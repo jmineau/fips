@@ -11,17 +11,15 @@ This module provides core classes and utilities for formulating and solving inve
 
 from abc import ABC, abstractmethod
 from functools import cached_property, partial
-from pathlib import Path
-from typing_extensions import \
-    Self  # requires python 3.11 to import from typing
 
 import numpy as np
 from numpy.linalg import inv as invert
 import pandas as pd
+from typing_extensions import \
+    Self  # requires python 3.11 to import from typing
 import xarray as xr
 
-
-from lair.inversion.utils import dataframe_matrix_to_xarray, round_index
+from fips.utils import dataframe_matrix_to_xarray, round_index
 
 
 # TODO

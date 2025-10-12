@@ -8,7 +8,7 @@ from functools import cached_property
 import numpy as np
 from numpy.linalg import inv as invert
 
-from lair.inversion.core import Estimator, ESTIMATOR_REGISTRY
+from fips.core import Estimator, ESTIMATOR_REGISTRY
 
 # TODO
 # - implement bayesian regularization factor usage

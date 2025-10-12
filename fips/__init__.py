@@ -5,3 +5,12 @@ from .core import (
     InverseProblem,
 )
 # import .estimators  # import to register estimators
+# import problems
+
+
+__all__ = [
+    "Estimator",
+    "ESTIMATOR_REGISTRY",
+    "SymmetricMatrix",
+    "InverseProblem",
+]

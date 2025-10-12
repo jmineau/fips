@@ -2,60 +2,82 @@
 Utility functions for inversion module.
 """
 
-import numpy as np
+from functools import partial
+import multiprocessing
+from typing import Any, Callable, Literal
+
 import pandas as pd
 from pandas.api.types import is_float_dtype
 import xarray as xr
 
 
-def integrate_over_time_bins(data: pd.DataFrame | pd.Series, time_bins: pd.IntervalIndex,
-                             time_dim: str = 'time') -> pd.DataFrame | pd.Series:
+def parallelize(func: Callable, num_processes: int | Literal['max'] = 1
+                ) -> Callable:
     """
-    Integrate data over time bins.
+    Parallelize a function across an iterable.
 
     Parameters
     ----------
-    data : pd.DataFrame | pd.Series
-        Data to integrate.
-    time_bins : pd.IntervalIndex
-        Time bins for integration.
-    time_dim : str, optional
-        Time dimension name, by default 'time'
+    func : function
+        The function to parallelize.
+    num_processes : int or 'max', optional
+        The number of processes to use. Uses the minimum of the number of
+        items in the iterable and the number of CPUs requested. If 'max',
+        uses all available CPUs. Default is 1.
 
     Returns
     -------
-    pd.DataFrame | pd.Series
-        Integrated footprint. The bin labels are set to the left edge of the bin.
+    parallelized : function
+        A function that will execute the input function in parallel across
+        an iterable.
     """
-    is_series = isinstance(data, pd.Series)
-    
-    dims = data.index.names
-    if time_dim not in dims:
-        raise ValueError(f"time_dim '{time_dim}' not found in data index levels {dims}")
-    other_levels = [lvl for lvl in dims if lvl != time_dim]
 
-    data = data.reset_index()
+    def parallelized(iterable, **kwargs) -> list[Any]:
+        """
+        Execute the input function in parallel across an iterable.
 
-    # Use pd.cut to bin the data by time into time bins
-    data[time_dim] = pd.cut(data[time_dim], bins=time_bins,
-                            include_lowest=True, right=False)
+        Parameters
+        ----------
+        iterable : iterable
+            The iterable to parallelize the function across.
+        **kwargs : dict
+            Additional keyword arguments to pass to the function.
 
-    # Set Intervals to the left edge of the bin (start of time interval)
-    data[time_dim] = data[time_dim].apply(lambda x: x.left)
+        Returns
+        -------
+        results : list
+            The results of the function applied to each item in the iterable.
+        """
+        # Determine the number of processes to use
+        cpu_count = multiprocessing.cpu_count()
+        if num_processes == 'max':
+            processes = cpu_count
+        elif num_processes > cpu_count:
+            processes = cpu_count
+        else:
+            processes = num_processes
 
-    # Group the date by the time bins & any other existing levels
-    grouped = data.groupby([time_dim] + other_levels, observed=True)
+        if processes > len(iterable):
+            processes = len(iterable)
 
-    # Sum over the groups
-    integrated = grouped.sum()
+        # If only one process is requested, execute the function sequentially
+        if processes == 1:
+            results = [func(i, **kwargs) for i in iterable]
+            return results
 
-    # Order the index levels
-    integrated = integrated.reorder_levels(dims)
+        # Create a multiprocessing Pool
+        pool = multiprocessing.Pool(processes=processes)
 
-    if is_series:
-        # Return a Series if the input was a Series
-        return integrated.iloc[:, 0]
-    return integrated
+        # Use the pool to map the function across the iterable
+        results = pool.map(func=partial(func, **kwargs), iterable=iterable)
+
+        # Close the pool to free resources
+        pool.close()
+        pool.join()
+
+        return results
+
+    return parallelized
 
 
 def round_index(index: pd.Index | pd.MultiIndex, decimals: int
