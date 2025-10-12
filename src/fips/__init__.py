@@ -9,11 +9,12 @@ __email__ = "jameskmineau@gmail.com"
 
 
 from .core import (
-    Estimator,
     ESTIMATOR_REGISTRY,
-    SymmetricMatrix,
+    Estimator,
     InverseProblem,
+    SymmetricMatrix,
 )
+
 # import .estimators  # import to register estimators
 # import problems
 

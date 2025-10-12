@@ -2,17 +2,17 @@
 Utility functions for inversion module.
 """
 
-from functools import partial
 import multiprocessing
-from typing import Any, Callable, Literal
+from collections.abc import Callable
+from functools import partial
+from typing import Any, Literal
 
 import pandas as pd
-from pandas.api.types import is_float_dtype
 import xarray as xr
+from pandas.api.types import is_float_dtype
 
 
-def parallelize(func: Callable, num_processes: int | Literal['max'] = 1
-                ) -> Callable:
+def parallelize(func: Callable, num_processes: int | Literal["max"] = 1) -> Callable:
     """
     Parallelize a function across an iterable.
 
@@ -50,9 +50,7 @@ def parallelize(func: Callable, num_processes: int | Literal['max'] = 1
         """
         # Determine the number of processes to use
         cpu_count = multiprocessing.cpu_count()
-        if num_processes == 'max':
-            processes = cpu_count
-        elif num_processes > cpu_count:
+        if num_processes == "max" or num_processes > cpu_count:
             processes = cpu_count
         else:
             processes = num_processes
@@ -80,8 +78,9 @@ def parallelize(func: Callable, num_processes: int | Literal['max'] = 1
     return parallelized
 
 
-def round_index(index: pd.Index | pd.MultiIndex, decimals: int
-                ) -> pd.Index | pd.MultiIndex:
+def round_index(
+    index: pd.Index | pd.MultiIndex, decimals: int
+) -> pd.Index | pd.MultiIndex:
     """
     Rounds the values in a pandas Index or MultiIndex if the level's
     data type is a numpy floating type.
@@ -113,7 +112,7 @@ def round_index(index: pd.Index | pd.MultiIndex, decimals: int
                 changed = True
             else:
                 new_levels.append(level)
-        
+
         if changed:
             # Reconstruct the MultiIndex with the new, rounded levels
             return pd.MultiIndex.from_arrays(new_levels, names=index.names)

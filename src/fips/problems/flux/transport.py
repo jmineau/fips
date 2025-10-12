@@ -1,5 +1,5 @@
-from collections import defaultdict
 import datetime as dt
+from collections import defaultdict
 from pathlib import Path
 from typing import Literal
 
@@ -7,9 +7,8 @@ import numpy as np
 import pandas as pd
 import stilt
 
-from fips.core import (
-    ForwardOperator as Jacobian
-)
+from fips.core import ForwardOperator as Jacobian
+
 from .utils import integrate_over_time_bins, parallelize
 
 
@@ -44,14 +43,15 @@ class StiltJacobianBuilder:
 
         self.failed_sims = []
 
-    def build_from_coords(self,
-                          coords: list[tuple[float, float]] | dict[str, list[tuple[float, float]]],
-                          flux_times: pd.IntervalIndex,
-                          resolution: str | None = None,
-                          subset_hours: int | list[int] | None = None,
-                          num_processes: int | Literal['max'] = 1,
-                          location_mapper: dict[str, str] | None = None,
-                          ) -> Jacobian | dict[str, Jacobian]:
+    def build_from_coords(
+        self,
+        coords: list[tuple[float, float]] | dict[str, list[tuple[float, float]]],
+        flux_times: pd.IntervalIndex,
+        resolution: str | None = None,
+        subset_hours: int | list[int] | None = None,
+        num_processes: int | Literal["max"] = 1,
+        location_mapper: dict[str, str] | None = None,
+    ) -> Jacobian | dict[str, Jacobian]:
         """
         Build the Jacobian matrix H from specified coordinates (x, y) and flux time bins.
 
@@ -80,20 +80,23 @@ class StiltJacobianBuilder:
             Otherwise, returns a single Jacobian.
         """
 
-        print('Building Jacobian matrix...')
+        print("Building Jacobian matrix...")
 
         if not isinstance(coords, dict):
-            coords = {'DEFAULT': coords}
+            coords = {"DEFAULT": coords}
 
         # Build the Jacobian matrix in parallel
         H_rows = defaultdict(list)
-        parallelized_builder = parallelize(self._build_jacobian_row_from_coords,
-                                           num_processes=num_processes)
-        results = parallelized_builder(self.simulations,
-                                       coords=coords,
-                                       flux_times=flux_times,
-                                       resolution=resolution,
-                                       subset_hours=subset_hours)
+        parallelized_builder = parallelize(
+            self._build_jacobian_row_from_coords, num_processes=num_processes
+        )
+        results = parallelized_builder(
+            self.simulations,
+            coords=coords,
+            flux_times=flux_times,
+            resolution=resolution,
+            subset_hours=subset_hours,
+        )
         for row in results:
             if row is not None:
                 if isinstance(row, dict):
@@ -103,64 +106,70 @@ class StiltJacobianBuilder:
                     if row not in self.failed_sims:
                         self.failed_sims.append(row)
                 else:
-                    raise ValueError('Unexpected output from build_jacobian_row')
+                    raise ValueError("Unexpected output from build_jacobian_row")
 
         H_dict = {}
         for key, rows in H_rows.items():
             if rows:
-                print(f'Combining {len(rows)} rows for {key} jacobian...')
+                print(f"Combining {len(rows)} rows for {key} jacobian...")
                 H = pd.concat(rows).fillna(0)
 
                 if location_mapper:
                     h = H.reset_index()
-                    h['obs_location'] = h['obs_location'].map(location_mapper).fillna(h['obs_location'])
-                    H = h.set_index(['obs_location', 'obs_time'])
+                    h["obs_location"] = (
+                        h["obs_location"].map(location_mapper).fillna(h["obs_location"])
+                    )
+                    H = h.set_index(["obs_location", "obs_time"])
 
                 H = Jacobian(H)
                 H_dict[key] = H
 
-                if key == 'DEFAULT':
+                if key == "DEFAULT":
                     return H
 
-        print('Jacobian matrix built successfully.')
+        print("Jacobian matrix built successfully.")
 
         return H_dict
 
     @staticmethod
-    def _build_jacobian_row_from_coords(simulation: stilt.Simulation | Path,
-                                        coords: dict[str, list[tuple[float, float]]],
-                                        flux_times: pd.IntervalIndex,
-                                        resolution: str | None = None,
-                                        subset_hours: int | list[int] | None = None
-                                        ) -> dict[str, pd.DataFrame] | str | None:
+    def _build_jacobian_row_from_coords(
+        simulation: stilt.Simulation | Path,
+        coords: dict[str, list[tuple[float, float]]],
+        flux_times: pd.IntervalIndex,
+        resolution: str | None = None,
+        subset_hours: int | list[int] | None = None,
+    ) -> dict[str, pd.DataFrame] | str | None:
         """
         Build a row of the Jacobian matrix for a single STILT simulation
         """
         t_start, t_stop = flux_times[0].left, flux_times[-1].right
-        
+
         # Get simulation object
-        sim = StiltJacobianBuilder._get_sim(simulation=simulation,
-                                            t_start=t_start, t_stop=t_stop,
-                                            subset_hours=subset_hours)
+        sim = StiltJacobianBuilder._get_sim(
+            simulation=simulation,
+            t_start=t_start,
+            t_stop=t_stop,
+            subset_hours=subset_hours,
+        )
         if not isinstance(sim, stilt.Simulation):
             return sim  # could be None or sim.id if failed
 
         # Get footprint for the simulation
-        footprint = StiltJacobianBuilder._get_footprint(sim=sim,
-                                                        t_start=t_start, t_stop=t_stop,
-                                                        resolution=resolution)
+        footprint = StiltJacobianBuilder._get_footprint(
+            sim=sim, t_start=t_start, t_stop=t_stop, resolution=resolution
+        )
         if footprint is None:
             return None
 
-        print(f'Computing Jacobian row for {sim.id}...')
+        print(f"Computing Jacobian row for {sim.id}...")
 
         # Convert xarray to pandas for sparse representation
         foot = footprint.data.to_series()
 
         # Get the x and y dimension names
-        is_latlon = 'lon' in foot.index.names and 'lat' in foot.index.names
-        x_dim = 'lon' if is_latlon else 'x'
-        y_dim = 'lat' if is_latlon else 'y'
+        is_latlon = "lon" in foot.index.names and "lat" in foot.index.names
+        x_dim = "lon" if is_latlon else "x"
+        y_dim = "lat" if is_latlon else "y"
 
         foot = foot.reset_index()
 
@@ -173,7 +182,7 @@ class StiltJacobianBuilder:
         foot[y_dim] = foot[y_dim].round(ydigits)
 
         # Reorder dimensions to x, y, time
-        foot = foot.set_index([x_dim, y_dim, 'time'])  # still a df
+        foot = foot.set_index([x_dim, y_dim, "time"])  # still a df
 
         # Build index value for the observation
         obs_index = StiltJacobianBuilder._build_obs_index(sim=sim)
@@ -183,17 +192,24 @@ class StiltJacobianBuilder:
         for key, coord_list in coords.items():
             # Round input coordinates to match footprint rounding
             coord_index = pd.MultiIndex.from_tuples(coord_list)
-            coord_index = coord_index.round([xdigits, ydigits]).set_names([x_dim, y_dim])
+            coord_index = coord_index.round([xdigits, ydigits]).set_names(
+                [x_dim, y_dim]
+            )
 
             # Filter to xy points defined by grid
-            filtered_foot = foot.reset_index(level='time').loc[coord_index].set_index('time', append=True)
+            filtered_foot = (
+                foot.reset_index(level="time")
+                .loc[coord_index]
+                .set_index("time", append=True)
+            )
 
             if filtered_foot.size == 0:
                 continue
 
             # Integrate each simulation over flux_time bins
-            integrated_foot = integrate_over_time_bins(data=filtered_foot,
-                                                       time_bins=flux_times)
+            integrated_foot = integrate_over_time_bins(
+                data=filtered_foot, time_bins=flux_times
+            )
 
             # Transpose and set index as (obs_location, obs_time) multiindex
             transposed_foot = integrated_foot.T
@@ -203,18 +219,20 @@ class StiltJacobianBuilder:
         return rows
 
     @staticmethod
-    def _get_sim(simulation: stilt.Simulation | Path,
-                 t_start: dt.datetime, t_stop: dt.datetime,
-                 subset_hours: int | list[int] | None = None
-                 ) -> stilt.Simulation | str | None:
+    def _get_sim(
+        simulation: stilt.Simulation | Path,
+        t_start: dt.datetime,
+        t_stop: dt.datetime,
+        subset_hours: int | list[int] | None = None,
+    ) -> stilt.Simulation | str | None:
         sim = StiltJacobianBuilder._load_simulation(simulation)
 
-        if not sim.status == 'SUCCESS':
+        if sim.status != "SUCCESS":
             return sim.id
 
-        if not StiltJacobianBuilder._sim_in_time_range(sim=sim,
-                                                       t_start=t_start, t_stop=t_stop,
-                                                       subset_hours=subset_hours):
+        if not StiltJacobianBuilder._sim_in_time_range(
+            sim=sim, t_start=t_start, t_stop=t_stop, subset_hours=subset_hours
+        ):
             return None
         return sim
 
@@ -225,16 +243,20 @@ class StiltJacobianBuilder:
         elif isinstance(simulation, stilt.Simulation):
             sim = simulation
         else:
-            raise ValueError('simulation must be a Path or a stilt.Simulation object')
+            raise ValueError("simulation must be a Path or a stilt.Simulation object")
         return sim
 
     @staticmethod
-    def _sim_in_time_range(sim: stilt.Simulation, t_start: dt.datetime, t_stop: dt.datetime,
-                           subset_hours: int | list[int] | None = None) -> bool:
+    def _sim_in_time_range(
+        sim: stilt.Simulation,
+        t_start: dt.datetime,
+        t_stop: dt.datetime,
+        subset_hours: int | list[int] | None = None,
+    ) -> bool:
         n_hours = sim.config.n_hours
         if n_hours >= 0:
-            raise ValueError('STILT must be run backwards in time (n_hours < 0)')
-        n_hours = pd.to_timedelta(n_hours, unit='h')
+            raise ValueError("STILT must be run backwards in time (n_hours < 0)")
+        n_hours = pd.to_timedelta(n_hours, unit="h")
 
         # Skip simulations that do not overlap with inversion time range
         sim_start = sim.receptor.time + n_hours
@@ -247,16 +269,18 @@ class StiltJacobianBuilder:
             if isinstance(subset_hours, int):
                 subset_hours = [subset_hours]
 
-            if not sim.receptor.time.hour in subset_hours:
+            if sim.receptor.time.hour not in subset_hours:
                 return False
 
         return True
 
     @staticmethod
-    def _get_footprint(sim: stilt.Simulation,
-                       t_start: dt.datetime, t_stop: dt.datetime,
-                       resolution: str | None = None) -> stilt.Footprint | None:
-
+    def _get_footprint(
+        sim: stilt.Simulation,
+        t_start: dt.datetime,
+        t_stop: dt.datetime,
+        resolution: str | None = None,
+    ) -> stilt.Footprint | None:
         # Load footprint object
         footprint = StiltJacobianBuilder._load_footprint(sim=sim, resolution=resolution)
 
@@ -264,8 +288,9 @@ class StiltJacobianBuilder:
             return None
 
         # Check if footprint time range overlaps with inversion time range
-        if not StiltJacobianBuilder._footprint_in_time_range(footprint=footprint,
-                                                             t_start=t_start, t_stop=t_stop):
+        if not StiltJacobianBuilder._footprint_in_time_range(
+            footprint=footprint, t_start=t_start, t_stop=t_stop
+        ):
             # A footprint within a simulation might not overlap with the inversion time range
             # even if the simulation does
             return None
@@ -273,31 +298,32 @@ class StiltJacobianBuilder:
         return footprint
 
     @staticmethod
-    def _load_footprint(sim: stilt.Simulation,
-                        resolution: str | None = None) -> stilt.Footprint | None:
-        if resolution:
-            # Load footprint at specified resolution
-            footprint = sim.footprints[resolution]
-        else:
-            # Get the default (highest) resolution footprint
-            footprint = sim.footprint
+    def _load_footprint(
+        sim: stilt.Simulation, resolution: str | None = None
+    ) -> stilt.Footprint | None:
+        # Load footprint at specified resolution if available
+        # Otherwise, get the default (highest) resolution footprint
+        footprint = sim.footprints[resolution] if resolution else sim.footprint
         return footprint
 
     @staticmethod
-    def _footprint_in_time_range(footprint: stilt.Footprint,
-                               t_start: dt.datetime, t_stop: dt.datetime) -> bool:
+    def _footprint_in_time_range(
+        footprint: stilt.Footprint, t_start: dt.datetime, t_stop: dt.datetime
+    ) -> bool:
         # Check if footprint time range overlaps with inversion time range
         return footprint.time_range[0] < t_stop and footprint.time_range[1] > t_start
 
     @staticmethod
     def _build_obs_index(sim: stilt.Simulation) -> pd.MultiIndex:
-        return pd.MultiIndex.from_arrays([[sim.receptor.location.id], [sim.receptor.time]],
-                                         names=['obs_location', 'obs_time'])
+        return pd.MultiIndex.from_arrays(
+            [[sim.receptor.location.id], [sim.receptor.time]],
+            names=["obs_location", "obs_time"],
+        )
 
     @staticmethod
     def _calc_digits(res: float) -> int:
         if res <= 0:
-            raise ValueError('Resolution must be positive')
+            raise ValueError("Resolution must be positive")
         if res < 1:  # fractional resolution
             digits = int(np.ceil(np.abs(np.log10(res)))) + 1
         else:

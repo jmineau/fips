@@ -2,8 +2,9 @@ import numpy as np
 import pandas as pd
 
 
-def integrate_over_time_bins(data: pd.DataFrame | pd.Series, time_bins: pd.IntervalIndex,
-                             time_dim: str = 'time') -> pd.DataFrame | pd.Series:
+def integrate_over_time_bins(
+    data: pd.DataFrame | pd.Series, time_bins: pd.IntervalIndex, time_dim: str = "time"
+) -> pd.DataFrame | pd.Series:
     """
     Integrate data over time bins.
 
@@ -22,7 +23,7 @@ def integrate_over_time_bins(data: pd.DataFrame | pd.Series, time_bins: pd.Inter
         Integrated footprint. The bin labels are set to the left edge of the bin.
     """
     is_series = isinstance(data, pd.Series)
-    
+
     dims = data.index.names
     if time_dim not in dims:
         raise ValueError(f"time_dim '{time_dim}' not found in data index levels {dims}")
@@ -31,8 +32,9 @@ def integrate_over_time_bins(data: pd.DataFrame | pd.Series, time_bins: pd.Inter
     data = data.reset_index()
 
     # Use pd.cut to bin the data by time into time bins
-    data[time_dim] = pd.cut(data[time_dim], bins=time_bins,
-                            include_lowest=True, right=False)
+    data[time_dim] = pd.cut(
+        data[time_dim], bins=time_bins, include_lowest=True, right=False
+    )
 
     # Set Intervals to the left edge of the bin (start of time interval)
     data[time_dim] = data[time_dim].apply(lambda x: x.left)
@@ -68,7 +70,9 @@ def time_difference_matrix(times, absolute: bool = True) -> np.ndarray:
     np.ndarray
         The matrix of time differences.
     """
-    times = pd.DatetimeIndex(times)  # wrap in pandas DatetimeIndex as np.subtract.outer doesn't like pd.Series
+    times = pd.DatetimeIndex(
+        times
+    )  # wrap in pandas DatetimeIndex as np.subtract.outer doesn't like pd.Series
     diffs = np.subtract.outer(times, times)
     if absolute:
         diffs = np.abs(diffs)

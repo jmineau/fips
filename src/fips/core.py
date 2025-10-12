@@ -13,14 +13,12 @@ from abc import ABC, abstractmethod
 from functools import cached_property, partial
 
 import numpy as np
-from numpy.linalg import inv as invert
 import pandas as pd
-from typing_extensions import \
-    Self  # requires python 3.11 to import from typing
 import xarray as xr
+from numpy.linalg import inv as invert
+from typing_extensions import Self  # requires python 3.11 to import from typing
 
 from fips.utils import dataframe_matrix_to_xarray, round_index
-
 
 # TODO
 # - Obs aggregation
@@ -82,14 +80,15 @@ class Estimator(ABC):
         Calculate the leverage matrix.
     """
 
-    def __init__(self,
-                 z: np.ndarray,
-                 x_0: np.ndarray,
-                 H: np.ndarray,
-                 S_0: np.ndarray,
-                 S_z: np.ndarray,
-                 c: np.ndarray | float | None = None,
-                 ):
+    def __init__(
+        self,
+        z: np.ndarray,
+        x_0: np.ndarray,
+        H: np.ndarray,
+        S_0: np.ndarray,
+        S_z: np.ndarray,
+        c: np.ndarray | float | None = None,
+    ):
         """
         Initialize the Estimator object.
 
@@ -135,7 +134,7 @@ class Estimator(ABC):
         np.ndarray
             Model output (Hx + c).
         """
-        print('Performing forward calculation...')
+        print("Performing forward calculation...")
         return self.H @ x + self.c
 
     def residual(self, x) -> np.ndarray:
@@ -155,7 +154,7 @@ class Estimator(ABC):
         np.ndarray
             Residual (z - (Hx + c)).
         """
-        print('Performing residual calculation...')
+        print("Performing residual calculation...")
         return self.z - self.forward(x)
 
     def leverage(self, x) -> np.ndarray:
@@ -177,7 +176,7 @@ class Estimator(ABC):
         np.ndarray
             Leverage matrix.
         """
-        print('Calculating Leverage matrix...')
+        print("Calculating Leverage matrix...")
         Hx = self.forward(x)
         Hx_T = Hx.T
         HS_0H_Sz_inv = invert(self._HS_0H + self.S_z)
@@ -198,7 +197,7 @@ class Estimator(ABC):
         float
             Cost value.
         """
-        print('Performing cost calculation...')
+        print("Performing cost calculation...")
         raise NotImplementedError
 
     @property
@@ -212,7 +211,7 @@ class Estimator(ABC):
         np.ndarray
             Posterior state estimate.
         """
-        print('Calculating Posterior Mean Model State Estimate...')
+        print("Calculating Posterior Mean Model State Estimate...")
         raise NotImplementedError
 
     @property
@@ -226,7 +225,7 @@ class Estimator(ABC):
         np.ndarray
             Posterior error covariance matrix.
         """
-        print('Calculating Posterior Error Covariance Matrix...')
+        print("Calculating Posterior Error Covariance Matrix...")
         raise NotImplementedError
 
     @cached_property
@@ -242,7 +241,7 @@ class Estimator(ABC):
         np.ndarray
             Posterior observation estimate.
         """
-        print('Calculating Posterior Mean Observation Estimate...')
+        print("Calculating Posterior Mean Observation Estimate...")
         return self.forward(self.x_hat)
 
     @cached_property
@@ -258,7 +257,7 @@ class Estimator(ABC):
         np.ndarray
             Prior data estimate.
         """
-        print('Calculating Prior Mean Data Estimate...')
+        print("Calculating Prior Mean Data Estimate...")
         return self.forward(self.x_0)
 
     @cached_property
@@ -274,7 +273,7 @@ class Estimator(ABC):
         np.ndarray
             Kalman gain matrix.
         """
-        print('Calculating Kalman Gain Matrix...')
+        print("Calculating Kalman Gain Matrix...")
         return self._HS_0.T @ invert(self._HS_0H + self.S_z)
 
     @cached_property
@@ -290,7 +289,7 @@ class Estimator(ABC):
         np.ndarray
             Averaging kernel matrix.
         """
-        print('Calculating Averaging Kernel Matrix...')
+        print("Calculating Averaging Kernel Matrix...")
         return self.K @ self.H
 
     @cached_property
@@ -401,7 +400,7 @@ class Estimator(ABC):
         float
             R-squared value.
         """
-        print('Calculating Coefficient of determination (R-squared)...')
+        print("Calculating Coefficient of determination (R-squared)...")
         return np.corrcoef(self.z, self.y_hat)[0, 1] ** 2
 
     @cached_property
@@ -416,9 +415,9 @@ class Estimator(ABC):
         float
             RMSE value.
         """
-        print('Calculating Root Mean Square Error (RMSE)...')
+        print("Calculating Root Mean Square Error (RMSE)...")
         r = self.residual(self.x_hat)
-        return np.sqrt((r ** 2) / self.n_z)
+        return np.sqrt((r**2) / self.n_z)
 
     @cached_property
     def U_red(self):
@@ -433,7 +432,7 @@ class Estimator(ABC):
         float
             Uncertainty reduction value.
         """
-        print('Calculating Uncertainty reduction metric...')
+        print("Calculating Uncertainty reduction metric...")
         return 1 - (np.sqrt(np.trace(self.S_hat)) / np.sqrt(np.trace(self.S_0)))
 
 
@@ -441,6 +440,7 @@ class EstimatorRegistry(dict):
     """
     Registry for estimator classes.
     """
+
     def register(self, name: str):
         """
         Register an estimator class under a given name.
@@ -455,17 +455,20 @@ class EstimatorRegistry(dict):
         decorator : function
             Decorator to register the class.
         """
+
         def decorator(cls: type[Estimator]) -> type[Estimator]:
             self[name] = cls
             return cls
+
         return decorator
 
 
 ESTIMATOR_REGISTRY = EstimatorRegistry()
 
 
-def convolve(forward_operator: pd.DataFrame, state: pd.Series,
-             coord_decimals: int = 6) -> pd.Series:
+def convolve(
+    forward_operator: pd.DataFrame, state: pd.Series, coord_decimals: int = 6
+) -> pd.Series:
     """
     Convolve a forward_operator with a state field to get modeled observations.
 
@@ -496,7 +499,9 @@ def convolve(forward_operator: pd.DataFrame, state: pd.Series,
     # Ensure the state index matches the forward operator columns
     if isinstance(fo.columns, pd.MultiIndex):
         if not isinstance(state.index, pd.MultiIndex):
-            raise ValueError("If forward operator columns are a MultiIndex, state index must also be a MultiIndex.")
+            raise ValueError(
+                "If forward operator columns are a MultiIndex, state index must also be a MultiIndex."
+            )
         state.index = state.index.reorder_levels(fo.columns.names)
     common = fo.columns.intersection(state.index)
     fo = fo.reindex(columns=common)
@@ -510,7 +515,7 @@ def convolve(forward_operator: pd.DataFrame, state: pd.Series,
 
     # Perform the matrix multiplication to get modeled observations
     modeled_obs = fo @ state
-    modeled_obs.name = f'{state.name}_obs'
+    modeled_obs.name = f"{state.name}_obs"
 
     return modeled_obs
 
@@ -545,6 +550,7 @@ class ForwardOperator:
     to_xarray() -> xr.DataArray
         Convert the forward operator to an xarray DataArray.
     """
+
     def __init__(self, data: pd.DataFrame):
         """
         Initialize the ForwardOperator.
@@ -618,8 +624,7 @@ class ForwardOperator:
         """
         return tuple(self.state_index.names)
 
-    def convolve(self, state: pd.Series, coord_decimals: int = 6
-                 ) -> pd.Series:
+    def convolve(self, state: pd.Series, coord_decimals: int = 6) -> pd.Series:
         """
         Convolve the forward operator with a state vector.
 
@@ -636,8 +641,9 @@ class ForwardOperator:
         pd.Series
             Result of convolution.
         """
-        return convolve(forward_operator=self._data, state=state,
-                        coord_decimals=coord_decimals)
+        return convolve(
+            forward_operator=self._data, state=state, coord_decimals=coord_decimals
+        )
 
     def to_xarray(self) -> xr.DataArray:
         """
@@ -698,8 +704,10 @@ class SymmetricMatrix:
         if not isinstance(data, pd.DataFrame):
             raise TypeError("Input data must be a pandas DataFrame.")
         if not data.index.equals(data.columns):
-            raise ValueError("Symmetric matrix must have identical row and column indices.")
-        
+            raise ValueError(
+                "Symmetric matrix must have identical row and column indices."
+            )
+
         self._data = data
         self.loc = self.__class__._Indexer(self)
 
@@ -778,7 +786,9 @@ class SymmetricMatrix:
         if not isinstance(index, pd.Index):
             raise TypeError("Index must be a pandas Index.")
         if len(index) != self.data.shape[0]:
-            raise ValueError("Index length must match the number of rows/columns in the matrix.")
+            raise ValueError(
+                "Index length must match the number of rows/columns in the matrix."
+            )
         self._data.index = index
         self._data.columns = index
 
@@ -806,7 +816,7 @@ class SymmetricMatrix:
         """
         return self.data.shape
 
-    def reindex(self, index: pd.Index, **kwargs) -> 'SymmetricMatrix':
+    def reindex(self, index: pd.Index, **kwargs) -> "SymmetricMatrix":
         """
         Reindex the symmetric matrix, filling new entries with 0.
 
@@ -822,10 +832,12 @@ class SymmetricMatrix:
         SymmetricMatrix
             Reindexed SymmetricMatrix instance.
         """
-        reindexed_data = self.data.reindex(index=index, columns=index, **kwargs).fillna(0.0)
+        reindexed_data = self.data.reindex(index=index, columns=index, **kwargs).fillna(
+            0.0
+        )
         return self.__class__(data=reindexed_data)
 
-    def reorder_levels(self, order) -> 'SymmetricMatrix':
+    def reorder_levels(self, order) -> "SymmetricMatrix":
         """
         Reorder the levels of a MultiIndex symmetric matrix.
 
@@ -847,8 +859,8 @@ class SymmetricMatrix:
         if not isinstance(self.index, pd.MultiIndex):
             raise TypeError("Index must be a MultiIndex to reorder levels.")
         data = self.data.copy()
-        data = data.reorder_levels(order, axis='index')
-        data = data.reorder_levels(order, axis='columns')
+        data = data.reorder_levels(order, axis="index")
+        data = data.reorder_levels(order, axis="columns")
         return self.__class__(data=data)
 
     class _Indexer:
@@ -857,7 +869,8 @@ class SymmetricMatrix:
         pandas' .loc. It enables label-based selection and assignment while
         enforcing the symmetrical nature of a symmetric matrix.
         """
-        def __init__(self, matrix_obj: 'SymmetricMatrix'):
+
+        def __init__(self, matrix_obj: "SymmetricMatrix"):
             self._obj = matrix_obj
 
         def __getitem__(self, key):
@@ -899,7 +912,7 @@ class SymmetricMatrix:
 
             # Determine the value for the symmetric assignment
             symmetric_value = value
-            if hasattr(value, 'T'):
+            if hasattr(value, "T"):
                 # For DataFrames, Series, and numpy arrays, we need the transpose
                 # for the symmetric assignment. Scalars do not have .T.
                 symmetric_value = value.T
@@ -928,7 +941,7 @@ class CovarianceMatrix(SymmetricMatrix):
         pd.Series
             Series containing the variances.
         """
-        return pd.Series(np.diag(self.data), index=self.index, name='variance')
+        return pd.Series(np.diag(self.data), index=self.index, name="variance")
 
 
 class InverseProblem:
@@ -1014,18 +1027,19 @@ class InverseProblem:
     input data.
     """
 
-    def __init__(self,
-                 estimator: str | type[Estimator],
-                 obs: pd.Series,
-                 prior: pd.Series,
-                 forward_operator: ForwardOperator | pd.DataFrame,
-                 prior_error: SymmetricMatrix,
-                 modeldata_mismatch: SymmetricMatrix,
-                 constant: float | pd.Series | None = None,
-                 state_index: pd.Index | None = None,
-                 estimator_kwargs: dict = {},
-                 coord_decimals: int = 6,
-                 ) -> None:
+    def __init__(
+        self,
+        estimator: str | type[Estimator],
+        obs: pd.Series,
+        prior: pd.Series,
+        forward_operator: ForwardOperator | pd.DataFrame,
+        prior_error: SymmetricMatrix,
+        modeldata_mismatch: SymmetricMatrix,
+        constant: float | pd.Series | None = None,
+        state_index: pd.Index | None = None,
+        estimator_kwargs: dict | None = None,
+        coord_decimals: int = 6,
+    ) -> None:
         """
         Initialize the InverseProblem.
 
@@ -1083,24 +1097,30 @@ class InverseProblem:
 
         # Assert dimensions are in indices
         if not all(dim in forward_operator.index.names for dim in self.obs_dims):
-            raise ValueError("Observation dimensions must be in the forward operator index.")
-        if  not all(dim in constant.index.names for dim in self.obs_dims):
+            raise ValueError(
+                "Observation dimensions must be in the forward operator index."
+            )
+        if not all(dim in constant.index.names for dim in self.obs_dims):
             raise ValueError("Observation dimensions must be in the constant index.")
         if not all(dim in forward_operator.columns.names for dim in self.state_dims):
-            raise ValueError("State dimensions must be in the forward operator columns.")
+            raise ValueError(
+                "State dimensions must be in the forward operator columns."
+            )
         if not all(dim in state_index.names for dim in self.state_dims):
             raise ValueError("State dimensions must be in the state index.")
-        
+
         # Order levels if indexes are MultiIndex
         if isinstance(forward_operator.index, pd.MultiIndex):
-            forward_operator = forward_operator.reorder_levels(self.obs_dims,
-                                                                axis='index')
+            forward_operator = forward_operator.reorder_levels(
+                self.obs_dims, axis="index"
+            )
             obs = obs.reorder_levels(self.obs_dims)
             modeldata_mismatch = modeldata_mismatch.reorder_levels(self.obs_dims)
             constant = constant.reorder_levels(self.obs_dims)
         if isinstance(forward_operator.columns, pd.MultiIndex):
-            forward_operator = forward_operator.reorder_levels(self.state_dims,
-                                                               axis='columns')
+            forward_operator = forward_operator.reorder_levels(
+                self.state_dims, axis="columns"
+            )
             prior = prior.reorder_levels(self.state_dims)
             prior_error = prior_error.reorder_levels(self.state_dims)
 
@@ -1118,12 +1138,16 @@ class InverseProblem:
         # Define the obs index as the intersection of the observation and forward operator obs indices
         obs_index = obs.index.intersection(forward_operator.index)
         if obs_index.empty:
-            raise ValueError("No overlapping indices between observations and forward operator.")
+            raise ValueError(
+                "No overlapping indices between observations and forward operator."
+            )
 
         # Align inputs
         self.obs = obs.reindex(obs_index).dropna()
         self.prior = prior.reindex(state_index).dropna()
-        self.forward_operator = forward_operator.reindex(index=obs_index, columns=state_index).fillna(0.0)
+        self.forward_operator = forward_operator.reindex(
+            index=obs_index, columns=state_index
+        ).fillna(0.0)
         self.prior_error = prior_error.reindex(state_index)
         self.modeldata_mismatch = modeldata_mismatch.reindex(obs_index)
         self.constant = constant.reindex(obs_index).fillna(0.0)
@@ -1134,22 +1158,26 @@ class InverseProblem:
 
         # Initialize the estimator
         estimator_input = {
-            'z': self.obs.values,
-            'x_0': self.prior.values,
-            'H': self.forward_operator.values,
-            'S_0': self.prior_error.values,
-            'S_z': self.modeldata_mismatch.values,
-            'c': self.constant.values
+            "z": self.obs.values,
+            "x_0": self.prior.values,
+            "H": self.forward_operator.values,
+            "S_0": self.prior_error.values,
+            "S_z": self.modeldata_mismatch.values,
+            "c": self.constant.values,
         }
+        if estimator_kwargs is None:
+            estimator_kwargs = {}
 
-        self.estimator = self._init_estimator(estimator, estimator_input=estimator_input, **estimator_kwargs)
+        self.estimator = self._init_estimator(
+            estimator, estimator_input=estimator_input, **estimator_kwargs
+        )
 
         # Build xarray interface
         self.xr = self._XR(self)
 
-    def _init_estimator(self, estimator: str | type[Estimator], 
-                        estimator_input: dict,
-                        **kwargs) -> Estimator:
+    def _init_estimator(
+        self, estimator: str | type[Estimator], estimator_input: dict, **kwargs
+    ) -> Estimator:
         """
         Initialize the estimator.
 
@@ -1182,12 +1210,12 @@ class InverseProblem:
         else:
             raise TypeError("Estimator must be a string or a subclass of Estimator.")
 
-        z = estimator_input['z']
-        x_0 = estimator_input['x_0']
-        H = estimator_input['H']
-        S_0 = estimator_input['S_0']
-        S_z = estimator_input['S_z']
-        c = estimator_input.get('c')
+        z = estimator_input["z"]
+        x_0 = estimator_input["x_0"]
+        H = estimator_input["H"]
+        S_0 = estimator_input["S_0"]
+        S_z = estimator_input["S_z"]
+        c = estimator_input.get("c")
 
         return estimator_cls(z=z, x_0=x_0, H=H, S_0=S_0, S_z=S_z, c=c, **kwargs)
 
@@ -1204,9 +1232,9 @@ class InverseProblem:
             - 'posterior_obs': Pandas series with the posterior observation estimates.
         """
         return {
-            'posterior': self.posterior,
-            'posterior_error': self.posterior_error,
-            'posterior_obs': self.posterior_obs,
+            "posterior": self.posterior,
+            "posterior_error": self.posterior_error,
+            "posterior_obs": self.posterior_obs,
         }
 
     @property
@@ -1244,7 +1272,7 @@ class InverseProblem:
             Pandas series with the posterior mean model estimate.
         """
         x_hat = self.estimator.x_hat
-        return pd.Series(x_hat, index=self.state_index, name='posterior')
+        return pd.Series(x_hat, index=self.state_index, name="posterior")
 
     @cached_property
     def posterior_obs(self) -> pd.Series:
@@ -1257,7 +1285,7 @@ class InverseProblem:
             Pandas series with the posterior observation estimates.
         """
         y_hat = self.estimator.y_hat
-        return pd.Series(y_hat, index=self.obs_index, name='posterior_obs')
+        return pd.Series(y_hat, index=self.obs_index, name="posterior_obs")
 
     @cached_property
     def posterior_error(self) -> SymmetricMatrix:
@@ -1270,7 +1298,9 @@ class InverseProblem:
             CovarianceMatrix instance with the posterior error covariance matrix.
         """
         S_hat = self.estimator.S_hat
-        return SymmetricMatrix(pd.DataFrame(S_hat, index=self.state_index, columns=self.state_index))
+        return SymmetricMatrix(
+            pd.DataFrame(S_hat, index=self.state_index, columns=self.state_index)
+        )
 
     @cached_property
     def prior_obs(self) -> pd.Series:
@@ -1283,13 +1313,14 @@ class InverseProblem:
             Pandas series with the prior observation estimates.
         """
         y_0 = self.estimator.y_0
-        return pd.Series(y_0, index=self.obs_index, name='prior_obs')
+        return pd.Series(y_0, index=self.obs_index, name="prior_obs")
 
     class _XR:
         """
         Xarray interface for Inversion data.
         """
-        def __init__(self, inversion: 'InverseProblem'):
+
+        def __init__(self, inversion: "InverseProblem"):
             self._inversion = inversion
 
         def __getattr__(self, attr):
@@ -1313,7 +1344,7 @@ class InverseProblem:
             TypeError
                 If the attribute type is not supported.
             """
-            if attr == '_inversion':
+            if attr == "_inversion":
                 return self._inversion
             if hasattr(self._inversion, attr):
                 obj = getattr(self._inversion, attr)
@@ -1324,7 +1355,9 @@ class InverseProblem:
                 else:
                     raise TypeError(f"Unable to represent {type(obj)} as Xarray.")
             else:
-                raise AttributeError(f"'{type(self._inversion).__name__}' object has no attribute '{attr}'")
+                raise AttributeError(
+                    f"'{type(self._inversion).__name__}' object has no attribute '{attr}'"
+                )
 
         def __setattr__(self, *args):
             """
@@ -1340,10 +1373,12 @@ class InverseProblem:
             AttributeError
                 If attempting to set an attribute.
             """
-            if args[0] == '_inversion':
+            if args[0] == "_inversion":
                 super().__setattr__(*args)
             else:
-                raise AttributeError(f"Cannot set attribute '{args[0]}' on Xarray interface.")
+                raise AttributeError(
+                    f"Cannot set attribute '{args[0]}' on Xarray interface."
+                )
 
         @staticmethod
         def _series_to_xarray(series: pd.Series, attr) -> xr.DataArray:

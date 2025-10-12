@@ -5,16 +5,17 @@ This module contains various inversion estimators for solving inverse problems.
 """
 
 from functools import cached_property
+
 import numpy as np
 from numpy.linalg import inv as invert
 
-from fips.core import Estimator, ESTIMATOR_REGISTRY
+from fips.core import ESTIMATOR_REGISTRY, Estimator
 
 # TODO
 # - implement bayesian regularization factor usage
 
 
-@ESTIMATOR_REGISTRY.register('bayesian')
+@ESTIMATOR_REGISTRY.register("bayesian")
 class BayesianSolver(Estimator):
     """
     Bayesian inversion estimator class
@@ -22,15 +23,16 @@ class BayesianSolver(Estimator):
     also known as the batch method.
     """
 
-    def __init__(self,
-                 z: np.ndarray,
-                 x_0: np.ndarray,
-                 H: np.ndarray,
-                 S_0: np.ndarray,
-                 S_z: np.ndarray,
-                 c: np.ndarray | float | None = None,
-                 rf: float = 1.0,
-                 ):
+    def __init__(
+        self,
+        z: np.ndarray,
+        x_0: np.ndarray,
+        H: np.ndarray,
+        S_0: np.ndarray,
+        S_z: np.ndarray,
+        c: np.ndarray | float | None = None,
+        rf: float = 1.0,
+    ):
         """
         Initialize inversion object
 
@@ -61,7 +63,7 @@ class BayesianSolver(Estimator):
         .. math::
             J(x) = \\frac{1}{2}(x - x_0)^T S_0^{-1}(x - x_0) + \\frac{1}{2}(z - Hx - c)^T S_z^{-1}(z - Hx - c)
         """
-        print('Performing cost calculation...')
+        print("Performing cost calculation...")
         diff_model = x - self.x_0
         diff_data = self.residual(x)
         cost_model = diff_model.T @ self._S_0_inv @ diff_model
@@ -76,7 +78,7 @@ class BayesianSolver(Estimator):
         .. math::
             \\hat{x} = x_0 + K(z - Hx_0 - c)
         """
-        print('Calculating Posterior Mean Model Estimate...')
+        print("Calculating Posterior Mean Model Estimate...")
         return self.x_0 + self.K @ self.residual(self.x_0)
 
     @cached_property
@@ -88,7 +90,9 @@ class BayesianSolver(Estimator):
             \\hat{S} = (H^T S_z^{-1} H + S_0^{-1})^{-1}
                 = S_0 - (H S_0)^T(H S_0 H^T + S_z)^{-1}(H S_0)
         """
-        print('Calculating Posterior Error Covariance Matrix...')
+        print("Calculating Posterior Error Covariance Matrix...")
         # Both methods return the same result
         # return invert(self.H_T @ self.S_z_inv @ self.H + self.S_0_inv)
-        return self.S_0 - self._HS_0.T @ invert(self._HS_0H + self.S_z) @ self._HS_0  # this one only has one invert call
+        return (
+            self.S_0 - self._HS_0.T @ invert(self._HS_0H + self.S_z) @ self._HS_0
+        )  # this one only has one invert call

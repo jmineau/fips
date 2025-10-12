@@ -26,24 +26,18 @@ which extends the base InverseProblem to handle flux-specific terminology and pl
 interfaces for visualizing results.
 """
 
-
 import cartopy.crs as ccrs
 import matplotlib.pyplot as plt
 import pandas as pd
 
-from fips import estimators  # register estimators
-from fips.core import (
-    SymmetricMatrix,
-    Estimator,
-    ForwardOperator as Jacobian,
-    InverseProblem
-)
+from fips.core import Estimator, InverseProblem, SymmetricMatrix
+from fips.core import ForwardOperator as Jacobian
 
 # TODO:
-    # eventually want to support multiple flux source (farfield/bio/etc)
-    # enable regridding
-    # build stilt jacobian from geometries or nested grid
-    # ability to extend state elements
+# eventually want to support multiple flux source (farfield/bio/etc)
+# enable regridding
+# build stilt jacobian from geometries or nested grid
+# ability to extend state elements
 
 
 class FluxInversion(InverseProblem):
@@ -81,16 +75,17 @@ class FluxInversion(InverseProblem):
         Diagnostic and plotting interface.
     """
 
-    def __init__(self,
-                 concentrations: pd.Series,
-                 inventory: pd.Series,
-                 jacobian: Jacobian | pd.DataFrame,
-                 prior_error: SymmetricMatrix,
-                 modeldata_mismatch: SymmetricMatrix,
-                 background: pd.Series | float | None = None,
-                 estimator: type[Estimator] | str = 'bayesian',
-                 **kwargs,
-                 ) -> None:
+    def __init__(
+        self,
+        concentrations: pd.Series,
+        inventory: pd.Series,
+        jacobian: Jacobian | pd.DataFrame,
+        prior_error: SymmetricMatrix,
+        modeldata_mismatch: SymmetricMatrix,
+        background: pd.Series | float | None = None,
+        estimator: type[Estimator] | str = "bayesian",
+        **kwargs,
+    ) -> None:
         """
         Initialize a flux inversion problem.
 
@@ -158,12 +153,12 @@ class FluxInversion(InverseProblem):
 
 
 class _Plotter:
-    """ Plotting interface for FluxInversion results."""
+    """Plotting interface for FluxInversion results."""
 
-    def __init__(self, inversion: 'FluxInversion'):
+    def __init__(self, inversion: "FluxInversion"):
         self.inversion = inversion
 
-    def fluxes(self, time='mean', truth=None, **kwargs):
+    def fluxes(self, time="mean", truth=None, **kwargs):
         """
         Plot prior & Posterior fluxes.
 
@@ -193,12 +188,12 @@ class _Plotter:
         posterior = self.inversion.xr.posterior_fluxes
 
         # Filter/aggregate by time
-        if time == 'mean':
-            prior = prior.mean(dim='time')
-            posterior = posterior.mean(dim='time')
-        elif time == 'std':
-            prior = prior.std(dim='time')
-            posterior = posterior.std(dim='time')
+        if time == "mean":
+            prior = prior.mean(dim="time")
+            posterior = posterior.mean(dim="time")
+        elif time == "std":
+            prior = prior.std(dim="time")
+            posterior = posterior.std(dim="time")
         elif isinstance(time, int):
             prior = prior.isel(time=time)
             posterior = posterior.isel(time=time)
@@ -207,30 +202,29 @@ class _Plotter:
             posterior = posterior.sel(time=time)
 
         # Get tiler and projection from kwargs
-        tiler = kwargs.pop('tiler', None)
-        subplot_kw = kwargs.pop('subplot_kw', {})
+        tiler = kwargs.pop("tiler", None)
+        subplot_kw = kwargs.pop("subplot_kw", {})
         if tiler is not None:
-            subplot_kw['projection'] = tiler.crs
+            subplot_kw["projection"] = tiler.crs
 
         ncols = 3
-        if time == 'std':
+        if time == "std":
             ncols -= 1
         if truth is not None:
             ncols += 1
             if isinstance(truth, pd.Series):
                 truth = truth.to_xarray()
-            if time == 'mean':
-                truth = truth.mean(dim='time')
-            elif time == 'std':
-                truth = truth.std(dim='time')
+            if time == "mean":
+                truth = truth.mean(dim="time")
+            elif time == "std":
+                truth = truth.std(dim="time")
             elif isinstance(time, int):
                 truth = truth.isel(time=time)
             else:
                 truth = truth.sel(time=time)
 
         # Create figure and axes
-        fig, axes = plt.subplots(ncols=ncols, sharey=True,
-                                 subplot_kw=subplot_kw)
+        fig, axes = plt.subplots(ncols=ncols, sharey=True, subplot_kw=subplot_kw)
 
         if truth is None:
             ax_prior = axes[0]
@@ -239,22 +233,28 @@ class _Plotter:
             ax_truth = axes[0]
             ax_prior = axes[1]
             ax_post = axes[2]
-        if time != 'std':
+        if time != "std":
             ax_res = axes[-1]
 
         # Add background tiles
         if tiler is not None:
-            tiler_zoom = kwargs.pop('tiler_zoom', 10)
-            extent = [posterior.lon.min(), posterior.lon.max(),
-                    posterior.lat.min(), posterior.lat.max()]
+            tiler_zoom = kwargs.pop("tiler_zoom", 10)
+            extent = [
+                posterior.lon.min(),
+                posterior.lon.max(),
+                posterior.lat.min(),
+                posterior.lat.max(),
+            ]
             for ax in axes:
                 ax.set_extent(extent, crs=ccrs.PlateCarree())
                 ax.add_image(tiler, tiler_zoom)
-            if 'lat' in posterior.dims:
-                kwargs['transform'] = ccrs.PlateCarree()
+            if "lat" in posterior.dims:
+                kwargs["transform"] = ccrs.PlateCarree()
             else:
                 # TODO handle projected data (i could use my crs class)
-                raise ValueError('Cannot determine coordinate reference system for plotting.')
+                raise ValueError(
+                    "Cannot determine coordinate reference system for plotting."
+                )
 
         # Colorbar and plot options
         vmin = min(prior.min(), posterior.min())
@@ -262,8 +262,8 @@ class _Plotter:
         if truth is not None:
             vmin = min(vmin, truth.min())
             vmax = max(vmax, truth.max())
-        alpha = kwargs.pop('alpha', 0.55)
-        cmap = kwargs.pop('cmap', 'RdBu_r' if vmin < 0 else 'Reds')
+        alpha = kwargs.pop("alpha", 0.55)
+        cmap = kwargs.pop("cmap", "RdBu_r" if vmin < 0 else "Reds")
         if vmin < 0:
             center = 0
             vmin = None  # cant set both vmin/vmax and center
@@ -274,58 +274,103 @@ class _Plotter:
         fig.subplots_adjust(bottom=0.15)
         ax1 = axes[0]
         cbar_ax1_width = ax_post.get_position().x1 - ax1.get_position().x0
-        cbar_ax1 = fig.add_axes([ax1.get_position().x0, ax1.get_position().y0 - 0.1, cbar_ax1_width, 0.05])
-        
-        if truth is not None:
-            truth.plot(ax=ax_truth, x='lon', y='lat', vmin=vmin, vmax=vmax, cmap=cmap, alpha=alpha,
-                       add_colorbar=False, center=center, **kwargs)
-            ax_truth.set(title='Truth',
-                         xlabel=None,
-                         ylabel=None)
+        cbar_ax1 = fig.add_axes(
+            [ax1.get_position().x0, ax1.get_position().y0 - 0.1, cbar_ax1_width, 0.05]
+        )
 
-        prior.plot(ax=ax_prior, x='lon', y='lat', vmin=vmin, vmax=vmax, cmap=cmap, alpha=alpha,
-                       cbar_ax=cbar_ax1, cbar_kwargs={'orientation': 'horizontal', 'label': 'Flux'},
-                       center=center, **kwargs)
-        posterior.plot(ax=ax_post, x='lon', y='lat', vmin=vmin, vmax=vmax, cmap=cmap, alpha=alpha,
-                       add_colorbar=False, center=center, **kwargs)
+        if truth is not None:
+            truth.plot(
+                ax=ax_truth,
+                x="lon",
+                y="lat",
+                vmin=vmin,
+                vmax=vmax,
+                cmap=cmap,
+                alpha=alpha,
+                add_colorbar=False,
+                center=center,
+                **kwargs,
+            )
+            ax_truth.set(title="Truth", xlabel=None, ylabel=None)
+
+        prior.plot(
+            ax=ax_prior,
+            x="lon",
+            y="lat",
+            vmin=vmin,
+            vmax=vmax,
+            cmap=cmap,
+            alpha=alpha,
+            cbar_ax=cbar_ax1,
+            cbar_kwargs={"orientation": "horizontal", "label": "Flux"},
+            center=center,
+            **kwargs,
+        )
+        posterior.plot(
+            ax=ax_post,
+            x="lon",
+            y="lat",
+            vmin=vmin,
+            vmax=vmax,
+            cmap=cmap,
+            alpha=alpha,
+            add_colorbar=False,
+            center=center,
+            **kwargs,
+        )
 
         # Add title and time text
         fig.suptitle("Flux Maps", fontsize=16, y=ax_prior.get_position().y1 + 0.13)
-        fig.text(0.5, ax_prior.get_position().y1 + 0.05, f"time = {time}", ha='center', va='bottom', fontsize=10)
+        fig.text(
+            0.5,
+            ax_prior.get_position().y1 + 0.05,
+            f"time = {time}",
+            ha="center",
+            va="bottom",
+            fontsize=10,
+        )
 
         # Set labels for each subplot
-        ax_prior.set(title='Prior',
-                     xlabel=None,
-                     ylabel=None)
-        ax_post.set(title='Posterior',
-                    xlabel=None,
-                    ylabel=None)
+        ax_prior.set(title="Prior", xlabel=None, ylabel=None)
+        ax_post.set(title="Posterior", xlabel=None, ylabel=None)
 
         # Plot residual
-        if time != 'std':
+        if time != "std":
             if truth is not None:
                 base = truth
-                label = 'Posterior - Truth'
+                label = "Posterior - Truth"
             else:
                 base = prior
-                label = 'Posterior - Prior'
-            residual_cmap = kwargs.pop('residual_cmap', 'PiYG')
-            cbar_ax2 = fig.add_axes([ax_res.get_position().x0, ax_res.get_position().y0 - 0.1, ax_res.get_position().width, 0.05])
-            (posterior - base).plot(ax=ax_res, x='lon', y='lat', cmap=residual_cmap, alpha=alpha, center=0,
-                                         cbar_ax=cbar_ax2, cbar_kwargs={'orientation': 'horizontal',
-                                                                        'label': label},
-                                         **kwargs)
+                label = "Posterior - Prior"
+            residual_cmap = kwargs.pop("residual_cmap", "PiYG")
+            cbar_ax2 = fig.add_axes(
+                [
+                    ax_res.get_position().x0,
+                    ax_res.get_position().y0 - 0.1,
+                    ax_res.get_position().width,
+                    0.05,
+                ]
+            )
+            (posterior - base).plot(
+                ax=ax_res,
+                x="lon",
+                y="lat",
+                cmap=residual_cmap,
+                alpha=alpha,
+                center=0,
+                cbar_ax=cbar_ax2,
+                cbar_kwargs={"orientation": "horizontal", "label": label},
+                **kwargs,
+            )
 
-            ax_res.set(title='Residual',
-                       xlabel=None,
-                       ylabel=None)
+            ax_res.set(title="Residual", xlabel=None, ylabel=None)
 
         return fig, axes
 
     def concentrations(self, location=None, **kwargs):
         """
         Plot observed, prior, & posterior concentrations.
-        
+
         Parameters
         ----------
         location : str | list[str] | None, optional
@@ -346,13 +391,13 @@ class _Plotter:
         data = pd.concat([obs, posterior, prior], axis=1)
 
         if location is None:
-            locations = data.index.get_level_values('obs_location').unique()
+            locations = data.index.get_level_values("obs_location").unique()
         elif isinstance(location, str):
             locations = [location]
         elif isinstance(location, list):
             locations = location
         else:
-            raise ValueError('location must be None, a string, or a list of strings')
+            raise ValueError("location must be None, a string, or a list of strings")
 
         axes = []
         for location in locations:
@@ -361,11 +406,25 @@ class _Plotter:
 
             fig, ax = plt.subplots()
 
-            df.plot(ax=ax, style='.', alpha=0.6, color=['black', 'red', 'blue'], markeredgecolor='None', legend=False)
-            df.rolling(window=max(1, int(len(df)/10)), center=True).mean().plot(ax=ax, linewidth=2,
-                                                                                  color=['black', 'red', 'blue'],
-                                                                                  label=['Observed', 'Posterior', 'Prior'],)
-            ax.set(title=f'Concentrations at {location}', ylabel='Concentration', xlabel='Time')
+            df.plot(
+                ax=ax,
+                style=".",
+                alpha=0.6,
+                color=["black", "red", "blue"],
+                markeredgecolor="None",
+                legend=False,
+            )
+            df.rolling(window=max(1, int(len(df) / 10)), center=True).mean().plot(
+                ax=ax,
+                linewidth=2,
+                color=["black", "red", "blue"],
+                label=["Observed", "Posterior", "Prior"],
+            )
+            ax.set(
+                title=f"Concentrations at {location}",
+                ylabel="Concentration",
+                xlabel="Time",
+            )
             fig.autofmt_xdate()
             axes.append(ax)
             plt.show()
