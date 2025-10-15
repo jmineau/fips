@@ -8,12 +8,10 @@ __author__ = "James Mineau"
 __email__ = "jameskmineau@gmail.com"
 
 
-from .core import (
-    ESTIMATOR_REGISTRY,
-    Estimator,
-    InverseProblem,
-    SymmetricMatrix,
-)
+from .estimators import Estimator
+from .matrices import CovarianceMatrix
+from .operator import ForwardOperator, convolve
+from .problem import InverseProblem
 
 # import .estimators  # import to register estimators
 # import problems
@@ -21,7 +19,8 @@ from .core import (
 
 __all__ = [
     "Estimator",
-    "ESTIMATOR_REGISTRY",
-    "SymmetricMatrix",
+    "ForwardOperator",
+    "CovarianceMatrix",
     "InverseProblem",
+    "convolve",
 ]

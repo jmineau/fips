@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 from typing_extensions import Self
 
-from fips.core import CovarianceMatrix
+from fips.matrices import CovarianceMatrix
 from fips.problems.flux.utils import haversine_matrix, time_decay_matrix
 
 

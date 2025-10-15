@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 import stilt
 
-from fips.core import ForwardOperator as Jacobian
+from fips.operator import ForwardOperator as Jacobian
 from fips.problems.flux.utils import integrate_over_time_bins
 from fips.utils import parallelize
 

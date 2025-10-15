@@ -30,8 +30,10 @@ import cartopy.crs as ccrs
 import matplotlib.pyplot as plt
 import pandas as pd
 
-from fips.core import Estimator, InverseProblem, SymmetricMatrix
-from fips.core import ForwardOperator as Jacobian
+from fips.estimators import Estimator
+from fips.matrices import CovarianceMatrix
+from fips.operator import ForwardOperator as Jacobian
+from fips.problem import InverseProblem
 
 # TODO:
 # eventually want to support multiple flux source (farfield/bio/etc)
@@ -80,8 +82,8 @@ class FluxInversion(InverseProblem):
         concentrations: pd.Series,
         inventory: pd.Series,
         jacobian: Jacobian | pd.DataFrame,
-        prior_error: SymmetricMatrix,
-        modeldata_mismatch: SymmetricMatrix,
+        prior_error: CovarianceMatrix,
+        modeldata_mismatch: CovarianceMatrix,
         background: pd.Series | float | None = None,
         estimator: type[Estimator] | str = "bayesian",
         **kwargs,
