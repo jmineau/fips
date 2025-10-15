@@ -9,8 +9,11 @@ This module provides core classes and utilities for formulating and solving inve
     - The `InverseProblem` class, which orchestrates the alignment of data, prior information, error covariances, and the solution process.
 """
 
+import warnings
 from abc import ABC, abstractmethod
+from collections.abc import Sequence
 from functools import cached_property, partial
+from typing import Any
 
 import numpy as np
 import pandas as pd
@@ -709,7 +712,6 @@ class SymmetricMatrix:
             )
 
         self._data = data
-        self.loc = self.__class__._Indexer(self)
 
     @classmethod
     def from_numpy(cls, array: np.ndarray, index: pd.Index) -> Self:
@@ -802,7 +804,7 @@ class SymmetricMatrix:
         np.ndarray
             Underlying data array.
         """
-        return self.data.values
+        return self.data.to_numpy()
 
     @property
     def shape(self) -> tuple:
@@ -816,7 +818,7 @@ class SymmetricMatrix:
         """
         return self.data.shape
 
-    def reindex(self, index: pd.Index, **kwargs) -> "SymmetricMatrix":
+    def reindex(self, index: pd.Index, **kwargs) -> Self:
         """
         Reindex the symmetric matrix, filling new entries with 0.
 
@@ -835,9 +837,9 @@ class SymmetricMatrix:
         reindexed_data = self.data.reindex(index=index, columns=index, **kwargs).fillna(
             0.0
         )
-        return self.__class__(data=reindexed_data)
+        return type(self)(data=reindexed_data)
 
-    def reorder_levels(self, order) -> "SymmetricMatrix":
+    def reorder_levels(self, order) -> Self:
         """
         Reorder the levels of a MultiIndex symmetric matrix.
 
@@ -861,64 +863,127 @@ class SymmetricMatrix:
         data = self.data.copy()
         data = data.reorder_levels(order, axis="index")
         data = data.reorder_levels(order, axis="columns")
-        return self.__class__(data=data)
+        return type(self)(data=data)
 
-    class _Indexer:
+    def sort_index(self, **kwargs) -> Self:
         """
-        A custom accessor object for the SymmetricMatrix class, similar to
-        pandas' .loc. It enables label-based selection and assignment while
-        enforcing the symmetrical nature of a symmetric matrix.
+        Sort the index of the symmetric matrix.
+
+        Parameters
+        ----------
+        **kwargs : additional keyword arguments
+            Passed to pandas' sort_index method.
+
+        Returns
+        -------
+        SymmetricMatrix
+            SymmetricMatrix instance with sorted index.
         """
+        data = self.data.copy()
+        data = data.sort_index(axis="index", **kwargs)
+        data = data.sort_index(axis="columns", **kwargs)
+        return type(self)(data=data)
 
-        def __init__(self, matrix_obj: "SymmetricMatrix"):
-            self._obj = matrix_obj
+    def operate(
+        self,
+        value: float | int,
+        operation="replace",
+        diagonal: bool | None = None,
+        cross: dict | None = None,
+        **kwargs,
+    ) -> Self:
+        """
+        Operate on specific entries in the symmetric matrix.
 
-        def __getitem__(self, key):
-            """
-            Get data from the symmetric matrix.
+        Parameters
+        ----------
+        value : float or int
+            Value to assign or use in the operation.
+        operation : {'replace', 'add', 'subtract', 'multiply', 'divide'}, optional
+            Operation to perform with the value. Default is 'replace'.
+        diagonal : bool, optional
+            If True, only operate on diagonal entries. If False, only operate on off-diagonal entries.
+            If None, operate on all selected entries. Default is None.
+        cross : dict, optional
+            Dictionary specifying cross indices for symmetric assignment.
+            Keys are index level names, and values are the corresponding index values.
+            If None, no cross assignment is performed. Default is None.
+        **kwargs : additional keyword arguments
+            Key-value pairs specifying index level names and their corresponding
+            index values to select rows and columns for assignment. Use slice(None)
+            to select all entries along a level.
 
-            Parameters
-            ----------
-            key : scalar or array-like
-                Row and column labels.
+        Returns
+        -------
+        SymmetricMatrix
+            New SymmetricMatrix instance with the operation applied.
+        """
+        mat = self.data.copy()
+        names = self.index.names
 
-            Returns
-            -------
-            pd.DataFrame
-                Selected data.
-            """
-            return self._obj.data.loc[key, key]
+        cross = cross or {}
 
-        def __setitem__(self, key, value):
-            """
-            Set data in the symmetric matrix, enforcing symmetry.
+        # Build selection tuple-of-slices for the given level
+        sel = tuple(kwargs.get(name, slice(None)) for name in names)
 
-            Parameters
-            ----------
-            key : scalar or array-like
-                Row and column labels.
-            value : scalar or array-like
-                Value to set.
+        # If cross assignment is specified, build cross selection
+        if cross:
+            cross_sel = tuple(cross.get(name, slice(None)) for name in names)
+        else:
+            cross_sel = sel
 
-            Notes
-            -----
-            This method automatically enforces symmetry and supports advanced indexing
-            like slices and lists (e.g., cov.loc[:, 'a'] = some_values).
-            """
-            rows = cols = key
+        # Update value based on operation
+        if operation == "replace":
+            pass  # value is already the value to assign
+        elif operation == "add":
+            value = mat.loc[sel, cross_sel] + value
+        elif operation == "subtract":
+            value = mat.loc[sel, cross_sel] - value
+        elif operation == "multiply":
+            value = mat.loc[sel, cross_sel] * value
+        elif operation == "divide":
+            value = mat.loc[sel, cross_sel] / value
+        else:
+            raise ValueError(f"Unsupported operation: {operation}")
 
-            # Set the primary value
-            self._obj.data.loc[rows, cols] = value
+        # Assign the value to the selected entries
+        mat.loc[sel, cross_sel] = value
 
-            # Determine the value for the symmetric assignment
-            symmetric_value = value
-            if hasattr(value, "T"):
-                # For DataFrames, Series, and numpy arrays, we need the transpose
-                # for the symmetric assignment. Scalars do not have .T.
-                symmetric_value = value.T
+        # If cross assignment is specified, assign the transposed value
+        if cross:
+            # if scalar-> same value; otherwise transpose the array assigned
+            if np.isscalar(value):
+                mat.loc[cross_sel, sel] = value
+            else:
+                mat.loc[cross_sel, sel] = np.asarray(value).T
 
-            # Set the symmetric value
-            self._obj.data.loc[cols, rows] = symmetric_value
+        return type(self)(mat)
+
+    def __add__(self, other: Any) -> Self:
+        """
+        Add two SymmetricMatrix instances.
+
+        Parameters
+        ----------
+        other : SymmetricMatrix
+            Another SymmetricMatrix instance.
+
+        Returns
+        -------
+        SymmetricMatrix
+            Sum of the two SymmetricMatrix instances.
+        """
+        Klass = type(self)
+        if isinstance(other, Klass):
+            if not self.index.equals(other.index):
+                raise ValueError("Indices must match for addition.")
+            return Klass.from_numpy(
+                self.data.values + other.data.values, index=self.index
+            )
+        elif np.isscalar(other):
+            return Klass.from_numpy(self.data.values + other, index=self.index)
+        else:
+            raise TypeError(f"Cannot add {type(self)} and {type(other)}")
 
 
 class CovarianceMatrix(SymmetricMatrix):
@@ -932,7 +997,7 @@ class CovarianceMatrix(SymmetricMatrix):
     """
 
     @property
-    def variance(self) -> pd.Series:
+    def variances(self) -> pd.Series:
         """
         Returns the diagonal of the covariance matrix (the variances).
 
@@ -942,6 +1007,77 @@ class CovarianceMatrix(SymmetricMatrix):
             Series containing the variances.
         """
         return pd.Series(np.diag(self.data), index=self.index, name="variance")
+
+    @classmethod
+    def from_variances(
+        cls,
+        variances: pd.Series | np.ndarray | float,
+        index: pd.Index | None = None,
+        **kwargs,
+    ) -> Self:
+        # Normalize variances to a pandas Series
+        variances = cls._variances_as_series(variances, index=index)
+
+        # Create diagonal covariance matrix from variances
+        index = variances.index
+        values = np.diag(variances.to_numpy())
+
+        return cls.from_numpy(array=values, index=index)
+
+    @staticmethod
+    def _variances_as_series(
+        variances: pd.Series | xr.DataArray | np.ndarray | float,
+        index: pd.Index | None = None,
+    ) -> pd.Series:
+        """
+        Convert variances to a pandas Series with the given index.
+
+        Parameters
+        ----------
+        variances : scalar | sequence | xr.DataArray | pd.Series
+            Variances.
+        index : pd.Index
+            Index for the variances if variances is a scalar or sequence.
+        Returns
+        -------
+        pd.Series
+            Prior error variances as a pandas Series.
+        """
+
+        # If already a pandas Series, use it (warn if index argument is provided)
+        if isinstance(variances, pd.Series):
+            if index is not None:
+                warnings.warn(
+                    message="Provided 'index' is ignored when 'variances' is a pandas Series; "
+                    "the Series' own index will be used.",
+                    category=UserWarning,
+                )
+            return variances
+
+        # Xarray -> pandas Series
+        if isinstance(variances, xr.DataArray):
+            return variances.to_series()
+
+        # Scalar (any numeric scalar, numpy or python)
+        if np.isscalar(variances):
+            if index is None:
+                raise ValueError("index must be provided if variances is a scalar")
+            arr = np.full(len(index), variances)
+            return pd.Series(arr, index=index)
+
+        # Sequence-like (lists, tuples, numpy arrays, etc.), but exclude strings/bytes
+        if isinstance(variances, (np.ndarray, Sequence)) and not isinstance(
+            variances, (str, bytes)
+        ):
+            if index is None:
+                raise ValueError("index must be provided if variances is a sequence")
+            if len(variances) != len(index):
+                raise ValueError("Length of variances must match length of index")
+            return pd.Series(np.asarray(variances), index=index)
+
+        raise ValueError(
+            "variances must be a scalar, sequence, xr.DataArray, or pd.Series"
+        )
 
 
 class InverseProblem:

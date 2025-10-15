@@ -2,6 +2,64 @@ import numpy as np
 import pandas as pd
 
 
+def haversine_matrix(lats, lons, earth_radius=6371.0, deg=True):
+    """
+    Calculates the pairwise Haversine distance matrix between a set of coordinates.
+
+    Parameters
+    ----------
+    lats : array-like
+        1D array-like of latitude coordinates in degrees (if deg=True) else in radians.
+    lons : array-like
+        1D array-like of longitude coordinates in degrees (if deg=True) else in radians.
+    earth_radius : float, optional
+        Radius of the Earth in kilometers, by default 6371.0 km.
+    deg : bool, optional
+        If True, input coordinates are in degrees and will be converted to radians.
+        If False, input coordinates are assumed to be in radians, by default True.
+
+    Returns
+    -------
+    np.ndarray
+        A 2D NumPy array (matrix) where the element at (i, j) is the
+        Haversine distance between the i-th and j-th coordinate.
+        The diagonal of the matrix will be zero.
+    """
+    # Convert to numpy
+    lats = np.asarray(lats)
+    lons = np.asarray(lons)
+
+    if not (lats.ndim == 1 and lons.ndim == 1):
+        raise ValueError("lats and lons must be 1D sequences")
+
+    if deg:
+        # Convert degrees to radians
+        lats = np.radians(lats)
+        lons = np.radians(lons)
+
+    # Reshape for broadcasting to column vectors
+    lats = lats[:, np.newaxis]
+    lons = lons[:, np.newaxis]
+
+    # Calculate pairwise differences in latitude and longitude
+    # Broadcasting (n, 1) with (1, n) results in an (n, n) matrix
+    dlat = lats - lats.T
+    dlon = lons - lons.T
+
+    # Apply the Haversine formula
+    a = np.sin(dlat / 2) ** 2 + np.cos(lats) * np.cos(lats.T) * np.sin(dlon / 2) ** 2
+    c = 2 * np.arctan2(np.sqrt(a), np.sqrt(1 - a))
+
+    distance_matrix = earth_radius * c
+
+    # The diagonal is already ~0 due to the calculation, but this ensures it's exactly 0.
+    np.fill_diagonal(
+        distance_matrix, 0
+    )  # This line is often not needed but ensures precision.
+
+    return distance_matrix
+
+
 def integrate_over_time_bins(
     data: pd.DataFrame | pd.Series, time_bins: pd.IntervalIndex, time_dim: str = "time"
 ) -> pd.DataFrame | pd.Series:
@@ -105,5 +163,5 @@ def time_decay_matrix(times, decay: str | pd.Timedelta) -> np.ndarray:
     decay = pd.Timedelta(decay)
 
     # Calculate the decay matrix using an exponential decay
-    decay_matrix = np.exp(-diffs / decay).values  # values gets the numpy array
+    decay_matrix = np.exp(-diffs / decay).to_numpy()
     return decay_matrix
