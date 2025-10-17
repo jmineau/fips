@@ -155,7 +155,6 @@ class PriorError(SpaceTimeCovariance):
         times: pd.Index | pd.DatetimeIndex,
         method: str | dict | None = None,
         length_scale: pd.Timedelta | str | None = None,
-        **kwargs,
     ) -> np.ndarray:
         """
         Build the temporal error correlation matrix for the inversion.
@@ -310,7 +309,7 @@ class ModelDataMismatch(SpaceTimeCovariance):
     def apply_temporal_decay(
         self,
         length_scale: pd.Timedelta | str,
-        span_days: bool = True,
+        interday: bool = True,
         time_dim: str = "obs_time",
     ) -> Self:
         """
@@ -320,8 +319,9 @@ class ModelDataMismatch(SpaceTimeCovariance):
         -----------
         length_scale : pd.Timedelta or str
             Length scale for the temporal decay (e.g., '32h' for 32 hours)
-        span_days : bool
-            Whether to span across days
+        interday : bool
+            Whether to apply decay across days. If False, decay is only applied
+            within the same day.
         time_dim : str
             Name of the time dimension
 
@@ -340,7 +340,7 @@ class ModelDataMismatch(SpaceTimeCovariance):
 
         # If not spanning days, add the date as a grouping dimension
         coords = self.index.to_frame(index=False)
-        if not span_days:
+        if not interday:
             times = pd.to_datetime(coords[time_dim])
             coords["date_group"] = times.dt.date
 
