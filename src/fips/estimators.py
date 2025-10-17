@@ -334,47 +334,30 @@ class Estimator(ABC):
         return np.trace(self.A)
 
     @cached_property
-    def chi2(self) -> float:
+    def reduced_chi2(self) -> float:
         """
-        Reduced Chi-squared statistic.
+        Reduced Chi-squared statistic. Tarantola (1987)
 
         .. math::
             \\chi^2 = \\frac{1}{n_z} ((z - H\\hat{x})^T S_z^{-1} (z - H\\hat{x}) + (\\hat{x} - x_0)^T S_0^{-1} (\\hat{x} - x_0))
+
+        .. note::
+            I can't find a copy of Tarantola (1987) to verify this equation, but it appears in
+            Kunik et al. (2019) https://doi.org/10.1525/elementa.375
 
         Returns
         -------
         float
             Reduced Chi-squared value.
         """
-        # TBH im not 100% sure this is right
-        return (self.chi2_obs + self.chi2_state) / self.n_z
+        print("Calculating Reduced Chi-squared statistic...")
+        data_residual = self.residual(self.x_hat)
+        model_residual = self.x_hat - self.x_0
 
-    @cached_property
-    def chi2_obs(self) -> float:
-        """
-        Chi-squared statistic for observation params
+        scaled_data_misfit = data_residual.T @ self._S_z_inv @ data_residual
+        scaled_model_misfit = model_residual.T @ self._S_0_inv @ model_residual
 
-        .. math::
-            \\chi^2 = (z - H\\hat{x})^T S_z^{-1} (z - H\\hat{x})
-
-        Returns
-        -------
-        float
-            Chi-squared value.
-        """
-        r = self.residual(self.x_hat)
-        return (r.T @ self._S_z_inv @ r) / self.n_z
-
-    @cached_property
-    def chi2_state(self) -> float:
-        """
-        Chi-squared statistic for state params
-
-        .. math::
-            \\chi^2 = (\\hat{x} - x_0)^T S_0^{-1} (\\hat{x} - x_0)
-        """
-        r = self.x_hat - self.x_0
-        return (r.T @ self._S_0_inv @ r) / self.n_x
+        return (scaled_data_misfit + scaled_model_misfit) / self.n_z
 
     @cached_property
     def R2(self) -> float:
