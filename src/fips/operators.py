@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 import xarray as xr
 
-from fips.utils import dataframe_matrix_to_xarray, round_index
+from fips.utils import dataframe_to_xarray, round_index
 
 
 def convolve(
@@ -99,9 +99,7 @@ class ForwardOperator:
         data : pd.DataFrame
             Forward operator matrix.
         """
-        if not isinstance(data, pd.DataFrame):
-            raise TypeError("Input data must be a pandas DataFrame.")
-        self._data = data
+        self.data = data
 
     @property
     def data(self) -> pd.DataFrame:
@@ -115,6 +113,20 @@ class ForwardOperator:
         """
         return self._data
 
+    @data.setter
+    def data(self, value: pd.DataFrame) -> None:
+        """
+        Set the underlying data of the forward operator.
+
+        Parameters
+        ----------
+        value : pd.DataFrame
+            New forward operator matrix.
+        """
+        if not isinstance(value, pd.DataFrame):
+            raise TypeError("Input data must be a pandas DataFrame.")
+        self._data = value
+
     @property
     def obs_index(self) -> pd.Index:
         """
@@ -125,7 +137,7 @@ class ForwardOperator:
         pd.Index
             Observation index.
         """
-        return self._data.index
+        return self.data.index
 
     @property
     def state_index(self) -> pd.Index:
@@ -137,7 +149,7 @@ class ForwardOperator:
         pd.Index
             State index.
         """
-        return self._data.columns
+        return self.data.columns
 
     @property
     def obs_dims(self) -> tuple:
@@ -181,7 +193,7 @@ class ForwardOperator:
             Result of convolution.
         """
         return convolve(
-            forward_operator=self._data, state=state, coord_decimals=coord_decimals
+            forward_operator=self.data, state=state, coord_decimals=coord_decimals
         )
 
     def to_xarray(self) -> xr.DataArray:
@@ -193,5 +205,4 @@ class ForwardOperator:
         xr.DataArray
             Xarray representation of the forward operator.
         """
-        """Convert the forward operator to an xarray DataArray."""
-        return dataframe_matrix_to_xarray(self._data)
+        return dataframe_to_xarray(self.data, name=self.__class__.__name__.lower())

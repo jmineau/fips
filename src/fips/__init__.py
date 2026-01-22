@@ -10,11 +10,10 @@ __email__ = "jameskmineau@gmail.com"
 
 from .estimators import Estimator
 from .matrices import CovarianceMatrix
-from .operator import ForwardOperator, convolve
+from .operators import ForwardOperator, convolve
 from .problem import InverseProblem
 
-# import .estimators  # import to register estimators
-# import problems
+# import problems  #TODO should this be here?
 
 
 __all__ = [

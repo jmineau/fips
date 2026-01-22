@@ -1,13 +1,13 @@
 import datetime as dt
 from collections import defaultdict
 from pathlib import Path
-from typing import Literal
+from typing import Literal, overload
 
 import numpy as np
 import pandas as pd
 import stilt
 
-from fips.operator import ForwardOperator as Jacobian
+from fips.operators import ForwardOperator as Jacobian
 from fips.problems.flux.utils import integrate_over_time_bins
 from fips.utils import parallelize
 
@@ -43,6 +43,28 @@ class StiltJacobianBuilder:
 
         self.failed_sims = []
 
+    @overload
+    def build_from_coords(
+        self,
+        coords: list[tuple[float, float]],
+        flux_times: pd.IntervalIndex,
+        resolution: str | None = None,
+        subset_hours: int | list[int] | None = None,
+        num_processes: int | Literal["max"] = 1,
+        location_mapper: dict[str, str] | None = None,
+    ) -> Jacobian: ...
+
+    @overload
+    def build_from_coords(
+        self,
+        coords: dict[str, list[tuple[float, float]]],
+        flux_times: pd.IntervalIndex,
+        resolution: str | None = None,
+        subset_hours: int | list[int] | None = None,
+        num_processes: int | Literal["max"] = 1,
+        location_mapper: dict[str, str] | None = None,
+    ) -> dict[str, Jacobian]: ...
+
     def build_from_coords(
         self,
         coords: list[tuple[float, float]] | dict[str, list[tuple[float, float]]],
@@ -51,6 +73,7 @@ class StiltJacobianBuilder:
         subset_hours: int | list[int] | None = None,
         num_processes: int | Literal["max"] = 1,
         location_mapper: dict[str, str] | None = None,
+        timeout: float | int | None = None,
     ) -> Jacobian | dict[str, Jacobian]:
         """
         Build the Jacobian matrix H from specified coordinates (x, y) and flux time bins.
@@ -72,6 +95,10 @@ class StiltJacobianBuilder:
             Number of processes to use for parallel computation, by default 1
         location_mapper : dict[str, str] | None, optional
             Optional mapping of observation location IDs to new IDs.
+        timeout : float, optional
+            The maximum time (in seconds) allowed for each simulation to be processed.
+            If a task exceeds this time, a TimeoutError is raised.
+            Default is None (no timeout).
 
         Returns
         -------
@@ -88,7 +115,9 @@ class StiltJacobianBuilder:
         # Build the Jacobian matrix in parallel
         H_rows = defaultdict(list)
         parallelized_builder = parallelize(
-            self._build_jacobian_row_from_coords, num_processes=num_processes
+            self._build_jacobian_row_from_coords,
+            num_processes=num_processes,
+            timeout=timeout,
         )
         results = parallelized_builder(
             self.simulations,
@@ -97,6 +126,7 @@ class StiltJacobianBuilder:
             resolution=resolution,
             subset_hours=subset_hours,
         )
+        print("Sorting Jacobian rows...")
         for row in results:
             if row is not None:
                 if isinstance(row, dict):
@@ -142,6 +172,7 @@ class StiltJacobianBuilder:
         """
         Build a row of the Jacobian matrix for a single STILT simulation
         """
+        t0 = dt.datetime.now()
         t_start, t_stop = flux_times[0].left, flux_times[-1].right
 
         # Get simulation object
@@ -155,13 +186,19 @@ class StiltJacobianBuilder:
             return sim  # could be None or sim.id if failed
 
         # Get footprint for the simulation
-        footprint = StiltJacobianBuilder._get_footprint(
-            sim=sim, t_start=t_start, t_stop=t_stop, resolution=resolution
-        )
+        try:
+            footprint = StiltJacobianBuilder._get_footprint(
+                sim=sim, t_start=t_start, t_stop=t_stop, resolution=resolution
+            )
+        except Exception as e:
+            foot_file = sim.paths["footprints"][str(resolution)]
+            print(f"Error loading footprint file {foot_file}: {e}")
+            raise e
+
         if footprint is None:
             return None
 
-        print(f"Computing Jacobian row for {sim.id}...")
+        # print(f"Computing Jacobian row for {sim.id}...")
 
         # Convert xarray to pandas for sparse representation
         foot = footprint.data.to_series()
@@ -216,6 +253,9 @@ class StiltJacobianBuilder:
             transposed_foot.index = obs_index
 
             rows[key] = transposed_foot
+        print(
+            f"Finished computing Jacobian row for {sim.id} in {dt.datetime.now() - t0}"
+        )
         return rows
 
     @staticmethod

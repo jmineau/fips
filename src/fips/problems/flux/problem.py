@@ -26,14 +26,15 @@ which extends the base InverseProblem to handle flux-specific terminology and pl
 interfaces for visualizing results.
 """
 
-import cartopy.crs as ccrs
-import matplotlib.pyplot as plt
 import pandas as pd
 
 from fips.estimators import Estimator
 from fips.matrices import CovarianceMatrix
-from fips.operator import ForwardOperator as Jacobian
+from fips.mixins import AttributeMapperMixin
+from fips.operators import ForwardOperator as Jacobian
 from fips.problem import InverseProblem
+from fips.problems.flux.plotter import Plotter
+from fips.utils import filter_intervals
 
 # TODO:
 # eventually want to support multiple flux source (farfield/bio/etc)
@@ -42,7 +43,7 @@ from fips.problem import InverseProblem
 # ability to extend state elements
 
 
-class FluxInversion(InverseProblem):
+class FluxInversion(AttributeMapperMixin, InverseProblem):
     """
     FluxInversion: Atmospheric Flux Inversion Problem.
 
@@ -73,9 +74,37 @@ class FluxInversion(InverseProblem):
         Modelled concentrations using posterior fluxes.
     prior_concentrations : pd.Series
         Modelled concentrations using prior fluxes.
-    plot : _Plotter
+    plot : Plotter
         Diagnostic and plotting interface.
     """
+
+    _attribute_map = {
+        "concentrations": "obs",
+        "inventory": "prior",
+        "jacobian": "forward_operator",
+        "background": "constant",
+        "posterior_fluxes": "posterior",
+        "posterior_concentrations": "posterior_obs",
+        "prior_concentrations": "prior_obs",
+    }
+    _read_only_attributes = {
+        "posterior_fluxes",
+        "posterior_concentrations",
+        "prior_concentrations",
+    }
+
+    # Type annotations for attributes
+    obs_index: pd.MultiIndex
+    state_index: pd.MultiIndex
+    concentrations: pd.Series
+    inventory: pd.Series
+    jacobian: Jacobian | pd.DataFrame
+    prior_error: CovarianceMatrix
+    modeldata_mismatch: CovarianceMatrix
+    background: pd.Series
+    posterior_fluxes: pd.Series
+    posterior_concentrations: pd.Series
+    prior_concentrations: pd.Series
 
     def __init__(
         self,
@@ -85,7 +114,11 @@ class FluxInversion(InverseProblem):
         prior_error: CovarianceMatrix,
         modeldata_mismatch: CovarianceMatrix,
         background: pd.Series | float | None = None,
+        state_index: pd.Index | None = None,
         estimator: type[Estimator] | str = "bayesian",
+        freq: str | None = "infer",
+        min_obs_per_interval: int = 1,
+        min_sims_per_interval: int = 1,
         **kwargs,
     ) -> None:
         """
@@ -110,7 +143,46 @@ class FluxInversion(InverseProblem):
         kwargs : dict, optional
             Additional keyword arguments to pass to the InverseProblem constructor.
         """
+        # Drop time steps with insufficient observations/simulations
+        # TODO i think this should be moved after the super init
+        # but then we might lose our initial indices and cannot infer time bins
+        if min_obs_per_interval > 1 or min_sims_per_interval > 1:
+            # Determine state time bins
+            state_time_index = state_index or inventory.index
+            times = state_time_index.get_level_values("time").unique().sort_values()
+            if not isinstance(times, pd.IntervalIndex):  # Assume regular intervals
+                if freq == "infer":
+                    freq = pd.infer_freq(times)
+                    if freq is None:
+                        raise ValueError(
+                            "Could not infer frequency from inventory time index. Please specify freq."
+                        )
+                offset = pd.tseries.frequencies.to_offset(freq)
+                t0 = times.min()
+                tf = times.max() + offset
+                bins = pd.interval_range(start=t0, end=tf, freq=freq)
+            else:  # Already interval index
+                # If the supplied index is already an IntervalIndex, we dont need to infer freq
+                bins = times  # The supplied intervals can be regular or irregular
 
+            if min_obs_per_interval > 1:
+                concentrations = filter_intervals(
+                    concentrations,
+                    intervals=bins,
+                    threshold=min_obs_per_interval,
+                    level="obs_time",
+                )
+            if min_sims_per_interval > 1:
+                if isinstance(jacobian, Jacobian):
+                    jacobian = jacobian.data
+                jacobian = filter_intervals(
+                    jacobian,
+                    intervals=bins,
+                    threshold=min_sims_per_interval,
+                    level="obs_time",
+                )
+
+        # Initialize inverse problem, aligning indices
         super().__init__(
             estimator=estimator,
             obs=concentrations,
@@ -119,315 +191,9 @@ class FluxInversion(InverseProblem):
             prior_error=prior_error,
             modeldata_mismatch=modeldata_mismatch,
             constant=background,
+            state_index=state_index,
             **kwargs,
         )
 
         # Build plotting interface
-        self.plot = _Plotter(self)
-
-    @property
-    def concentrations(self) -> pd.Series:
-        return self.obs
-
-    @property
-    def inventory(self) -> pd.Series:
-        return self.prior
-
-    @property
-    def jacobian(self) -> pd.DataFrame:
-        return self.forward_operator
-
-    @property
-    def background(self) -> pd.Series | float | None:
-        return self.constant
-
-    @property
-    def posterior_fluxes(self) -> pd.Series:
-        return self.posterior
-
-    @property
-    def posterior_concentrations(self) -> pd.Series:
-        return self.posterior_obs
-
-    @property
-    def prior_concentrations(self) -> pd.Series:
-        return self.prior_obs
-
-
-class _Plotter:
-    """Plotting interface for FluxInversion results."""
-
-    def __init__(self, inversion: "FluxInversion"):
-        self.inversion = inversion
-
-    def fluxes(self, time="mean", truth=None, **kwargs):
-        """
-        Plot prior & Posterior fluxes.
-
-        Parameters
-        ----------
-        time : 'mean' | 'std' | int | pd.Timestamp, optional
-            Time to plot. Can be 'mean' or 'std' to plot the mean or standard deviation
-            over time, an integer to plot a specific time index, or a pd.Timestamp to plot a specific time.
-            By default 'mean'.
-        tiler : cartopy.io.img_tiles.GoogleTiles | None, optional
-            Tiler to use for background map, by default None.
-            If provided, the tiler will be used to add a background map to the plots.
-        truth : pd.Series | None, optional
-            Truth fluxes to plot for comparison, by default None.
-            Residual will be calculated as posterior - truth if provided,
-            otherwise as posterior - prior.
-        **kwargs : dict
-            Additional keyword arguments to pass to xarray plotting functions.
-
-        Returns
-        -------
-        fig, axes : matplotlib.figure.Figure, np.ndarray
-            Figure and axes objects.
-        """
-        # Get xarray representations of fluxes
-        prior = self.inversion.xr.prior
-        posterior = self.inversion.xr.posterior_fluxes
-
-        # Filter/aggregate by time
-        if time == "mean":
-            prior = prior.mean(dim="time")
-            posterior = posterior.mean(dim="time")
-        elif time == "std":
-            prior = prior.std(dim="time")
-            posterior = posterior.std(dim="time")
-        elif isinstance(time, int):
-            prior = prior.isel(time=time)
-            posterior = posterior.isel(time=time)
-        else:
-            prior = prior.sel(time=time)
-            posterior = posterior.sel(time=time)
-
-        # Get tiler and projection from kwargs
-        tiler = kwargs.pop("tiler", None)
-        subplot_kw = kwargs.pop("subplot_kw", {})
-        if tiler is not None:
-            subplot_kw["projection"] = tiler.crs
-
-        ncols = 3
-        if time == "std":
-            ncols -= 1
-        if truth is not None:
-            ncols += 1
-            if isinstance(truth, pd.Series):
-                truth = truth.to_xarray()
-            if time == "mean":
-                truth = truth.mean(dim="time")
-            elif time == "std":
-                truth = truth.std(dim="time")
-            elif isinstance(time, int):
-                truth = truth.isel(time=time)
-            else:
-                truth = truth.sel(time=time)
-
-        # Create figure and axes
-        fig, axes = plt.subplots(ncols=ncols, sharey=True, subplot_kw=subplot_kw)
-
-        if truth is None:
-            ax_prior = axes[0]
-            ax_post = axes[1]
-        else:
-            ax_truth = axes[0]
-            ax_prior = axes[1]
-            ax_post = axes[2]
-        if time != "std":
-            ax_res = axes[-1]
-
-        # Add background tiles
-        if tiler is not None:
-            tiler_zoom = kwargs.pop("tiler_zoom", 10)
-            extent = [
-                posterior.lon.min(),
-                posterior.lon.max(),
-                posterior.lat.min(),
-                posterior.lat.max(),
-            ]
-            for ax in axes:
-                ax.set_extent(extent, crs=ccrs.PlateCarree())
-                ax.add_image(tiler, tiler_zoom)
-            if "lat" in posterior.dims:
-                kwargs["transform"] = ccrs.PlateCarree()
-            else:
-                # TODO handle projected data (i could use my crs class)
-                raise ValueError(
-                    "Cannot determine coordinate reference system for plotting."
-                )
-
-        # Colorbar and plot options
-        vmin = min(prior.min(), posterior.min())
-        vmax = max(prior.max(), posterior.max())
-        if truth is not None:
-            vmin = min(vmin, truth.min())
-            vmax = max(vmax, truth.max())
-        alpha = kwargs.pop("alpha", 0.55)
-        cmap = kwargs.pop("cmap", "RdBu_r" if vmin < 0 else "Reds")
-        if vmin < 0:
-            center = 0
-            vmin = None  # cant set both vmin/vmax and center
-        else:
-            center = None
-
-        # Set colorbar axis below both plots
-        fig.subplots_adjust(bottom=0.15)
-        ax1 = axes[0]
-        cbar_ax1_width = ax_post.get_position().x1 - ax1.get_position().x0
-        cbar_ax1 = fig.add_axes(
-            [ax1.get_position().x0, ax1.get_position().y0 - 0.1, cbar_ax1_width, 0.05]
-        )
-
-        if truth is not None:
-            truth.plot(
-                ax=ax_truth,
-                x="lon",
-                y="lat",
-                vmin=vmin,
-                vmax=vmax,
-                cmap=cmap,
-                alpha=alpha,
-                add_colorbar=False,
-                center=center,
-                **kwargs,
-            )
-            ax_truth.set(title="Truth", xlabel=None, ylabel=None)
-
-        prior.plot(
-            ax=ax_prior,
-            x="lon",
-            y="lat",
-            vmin=vmin,
-            vmax=vmax,
-            cmap=cmap,
-            alpha=alpha,
-            cbar_ax=cbar_ax1,
-            cbar_kwargs={"orientation": "horizontal", "label": "Flux"},
-            center=center,
-            **kwargs,
-        )
-        posterior.plot(
-            ax=ax_post,
-            x="lon",
-            y="lat",
-            vmin=vmin,
-            vmax=vmax,
-            cmap=cmap,
-            alpha=alpha,
-            add_colorbar=False,
-            center=center,
-            **kwargs,
-        )
-
-        # Add title and time text
-        fig.suptitle("Flux Maps", fontsize=16, y=ax_prior.get_position().y1 + 0.13)
-        fig.text(
-            0.5,
-            ax_prior.get_position().y1 + 0.05,
-            f"time = {time}",
-            ha="center",
-            va="bottom",
-            fontsize=10,
-        )
-
-        # Set labels for each subplot
-        ax_prior.set(title="Prior", xlabel=None, ylabel=None)
-        ax_post.set(title="Posterior", xlabel=None, ylabel=None)
-
-        # Plot residual
-        if time != "std":
-            if truth is not None:
-                base = truth
-                label = "Posterior - Truth"
-            else:
-                base = prior
-                label = "Posterior - Prior"
-            residual_cmap = kwargs.pop("residual_cmap", "PiYG")
-            cbar_ax2 = fig.add_axes(
-                [
-                    ax_res.get_position().x0,
-                    ax_res.get_position().y0 - 0.1,
-                    ax_res.get_position().width,
-                    0.05,
-                ]
-            )
-            (posterior - base).plot(
-                ax=ax_res,
-                x="lon",
-                y="lat",
-                cmap=residual_cmap,
-                alpha=alpha,
-                center=0,
-                cbar_ax=cbar_ax2,
-                cbar_kwargs={"orientation": "horizontal", "label": label},
-                **kwargs,
-            )
-
-            ax_res.set(title="Residual", xlabel=None, ylabel=None)
-
-        return fig, axes
-
-    def concentrations(self, location=None, **kwargs):
-        """
-        Plot observed, prior, & posterior concentrations.
-
-        Parameters
-        ----------
-        location : str | list[str] | None, optional
-            Observation location(s) to plot. If None, plots all locations.
-            By default None.
-        **kwargs : dict
-            Additional keyword arguments to pass to pandas plotting functions.
-
-        Returns
-        -------
-        axes : list[matplotlib.axes.Axes]
-            List of axes objects.
-        """
-        obs = self.inversion.concentrations
-        posterior = self.inversion.posterior_concentrations
-        prior = self.inversion.prior_concentrations
-
-        data = pd.concat([obs, posterior, prior], axis=1)
-
-        if location is None:
-            locations = data.index.get_level_values("obs_location").unique()
-        elif isinstance(location, str):
-            locations = [location]
-        elif isinstance(location, list):
-            locations = location
-        else:
-            raise ValueError("location must be None, a string, or a list of strings")
-
-        axes = []
-        for location in locations:
-            df = data.loc[location]
-            df.columns.name = None
-
-            fig, ax = plt.subplots()
-
-            df.plot(
-                ax=ax,
-                style=".",
-                alpha=0.6,
-                color=["black", "red", "blue"],
-                markeredgecolor="None",
-                legend=False,
-            )
-            df.rolling(window=max(1, int(len(df) / 10)), center=True).mean().plot(
-                ax=ax,
-                linewidth=2,
-                color=["black", "red", "blue"],
-                label=["Observed", "Posterior", "Prior"],
-            )
-            ax.set(
-                title=f"Concentrations at {location}",
-                ylabel="Concentration",
-                xlabel="Time",
-            )
-            fig.autofmt_xdate()
-            axes.append(ax)
-            plt.show()
-        return axes
+        self.plot = Plotter(self)

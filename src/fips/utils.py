@@ -3,16 +3,39 @@ Utility functions for inversion module.
 """
 
 import multiprocessing
+import signal
 from collections.abc import Callable
 from functools import partial
-from typing import Any, Literal
+from typing import Any, Literal, overload
 
 import pandas as pd
 import xarray as xr
 from pandas.api.types import is_float_dtype
 
 
-def parallelize(func: Callable, num_processes: int | Literal["max"] = 1) -> Callable:
+def exec_with_timeout(func, timeout, kwargs, item):
+    """Helper to execute a function with a timeout using signals."""
+
+    def handler(signum, frame):
+        raise TimeoutError(f"Task timed out after {timeout} seconds")
+
+    # Register the signal function handler
+    signal.signal(signal.SIGALRM, handler)
+    # Define a timeout for the function (supports floats)
+    signal.setitimer(signal.ITIMER_REAL, timeout)
+
+    try:
+        return func(item, **kwargs)
+    finally:
+        # Disable the alarm
+        signal.setitimer(signal.ITIMER_REAL, 0)
+
+
+def parallelize(
+    func: Callable,
+    num_processes: int | Literal["max"] = 1,
+    timeout: float | None = None,
+) -> Callable:
     """
     Parallelize a function across an iterable.
 
@@ -24,6 +47,10 @@ def parallelize(func: Callable, num_processes: int | Literal["max"] = 1) -> Call
         The number of processes to use. Uses the minimum of the number of
         items in the iterable and the number of CPUs requested. If 'max',
         uses all available CPUs. Default is 1.
+    timeout : float, optional
+        The maximum time (in seconds) allowed for each item to be processed.
+        If a task exceeds this time, a TimeoutError is raised.
+        Default is None (no timeout).
 
     Returns
     -------
@@ -60,22 +87,59 @@ def parallelize(func: Callable, num_processes: int | Literal["max"] = 1) -> Call
 
         # If only one process is requested, execute the function sequentially
         if processes == 1:
-            results = [func(i, **kwargs) for i in iterable]
+            if timeout is not None:
+                results = [
+                    exec_with_timeout(func, timeout, kwargs, i) for i in iterable
+                ]
+            else:
+                results = [func(i, **kwargs) for i in iterable]
             return results
 
         # Create a multiprocessing Pool
         pool = multiprocessing.Pool(processes=processes)
 
-        # Use the pool to map the function across the iterable
-        results = pool.map(func=partial(func, **kwargs), iterable=iterable)
-
-        # Close the pool to free resources
-        pool.close()
-        pool.join()
+        try:
+            # Use the pool to map the function across the iterable
+            if timeout is not None:
+                # Use partial to bind func, timeout, and kwargs.
+                # The iterable item is passed as the last argument by pool.map
+                worker = partial(exec_with_timeout, func, timeout, kwargs)
+                results = pool.map(func=worker, iterable=iterable)
+            else:
+                results = pool.map(func=partial(func, **kwargs), iterable=iterable)
+        except Exception:
+            pool.terminate()
+            raise
+        else:
+            # Close the pool to free resources
+            pool.close()
+        finally:
+            pool.join()
 
         return results
 
     return parallelized
+
+
+@overload
+def validate_single_column_df(name: str, obj: pd.DataFrame) -> pd.Series: ...
+
+
+@overload
+def validate_single_column_df(name: str, obj: pd.Series) -> pd.Series: ...
+
+
+@overload
+def validate_single_column_df(name: str, obj: Any) -> Any: ...
+
+
+def validate_single_column_df(name: str, obj: Any) -> Any | pd.Series:
+    if isinstance(obj, pd.DataFrame):
+        ncols = obj.shape[1]
+        if ncols > 1:
+            raise ValueError(f"{name} DataFrame must have a single column.")
+        return obj.iloc[:, 0]
+    return obj
 
 
 def round_index(
@@ -129,28 +193,131 @@ def round_index(
         return index
 
 
-def dataframe_matrix_to_xarray(frame: pd.DataFrame) -> xr.DataArray:
+def series_to_xarray(series: pd.Series, name=None) -> xr.DataArray:
     """
-    Convert a pandas DataFrame to an xarray DataArray.
-
-    If the DataFrame has a MultiIndex for columns, all levels of the MultiIndex
-    are stacked into the index of the resulting DataArray.
+    Convert a Pandas Series to an Xarray DataArray.
 
     Parameters
     ----------
-    frame : pd.DataFrame
-        DataFrame to convert.
+    series : pd.Series
+        Pandas Series to convert.
+    attr : str
+        Attribute name.
 
     Returns
     -------
     xr.DataArray
-        Converted DataArray.
+        Xarray DataArray representation of the series.
     """
+    series = series.copy()
+    if name is not None:
+        series.name = name
+    return series.to_xarray()
 
-    if isinstance(frame.columns, pd.MultiIndex):
+
+def dataframe_to_xarray(df: pd.DataFrame, name=None) -> xr.DataArray:
+    """
+    Convert a Pandas DataFrame to an Xarray DataArray.
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        Pandas DataFrame to convert.
+    name : str
+        Name for the resulting DataArray.
+
+    Returns
+    -------
+    xr.DataArray
+        Xarray DataArray representation of the DataFrame.
+    """
+    df = df.copy()
+    if isinstance(df.columns, pd.MultiIndex):
         # Stack all levels of the columns MultiIndex into the index
-        n_levels = len(frame.columns.levels)
-        s = frame.stack(list(range(n_levels)), future_stack=True)
+        n_levels = len(df.columns.levels)
+        s = df.stack(list(range(n_levels)), future_stack=True)
     else:
-        s = frame.stack(future_stack=True)
-    return s.to_xarray()
+        s = df.stack(future_stack=True)
+    if isinstance(s, pd.DataFrame):
+        raise ValueError("DataFrame could not be stacked into a Series.")
+    return series_to_xarray(series=s, name=name)
+
+
+def enough_obs_per_interval(
+    index: pd.Index,
+    intervals: pd.IntervalIndex,
+    threshold: int,
+    level: str | None = None,
+) -> list[bool]:
+    """
+    Determine which observations have enough data points per time interval.
+
+    Parameters
+    ----------
+    index : pd.Index
+        Index containing observations.
+    intervals : pd.IntervalIndex
+        Intervals to group observations into.
+    threshold : int
+        Minimum number of observations required per interval.
+    level : str, optional
+        Level name to use if index is a MultiIndex. If None, uses the entire index.
+
+    Returns
+    -------
+    pd.Series
+        Boolean mask indicating which observations meet the threshold.
+    """
+    obs = index if level is None else index.get_level_values(level)
+    groups = pd.Index(pd.cut(obs, bins=intervals))
+    counts = obs.to_series().groupby(groups).transform("count")
+    return (counts >= threshold).tolist()
+
+
+@overload
+def filter_intervals(
+    data: pd.Series,
+    intervals: pd.IntervalIndex,
+    threshold: int,
+    level: str | None = None,
+) -> pd.Series: ...
+
+
+@overload
+def filter_intervals(
+    data: pd.DataFrame,
+    intervals: pd.IntervalIndex,
+    threshold: int,
+    level: str | None = None,
+) -> pd.DataFrame: ...
+
+
+def filter_intervals(
+    data: pd.Series | pd.DataFrame,
+    intervals: pd.IntervalIndex,
+    threshold: int,
+    level: str | None = None,
+) -> pd.Series | pd.DataFrame:
+    """
+    Filter data to only include observations with enough data points per time interval.
+
+    Parameters
+    ----------
+    data : pd.Series | pd.DataFrame
+        Data to filter.
+    intervals : pd.IntervalIndex
+        Intervals to group observations into.
+    threshold : int
+        Minimum number of observations required per interval.
+    level : str, optional
+        Level name to use if index is a MultiIndex. If None, uses the entire index.
+
+    Returns
+    -------
+    pd.Series | pd.DataFrame
+        Filtered data.
+    """
+    mask = enough_obs_per_interval(
+        index=data.index, intervals=intervals, threshold=threshold, level=level
+    )
+    return data[mask]

@@ -1,5 +1,4 @@
 import math
-from collections.abc import Callable
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -22,8 +21,12 @@ class SpaceTimeCovariance(CovarianceMatrix):
         super().__init__(*args, **kwargs)
 
     def plot(self, **kwargs) -> plt.Axes:
-        """Plot the covariance matrix using imshow."""
-        fig, ax = plt.subplots(figsize=kwargs.pop("figsize", None))
+        """Plot the symmetric matrix using imshow."""
+        ax = kwargs.pop("ax", None)
+        if ax is not None:
+            fig = ax.get_figure()
+        else:
+            fig, ax = plt.subplots(figsize=kwargs.pop("figsize", None))
         p = ax.imshow(self.data, **kwargs)
         ax.set_xticks(np.arange(len(self.index)))
         ax.set_xticklabels(self.index.values, rotation=45, ha="right")
@@ -245,67 +248,6 @@ class ModelDataMismatch(SpaceTimeCovariance):
     covariance matrix in flux inversion problems.
     """
 
-    @staticmethod
-    def _apply_groupwise_decay(
-        matrix: np.ndarray,
-        coords: pd.DataFrame,
-        decay_func: Callable,
-        decay_dims: list[str],
-        **decay_kwargs,
-    ) -> np.ndarray:
-        """
-        Generic method to apply decay (time or space) to the covariance matrix.
-
-        Parameters:
-        -----------
-        matrix : np.ndarray
-            Covariance matrix to which decay will be applied.
-        coords : pd.DataFrame
-            DataFrame containing the coordinates corresponding to the matrix indices.
-        decay_func : Callable
-            Function to compute the decay matrix.
-        decay_dims : list[str]
-            Dimension(s) on which to apply the decay (e.g., 'obs_time' for time decay).
-        decay_kwargs : dict
-            Additional keyword arguments for the decay function
-
-        Returns:
-        --------
-        Self
-            A new instance with the decay applied
-        """
-        diag_mask = np.eye(len(coords), dtype=bool)
-        off_diags = np.zeros_like(matrix)
-
-        # Find all dimensions other than the decay dimension
-        group_dims = [col for col in coords.columns if col not in decay_dims]
-
-        # If no other dimensions found, add a dummy dimension
-        if not group_dims:
-            coords["dummy"] = 0
-            group_dims = ["dummy"]
-
-        # Group by the identified dimensions
-        groups = coords.groupby(group_dims)
-
-        # Calculate the decay matrix for each group
-        for _group_key, group in groups:
-            group_indices = group.index.to_list()
-            decay_matrix = decay_func(group, **decay_kwargs)
-            off_diags[np.ix_(group_indices, group_indices)] = decay_matrix
-
-        # Scale decay matrix by variances
-        variances = np.diag(matrix)
-        sigma = np.diag(np.sqrt(variances))
-        off_diags = sigma @ off_diags @ sigma
-
-        # Add the decayed off-diagonal terms to the original matrix
-        mdm = matrix.copy()
-        off_diags[diag_mask] = 0  # Zero out diagonal terms
-        mdm += off_diags
-
-        return mdm
-
     def apply_temporal_decay(
         self,
         length_scale: pd.Timedelta | str,
@@ -315,8 +257,8 @@ class ModelDataMismatch(SpaceTimeCovariance):
         """
         Apply temporal decay to the covariance matrix.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         length_scale : pd.Timedelta or str
             Length scale for the temporal decay (e.g., '32h' for 32 hours)
         interday : bool
@@ -325,8 +267,8 @@ class ModelDataMismatch(SpaceTimeCovariance):
         time_dim : str
             Name of the time dimension
 
-        Returns:
-        --------
+        Returns
+        -------
         Self
             A new instance with time decay applied
         """
@@ -338,24 +280,21 @@ class ModelDataMismatch(SpaceTimeCovariance):
             times = group[time_dim]
             return time_decay_matrix(times=times, decay=length_scale)
 
-        # If not spanning days, add the date as a grouping dimension
-        coords = self.index.to_frame(index=False)
+        # Find all dimensions other than the decay dimension
+        groupers = [col for col in self.index.names if col != time_dim]
+
+        # If not spanning days, add the date as a grouper
         if not interday:
-            times = pd.to_datetime(coords[time_dim])
-            coords["date_group"] = times.dt.date
+            dates = self.index.get_level_values(time_dim).date
+            groupers.append(dates)
 
         # Apply the decay
-        matrix = self.data.to_numpy()
-        decayed_matrix = self._apply_groupwise_decay(
-            matrix=matrix,
-            coords=coords,
-            decay_func=calculate_temporal_decay,
-            decay_dims=[time_dim],
+        return self.apply_groupwise(
+            groupers=groupers,
+            func=calculate_temporal_decay,
             time_dim=time_dim,
             length_scale=length_scale,
         )
-
-        return self.from_numpy(array=decayed_matrix, index=self.index)
 
     def apply_spatial_decay(
         self,
@@ -367,8 +306,8 @@ class ModelDataMismatch(SpaceTimeCovariance):
         """
         Apply spatial decay to the covariance matrix.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         length_scale : float
             Length scale for the spatial decay (in km)
         location_latlon_mapper : dict
@@ -378,19 +317,22 @@ class ModelDataMismatch(SpaceTimeCovariance):
         spatial_dim : str
             Name of the spatial dimension
 
-        Returns:
-        --------
+        Returns
+        -------
         Self
             A new instance with spatial decay applied
         """
 
         # Define the decay function
         def calculate_spatial_decay(
-            group: pd.DataFrame, length_scale: float, earth_radius: float
+            group: pd.DataFrame,
+            spatial_dim: str,
+            length_scale: float,
+            earth_radius: float,
         ) -> np.ndarray:
             # Get lat/lon for each location in the group
-            lats = group["lat"].to_numpy()
-            lons = group["lon"].to_numpy()
+            lats = [location_latlon_mapper[loc][0] for loc in group[spatial_dim]]
+            lons = [location_latlon_mapper[loc][1] for loc in group[spatial_dim]]
 
             # Calculate distance matrix using haversine formula
             dist_matrix = haversine_matrix(
@@ -400,20 +342,14 @@ class ModelDataMismatch(SpaceTimeCovariance):
             # Calculate decay matrix
             return np.exp(-dist_matrix / length_scale)
 
-        coords = self.index.to_frame(index=False)
-        coords["lat"] = [location_latlon_mapper[loc][0] for loc in coords[spatial_dim]]
-        coords["lon"] = [location_latlon_mapper[loc][1] for loc in coords[spatial_dim]]
-        coords = coords.drop(columns=[spatial_dim])
+        # Find all dimensions other than the decay dimension
+        groupers = [col for col in self.index.names if col != spatial_dim]
 
         # Apply the decay
-        matrix = self.data.to_numpy()
-        decayed_matrix = self._apply_groupwise_decay(
-            matrix=matrix,
-            coords=coords,
-            decay_func=calculate_spatial_decay,
-            decay_dims=["lat", "lon"],
+        return self.apply_groupwise(
+            groupers=groupers,
+            func=calculate_spatial_decay,
+            spatial_dim=spatial_dim,
             length_scale=length_scale,
             earth_radius=earth_radius,
         )
-
-        return self.from_numpy(array=decayed_matrix, index=self.index)

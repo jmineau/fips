@@ -1,5 +1,5 @@
 import warnings
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from typing import Any
 
 import numpy as np
@@ -304,7 +304,106 @@ class SymmetricMatrix:
             else:
                 mat.loc[cross_sel, sel] = np.asarray(value).T
 
+        # If diagonal/off-diagonal selection is specified, mask accordingly
+        if diagonal is not None:
+            diag_mask = np.eye(len(mat), dtype=bool)
+            if diagonal:
+                # Keep only diagonal entries
+                mat = mat.where(diag_mask, other=self.data)
+            else:
+                # Keep only off-diagonal entries
+                mat = mat.where(~diag_mask, other=self.data)
+
         return type(self)(mat)
+
+    def apply_groupwise(
+        self,
+        groupers: list[Any],
+        func: Callable,
+        diagonal: bool = True,
+        **kwargs,
+    ) -> Self:
+        """
+        Generic method to apply decay (time or space) to the covariance matrix.
+
+        Parameters
+        ----------
+        groupers : list
+            List of pandas grouping objects (e.g., index level names) to group by.
+        func : Callable
+            Function that takes a group DataFrame and returns a numpy array.
+        diagonal : bool
+            If True, include diagonal elements in application. Default is True.
+        **kwargs : dict
+            Additional keyword arguments to pass to `func`.
+
+        Returns
+        -------
+        SymmetricMatrix
+            New SymmetricMatrix instance with func applied by group.
+        """
+        matrix = self.data.to_numpy()
+        diag_mask = np.eye(len(self.index), dtype=bool)
+        off_diags = np.zeros_like(matrix)
+
+        # Get the index coordinates as a DataFrame
+        coords = self.index.to_frame(index=False)
+
+        # Group by the identified dimensions
+        groups = coords.groupby(groupers)
+
+        # Calculate the decay matrix for each group
+        for _group_key, group in groups:
+            group_indices = group.index.to_list()
+            submatrix = func(group, **kwargs)
+            off_diags[np.ix_(group_indices, group_indices)] = submatrix
+
+        # Scale decay matrix by variances
+        variances = np.diag(matrix)
+        sigma = np.diag(np.sqrt(variances))
+        off_diags = sigma @ off_diags @ sigma
+
+        # Add the decayed off-diagonal terms to the original matrix
+        mat = matrix.copy()
+        if not diagonal:
+            off_diags[diag_mask] = 0  # Zero out diagonal terms
+        mat += off_diags
+
+        return self.from_numpy(mat, index=self.index)
+
+    def scale(self, factor: float | int) -> Self:
+        """
+        Scale the matrix by a scalar factor.
+
+        Parameters
+        ----------
+        factor : float or int
+            Scalar factor to multiply the matrix by.
+
+        Returns
+        -------
+        SymmetricMatrix
+            New SymmetricMatrix instance scaled by the factor.
+        """
+        if not np.isscalar(factor):
+            raise TypeError("Factor must be a scalar (float or int).")
+        return type(self).from_numpy(self.values * factor, index=self.index)
+
+    def copy(self, deep: bool = True) -> Self:
+        """
+        Create a copy of the SymmetricMatrix instance.
+
+        Parameters
+        ----------
+        deep : bool, default True
+            If True, perform a deep copy of the underlying data.
+
+        Returns
+        -------
+        SymmetricMatrix
+            Copy of the SymmetricMatrix instance.
+        """
+        return type(self)(self.data.copy(deep=deep))
 
     def __add__(self, other: Any) -> Self:
         """
@@ -398,6 +497,7 @@ class CovarianceMatrix(SymmetricMatrix):
                     message="Provided 'index' is ignored when 'variances' is a pandas Series; "
                     "the Series' own index will be used.",
                     category=UserWarning,
+                    stacklevel=3,
                 )
             return variances
 

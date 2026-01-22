@@ -96,12 +96,21 @@ class Estimator(ABC):
         c : np.ndarray or float, optional
             Constant data, defaults to 0.0.
         """
-        self.z = z
-        self.x_0 = x_0
-        self.H = H
-        self.S_0 = S_0
-        self.S_z = S_z
-        self.c = c if c is not None else 0.0
+        self.z = z.astype(float)
+        self.x_0 = x_0.astype(float)
+        self.H = H.astype(float)
+        self.S_0 = S_0.astype(float)
+        self.S_z = S_z.astype(float)
+
+        # Handle optional constant data
+        if c is None:
+            c = 0.0
+        if isinstance(c, (int, float)):
+            self.c = np.full(self.z.shape, float(c)).astype(float)
+        elif isinstance(c, np.ndarray):
+            self.c = c.astype(float)
+        else:
+            raise TypeError("c must be None, a float, or a numpy ndarray.")
 
         self.n_z = z.shape[0]
         self.n_x = x_0.shape[0]
@@ -231,6 +240,7 @@ class Estimator(ABC):
             Posterior observation estimate.
         """
         print("Calculating Posterior Mean Observation Estimate...")
+        # TODO should this be z_hat? and y_hat not include c?
         return self.forward(self.x_hat)
 
     @cached_property
@@ -331,7 +341,7 @@ class Estimator(ABC):
         float
             Degrees of Freedom value.
         """
-        return np.trace(self.A)
+        return float(np.trace(self.A))
 
     @cached_property
     def reduced_chi2(self) -> float:
@@ -357,7 +367,7 @@ class Estimator(ABC):
         scaled_data_misfit = data_residual.T @ self._S_z_inv @ data_residual
         scaled_model_misfit = model_residual.T @ self._S_0_inv @ model_residual
 
-        return (scaled_data_misfit + scaled_model_misfit) / self.n_z
+        return float((scaled_data_misfit + scaled_model_misfit) / self.n_z)
 
     @cached_property
     def R2(self) -> float:
@@ -373,7 +383,7 @@ class Estimator(ABC):
             R-squared value.
         """
         print("Calculating Coefficient of determination (R-squared)...")
-        return np.corrcoef(self.z, self.y_hat)[0, 1] ** 2
+        return float(np.corrcoef(self.z, self.y_hat)[0, 1] ** 2)
 
     @cached_property
     def RMSE(self) -> float:
@@ -389,10 +399,10 @@ class Estimator(ABC):
         """
         print("Calculating Root Mean Square Error (RMSE)...")
         r = self.residual(self.x_hat)
-        return np.sqrt((r**2) / self.n_z)
+        return float(np.sqrt((r**2).sum() / self.n_z))
 
     @cached_property
-    def U_red(self):
+    def uncertainty_reduction(self) -> float:
         """
         Uncertainty reduction metric.
 
@@ -404,8 +414,24 @@ class Estimator(ABC):
         float
             Uncertainty reduction value.
         """
-        print("Calculating Uncertainty reduction metric...")
-        return 1 - (np.sqrt(np.trace(self.S_hat)) / np.sqrt(np.trace(self.S_0)))
+        print("Calculating uncertainty reduction metric...")
+        return float(1 - (np.sqrt(np.trace(self.S_hat)) / np.sqrt(np.trace(self.S_0))))
+
+    @cached_property
+    def U_red(self) -> np.ndarray:
+        """
+        Uncertainty reduction vector.
+
+        .. math::
+            U_{red} = \\left( 1 - \\frac{\\sqrt{diag(\\hat{S})}}{\\sqrt{diag(S_0)}} \\right) * 100\\%
+
+        Returns
+        -------
+        np.ndarray
+            Uncertainty reduction vector.
+        """
+        print("Calculating uncertainty reduction vector...")
+        return (1 - (np.sqrt(np.diag(self.S_hat)) / np.sqrt(np.diag(self.S_0)))) * 100.0
 
 
 class EstimatorRegistry(dict):
