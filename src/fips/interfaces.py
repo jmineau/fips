@@ -5,8 +5,7 @@ import pandas as pd
 import xarray as xr
 
 from fips.estimators import Estimator
-from fips.matrices import CovarianceMatrix, SymmetricMatrix
-from fips.utils import dataframe_to_xarray, series_to_xarray
+from fips.matrices import CovarianceMatrix
 
 if TYPE_CHECKING:
     from fips.problem import InverseProblem
@@ -15,8 +14,8 @@ if TYPE_CHECKING:
 class EstimatorOutput:
     """Estimator output interface for inversion attributes."""
 
-    obs_index: pd.Index
-    state_index: pd.Index
+    obs_index: pd.Index | property
+    state_index: pd.Index | property
     estimator: Estimator | property
 
     @cached_property
@@ -87,7 +86,7 @@ class XR:
     def __init__(self, inversion: "InverseProblem"):
         self._inversion = inversion
 
-    def __getattr__(self, attr) -> xr.DataArray:
+    def __getattr__(self, attr) -> xr.DataArray | xr.Dataset:
         """
         Get an xarray representation of an attribute from the inversion object.
 
@@ -98,7 +97,7 @@ class XR:
 
         Returns
         -------
-        xr.DataArray
+        xr.DataArray | xr.Dataset
             Xarray representation of the attribute.
 
         Raises
@@ -109,12 +108,7 @@ class XR:
             If the attribute type is not supported.
         """
         obj = getattr(self._inversion, attr)
-        if isinstance(obj, pd.Series):
-            return series_to_xarray(series=obj, name=attr)
-        elif isinstance(obj, (pd.DataFrame, SymmetricMatrix)):
-            return dataframe_to_xarray(df=obj.data, name=attr)
-        else:
-            raise TypeError(f"Unable to represent {type(obj)} as Xarray.")
+        return convert_to_xarray(obj, name=attr)
 
     def __setattr__(self, *args):
         """
@@ -136,3 +130,83 @@ class XR:
             raise AttributeError(
                 f"Cannot set attribute '{args[0]}' on Xarray interface."
             )
+
+
+#  --- XARRAY HELPERS ---
+
+def series_to_xarray(series: pd.Series, name=None) -> xr.DataArray:
+    """
+    Convert a Pandas Series to an Xarray DataArray.
+
+    Parameters
+    ----------
+    series : pd.Series
+        Pandas Series to convert.
+    attr : str
+        Attribute name.
+
+    Returns
+    -------
+    xr.DataArray
+        Xarray DataArray representation of the series.
+    """
+    series = series.copy()
+    if name is not None:
+        series.name = name
+    return series.to_xarray()
+
+
+def dataframe_to_xarray(df: pd.DataFrame, name=None) -> xr.DataArray:
+    """
+    Convert a Pandas DataFrame to an Xarray DataArray.
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        Pandas DataFrame to convert.
+    name : str
+        Name for the resulting DataArray.
+
+    Returns
+    -------
+    xr.DataArray
+        Xarray DataArray representation of the DataFrame.
+    """
+    df = df.copy()
+    if isinstance(df.columns, pd.MultiIndex):
+        # Stack all levels of the columns MultiIndex into the index
+        n_levels = len(df.columns.levels)
+        s = df.stack(list(range(n_levels)), future_stack=True)
+    else:
+        s = df.stack(future_stack=True)
+    if isinstance(s, pd.DataFrame):
+        raise ValueError("DataFrame could not be stacked into a Series.")
+    return series_to_xarray(series=s, name=name)
+
+
+def convert_to_xarray(obj: pd.Series | pd.DataFrame, name: str
+                        ) -> xr.DataArray | xr.Dataset:
+    # Handle Series with blocks -> Dataset
+    if isinstance(obj, pd.Series):
+        if isinstance(obj.index, pd.MultiIndex) and 'block' in obj.index.names:
+            ds = xr.Dataset()
+            blocks = obj.index.get_level_values('block').unique()
+            
+            for block in blocks:
+                # Extract subset for this block
+                # .xs drops the 'block' level, leaving the inner index (e.g. time/lat/lon)
+                subset = obj.xs(block, level='block')
+                
+                # Convert to DataArray
+                da = series_to_xarray(subset, name=block)
+                ds[block] = da
+            return ds
+        else:
+            # Flat Series -> DataArray
+            return series_to_xarray(obj, name=name)
+
+    # Handle DataFrame (Matrices) -> DataArray
+    elif isinstance(obj, pd.DataFrame):
+        return dataframe_to_xarray(obj, name=name)
+
+    raise TypeError(f"Cannot convert object of type {type(obj)} to xarray.")
