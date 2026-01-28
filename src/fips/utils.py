@@ -84,6 +84,9 @@ def parallelize(
         results : list
             The results of the function applied to each item in the iterable.
         """
+        if len(iterable) == 0:
+            raise ValueError("Iterable is empty; nothing to parallelize.")
+
         # Determine the number of processes to use
         cpu_count = multiprocessing.cpu_count()
         if num_processes == "max" or num_processes > cpu_count:
@@ -128,11 +131,6 @@ def parallelize(
         return results
 
     return parallelized
-
-
-# ==============================================================================
-# DATA VALIDATION
-# ==============================================================================
 
 
 # ==============================================================================

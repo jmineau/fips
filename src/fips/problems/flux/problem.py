@@ -66,8 +66,6 @@ class FluxInversion(InverseProblem):
         Covariance matrix for observation error.
     constant : pd.Series or float or None
         Background/constant concentration to add to modelled observations.
-    estimator : type[Estimator] or str
-        Estimation method to use (default: 'bayesian').
     plot : Plotter
         Plotting interface for results.
     """
@@ -81,8 +79,6 @@ class FluxInversion(InverseProblem):
         modeldata_mismatch,
         background: pd.Series | float | None = None,
         bias: pd.Series | Block | None = None,
-        state_index: pd.Index | None = None,
-        estimator: type[Estimator] | str = "bayesian",
         freq: str | None = "infer",
         min_obs_per_interval: int = 1,
         min_sims_per_interval: int = 1,
@@ -108,10 +104,6 @@ class FluxInversion(InverseProblem):
             Background concentration to add to modelled observations, by default None.
         bias : pd.Series, Block, or None, optional
             Optional bias correction block to add to state, by default None.
-        state_index : pd.Index, optional
-            Explicit state index (used if provided), by default None.
-        estimator : type[Estimator] or str, optional
-            Estimator class or name ('bayesian', etc.), by default 'bayesian'.
         freq : str, optional
             Frequency for time binning (e.g., 'D', 'H'), by default 'infer'.
         min_obs_per_interval : int, optional
@@ -136,7 +128,7 @@ class FluxInversion(InverseProblem):
             else:
                 state_data = inventory
 
-            state_time_index = state_index or state_data.index
+            state_time_index = state_data.index
             times = state_time_index.get_level_values("time").unique().sort_values()
 
             if not isinstance(times, pd.IntervalIndex):  # Assume regular intervals
@@ -234,10 +226,11 @@ class FluxInversion(InverseProblem):
             prior_error=prior_error,
             modeldata_mismatch=modeldata_mismatch,
             constant=background,
-            state_index=state_index,
-            estimator=estimator,
             **kwargs,
         )
 
         # Build plotting interface
         self.plot = FluxPlotter(self)
+
+    def solve(self, estimator: str | type[Estimator] = "bayesian", **kwargs):
+        return super().solve(estimator=estimator, **kwargs)

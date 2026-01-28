@@ -9,11 +9,12 @@ from fips.vectors import Vector, prepare_vector
 class InverseProblem(EstimatorOutput):
     def __init__(
         self,
-        prior: Vector,
-        obs: Vector,
-        forward_operator: ForwardOperator,
-        prior_error: CovarianceMatrix,
-        modeldata_mismatch: CovarianceMatrix,
+        prior: Vector | pd.Series,
+        obs: Vector | pd.Series,
+        forward_operator: ForwardOperator | pd.DataFrame,
+        prior_error: CovarianceMatrix | pd.DataFrame,
+        modeldata_mismatch: CovarianceMatrix | pd.DataFrame,
+        constant: Vector | pd.Series | float | None = None,
         float_precision: int | None = None,
     ):
         super().__init__()
@@ -51,6 +52,16 @@ class InverseProblem(EstimatorOutput):
             float_precision=float_precision,
         )
 
+        # Prepare constant (scalar or vector aligned to obs index)
+        if constant is not None:
+            try:
+                constant = float(constant)
+            except (TypeError, ValueError):
+                constant = prepare_vector(
+                    name="constant", vector=constant, float_precision=float_precision
+                )
+        self.constant = constant
+
         self.float_precision = float_precision
         self._estimator: Estimator | None = None  # init empty estimator
 
@@ -83,8 +94,8 @@ class InverseProblem(EstimatorOutput):
             raise TypeError(f"Object '{component}' is neither a Vector nor a Matrix.")
 
     def solve(
-        self, estimator: str | type[Estimator] = "bayesian", **kwargs
-    ) -> dict[str, pd.Series | CovarianceMatrix | pd.Series]:
+        self, estimator: str | type[Estimator], **kwargs
+    ) -> dict[str, Vector | CovarianceMatrix]:
         # Get estimator class
         if isinstance(estimator, str):
             if estimator not in ESTIMATOR_REGISTRY:
@@ -101,7 +112,15 @@ class InverseProblem(EstimatorOutput):
         H = self.forward_operator.values
         S_0 = self.prior_error.values
         S_z = self.modeldata_mismatch.values
-        self._estimator = estimator_cls(z=z, x_0=x_0, H=H, S_0=S_0, S_z=S_z, **kwargs)
+        c = (
+            self.constant
+            if not isinstance(self.constant, Vector)
+            else self.constant.values
+        )
+
+        self._estimator = estimator_cls(
+            z=z, x_0=x_0, H=H, S_0=S_0, S_z=S_z, c=c, **kwargs
+        )
 
         return {
             "posterior": self.posterior,

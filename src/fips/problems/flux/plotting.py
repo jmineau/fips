@@ -15,7 +15,17 @@ class FluxPlotter:
     def __init__(self, inversion: "FluxInversion"):
         self.inversion = inversion
 
-    def fluxes(self, time="mean", truth=None, **kwargs):
+    def fluxes(
+        self,
+        time="mean",
+        truth=None,
+        x_dim="lon",
+        y_dim="lat",
+        time_dim="time",
+        sites=False,
+        sites_kwargs=None,
+        **kwargs,
+    ):
         """
         Plot prior & Posterior fluxes.
 
@@ -25,13 +35,29 @@ class FluxPlotter:
             Time to plot. Can be 'mean' or 'std' to plot the mean or standard deviation
             over time, an integer to plot a specific time index, or a pd.Timestamp to plot a specific time.
             By default 'mean'.
-        tiler : cartopy.io.img_tiles.GoogleTiles | None, optional
-            Tiler to use for background map, by default None.
-            If provided, the tiler will be used to add a background map to the plots.
         truth : pd.Series | None, optional
             Truth fluxes to plot for comparison, by default None.
             Residual will be calculated as posterior - truth if provided,
             otherwise as posterior - prior.
+        x_dim : str, optional
+            Name of the x-coordinate dimension (e.g., 'lon'), by default 'lon'.
+        y_dim : str, optional
+            Name of the y-coordinate dimension (e.g., 'lat'), by default 'lat'.
+        time_dim : str, optional
+            Name of the time dimension, by default 'time'.
+        sites : bool | dict | None, optional
+            Whether to overlay observation site locations on the plots.
+            Can be:
+            - False or None: no sites plotted (default)
+            - True: plot sites (requires sites to be stored in inversion object)
+            - dict: dictionary mapping site/location IDs to (latitude, longitude) tuples.
+              Example: {'site_1': (40.5, -111.5), 'site_2': (41.2, -112.0)}
+        sites_kwargs : dict | None, optional
+            Additional keyword arguments for site marker plotting (e.g., 'marker', 'color', 's').
+            By default None (uses default marker style).
+        tiler : cartopy.io.img_tiles.GoogleTiles | None, optional
+            Tiler to use for background map, by default None.
+            If provided, the tiler will be used to add a background map to the plots.
         **kwargs : dict
             Additional keyword arguments to pass to xarray plotting functions.
 
@@ -41,22 +67,22 @@ class FluxPlotter:
             Figure and axes objects.
         """
         # Get xarray representations of fluxes
-        prior = self.inversion.xr.prior
-        posterior = self.inversion.xr.posterior_fluxes
+        prior = self.inversion.xr.prior["flux"]
+        posterior = self.inversion.xr.posterior["flux"]
 
         # Filter/aggregate by time
         if time == "mean":
-            prior = prior.mean(dim="time")
-            posterior = posterior.mean(dim="time")
+            prior = prior.mean(dim=time_dim)
+            posterior = posterior.mean(dim=time_dim)
         elif time == "std":
-            prior = prior.std(dim="time")
-            posterior = posterior.std(dim="time")
+            prior = prior.std(dim=time_dim)
+            posterior = posterior.std(dim=time_dim)
         elif isinstance(time, int):
-            prior = prior.isel(time=time)
-            posterior = posterior.isel(time=time)
+            prior = prior.isel({time_dim: time})
+            posterior = posterior.isel({time_dim: time})
         else:
-            prior = prior.sel(time=time)
-            posterior = posterior.sel(time=time)
+            prior = prior.sel({time_dim: time})
+            posterior = posterior.sel({time_dim: time})
 
         # Get tiler and projection from kwargs
         tiler = kwargs.pop("tiler", None)
@@ -72,13 +98,13 @@ class FluxPlotter:
             if isinstance(truth, pd.Series):
                 truth = truth.to_xarray()
             if time == "mean":
-                truth = truth.mean(dim="time")
+                truth = truth.mean(dim=time_dim)
             elif time == "std":
-                truth = truth.std(dim="time")
+                truth = truth.std(dim=time_dim)
             elif isinstance(time, int):
-                truth = truth.isel(time=time)
+                truth = truth.isel({time_dim: time})
             else:
-                truth = truth.sel(time=time)
+                truth = truth.sel({time_dim: time})
 
         # Create figure and axes
         fig, axes = plt.subplots(ncols=ncols, sharey=True, subplot_kw=subplot_kw)
@@ -138,8 +164,8 @@ class FluxPlotter:
         if truth is not None:
             truth.plot(
                 ax=ax_truth,
-                x="lon",
-                y="lat",
+                x=x_dim,
+                y=y_dim,
                 vmin=vmin,
                 vmax=vmax,
                 cmap=cmap,
@@ -152,8 +178,8 @@ class FluxPlotter:
 
         prior.plot(
             ax=ax_prior,
-            x="lon",
-            y="lat",
+            x=x_dim,
+            y=y_dim,
             vmin=vmin,
             vmax=vmax,
             cmap=cmap,
@@ -165,8 +191,8 @@ class FluxPlotter:
         )
         posterior.plot(
             ax=ax_post,
-            x="lon",
-            y="lat",
+            x=x_dim,
+            y=y_dim,
             vmin=vmin,
             vmax=vmax,
             cmap=cmap,
@@ -210,8 +236,8 @@ class FluxPlotter:
             )
             (posterior - base).plot(
                 ax=ax_res,
-                x="lon",
-                y="lat",
+                x=x_dim,
+                y=y_dim,
                 cmap=residual_cmap,
                 alpha=alpha,
                 center=0,
@@ -222,9 +248,45 @@ class FluxPlotter:
 
             ax_res.set(title="Residual", xlabel=None, ylabel=None)
 
+        # Plot observation site markers
+        if sites:
+            if isinstance(sites, dict):
+                # Extract coordinates from dict map
+                lats = []
+                lons = []
+                for site_id, (lat, lon) in sites.items():
+                    lats.append(lat)
+                    lons.append(lon)
+
+                if lons and lats:
+                    # Set default site marker kwargs
+                    site_plot_kwargs = {
+                        "marker": "o",
+                        "color": "blue",
+                        "s": 80,
+                        "alpha": 0.7,
+                    }
+                    if sites_kwargs:
+                        site_plot_kwargs.update(sites_kwargs)
+
+                    # Plot sites on all axes
+                    for ax in axes:
+                        ax.scatter(
+                            lons,
+                            lats,
+                            **site_plot_kwargs,
+                            zorder=5,
+                            edgecolors="black",
+                            linewidth=1,
+                        )
+            else:
+                raise NotImplementedError(
+                    "Sites must be passed as a dict[site_id, (lat, lon)] at present"
+                )
+
         return fig, axes
 
-    def concentrations(self, location=None, **kwargs):
+    def concentrations(self, location=None, location_dim="obs_location", **kwargs):
         """
         Plot observed, prior, & posterior concentrations.
 
@@ -241,14 +303,14 @@ class FluxPlotter:
         axes : list[matplotlib.axes.Axes]
             List of axes objects.
         """
-        obs = self.inversion.concentrations
-        posterior = self.inversion.posterior_concentrations
-        prior = self.inversion.prior_concentrations
+        obs = self.inversion.obs["concentration"].rename("observed")
+        posterior = self.inversion.posterior_obs["concentration"].rename("posterior")
+        prior = self.inversion.prior_obs["concentration"].rename("prior")
 
         data = pd.concat([obs, posterior, prior], axis=1)
 
         if location is None:
-            locations = data.index.get_level_values("obs_location").unique()
+            locations = data.index.get_level_values(location_dim).unique()
         elif isinstance(location, str):
             locations = [location]
         elif isinstance(location, list):
@@ -278,7 +340,7 @@ class FluxPlotter:
                 label=["Observed", "Posterior", "Prior"],
             )
             ax.set(
-                title=f"Concentrations at {location}",
+                title=f"Concentrations at site: {location}",
                 ylabel="Concentration",
                 xlabel="Time",
             )

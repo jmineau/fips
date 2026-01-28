@@ -45,6 +45,7 @@ docs = [
 ]
 flux = [
     "cartopy",
+    "h5py",
     "matplotlib",
     "pystilt",
 ]

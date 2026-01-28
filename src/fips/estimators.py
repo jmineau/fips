@@ -470,7 +470,7 @@ class EstimatorRegistry(dict):
         return decorator
 
 
-ESTIMATOR_REGISTRY = EstimatorRegistry()
+ESTIMATOR_REGISTRY: dict[str, type[Estimator]] = EstimatorRegistry()
 
 
 @ESTIMATOR_REGISTRY.register("bayesian")

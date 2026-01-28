@@ -41,7 +41,9 @@ def sanitize_index(index: pd.Index, decimals: int | None = None) -> pd.Index:
         return index.set_levels(new_levels, level=range(len(new_levels)))
 
     # Try converting to numeric (handles strings like "1.00")
-    if not pd.api.types.is_numeric_dtype(index):
+    if not pd.api.types.is_numeric_dtype(
+        index
+    ) and not pd.api.types.is_datetime64_dtype(index):
         try:
             numeric_index = pd.to_numeric(index, errors="raise")
             index = pd.Index(numeric_index, name=index.name)
