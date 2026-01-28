@@ -4,8 +4,9 @@ from typing import TYPE_CHECKING, Literal
 import pandas as pd
 import xarray as xr
 
-from fips.estimators import Estimator
+from fips.estimators import OUTPUT_PROPERTY_NAMES, Estimator
 from fips.matrices import CovarianceMatrix, Matrix
+from fips.utils import dataframe_to_xarray, series_to_xarray
 from fips.vectors import Vector
 
 if TYPE_CHECKING:
@@ -21,90 +22,10 @@ class ComponentType(Enum):
     COVMATRIX = "covariance_matrix"  # 2D covariance matrix
 
 
-# INPUTS = {
-#     # component name: (ComponentType, row_index, col_index, [aliases])
-#     'obs': (ComponentType.VECTOR, 'obs', None, ['observations']),
-#     'prior': (ComponentType.VECTOR, 'state', None, ['prior_state']),
-#     'forward_operator': (ComponentType.MATRIX, 'obs', 'state', ['jacobian', 'forwardoperater']),
-#     'prior_error': (ComponentType.COVMATRIX, 'state', 'state', ['prior_cov']),
-#     'modeldata_mismatch': (ComponentType.COVMATRIX, 'obs', 'obs', ['obs_error', 'obs_cov', 'mdm']),
-# }
-# OUTPUTS = {
-#     'posterior': (ComponentType.VECTOR, 'state', None, ['posterior_state', 'analysis']),
-#     'posterior_error': (ComponentType.COVMATRIX, 'state', 'state', ['posterior_cov']),
-#     'posterior_obs': (ComponentType.VECTOR, 'obs', None, ['posterior_observations']),
-#     'prior_obs': (ComponentType.VECTOR, 'obs', None, ['prior_observations']),
-#     'kalman_gain': (ComponentType.MATRIX, 'state', 'obs', []),
-#     'averaging_kernel': (ComponentType.MATRIX, 'state', 'state', []),
-#     'U_red': (ComponentType.MATRIX, 'state', 'state', []),
-#     'leverage': (ComponentType.VECTOR, 'state', None, []),
-# }
-
-INPUTS = {
-    # component name: (ComponentType, row_index, col_index)
-    "obs": (ComponentType.VECTOR, "obs", None),
-    "prior": (ComponentType.VECTOR, "state", None),
-    "forward_operator": (ComponentType.MATRIX, "obs", "state"),
-    "prior_error": (ComponentType.COVMATRIX, "state", "state"),
-    "modeldata_mismatch": (ComponentType.COVMATRIX, "obs", "obs"),
-}
-
-# Aliases mapping -> canonical name
-ALIASES = {
-    "observations": "obs",
-    "prior_state": "prior",
-    "jacobian": "forward_operator",
-    "forwardoperator": "forward_operator",
-    "prior_cov": "prior_error",
-    "obs_error": "modeldata_mismatch",
-    "obs_cov": "modeldata_mismatch",
-    "mdm": "modeldata_mismatch",
-    "posterior_state": "posterior",
-    "analysis": "posterior",
-    "posterior_cov": "posterior_error",
-    "posterior_observations": "posterior_obs",
-    "prior_observations": "prior_obs",
-}
-
-# Combined lookup: canonical names + aliases
-# _ALL_COMPONENTS = {**INPUTS, **OUTPUTS, **ALIASES}
-
-
-def canonicalize(name: str) -> str:
-    """
-    Convert an alias to its canonical component name.
-
-    Parameters
-    ----------
-    name : str
-        Component name or alias.
-
-    Returns
-    -------
-    str
-        Canonical component name.
-
-    Raises
-    ------
-    KeyError
-        If the name is not a valid component or alias.
-    """
-    if name in ALIASES:
-        return ALIASES[name]
-    elif name in _ALL_COMPONENTS:
-        return name
-    else:
-        valid = list(INPUTS.keys()) + list(OUTPUTS.keys())
-        raise KeyError(
-            f"Unknown component '{name}'. Valid components are: {valid}. "
-            f"Aliases: {list(ALIASES.keys())}"
-        )
-
-
 class EstimatorOutput:
-    state_index: pd.Index
-    obs_index: pd.Index
-    estimator: Estimator
+    state_index: pd.Index | property
+    obs_index: pd.Index | property
+    estimator: Estimator | property
 
     OUTPUTS = {
         # component name: (ComponentType, row_index, col_index)
@@ -122,6 +43,10 @@ class EstimatorOutput:
         "DOFS": (ComponentType.SCALAR,),
         "uncertainty_reduction": (ComponentType.SCALAR,),
     }
+
+    def __init__(self):
+        """Initialize output cache for caching computed results."""
+        self._output_cache: dict = {}
 
     def _wrap_output(
         self,
@@ -145,9 +70,9 @@ class EstimatorOutput:
 
         # Wrap Vectors
         if component_type == ComponentType.VECTOR:
-            # Create Vector
+            # Create Vector with index that already has 'block' level from Vector inputs
             s = pd.Series(component, index=idx, name=attr)
-            return Vector.from_series(s)
+            return Vector.from_series(s, name=attr)
 
         # Determine Matrix class
         if component_type == ComponentType.MATRIX:
@@ -173,14 +98,28 @@ class EstimatorOutput:
 
     def __getattr__(self, attr: str):
         if attr in self.OUTPUTS:
-            component_type, row_index, col_index = self.OUTPUTS[attr]
-            return self._wrap_output(
+            # Check cache first
+            if attr in self._output_cache:
+                return self._output_cache[attr]
+
+            # Compute and cache the output
+            meta = self.OUTPUTS[attr]
+            component_type = meta[0]
+            row_index = meta[1] if len(meta) > 1 else None
+            col_index = meta[2] if len(meta) > 2 else None
+
+            estimator_attr = OUTPUT_PROPERTY_NAMES.get(attr, attr)
+            result = self._wrap_output(
                 attr=attr,
-                component=getattr(self.estimator, attr),
+                component=getattr(self.estimator, estimator_attr),
                 component_type=component_type,
                 index=row_index,
                 column=col_index,
             )
+
+            # Cache the result
+            self._output_cache[attr] = result
+            return result
 
         return super().__getattribute__(attr)
 
@@ -264,56 +203,6 @@ class XR(_ReadOnly):
 
 
 #  --- XARRAY HELPERS ---
-
-
-def series_to_xarray(series: pd.Series, name=None) -> xr.DataArray:
-    """
-    Convert a Pandas Series to an Xarray DataArray.
-
-    Parameters
-    ----------
-    series : pd.Series
-        Pandas Series to convert.
-    name : str
-        Attribute name.
-
-    Returns
-    -------
-    xr.DataArray
-        Xarray DataArray representation of the series.
-    """
-    series = series.copy()
-    if name is not None:
-        series.name = name
-    return series.to_xarray()
-
-
-def dataframe_to_xarray(df: pd.DataFrame, name=None) -> xr.DataArray:
-    """
-    Convert a Pandas DataFrame to an Xarray DataArray.
-
-    Parameters
-    ----------
-    df : pd.DataFrame
-        Pandas DataFrame to convert.
-    name : str
-        Name for the resulting DataArray.
-
-    Returns
-    -------
-    xr.DataArray
-        Xarray DataArray representation of the DataFrame.
-    """
-    df = df.copy()
-    if isinstance(df.columns, pd.MultiIndex):
-        # Stack all levels of the columns MultiIndex into the index
-        n_levels = len(df.columns.levels)
-        s = df.stack(list(range(n_levels)), future_stack=True)
-    else:
-        s = df.stack(future_stack=True)
-    if isinstance(s, pd.DataFrame):
-        raise ValueError("DataFrame could not be stacked into a Series.")
-    return series_to_xarray(series=s, name=name)
 
 
 def convert_to_xarray(

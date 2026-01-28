@@ -78,10 +78,7 @@ def prepare_matrix(
     """
 
     # Unwrap if already a Matrix
-    if isinstance(matrix, Matrix):
-        df = matrix.data.copy()
-    else:
-        df = matrix.copy()
+    df = matrix.data.copy() if isinstance(matrix, Matrix) else matrix.copy()
 
     # Sanitize all indices
     df.index = sanitize_index(index=df.index, decimals=float_precision)
@@ -190,14 +187,28 @@ class CovarianceMatrix(Matrix):
         try:
             # get_loc on a MultiIndex returns a slice if sorted, or boolean array/indices
             return self.data.index.get_loc(block_name)
-        except KeyError:
-            raise KeyError(f"Block '{block_name}' not found in CovarianceMatrix index.")
+        except KeyError as err:
+            raise KeyError(f"Block '{block_name}' not found in CovarianceMatrix index.") from err
 
     def _get_inner_index(self, slc: slice) -> pd.Index:
-        """Returns the inner index (dropping the block name) for a slice."""
+        """
+        Returns the inner index (dropping the block name) for a slice.
+        If the result is a MultiIndex with NaN levels, extracts the non-NaN level.
+        """
         full_idx = self.data.index[slc]
         if isinstance(full_idx, pd.MultiIndex):
-            return full_idx.droplevel(0)
+            inner_idx = full_idx.droplevel(0)
+
+            # If we have a MultiIndex with NaN levels, extract the non-NaN level
+            if isinstance(inner_idx, pd.MultiIndex):
+                # Find the level with no NaN values
+                for level in range(inner_idx.nlevels):
+                    level_vals = inner_idx.get_level_values(level)
+                    if not level_vals.isna().any():
+                        return level_vals
+                # If all levels have NaN, return the whole thing (shouldn't happen)
+                return inner_idx
+            return inner_idx
         return full_idx
 
     def _normalize_sigma(self, sigma: Any, size: int) -> np.ndarray:
@@ -305,8 +316,15 @@ class CovarianceMatrix(Matrix):
                 f"Final shape mismatch for block '{block}': expected ({block_size}, {block_size}), got {data.shape}"
             )
 
-        # Modify underlying numpy array using the slice
-        self.data.values[slc, slc] = data
+        # Convert slice/boolean array to integer indices for 2D indexing
+        if isinstance(slc, slice):
+            # Slice objects work directly with 2D indexing
+            self.data.values[slc, slc] = data
+        else:
+            # Boolean array or integer array - convert to integer positions
+            int_idx = np.where(slc)[0] if slc.dtype == bool else np.asarray(slc)
+            # Use np.ix_ for fancy indexing to get 2D grid
+            self.data.values[np.ix_(int_idx, int_idx)] = data
         return self
 
     def set_interaction(
@@ -351,8 +369,36 @@ class CovarianceMatrix(Matrix):
                 f"Interaction shape mismatch: expected ({r_size}, {c_size}), got {data.shape}"
             )
 
-        self.data.values[r_slc, c_slc] = data
-        self.data.values[c_slc, r_slc] = data.T
+        # Convert slice/boolean arrays to integer indices for 2D indexing
+        # Handle both slices and boolean/integer arrays
+        def to_indexer(slc):
+            if isinstance(slc, slice):
+                return slc
+            elif slc.dtype == bool:
+                return np.where(slc)[0]
+            else:
+                return np.asarray(slc)
+
+        row_idx = to_indexer(r_slc)
+        col_idx = to_indexer(c_slc)
+
+        # Set both the interaction block and its transpose
+        if isinstance(row_idx, slice) and isinstance(col_idx, slice):
+            self.data.values[row_idx, col_idx] = data
+            self.data.values[col_idx, row_idx] = data.T
+        elif isinstance(row_idx, slice):
+            self.data.values[np.ix_(np.arange(len(self.data))[row_idx], col_idx)] = data
+            self.data.values[np.ix_(col_idx, np.arange(len(self.data))[row_idx])] = (
+                data.T
+            )
+        elif isinstance(col_idx, slice):
+            self.data.values[np.ix_(row_idx, np.arange(len(self.data))[col_idx])] = data
+            self.data.values[np.ix_(np.arange(len(self.data))[col_idx], row_idx)] = (
+                data.T
+            )
+        else:
+            self.data.values[np.ix_(row_idx, col_idx)] = data
+            self.data.values[np.ix_(col_idx, row_idx)] = data.T
         return self
 
 

@@ -16,9 +16,9 @@ from numpy.linalg import inv as invert
 
 OUTPUT_PROPERTY_NAMES = {
     "posterior": "x_hat",
-    "posterior_covariance": "S_hat",
-    "posterior_observations": "y_hat",
-    "prior_observations": "y_0",
+    "posterior_error": "S_hat",
+    "posterior_obs": "y_hat",
+    "prior_obs": "y_0",
     "kalman_gain": "K",
     "averaging_kernel": "A",
 }
@@ -250,7 +250,6 @@ class Estimator(ABC):
             Posterior observation estimate.
         """
         print("Calculating Posterior Mean Observation Estimate...")
-        # TODO should this be z_hat? and y_hat not include c?
         return self.forward(self.x_hat)
 
     @cached_property

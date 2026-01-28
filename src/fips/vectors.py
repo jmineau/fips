@@ -24,7 +24,9 @@ class Block:
             # Warn if index argument is provided but ignored
             if index is not None:
                 warnings.warn(
-                    "Index argument is ignored when data is a pd.Series.", UserWarning
+                    "Index argument is ignored when data is a pd.Series.",
+                    UserWarning,
+                    stacklevel=2,
                 )
 
             # Validation: Series must have a name (from itself or argument)
@@ -70,7 +72,8 @@ class Block:
         return self.data.to_numpy()
 
     def __repr__(self):
-        return repr(self.data)
+        header = f"Block(name='{self.name}')\n"
+        return header + repr(self.data)
 
 
 class Vector:
@@ -166,7 +169,8 @@ class Vector:
         self.data = combined.set_index(dynamic_cols)[self.name]
 
     def __repr__(self) -> str:
-        return repr(self.data)
+        header = f"Vector(name='{self.name}', n_blocks={len(self.blocks)})\n"
+        return header + repr(self.data)
 
     def __getitem__(self, key) -> pd.Series:
         return self.blocks[key].data

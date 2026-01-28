@@ -11,6 +11,7 @@ def check_overlap(target_idx: pd.Index, available_idx: pd.Index, name: str):
             f"No overlap found between {name} Vector and Matrix indices. "
             f"The matrix will be filled with zeros, leading to a disconnected problem.",
             UserWarning,
+            stacklevel=2,
         )
     elif len(intersection) < len(target_idx):
         missing = len(target_idx) - len(intersection)
@@ -18,6 +19,7 @@ def check_overlap(target_idx: pd.Index, available_idx: pd.Index, name: str):
             f"Partial overlap for {name}: {missing} / {len(target_idx)} vector elements "
             f"are missing from the provided matrix and will be zero-filled.",
             UserWarning,
+            stacklevel=2,
         )
 
 

@@ -38,7 +38,7 @@ class TestInverseProblemCreation:
     def test_inverse_problem_with_vector_objects(self):
         """Test InverseProblem with Vector objects instead of Series."""
         block_prior = Block(pd.Series([1.0, 2.0], index=["x", "y"], name="state"))
-        prior = Vector([block_prior])
+        prior = Vector(name="prior", blocks=[block_prior])
 
         obs = pd.Series([1.0, 2.0], index=["obs_0", "obs_1"])
 
@@ -57,8 +57,8 @@ class TestInverseProblemCreation:
 
         problem = InverseProblem(prior, obs, H, S_0, S_z)
 
-        assert isinstance(problem.prior, pd.Series)
-        assert isinstance(problem.obs, pd.Series)
+        assert isinstance(problem.prior, Vector)
+        assert isinstance(problem.obs, Vector)
 
     def test_inverse_problem_stores_matrices(
         self,
@@ -77,9 +77,9 @@ class TestInverseProblemCreation:
             modeldata_mismatch=simple_modeldata_mismatch,
         )
 
-        assert "forward_operator" in problem.matrices
-        assert "prior_error" in problem.matrices
-        assert "modeldata_mismatch" in problem.matrices
+        assert hasattr(problem, "forward_operator")
+        assert hasattr(problem, "prior_error")
+        assert hasattr(problem, "modeldata_mismatch")
 
     def test_inverse_problem_stores_vectors(
         self,
@@ -98,8 +98,8 @@ class TestInverseProblemCreation:
             modeldata_mismatch=simple_modeldata_mismatch,
         )
 
-        assert "prior" in problem.vectors
-        assert "obs" in problem.vectors
+        assert hasattr(problem, "prior")
+        assert hasattr(problem, "obs")
 
 
 class TestInverseProblemProperties:
@@ -123,8 +123,8 @@ class TestInverseProblemProperties:
         )
 
         prior = problem.prior
-        assert isinstance(prior, pd.Series)
-        assert len(prior) == 3
+        assert isinstance(prior, Vector)
+        assert prior.n == 3
 
     def test_obs_property(
         self,
@@ -144,8 +144,8 @@ class TestInverseProblemProperties:
         )
 
         obs = problem.obs
-        assert isinstance(obs, pd.Series)
-        assert len(obs) == 4
+        assert isinstance(obs, Vector)
+        assert obs.n == 4
 
     def test_forward_operator_property(
         self,
@@ -165,7 +165,9 @@ class TestInverseProblemProperties:
         )
 
         H = problem.forward_operator
-        assert isinstance(H, pd.DataFrame)
+        from fips.matrices import ForwardOperator
+
+        assert isinstance(H, ForwardOperator)
         assert H.shape == (4, 3)
 
     def test_prior_error_property(
@@ -186,8 +188,7 @@ class TestInverseProblemProperties:
         )
 
         # Check that prior_error is accessible and correctly wrapped
-        assert "prior_error" in problem.matrices
-        S_a = problem.matrices["prior_error"]
+        S_a = problem.prior_error
         assert isinstance(S_a, CovarianceMatrix)
         assert isinstance(S_a.data, pd.DataFrame)
         assert S_a.shape == (3, 3)
@@ -210,8 +211,7 @@ class TestInverseProblemProperties:
         )
 
         # Check that modeldata_mismatch is accessible and correctly wrapped
-        assert "modeldata_mismatch" in problem.matrices
-        S_z = problem.matrices["modeldata_mismatch"]
+        S_z = problem.modeldata_mismatch
         assert isinstance(S_z, CovarianceMatrix)
         assert isinstance(S_z.data, pd.DataFrame)
         assert S_z.shape == (4, 4)
@@ -241,8 +241,8 @@ class TestInverseProblemMatrixHandling:
         )
 
         # Check that matrices are stored properly
-        assert problem.matrices["prior_error"] is not None
-        assert problem.matrices["modeldata_mismatch"] is not None
+        assert problem.prior_error is not None
+        assert problem.modeldata_mismatch is not None
 
     def test_matrix_wrapping_forward_operator(
         self,
@@ -282,7 +282,7 @@ class TestInverseProblemIndexAlignment:
 
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
-            problem = InverseProblem(prior, obs, H, S_a, S_z)
+            InverseProblem(prior, obs, H, S_a, S_z)
 
             # Should generate warning about partial overlap
             warning_messages = [str(warn.message) for warn in w]
@@ -367,8 +367,8 @@ class TestInverseProblemDimensions:
             problem = InverseProblem(prior, obs, H, S_a, S_z)
 
             assert problem.forward_operator.shape == (10, 5)
-            assert len(problem.prior) == 5
-            assert len(problem.obs) == 10
+            assert problem.prior.n == 5
+            assert problem.obs.n == 10
 
     def test_square_problem(self):
         """Test with equal dimensions."""
@@ -472,8 +472,8 @@ class TestInverseProblemSolve:
 
         # Result keys and shapes
         assert set(result.keys()) == {"posterior", "posterior_error", "posterior_obs"}
-        assert result["posterior"].shape[0] == len(data["prior"])
-        assert result["posterior_obs"].shape[0] == len(data["obs"])
+        assert result["posterior"].n == len(data["prior"])
+        assert result["posterior_obs"].n == len(data["obs"])
         assert result["posterior_error"].values.shape == (
             len(data["prior"]),
             len(data["prior"]),
