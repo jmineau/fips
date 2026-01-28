@@ -14,6 +14,16 @@ from numpy.linalg import inv as invert
 # - implement bayesian regularization factor usage
 
 
+OUTPUT_PROPERTY_NAMES = {
+    "posterior": "x_hat",
+    "posterior_covariance": "S_hat",
+    "posterior_observations": "y_hat",
+    "prior_observations": "y_0",
+    "kalman_gain": "K",
+    "averaging_kernel": "A",
+}
+
+
 class Estimator(ABC):
     """
     Base inversion estimator class.

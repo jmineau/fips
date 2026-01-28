@@ -10,6 +10,7 @@ __email__ = "jameskmineau@gmail.com"
 
 from .estimators import Estimator
 from .matrices import CovarianceMatrix, ForwardOperator, convolve
+from .plotting import compute_credible_interval, plot_comparison, plot_error_norm
 from .problem import InverseProblem
 from .vectors import Block, Vector
 
@@ -24,4 +25,7 @@ __all__ = [
     "CovarianceMatrix",
     "InverseProblem",
     "convolve",
+    "plot_comparison",
+    "plot_error_norm",
+    "compute_credible_interval",
 ]

@@ -10,15 +10,21 @@ def check_overlap(target_idx: pd.Index, available_idx: pd.Index, name: str):
         warnings.warn(
             f"No overlap found between {name} Vector and Matrix indices. "
             f"The matrix will be filled with zeros, leading to a disconnected problem.",
-            UserWarning
+            UserWarning,
         )
     elif len(intersection) < len(target_idx):
         missing = len(target_idx) - len(intersection)
         warnings.warn(
             f"Partial overlap for {name}: {missing} / {len(target_idx)} vector elements "
             f"are missing from the provided matrix and will be zero-filled.",
-            UserWarning
+            UserWarning,
         )
+
+
+def promote_index(index: pd.Index, promotion, promotion_level):
+    df = index.to_frame(index=False)
+    df.insert(0, promotion_level, promotion)
+    return pd.MultiIndex.from_frame(df)
 
 
 def sanitize_index(index: pd.Index, decimals: int | None = None) -> pd.Index:
@@ -35,7 +41,7 @@ def sanitize_index(index: pd.Index, decimals: int | None = None) -> pd.Index:
     # Try converting to numeric (handles strings like "1.00")
     if not pd.api.types.is_numeric_dtype(index):
         try:
-            numeric_index = pd.to_numeric(index, errors='raise')
+            numeric_index = pd.to_numeric(index, errors="raise")
             index = pd.Index(numeric_index, name=index.name)
         except (ValueError, TypeError):
             # If conversion fails (e.g. text labels), keep as is
