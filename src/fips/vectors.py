@@ -1,10 +1,12 @@
 import warnings
 from collections.abc import Sequence
+from pathlib import Path
 
 import numpy.typing as npt
 import pandas as pd
 
 from fips.indices import sanitize_index
+from fips.utils import load_or_pass
 
 
 class Block:
@@ -55,6 +57,14 @@ class Block:
         ]
         self.data.index.set_names(new_names, inplace=True)
 
+    def __getstate__(self):
+        """Explicit pickle support: return state as dict."""
+        return {"data": self.data}
+
+    def __setstate__(self, state):
+        """Explicit pickle support: restore state from dict."""
+        self.data = state["data"]
+
     @property
     def name(self) -> str:
         return str(self.data.name)
@@ -96,6 +106,40 @@ class Vector:
             self.blocks[block.name] = block
         self._assemble()
 
+    def __getstate__(self):
+        """Explicit pickle support: return state as dict."""
+        return {"name": self.name, "data": self.data}
+
+    def __setstate__(self, state):
+        """Explicit pickle support: restore state from dict."""
+        self.name = state["name"]
+        self.data = state["data"]
+        # Reconstruct blocks from assembled data
+        self.blocks = self._reconstruct_blocks_from_data(self.data)
+
+    @staticmethod
+    def _reconstruct_blocks_from_data(data: pd.Series) -> dict[str | int, Block]:
+        """
+        Reconstruct blocks dict from assembled Series with 'block' level in MultiIndex.
+
+        Parameters
+        ----------
+        data : pd.Series
+            Series with MultiIndex containing 'block' level.
+
+        Returns
+        -------
+        dict[str | int, Block]
+            Dictionary mapping block names to Block objects.
+        """
+        blocks = {}
+        if isinstance(data.index, pd.MultiIndex) and "block" in data.index.names:
+            block_names = data.index.get_level_values("block").unique()
+            for block_name in block_names:
+                block_data = data.xs(block_name, level="block")
+                blocks[block_name] = Block(block_data, name=block_name)
+        return blocks
+
     @classmethod
     def from_series(cls, data: pd.Series, name: str | None = None) -> "Vector":
         """
@@ -124,13 +168,8 @@ class Vector:
         if vector_name is None:
             raise ValueError("Series must have a name or 'name' must be provided.")
 
-        # Extract blocks from the series
-        blocks = []
-        block_names = data.index.get_level_values("block").unique()
-
-        for block_name in block_names:
-            block_data = data.xs(block_name, level="block")
-            blocks.append(Block(block_data, name=block_name))
+        # Extract blocks from the series using shared helper
+        blocks = list(cls._reconstruct_blocks_from_data(data).values())
 
         return cls(name=vector_name, blocks=blocks)
 
@@ -223,9 +262,12 @@ class Vector:
 
 
 def prepare_vector(
-    name: str, vector: Vector | pd.Series, float_precision: int | None
+    name: str, vector: str | Path | Vector | pd.Series, float_precision: int | None
 ) -> Vector:
     """Helper to normalize input vectors into Vector objects and sanitize indices."""
+    # Load from pickle if path is provided
+    vector = load_or_pass(vector)
+
     if isinstance(vector, pd.Series):
         v_clean = vector.copy()
         v_clean.index = sanitize_index(v_clean.index, float_precision)

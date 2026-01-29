@@ -1,10 +1,12 @@
 from collections.abc import Callable
+from pathlib import Path
 from typing import Any
 
 import numpy as np
 import pandas as pd
 
 from fips.indices import check_overlap, promote_index, sanitize_index
+from fips.utils import load_or_pass
 from fips.vectors import Vector
 
 # ==============================================================================
@@ -23,6 +25,14 @@ class Matrix:
         # Ensure indices are clean (standard numeric types)
         self.data.index = sanitize_index(self.data.index)
         self.data.columns = sanitize_index(self.data.columns)
+
+    def __getstate__(self):
+        """Explicit pickle support: return state as dict."""
+        return {"data": self.data}
+
+    def __setstate__(self, state):
+        """Explicit pickle support: restore state from dict."""
+        self.data = state["data"]
 
     @property
     def values(self) -> np.ndarray:
@@ -45,7 +55,7 @@ class Matrix:
 
 
 def prepare_matrix(
-    matrix: pd.DataFrame | Matrix,
+    matrix: str | Path | pd.DataFrame | Matrix,
     matrix_class: type[Matrix],
     row_index: pd.Index,
     col_index: pd.Index,
@@ -60,8 +70,8 @@ def prepare_matrix(
 
     Parameters
     ----------
-    matrix : pd.DataFrame | Matrix
-        Input matrix data
+    matrix : str | Path | pd.DataFrame | Matrix
+        Input matrix data (file path to pickled object, DataFrame, or Matrix instance)
     matrix_class : type[Matrix]
         Class to wrap result in (e.g., ForwardOperator, CovarianceMatrix)
     row_index : pd.Index
@@ -76,6 +86,8 @@ def prepare_matrix(
     Matrix
         Instance of matrix_class wrapping the prepared DataFrame
     """
+    # Load from pickle if path is provided
+    matrix = load_or_pass(matrix)
 
     # Unwrap if already a Matrix
     df = matrix.data.copy() if isinstance(matrix, Matrix) else matrix.copy()
@@ -188,7 +200,9 @@ class CovarianceMatrix(Matrix):
             # get_loc on a MultiIndex returns a slice if sorted, or boolean array/indices
             return self.data.index.get_loc(block_name)
         except KeyError as err:
-            raise KeyError(f"Block '{block_name}' not found in CovarianceMatrix index.") from err
+            raise KeyError(
+                f"Block '{block_name}' not found in CovarianceMatrix index."
+            ) from err
 
     def _get_inner_index(self, slc: slice) -> pd.Index:
         """
@@ -413,10 +427,13 @@ class ForwardOperator(Matrix):
     Columns = State Space, Rows = Obs Space.
     """
 
-    def __init__(self, data: pd.DataFrame):
-        super().__init__(data)
-        self.state_index = self.columns
-        self.obs_index = self.index
+    @property
+    def state_index(self) -> pd.Index:
+        return self.columns
+
+    @property
+    def obs_index(self) -> pd.Index:
+        return self.index
 
     def convolve(
         self, state: Vector | pd.Series | np.ndarray, float_precision: int | None = None

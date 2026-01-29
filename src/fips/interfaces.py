@@ -48,6 +48,15 @@ class EstimatorOutput:
         """Initialize output cache for caching computed results."""
         self._output_cache: dict = {}
 
+    def __getstate__(self):
+        """Explicit pickle support: return state as dict."""
+        # Clear cache before pickling since cached objects may be complex
+        return {"_output_cache": {}}
+
+    def __setstate__(self, state):
+        """Explicit pickle support: restore state from dict."""
+        self._output_cache = state.get("_output_cache", {})
+
     def _wrap_output(
         self,
         attr,

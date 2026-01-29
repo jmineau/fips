@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import pandas as pd
 
 from fips.estimators import ESTIMATOR_REGISTRY, Estimator
@@ -9,17 +11,17 @@ from fips.vectors import Vector, prepare_vector
 class InverseProblem(EstimatorOutput):
     def __init__(
         self,
-        prior: Vector | pd.Series,
-        obs: Vector | pd.Series,
-        forward_operator: ForwardOperator | pd.DataFrame,
-        prior_error: CovarianceMatrix | pd.DataFrame,
-        modeldata_mismatch: CovarianceMatrix | pd.DataFrame,
-        constant: Vector | pd.Series | float | None = None,
+        prior: str | Path | Vector | pd.Series,
+        obs: str | Path | Vector | pd.Series,
+        forward_operator: str | Path | ForwardOperator | pd.DataFrame,
+        prior_error: str | Path | CovarianceMatrix | pd.DataFrame,
+        modeldata_mismatch: str | Path | CovarianceMatrix | pd.DataFrame,
+        constant: str | Path | Vector | pd.Series | float | None = None,
         float_precision: int | None = None,
     ):
         super().__init__()
 
-        # Prepare obs and prior vectors
+        # Prepare obs and prior vectors (handles file paths via load_or_pass)
         self.obs = prepare_vector(
             name="obs", vector=obs, float_precision=float_precision
         )
@@ -27,7 +29,7 @@ class InverseProblem(EstimatorOutput):
             name="prior", vector=prior, float_precision=float_precision
         )
 
-        # Prepare forward operator and covariance matrices
+        # Prepare forward operator and covariance matrices (handles file paths via load_or_pass)
         self.forward_operator = prepare_matrix(
             matrix=forward_operator,
             matrix_class=ForwardOperator,
@@ -52,7 +54,7 @@ class InverseProblem(EstimatorOutput):
             float_precision=float_precision,
         )
 
-        # Prepare constant (scalar or vector aligned to obs index)
+        # Prepare constant (scalar or vector aligned to obs index, handles file paths)
         if constant is not None:
             try:
                 constant = float(constant)
@@ -64,6 +66,32 @@ class InverseProblem(EstimatorOutput):
 
         self.float_precision = float_precision
         self._estimator: Estimator | None = None  # init empty estimator
+
+    def __getstate__(self):
+        """Explicit pickle support: return state as dict."""
+        return {
+            "prior": self.prior,
+            "obs": self.obs,
+            "forward_operator": self.forward_operator,
+            "prior_error": self.prior_error,
+            "modeldata_mismatch": self.modeldata_mismatch,
+            "constant": self.constant,
+            "float_precision": self.float_precision,
+            "_estimator": self._estimator,
+            "_output_cache": self._output_cache,
+        }
+
+    def __setstate__(self, state):
+        """Explicit pickle support: restore state from dict."""
+        self.prior = state["prior"]
+        self.obs = state["obs"]
+        self.forward_operator = state["forward_operator"]
+        self.prior_error = state["prior_error"]
+        self.modeldata_mismatch = state["modeldata_mismatch"]
+        self.constant = state["constant"]
+        self.float_precision = state["float_precision"]
+        self._estimator = state.get("_estimator", None)
+        self._output_cache = state.get("_output_cache", {})
 
     @property
     def state_index(self) -> pd.Index:

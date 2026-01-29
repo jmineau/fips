@@ -58,7 +58,7 @@ def generate_test_data(
     obs_sigma : float
         Observation error standard deviation.
     correlation_len : float
-        Correlation length scale for prior covariance and Jacobian.
+        Correlation length scale for prior covariance and forward operator.
     seed : int
         Random seed.
 
@@ -67,7 +67,7 @@ def generate_test_data(
     Dict containing:
         - 'prior': pd.Series (Prior state x_a)
         - 'obs': pd.Series (Synthetic observations y_obs)
-        - 'jacobian': pd.DataFrame (Forward operator H)
+        - 'forward_operator': pd.DataFrame (Forward operator H)
         - 'prior_error': CovarianceMatrix (S_a)
         - 'modeldata_mismatch': CovarianceMatrix (S_z)
         - 'truth': pd.Series (Hidden truth x_true)
@@ -107,7 +107,7 @@ def generate_test_data(
     prior_vals = truth_vals * rng.uniform(0.8, 1.2) + noise
     prior_state = pd.Series(prior_vals, index=idx_state, name="state_block")
 
-    # 4. Jacobian (Distance-based)
+    # 4. Forward Operator (Distance-based)
     # Pad to max dimensions so distances include all spatial dims
     max_dims = max(coords_obs.shape[1], coords_state.shape[1])
     c_obs = np.pad(
@@ -188,7 +188,7 @@ def generate_test_data(
     return {
         "prior": prior_state,
         "obs": obs_state,
-        "jacobian": H_df,
+        "forward_operator": H_df,
         "prior_error": S_prior,
         "modeldata_mismatch": S_obs,
         "truth": truth_state,

@@ -460,7 +460,7 @@ class TestInverseProblemSolve:
         problem = InverseProblem(
             prior=data["prior"],
             obs=data["obs"],
-            forward_operator=data["jacobian"],
+            forward_operator=data["forward_operator"],
             prior_error=data["prior_error"],
             modeldata_mismatch=data["modeldata_mismatch"],
         )
