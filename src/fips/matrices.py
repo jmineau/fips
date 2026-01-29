@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 
 from fips.indices import check_overlap, promote_index, sanitize_index
-from fips.utils import load_or_pass
+from fips.serialization import load_or_pass, Pickleable
 from fips.vectors import Vector
 
 # ==============================================================================
@@ -14,7 +14,7 @@ from fips.vectors import Vector
 # ==============================================================================
 
 
-class Matrix:
+class Matrix(Pickleable):
     """
     Base class for all matrix-like objects in the inversion framework.
     Wraps a pandas DataFrame and ensures consistent index handling.

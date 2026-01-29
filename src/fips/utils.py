@@ -5,56 +5,20 @@ This module provides reusable utility functions for:
 - Parallelization and task execution with timeouts
 - Data validation and conversion between pandas and xarray formats
 - Index manipulation and filtering operations
-- Pickle loading from file paths
+
+For pickle loading and serialization, see fips.serialization module.
 """
 
 import multiprocessing
-import pickle
 import signal
 from collections.abc import Callable
 from functools import partial
 from pathlib import Path
-from typing import Any, Literal, TypeVar, overload
+from typing import Any, Literal, overload
 
 import numpy as np
 import pandas as pd
 import xarray as xr
-
-T = TypeVar("T")
-
-# ==============================================================================
-# PICKLE LOADING
-# ==============================================================================
-
-
-def load_or_pass(obj: str | Path | T) -> T:
-    """
-    Load an object from a pickle file if obj is a file path, otherwise return as-is.
-
-    Parameters
-    ----------
-    obj : str | Path | T
-        Either a file path (str or Path) to a pickled object, or an object to pass through.
-
-    Returns
-    -------
-    T
-        The unpickled object or the input object.
-
-    Raises
-    ------
-    FileNotFoundError
-        If the path doesn't exist.
-    pickle.UnpicklingError
-        If the file cannot be unpickled.
-    """
-    if isinstance(obj, (str, Path)):
-        path = Path(obj)
-        if not path.exists():
-            raise FileNotFoundError(f"Pickle file not found: {path}")
-        with open(path, "rb") as f:
-            return pickle.load(f)
-    return obj
 
 
 # ==============================================================================

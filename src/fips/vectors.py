@@ -6,10 +6,10 @@ import numpy.typing as npt
 import pandas as pd
 
 from fips.indices import sanitize_index
-from fips.utils import load_or_pass
+from fips.serialization import load_or_pass, Pickleable
 
 
-class Block:
+class Block(Pickleable):
     def __init__(
         self,
         data: pd.Series | npt.ArrayLike,
@@ -86,7 +86,7 @@ class Block:
         return header + repr(self.data)
 
 
-class Vector:
+class Vector(Pickleable):
     # State or Obs vector composed of multiple Blocks
     # can be prior, posterior, obs, etc.
     def __init__(self, name, blocks: Sequence[Block | pd.Series]):

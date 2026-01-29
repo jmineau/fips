@@ -5,10 +5,11 @@ import pandas as pd
 from fips.estimators import ESTIMATOR_REGISTRY, Estimator
 from fips.interfaces import PD, XR, EstimatorOutput
 from fips.matrices import CovarianceMatrix, ForwardOperator, Matrix, prepare_matrix
+from fips.serialization import Pickleable
 from fips.vectors import Vector, prepare_vector
 
 
-class InverseProblem(EstimatorOutput):
+class InverseProblem(EstimatorOutput, Pickleable):
     def __init__(
         self,
         prior: str | Path | Vector | pd.Series,

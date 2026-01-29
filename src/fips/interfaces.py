@@ -6,6 +6,7 @@ import xarray as xr
 
 from fips.estimators import OUTPUT_PROPERTY_NAMES, Estimator
 from fips.matrices import CovarianceMatrix, Matrix
+from fips.serialization import Pickleable
 from fips.utils import dataframe_to_xarray, series_to_xarray
 from fips.vectors import Vector
 
@@ -22,7 +23,7 @@ class ComponentType(Enum):
     COVMATRIX = "covariance_matrix"  # 2D covariance matrix
 
 
-class EstimatorOutput:
+class EstimatorOutput(Pickleable):
     state_index: pd.Index | property
     obs_index: pd.Index | property
     estimator: Estimator | property
@@ -47,15 +48,6 @@ class EstimatorOutput:
     def __init__(self):
         """Initialize output cache for caching computed results."""
         self._output_cache: dict = {}
-
-    def __getstate__(self):
-        """Explicit pickle support: return state as dict."""
-        # Clear cache before pickling since cached objects may be complex
-        return {"_output_cache": {}}
-
-    def __setstate__(self, state):
-        """Explicit pickle support: restore state from dict."""
-        self._output_cache = state.get("_output_cache", {})
 
     def _wrap_output(
         self,
