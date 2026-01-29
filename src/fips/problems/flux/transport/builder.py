@@ -1,4 +1,8 @@
-"""Main STILT Jacobian builder class."""
+"""Main STILT Jacobian builder class.
+
+This module provides the JacobianBuilder class for constructing sensitivity matrices
+(Forward Operators) from STILT atmospheric transport simulations.
+"""
 
 import datetime as dt
 from collections import defaultdict

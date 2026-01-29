@@ -1,4 +1,8 @@
-"""Parallel execution utilities for multiprocessing tasks."""
+"""Parallel execution utilities for multiprocessing tasks.
+
+This module provides decorators for parallelizing function calls
+across iterables with optional timeout support.
+"""
 
 import multiprocessing
 import signal
@@ -8,7 +12,24 @@ from typing import Any, Literal
 
 
 def exec_with_timeout(func, timeout, kwargs, item):
-    """Helper to execute a function with a timeout using signals."""
+    """Execute a function with a timeout using signals.
+
+    Parameters
+    ----------
+    func : callable
+        Function to execute.
+    timeout : float
+        Timeout in seconds.
+    kwargs : dict
+        Keyword arguments for func.
+    item : any
+        Item to pass to func.
+
+    Returns
+    -------
+    any
+        Result of func(item, **kwargs).
+    """
 
     def handler(signum, frame):
         raise TimeoutError(f"Task timed out after {timeout} seconds")
@@ -30,27 +51,21 @@ def parallelize(
     num_processes: int | Literal["max"] = 1,
     timeout: float | None = None,
 ) -> Callable:
-    """
-    Parallelize a function across an iterable.
+    """Parallelize a function across an iterable.
 
     Parameters
     ----------
-    func : function
+    func : callable
         The function to parallelize.
     num_processes : int or 'max', optional
-        The number of processes to use. Uses the minimum of the number of
-        items in the iterable and the number of CPUs requested. If 'max',
-        uses all available CPUs. Default is 1.
+        Number of processes to use. If 'max', uses all available CPUs. Default is 1.
     timeout : float, optional
-        The maximum time (in seconds) allowed for each item to be processed.
-        If a task exceeds this time, a TimeoutError is raised.
-        Default is None (no timeout).
+        Maximum time (in seconds) for each item. Default is None (no timeout).
 
     Returns
     -------
-    parallelized : function
-        A function that will execute the input function in parallel across
-        an iterable.
+    callable
+        Parallelized function that accepts an iterable and **kwargs.
     """
 
     def parallelized(iterable, **kwargs) -> list[Any]:

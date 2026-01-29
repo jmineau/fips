@@ -1,8 +1,7 @@
 """Serialization utilities for pickling and file I/O.
 
-This module provides:
-- Pickleable: A mixin class for easy pickle file save/load
-- load_or_pass: A utility to load pickle files or pass through objects
+This module provides the Pickleable mixin for adding to_file/from_file methods
+with .pkl/.pickle extension validation, and load_or_pass for transparent pickle loading.
 """
 
 import pickle
@@ -13,23 +12,20 @@ T = TypeVar("T")
 
 
 class Pickleable:
-    """Mixin to add to_file() and from_file() methods for pickle serialization."""
+    """Mixin to add to_file() and from_file() methods for pickle serialization.
+    
+    Provides automatic pickle file I/O with extension validation (.pkl or .pickle).
+    """
 
     VALID_EXTENSIONS = {".pkl", ".pickle"}
 
     def to_file(self, path: str | Path) -> None:
-        """
-        Save object to a pickle file.
+        """Save object to a pickle file.
 
         Parameters
         ----------
-        path : str | Path
-            File path where object will be saved. Must have .pkl or .pickle extension.
-
-        Raises
-        ------
-        ValueError
-            If file extension is not .pkl or .pickle.
+        path : str or Path
+            File path where object will be saved.
         """
         path = Path(path)
         if path.suffix not in self.VALID_EXTENSIONS:
@@ -41,25 +37,17 @@ class Pickleable:
 
     @classmethod
     def from_file(cls, path: str | Path):
-        """
-        Load object from a pickle file.
+        """Load object from a pickle file.
 
         Parameters
         ----------
-        path : str | Path
-            File path to load from. Must have .pkl or .pickle extension.
+        path : str or Path
+            File path to load from.
 
         Returns
         -------
-        cls
+        object
             The unpickled object.
-
-        Raises
-        ------
-        ValueError
-            If file extension is not .pkl or .pickle.
-        FileNotFoundError
-            If the file does not exist.
         """
         path = Path(path)
         if path.suffix not in cls.VALID_EXTENSIONS:
@@ -73,25 +61,17 @@ class Pickleable:
 
 
 def load_or_pass(obj: str | Path | T) -> T:
-    """
-    Load an object from a pickle file if obj is a file path, otherwise return as-is.
+    """Load an object from a pickle file if path, otherwise pass through.
 
     Parameters
     ----------
-    obj : str | Path | T
-        Either a file path (str or Path) to a pickled object, or an object to pass through.
+    obj : str, Path, or object
+        Either a file path to a pickled object, or an object to return as-is.
 
     Returns
     -------
-    T
+    object
         The unpickled object or the input object.
-
-    Raises
-    ------
-    FileNotFoundError
-        If the path doesn't exist.
-    pickle.UnpicklingError
-        If the file cannot be unpickled.
     """
     if isinstance(obj, (str, Path)):
         path = Path(obj)

@@ -1,4 +1,8 @@
-"""STILT simulation loading and validation utilities."""
+"""STILT simulation loading and validation utilities.
+
+This module provides functions for loading, filtering, and validating
+STILT simulations by time and location.
+"""
 
 import datetime as dt
 from pathlib import Path

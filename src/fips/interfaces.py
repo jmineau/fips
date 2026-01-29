@@ -1,3 +1,9 @@
+"""Interfaces and mixins for inverse problem outputs.
+
+This module provides base classes for managing estimator outputs including
+caching, type conversion to pandas and xarray, and metadata.
+"""
+
 from enum import Enum
 from typing import TYPE_CHECKING, Literal
 

@@ -1,29 +1,16 @@
-"""
-Flux inversion module.
+"""Atmospheric flux inversion framework.
 
-This module provides classes and utilities for performing atmospheric flux inversion,
-a technique used to estimate surface fluxes (such as greenhouse gas emissions or uptake)
-from observed atmospheric concentrations. Flux inversion is a specific application of
-the general inverse problem framework, where the goal is to infer unknown fluxes
-(posterior) given observed concentrations, a prior flux inventory, and a model
-of atmospheric transport.
+Provides classes and utilities for estimating surface fluxes (emissions/uptake)
+from observed atmospheric concentrations using STILT transport models.
 
-Key terminology differences from the base inverse problem:
-- "Prior" refers to the initial estimate of surface fluxes (e.g., from inventories or models).
-- "Posterior" refers to the updated estimate of fluxes after assimilating observations.
-- "Forward Operator" maps fluxes to concentrations via atmospheric transport.
-- "Observations" are the observed concentration values at receptor locations/times.
-- "Constant" is the baseline (background) concentration not attributed to local fluxes.
+Flux inversion is a specific application of the inverse problem framework where:
+- Prior: initial estimate of surface fluxes (from inventories or models)
+- Posterior: updated flux estimate after assimilating observations
+- Forward Operator: maps fluxes to concentrations via STILT transport
+- Observations: measured concentration values at receptor locations/times
 
-The Forward Operator matrix is constructed using atmospheric transport models, currently STILT
-(Stochastic Time-Inverted Lagrangian Transport), which simulates the influence of surface
-fluxes on observed concentrations by generating footprints for each observation.
-These footprints quantify the sensitivity of each observation to fluxes at different
-locations and times, forming the basis of the Forward Operator.
-This module supports building the Forward Operator from STILT simulations, specifying time bins,
-grid resolutions, and parallel computation. It also provides the FluxInversion class,
-which extends the base InverseProblem to handle flux-specific terminology and plotting
-interfaces for visualizing results.
+The Forward Operator is built from STILT footprints which quantify the sensitivity
+of each observation to fluxes at different locations and times.
 """
 
 import pandas as pd
@@ -42,31 +29,27 @@ from fips.vectors import Block, Vector
 
 
 class FluxInversion(InverseProblem):
-    """
-    FluxInversion: Atmospheric Flux Inversion Problem.
-
-    Subclass of InverseProblem for estimating spatial and temporal surface fluxes
-    (e.g., greenhouse gas emissions or uptake) from observed atmospheric concentrations.
-    Combines observations, prior flux estimates, and a forward model (Forward Operator)
-    within a statistical estimation framework.
-
+    """Atmospheric flux inversion problem.
+    
+    Subclass of InverseProblem specialized for estimating spatial and temporal surface fluxes
+    from observed atmospheric concentrations using a forward transport model.
     Supports multi-block state composition (e.g., fluxes + bias corrections).
-
+    
     Attributes
     ----------
     prior : Vector
-        Prior state vector (fluxes, bias, etc. as Blocks).
+        Prior state vector (fluxes, bias, etc.).
     obs : Vector
-        Observation vector (concentrations, etc. as Blocks).
+        Observation vector (concentrations, etc.).
     forward_operator : ForwardOperator
-        Forward operator mapping state to observations via atmospheric transport.
+        Sensitivity matrix mapping state to observations.
     prior_error : CovarianceMatrix
-        Covariance matrix for prior state uncertainty.
+        Prior state uncertainty covariance.
     modeldata_mismatch : CovarianceMatrix
-        Covariance matrix for observation error.
-    constant : pd.Series or float or None
-        Background/constant concentration to add to modelled observations.
-    plot : Plotter
+        Observation error covariance.
+    constant : pd.Series, float, or None
+        Background concentration.
+    plot : FluxPlotter
         Plotting interface for results.
     """
 

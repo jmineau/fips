@@ -1,7 +1,7 @@
-"""
-Inversion estimators.
+"""Inversion estimators for solving inverse problems.
 
-This module contains various inversion estimators for solving inverse problems.
+This module contains Bayesian and regularized estimators for state estimation
+in linear inverse problems, computing posterior distributions and diagnostics.
 """
 
 from abc import ABC, abstractmethod

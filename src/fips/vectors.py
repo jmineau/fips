@@ -1,3 +1,9 @@
+"""Vector and Block data structures for inverse problems.
+
+This module provides Block and Vector classes for organizing state and observation data
+into structured hierarchies with automatic index management and serialization support.
+"""
+
 import warnings
 from collections.abc import Sequence
 from pathlib import Path
@@ -10,12 +16,29 @@ from fips.serialization import load_or_pass, Pickleable
 
 
 class Block(Pickleable):
+    """Single data block with a named Series and consistent index.
+    
+    A Block wraps a pandas Series with automatic index name validation.
+    Can be initialized from an existing Series or from raw values.
+    """
+
     def __init__(
         self,
         data: pd.Series | npt.ArrayLike,
         index: pd.Index | None = None,
         name: str | None = None,
     ):
+        """Initialize a Block.
+
+        Parameters
+        ----------
+        data : pd.Series or array-like
+            Series data or raw values.
+        index : pd.Index, optional
+            Index for the Block. Required if data is array-like.
+        name : str, optional
+            Name for the Block. Required if data is array-like.
+        """
         # CASE 1: Input is already a Series
         if isinstance(data, pd.Series):
             self.data = data.copy()
@@ -87,15 +110,21 @@ class Block(Pickleable):
 
 
 class Vector(Pickleable):
-    # State or Obs vector composed of multiple Blocks
-    # can be prior, posterior, obs, etc.
-    def __init__(self, name, blocks: Sequence[Block | pd.Series]):
-        """
+    """State or observation vector composed of multiple Block objects.
+    
+    A Vector organizes one or more Blocks (prior, posterior, observations, etc.)
+    into a single hierarchical structure with automatic index promotion.
+    """
+
+    def __init__(self, name: str, blocks: Sequence[Block | pd.Series]):
+        """Initialize a Vector.
+
         Parameters
         ----------
-        blocks : Sequence[Block | pd.Series]
-            A sequence containing either Block objects, pd.Series, or both.
-            pd.Series entries are automatically converted to Blocks.
+        name : str
+            Name for the Vector (e.g., 'prior', 'posterior', 'obs').
+        blocks : Sequence[Block or pd.Series]
+            Sequence of Block objects or Series (automatically converted to Blocks).
         """
         self.name = name
         self.blocks: dict[str | int, Block] = {}
@@ -119,8 +148,7 @@ class Vector(Pickleable):
 
     @staticmethod
     def _reconstruct_blocks_from_data(data: pd.Series) -> dict[str | int, Block]:
-        """
-        Reconstruct blocks dict from assembled Series with 'block' level in MultiIndex.
+        """Reconstruct blocks dictionary from assembled Series.
 
         Parameters
         ----------
@@ -129,7 +157,7 @@ class Vector(Pickleable):
 
         Returns
         -------
-        dict[str | int, Block]
+        dict[str or int, Block]
             Dictionary mapping block names to Block objects.
         """
         blocks = {}
@@ -142,8 +170,7 @@ class Vector(Pickleable):
 
     @classmethod
     def from_series(cls, data: pd.Series, name: str | None = None) -> "Vector":
-        """
-        Create a Vector from a Series with 'block' level in index.
+        """Create a Vector from a Series with 'block' level in index.
 
         Parameters
         ----------
@@ -234,14 +261,21 @@ class Vector(Pickleable):
         return len(self.data)
 
     def xs(self, *args, drop_block=False, **kwargs) -> pd.Series:
-        """
-        Access a cross-section of the vector data.
+        """Cross-section indexing for vector data.
 
         Parameters
         ----------
-        *args, **kwargs : passed to pd.Series.xs
+        *args
+            Positional arguments passed to pd.Series.xs.
         drop_block : bool, default False
-            If True, drops the 'block' level
+            If True, drops the 'block' level (not yet implemented).
+        **kwargs
+            Keyword arguments passed to pd.Series.xs.
+
+        Returns
+        -------
+        pd.Series
+            Cross-section of the vector data.
         """
         # Call the underlying Series xs method
         s = self.data.xs(*args, **kwargs).copy()
@@ -264,7 +298,22 @@ class Vector(Pickleable):
 def prepare_vector(
     name: str, vector: str | Path | Vector | pd.Series, float_precision: int | None
 ) -> Vector:
-    """Helper to normalize input vectors into Vector objects and sanitize indices."""
+    """Normalize and validate input into a Vector object.
+
+    Parameters
+    ----------
+    name : str
+        Name for the resulting Vector.
+    vector : str, Path, Vector, or pd.Series
+        Vector data or path to pickled Vector.
+    float_precision : int, optional
+        Round float indices to this many decimal places.
+
+    Returns
+    -------
+    Vector
+        Validated Vector object with sanitized indices.
+    """
     # Load from pickle if path is provided
     vector = load_or_pass(vector)
 

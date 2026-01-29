@@ -1,4 +1,8 @@
-"""STILT footprint loading and Jacobian row building utilities."""
+"""STILT footprint loading and Jacobian row building utilities.
+
+This module provides functions for loading footprints, validating their time ranges,
+and building individual Jacobian rows for assembly into the full sensitivity matrix.
+"""
 
 import datetime as dt
 

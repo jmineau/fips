@@ -1,22 +1,17 @@
-"""
-Correlation kernels for covariance matrices.
+"""Correlation kernels for covariance matrices.
 
-This module provides reusable functions to compute spatial, temporal, and spatio-temporal
-correlation kernels for use with CovarianceMatrix.set_block() and
-CovarianceMatrix.set_interaction() methods across different inverse problem types.
+Provides functions to compute spatial, temporal, and spatio-temporal correlation kernels
+for use in building covariance structures. Kernels are flexible and support custom
+dimension names for generic inverse problem applications.
 
-Kernels accept flexible dimension names as parameters, allowing them to work with
-any naming convention for time, location, latitude, longitude, etc.
-
-Example:
-    >>> from fips.kernels import exponential_decay_kernel, spatial_decay_kernel
-    >>> # Extract times from a custom index dimension
-    >>> times = obs_index.get_level_values("measurement_time")
-    >>> temporal_kernel = exponential_decay_kernel(times, length_scale=5.0)
-    >>> # Use custom dimension names for spatial indices
-    >>> lats = state_index.get_level_values("latitude")
-    >>> lons = state_index.get_level_values("longitude")
-    >>> spatial_kernel = spatial_decay_kernel(lats, lons, length_scale=100.0)
+Example
+-------
+>>> from fips.kernels import exponential_decay_kernel, spatial_decay_kernel
+>>> times = obs_index.get_level_values("measurement_time")
+>>> temporal_kernel = exponential_decay_kernel(times, length_scale=5.0)
+>>> lats = state_index.get_level_values("latitude")
+>>> lons = state_index.get_level_values("longitude")
+>>> spatial_kernel = spatial_decay_kernel(lats, lons, length_scale=100.0)
 """
 
 from __future__ import annotations

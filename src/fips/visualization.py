@@ -1,3 +1,9 @@
+"""Visualization and plotting utilities for inverse problem results.
+
+This module provides functions for plotting error norms, comparing multiple series,
+and computing credible intervals for uncertainty visualization.
+"""
+
 from __future__ import annotations
 
 from collections.abc import Iterable, Sequence

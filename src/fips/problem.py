@@ -1,3 +1,10 @@
+"""Inverse problem framework for state estimation.
+
+This module provides the core InverseProblem class which combines observations,
+prior estimates, forward operators, and error covariances into a unified framework
+for Bayesian state estimation.
+"""
+
 from pathlib import Path
 
 import pandas as pd
@@ -10,6 +17,12 @@ from fips.vectors import Vector, prepare_vector
 
 
 class InverseProblem(EstimatorOutput, Pickleable):
+    """Bayesian inverse problem combining observations, priors, and forward model.
+    
+    Organizes state vectors, observations, forward operators, and error covariances
+    into a unified framework for solving inverse problems via Bayesian estimation.
+    """
+
     def __init__(
         self,
         prior: str | Path | Vector | pd.Series,

@@ -1,3 +1,10 @@
+"""Matrix and covariance data structures for inverse problems.
+
+This module provides Matrix, CovarianceMatrix, and ForwardOperator classes
+for organizing linear operators and covariance structures with automatic
+index handling and serialization support.
+"""
+
 from collections.abc import Callable
 from pathlib import Path
 from typing import Any
@@ -61,30 +68,27 @@ def prepare_matrix(
     col_index: pd.Index,
     float_precision: int | None = None,
 ) -> Matrix:
-    """
-    Prepare a matrix by sanitizing, promoting if needed, checking overlap, and reindexing.
+    """Normalize and validate input into a Matrix object.
 
-    Assumes row_index and col_index are already promoted (i.e., in their final form).
-    Will promote the matrix indices if they don't match the first level of the target indices.
-    Always warns if overlap is incomplete.
+    Sanitizes, promotes if needed, and validates index overlap.
 
     Parameters
     ----------
-    matrix : str | Path | pd.DataFrame | Matrix
-        Input matrix data (file path to pickled object, DataFrame, or Matrix instance)
+    matrix : str, Path, pd.DataFrame, or Matrix
+        Input matrix data (file path to pickled Matrix, DataFrame, or Matrix instance).
     matrix_class : type[Matrix]
-        Class to wrap result in (e.g., ForwardOperator, CovarianceMatrix)
+        Class to wrap result in (ForwardOperator, CovarianceMatrix, etc.).
     row_index : pd.Index
-        Target row index (assumed already promoted)
+        Target row index (assumed already promoted).
     col_index : pd.Index
-        Target column index (assumed already promoted)
-    float_precision : int | None
-        Decimals to round float indices to
+        Target column index (assumed already promoted).
+    float_precision : int, optional
+        Decimals to round float indices to.
 
     Returns
     -------
     Matrix
-        Instance of matrix_class wrapping the prepared DataFrame
+        Instance of matrix_class wrapping the prepared DataFrame.
     """
     # Load from pickle if path is provided
     matrix = load_or_pass(matrix)

@@ -1,3 +1,5 @@
+"""Plotting and visualization for flux inversion results."""
+
 from typing import TYPE_CHECKING
 
 import cartopy.crs as ccrs
@@ -10,9 +12,19 @@ if TYPE_CHECKING:
 
 
 class FluxPlotter:
-    """Plotting interface for FluxInversion results."""
+    """Plotting interface for FluxInversion results.
+    
+    Provides methods for visualizing prior/posterior fluxes and concentration timeseries.
+    """
 
     def __init__(self, inversion: "FluxInversion"):
+        """Initialize with a FluxInversion instance.
+
+        Parameters
+        ----------
+        inversion : FluxInversion
+            The inverse problem to visualize.
+        """
         self.inversion = inversion
 
     def fluxes(
@@ -26,46 +38,26 @@ class FluxPlotter:
         sites_kwargs=None,
         **kwargs,
     ):
-        """
-        Plot prior & Posterior fluxes.
+        """Plot prior and posterior flux maps.
 
         Parameters
         ----------
-        time : 'mean' | 'std' | int | pd.Timestamp, optional
-            Time to plot. Can be 'mean' or 'std' to plot the mean or standard deviation
-            over time, an integer to plot a specific time index, or a pd.Timestamp to plot a specific time.
-            By default 'mean'.
-        truth : pd.Series | None, optional
-            Truth fluxes to plot for comparison, by default None.
-            Residual will be calculated as posterior - truth if provided,
-            otherwise as posterior - prior.
-        x_dim : str, optional
-            Name of the x-coordinate dimension (e.g., 'lon'), by default 'lon'.
-        y_dim : str, optional
-            Name of the y-coordinate dimension (e.g., 'lat'), by default 'lat'.
-        time_dim : str, optional
-            Name of the time dimension, by default 'time'.
-        sites : bool | dict | None, optional
-            Whether to overlay observation site locations on the plots.
-            Can be:
-            - False or None: no sites plotted (default)
-            - True: plot sites (requires sites to be stored in inversion object)
-            - dict: dictionary mapping site/location IDs to (latitude, longitude) tuples.
-              Example: {'site_1': (40.5, -111.5), 'site_2': (41.2, -112.0)}
-        sites_kwargs : dict | None, optional
-            Additional keyword arguments for site marker plotting (e.g., 'marker', 'color', 's').
-            By default None (uses default marker style).
-        tiler : cartopy.io.img_tiles.GoogleTiles | None, optional
-            Tiler to use for background map, by default None.
-            If provided, the tiler will be used to add a background map to the plots.
-        **kwargs : dict
-            Additional keyword arguments to pass to xarray plotting functions.
-
-        Returns
-        -------
-        fig, axes : matplotlib.figure.Figure, np.ndarray
-            Figure and axes objects.
-        """
+        time : str, int, or pd.Timestamp, default 'mean'
+            Time to plot: 'mean', 'std', time index, or timestamp.
+        truth : pd.Series, optional
+            Truth fluxes for comparison.
+        x_dim : str, default 'lon'
+            Name of the x-coordinate dimension.
+        y_dim : str, default 'lat'
+            Name of the y-coordinate dimension.
+        time_dim : str, default 'time'
+            Name of the time dimension.
+        sites : bool or dict, optional
+            Site locations to overlay: dict mapping site IDs to (lat, lon).
+        sites_kwargs : dict, optional
+            Additional plotting kwargs for site markers.
+        **kwargs
+            Additional arguments passed to xarray plotting.
         # Get xarray representations of fluxes
         prior = self.inversion.xr.prior["flux"]
         posterior = self.inversion.xr.posterior["flux"]
@@ -287,21 +279,21 @@ class FluxPlotter:
         return fig, axes
 
     def concentrations(self, location=None, location_dim="obs_location", **kwargs):
-        """
-        Plot observed, prior, & posterior concentrations.
+        """Plot observed, prior, and posterior concentrations.
 
         Parameters
         ----------
-        location : str | list[str] | None, optional
+        location : str, list of str, optional
             Observation location(s) to plot. If None, plots all locations.
-            By default None.
-        **kwargs : dict
-            Additional keyword arguments to pass to pandas plotting functions.
+        location_dim : str, default 'obs_location'
+            Name of the location dimension in the data.
+        **kwargs
+            Additional arguments passed to pandas plotting.
 
         Returns
         -------
-        axes : list[matplotlib.axes.Axes]
-            List of axes objects.
+        axes : np.ndarray
+            Array of axes objects, one per location.
         """
         obs = self.inversion.obs["concentration"].rename("observed")
         posterior = self.inversion.posterior_obs["concentration"].rename("posterior")

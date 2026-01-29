@@ -1,3 +1,9 @@
+"""Index validation and manipulation utilities.
+
+This module provides utilities for checking index overlap, promoting indices,
+and sanitizing index types for consistent handling across data structures.
+"""
+
 import warnings
 
 import pandas as pd
