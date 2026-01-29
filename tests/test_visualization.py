@@ -1,10 +1,10 @@
-"""Test suite for fips.plotting module."""
+"""Test suite for fips.visualization module."""
 
 import numpy as np
 import pandas as pd
 import pytest
 
-from fips.plotting import (
+from fips.visualization import (
     compute_credible_interval,
     plot_comparison,
     plot_error_norm,

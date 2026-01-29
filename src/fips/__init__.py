@@ -18,19 +18,19 @@ from .kernels import (
     spatio_temporal_kernel,
 )
 from .matrices import CovarianceMatrix, ForwardOperator, convolve
-from .plotting import compute_credible_interval, plot_comparison, plot_error_norm
+from .parallel import parallelize
 from .problem import InverseProblem
-from .utils import (
+from .spacetime import (
     dataframe_to_xarray,
     enough_obs_per_interval,
     filter_intervals,
     haversine_matrix,
     integrate_over_time_bins,
-    parallelize,
     series_to_xarray,
     time_difference_matrix,
 )
 from .vectors import Block, Vector
+from .visualization import compute_credible_interval, plot_comparison, plot_error_norm
 
 __all__ = [
     "Block",

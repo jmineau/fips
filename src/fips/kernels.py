@@ -95,7 +95,7 @@ def spatial_decay_kernel(
     np.ndarray
         (n_locations, n_locations) correlation matrix with spatial decay.
     """
-    from fips.problems.flux.utils import haversine_matrix
+    from fips.spacetime import haversine_matrix
 
     if isinstance(lats, pd.Index):
         lats = lats.to_numpy()

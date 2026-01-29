@@ -56,18 +56,18 @@ class Pickleable:
 
         Raises
         ------
-        FileNotFoundError
-            If the file does not exist.
         ValueError
             If file extension is not .pkl or .pickle.
+        FileNotFoundError
+            If the file does not exist.
         """
         path = Path(path)
-        if not path.exists():
-            raise FileNotFoundError(f"File not found: {path}")
         if path.suffix not in cls.VALID_EXTENSIONS:
             raise ValueError(
                 f"File extension must be one of {cls.VALID_EXTENSIONS}, got {path.suffix}"
             )
+        if not path.exists():
+            raise FileNotFoundError(f"File not found: {path}")
         with open(path, "rb") as f:
             return pickle.load(f)
 

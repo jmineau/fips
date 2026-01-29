@@ -7,7 +7,7 @@ import xarray as xr
 from fips.estimators import OUTPUT_PROPERTY_NAMES, Estimator
 from fips.matrices import CovarianceMatrix, Matrix
 from fips.serialization import Pickleable
-from fips.utils import dataframe_to_xarray, series_to_xarray
+from fips.spacetime import dataframe_to_xarray, series_to_xarray
 from fips.vectors import Vector
 
 if TYPE_CHECKING:

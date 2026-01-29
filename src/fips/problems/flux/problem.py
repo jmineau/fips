@@ -31,8 +31,8 @@ import pandas as pd
 from fips.estimators import Estimator
 from fips.matrices import ForwardOperator as Jacobian
 from fips.problem import InverseProblem
-from fips.problems.flux.plotting import FluxPlotter
-from fips.utils import filter_intervals
+from fips.problems.flux.visualization import FluxPlotter
+from fips.spacetime import filter_intervals
 from fips.vectors import Block, Vector
 
 # TODO:
