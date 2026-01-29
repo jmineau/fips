@@ -4,7 +4,7 @@ This module provides the JacobianBuilder class for constructing sensitivity matr
 (Forward Operators) from STILT atmospheric transport simulations.
 """
 
-import datetime as dt
+
 from collections import defaultdict
 from pathlib import Path
 from typing import Literal, overload
@@ -191,5 +191,3 @@ class JacobianBuilder:
 
         return H_dict
 
-
-__all__ = ["JacobianBuilder"]

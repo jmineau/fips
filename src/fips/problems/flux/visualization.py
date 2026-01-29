@@ -12,7 +12,8 @@ if TYPE_CHECKING:
 
 
 class FluxPlotter:
-    """Plotting interface for FluxInversion results.
+    """
+    Plotting interface for FluxInversion results.
     
     Provides methods for visualizing prior/posterior fluxes and concentration timeseries.
     """
@@ -38,7 +39,8 @@ class FluxPlotter:
         sites_kwargs=None,
         **kwargs,
     ):
-        """Plot prior and posterior flux maps.
+        """
+        Plot prior and posterior flux maps.
 
         Parameters
         ----------
@@ -58,6 +60,12 @@ class FluxPlotter:
             Additional plotting kwargs for site markers.
         **kwargs
             Additional arguments passed to xarray plotting.
+        
+        Returns
+        -------
+        fig, axes : matplotlib Figure and Axes
+            The created figure and axes.
+        """
         # Get xarray representations of fluxes
         prior = self.inversion.xr.prior["flux"]
         posterior = self.inversion.xr.posterior["flux"]

@@ -56,19 +56,6 @@ def _check_shapes(*arrays: np.ndarray | None) -> tuple[int, int]:
     return n_points, state_dim
 
 
-def _prepare_dims(state_dim: int, dims: int | Sequence[int] | None) -> list[int]:
-    if dims is None:
-        return list(range(min(state_dim, 4)))
-    if isinstance(dims, int):
-        return list(range(min(state_dim, dims)))
-    chosen = list(dims)
-    if not chosen:
-        raise ValueError("dims cannot be empty")
-    if min(chosen) < 0 or max(chosen) >= state_dim:
-        raise IndexError(f"dims must be in [0, {state_dim - 1}]")
-    return chosen
-
-
 def plot_error_norm(
     prior: ArrayLike,
     posterior: ArrayLike,

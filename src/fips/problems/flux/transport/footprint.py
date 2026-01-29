@@ -254,13 +254,3 @@ def build_jacobian_row(
     
     print(f"Finished computing Jacobian row for {sim.id} in {dt.datetime.now() - t0}")
     return rows
-
-
-__all__ = [
-    "load_footprint",
-    "check_footprint_in_time_range",
-    "get_footprint",
-    "build_obs_index",
-    "calc_rounding_digits",
-    "build_jacobian_row",
-]

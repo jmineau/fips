@@ -3,7 +3,8 @@
 import numpy as np
 import pandas as pd
 
-from fips import Block, CovarianceMatrix, Vector, exponential_decay_kernel
+from fips import Block, CovarianceMatrix, Vector
+from fips.kernels import exponential_decay_kernel
 
 
 def test_diagonal_from_scalar():
