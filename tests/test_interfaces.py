@@ -4,8 +4,8 @@ import numpy as np
 import pandas as pd
 import pytest
 
+from fips.covariance import CovarianceMatrix
 from fips.interfaces import XR, EstimatorOutput
-from fips.matrices import CovarianceMatrix
 
 
 class MockEstimator:
@@ -28,7 +28,7 @@ class MockInverseProblem(EstimatorOutput):
         super().__init__()
         import pandas as pd
 
-        from fips.vectors import Block, Vector
+        from fips.structures import Block, Vector
 
         self.n_x = n_x
         self.n_z = n_z
@@ -67,7 +67,7 @@ class TestEstimatorOutputPosterior:
 
     def test_posterior_property(self):
         """Test posterior property returns correct Vector."""
-        from fips.vectors import Vector
+        from fips.structures import Vector
 
         problem = MockInverseProblem(n_x=5, n_z=10)
         posterior = problem.posterior
@@ -110,14 +110,14 @@ class TestEstimatorOutputPosteriorObs:
 
     def test_posterior_obs_property(self):
         """Test posterior_obs property."""
-        from fips.vectors import Vector
+        from fips.structures import Vector
 
         problem = MockInverseProblem(n_x=5, n_z=10)
         posterior_obs = problem.posterior_obs
 
         assert isinstance(posterior_obs, Vector)
         assert posterior_obs.n == 10
-        assert posterior_obs.name == "posterior_obs"
+        assert posterior_obs.name == "obs"
 
     def test_posterior_obs_uses_estimator_y_hat(self):
         """Test that posterior_obs uses estimator's y_hat."""
@@ -177,14 +177,14 @@ class TestEstimatorOutputPriorObs:
 
     def test_prior_obs_property(self):
         """Test prior_obs property."""
-        from fips.vectors import Vector
+        from fips.structures import Vector
 
         problem = MockInverseProblem(n_x=5, n_z=10)
         prior_obs = problem.prior_obs
 
         assert isinstance(prior_obs, Vector)
         assert prior_obs.n == 10
-        assert prior_obs.name == "prior_obs"
+        assert prior_obs.name == "obs"
 
     def test_prior_obs_uses_estimator_y_0(self):
         """Test that prior_obs uses estimator's y_0."""
@@ -208,14 +208,14 @@ class TestEstimatorOutputURed:
 
     def test_u_red_property(self):
         """Test U_red property."""
-        from fips.vectors import Vector
+        from fips.structures import Vector
 
         problem = MockInverseProblem(n_x=5, n_z=10)
         u_red = problem.U_red
 
         assert isinstance(u_red, Vector)
         assert u_red.n == 5
-        assert u_red.name == "U_red"
+        assert u_red.name == "state"
 
     def test_u_red_uses_estimator_U_red(self):
         """Test that U_red uses estimator's U_red."""
@@ -310,8 +310,8 @@ class TestEstimatorOutputConsistency:
 
     def test_all_properties_have_correct_dtype(self):
         """Test that all properties return correct types."""
-        from fips.matrices import CovarianceMatrix
-        from fips.vectors import Vector
+        from fips.covariance import CovarianceMatrix
+        from fips.structures import Vector
 
         problem = MockInverseProblem()
 

@@ -1,11 +1,11 @@
-"""Test suite for fips.matrices module."""
+"""Test suite for fips matrix types (structures, covariance, operators)."""
 
 import numpy as np
 import pandas as pd
-import pytest
 
-from fips.matrices import CovarianceMatrix, ForwardOperator, Matrix, prepare_matrix
-from fips.vectors import Block, Vector
+from fips.covariance import CovarianceMatrix
+from fips.operators import ForwardOperator, convolve
+from fips.structures import Matrix, prepare_matrix
 
 
 class TestMatrix:
@@ -102,297 +102,29 @@ class TestCovarianceMatrix:
         # Check symmetry
         assert np.allclose(cov.values, cov.values.T)
 
-    def test_covariance_matrix_from_vector(self):
-        """Test creating CovarianceMatrix from Vector."""
-        block = Block(pd.Series([1, 2, 3], index=["a", "b", "c"], name="b1"))
-        vector = Vector(name="test_vector", blocks=[block])
+    def test_covariance_matrix_from_variances(self):
+        """Test creating CovarianceMatrix from variances."""
+        variances = pd.Series([1.0, 2.0, 3.0], index=["a", "b", "c"], name="variance")
 
-        cov = CovarianceMatrix.from_vector(vector)
+        cov = CovarianceMatrix.from_variances(variances)
 
         assert cov.shape == (3, 3)
-        # Should be zero-initialized
-        assert np.allclose(cov.values, 0)
+        # Should be diagonal with variances on diagonal
+        assert np.allclose(np.diag(cov.values), [1.0, 2.0, 3.0])
+        assert np.allclose(
+            cov.values - np.diag(np.diag(cov.values)), 0
+        )  # Off-diagonal is zero
 
-    def test_covariance_matrix_from_vector_multiple_blocks(self):
-        """Test CovarianceMatrix.from_vector with multiple blocks."""
-        block1 = Block(pd.Series([1, 2], index=["x", "y"], name="b1"))
-        block2 = Block(pd.Series([3, 4, 5], index=["a", "b", "c"], name="b2"))
-        vector = Vector(name="multi_vector", blocks=[block1, block2])
+    def test_covariance_matrix_from_variances_multiindex(self):
+        """Test CovarianceMatrix.from_variances with MultiIndex."""
+        idx = pd.MultiIndex.from_product([["b1", "b2"], [0, 1]], names=["block", "idx"])
+        variances = pd.Series([1.0, 2.0, 3.0, 4.0], index=idx, name="variance")
 
-        cov = CovarianceMatrix.from_vector(vector)
+        cov = CovarianceMatrix.from_variances(variances)
 
-        assert cov.shape == (5, 5)
+        assert cov.shape == (4, 4)
         assert "block" in cov.index.names
-
-
-class TestCovarianceMatrixSetBlock:
-    """Tests for CovarianceMatrix.set_block() method."""
-
-    def test_set_block_scalar_sigma(self):
-        """Test set_block with scalar sigma (identity-like covariance)."""
-        block = Block(pd.Series([1, 2, 3], index=["a", "b", "c"], name="state"))
-        vector = Vector(name="state_vector", blocks=[block])
-        cov = CovarianceMatrix.from_vector(vector)
-
-        cov.set_block("state", sigma=2.0)
-
-        # Should be diagonal with 2.0^2 = 4.0 on diagonal
-        expected = np.eye(3) * 4.0
-        assert np.allclose(cov.values, expected)
-
-    def test_set_block_array_sigma(self):
-        """Test set_block with array sigma (heterogeneous variances)."""
-        block = Block(pd.Series([1, 2, 3], index=["a", "b", "c"], name="state"))
-        vector = Vector(name="state_vector", blocks=[block])
-        cov = CovarianceMatrix.from_vector(vector)
-
-        sigmas = np.array([1.0, 2.0, 3.0])
-        cov.set_block("state", sigma=sigmas)
-
-        # Diagonal should be sigmas^2
-        expected = np.diag([1.0, 4.0, 9.0])
-        assert np.allclose(cov.values, expected)
-
-    def test_set_block_with_kernel(self):
-        """Test set_block with correlation kernel."""
-        block = Block(pd.Series([1, 2, 3], index=[0.0, 1.0, 2.0], name="state"))
-        vector = Vector(name="state_vector", blocks=[block])
-        cov = CovarianceMatrix.from_vector(vector)
-
-        # Exponential decay kernel that handles MultiIndex by extracting the numeric level
-        def kernel(idx1, idx2):
-            # Extract numeric level from MultiIndex if present
-            if isinstance(idx1, pd.MultiIndex):
-                # Get the last level (the original numeric index)
-                x1 = idx1.get_level_values(-1).values[:, None]
-            else:
-                x1 = idx1.values[:, None]
-
-            if isinstance(idx2, pd.MultiIndex):
-                x2 = idx2.get_level_values(-1).values[None, :]
-            else:
-                x2 = idx2.values[None, :]
-
-            dists = np.abs(x1 - x2)
-            return np.exp(-dists / 1.0)  # correlation length = 1.0
-
-        cov.set_block("state", sigma=1.0, kernel=kernel)
-
-        # Should be symmetric and have 1 on diagonal
-        assert np.allclose(np.diag(cov.values), [1.0, 1.0, 1.0])
-        assert np.allclose(cov.values, cov.values.T)
-
-    def test_set_block_from_array_covariance(self):
-        """Test set_block with explicit covariance array."""
-        block = Block(pd.Series([1, 2], index=["a", "b"], name="state"))
-        vector = Vector(name="state_vector", blocks=[block])
-        cov = CovarianceMatrix.from_vector(vector)
-
-        cov_array = np.array([[1.0, 0.5], [0.5, 2.0]])
-        cov.set_block("state", covariance=cov_array)
-
-        assert np.allclose(cov.values, cov_array)
-
-    def test_set_block_from_dataframe_covariance(self):
-        """Test set_block with DataFrame covariance."""
-        block = Block(pd.Series([1, 2], index=["a", "b"], name="state"))
-        vector = Vector(name="state_vector", blocks=[block])
-        cov = CovarianceMatrix.from_vector(vector)
-
-        cov_df = pd.DataFrame(
-            [[1.0, 0.5], [0.5, 2.0]], index=["a", "b"], columns=["a", "b"]
-        )
-        cov.set_block("state", covariance=cov_df)
-
-        assert np.allclose(cov.values, cov_df.values)
-
-    def test_set_block_from_callable_covariance(self):
-        """Test set_block with callable covariance."""
-        block = Block(pd.Series([1, 2, 3], index=["a", "b", "c"], name="state"))
-        vector = Vector(name="state_vector", blocks=[block])
-        cov = CovarianceMatrix.from_vector(vector)
-
-        def covariance_func(idx_row, idx_col):
-            # Simple function that returns ones (all fully correlated)
-            return np.ones((len(idx_row), len(idx_col)))
-
-        cov.set_block("state", covariance=covariance_func)
-
-        expected = np.ones((3, 3))
-        assert np.allclose(cov.values, expected)
-
-    def test_set_block_multiblock_vector(self):
-        """Test set_block on one block of a multi-block vector."""
-        block1 = Block(pd.Series([1, 2], index=["x", "y"], name="b1"))
-        block2 = Block(pd.Series([3, 4, 5], index=["a", "b", "c"], name="b2"))
-        vector = Vector(name="multi_vector", blocks=[block1, block2])
-        cov = CovarianceMatrix.from_vector(vector)
-
-        # Set first block only
-        cov.set_block("b1", sigma=2.0)
-
-        # Block 1 (rows/cols 0-1) should have 4.0 on diagonal
-        assert np.allclose(cov.values[0, 0], 4.0)
-        assert np.allclose(cov.values[1, 1], 4.0)
-        # Block 2 (rows/cols 2-4) should still be zero
-        assert np.allclose(cov.values[2:, 2:], 0.0)
-
-    def test_set_block_chaining(self):
-        """Test that set_block returns self for method chaining."""
-        block1 = Block(pd.Series([1, 2], index=["x", "y"], name="b1"))
-        block2 = Block(pd.Series([3, 4], index=["a", "b"], name="b2"))
-        vector = Vector(name="chain_vector", blocks=[block1, block2])
-        cov = CovarianceMatrix.from_vector(vector)
-
-        result = cov.set_block("b1", sigma=1.0).set_block("b2", sigma=2.0)
-
-        assert result is cov
-        assert np.allclose(cov.values[0, 0], 1.0)
-        assert np.allclose(cov.values[2, 2], 4.0)
-
-    def test_set_block_cannot_specify_both_sigma_covariance(self):
-        """Test that specifying both sigma and covariance raises error."""
-        block = Block(pd.Series([1, 2], index=["a", "b"], name="state"))
-        vector = Vector(name="state_vector", blocks=[block])
-        cov = CovarianceMatrix.from_vector(vector)
-
-        with pytest.raises(ValueError, match="Specify 'covariance' OR 'sigma'"):
-            cov.set_block("state", sigma=1.0, covariance=np.eye(2))
-
-    def test_set_block_must_specify_sigma_or_covariance(self):
-        """Test that must specify either sigma or covariance."""
-        block = Block(pd.Series([1, 2], index=["a", "b"], name="state"))
-        vector = Vector(name="state_vector", blocks=[block])
-        cov = CovarianceMatrix.from_vector(vector)
-
-        with pytest.raises(
-            ValueError, match="Must specify either 'covariance' or 'sigma'"
-        ):
-            cov.set_block("state")
-
-
-class TestCovarianceMatrixSetInteraction:
-    """Tests for CovarianceMatrix.set_interaction() method."""
-
-    def test_set_interaction_scalar_sigma(self):
-        """Test set_interaction with scalar sigma for cross-covariance."""
-        block1 = Block(pd.Series([1, 2], index=["x", "y"], name="b1"))
-        block2 = Block(pd.Series([3, 4, 5], index=["a", "b", "c"], name="b2"))
-        vector = Vector(name="interaction_vector", blocks=[block1, block2])
-        cov = CovarianceMatrix.from_vector(vector)
-
-        cov.set_interaction("b1", "b2", sigma=0.5)
-
-        # Cross block should have 0.25 (0.5^2)
-        assert np.allclose(cov.values[0, 2], 0.25)
-        # Should be symmetric
-        assert np.allclose(cov.values[2, 0], 0.25)
-
-    def test_set_interaction_tuple_sigma(self):
-        """Test set_interaction with tuple of sigmas."""
-        block1 = Block(pd.Series([1, 2], index=["x", "y"], name="b1"))
-        block2 = Block(pd.Series([3, 4], index=["a", "b"], name="b2"))
-        vector = Vector(name="interaction_vector", blocks=[block1, block2])
-        cov = CovarianceMatrix.from_vector(vector)
-
-        cov.set_interaction("b1", "b2", sigma=(1.0, 2.0))
-
-        # Should be 1.0 * 2.0 = 2.0
-        assert np.allclose(cov.values[0, 2], 2.0)
-        assert np.allclose(cov.values[2, 0], 2.0)
-
-    def test_set_interaction_from_array_covariance(self):
-        """Test set_interaction with explicit covariance array."""
-        block1 = Block(pd.Series([1, 2], index=["x", "y"], name="b1"))
-        block2 = Block(pd.Series([3, 4], index=["a", "b"], name="b2"))
-        vector = Vector(name="interaction_vector", blocks=[block1, block2])
-        cov = CovarianceMatrix.from_vector(vector)
-
-        cross_cov = np.array([[0.1, 0.2], [0.3, 0.4]])
-        cov.set_interaction("b1", "b2", covariance=cross_cov)
-
-        # Check both blocks and symmetry
-        assert np.allclose(cov.values[0:2, 2:4], cross_cov)
-        assert np.allclose(cov.values[2:4, 0:2], cross_cov.T)
-
-    def test_set_interaction_with_kernel(self):
-        """Test set_interaction with kernel function."""
-        idx1 = pd.Index([0.0, 1.0], name="x")
-        idx2 = pd.Index([2.0, 3.0], name="y")
-
-        block1 = Block(pd.Series([1, 2], index=idx1, name="b1"))
-        block2 = Block(pd.Series([3, 4], index=idx2, name="b2"))
-        vector = Vector(name="interaction_vector", blocks=[block1, block2])
-        cov = CovarianceMatrix.from_vector(vector)
-
-        def distance_kernel(idx_row, idx_col):
-            """Exponential distance kernel."""
-            # Indices are clean (single level) after CovarianceMatrix extracts them
-            x = idx_row.values[:, None].astype(float)
-            y = idx_col.values[None, :].astype(float)
-
-            # Exponential distance kernel with correlation length = 1.0
-            dists = np.abs(x - y)
-            return np.exp(-dists / 1.0)
-
-        # Set interaction using kernel
-        cov.set_interaction("b1", "b2", sigma=1.0, kernel=distance_kernel)
-
-        # Verify the result
-        assert np.isfinite(cov.values).all()
-        # Cross-covariance should have reasonable values from exponential kernel
-        cross_block = cov.values[0:2, 2:4]
-        assert cross_block.shape == (2, 2)
-        assert not np.allclose(cross_block, 0)  # Should not be all zeros
-
-    def test_set_interaction_same_block_calls_set_block(self):
-        """Test that set_interaction with same block calls set_block."""
-        block = Block(pd.Series([1, 2], index=["x", "y"], name="b1"))
-        vector = Vector(name="single_vector", blocks=[block])
-        cov = CovarianceMatrix.from_vector(vector)
-
-        cov.set_interaction("b1", "b1", sigma=2.0)
-
-        # Should behave like set_block
-        expected = np.eye(2) * 4.0
-        assert np.allclose(cov.values, expected)
-
-    def test_set_interaction_three_blocks(self):
-        """Test set_interaction with three blocks."""
-        block1 = Block(pd.Series([1], index=["a"], name="b1"))
-        block2 = Block(pd.Series([2], index=["b"], name="b2"))
-        block3 = Block(pd.Series([3], index=["c"], name="b3"))
-        vector = Vector(name="three_vector", blocks=[block1, block2, block3])
-        cov = CovarianceMatrix.from_vector(vector)
-
-        # Set all interactions
-        cov.set_block("b1", sigma=1.0)
-        cov.set_block("b2", sigma=2.0)
-        cov.set_block("b3", sigma=3.0)
-        cov.set_interaction("b1", "b2", sigma=0.5)
-        cov.set_interaction("b1", "b3", sigma=0.5)
-        cov.set_interaction("b2", "b3", sigma=0.5)
-
-        # Check structure
-        assert cov.shape == (3, 3)
-        assert np.allclose(cov.values[0, 0], 1.0)
-        assert np.allclose(cov.values[1, 1], 4.0)
-        assert np.allclose(cov.values[2, 2], 9.0)
-        assert np.allclose(cov.values[0, 1], 0.25)
-        assert np.allclose(cov.values[1, 0], 0.25)
-
-    def test_set_interaction_cannot_have_kernel_with_covariance(self):
-        """Test that kernel cannot be used with covariance."""
-        block1 = Block(pd.Series([1, 2], index=["x", "y"], name="b1"))
-        block2 = Block(pd.Series([3, 4], index=["a", "b"], name="b2"))
-        vector = Vector(name="interaction_vector", blocks=[block1, block2])
-        cov = CovarianceMatrix.from_vector(vector)
-
-        def kernel_func(idx1, idx2):
-            return np.ones((len(idx1), len(idx2)))
-
-        with pytest.raises(ValueError, match="Cannot apply 'kernel' to 'covariance'"):
-            cov.set_interaction("b1", "b2", covariance=np.eye(2), kernel=kernel_func)
+        assert np.allclose(np.diag(cov.values), [1.0, 2.0, 3.0, 4.0])
 
 
 class TestCovarianceMatrixAddition:
@@ -599,7 +331,6 @@ class TestConvolve:
 
     def test_convolve_basic(self):
         """Test basic convolution with vector and forward operator."""
-        from fips.matrices import convolve
 
         state = np.array([1.0, 2.0, 3.0])
         H = pd.DataFrame([[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]])
@@ -611,7 +342,6 @@ class TestConvolve:
 
     def test_convolve_with_dataframe_operator(self):
         """Test convolution with DataFrame forward operator."""
-        from fips.matrices import convolve
 
         state = np.array([1.0, 2.0])
         H = pd.DataFrame([[1.0, 2.0], [3.0, 4.0]])
@@ -623,7 +353,6 @@ class TestConvolve:
 
     def test_convolve_with_forward_operator_object(self):
         """Test convolution with ForwardOperator object."""
-        from fips.matrices import convolve
 
         state = np.array([1.0, 2.0])
         H_df = pd.DataFrame([[1.0, 2.0], [3.0, 4.0]])
@@ -635,7 +364,6 @@ class TestConvolve:
 
     def test_convolve_result_values(self):
         """Test that convolution produces correct values."""
-        from fips.matrices import convolve
 
         state = np.array([1.0, 2.0])
         H = pd.DataFrame([[1.0, 0.0], [0.0, 1.0]])
@@ -658,7 +386,6 @@ class TestConvolve:
 
     def test_convolve_with_series(self):
         """Test convolution with pandas Series state."""
-        from fips.matrices import convolve
 
         idx = pd.Index([0, 1, 2], name="x")
         state = pd.Series([1.0, 2.0, 3.0], index=idx)
@@ -670,7 +397,6 @@ class TestConvolve:
 
     def test_convolve_float_precision(self):
         """Test convolution with float precision parameter."""
-        from fips.matrices import convolve
 
         state = np.array([1.123456, 2.654321])
         H = pd.DataFrame(np.eye(2))

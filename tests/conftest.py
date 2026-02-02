@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from fips.vectors import Block, Vector
+from fips.structures import Block, Vector
 
 
 @pytest.fixture
@@ -63,7 +63,7 @@ def simple_vector_multi_block():
     """Simple multi-block vector."""
     block1 = Block(pd.Series([1.0, 2.0], index=["x", "y"], name="state_a"))
     block2 = Block(pd.Series([3.0, 4.0, 5.0], index=["a", "b", "c"], name="state_b"))
-    return Vector([block1, block2])
+    return Vector(name="state", blocks=[block1, block2])
 
 
 @pytest.fixture

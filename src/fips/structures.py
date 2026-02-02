@@ -149,6 +149,8 @@ class Vector(Structure1D):
     into a single hierarchical structure with automatic index promotion.
     """
 
+    _valid_names = {"prior", "posterior", "obs", "observation", "state"}
+
     def __init__(self, name: str, blocks: Sequence[Block | pd.Series]):
         """Initialize a Vector.
 
@@ -156,9 +158,20 @@ class Vector(Structure1D):
         ----------
         name : str
             Name for the Vector (e.g., 'prior', 'posterior', 'obs').
+            Must be one of: {prior, posterior, obs, observation, state}.
         blocks : Sequence[Block or pd.Series]
             Sequence of Block objects or Series (automatically converted to Blocks).
+
+        Raises
+        ------
+        ValueError
+            If name is not a valid vector name.
         """
+        if name not in self._valid_names:
+            raise ValueError(
+                f"Invalid vector name '{name}'. "
+                f"Must be one of {sorted(self._valid_names)}."
+            )
         self.name = name
         self.blocks: dict[str | int, Block] = {}
         for block in blocks:

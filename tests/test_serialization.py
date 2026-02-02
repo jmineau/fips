@@ -8,9 +8,10 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from fips.matrices import CovarianceMatrix, ForwardOperator, Matrix
+from fips.covariance import CovarianceMatrix
+from fips.operators import ForwardOperator
 from fips.problem import InverseProblem
-from fips.vectors import Block, Vector
+from fips.structures import Block, Matrix, Vector
 from tests.generate_data import generate_test_data
 
 
@@ -28,6 +29,7 @@ class TestBlockPickling:
         assert unpickled.name == block.name
         assert np.allclose(unpickled.values, block.values)
         assert unpickled.index.tolist() == block.index.tolist()
+
     def test_block_to_file_and_from_file(self):
         """Test saving Block to and loading from file."""
         series = pd.Series([1, 2, 3], index=["a", "b", "c"], name="block1")
@@ -61,6 +63,7 @@ class TestBlockPickling:
         with pytest.raises(FileNotFoundError):
             Block.from_file("/nonexistent/path/file.pkl")
 
+
 class TestVectorPickling:
     """Tests for Vector pickling and file path loading."""
 
@@ -68,7 +71,7 @@ class TestVectorPickling:
         """Test that a Vector can be pickled and unpickled."""
         s1 = pd.Series([1, 2], index=["a", "b"], name="block1")
         s2 = pd.Series([3, 4], index=["c", "d"], name="block2")
-        vector = Vector(name="vec", blocks=[s1, s2])
+        vector = Vector(name="prior", blocks=[s1, s2])
 
         pickled = pickle.dumps(vector)
         unpickled = pickle.loads(pickled)
@@ -76,11 +79,12 @@ class TestVectorPickling:
         assert unpickled.name == vector.name
         assert set(unpickled.blocks.keys()) == set(vector.blocks.keys())
         assert np.allclose(unpickled.values, vector.values)
+
     def test_vector_to_file_and_from_file(self):
         """Test saving Vector to and loading from file."""
         s1 = pd.Series([1, 2], index=["a", "b"], name="block1")
         s2 = pd.Series([3, 4], index=["c", "d"], name="block2")
-        vector = Vector(name="vec", blocks=[s1, s2])
+        vector = Vector(name="posterior", blocks=[s1, s2])
 
         with tempfile.NamedTemporaryFile(suffix=".pickle", delete=False) as f:
             temp_path = f.name
@@ -96,6 +100,7 @@ class TestVectorPickling:
             assert np.allclose(loaded_vector.values, vector.values)
         finally:
             Path(temp_path).unlink()
+
 
 class TestMatrixPickling:
     """Tests for Matrix, CovarianceMatrix, and ForwardOperator pickling."""
@@ -237,7 +242,7 @@ class TestInverseProblemPickling:
             # Load from pickle file
             with open(temp_path, "rb") as f:
                 loaded_problem = pickle.load(f)
-            
+
             assert loaded_problem.prior.n == problem.prior.n
             assert loaded_problem.obs.n == problem.obs.n
             assert np.allclose(loaded_problem.prior.values, problem.prior.values)
@@ -248,7 +253,7 @@ class TestInverseProblemPickling:
     def test_inverse_problem_override_components(self):
         """Test creating InverseProblem with mix of objects and file paths."""
         test_data = generate_test_data(n_state=5, n_obs=8)
-        
+
         # Create new prior error with different values
         new_error_data = pd.DataFrame(
             np.eye(len(test_data["prior"])) * 2.0,
@@ -268,13 +273,18 @@ class TestInverseProblemPickling:
                 prior=test_data["prior"],
                 obs=test_data["obs"],
                 forward_operator=jacobian_path,  # Load from file
-                prior_error=new_prior_error,     # Use new object
+                prior_error=new_prior_error,  # Use new object
                 modeldata_mismatch=test_data["modeldata_mismatch"],
             )
 
             # Verify
-            assert np.allclose(loaded_problem.prior_error.values, new_prior_error.values)
-            assert np.allclose(loaded_problem.forward_operator.values, test_data["forward_operator"].values)
+            assert np.allclose(
+                loaded_problem.prior_error.values, new_prior_error.values
+            )
+            assert np.allclose(
+                loaded_problem.forward_operator.values,
+                test_data["forward_operator"].values,
+            )
         finally:
             Path(jacobian_path).unlink()
 
@@ -284,7 +294,13 @@ class TestInverseProblemPickling:
 
         # Save different components to different files
         temp_paths = {}
-        for key in ["prior", "obs", "forward_operator", "prior_error", "modeldata_mismatch"]:
+        for key in [
+            "prior",
+            "obs",
+            "forward_operator",
+            "prior_error",
+            "modeldata_mismatch",
+        ]:
             with tempfile.NamedTemporaryFile(suffix=".pkl", delete=False) as f:
                 pickle.dump(test_data[key], f)
                 temp_paths[key] = f.name
@@ -302,10 +318,16 @@ class TestInverseProblemPickling:
             # Verify all components loaded correctly
             assert loaded_problem.prior.n == len(test_data["prior"])
             assert loaded_problem.obs.n == len(test_data["obs"])
-            assert loaded_problem.forward_operator.shape == test_data["forward_operator"].shape
-            assert np.allclose(loaded_problem.prior_error.values, test_data["prior_error"].values)
+            assert (
+                loaded_problem.forward_operator.shape
+                == test_data["forward_operator"].shape
+            )
             assert np.allclose(
-                loaded_problem.modeldata_mismatch.values, test_data["modeldata_mismatch"].values
+                loaded_problem.prior_error.values, test_data["prior_error"].values
+            )
+            assert np.allclose(
+                loaded_problem.modeldata_mismatch.values,
+                test_data["modeldata_mismatch"].values,
             )
         finally:
             for path in temp_paths.values():
@@ -314,7 +336,7 @@ class TestInverseProblemPickling:
     def test_inverse_problem_override_with_new_object(self):
         """Test that individual components can be passed as file paths."""
         test_data = generate_test_data(n_state=5, n_obs=8)
-        
+
         # Save each component to a separate file
         temp_paths = {}
         for component, name in [
@@ -348,7 +370,9 @@ class TestInverseProblemPickling:
             )
 
             # Verify override worked
-            assert np.allclose(loaded_problem.prior_error.values, new_prior_error.values)
+            assert np.allclose(
+                loaded_problem.prior_error.values, new_prior_error.values
+            )
             # Verify files were loaded correctly
             assert np.allclose(loaded_problem.prior.values, test_data["prior"].values)
         finally:
@@ -418,7 +442,7 @@ class TestToFileFromFile:
         """Test Vector to_file and from_file methods."""
         s1 = pd.Series([1, 2], index=["a", "b"], name="block1")
         s2 = pd.Series([3, 4], index=["c", "d"], name="block2")
-        vector = Vector(name="vec", blocks=[s1, s2])
+        vector = Vector(name="obs", blocks=[s1, s2])
 
         with tempfile.NamedTemporaryFile(suffix=".pickle", delete=False) as f:
             temp_path = f.name
@@ -523,4 +547,3 @@ class TestToFileFromFile:
         """Test that from_file raises FileNotFoundError for missing files."""
         with pytest.raises(FileNotFoundError):
             Vector.from_file("/nonexistent/path/file.pkl")
-

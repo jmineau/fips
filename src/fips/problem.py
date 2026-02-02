@@ -14,7 +14,7 @@ from fips.covariance import CovarianceMatrix
 from fips.estimators import ESTIMATOR_REGISTRY, Estimator
 from fips.interfaces import PD, XR, EstimatorOutput
 from fips.operators import ForwardOperator
-from fips.serialization import Pickleable
+from fips.serialization import Pickleable, load_or_pass
 from fips.structures import Block, Matrix, Vector, prepare_matrix, prepare_vector
 
 logger = logging.getLogger(__name__)
@@ -77,10 +77,25 @@ class InverseProblem(EstimatorOutput, Pickleable):
             try:
                 constant = float(constant)
             except (TypeError, ValueError):
+                # Load constant (could be a file path or Series/Vector)
+                constant = load_or_pass(constant)
+
+                # If it's a Series, make sure it aligns with obs index before wrapping
+                if isinstance(constant, pd.Series):
+                    # Reindex the raw Series to match obs_index's base index (without block level)
+                    obs_base_idx = (
+                        self.obs.index.droplevel("block")
+                        if isinstance(self.obs.index, pd.MultiIndex)
+                        and "block" in self.obs.index.names
+                        else self.obs.index
+                    )
+                    constant = constant.reindex(obs_base_idx).fillna(0.0)
+                    constant.name = "constant"
+
+                # Now wrap it as a Vector
                 constant = prepare_vector(
-                    name="constant", vector=constant, float_precision=float_precision
+                    name="obs", vector=constant, float_precision=float_precision
                 )
-                constant.data = constant.data.reindex(self.obs_index).fillna(0.0)
         self.constant = constant
 
         self.float_precision = float_precision

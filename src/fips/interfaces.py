@@ -52,6 +52,15 @@ class EstimatorOutput(Pickleable):
         "uncertainty_reduction": (ComponentType.SCALAR,),
     }
 
+    # Map output property names to valid Vector names
+    VECTOR_NAMES = {
+        "posterior": "posterior",
+        "posterior_obs": "obs",
+        "prior_obs": "obs",
+        "U_red": "state",
+        "leverage": "obs",
+    }
+
     def __init__(self):
         """Initialize output cache for caching computed results."""
         self._output_cache: dict = {}
@@ -78,9 +87,14 @@ class EstimatorOutput(Pickleable):
 
         # Wrap Vectors
         if component_type == ComponentType.VECTOR:
+            # Get the Vector name from the mapping, or fall back to index type
+            vector_name = self.VECTOR_NAMES.get(
+                attr, "obs" if index == "obs" else "state"
+            )
+
             # Create Vector with index that already has 'block' level from Vector inputs
             s = pd.Series(component, index=idx, name=attr)
-            return Vector.from_series(s, name=attr)
+            return Vector.from_series(s, name=vector_name)
 
         # Determine Matrix class
         if component_type == ComponentType.MATRIX:

@@ -5,9 +5,10 @@ import warnings
 import numpy as np
 import pandas as pd
 
-from fips.matrices import CovarianceMatrix, ForwardOperator
+from fips.covariance import CovarianceMatrix
+from fips.operators import ForwardOperator
 from fips.problem import InverseProblem
-from fips.vectors import Block, Vector
+from fips.structures import Block, Vector
 from tests.generate_data import generate_test_data
 
 
@@ -165,7 +166,7 @@ class TestInverseProblemProperties:
         )
 
         H = problem.forward_operator
-        from fips.matrices import ForwardOperator
+        from fips.operators import ForwardOperator
 
         assert isinstance(H, ForwardOperator)
         assert H.shape == (4, 3)
