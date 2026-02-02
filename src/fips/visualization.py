@@ -11,8 +11,8 @@ from collections.abc import Iterable, Sequence
 import numpy as np
 import pandas as pd
 
-from fips.matrices import CovarianceMatrix
-from fips.vectors import Vector
+from fips.covariance import CovarianceMatrix
+from fips.structures import Vector
 
 ArrayLike = Sequence[Sequence[float]] | np.ndarray
 CI = tuple[ArrayLike, ArrayLike]

@@ -12,14 +12,16 @@ __author__ = "James Mineau"
 __email__ = "jameskmineau@gmail.com"
 
 
+from .covariance import CovarianceMatrix
 from .estimators import Estimator
-from .matrices import CovarianceMatrix, ForwardOperator, convolve
+from .operators import ForwardOperator, convolve
 from .problem import InverseProblem
-from .vectors import Block, Vector
+from .structures import Block, Matrix, Vector
 
 __all__ = [
     "Block",
     "Vector",
+    "Matrix",
     "Estimator",
     "ForwardOperator",
     "CovarianceMatrix",

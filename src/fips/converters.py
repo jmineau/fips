@@ -2,8 +2,37 @@
 Utilities for converting between data structures.
 """
 
+from typing import Any
+
 import pandas as pd
 import xarray as xr
+
+# PANDAS CONVERSION
+
+
+def to_series(obj: Any) -> pd.Series:
+    if isinstance(obj, pd.Series):
+        return obj
+    elif isinstance(obj, pd.DataFrame):
+        ncols = obj.shape[1]
+        if ncols != 1:
+            raise ValueError("DataFrame has more than one column")
+        return obj.iloc[:, 0]
+    elif hasattr(obj, "to_series"):
+        return obj.to_series()
+    elif isinstance(obj, (int, float)):
+        return pd.Series([obj])
+    else:
+        raise TypeError(f"Cannot convert object of type {type(obj)} to pd.Series.")
+
+
+def to_frame(obj: Any) -> pd.DataFrame:
+    if isinstance(obj, pd.DataFrame):
+        return obj
+    elif hasattr(obj, "to_frame"):
+        return obj.to_frame()
+    else:
+        raise TypeError(f"Cannot convert object of type {type(obj)} to pd.DataFrame.")
 
 
 # ==============================================================================
@@ -59,4 +88,3 @@ def dataframe_to_xarray(df: pd.DataFrame, name=None) -> xr.DataArray:
     if isinstance(s, pd.DataFrame):
         raise ValueError("DataFrame could not be stacked into a Series.")
     return series_to_xarray(series=s, name=name)
-

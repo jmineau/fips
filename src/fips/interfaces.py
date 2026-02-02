@@ -10,11 +10,12 @@ from typing import TYPE_CHECKING, Literal
 import pandas as pd
 import xarray as xr
 
-from fips.estimators import OUTPUT_PROPERTY_NAMES, Estimator
-from fips.matrices import CovarianceMatrix, Matrix
-from fips.serialization import Pickleable
 from fips.converters import dataframe_to_xarray, series_to_xarray
-from fips.vectors import Vector
+from fips.covariance import CovarianceMatrix
+from fips.estimators import OUTPUT_PROPERTY_NAMES, Estimator
+from fips.indices import xs
+from fips.serialization import Pickleable
+from fips.structures import Matrix, Vector
 
 if TYPE_CHECKING:
     from fips.problem import InverseProblem
@@ -173,7 +174,7 @@ class PD(_ReadOnly):
             If the attribute type is not supported.
         """
         obj = getattr(self._inversion, attr)
-        if isinstance(obj, Vector | Matrix):
+        if isinstance(obj, (Vector, Matrix)):
             return obj.data
         else:
             raise TypeError(f"Cannot convert object of type {type(obj)} to pandas.")
@@ -224,7 +225,7 @@ def convert_to_xarray(
             for block in blocks:
                 # Extract subset for this block
                 # .xs drops the 'block' level, leaving the inner index (e.g. time/lat/lon)
-                subset = obj.xs(block, level="block")
+                subset = xs(obj, block, level="block")
 
                 # Convert to DataArray
                 da = series_to_xarray(subset, name=block)

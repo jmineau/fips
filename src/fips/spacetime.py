@@ -1,25 +1,22 @@
 """Spatial and temporal utilities for atmospheric inverse problems.
 
 This module provides utilities for:
-- Converting between pandas and xarray data structures
-- Filtering data by time intervals
 - Computing spatial distances (Haversine)
 - Integrating data over time bins
 - Computing time differences
 """
 
-from typing import overload
+import math
 
 import numpy as np
 import pandas as pd
-
 
 # ==============================================================================
 # SPATIAL UTILITIES
 # ==============================================================================
 
 
-def haversine_matrix(lats, lons, earth_radius=6371.0, deg=True):
+def haversine_matrix(lats, lons, earth_radius=None, deg=True):
     """
     Calculates the pairwise Haversine distance matrix between a set of coordinates.
 
@@ -42,6 +39,9 @@ def haversine_matrix(lats, lons, earth_radius=6371.0, deg=True):
         Haversine distance between the i-th and j-th coordinate.
         The diagonal of the matrix will be zero.
     """
+    if earth_radius is None:
+        earth_radius = 6371.0  # Earth's radius in kilometers
+
     # Convert to numpy
     lats = np.asarray(lats)
     lons = np.asarray(lons)
@@ -77,9 +77,48 @@ def haversine_matrix(lats, lons, earth_radius=6371.0, deg=True):
     return distance_matrix
 
 
+def spatial_decay_kernel(
+    lats: np.ndarray | pd.Index,
+    lons: np.ndarray | pd.Index,
+    length_scale: float,
+) -> np.ndarray:
+    """
+    Compute a spatial correlation kernel based on Haversine distances with exponential decay.
+
+    Parameters
+    ----------
+    lats : np.ndarray or pd.Index
+        Latitude coordinates (degrees).
+    lons : np.ndarray or pd.Index
+        Longitude coordinates (degrees).
+    length_scale : float
+        E-folding length scale (in km) for exponential decay.
+
+    Returns
+    -------
+    np.ndarray
+        (n_locations, n_locations) correlation matrix with spatial decay.
+    """
+    # Get the lat/lon coordinates of the grid cells
+    lon_grid, lat_grid = np.meshgrid(lons, lats)
+
+    # Calculate pairwise haversine distances between grid cells
+    distances = haversine_matrix(lats=lat_grid.ravel(), lons=lon_grid.ravel())
+    corr = np.exp((-1 * distances) / length_scale)
+
+    return corr
+
+
 # ==============================================================================
 # TEMPORAL UTILITIES
 # ==============================================================================
+
+
+def convert_to_local_time(df, utc_offset, time_col="obs_time"):
+    idx = df.index.to_frame(index=False)
+    idx[time_col] = pd.to_datetime(idx[time_col]) + pd.Timedelta(hours=utc_offset)
+    df.index = pd.MultiIndex.from_frame(idx, names=df.index.names)
+    return df
 
 
 def integrate_over_time_bins(
@@ -159,12 +198,117 @@ def time_difference_matrix(times, absolute: bool = True) -> np.ndarray:
     return diffs
 
 
-__all__ = [
-    "series_to_xarray",
-    "dataframe_to_xarray",
-    "enough_obs_per_interval",
-    "filter_intervals",
-    "haversine_matrix",
-    "integrate_over_time_bins",
-    "time_difference_matrix",
-]
+def time_decay_matrix(times, decay: str | pd.Timedelta) -> np.ndarray:
+    """
+    Calculate the time decay matrix for the specified times and decay.
+
+    Parameters
+    ----------
+    times : list[dt.datetime]
+        The list of times to calculate the decay matrix for.
+    decay : str | pd.Timedelta
+        The decay to use for the exponential decay.
+
+    Returns
+    -------
+    np.ndarray
+        The matrix of time decay values.
+    """
+    # Calculate the time differences
+    diffs = time_difference_matrix(times, absolute=True)
+
+    # Wrap in pandas DataFrame to use pd.Timedelta functionality
+    diffs = pd.DataFrame(diffs)
+
+    # Get decay as a pd.Timedelta
+    decay = pd.Timedelta(decay)
+
+    # Calculate the decay matrix using an exponential decay
+    decay_matrix = np.exp(-diffs / decay).to_numpy()
+    return decay_matrix
+
+
+def temporal_decay_kernel(
+    times: pd.Index | pd.DatetimeIndex,
+    method: str | dict | None = None,
+    length_scale: pd.Timedelta | str | None = None,
+) -> np.ndarray:
+    """
+    Build the temporal error correlation matrix for the inversion.
+    Has dimensions of flux_times x flux_times.
+
+    Parameters
+    ----------
+    times : pd.Index or pd.DatetimeIndex
+        Datetime-like index of flux times. Values will be coerced to a
+        pandas.DatetimeIndex internally so attributes like `.hour` and
+        `.month` are available.
+    method : dict, optional
+        Method for calculating the temporal error correlation matrix.
+        The key defines the method and the value is the weight for the method.
+        Options include:
+            - 'exp': exponentially decaying with an e-folding length of self.t_bins freq
+            - 'diel': like 'exp', except correlations are only non-zero for the same time of day
+            - 'clim': each month is highly correlated with the same month in other years
+
+    Returns
+    -------
+    np.ndarray
+        Temporal error correlation matrix for the inversion.
+    """
+    # Coerce to DatetimeIndex so we can use .hour/.month safely
+    times = pd.DatetimeIndex(times)
+
+    # Handle method input
+    if method is None:
+        method = {"exp": 1.0}
+    elif isinstance(method, str):
+        method = {method: 1.0}
+    elif isinstance(method, dict):
+        if not math.isclose(float(sum(method.values())), 1.0):
+            raise ValueError("Weights for temporal error methods must sum to 1.0")
+    else:
+        raise ValueError("method must be a dict")
+
+    # Initialize the temporal correlation matrix
+    N = len(times)  # number of flux times
+    corr = np.zeros((N, N))
+
+    # Calculate and combine correlation matrices based on the method weights
+    for method_name, weight in method.items():
+        if method_name in ["exp", "diel"]:  # Closer times are more correlated
+            if not isinstance(length_scale, (str, pd.Timedelta)):
+                raise ValueError(
+                    'length_scale must be a str or pd.Timedelta for "exp" and "diel" methods'
+                )
+            method_corr = time_decay_matrix(times, decay=length_scale)
+
+            if method_name == "diel":
+                # Set the correlation values for the same hour of day
+                # use a NumPy array for safe ndarray-style indexing
+                hours = times.hour.values
+                same_time_mask = (hours[:, None] - hours[None, :]) == 0
+                method_corr[~same_time_mask] = 0
+
+        elif (
+            method_name == "clim"
+        ):  # Each month is highly correlated with the same month in other years
+            # Initialize the correlation matrix as identity matrix
+            method_corr = np.eye(N)  # the diagonal
+
+            # Set the correlation values for the same month in other years
+            corr_val = 0.9
+            months = times.month.values
+
+            # Create a mask for the same month in different years
+            same_month_mask = (months[:, None] - months[None, :]) % 12 == 0
+
+            # Apply the correlation value using the mask
+            method_corr[same_month_mask] = corr_val
+        else:
+            raise ValueError(f"Unknown method: {method_name}")
+
+        # Combine the correlation matrices based on the method weights
+        corr += weight * method_corr
+
+    return corr

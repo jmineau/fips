@@ -7,18 +7,20 @@ import numpy as np
 import pandas as pd
 from stilt import Simulation
 
-from fips.matrices import ForwardOperator
-from fips.spacetime import integrate_over_time_bins
+from fips.operators import ForwardOperator
 from fips.parallel import parallelize
-from fips.problems.flux.transport.stilt.simulation import get_sim
 from fips.problems.flux.transport.stilt.footprint import get_footprint
+from fips.problems.flux.transport.stilt.simulation import get_sim
+from fips.spacetime import integrate_over_time_bins
 
 
 class JacobianBuilder:
-
-    def __init__(self, simulations: list[Simulation | Path],
-                 location_dim: str = "obs_location",
-                 time_dim: str = "obs_time"):
+    def __init__(
+        self,
+        simulations: list[Simulation | Path],
+        location_dim: str = "obs_location",
+        time_dim: str = "obs_time",
+    ):
         """
         Initialize the Jacobian builder with a list of STILT simulations
         or paths to simulation directories.
@@ -102,7 +104,7 @@ class JacobianBuilder:
 
         if not isinstance(coords, dict):
             coords = {"DEFAULT": coords}
-        
+
         # Determine overall time range from flux_times
         t_start, t_stop = flux_times[0].left, flux_times[-1].right
 
@@ -146,7 +148,9 @@ class JacobianBuilder:
                 if location_mapper:
                     h = H.reset_index()
                     h[self.location_dim] = (
-                        h[self.location_dim].map(location_mapper).fillna(h[self.location_dim])
+                        h[self.location_dim]
+                        .map(location_mapper)
+                        .fillna(h[self.location_dim])
                     )
                     H = h.set_index([self.location_dim, self.time_dim])
 
@@ -179,10 +183,7 @@ def build_jacobian_row_from_coords(  # must be top-level for multiprocessing
 
     # Get simulation object
     sim = get_sim(
-        simulation=simulation,
-        t_start=t_start,
-        t_stop=t_stop,
-        subset_hours=subset_hours
+        simulation=simulation, t_start=t_start, t_stop=t_stop, subset_hours=subset_hours
     )
     if not isinstance(sim, Simulation):
         return sim  # could be None or sim.id if failed
@@ -231,9 +232,7 @@ def build_jacobian_row_from_coords(  # must be top-level for multiprocessing
     for key, coord_list in coords.items():
         # Round input coordinates to match footprint rounding
         coord_index = pd.MultiIndex.from_tuples(coord_list)
-        coord_index = coord_index.round([xdigits, ydigits]).set_names(
-            [x_dim, y_dim]
-        )
+        coord_index = coord_index.round([xdigits, ydigits]).set_names([x_dim, y_dim])
 
         # Filter to xy points defined by grid
         filtered_foot = (
@@ -255,9 +254,7 @@ def build_jacobian_row_from_coords(  # must be top-level for multiprocessing
         transposed_foot.index = obs_index
 
         rows[key] = transposed_foot
-    print(
-        f"Finished computing Jacobian row for {sim.id} in {dt.datetime.now() - t0}"
-    )
+    print(f"Finished computing Jacobian row for {sim.id} in {dt.datetime.now() - t0}")
     return rows
 
 

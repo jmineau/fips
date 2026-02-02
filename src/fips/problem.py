@@ -9,33 +9,34 @@ from pathlib import Path
 
 import pandas as pd
 
+from fips.covariance import CovarianceMatrix
 from fips.estimators import ESTIMATOR_REGISTRY, Estimator
 from fips.interfaces import PD, XR, EstimatorOutput
-from fips.matrices import CovarianceMatrix, ForwardOperator, Matrix, prepare_matrix
+from fips.operators import ForwardOperator
 from fips.serialization import Pickleable
-from fips.vectors import Vector, prepare_vector
+from fips.structures import Block, Matrix, Vector, prepare_matrix, prepare_vector
 
 
 class InverseProblem(EstimatorOutput, Pickleable):
     """Bayesian inverse problem combining observations, priors, and forward model.
-    
+
     Organizes state vectors, observations, forward operators, and error covariances
     into a unified framework for solving inverse problems via Bayesian estimation.
     """
 
     def __init__(
         self,
-        prior: str | Path | Vector | pd.Series,
-        obs: str | Path | Vector | pd.Series,
+        prior: str | Path | Vector | Block | pd.Series,
+        obs: str | Path | Vector | Block | pd.Series,
         forward_operator: str | Path | ForwardOperator | pd.DataFrame,
         prior_error: str | Path | CovarianceMatrix | pd.DataFrame,
         modeldata_mismatch: str | Path | CovarianceMatrix | pd.DataFrame,
-        constant: str | Path | Vector | pd.Series | float | None = None,
+        constant: str | Path | Vector | Block | pd.Series | float | None = None,
         float_precision: int | None = None,
     ):
         super().__init__()
 
-        # Prepare obs and prior vectors (handles file paths via load_or_pass)
+        # Prepare obs and prior vectors
         self.obs = prepare_vector(
             name="obs", vector=obs, float_precision=float_precision
         )
@@ -43,7 +44,7 @@ class InverseProblem(EstimatorOutput, Pickleable):
             name="prior", vector=prior, float_precision=float_precision
         )
 
-        # Prepare forward operator and covariance matrices (handles file paths via load_or_pass)
+        # Prepare forward operator and covariance matrices
         self.forward_operator = prepare_matrix(
             matrix=forward_operator,
             matrix_class=ForwardOperator,
@@ -68,7 +69,7 @@ class InverseProblem(EstimatorOutput, Pickleable):
             float_precision=float_precision,
         )
 
-        # Prepare constant (scalar or vector aligned to obs index, handles file paths)
+        # Prepare constant
         if constant is not None:
             try:
                 constant = float(constant)
@@ -76,6 +77,7 @@ class InverseProblem(EstimatorOutput, Pickleable):
                 constant = prepare_vector(
                     name="constant", vector=constant, float_precision=float_precision
                 )
+                constant.data = constant.data.reindex(self.obs_index).fillna(0.0)
         self.constant = constant
 
         self.float_precision = float_precision
@@ -114,6 +116,14 @@ class InverseProblem(EstimatorOutput, Pickleable):
     @property
     def obs_index(self) -> pd.Index:
         return self.obs.index
+
+    @property
+    def n_state(self) -> int:
+        return len(self.state_index)
+
+    @property
+    def n_obs(self) -> int:
+        return len(self.obs_index)
 
     @property
     def estimator(self) -> Estimator:
