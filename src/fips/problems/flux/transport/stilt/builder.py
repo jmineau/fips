@@ -9,10 +9,10 @@ import pandas as pd
 from stilt import Simulation
 
 from fips.operators import ForwardOperator
-from fips.parallel import parallelize
 from fips.problems.flux.transport.stilt.footprint import get_footprint
 from fips.problems.flux.transport.stilt.simulation import get_sim
-from fips.spacetime import integrate_over_time_bins
+from fips.utils.parallel import parallelize
+from fips.utils.spacetime import integrate_over_time_bins
 
 logger = logging.getLogger(__name__)
 

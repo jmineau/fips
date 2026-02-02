@@ -7,9 +7,9 @@ import pandas as pd
 import xarray as xr
 from typing_extensions import Self
 
-from fips.correlation import build_latlon_corr_matrix, build_temporal_corr_matrix
 from fips.indices import xs
 from fips.structures import SymmetricMatrix
+from fips.utils.spacetime import build_latlon_corr_matrix, build_temporal_corr_matrix
 
 logger = logging.getLogger(__name__)
 

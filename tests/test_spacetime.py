@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from fips.spacetime import (
+from fips.utils.spacetime import (
     haversine_matrix,
     integrate_over_time_bins,
     spatial_decay_kernel,

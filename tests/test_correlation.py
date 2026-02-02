@@ -5,7 +5,7 @@ import datetime as dt
 import numpy as np
 import pandas as pd
 
-from fips.correlation import (
+from fips.utils.spacetime import (
     build_latlon_corr_matrix,
     build_temporal_corr_matrix,
     exponential_decay,
