@@ -13,6 +13,8 @@ The Forward Operator is built from STILT footprints which quantify the sensitivi
 of each observation to fluxes at different locations and times.
 """
 
+import logging
+
 import pandas as pd
 
 from fips.converters import to_frame, to_series
@@ -28,6 +30,8 @@ from fips.operators import ForwardOperator
 from fips.problem import InverseProblem
 from fips.problems.flux.visualization import FluxPlotter
 from fips.structures import Block, Vector
+
+logger = logging.getLogger(__name__)
 
 # TODO:
 # - Support multiple flux sources (farfield/bio/etc)
@@ -224,14 +228,11 @@ class FluxInversion(InverseProblem):
 
             bias_jacobian = ensure_block_axis(bias_jacobian, "columns", "bias")
             bias_jacobian = ensure_block_axis(bias_jacobian, "index", "concentration")
-            print(f"{bias_jacobian.iloc[-5:, -5:] = }")
-            print(f"{jacobian.iloc[-5:, -5:] = }")
 
             jacobian, bias_jacobian = outer_align_levels(
                 [jacobian, bias_jacobian], axis=1
             )
             jacobian = pd.concat([jacobian, bias_jacobian], axis=1).fillna(0.0)
-            print(f"merged {jacobian.iloc[-5:, -5:] = }")
         else:
             prior_error = inventory_error
 

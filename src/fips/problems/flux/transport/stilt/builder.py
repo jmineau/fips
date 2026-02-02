@@ -1,4 +1,5 @@
 import datetime as dt
+import logging
 from collections import defaultdict
 from pathlib import Path
 from typing import Literal, overload
@@ -12,6 +13,8 @@ from fips.parallel import parallelize
 from fips.problems.flux.transport.stilt.footprint import get_footprint
 from fips.problems.flux.transport.stilt.simulation import get_sim
 from fips.spacetime import integrate_over_time_bins
+
+logger = logging.getLogger(__name__)
 
 
 class JacobianBuilder:
@@ -100,7 +103,7 @@ class JacobianBuilder:
             Otherwise, returns a single ForwardOperator.
         """
 
-        print("Building Jacobian matrix...")
+        logger.info("Building Jacobian matrix...")
 
         if not isinstance(coords, dict):
             coords = {"DEFAULT": coords}
@@ -126,7 +129,7 @@ class JacobianBuilder:
             resolution=resolution,
             subset_hours=subset_hours,
         )
-        print("Sorting Jacobian rows...")
+        logger.debug("Sorting Jacobian rows...")
         for row in results:
             if row is not None:
                 if isinstance(row, dict):
@@ -142,7 +145,7 @@ class JacobianBuilder:
         for key, rows in H_rows.items():
             if rows:
                 rows: list[pd.DataFrame]
-                print(f"Combining {len(rows)} rows for {key} jacobian...")
+                logger.debug(f"Combining {len(rows)} rows for {key} jacobian...")
                 H = pd.concat(rows).fillna(0)
 
                 if location_mapper:
@@ -160,7 +163,7 @@ class JacobianBuilder:
                 if key == "DEFAULT":
                     return H
 
-        print("Jacobian matrix built successfully.")
+        logger.info("Jacobian matrix built successfully.")
 
         return H_dict
 
@@ -195,7 +198,7 @@ def build_jacobian_row_from_coords(  # must be top-level for multiprocessing
         )
     except Exception as e:
         foot_file = sim.paths["footprints"][str(resolution)]
-        print(f"Error loading footprint file {foot_file}: {e}")
+        logger.exception(f"Error loading footprint file {foot_file}")
         raise e
 
     if footprint is None:
@@ -254,7 +257,11 @@ def build_jacobian_row_from_coords(  # must be top-level for multiprocessing
         transposed_foot.index = obs_index
 
         rows[key] = transposed_foot
-    print(f"Finished computing Jacobian row for {sim.id} in {dt.datetime.now() - t0}")
+    logger.debug(
+        "Finished computing Jacobian row for %s in %s",
+        sim.id,
+        dt.datetime.now() - t0,
+    )
     return rows
 
 

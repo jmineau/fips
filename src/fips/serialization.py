@@ -4,16 +4,19 @@ This module provides the Pickleable mixin for adding to_file/from_file methods
 with .pkl/.pickle extension validation, and load_or_pass for transparent pickle loading.
 """
 
+import logging
 import pickle
 from pathlib import Path
 from typing import TypeVar
 
 T = TypeVar("T")
 
+logger = logging.getLogger(__name__)
+
 
 class Pickleable:
     """Mixin to add to_file() and from_file() methods for pickle serialization.
-    
+
     Provides automatic pickle file I/O with extension validation (.pkl or .pickle).
     """
 
@@ -28,6 +31,7 @@ class Pickleable:
             File path where object will be saved.
         """
         path = Path(path)
+        logger.debug(f"Serializing {type(self).__name__} to {path}")
         if path.suffix not in self.VALID_EXTENSIONS:
             raise ValueError(
                 f"File extension must be one of {self.VALID_EXTENSIONS}, got {path.suffix}"
@@ -50,6 +54,7 @@ class Pickleable:
             The unpickled object.
         """
         path = Path(path)
+        logger.debug(f"Deserializing {cls.__name__} from {path}")
         if path.suffix not in cls.VALID_EXTENSIONS:
             raise ValueError(
                 f"File extension must be one of {cls.VALID_EXTENSIONS}, got {path.suffix}"
@@ -75,6 +80,7 @@ def load_or_pass(obj: str | Path | T) -> T:
     """
     if isinstance(obj, (str, Path)):
         path = Path(obj)
+        logger.debug(f"Loading pickled object from {path}")
         if not path.exists():
             raise FileNotFoundError(f"Pickle file not found: {path}")
         with open(path, "rb") as f:

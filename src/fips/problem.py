@@ -5,6 +5,7 @@ prior estimates, forward operators, and error covariances into a unified framewo
 for Bayesian state estimation.
 """
 
+import logging
 from pathlib import Path
 
 import pandas as pd
@@ -15,6 +16,8 @@ from fips.interfaces import PD, XR, EstimatorOutput
 from fips.operators import ForwardOperator
 from fips.serialization import Pickleable
 from fips.structures import Block, Matrix, Vector, prepare_matrix, prepare_vector
+
+logger = logging.getLogger(__name__)
 
 
 class InverseProblem(EstimatorOutput, Pickleable):
@@ -158,7 +161,7 @@ class InverseProblem(EstimatorOutput, Pickleable):
         else:
             raise TypeError("Estimator must be a string or a subclass of Estimator.")
 
-        print(f"Solving using {estimator_cls.__name__}...")
+        logger.info(f"Solving using {estimator_cls.__name__}...")
         z = self.obs.values
         x_0 = self.prior.values
         H = self.forward_operator.values

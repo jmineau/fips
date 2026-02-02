@@ -1,25 +1,29 @@
 import datetime as dt
+import logging
 from pathlib import Path
 
 import pandas as pd
-
 from stilt import Simulation
+
+logger = logging.getLogger(__name__)
 
 
 def get_sim(
     simulation: Simulation | Path,
     t_start: dt.datetime,
     t_stop: dt.datetime,
-    subset_hours: int | list[int] | None = None
+    subset_hours: int | list[int] | None = None,
 ) -> Simulation | str | None:
     sim = load_simulation(simulation)
 
     if sim.status != "SUCCESS":
+        logger.debug(f"Skipping simulation {sim.id} with status {sim.status}")
         return sim.id
 
     if not sim_in_time_range(
         sim=sim, t_start=t_start, t_stop=t_stop, subset_hours=subset_hours
     ):
+        logger.debug(f"Simulation {sim.id} outside time range")
         return None
     return sim
 
@@ -31,6 +35,7 @@ def load_simulation(simulation: Simulation | Path) -> Simulation:
         sim = simulation
     else:
         raise ValueError("simulation must be a Path or a stilt.Simulation object")
+    logger.debug(f"Loaded simulation {sim.id}")
     return sim
 
 

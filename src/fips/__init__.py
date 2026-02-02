@@ -7,6 +7,8 @@ serialization, visualization, and specialized applications like atmospheric
 flux inversion.
 """
 
+import logging
+
 __version__ = "2025.10.0"
 __author__ = "James Mineau"
 __email__ = "jameskmineau@gmail.com"
@@ -17,6 +19,8 @@ from .estimators import Estimator
 from .operators import ForwardOperator, convolve
 from .problem import InverseProblem
 from .structures import Block, Matrix, Vector
+
+logging.getLogger(__name__).addHandler(logging.NullHandler())
 
 __all__ = [
     "Block",

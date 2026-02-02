@@ -4,11 +4,14 @@ This module provides decorators for parallelizing function calls
 across iterables with optional timeout support.
 """
 
+import logging
 import multiprocessing
 import signal
 from collections.abc import Callable
 from functools import partial
 from typing import Any, Literal
+
+logger = logging.getLogger(__name__)
 
 
 def exec_with_timeout(func, timeout, kwargs, item):
@@ -96,6 +99,11 @@ def parallelize(
 
         if processes > len(iterable):
             processes = len(iterable)
+
+        logger.debug(
+            f"Parallelizing {getattr(func, '__name__', '<callable>')} over "
+            f"{len(iterable)} items with {processes} processes (timeout={timeout})"
+        )
 
         # If only one process is requested, execute the function sequentially
         if processes == 1:

@@ -1,3 +1,4 @@
+import logging
 import warnings
 from collections.abc import Sequence
 
@@ -9,6 +10,8 @@ from typing_extensions import Self
 from fips.correlation import build_latlon_corr_matrix, build_temporal_corr_matrix
 from fips.indices import xs
 from fips.structures import SymmetricMatrix
+
+logger = logging.getLogger(__name__)
 
 
 def variances_as_series(
@@ -39,6 +42,7 @@ def variances_as_series(
                 category=UserWarning,
                 stacklevel=3,
             )
+        logger.debug(f"Using variances from Series with {len(variances)} entries")
         return variances
 
     # Xarray -> pandas Series
@@ -87,6 +91,7 @@ class CovarianceMatrix(SymmetricMatrix):
         index = variances.index
         values = np.diag(variances.to_numpy())
 
+        logger.debug(f"Building diagonal covariance with {len(index)} elements")
         return cls.from_numpy(array=values, index=index)
 
     def get_variances(self, block: str | None = None) -> pd.Series:
@@ -177,6 +182,9 @@ class SpaceTimeCovariance(CovarianceMatrix):
             )
         else:
             raise ValueError("spatial_corr must be a dict or None")
+        logger.debug(
+            f"Built spatial correlation matrix with shape {spatial_corr_matrix.shape}"
+        )
         # Build temporal correlation matrix
         if temporal_corr is None:
             temporal_corr_matrix = np.eye(len(times))
@@ -186,11 +194,15 @@ class SpaceTimeCovariance(CovarianceMatrix):
             )
         else:
             raise ValueError("temporal_corr must be a dict or None")
+        logger.debug(
+            f"Built temporal correlation matrix with shape {temporal_corr_matrix.shape}"
+        )
 
         # Combine spatial and temporal correlations using Kronecker product
         sigma = np.diag(np.sqrt(variances))  # Scale by variances
         kron = np.kron(temporal_corr_matrix, spatial_corr_matrix)  # order matters
         S_0 = sigma @ kron @ sigma
+        logger.debug(f"Built spatiotemporal covariance with shape {S_0.shape}")
         return cls.from_numpy(S_0, index=index)
 
     def apply_temporal_decay(
@@ -234,6 +246,9 @@ class SpaceTimeCovariance(CovarianceMatrix):
             groupers.append(dates)
 
         # Apply the decay
+        logger.debug(
+            f"Applying temporal decay (length_scale={length_scale}, interday={interday})"
+        )
         return self.apply_groupwise(
             groupers=groupers,
             func=calculate_temporal_decay,
@@ -292,6 +307,9 @@ class SpaceTimeCovariance(CovarianceMatrix):
         groupers = [col for col in self.index.names if col != spatial_dim]
 
         # Apply the decay
+        logger.debug(
+            f"Applying spatial decay (length_scale={length_scale}, spatial_dim={spatial_dim})"
+        )
         return self.apply_groupwise(
             groupers=groupers,
             func=calculate_spatial_decay,

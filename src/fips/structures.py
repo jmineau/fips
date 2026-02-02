@@ -5,6 +5,7 @@ This module provides Block, Vector, and Matrix classes for organizing state and 
 data into structured hierarchies with automatic index management and serialization support.
 """
 
+import logging
 import warnings
 from abc import ABC
 from collections.abc import Callable, Sequence
@@ -19,6 +20,8 @@ from typing_extensions import Self
 from fips.converters import to_series
 from fips.indices import check_overlap, promote_index, sanitize_index, xs
 from fips.serialization import Pickleable, load_or_pass
+
+logger = logging.getLogger(__name__)
 
 
 class Structure(Pickleable, ABC):
@@ -107,11 +110,16 @@ class Block(Structure1D):
             raise ValueError(f"Block '{self.name}' contains NaN values.")
 
         # Update dim names if missing
+        old_names = list(self.data.index.names)
         new_names = [
             dim if dim is not None else f"{self.name}_{i}"
             for i, dim in enumerate(self.data.index.names)
         ]
         self.data.index.set_names(new_names, inplace=True)
+        if new_names != old_names:
+            logger.debug(
+                f"Updated Block index names for {self.name}: {old_names} -> {new_names}"
+            )
 
     def __getstate__(self):
         """Explicit pickle support: return state as dict."""
@@ -229,11 +237,15 @@ class Vector(Structure1D):
             if block is None:
                 block = f"{data.name}_block"
             data = pd.concat({block: data}, names=["block"] + list(data.index.names))
+            logger.debug(
+                f"Promoted Series to include block level '{block}' for Vector '{data.name}'"
+            )
         elif block is not None:
             # Update block level to the provided block name
             idx = data.index.to_frame(index=False)
             idx["block"] = block
             data.index = pd.MultiIndex.from_frame(idx, names=data.index.names)
+            logger.debug(f"Updated block level to '{block}' for Vector '{data.name}'")
         else:
             pass  # use existing 'block' level
 
@@ -615,6 +627,9 @@ def prepare_vector(
         raise TypeError(f"Cannot prepare vector from type: {type(vector)}")
 
     vector.data.index = sanitize_index(vector.data.index, float_precision)
+    logger.debug(
+        f"Prepared Vector '{vector.name}' with {len(vector.data.index)} elements"
+    )
 
     return vector
 
@@ -691,6 +706,7 @@ def prepare_matrix(
                 df.index = promoted_idx
             else:
                 df.columns = promoted_idx
+            logger.debug(f"Promoted {name} index with block '{blocks[0]}'")
 
         elif matrix_has_block and target_has_block:
             # Both have blocks - ensure they're compatible
@@ -710,6 +726,7 @@ def prepare_matrix(
             and df.index.names != row_index.names
         ):
             df.index = df.index.reorder_levels(row_index.names)
+            logger.debug(f"Reordered row index levels to {row_index.names}")
 
     if isinstance(df.columns, pd.MultiIndex) and isinstance(col_index, pd.MultiIndex):
         if (
@@ -717,6 +734,7 @@ def prepare_matrix(
             and df.columns.names != col_index.names
         ):
             df.columns = df.columns.reorder_levels(col_index.names)
+            logger.debug(f"Reordered column index levels to {col_index.names}")
 
     # Check for overlapping indices
     check_overlap(target_idx=row_index, available_idx=df.index, name="Row")
@@ -724,6 +742,9 @@ def prepare_matrix(
 
     # Reindex to target indices, filling missing with zeros
     df = df.reindex(index=row_index, columns=col_index).fillna(0.0)
+    logger.debug(
+        f"Reindexed matrix to target indices (rows={len(row_index)}, cols={len(col_index)})"
+    )
 
     # Wrap in appropriate matrix class and return
     return matrix_class(df)

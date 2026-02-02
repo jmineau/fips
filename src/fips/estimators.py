@@ -4,11 +4,14 @@ This module contains Bayesian and regularized estimators for state estimation
 in linear inverse problems, computing posterior distributions and diagnostics.
 """
 
+import logging
 from abc import ABC, abstractmethod
 from functools import cached_property
 
 import numpy as np
 from numpy.linalg import inv as invert
+
+logger = logging.getLogger(__name__)
 
 # TODO
 # - implement bayesian regularization factor usage
@@ -142,7 +145,7 @@ class Estimator(ABC):
         np.ndarray
             Model output (Hx + c).
         """
-        print("Performing forward calculation...")
+        logger.debug("Performing forward calculation...")
         return self.H @ x + self.c
 
     def residual(self, x) -> np.ndarray:
@@ -162,7 +165,7 @@ class Estimator(ABC):
         np.ndarray
             Residual (z - (Hx + c)).
         """
-        print("Performing residual calculation...")
+        logger.debug("Performing residual calculation...")
         return self.z - self.forward(x)
 
     def leverage(self, x) -> np.ndarray:
@@ -184,7 +187,7 @@ class Estimator(ABC):
         np.ndarray
             Leverage matrix.
         """
-        print("Calculating Leverage matrix...")
+        logger.debug("Calculating Leverage matrix...")
         Hx = self.forward(x)
         Hx_T = Hx.T
         HS_0H_Sz_inv = invert(self._HS_0H + self.S_z)
@@ -205,7 +208,7 @@ class Estimator(ABC):
         float
             Cost value.
         """
-        print("Performing cost calculation...")
+        logger.debug("Performing cost calculation...")
         raise NotImplementedError
 
     @property
@@ -219,7 +222,7 @@ class Estimator(ABC):
         np.ndarray
             Posterior state estimate.
         """
-        print("Calculating Posterior Mean Model State Estimate...")
+        logger.debug("Calculating Posterior Mean Model State Estimate...")
         raise NotImplementedError
 
     @property
@@ -233,7 +236,7 @@ class Estimator(ABC):
         np.ndarray
             Posterior error covariance matrix.
         """
-        print("Calculating Posterior Error Covariance Matrix...")
+        logger.debug("Calculating Posterior Error Covariance Matrix...")
         raise NotImplementedError
 
     @cached_property
@@ -249,7 +252,7 @@ class Estimator(ABC):
         np.ndarray
             Posterior observation estimate.
         """
-        print("Calculating Posterior Mean Observation Estimate...")
+        logger.debug("Calculating Posterior Mean Observation Estimate...")
         return self.forward(self.x_hat)
 
     @cached_property
@@ -265,7 +268,7 @@ class Estimator(ABC):
         np.ndarray
             Prior data estimate.
         """
-        print("Calculating Prior Mean Data Estimate...")
+        logger.debug("Calculating Prior Mean Data Estimate...")
         return self.forward(self.x_0)
 
     @cached_property
@@ -281,7 +284,7 @@ class Estimator(ABC):
         np.ndarray
             Kalman gain matrix.
         """
-        print("Calculating Kalman Gain Matrix...")
+        logger.debug("Calculating Kalman Gain Matrix...")
         return self._HS_0.T @ invert(self._HS_0H + self.S_z)
 
     @cached_property
@@ -297,7 +300,7 @@ class Estimator(ABC):
         np.ndarray
             Averaging kernel matrix.
         """
-        print("Calculating Averaging Kernel Matrix...")
+        logger.debug("Calculating Averaging Kernel Matrix...")
         return self.K @ self.H
 
     @cached_property
@@ -369,7 +372,7 @@ class Estimator(ABC):
         float
             Reduced Chi-squared value.
         """
-        print("Calculating Reduced Chi-squared statistic...")
+        logger.debug("Calculating Reduced Chi-squared statistic...")
         data_residual = self.residual(self.x_hat)
         model_residual = self.x_hat - self.x_0
 
@@ -391,7 +394,7 @@ class Estimator(ABC):
         float
             R-squared value.
         """
-        print("Calculating Coefficient of determination (R-squared)...")
+        logger.debug("Calculating Coefficient of determination (R-squared)...")
         return float(np.corrcoef(self.z, self.y_hat)[0, 1] ** 2)
 
     @cached_property
@@ -406,7 +409,7 @@ class Estimator(ABC):
         float
             RMSE value.
         """
-        print("Calculating Root Mean Square Error (RMSE)...")
+        logger.debug("Calculating Root Mean Square Error (RMSE)...")
         r = self.residual(self.x_hat)
         return float(np.sqrt((r**2).sum() / self.n_z))
 
@@ -423,7 +426,7 @@ class Estimator(ABC):
         float
             Uncertainty reduction value.
         """
-        print("Calculating uncertainty reduction metric...")
+        logger.debug("Calculating uncertainty reduction metric...")
         return float(1 - (np.sqrt(np.trace(self.S_hat)) / np.sqrt(np.trace(self.S_0))))
 
     @cached_property
@@ -439,7 +442,7 @@ class Estimator(ABC):
         np.ndarray
             Uncertainty reduction vector.
         """
-        print("Calculating uncertainty reduction vector...")
+        logger.debug("Calculating uncertainty reduction vector...")
         return (1 - (np.sqrt(np.diag(self.S_hat)) / np.sqrt(np.diag(self.S_0)))) * 100.0
 
 
@@ -521,7 +524,7 @@ class BayesianSolver(Estimator):
         .. math::
             J(x) = \\frac{1}{2}(x - x_0)^T S_0^{-1}(x - x_0) + \\frac{1}{2}(z - Hx - c)^T S_z^{-1}(z - Hx - c)
         """
-        print("Performing cost calculation...")
+        logger.debug("Performing cost calculation...")
         diff_model = x - self.x_0
         diff_data = self.residual(x)
         cost_model = diff_model.T @ self._S_0_inv @ diff_model
@@ -536,7 +539,7 @@ class BayesianSolver(Estimator):
         .. math::
             \\hat{x} = x_0 + K(z - Hx_0 - c)
         """
-        print("Calculating Posterior Mean Model Estimate...")
+        logger.debug("Calculating Posterior Mean Model Estimate...")
         return self.x_0 + self.K @ self.residual(self.x_0)
 
     @cached_property
@@ -548,7 +551,7 @@ class BayesianSolver(Estimator):
             \\hat{S} = (H^T S_z^{-1} H + S_0^{-1})^{-1}
                 = S_0 - (H S_0)^T(H S_0 H^T + S_z)^{-1}(H S_0)
         """
-        print("Calculating Posterior Error Covariance Matrix...")
+        logger.debug("Calculating Posterior Error Covariance Matrix...")
         # Both methods return the same result
         # return invert(self.H_T @ self.S_z_inv @ self.H + self.S_0_inv)
         return (
