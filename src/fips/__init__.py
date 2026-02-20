@@ -16,9 +16,10 @@ __email__ = "jameskmineau@gmail.com"
 
 from .covariance import CovarianceMatrix
 from .estimators import Estimator
+from .matrix import Matrix
 from .operators import ForwardOperator, convolve
 from .problem import InverseProblem
-from .structures import Block, Matrix, Vector
+from .vector import Block, Vector
 
 logging.getLogger(__name__).addHandler(logging.NullHandler())
 

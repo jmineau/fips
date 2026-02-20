@@ -8,11 +8,11 @@ import numpy as np
 import pandas as pd
 from stilt import Simulation
 
-from fips.operators import ForwardOperator
+from fips.matrix import MatrixBlock
 from fips.problems.flux.transport.stilt.footprint import get_footprint
 from fips.problems.flux.transport.stilt.simulation import get_sim
-from fips.utils.parallel import parallelize
-from fips.utils.spacetime import integrate_over_time_bins
+from fips.problems.utils.parallel import parallelize
+from fips.problems.utils.spacetime import integrate_over_time_bins
 
 logger = logging.getLogger(__name__)
 
@@ -48,7 +48,7 @@ class JacobianBuilder:
         subset_hours: int | list[int] | None = None,
         num_processes: int | Literal["max"] = 1,
         location_mapper: dict[str, str] | None = None,
-    ) -> ForwardOperator: ...
+    ) -> MatrixBlock: ...
 
     @overload
     def build_from_coords(
@@ -59,7 +59,7 @@ class JacobianBuilder:
         subset_hours: int | list[int] | None = None,
         num_processes: int | Literal["max"] = 1,
         location_mapper: dict[str, str] | None = None,
-    ) -> dict[str, ForwardOperator]: ...
+    ) -> dict[str, MatrixBlock]: ...
 
     def build_from_coords(
         self,
@@ -70,7 +70,7 @@ class JacobianBuilder:
         num_processes: int | Literal["max"] = 1,
         location_mapper: dict[str, str] | None = None,
         timeout: float | int | None = None,
-    ) -> ForwardOperator | dict[str, ForwardOperator]:
+    ) -> MatrixBlock | dict[str, MatrixBlock]:
         """
         Build the Jacobian matrix H from specified coordinates (x, y) and flux time bins.
 
@@ -98,9 +98,9 @@ class JacobianBuilder:
 
         Returns
         -------
-        ForwardOperator | dict[str, ForwardOperator]
-            If coords is a dict, returns a dict of ForwardOperators for each set of coordinates.
-            Otherwise, returns a single ForwardOperator.
+        MatrixBlock | dict[str, MatrixBlock]
+            If coords is a dict, returns a dict of MatrixBlocks for each set of coordinates.
+            Otherwise, returns a single MatrixBlock.
         """
 
         logger.info("Building Jacobian matrix...")
@@ -157,7 +157,9 @@ class JacobianBuilder:
                     )
                     H = h.set_index([self.location_dim, self.time_dim])
 
-                H = ForwardOperator(H)
+                H = MatrixBlock(
+                    H, name="jacobian", row_block="concentration", col_block="flux"
+                )
                 H_dict[key] = H
 
                 if key == "DEFAULT":

@@ -14,7 +14,7 @@ if TYPE_CHECKING:
 class FluxPlotter:
     """
     Plotting interface for FluxInversion results.
-    
+
     Provides methods for visualizing prior/posterior fluxes and concentration timeseries.
     """
 
@@ -60,15 +60,15 @@ class FluxPlotter:
             Additional plotting kwargs for site markers.
         **kwargs
             Additional arguments passed to xarray plotting.
-        
+
         Returns
         -------
         fig, axes : matplotlib Figure and Axes
             The created figure and axes.
         """
         # Get xarray representations of fluxes
-        prior = self.inversion.xr.prior["flux"]
-        posterior = self.inversion.xr.posterior["flux"]
+        prior = self.inversion.prior_fluxes.to_xarray()
+        posterior = self.inversion.posterior_fluxes.to_xarray()
 
         # Filter/aggregate by time
         if time == "mean":
@@ -303,9 +303,9 @@ class FluxPlotter:
         axes : np.ndarray
             Array of axes objects, one per location.
         """
-        obs = self.inversion.obs["concentration"].rename("observed")
-        posterior = self.inversion.posterior_obs["concentration"].rename("posterior")
-        prior = self.inversion.prior_obs["concentration"].rename("prior")
+        obs = self.inversion.concentrations.rename("observed")
+        prior = self.inversion.prior_concentrations.rename("prior")
+        posterior = self.inversion.posterior_concentrations.rename("posterior")
 
         data = pd.concat([obs, posterior, prior], axis=1)
 

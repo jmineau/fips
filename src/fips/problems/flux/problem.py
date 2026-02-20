@@ -6,7 +6,7 @@ from observed atmospheric concentrations using STILT transport models.
 Flux inversion is a specific application of the inverse problem framework where:
 - Prior: initial estimate of surface fluxes (from inventories or models)
 - Posterior: updated flux estimate after assimilating observations
-- Forward Operator: maps fluxes to concentrations via STILT transport
+- Forward Operator (Jacobian): maps fluxes to concentrations via STILT transport
 - Observations: measured concentration values at receptor locations/times
 
 The Forward Operator is built from STILT footprints which quantify the sensitivity
@@ -17,19 +17,12 @@ import logging
 
 import pandas as pd
 
-from fips.converters import to_frame, to_series
-from fips.covariance import CovarianceMatrix
 from fips.estimators import Estimator
-from fips.indices import (
-    ensure_block,
-    ensure_block_axis,
-    outer_align_levels,
-    select_intervals_with_min_obs,
-)
-from fips.operators import ForwardOperator
+from fips.filters import select_intervals_with_min_obs
+from fips.matrix import MatrixBlock, MatrixBlockLike
 from fips.problem import InverseProblem
 from fips.problems.flux.visualization import FluxPlotter
-from fips.structures import Block, Vector
+from fips.vector import Block, BlockLike
 
 logger = logging.getLogger(__name__)
 
@@ -45,38 +38,19 @@ class FluxInversion(InverseProblem):
     Subclass of InverseProblem specialized for estimating spatial and temporal surface fluxes
     from observed atmospheric concentrations using a forward transport model.
     Supports multi-block state composition (e.g., fluxes + bias corrections).
-
-    Attributes
-    ----------
-    prior : Vector
-        Prior state vector (fluxes, bias, etc.).
-    obs : Vector
-        Observation vector (concentrations, etc.).
-    forward_operator : ForwardOperator
-        Sensitivity matrix mapping state to observations.
-    prior_error : CovarianceMatrix
-        Prior state uncertainty covariance.
-    modeldata_mismatch : CovarianceMatrix
-        Observation error covariance.
-    constant : pd.Series, float, or None
-        Background concentration.
-    plot : FluxPlotter
-        Plotting interface for results.
     """
 
     def __init__(
         self,
-        concentrations: pd.Series | Block | Vector,
-        inventory: pd.Series | Block | Vector,
-        jacobian: pd.DataFrame | ForwardOperator,
-        inventory_error: pd.DataFrame | CovarianceMatrix,
-        modeldata_mismatch: pd.DataFrame | CovarianceMatrix,
-        background: pd.Series | Block | Vector | float | None = None,
-        bias: pd.Series | Vector | None = None,  # this would be the prior
-        bias_error: pd.DataFrame
-        | CovarianceMatrix
-        | None = None,  # then we would just add an index for each index in the block
-        bias_jacobian: float | pd.DataFrame | ForwardOperator | None = 1.0,
+        concentrations: BlockLike,
+        inventory: BlockLike,
+        jacobian: MatrixBlockLike,
+        inventory_error: MatrixBlockLike,
+        modeldata_mismatch: MatrixBlockLike,
+        background: "BlockLike | float | None" = None,
+        bias: "BlockLike | None" = None,  # this would be the prior
+        bias_error: "MatrixBlockLike | None" = None,  # then we would just add an index for each index in the block
+        bias_jacobian: "MatrixBlockLike | float | None" = 1.0,
         freq: str | None = "infer",
         min_obs_per_interval: int = 1,
         min_sims_per_interval: int = 1,
@@ -87,20 +61,19 @@ class FluxInversion(InverseProblem):
 
         Parameters
         ----------
-        concentrations : pd.Series, Block, or Vector
-            Observed concentrations. If pd.Series, automatically converted to Vector.
-        inventory : pd.Series, Block, or Vector
-            Prior flux inventory. If pd.Series, converted to Block; if Block, converted to Vector.
-            If already a Vector, used as-is.
-        jacobian : pd.DataFrame or ForwardOperator
+        concentrations : BlockLike
+            Observed concentrations.
+        inventory : BlockLike
+            Prior flux inventory.
+        jacobian : MatrixBlockLike
             Jacobian (forward operator) mapping state to observations.
-        inventory_error : CovarianceMatrix
+        inventory_error : MatrixBlockLike
             Inventory error covariance matrix for state.
-        modeldata_mismatch : CovarianceMatrix
+        modeldata_mismatch : MatrixBlockLike
             Model-data mismatch covariance matrix for observations.
-        background : pd.Series, float, or None, optional
+        background : BlockLike, float, or None, optional
             Background concentration to add to modelled observations, by default None.
-        bias : pd.Series, Block, or Vector, or None, optional
+        bias : BlockLike, float, or None, optional
             Optional bias correction block to add to state, by default None.
         freq : str, optional
             Frequency for time binning (e.g., 'D', 'H'), by default 'infer'.
@@ -117,19 +90,24 @@ class FluxInversion(InverseProblem):
             If time frequency cannot be inferred and is not specified.
         """
 
-        # ----- NORMALIZE INPUTS -----
+        # ----- Normalize Inputs -----
+        obs_blk = Block(concentrations, name="concentration")
+        flux_blk = Block(inventory, name="flux")
+        jac_blk = MatrixBlock(jacobian, "concentration", "flux")
+        inv_err_blk = MatrixBlock(inventory_error, "flux", "flux")
+        mdm_blk = MatrixBlock(modeldata_mismatch, "concentration", "concentration")
+        bg_blk = (
+            Block(background, name="background") if background is not None else None
+        )
 
-        inventory = to_series(inventory)
-        concentrations = to_series(concentrations)
-        jacobian = to_frame(jacobian)
-        inventory_error = to_frame(inventory_error)
-        modeldata_mismatch = to_frame(modeldata_mismatch)
-        background = to_series(background) if background is not None else None
-
-        # ----- FILTER INTERVALS -----
+        # ----- FIlter Intervals -----
 
         # Handle filtering by time intervals
         if min_obs_per_interval > 1 or min_sims_per_interval > 1:
+            # Get inputs as series
+            inventory = flux_blk.to_series()
+            concentrations = obs_blk.to_series()
+
             # Determine flux times
             times = inventory.index.get_level_values("time").unique().sort_values()
 
@@ -157,104 +135,106 @@ class FluxInversion(InverseProblem):
                     level="obs_time",
                 )
 
-            # Filter Jacobian by interval
-            if min_sims_per_interval > 1:
-                jacobian = select_intervals_with_min_obs(
-                    jacobian,
-                    intervals=bins,
-                    threshold=min_sims_per_interval,
-                    level="obs_time",
-                )
+            obs_blk = Block(concentrations, name="concentration")
+            flux_blk = Block(inventory, name="flux")
 
-        # ----- PREPARE BLOCKS -----
+        # ----- Aggregate Blocks -----
 
-        state_blocks = []
-
-        # Prepare inventory block
-        inventory = Block(name="flux", data=inventory)
-        state_blocks.append(inventory)
-
-        # Prepare concentration block
-        concentrations = Block(name="concentration", data=concentrations)
-
-        # Normalize block names for alignment
-        if isinstance(background, pd.Series):
-            background = Block(name="concentration", data=background)
-
-        jacobian = ensure_block_axis(jacobian, "index", "concentration")
-        jacobian = ensure_block_axis(jacobian, "columns", "flux")
-        modeldata_mismatch = ensure_block(modeldata_mismatch, "concentration")
-        inventory_error = ensure_block(inventory_error, "flux")
+        state_blocks = [flux_blk]
+        fo_blks = [jac_blk]
+        S_0_blks = [inv_err_blk]
+        S_z_blks = [mdm_blk]
 
         # Add bias block if provided
         if bias is not None:
-            # Prepare bias state block
-            if isinstance(bias, pd.Series):
-                bias_block = Block(data=bias, name="bias")
-            elif isinstance(bias, Block):
-                bias_block = bias
-            else:
-                raise TypeError("bias must be pd.Series or Block")
+            bias_blk = Block(bias, name="bias")
+            state_blocks.append(bias_blk)
 
-            state_blocks.append(bias_block)
-
-            # Expand prior_error to include bias block
-            if bias_error is None:
-                raise ValueError("bias_error must be provided if bias block is used")
-            elif isinstance(bias_error, CovarianceMatrix):
-                bias_error = bias_error.data
-
-            bias_error = ensure_block(bias_error, "bias")
-
-            inventory_error, bias_error = outer_align_levels(
-                [inventory_error, bias_error], axis="both"
-            )
-            prior_error = pd.concat([inventory_error, bias_error], axis=0).fillna(0.0)
-
-            # Expand jacobian to include bias block
-            if bias_jacobian is None:
-                raise ValueError("bias_jacobian must be provided if bias block is used")
-            elif isinstance(bias_jacobian, ForwardOperator):
-                bias_jacobian = bias_jacobian.data
-            elif isinstance(bias_jacobian, (float, int)):
-                bias_jacobian = pd.DataFrame(
-                    bias_jacobian,
-                    index=jacobian.index,
-                    columns=pd.MultiIndex.from_product(
-                        [["bias"], bias_block.data.index],
-                        names=["block", "state_index"],
-                    ),
+            if any(x is None for x in [bias_error, bias_jacobian]):
+                raise ValueError(
+                    "bias error and bias jacobian must be provided if bias block is used"
                 )
 
-            bias_jacobian = ensure_block_axis(bias_jacobian, "columns", "bias")
-            bias_jacobian = ensure_block_axis(bias_jacobian, "index", "concentration")
+            if isinstance(bias_jacobian, (float, int)):
+                # Create a simple Jacobian block that maps bias to concentrations with the specified scalar value
+                bias_jac_blk = MatrixBlock(
+                    bias_jacobian,
+                    "concentration",
+                    "bias",
+                    name="bias_jacobian",
+                    index=jac_blk.index,
+                    columns=bias_blk.index,
+                )
+            else:
+                bias_jac_blk = MatrixBlock(bias_jacobian, "concentration", "bias")
+            fo_blks.append(bias_jac_blk)
 
-            jacobian, bias_jacobian = outer_align_levels(
-                [jacobian, bias_jacobian], axis=1
-            )
-            jacobian = pd.concat([jacobian, bias_jacobian], axis=1).fillna(0.0)
-        else:
-            prior_error = inventory_error
+            S_0_blks.append(MatrixBlock(bias_error, "bias", "bias"))
 
-        # ----- Assemble Blocks -----
-
-        # Create state Vector
-        prior = Vector(name="prior", blocks=state_blocks)
-
-        # ----- INITIALIZE INVERSE PROBLEM -----
+        # ----- Initialize Inverse Problem -----
 
         super().__init__(
-            obs=concentrations,
-            prior=prior,
-            forward_operator=jacobian,
-            prior_error=prior_error,
-            modeldata_mismatch=modeldata_mismatch,
-            constant=background,
+            obs=obs_blk,
+            prior=state_blocks,
+            forward_operator=fo_blks,
+            prior_error=S_0_blks,
+            modeldata_mismatch=S_z_blks,
+            constant=bg_blk,
             **kwargs,
         )
 
     def solve(self, estimator: str | type[Estimator] = "bayesian", **kwargs):
         return super().solve(estimator=estimator, **kwargs)
+
+    @property
+    def concentrations(self) -> pd.Series:
+        """Observed concentrations."""
+        return self.obs["concentration"]
+
+    @property
+    def prior_fluxes(self) -> pd.Series:
+        """Prior flux inventory."""
+        return self.prior["flux"]
+
+    @property
+    def jacobian(self) -> pd.DataFrame:
+        """Forward operator (Jacobian) mapping state to observations."""
+        return self.forward_operator["concentration", "flux"]
+
+    @property
+    def prior_flux_error(self) -> pd.DataFrame:
+        """Inventory error covariance matrix."""
+        return self.prior_error["flux", "flux"]
+
+    @property
+    def concentration_error(self) -> pd.DataFrame:
+        """Model-data mismatch covariance matrix for observations."""
+        return self.modeldata_mismatch["concentration", "concentration"]
+
+    @property
+    def background(self) -> pd.Series | None:
+        """Background concentration."""
+        return None if self.constant is None else self.constant["background"]
+
+    @property
+    def posterior_fluxes(self) -> pd.Series:
+        """Posterior flux estimates after inversion."""
+        return self.posterior["flux"]
+
+    @property
+    def posterior_flux_error(self) -> pd.DataFrame:
+        """Posterior flux error covariance matrix after inversion."""
+        return self.posterior_error["flux", "flux"]
+
+    @property
+    def prior_concentrations(self) -> pd.Series:
+        """Modelled concentrations from prior fluxes."""
+        return self.prior_obs["concentration"]
+
+    @property
+    def posterior_concentrations(self) -> pd.Series:
+        """Modelled concentrations from posterior fluxes."""
+        return self.posterior_obs["concentration"]
 
     @property
     def plot(self) -> FluxPlotter:

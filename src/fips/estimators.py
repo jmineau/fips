@@ -17,14 +17,34 @@ logger = logging.getLogger(__name__)
 # - implement bayesian regularization factor usage
 
 
-OUTPUT_PROPERTY_NAMES = {
-    "posterior": "x_hat",
-    "posterior_error": "S_hat",
-    "posterior_obs": "y_hat",
-    "prior_obs": "y_0",
-    "kalman_gain": "K",
-    "averaging_kernel": "A",
-}
+class EstimatorRegistry(dict):
+    """
+    Registry for estimator classes.
+    """
+
+    def register(self, name: str):
+        """
+        Register an estimator class under a given name.
+
+        Parameters
+        ----------
+        name : str
+            Name to register the estimator under.
+
+        Returns
+        -------
+        decorator : function
+            Decorator to register the class.
+        """
+
+        def decorator(cls: type[Estimator]) -> type[Estimator]:
+            self[name] = cls
+            return cls
+
+        return decorator
+
+
+ESTIMATOR_REGISTRY: dict[str, type["Estimator"]] = EstimatorRegistry()
 
 
 class Estimator(ABC):
@@ -81,6 +101,17 @@ class Estimator(ABC):
     leverage(x: np.ndarray) -> np.ndarray
         Calculate the leverage matrix.
     """
+
+    _output_meta = {
+        # attr : (row_space, col_space, is_covariance)
+        "x_hat": ("state", None, False),
+        "S_hat": ("state", "state", True),
+        "y_hat": ("obs", None, False),
+        "y_0": ("obs", None, False),
+        "K": ("state", "obs", False),
+        "A": ("state", "state", False),
+        "U_red": ("state", None, False),
+    }
 
     def __init__(
         self,
@@ -444,36 +475,6 @@ class Estimator(ABC):
         """
         logger.debug("Calculating uncertainty reduction vector...")
         return (1 - (np.sqrt(np.diag(self.S_hat)) / np.sqrt(np.diag(self.S_0)))) * 100.0
-
-
-class EstimatorRegistry(dict):
-    """
-    Registry for estimator classes.
-    """
-
-    def register(self, name: str):
-        """
-        Register an estimator class under a given name.
-
-        Parameters
-        ----------
-        name : str
-            Name to register the estimator under.
-
-        Returns
-        -------
-        decorator : function
-            Decorator to register the class.
-        """
-
-        def decorator(cls: type[Estimator]) -> type[Estimator]:
-            self[name] = cls
-            return cls
-
-        return decorator
-
-
-ESTIMATOR_REGISTRY: dict[str, type[Estimator]] = EstimatorRegistry()
 
 
 @ESTIMATOR_REGISTRY.register("bayesian")

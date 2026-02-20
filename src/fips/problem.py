@@ -2,130 +2,98 @@
 
 This module provides the core InverseProblem class which combines observations,
 prior estimates, forward operators, and error covariances into a unified framework
-for Bayesian state estimation.
+for state estimation.
 """
 
 import logging
-from pathlib import Path
 
 import pandas as pd
+from typing_extensions import Self
 
+from fips.base import Pickleable
 from fips.covariance import CovarianceMatrix
 from fips.estimators import ESTIMATOR_REGISTRY, Estimator
-from fips.interfaces import PD, XR, EstimatorOutput
+from fips.matrix import Matrix, MatrixLike
 from fips.operators import ForwardOperator
-from fips.serialization import Pickleable, load_or_pass
-from fips.structures import Block, Matrix, Vector, prepare_matrix, prepare_vector
+from fips.vector import Vector, VectorLike
 
 logger = logging.getLogger(__name__)
 
 
-class InverseProblem(EstimatorOutput, Pickleable):
-    """Bayesian inverse problem combining observations, priors, and forward model.
+class InverseProblem(Pickleable):
+    """Inverse problem combining observations, priors, and forward model.
 
     Organizes state vectors, observations, forward operators, and error covariances
-    into a unified framework for solving inverse problems via Bayesian estimation.
+    into a unified framework for solving inverse problems via different estimators.
     """
 
     def __init__(
         self,
-        prior: str | Path | Vector | Block | pd.Series,
-        obs: str | Path | Vector | Block | pd.Series,
-        forward_operator: str | Path | ForwardOperator | pd.DataFrame,
-        prior_error: str | Path | CovarianceMatrix | pd.DataFrame,
-        modeldata_mismatch: str | Path | CovarianceMatrix | pd.DataFrame,
-        constant: str | Path | Vector | Block | pd.Series | float | None = None,
-        float_precision: int | None = None,
+        obs: VectorLike,
+        prior: VectorLike,
+        forward_operator: MatrixLike,
+        modeldata_mismatch: MatrixLike,
+        prior_error: MatrixLike,
+        constant: "VectorLike | float | None" = None,
+        round_index: int | None = 6,
     ):
         super().__init__()
 
-        # Prepare obs and prior vectors
-        self.obs = prepare_vector(
-            name="obs", vector=obs, float_precision=float_precision
+        def getname(obj, default):
+            return getattr(obj, "name", default)
+
+        obs = Vector(obs, name=getname(obs, "obs"))
+        prior = Vector(prior, name=getname(prior, "prior"))
+
+        forward_operator = ForwardOperator(
+            forward_operator, name=getname(forward_operator, "forward_operator")
         )
-        self.prior = prepare_vector(
-            name="prior", vector=prior, float_precision=float_precision
+        modeldata_mismatch = CovarianceMatrix(
+            modeldata_mismatch, name=getname(modeldata_mismatch, "modeldata_mismatch")
+        )
+        prior_error = CovarianceMatrix(
+            prior_error, name=getname(prior_error, "prior_error")
         )
 
-        # Prepare forward operator and covariance matrices
-        self.forward_operator = prepare_matrix(
-            matrix=forward_operator,
-            matrix_class=ForwardOperator,
-            row_index=self.obs_index,
-            col_index=self.state_index,
-            float_precision=float_precision,
-        )
-
-        self.prior_error = prepare_matrix(
-            matrix=prior_error,
-            matrix_class=CovarianceMatrix,
-            row_index=self.state_index,
-            col_index=self.state_index,
-            float_precision=float_precision,
-        )
-
-        self.modeldata_mismatch = prepare_matrix(
-            matrix=modeldata_mismatch,
-            matrix_class=CovarianceMatrix,
-            row_index=self.obs_index,
-            col_index=self.obs_index,
-            float_precision=float_precision,
-        )
-
-        # Prepare constant
         if constant is not None:
-            try:
-                constant = float(constant)
-            except (TypeError, ValueError):
-                # Load constant (could be a file path or Series/Vector)
-                constant = load_or_pass(constant)
+            constant_index = obs.index if isinstance(constant, (int, float)) else None
+            constant = Vector(
+                constant, name=getname(constant, "constant"), index=constant_index
+            )
 
-                # If it's a Series, make sure it aligns with obs index before wrapping
-                if isinstance(constant, pd.Series):
-                    # Reindex the raw Series to match obs_index's base index (without block level)
-                    obs_base_idx = (
-                        self.obs.index.droplevel("block")
-                        if isinstance(self.obs.index, pd.MultiIndex)
-                        and "block" in self.obs.index.names
-                        else self.obs.index
-                    )
-                    constant = constant.reindex(obs_base_idx).fillna(0.0)
-                    constant.name = "constant"
+        # Round to specified precision if provided
+        if round_index is not None:
+            obs = obs.round_index(round_index)
+            prior = prior.round_index(round_index)
+            forward_operator = forward_operator.round_index(round_index, axis="both")
+            modeldata_mismatch = modeldata_mismatch.round_index(
+                round_index, axis="both"
+            )
+            prior_error = prior_error.round_index(round_index, axis="both")
+            if constant is not None:
+                constant = constant.round_index(round_index)
 
-                # Now wrap it as a Vector
-                constant = prepare_vector(
-                    name="obs", vector=constant, float_precision=float_precision
-                )
+        # Reindex matrices to obs and prior (state) indices
+        def reindex(matrix, row_idx, col_idx):
+            return matrix.reindex(
+                index=row_idx, columns=col_idx, fill_value=0.0, verify_overlap=True
+            )
+
+        forward_operator = reindex(
+            forward_operator, row_idx=obs.index, col_idx=prior.index
+        )
+        modeldata_mismatch = reindex(
+            modeldata_mismatch, row_idx=obs.index, col_idx=obs.index
+        )
+        prior_error = reindex(prior_error, row_idx=prior.index, col_idx=prior.index)
+
+        self.obs = obs
+        self.prior = prior
+        self.forward_operator = forward_operator
+        self.modeldata_mismatch = modeldata_mismatch
+        self.prior_error = prior_error
         self.constant = constant
-
-        self.float_precision = float_precision
         self._estimator: Estimator | None = None  # init empty estimator
-
-    def __getstate__(self):
-        """Explicit pickle support: return state as dict."""
-        return {
-            "prior": self.prior,
-            "obs": self.obs,
-            "forward_operator": self.forward_operator,
-            "prior_error": self.prior_error,
-            "modeldata_mismatch": self.modeldata_mismatch,
-            "constant": self.constant,
-            "float_precision": self.float_precision,
-            "_estimator": self._estimator,
-            "_output_cache": self._output_cache,
-        }
-
-    def __setstate__(self, state):
-        """Explicit pickle support: restore state from dict."""
-        self.prior = state["prior"]
-        self.obs = state["obs"]
-        self.forward_operator = state["forward_operator"]
-        self.prior_error = state["prior_error"]
-        self.modeldata_mismatch = state["modeldata_mismatch"]
-        self.constant = state["constant"]
-        self.float_precision = state["float_precision"]
-        self._estimator = state.get("_estimator", None)
-        self._output_cache = state.get("_output_cache", {})
 
     @property
     def state_index(self) -> pd.Index:
@@ -159,13 +127,11 @@ class InverseProblem(EstimatorOutput, Pickleable):
         elif isinstance(obj, Matrix):
             if crossblock is None:
                 crossblock = block
-            return obj.data.loc[block, crossblock]
+            return obj[block, crossblock]
         else:
             raise TypeError(f"Object '{component}' is neither a Vector nor a Matrix.")
 
-    def solve(
-        self, estimator: str | type[Estimator], **kwargs
-    ) -> dict[str, Vector | CovarianceMatrix]:
+    def solve(self, estimator: str | type[Estimator], **kwargs) -> Self:
         # Get estimator class
         if isinstance(estimator, str):
             if estimator not in ESTIMATOR_REGISTRY:
@@ -182,26 +148,91 @@ class InverseProblem(EstimatorOutput, Pickleable):
         H = self.forward_operator.values
         S_0 = self.prior_error.values
         S_z = self.modeldata_mismatch.values
-        c = (
-            self.constant
-            if not isinstance(self.constant, Vector)
-            else self.constant.values
-        )
+        c = getattr(self.constant, "values", None)
 
         self._estimator = estimator_cls(
             z=z, x_0=x_0, H=H, S_0=S_0, S_z=S_z, c=c, **kwargs
         )
 
+        return self
+
+    def _wrap(self, math_attr: str, friendly_name: str):
+        """Fetches raw math from the estimator and wraps it using the Estimator's space manifest."""
+        # Get the raw numpy data
+        raw_data = getattr(self.estimator, math_attr)
+
+        # Look up the metadata from the Estimator's manifest
+        meta = self.estimator._output_meta.get(math_attr)
+
+        # If it's not in the manifest (e.g., chi2, DOFS), just return the raw float/array
+        if not meta:
+            return raw_data
+
+        row_space, col_space, is_covariance = meta
+
+        # 3. Wrap 1D Vectors
+        if col_space is None:
+            index = self.state_index if row_space == "state" else self.obs_index
+            return Vector(raw_data, index=index, name=friendly_name)
+
+        # 4. Wrap 2D Matrices
+        idx_0 = self.state_index if row_space == "state" else self.obs_index
+        idx_1 = self.state_index if col_space == "state" else self.obs_index
+
+        if is_covariance:
+            return CovarianceMatrix(
+                raw_data, index=idx_0, columns=idx_1, name=friendly_name
+            )
+        return Matrix(raw_data, index=idx_0, columns=idx_1, name=friendly_name)
+
+    def __getstate__(self):
+        """Explicit pickle support: return state as dict."""
         return {
-            "posterior": self.posterior,
-            "posterior_error": self.posterior_error,
-            "posterior_obs": self.posterior_obs,
+            "prior": self.prior,
+            "obs": self.obs,
+            "forward_operator": self.forward_operator,
+            "prior_error": self.prior_error,
+            "modeldata_mismatch": self.modeldata_mismatch,
+            "constant": self.constant,
+            "_estimator": self._estimator,
         }
 
-    @property
-    def pd(self) -> PD:
-        return PD(self)
+    def __setstate__(self, state):
+        """Explicit pickle support: restore state from dict."""
+        self.prior = state["prior"]
+        self.obs = state["obs"]
+        self.forward_operator = state["forward_operator"]
+        self.prior_error = state["prior_error"]
+        self.modeldata_mismatch = state["modeldata_mismatch"]
+        self.constant = state["constant"]
+        self._estimator = state.get("_estimator", None)
 
     @property
-    def xr(self) -> XR:
-        return XR(self)
+    def posterior(self) -> Vector:
+        """Posterior state estimate."""
+        return self._wrap("x_hat", "posterior")
+
+    @property
+    def posterior_error(self) -> CovarianceMatrix:
+        """Posterior error covariance."""
+        return self._wrap("S_hat", "posterior_error")
+
+    @property
+    def posterior_obs(self) -> Vector:
+        """Modeled observations (H @ posterior)."""
+        return self._wrap("y_hat", "modeled_obs")
+
+    @property
+    def prior_obs(self) -> Vector:
+        """Modeled observations using the prior (H @ prior)."""
+        return self._wrap("y_0", "prior_obs")
+
+    @property
+    def kalman_gain(self) -> Matrix:
+        """Kalman gain matrix (K)."""
+        return self._wrap("K", "kalman_gain")
+
+    @property
+    def averaging_kernel(self) -> Matrix:
+        """Averaging kernel matrix (A)."""
+        return self._wrap("A", "averaging_kernel")
