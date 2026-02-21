@@ -10,10 +10,11 @@ import logging
 import pandas as pd
 from typing_extensions import Self
 
+from fips import Block
 from fips.base import Pickleable
 from fips.covariance import CovarianceMatrix
 from fips.estimators import ESTIMATOR_REGISTRY, Estimator
-from fips.matrix import Matrix, MatrixLike
+from fips.matrix import Matrix, MatrixBlock, MatrixLike
 from fips.operators import ForwardOperator
 from fips.vector import Vector, VectorLike
 
@@ -37,22 +38,42 @@ class InverseProblem(Pickleable):
         constant: "VectorLike | float | None" = None,
         round_index: int | None = 6,
     ):
-        super().__init__()
+        def promote_1d(data, default_block: str):
+            if isinstance(data, pd.Series) and "block" not in data.index.names:
+                # Wrap naked Series in a Block
+                return Block(data, name=default_block)
+            return data
+
+        def promote_2d(data, default_row: str, default_col: str):
+            if isinstance(data, pd.DataFrame):
+                has_row = "block" in data.axes[0].names
+                has_col = "block" in data.axes[1].names
+                if not has_row or not has_col:
+                    # Wrap naked DataFrame in a MatrixBlock
+                    return MatrixBlock(
+                        data, row_block=default_row, col_block=default_col
+                    )
+            return data
 
         def getname(obj, default):
             return getattr(obj, "name", default)
 
-        obs = Vector(obs, name=getname(obs, "obs"))
-        prior = Vector(prior, name=getname(prior, "prior"))
+        obs = Vector(promote_1d(obs, "obs"), name=getname(obs, "obs"))
+        prior = Vector(promote_1d(prior, "state"), name=getname(prior, "prior"))
 
         forward_operator = ForwardOperator(
-            forward_operator, name=getname(forward_operator, "forward_operator")
+            promote_2d(forward_operator, default_row="obs", default_col="state"),
+            name=getname(forward_operator, "forward_operator"),
         )
+
         modeldata_mismatch = CovarianceMatrix(
-            modeldata_mismatch, name=getname(modeldata_mismatch, "modeldata_mismatch")
+            promote_2d(modeldata_mismatch, default_row="obs", default_col="obs"),
+            name=getname(modeldata_mismatch, "modeldata_mismatch"),
         )
+
         prior_error = CovarianceMatrix(
-            prior_error, name=getname(prior_error, "prior_error")
+            promote_2d(prior_error, default_row="state", default_col="state"),
+            name=getname(prior_error, "prior_error"),
         )
 
         if constant is not None:

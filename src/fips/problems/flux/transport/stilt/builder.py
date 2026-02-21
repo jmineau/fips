@@ -8,11 +8,11 @@ import numpy as np
 import pandas as pd
 from stilt import Simulation
 
+from fips.aggregators import integrate_over_time_bins
 from fips.matrix import MatrixBlock
+from fips.parallel import parallelize
 from fips.problems.flux.transport.stilt.footprint import get_footprint
 from fips.problems.flux.transport.stilt.simulation import get_sim
-from fips.problems.utils.parallel import parallelize
-from fips.problems.utils.spacetime import integrate_over_time_bins
 
 logger = logging.getLogger(__name__)
 
