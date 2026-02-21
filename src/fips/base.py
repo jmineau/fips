@@ -11,11 +11,29 @@ import pandas as pd
 from pandas import MultiIndex
 from typing_extensions import Self
 
-from fips.indexes import overlaps, resolve_axes, round_index, to_numeric, xselect
+from fips.indexes import overlaps, resolve_axes, round_index, to_numeric
 
 logger = logging.getLogger(__name__)
 
 ArrayLike: TypeAlias = npt.ArrayLike | pd.Series | pd.DataFrame
+
+
+def xselect(
+    s_or_df: pd.DataFrame | pd.Series, key, axis=0, level=None, drop_level=True
+) -> pd.DataFrame | pd.Series:
+    for ax in resolve_axes(axis):
+        # Call the underlying xs method
+        s_or_df = s_or_df.xs(key, axis=ax, level=level, drop_level=drop_level).copy()
+
+        # Drop index levels that are all nan
+        idx = s_or_df.axes[ax]
+        idx = idx.droplevel(
+            [level for level in idx.names if idx.get_level_values(level).isna().all()]
+        )
+
+        # Reassign cleaned index/columns
+        s_or_df = s_or_df.set_axis(idx, axis=ax)
+    return s_or_df
 
 
 class Pickleable:
