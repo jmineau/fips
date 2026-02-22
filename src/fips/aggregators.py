@@ -44,8 +44,9 @@ def integrate_over_time_bins(
     # Sum over the groups
     integrated = grouped.sum()
 
-    # Order the index levels
-    integrated = integrated.reorder_levels(dims)
+    # Order the index levels if MultiIndex
+    if isinstance(integrated.index, pd.MultiIndex):
+        integrated = integrated.reorder_levels(dims)
 
     if is_series:
         # Return a Series if the input was a Series

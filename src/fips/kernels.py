@@ -12,7 +12,8 @@ def _exponential_decay(d, scale):
 
 def _time_decay(times, scale, decay_func=_exponential_decay):
     diffs = time_diff_matrix(times)
-    return decay_func(pd.to_timedelta(diffs), pd.Timedelta(scale))
+    # diffs is already timedelta64[ns] from time_diff_matrix
+    return decay_func(diffs, pd.Timedelta(scale))
 
 
 def ConstantCorrelation():
