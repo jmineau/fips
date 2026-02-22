@@ -135,8 +135,8 @@ class Structure(Pickleable, ABC):
 
     def reindex(
         self,
-        index: pd.MultiIndex,
-        columns: pd.MultiIndex | None = None,
+        index: pd.Index,
+        columns: pd.Index | None = None,
         verify_overlap: bool = False,
         inplace: bool = False,
         **kwargs,
@@ -144,14 +144,14 @@ class Structure(Pickleable, ABC):
         """Return a new instance with data reindexed to the specified index and columns."""
 
         def prepare_data_for_target(
-            data: pd.DataFrame | pd.Series, target: pd.MultiIndex, axis: int
+            data: pd.DataFrame | pd.Series, target: pd.Index, axis: int
         ) -> pd.DataFrame | pd.Series:
             current = data.axes[axis]
-            if not isinstance(target, pd.MultiIndex):
-                raise ValueError(
-                    f"Target index must be a MultiIndex, got {type(target)}."
-                )
-            if not current.nlevels == target.nlevels:
+
+            if (
+                isinstance(target, pd.MultiIndex)
+                and not current.nlevels == target.nlevels
+            ):
                 raise ValueError(
                     f"Cannot reindex: target index has {target.nlevels} levels but data has {current.nlevels} levels."
                 )
