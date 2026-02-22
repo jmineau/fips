@@ -158,9 +158,9 @@ class Vector(MultiBlockMixin, Structure1D):
             dfs: list[pd.DataFrame] = []
             dims = {}
 
-            for block in blocks:
+            for b in blocks:
                 # Convert to Block
-                block = Block(block)
+                block = Block(b)
                 if block.name in seen_blocks:
                     raise ValueError(f"Duplicate block name '{block.name}' found")
                 seen_blocks.add(block.name)

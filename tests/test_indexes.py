@@ -131,3 +131,10 @@ def test_to_numeric():
     res_midx = to_numeric(midx)
     expected = pd.MultiIndex.from_arrays([[1, 2], ["a", "b"]], names=["n", "s"])
     pd.testing.assert_index_equal(res_midx, expected)
+
+
+def test_to_numeric_datetime():
+    # DatetimeIndex should remain DatetimeIndex
+    idx = pd.Index(pd.to_datetime(["2020-01-01", "2020-01-02"]), name="date")
+    res = to_numeric(idx)
+    pd.testing.assert_index_equal(res, idx)

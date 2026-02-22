@@ -124,6 +124,12 @@ def to_numeric(index: pd.Index) -> pd.Index:
     """
     Attempt to convert index to numeric types, if possible. If conversion fails, returns original index.
     """
+    # Prevent converting Datetime/Timedelta/Period indices to numeric
+    if pd.api.types.is_datetime64_any_dtype(index) or pd.api.types.is_timedelta64_dtype(
+        index
+    ) or isinstance(index, pd.PeriodDtype):
+        return index
+
     try:
         numeric_index = pd.to_numeric(index, errors="raise")
         return pd.Index(numeric_index, name=index.name)
