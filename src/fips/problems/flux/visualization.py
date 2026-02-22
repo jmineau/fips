@@ -225,6 +225,10 @@ class FluxPlotter:
             else:
                 base = prior
                 label = "Posterior - Prior"
+
+            # Align base to posterior to handle floating point coordinate mismatches
+            base = base.reindex_like(posterior, method="nearest")
+
             residual_cmap = kwargs.pop("residual_cmap", "PiYG")
             cbar_ax2 = fig.add_axes(
                 [
