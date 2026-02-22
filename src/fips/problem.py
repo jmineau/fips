@@ -190,12 +190,12 @@ class InverseProblem(Pickleable):
 
         row_space, col_space, is_covariance = meta
 
-        # 3. Wrap 1D Vectors
+        # Wrap 1D Vectors
         if col_space is None:
             index = self.state_index if row_space == "state" else self.obs_index
             return Vector(raw_data, index=index, name=friendly_name)
 
-        # 4. Wrap 2D Matrices
+        # Wrap 2D Matrices
         idx_0 = self.state_index if row_space == "state" else self.obs_index
         idx_1 = self.state_index if col_space == "state" else self.obs_index
 
