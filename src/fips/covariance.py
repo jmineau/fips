@@ -156,22 +156,23 @@ class BlockDecayError(ErrorComponent):
         super().__init__(name, variances)
         self.groupers = groupers
         self.corr_func = corr_func
+    
+    def _compute_block(self, group: pd.DataFrame) -> tuple[np.ndarray, np.ndarray]:
+        """Helper function to execute safely in a joblib worker."""
+        idx = group.index.to_numpy()
+        return idx, self.corr_func(group)
 
-    def build(self, index: pd.MultiIndex, n_jobs: int = -1, **kwargs) -> pd.DataFrame:
+    def build(self, index: pd.MultiIndex, n_jobs: int = 1, **kwargs) -> pd.DataFrame:
         variances = self._align_variances(index)
         N = len(index)
         corr_matrix = np.eye(N)
 
         coords = index.to_frame(index=False)
 
-        # Define helper for parallel execution
-        def process_group(group):
-            idx = group.index.to_numpy()
-            return idx, self.corr_func(group)
-
         # Parallelize the loop over groups using joblib
         results = Parallel(n_jobs=n_jobs)(
-            delayed(process_group)(group) for _, group in coords.groupby(self.groupers)
+            delayed(self._compute_block)(group)
+            for _, group in coords.groupby(self.groupers)
         )
 
         for idx, block in results:
