@@ -72,10 +72,22 @@ class ErrorComponent(ABC):
                     "All levels in the variance Series index must be named."
                 )
 
+            # Check if the target index has any unnamed levels
+            if any(name is None for name in index.names):
+                raise ValueError(
+                    "All levels in the target index must be named when aligning variances."
+                )
+
+            # Ensure the Series has a name for join operation
+            variances = self.variances
+            if variances.name is None:
+                variances = variances.copy()
+                variances.name = "variances"
+
             # Convert the target index to a dataframe just to use its join capabilities
             target_df = pd.DataFrame(index=index)
-            aligned = target_df.join(self.variances, on=target_levels)
-            return aligned[self.variances.name].fillna(0.0)
+            aligned = target_df.join(variances, on=target_levels)
+            return aligned[variances.name].fillna(0.0)
 
         return pd.Series(self.variances, index=index)
 
@@ -111,6 +123,18 @@ class CovarianceBuilder:
         for component in self.components[1:]:
             S = np.add(S, component.build(index).to_numpy())
         return pd.DataFrame(S, index=index, columns=index)
+
+    def __add__(self, other):
+        if isinstance(other, ErrorComponent):
+            return CovarianceBuilder(self.components + [other])
+        elif isinstance(other, CovarianceBuilder):
+            return CovarianceBuilder(self.components + other.components)
+        raise TypeError(f"Cannot add CovarianceBuilder to {type(other)}")
+
+    def __radd__(self, other):
+        if isinstance(other, ErrorComponent):
+            return CovarianceBuilder([other] + self.components)
+        raise TypeError(f"Cannot add {type(other)} to CovarianceBuilder")
 
 
 class DiagonalError(ErrorComponent):

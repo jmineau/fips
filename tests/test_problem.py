@@ -4,11 +4,12 @@ import warnings
 
 import numpy as np
 import pandas as pd
+import pytest
 
 from fips.covariance import CovarianceMatrix
 from fips.operators import ForwardOperator
 from fips.problem import InverseProblem
-from fips.structures import Block, Vector
+from fips.vector import Block, Vector
 from tests.generate_data import generate_test_data
 
 
@@ -38,25 +39,44 @@ class TestInverseProblemCreation:
 
     def test_inverse_problem_with_vector_objects(self):
         """Test InverseProblem with Vector objects instead of Series."""
-        block_prior = Block(pd.Series([1.0, 2.0], index=["x", "y"], name="state"))
-        prior = Vector(name="prior", blocks=[block_prior])
+        # Use consistent dimension naming - both use 'id' as dimension name
+        block_prior = Block(
+            pd.Series([1.0, 2.0], index=pd.Index(["x", "y"], name="id"), name="state")
+        )
+        prior = Vector(data=[block_prior], name="prior")
 
-        obs = pd.Series([1.0, 2.0], index=["obs_0", "obs_1"])
+        obs = pd.Series(
+            [1.0, 2.0], index=pd.Index(["obs_0", "obs_1"], name="id"), name="obs"
+        )
 
-        # Forward operator must have columns matching the prior's assembled index structure
-        # Since prior is a Vector, its index will be promoted to include the block level
-        prior_idx = prior.data.index
+        # Create simple matrices - use 'id' for dimension name to match vectors
+        state_labels = ["x", "y"]
+        obs_labels = ["obs_0", "obs_1"]
 
         H = pd.DataFrame(
-            [[1, 0.5], [0.5, 1]], index=["obs_0", "obs_1"], columns=prior_idx
+            [[1, 0.5], [0.5, 1]],
+            index=pd.Index(obs_labels, name="id"),
+            columns=pd.Index(state_labels, name="id"),
         )
 
-        S_0 = pd.DataFrame(np.eye(2), index=prior_idx, columns=prior_idx)
+        S_0 = pd.DataFrame(
+            np.eye(2),
+            index=pd.Index(state_labels, name="id"),
+            columns=pd.Index(state_labels, name="id"),
+        )
         S_z = pd.DataFrame(
-            np.eye(2), index=["obs_0", "obs_1"], columns=["obs_0", "obs_1"]
+            np.eye(2),
+            index=pd.Index(obs_labels, name="id"),
+            columns=pd.Index(obs_labels, name="id"),
         )
 
-        problem = InverseProblem(prior, obs, H, S_0, S_z)
+        problem = InverseProblem(
+            obs=obs,
+            prior=prior,
+            forward_operator=H,
+            modeldata_mismatch=S_z,
+            prior_error=S_0,
+        )
 
         assert isinstance(problem.prior, Vector)
         assert isinstance(problem.obs, Vector)
@@ -125,7 +145,7 @@ class TestInverseProblemProperties:
 
         prior = problem.prior
         assert isinstance(prior, Vector)
-        assert prior.n == 3
+        assert prior.shape[0] == 3
 
     def test_obs_property(
         self,
@@ -146,7 +166,7 @@ class TestInverseProblemProperties:
 
         obs = problem.obs
         assert isinstance(obs, Vector)
-        assert obs.n == 4
+        assert obs.shape[0] == 4
 
     def test_forward_operator_property(
         self,
@@ -230,8 +250,14 @@ class TestInverseProblemMatrixHandling:
         simple_modeldata_mismatch,
     ):
         """Test that CovarianceMatrix objects are unwrapped."""
-        cov_prior = CovarianceMatrix(simple_prior_error)
-        cov_mismatch = CovarianceMatrix(simple_modeldata_mismatch)
+        from fips.matrix import MatrixBlock
+
+        cov_prior = CovarianceMatrix(
+            [MatrixBlock(simple_prior_error, row_block="state", col_block="state")]
+        )
+        cov_mismatch = CovarianceMatrix(
+            [MatrixBlock(simple_modeldata_mismatch, row_block="obs", col_block="obs")]
+        )
 
         problem = InverseProblem(
             prior=simple_prior,
@@ -254,7 +280,11 @@ class TestInverseProblemMatrixHandling:
         simple_modeldata_mismatch,
     ):
         """Test that ForwardOperator objects are unwrapped."""
-        forward = ForwardOperator(simple_forward_operator)
+        from fips.matrix import MatrixBlock
+
+        forward = ForwardOperator(
+            [MatrixBlock(simple_forward_operator, row_block="obs", col_block="state")]
+        )
 
         problem = InverseProblem(
             prior=simple_prior,
@@ -270,44 +300,62 @@ class TestInverseProblemMatrixHandling:
 class TestInverseProblemIndexAlignment:
     """Tests for index alignment in InverseProblem."""
 
-    def test_mismatched_prior_indices_warning(self):
-        """Test warning when prior indices don't match."""
-        prior = pd.Series([1.0, 2.0], index=["a", "b"], name="prior")
-        obs = pd.Series([1.0, 2.0], index=["o1", "o2"], name="obs")
+    def test_mismatched_prior_indices_raises(self):
+        """Test error when prior indices don't match."""
+        prior = pd.Series(
+            [1.0, 2.0], index=pd.Index(["a", "b"], name="id"), name="prior"
+        )
+        obs = pd.Series([1.0, 2.0], index=pd.Index(["o1", "o2"], name="id"), name="obs")
 
         # Forward operator uses different state indices
-        H = pd.DataFrame([[1, 0], [0, 1]], index=["o1", "o2"], columns=["x", "y"])
+        H = pd.DataFrame(
+            [[1, 0], [0, 1]],
+            index=pd.Index(["o1", "o2"], name="id"),
+            columns=pd.Index(["x", "y"], name="id"),
+        )
 
-        S_a = pd.DataFrame(np.eye(2), index=["a", "b"], columns=["a", "b"])
-        S_z = pd.DataFrame(np.eye(2), index=["o1", "o2"], columns=["o1", "o2"])
+        prior_idx = pd.Index(["a", "b"], name="id")
+        obs_idx = pd.Index(["o1", "o2"], name="id")
+        S_a = pd.DataFrame(np.eye(2), index=prior_idx, columns=prior_idx)
+        S_z = pd.DataFrame(np.eye(2), index=obs_idx, columns=obs_idx)
 
-        with warnings.catch_warnings(record=True) as w:
-            warnings.simplefilter("always")
-            InverseProblem(prior, obs, H, S_a, S_z)
-
-            # Should generate warning about partial overlap
-            warning_messages = [str(warn.message) for warn in w]
-            assert any(
-                "Partial overlap" in msg or "No overlap" in msg
-                for msg in warning_messages
+        with pytest.raises(ValueError, match="does not overlap"):
+            InverseProblem(
+                obs=obs,
+                prior=prior,
+                forward_operator=H,
+                modeldata_mismatch=S_z,
+                prior_error=S_a,
             )
 
     def test_matrix_reindexing_fills_zeros(self):
         """Test that matrices are reindexed with zero-filling."""
-        prior = pd.Series([1.0, 2.0, 3.0], index=["a", "b", "c"], name="prior")
-        obs = pd.Series([1.0, 2.0], index=["o1", "o2"], name="obs")
+        prior = pd.Series(
+            [1.0, 2.0, 3.0], index=pd.Index(["a", "b", "c"], name="id"), name="prior"
+        )
+        obs = pd.Series([1.0, 2.0], index=pd.Index(["o1", "o2"], name="id"), name="obs")
 
         # Forward operator doesn't cover all state variables
         H = pd.DataFrame(
-            [[1, 0.5, 0], [0.5, 1, 0.5]], index=["o1", "o2"], columns=["a", "b", "c"]
+            [[1, 0.5, 0], [0.5, 1, 0.5]],
+            index=pd.Index(["o1", "o2"], name="id"),
+            columns=pd.Index(["a", "b", "c"], name="id"),
         )
 
-        S_a = pd.DataFrame(np.eye(3), index=["a", "b", "c"], columns=["a", "b", "c"])
-        S_z = pd.DataFrame(np.eye(2), index=["o1", "o2"], columns=["o1", "o2"])
+        state_idx = pd.Index(["a", "b", "c"], name="id")
+        obs_idx = pd.Index(["o1", "o2"], name="id")
+        S_a = pd.DataFrame(np.eye(3), index=state_idx, columns=state_idx)
+        S_z = pd.DataFrame(np.eye(2), index=obs_idx, columns=obs_idx)
 
         with warnings.catch_warnings(record=True):
             warnings.simplefilter("always")
-            problem = InverseProblem(prior, obs, H, S_a, S_z)
+            problem = InverseProblem(
+                obs=obs,
+                prior=prior,
+                forward_operator=H,
+                modeldata_mismatch=S_z,
+                prior_error=S_a,
+            )
 
             # H should still have the right shape
             assert problem.forward_operator.shape == (2, 3)
@@ -318,21 +366,32 @@ class TestInverseProblemFloatPrecision:
 
     def test_float_precision_rounding(self):
         """Test float precision rounding in InverseProblem."""
-        prior = pd.Series([1.0, 2.0], index=[1.123456, 2.654321], name="prior")
-        obs = pd.Series([1.0, 2.0], index=[3.111111, 4.222222], name="obs")
+        prior = pd.Series(
+            [1.0, 2.0], index=pd.Index([1.123456, 2.654321], name="id"), name="prior"
+        )
+        obs = pd.Series(
+            [1.0, 2.0], index=pd.Index([3.111111, 4.222222], name="id"), name="obs"
+        )
 
         H = pd.DataFrame(
-            np.eye(2), index=[3.111111, 4.222222], columns=[1.123456, 2.654321]
+            np.eye(2),
+            index=pd.Index([3.111111, 4.222222], name="id"),
+            columns=pd.Index([1.123456, 2.654321], name="id"),
         )
 
-        S_a = pd.DataFrame(
-            np.eye(2), index=[1.123456, 2.654321], columns=[1.123456, 2.654321]
-        )
-        S_z = pd.DataFrame(
-            np.eye(2), index=[3.111111, 4.222222], columns=[3.111111, 4.222222]
-        )
+        state_idx = pd.Index([1.123456, 2.654321], name="id")
+        obs_idx = pd.Index([3.111111, 4.222222], name="id")
+        S_a = pd.DataFrame(np.eye(2), index=state_idx, columns=state_idx)
+        S_z = pd.DataFrame(np.eye(2), index=obs_idx, columns=obs_idx)
 
-        problem = InverseProblem(prior, obs, H, S_a, S_z, float_precision=2)
+        problem = InverseProblem(
+            obs=obs,
+            prior=prior,
+            forward_operator=H,
+            modeldata_mismatch=S_z,
+            prior_error=S_a,
+            round_index=2,
+        )
 
         # Should have rounded indices
         assert problem.prior is not None
@@ -343,86 +402,134 @@ class TestInverseProblemDimensions:
 
     def test_rectangular_problem(self):
         """Test with more observations than states (overdetermined)."""
-        prior = pd.Series(np.ones(5), index=[f"s{i}" for i in range(5)], name="prior")
-        obs = pd.Series(np.ones(10), index=[f"o{i}" for i in range(10)], name="obs")
+        prior = pd.Series(
+            np.ones(5),
+            index=pd.Index([f"s{i}" for i in range(5)], name="id"),
+            name="prior",
+        )
+        obs = pd.Series(
+            np.ones(10),
+            index=pd.Index([f"o{i}" for i in range(10)], name="id"),
+            name="obs",
+        )
 
         H = pd.DataFrame(
             np.ones((10, 5)),
-            index=[f"o{i}" for i in range(10)],
-            columns=[f"s{i}" for i in range(5)],
+            index=pd.Index([f"o{i}" for i in range(10)], name="id"),
+            columns=pd.Index([f"s{i}" for i in range(5)], name="id"),
         )
 
+        state_idx = pd.Index([f"s{i}" for i in range(5)], name="id")
+        obs_idx = pd.Index([f"o{i}" for i in range(10)], name="id")
         S_a = pd.DataFrame(
             np.eye(5),
-            index=[f"s{i}" for i in range(5)],
-            columns=[f"s{i}" for i in range(5)],
+            index=state_idx,
+            columns=state_idx,
         )
         S_z = pd.DataFrame(
             np.eye(10),
-            index=[f"o{i}" for i in range(10)],
-            columns=[f"o{i}" for i in range(10)],
+            index=obs_idx,
+            columns=obs_idx,
         )
 
         with warnings.catch_warnings(record=True):
             warnings.simplefilter("always")
-            problem = InverseProblem(prior, obs, H, S_a, S_z)
+            problem = InverseProblem(
+                obs=obs,
+                prior=prior,
+                forward_operator=H,
+                modeldata_mismatch=S_z,
+                prior_error=S_a,
+            )
 
             assert problem.forward_operator.shape == (10, 5)
-            assert problem.prior.n == 5
-            assert problem.obs.n == 10
+            assert len(problem.prior.data) == 5
+            assert len(problem.obs.data) == 10
 
     def test_square_problem(self):
         """Test with equal dimensions."""
         n = 7
-        prior = pd.Series(np.ones(n), index=[f"s{i}" for i in range(n)], name="prior")
-        obs = pd.Series(np.ones(n), index=[f"o{i}" for i in range(n)], name="obs")
+        prior = pd.Series(
+            np.ones(n),
+            index=pd.Index([f"s{i}" for i in range(n)], name="id"),
+            name="prior",
+        )
+        obs = pd.Series(
+            np.ones(n),
+            index=pd.Index([f"o{i}" for i in range(n)], name="id"),
+            name="obs",
+        )
 
         H = pd.DataFrame(
             np.eye(n),
-            index=[f"o{i}" for i in range(n)],
-            columns=[f"s{i}" for i in range(n)],
+            index=pd.Index([f"o{i}" for i in range(n)], name="id"),
+            columns=pd.Index([f"s{i}" for i in range(n)], name="id"),
         )
 
+        state_idx = pd.Index([f"s{i}" for i in range(n)], name="id")
+        obs_idx = pd.Index([f"o{i}" for i in range(n)], name="id")
         S_a = pd.DataFrame(
             np.eye(n),
-            index=[f"s{i}" for i in range(n)],
-            columns=[f"s{i}" for i in range(n)],
+            index=state_idx,
+            columns=state_idx,
         )
         S_z = pd.DataFrame(
             np.eye(n),
-            index=[f"o{i}" for i in range(n)],
-            columns=[f"o{i}" for i in range(n)],
+            index=obs_idx,
+            columns=obs_idx,
         )
 
-        problem = InverseProblem(prior, obs, H, S_a, S_z)
+        problem = InverseProblem(
+            obs=obs,
+            prior=prior,
+            forward_operator=H,
+            modeldata_mismatch=S_z,
+            prior_error=S_a,
+        )
 
         assert problem.forward_operator.shape == (n, n)
 
     def test_underdetermined_problem(self):
         """Test with fewer observations than states (underdetermined)."""
-        prior = pd.Series(np.ones(10), index=[f"s{i}" for i in range(10)], name="prior")
-        obs = pd.Series(np.ones(5), index=[f"o{i}" for i in range(5)], name="obs")
+        prior = pd.Series(
+            np.ones(10),
+            index=pd.Index([f"s{i}" for i in range(10)], name="id"),
+            name="prior",
+        )
+        obs = pd.Series(
+            np.ones(5),
+            index=pd.Index([f"o{i}" for i in range(5)], name="id"),
+            name="obs",
+        )
 
         H = pd.DataFrame(
             np.ones((5, 10)),
-            index=[f"o{i}" for i in range(5)],
-            columns=[f"s{i}" for i in range(10)],
+            index=pd.Index([f"o{i}" for i in range(5)], name="id"),
+            columns=pd.Index([f"s{i}" for i in range(10)], name="id"),
         )
 
+        state_idx = pd.Index([f"s{i}" for i in range(10)], name="id")
+        obs_idx = pd.Index([f"o{i}" for i in range(5)], name="id")
         S_a = pd.DataFrame(
             np.eye(10),
-            index=[f"s{i}" for i in range(10)],
-            columns=[f"s{i}" for i in range(10)],
+            index=state_idx,
+            columns=state_idx,
         )
         S_z = pd.DataFrame(
             np.eye(5),
-            index=[f"o{i}" for i in range(5)],
-            columns=[f"o{i}" for i in range(5)],
+            index=obs_idx,
+            columns=obs_idx,
         )
 
         with warnings.catch_warnings(record=True):
             warnings.simplefilter("always")
-            problem = InverseProblem(prior, obs, H, S_a, S_z)
+            problem = InverseProblem(
+                obs=obs,
+                prior=prior,
+                forward_operator=H,
+                modeldata_mismatch=S_z,
+                prior_error=S_a,
+            )
 
             assert problem.forward_operator.shape == (5, 10)
 
@@ -466,21 +573,21 @@ class TestInverseProblemSolve:
             modeldata_mismatch=data["modeldata_mismatch"],
         )
 
-        result = problem.solve(estimator="bayesian")
+        problem.solve(estimator="bayesian")
 
         # Estimator is attached
         assert problem._estimator is not None
 
-        # Result keys and shapes
-        assert set(result.keys()) == {"posterior", "posterior_error", "posterior_obs"}
-        assert result["posterior"].n == len(data["prior"])
-        assert result["posterior_obs"].n == len(data["obs"])
-        assert result["posterior_error"].values.shape == (
+        # Check estimator has the results
+        estimator = problem.estimator
+        assert estimator.x_hat.shape[0] == len(data["prior"])
+        assert estimator.y_hat.shape[0] == len(data["obs"])
+        assert estimator.S_hat.shape == (
             len(data["prior"]),
             len(data["prior"]),
         )
 
         # No NaNs or infs in outputs
-        assert np.isfinite(result["posterior"].values).all()
-        assert np.isfinite(result["posterior_obs"].values).all()
-        assert np.isfinite(result["posterior_error"].values).all()
+        assert np.isfinite(estimator.x_hat).all()
+        assert np.isfinite(estimator.y_hat).all()
+        assert np.isfinite(estimator.S_hat).all()

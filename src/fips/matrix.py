@@ -44,8 +44,8 @@ class MatrixBlock(SingleBlockMixin, Structure2D):
     def __init__(
         self,
         data: MatrixBlockLike,
-        row_block: str,
-        col_block: str,
+        row_block: str | None = None,
+        col_block: str | None = None,
         name: str | None = None,
         index: pd.Index | None = None,
         columns: pd.Index | None = None,
@@ -68,6 +68,14 @@ class MatrixBlock(SingleBlockMixin, Structure2D):
         super().__init__(
             data, name=name, index=index, columns=columns, dtype=dtype, copy=copy
         )
+
+    def _validate(self):
+        super()._validate()
+
+        if self.row_block is None or self.col_block is None:
+            raise ValueError(
+                "MatrixBlock must have both row_block and col_block defined."
+            )
 
     def __repr__(self):
         header = (

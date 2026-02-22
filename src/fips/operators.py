@@ -41,13 +41,13 @@ class ForwardOperator(Matrix):
             op = self
 
         state = state.reindex(
-            self.state_index, fill_value=0.0, verify_overlap=verify_overlap
+            op.state_index, fill_value=0.0, verify_overlap=verify_overlap
         )
 
         x_vals = state.values
         y_values = op.data.values @ x_vals
         name = f"{state.name}_obs" if state.name else None
-        return pd.Series(y_values, index=self.obs_index, name=name)
+        return pd.Series(y_values, index=op.obs_index, name=name)
 
 
 def convolve(

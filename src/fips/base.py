@@ -8,7 +8,6 @@ from typing import Any, TypeAlias
 import numpy as np
 import numpy.typing as npt
 import pandas as pd
-from pandas import MultiIndex
 from typing_extensions import Self
 
 from fips.indexes import overlaps, resolve_axes, round_index, to_numeric
@@ -134,9 +133,10 @@ class Structure(Pickleable, ABC):
     ) -> Self:
         """Return a new instance with data reindexed to the specified index and columns."""
 
-        def prepare_index_for_target(
-            current: pd.MultiIndex, target: pd.MultiIndex
-        ) -> MultiIndex:
+        def prepare_data_for_target(
+            data: pd.DataFrame | pd.Series, target: pd.MultiIndex, axis: int
+        ) -> pd.DataFrame | pd.Series:
+            current = data.axes[axis]
             if not isinstance(target, pd.MultiIndex):
                 raise ValueError(
                     f"Target index must be a MultiIndex, got {type(target)}."
@@ -150,7 +150,8 @@ class Structure(Pickleable, ABC):
                     f"Cannot reindex: target index names {target.names} do not match data index names {current.names}."
                 )
             if current.names != target.names:  # Reorder levels to match target index
-                current = current.reorder_levels(target.names)
+                data = data.reorder_levels(target.names, axis=axis)
+                current = data.axes[axis]
             if verify_overlap:
                 overlap = overlaps(target_idx=target, available_idx=current)
                 if not overlap:
@@ -164,14 +165,15 @@ class Structure(Pickleable, ABC):
                         stacklevel=2,
                     )
 
-            return current
+            return data
 
-        index = prepare_index_for_target(self.data.index, index)
+        data = prepare_data_for_target(self.data, index, axis=0)
 
         if columns is not None:
-            columns = prepare_index_for_target(self.data.columns, columns)
-
-        data = self.data.reindex(index=index, columns=columns, **kwargs)
+            data = prepare_data_for_target(data, columns, axis=1)
+            data = data.reindex(index=index, columns=columns, **kwargs)
+        else:
+            data = data.reindex(index=index, **kwargs)
 
         if inplace:
             self.data = data
@@ -395,7 +397,7 @@ class MultiBlockMixin(ABC):
     def _sanitize(self):
         super()._sanitize()
 
-        def block_as_first_level(self, index):
+        def block_as_first_level(index):
             if index.names[0] != "block":
                 return index.reorder_levels(
                     ["block"] + [n for n in index.names if n != "block"]

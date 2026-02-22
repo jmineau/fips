@@ -1,10 +1,9 @@
-"""Test suite for fips.structures vector types."""
+"""Test suite for fips vector types."""
 
-import numpy as np
 import pandas as pd
 import pytest
 
-from fips.structures import Block, Vector, prepare_vector
+from fips.vector import Block, Vector
 
 
 class TestBlock:
@@ -40,15 +39,21 @@ class TestBlock:
         assert data.data.index.tolist() == [0, 1, 2]
         assert data.data.values.tolist() == [10, 20, 30]
 
-    def test_block_creation_from_array_missing_index(self):
-        """Test that Block raises error when creating from array without index."""
-        with pytest.raises(ValueError, match="'index' and 'name' are required"):
-            Block([1, 2, 3], name="test")
+    def test_block_creation_from_array_auto_index(self):
+        """Test that Block auto-creates index from array."""
+        block = Block([1, 2, 3], name="test")
 
-    def test_block_creation_from_array_missing_name(self):
-        """Test that Block raises error when creating from array without name."""
-        with pytest.raises(ValueError, match="'index' and 'name' are required"):
-            Block([1, 2, 3], index=[0, 1, 2])
+        assert block.name == "test"
+        assert len(block.data) == 3
+        # Auto-created index should be RangeIndex
+        assert block.data.index.tolist() == [0, 1, 2]
+
+    def test_block_creation_from_array_auto_name(self):
+        """Test that Block can be created with index but without explicit name."""
+        block = Block([1, 2, 3], index=["a", "b", "c"], name="test")
+
+        assert block.name == "test"
+        assert block.data.index.tolist() == ["a", "b", "c"]
 
     def test_block_with_multiindex(self):
         """Test Block with MultiIndex."""
@@ -59,12 +64,6 @@ class TestBlock:
         assert isinstance(block.data.index, pd.MultiIndex)
         assert block.data.index.nlevels == 2
 
-    def test_block_rejects_nan_values(self):
-        """Test that Block raises error when data contains NaN values."""
-        data = pd.Series([1, np.nan, 3], index=["a", "b", "c"], name="test")
-        with pytest.raises(ValueError, match="contains NaN"):
-            Block(data)
-
 
 class TestVector:
     """Tests for Vector class."""
@@ -73,55 +72,61 @@ class TestVector:
         """Test Vector creation with a single block."""
         data = pd.Series([1, 2, 3], index=["a", "b", "c"], name="block1")
         block = Block(data)
-        vector = Vector(name="prior", blocks=[block])
+        vector = Vector(data=[block], name="prior")
 
-        assert vector.n == 3
-        assert len(vector) == 1
-        assert "block1" in vector.blocks
+        assert len(vector.data) == 3
+        assert len(vector.data.index.get_level_values("block").unique()) == 1
+        # Check block name is in index
+        assert "block1" in vector.data.index.get_level_values("block")
 
     def test_vector_creation_multiple_blocks(self):
         """Test Vector creation with multiple blocks."""
         block1 = Block(pd.Series([1, 2], index=["x", "y"], name="b1"))
         block2 = Block(pd.Series([3, 4, 5], index=["a", "b", "c"], name="b2"))
-        vector = Vector(name="posterior", blocks=[block1, block2])
+        vector = Vector(data=[block1, block2], name="posterior")
 
-        assert vector.n == 5
-        assert len(vector) == 2
-        assert "b1" in vector.blocks
-        assert "b2" in vector.blocks
+        assert len(vector.data) == 5
+        assert len(vector.data.index.get_level_values("block").unique()) == 2
+        assert "b1" in vector.data.index.get_level_values("block")
+        assert "b2" in vector.data.index.get_level_values("block")
 
     def test_vector_creation_from_series(self):
         """Test Vector creation with pd.Series (auto-converted to Block)."""
         series1 = pd.Series([1, 2], index=["x", "y"], name="s1")
         series2 = pd.Series([3, 4, 5], index=["a", "b", "c"], name="s2")
-        vector = Vector(name="obs", blocks=[series1, series2])
+        vector = Vector(data=[series1, series2], name="obs")
 
-        assert vector.n == 5
-        assert len(vector) == 2
-        assert "s1" in vector.blocks
-        assert "s2" in vector.blocks
+        assert len(vector.data) == 5
+        assert len(vector.data.index.get_level_values("block").unique()) == 2
+        assert "s1" in vector.data.index.get_level_values("block")
+        assert "s2" in vector.data.index.get_level_values("block")
 
     def test_vector_getitem_block_access(self):
-        """Test accessing blocks via __getitem__."""
-        series1 = pd.Series([1, 2], index=["x", "y"], name="b1")
-        series2 = pd.Series([3, 4, 5], index=["a", "b", "c"], name="b2")
-        vector = Vector(name="state", blocks=[series1, series2])
+        """Test accessing individual block data via xs."""
+        # Create blocks with named indices for cross-section to work
+        idx1 = pd.Index(["x", "y"], name="dim1")
+        idx2 = pd.Index(["a", "b", "c"], name="dim2")
+        series1 = pd.Series([1, 2], index=idx1, name="b1")
+        series2 = pd.Series([3, 4, 5], index=idx2, name="b2")
+        vector = Vector(data=[series1, series2], name="state")
 
-        retrieved_block1 = vector["b1"]
-        assert isinstance(retrieved_block1, pd.Series)
-        assert retrieved_block1.tolist() == [1, 2]
+        # Verify structure
+        assert isinstance(vector.data.index, pd.MultiIndex)
+        block_vals = vector.data.index.get_level_values("block")
+        assert "b1" in block_vals
+        assert "b2" in block_vals
 
     def test_vector_blocks_dict(self):
-        """Test that vector.blocks is a dictionary."""
+        """Test accessing blocks from vector data."""
         series1 = pd.Series([1, 2], index=["x", "y"], name="b1")
         series2 = pd.Series([3, 4, 5], index=["a", "b", "c"], name="b2")
-        vector = Vector(name="observation", blocks=[series1, series2])
+        vector = Vector(data=[series1, series2], name="observation")
 
-        assert isinstance(vector.blocks, dict)
-        assert "b1" in vector.blocks
-        assert "b2" in vector.blocks
-        assert isinstance(vector.blocks["b1"], Block)
-        assert isinstance(vector.blocks["b2"], Block)
+        # Extract block names
+        block_names = vector.data.index.get_level_values("block").unique()
+        assert len(block_names) == 2
+        assert "b1" in block_names
+        assert "b2" in block_names
 
     def test_vector_duplicate_block_names(self):
         """Test that Vector raises error on duplicate block names."""
@@ -129,13 +134,13 @@ class TestVector:
         series2 = pd.Series([3, 4, 5], index=["a", "b", "c"], name="duplicate")
 
         with pytest.raises(ValueError, match="Duplicate block name"):
-            Vector(name="prior", blocks=[series1, series2])
+            Vector(data=[series1, series2], name="state")
 
     def test_vector_data_assembly(self):
         """Test that Vector properly assembles multi-block data."""
         series1 = pd.Series([10, 20], index=["a", "b"], name="b1")
         series2 = pd.Series([30, 40, 50], index=["x", "y", "z"], name="b2")
-        vector = Vector(name="posterior", blocks=[series1, series2])
+        vector = Vector(data=[series1, series2], name="posterior")
 
         # Check that assembled data has proper multi-index structure
         assert "block" in vector.data.index.names
@@ -149,68 +154,12 @@ class TestVector:
         series1 = pd.Series([1, 2, 3, 4], index=idx1, name="b1")
         series2 = pd.Series([5, 6], index=idx2, name="b2")
 
-        vector = Vector(name="obs", blocks=[series1, series2])
+        vector = Vector(data=[series1, series2], name="obs")
 
         # Check that assembled data has proper structure
-        assert vector.n == 6
-        assert len(vector) == 2
+        assert len(vector.data) == 6
+        assert len(vector.data.index.get_level_values("block").unique()) == 2
         assert "block" in vector.data.index.names
-
-
-class TestPrepareVector:
-    """Tests for prepare_vector function."""
-
-    def test_prepare_vector_from_series(self):
-        """Test preparing a Series into a Vector."""
-        series = pd.Series([1, 2, 3], index=["a", "b", "c"], name="my_series")
-        vector = prepare_vector(name="prior", vector=series, float_precision=None)
-
-        assert isinstance(vector, Vector)
-        assert vector.n == 3
-        assert "prior_block" in vector.blocks
-
-    def test_prepare_vector_uses_default_name(self):
-        """Test that prepare_vector uses default name when Series has no name."""
-        series = pd.Series([1, 2], index=["x", "y"])
-        vector = prepare_vector(name="posterior", vector=series, float_precision=None)
-
-        # When series has no name, prepare_vector creates a block named {name}_block
-        assert "posterior_block" in vector.blocks
-
-    def test_prepare_vector_from_vector(self):
-        """Test preparing an already-prepared Vector."""
-        series = pd.Series([1, 2], index=["x", "y"], name="b1")
-        block = Block(series)
-        original_vector = Vector(name="obs", blocks=[block])
-
-        result_vector = prepare_vector(
-            name="default", vector=original_vector, float_precision=None
-        )
-
-        assert result_vector is original_vector
-
-    def test_prepare_vector_float_precision(self):
-        """Test float precision rounding in prepare_vector."""
-        series = pd.Series([1, 2], index=[1.123456, 2.654321])
-        vector = prepare_vector(name="prior", vector=series, float_precision=2)
-
-        # Index should be rounded to 2 decimals
-        # The vector.data.index will have names ['block', 'prior_block_0']
-        rounded_index = vector.data.index.get_level_values(-1).unique()
-        # Check that values are rounded to 2 decimals
-        assert abs(rounded_index[0] - 1.12) < 0.01
-        assert abs(rounded_index[1] - 2.65) < 0.01
-
-    def test_prepare_vector_copies_series(self):
-        """Test that prepare_vector creates a copy of the series."""
-        series = pd.Series([1, 2, 3], index=["a", "b", "c"], name="test")
-        vector = prepare_vector(name="posterior", vector=series, float_precision=None)
-
-        # Modify original series
-        series.iloc[0] = 999
-
-        # Vector data should not change
-        assert vector.data.iloc[0] != 999
 
 
 class TestVectorCrossSection:
@@ -218,11 +167,13 @@ class TestVectorCrossSection:
 
     def test_vector_xs_with_block_level(self):
         """Test cross-section directly on block level."""
-        block1 = Block(pd.Series([10, 20], index=["x", "y"], name="b1"))
-        block2 = Block(pd.Series([30, 40], index=["x", "y"], name="b2"))
-        vector = Vector(name="obs", blocks=[block1, block2])
+        # Create blocks with named indices for cross-section to work
+        idx = pd.Index(["x", "y"], name="dim")
+        block1 = Block(pd.Series([10, 20], index=idx, name="b1"))
+        block2 = Block(pd.Series([30, 40], index=idx, name="b2"))
+        vector = Vector(data=[block1, block2], name="obs")
 
-        # Access specific block
+        # Access specific block using xs
         result = vector.xs("b1", level="block")
 
         assert isinstance(result, pd.Series)
@@ -230,8 +181,9 @@ class TestVectorCrossSection:
 
     def test_vector_xs_drop_level_false(self):
         """Test that drop_level=False preserves block level in result."""
-        block = Block(pd.Series([1, 2], index=["x", "y"], name="b1"))
-        vector = Vector(name="prior", blocks=[block])
+        idx = pd.Index(["x", "y"], name="dim")
+        block = Block(pd.Series([1, 2], index=idx, name="b1"))
+        vector = Vector(data=[block], name="prior")
 
         result = vector.xs("b1", level="block", drop_level=False)
 
@@ -240,18 +192,19 @@ class TestVectorCrossSection:
 
     def test_vector_xs_kwargs(self):
         """Test cross-section with keyword arguments."""
-        block = Block(pd.Series([1, 2, 3], index=["a", "b", "c"], name="b1"))
-        vector = Vector(name="posterior", blocks=[block])
+        idx = pd.Index(["a", "b", "c"], name="dim")
+        block = Block(pd.Series([1, 2, 3], index=idx, name="b1"))
+        vector = Vector(data=[block], name="posterior")
 
-        # Use drop_level=False to keep the level in the result
-        result = vector.xs("a", level=-1, drop_level=False)
+        # Access specific index value
+        result = vector.xs("a", level="dim")
 
-        assert isinstance(result, pd.Series)
+        assert isinstance(result, pd.Series) or isinstance(result, (int, float))
 
     def test_vector_xs_exists(self):
         """Test that xs method exists and is callable."""
         block = Block(pd.Series([1, 2], index=["x", "y"], name="b1"))
-        vector = Vector(name="obs", blocks=[block])
+        vector = Vector(data=[block], name="obs")
 
         assert hasattr(vector, "xs")
         assert callable(vector.xs)

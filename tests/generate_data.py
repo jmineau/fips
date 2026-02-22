@@ -4,7 +4,29 @@ import numpy as np
 import pandas as pd
 
 from fips.covariance import CovarianceMatrix
-from fips.indices import promote_index
+from fips.indexes import assign_block
+
+
+def promote_index(
+    index: pd.Index, block_name: str, level_name: str = "block"
+) -> pd.Index:
+    """Promote an index by adding a block level.
+
+    Parameters
+    ----------
+    index : pd.Index
+        The index to promote.
+    block_name : str
+        The name/value of the block to assign.
+    level_name : str
+        The name of the level to add (default "block").
+
+    Returns
+    -------
+    pd.Index
+        The promoted index with block level added.
+    """
+    return assign_block(index, block_name)
 
 
 def _parse_dimensions(
@@ -126,9 +148,9 @@ def generate_test_data(
 
     H_df = pd.DataFrame(H_vals, index=idx_obs, columns=idx_state)
     # Promote to include block level so H aligns with Vector/Covariance indices
-    # Use "prior" and "obs" as block names to match what InverseProblem expects
-    H_df.index = promote_index(H_df.index, "obs_block", "block")
-    H_df.columns = promote_index(H_df.columns, "prior_block", "block")
+    # Use "state" and "obs" as block names to match what InverseProblem expects
+    H_df.index = promote_index(H_df.index, "obs", "block")
+    H_df.columns = promote_index(H_df.columns, "state", "block")
 
     # 5. Covariances (CovarianceMatrix)
     # Build correlation matrix using spatial distance
@@ -149,13 +171,15 @@ def generate_test_data(
     # Build Prior Error (S_0) from variances and correlation
     sigma_prior = np.diag(np.sqrt(prior_variances))
     S_prior_vals = sigma_prior @ spatial_corr @ sigma_prior
-    S_prior_idx = promote_index(idx_state, "prior_block", "block")
-    S_prior = CovarianceMatrix.from_numpy(S_prior_vals, index=S_prior_idx)
+    S_prior_idx = promote_index(idx_state, "state", "block")
+    S_prior_df = pd.DataFrame(S_prior_vals, index=S_prior_idx, columns=S_prior_idx)
+    S_prior = CovarianceMatrix(S_prior_df)
 
     # Build Obs Error (S_z) - diagonal
     obs_variances = np.full(n_obs_tot, obs_sigma**2)
-    S_obs_idx = promote_index(idx_obs, "obs_block", "block")
-    S_obs = CovarianceMatrix.from_variances(variances=obs_variances, index=S_obs_idx)
+    S_obs_idx = promote_index(idx_obs, "obs", "block")
+    S_obs_df = pd.DataFrame(np.diag(obs_variances), index=S_obs_idx, columns=S_obs_idx)
+    S_obs = CovarianceMatrix(S_obs_df)
     # 6. Synthetic Observations
     # y = Hx + noise
     # We use raw values since H and Truth are constructed aligned

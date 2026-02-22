@@ -10,13 +10,12 @@ import logging
 import pandas as pd
 from typing_extensions import Self
 
-from fips import Block
 from fips.base import Pickleable
 from fips.covariance import CovarianceMatrix
 from fips.estimators import ESTIMATOR_REGISTRY, Estimator
 from fips.matrix import Matrix, MatrixBlock, MatrixLike
 from fips.operators import ForwardOperator
-from fips.vector import Vector, VectorLike
+from fips.vector import Block, Vector, VectorLike
 
 logger = logging.getLogger(__name__)
 
