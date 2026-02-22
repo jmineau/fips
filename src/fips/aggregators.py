@@ -1,66 +1,54 @@
-from collections.abc import Callable
-
 import pandas as pd
 
 
-class ObsAggregator:
+def integrate_over_time_bins(
+    data: pd.DataFrame | pd.Series, time_bins: pd.IntervalIndex, time_dim: str = "time"
+) -> pd.DataFrame | pd.Series:
     """
-    A class for grouping and aggregating pandas Series or DataFrames with reusable configuration.
+    Integrate data over time bins.
+
+    Parameters
+    ----------
+    data : pd.DataFrame | pd.Series
+        Data to integrate.
+    time_bins : pd.IntervalIndex
+        Time bins for integration.
+    time_dim : str, optional
+        Time dimension name, by default 'time'
+
+    Returns
+    -------
+    pd.DataFrame | pd.Series
+        Integrated footprint. The bin labels are set to the left edge of the bin.
     """
+    is_series = isinstance(data, pd.Series)
 
-    def __init__(
-        self,
-        groupers: str | list[str] | dict[str, pd.Grouper],
-        method: str | Callable | dict[str, str | Callable],
-    ):
-        """
-        Initialize the Aggregator.
+    dims = data.index.names
+    if time_dim not in dims:
+        raise ValueError(f"time_dim '{time_dim}' not found in data index levels {dims}")
+    other_levels = [lvl for lvl in dims if lvl != time_dim]
 
-        Parameters
-        ----------
-        groupers : str, list of str, or dict mapping column names to pd.Grouper objects.
+    data = data.reset_index()
 
-        method : str, callable, or dict mapping column names to aggregation methods.
-            The aggregation method to apply to each group.
-        """
-        self.groupers = groupers
-        self.method = method
+    # Use pd.cut to bin the data by time into time bins
+    data[time_dim] = pd.cut(
+        data[time_dim], bins=time_bins, include_lowest=True, right=False
+    )
 
-    def aggregate(self, data: pd.Series) -> pd.Series:
-        """
-        Apply the configured aggregation to the provided series.
+    # Set Intervals to the left edge of the bin (start of time interval)
+    data[time_dim] = data[time_dim].apply(lambda x: x.left)
 
-        Parameters
-        ----------
-        data : pd.Series
-            The data to aggregate.
+    # Group the date by the time bins & any other existing levels
+    grouped = data.groupby([time_dim] + other_levels, observed=True)
 
-        Returns
-        -------
-        pd.Series
-            The aggregated data.
-        """
-        grouped = data.groupby(self.groupers)
-        return grouped.agg(self.method)
+    # Sum over the groups
+    integrated = grouped.sum()
 
-    def __call__(self, data: pd.Series | pd.DataFrame) -> pd.Series | pd.DataFrame:
-        """
-        Apply the aggregation to a Data object.
+    # Order the index levels if MultiIndex
+    if isinstance(integrated.index, pd.MultiIndex):
+        integrated = integrated.reorder_levels(dims)
 
-        Parameters
-        ----------
-        data : pd.Series | pd.DataFrame
-            The data to aggregate.
-
-        Returns
-        -------
-        pd.Series | pd.DataFrame
-            A new object with aggregated data.
-        """
-        assert isinstance(data, (pd.Series, pd.DataFrame)), (
-            "Data must be a pandas Series or DataFrame."
-        )
-        if not isinstance(data, pd.Series):
-            return data.groupby(self.groupers).agg(self.method)
-
-        return self.aggregate(data)
+    if is_series:
+        # Return a Series if the input was a Series
+        return integrated.iloc[:, 0]
+    return integrated

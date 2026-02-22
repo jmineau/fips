@@ -1,208 +1,64 @@
 import numpy as np
 import pandas as pd
-import xarray as xr
 
-from fips.utils import dataframe_to_xarray, round_index
+from fips.matrix import Matrix
+from fips.vector import Vector, VectorLike
 
 
-def convolve(
-    forward_operator: pd.DataFrame, state: pd.Series, coord_decimals: int = 6
-) -> pd.Series:
+class ForwardOperator(Matrix):
     """
-    Convolve a forward_operator with a state field to get modeled observations.
+    Forward operator matrix mapping state vectors to observation space.
 
-    Parameters
-    ----------
-    forward_operator : pd.DataFrame
-        DataFrame with columns corresponding to the state index
-        and rows corresponding to the observation index.
-    state : pd.Series
-        Series with rows corresponding to the state index.
-    coord_decimals : int, optional
-        Number of decimal places to round coordinates to when matching indices,
-        by default 6.
+    A ForwardOperator wraps a pandas DataFrame and provides methods
+    to convolve state vectors through the operator to produce modeled observations.
 
-    Returns
-    -------
-    pd.Series
-        Series with the same index as the forward_operator,
-        containing the modeled observations.
+    The foward operator, or Jacobian matrix, is a key component of inverse problems.
+    It defines how changes in the state vector affect the observations.
+    The rows correspond to observations and the columns to state variables.
     """
-    fo = forward_operator.copy()
-    state = state.copy()
-
-    # Round floating point coordinates to avoid precision issues
-    fo.columns = round_index(fo.columns, decimals=coord_decimals)
-    state.index = round_index(state.index, decimals=coord_decimals)
-
-    # Ensure the state index matches the forward operator columns
-    if isinstance(fo.columns, pd.MultiIndex):
-        if not isinstance(state.index, pd.MultiIndex):
-            raise ValueError(
-                "If forward operator columns are a MultiIndex, state index must also be a MultiIndex."
-            )
-        state.index = state.index.reorder_levels(fo.columns.names)
-    common = fo.columns.intersection(state.index)
-    fo = fo.reindex(columns=common)
-    state = state.reindex(index=common)
-
-    if np.isnan(fo).any().any():
-        raise ValueError("Forward operator contains NaN values after reindexing.")
-
-    if np.isnan(state).any():
-        raise ValueError("state contains NaN values after reindexing.")
-
-    # Perform the matrix multiplication to get modeled observations
-    modeled_obs = fo @ state
-    modeled_obs.name = f"{state.name}_obs"
-
-    return modeled_obs
-
-
-class ForwardOperator:
-    """
-    Forward operator class for modeling observations.
-
-    Parameters
-    ----------
-    data : pd.DataFrame
-        Forward operator matrix.
-
-    Attributes
-    ----------
-    data : pd.DataFrame
-        Underlying forward operator matrix.
-    obs_index : pd.Index
-
-        Observation index (row index).
-    state_index : pd.Index
-        State index (column index).
-    obs_dims : tuple
-        Observation dimension names.
-    state_dims : tuple
-        State dimension names.
-
-    Methods
-    -------
-    convolve(state: pd.Series, coord_decimals: int = 6) -> pd.Series
-        Convolve the forward operator with a state vector.
-    to_xarray() -> xr.DataArray
-        Convert the forward operator to an xarray DataArray.
-    """
-
-    def __init__(self, data: pd.DataFrame):
-        """
-        Initialize the ForwardOperator.
-
-        Parameters
-        ----------
-        data : pd.DataFrame
-            Forward operator matrix.
-        """
-        self.data = data
-
-    @property
-    def data(self) -> pd.DataFrame:
-        """
-        Get the underlying data of the forward operator.
-
-        Returns
-        -------
-        pd.DataFrame
-            Forward operator matrix.
-        """
-        return self._data
-
-    @data.setter
-    def data(self, value: pd.DataFrame) -> None:
-        """
-        Set the underlying data of the forward operator.
-
-        Parameters
-        ----------
-        value : pd.DataFrame
-            New forward operator matrix.
-        """
-        if not isinstance(value, pd.DataFrame):
-            raise TypeError("Input data must be a pandas DataFrame.")
-        self._data = value
-
-    @property
-    def obs_index(self) -> pd.Index:
-        """
-        Get the observation index (row index) of the forward operator.
-
-        Returns
-        -------
-        pd.Index
-            Observation index.
-        """
-        return self.data.index
 
     @property
     def state_index(self) -> pd.Index:
-        """
-        Get the state index (column index) of the forward operator.
-
-        Returns
-        -------
-        pd.Index
-            State index.
-        """
-        return self.data.columns
+        return self.columns
 
     @property
-    def obs_dims(self) -> tuple:
-        """
-        Get the observation dimensions (names of the row index).
+    def obs_index(self) -> pd.Index:
+        return self.index
 
-        Returns
-        -------
-        tuple
-            Observation dimension names.
-        """
-        return tuple(self.obs_index.names)
+    def convolve(
+        self,
+        state: VectorLike,
+        round_index: int | None = None,
+        verify_overlap: bool = True,
+    ) -> pd.Series:
+        """Convolve a state vector through the forward operator."""
+        state = Vector(state)
 
-    @property
-    def state_dims(self) -> tuple:
-        """
-        Get the state dimensions (names of the column index).
+        if round_index:
+            op = self.round_index(round_index, axis="both")
+            state = state.round_index(round_index)
+        else:
+            op = self
 
-        Returns
-        -------
-        tuple
-            State dimension names.
-        """
-        return tuple(self.state_index.names)
-
-    def convolve(self, state: pd.Series, coord_decimals: int = 6) -> pd.Series:
-        """
-        Convolve the forward operator with a state vector.
-
-        Parameters
-        ----------
-        state : pd.Series
-            State vector.
-        coord_decimals : int, optional
-            Number of decimal places to round coordinates to when matching indices,
-            by default 6.
-
-        Returns
-        -------
-        pd.Series
-            Result of convolution.
-        """
-        return convolve(
-            forward_operator=self.data, state=state, coord_decimals=coord_decimals
+        state = state.reindex(
+            op.state_index, fill_value=0.0, verify_overlap=verify_overlap
         )
 
-    def to_xarray(self) -> xr.DataArray:
-        """
-        Convert the forward operator to an xarray DataArray.
+        x_vals = state.values
+        y_values = op.data.values @ x_vals
+        name = f"{state.name}_obs" if state.name else None
+        return pd.Series(y_values, index=op.obs_index, name=name)
 
-        Returns
-        -------
-        xr.DataArray
-            Xarray representation of the forward operator.
-        """
-        return dataframe_to_xarray(self.data, name=self.__class__.__name__.lower())
+
+def convolve(
+    state: Vector | pd.Series | np.ndarray,
+    forward_operator: ForwardOperator | pd.DataFrame,
+    round_index: int | None = None,
+    verify_overlap: bool = True,
+) -> pd.Series:
+    """Helper to convolve a state vector with a forward operator matrix."""
+    forward_operator = ForwardOperator(forward_operator)
+
+    return forward_operator.convolve(
+        state=state, round_index=round_index, verify_overlap=verify_overlap
+    )

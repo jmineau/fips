@@ -1,12 +1,9 @@
-from .covariances import ModelDataMismatch, PriorError
-from .problem import FluxInversion
-from .transport import Jacobian
-from .utils import integrate_over_time_bins
+from fips.problems.flux.visualization import FluxPlotter
+from fips.problems.flux.problem import FluxInversion
+from fips.problems.flux.transport.stilt import JacobianBuilder
 
 __all__ = [
     "FluxInversion",
-    "Jacobian",
-    "PriorError",
-    "ModelDataMismatch",
-    "integrate_over_time_bins",
+    "FluxPlotter",
+    "JacobianBuilder",
 ]

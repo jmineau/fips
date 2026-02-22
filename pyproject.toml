@@ -45,6 +45,7 @@ docs = [
 ]
 flux = [
     "cartopy",
+    "h5py",
     "matplotlib",
     "pystilt",
 ]
@@ -84,6 +85,9 @@ exclude = ["**/__pycache__", "**/.venv"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+filterwarnings = [
+    "ignore:numpy.core.multiarray is deprecated:DeprecationWarning",
+]
 
 [tool.ruff]
 target-version = "py310"
