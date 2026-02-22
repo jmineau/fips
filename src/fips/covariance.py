@@ -5,6 +5,7 @@ from functools import reduce
 
 import numpy as np
 import pandas as pd
+from joblib import Parallel, delayed
 
 from fips.matrix import Matrix
 from fips.vector import Vector
@@ -92,7 +93,7 @@ class ErrorComponent(ABC):
         return pd.Series(self.variances, index=index)
 
     @abstractmethod
-    def build(self, index: pd.MultiIndex) -> pd.DataFrame:
+    def build(self, index: pd.MultiIndex, **kwargs) -> pd.DataFrame:
         """Must return a pd.DataFrame with the given index on both rows and columns."""
         pass
 
@@ -156,15 +157,25 @@ class BlockDecayError(ErrorComponent):
         self.groupers = groupers
         self.corr_func = corr_func
 
-    def build(self, index: pd.MultiIndex) -> pd.DataFrame:
+    def build(self, index: pd.MultiIndex, n_jobs: int = -1, **kwargs) -> pd.DataFrame:
         variances = self._align_variances(index)
         N = len(index)
         corr_matrix = np.eye(N)
 
         coords = index.to_frame(index=False)
-        for _, group in coords.groupby(self.groupers):
+
+        # Define helper for parallel execution
+        def process_group(group):
             idx = group.index.to_numpy()
-            corr_matrix[np.ix_(idx, idx)] = self.corr_func(group)
+            return idx, self.corr_func(group)
+
+        # Parallelize the loop over groups using joblib
+        results = Parallel(n_jobs=n_jobs)(
+            delayed(process_group)(group) for _, group in coords.groupby(self.groupers)
+        )
+
+        for idx, block in results:
+            corr_matrix[np.ix_(idx, idx)] = block
 
         std_dev = np.sqrt(variances.to_numpy())
         cov_matrix = std_dev[:, None] * corr_matrix * std_dev[None, :]
@@ -198,7 +209,7 @@ class KroneckerError(ErrorComponent):
         super().__init__(name, variances)
         self.marginal_kernels = marginal_kernels
 
-    def build(self, index: pd.MultiIndex) -> pd.DataFrame:
+    def build(self, index: pd.MultiIndex, **kwargs) -> pd.DataFrame:
         variances = self._align_variances(index)
 
         corr_matrices = []
