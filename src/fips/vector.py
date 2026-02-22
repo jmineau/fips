@@ -159,15 +159,17 @@ class Vector(MultiBlockMixin, Structure1D):
             dims = {}
 
             for block in blocks:
+                # Convert to Block
                 block = Block(block)
                 if block.name in seen_blocks:
                     raise ValueError(f"Duplicate block name '{block.name}' found")
                 seen_blocks.add(block.name)
 
+                # Collect unique dimensions in order
                 for dim in block.data.index.names:
-                    if dim:
-                        dims[dim] = True
+                    dims[dim] = True
 
+                # Format for concatenation
                 dfs.append(
                     block.to_series(add_block_level=True).rename(name).reset_index()
                 )
@@ -178,7 +180,7 @@ class Vector(MultiBlockMixin, Structure1D):
             # combined[list(dims.keys())] = combined[list(dims.keys())].fillna(-1)
 
             levels = ["block"] + list(dims.keys())
-            data = combined.set_index(levels)[name]
+            data = combined.set_index(levels)[name or 0].rename(name)
         else:
             # If we get here, data should be array-like and we can let the parent class handle it
             if name is None:

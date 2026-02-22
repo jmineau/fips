@@ -18,8 +18,8 @@ class TestForwardOperator:
         # Create a forward operator as a single MatrixBlock
         data = pd.DataFrame(
             [[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]],
-            index=["obs1", "obs2", "obs3"],
-            columns=["state1", "state2"],
+            index=pd.Index(["obs1", "obs2", "obs3"], name="obs"),
+            columns=pd.Index(["state1", "state2"], name="state"),
         )
         block = MatrixBlock(data, row_block="obs", col_block="state")
         op = ForwardOperator(block)
@@ -29,7 +29,11 @@ class TestForwardOperator:
         """Test state_index property."""
         from fips.matrix import MatrixBlock
 
-        data = pd.DataFrame([[1.0, 2.0]], index=["obs1"], columns=["state1", "state2"])
+        data = pd.DataFrame(
+            [[1.0, 2.0]],
+            index=pd.Index(["obs1"], name="obs"),
+            columns=pd.Index(["state1", "state2"], name="state"),
+        )
         block = MatrixBlock(data, row_block="obs", col_block="state")
         op = ForwardOperator(block)
         # state_index is the columns
@@ -39,7 +43,11 @@ class TestForwardOperator:
         """Test obs_index property."""
         from fips.matrix import MatrixBlock
 
-        data = pd.DataFrame([[1.0, 2.0]], index=["obs1"], columns=["state1", "state2"])
+        data = pd.DataFrame(
+            [[1.0, 2.0]],
+            index=pd.Index(["obs1"], name="obs"),
+            columns=pd.Index(["state1", "state2"], name="state"),
+        )
         block = MatrixBlock(data, row_block="obs", col_block="state")
         op = ForwardOperator(block)
         # obs_index is the index (rows)
@@ -52,15 +60,15 @@ class TestForwardOperator:
         # Create operator: 2 states -> 2 obs
         data = pd.DataFrame(
             [[1.0, 2.0], [3.0, 4.0]],
-            index=["obs1", "obs2"],
-            columns=["state1", "state2"],
+            index=pd.Index(["obs1", "obs2"], name="obs"),
+            columns=pd.Index(["state1", "state2"], name="state"),
         )
         block = MatrixBlock(data, row_block="obs", col_block="state")
         op = ForwardOperator(block)
 
         # Create state with MultiIndex matching operator's column structure
         state_idx = pd.MultiIndex.from_product(
-            [["state"], ["state1", "state2"]], names=["block", None]
+            [["state"], ["state1", "state2"]], names=["block", "state"]
         )
         state = pd.Series([10.0, 20.0], index=state_idx, name="state")
 
@@ -75,15 +83,15 @@ class TestForwardOperator:
 
         data = pd.DataFrame(
             [[1.0, 2.0], [3.0, 4.0]],
-            index=["obs1", "obs2"],
-            columns=["state1", "state2"],
+            index=pd.Index(["obs1", "obs2"], name="obs"),
+            columns=pd.Index(["state1", "state2"], name="state"),
         )
         block = MatrixBlock(data, row_block="obs", col_block="state")
         op = ForwardOperator(block)
 
         # Create state with MultiIndex matching operator's column structure
         state_idx = pd.MultiIndex.from_product(
-            [["state"], ["state1", "state2"]], names=["block", None]
+            [["state"], ["state1", "state2"]], names=["block", "state"]
         )
         state = pd.Series([10.0, 20.0], index=state_idx, name="test_state")
         result = op.convolve(state)
@@ -96,15 +104,15 @@ class TestForwardOperator:
 
         data = pd.DataFrame(
             [[1.0, 2.0], [3.0, 4.0]],
-            index=["obs1", "obs2"],
-            columns=["state1", "state2"],
+            index=pd.Index(["obs1", "obs2"], name="obs"),
+            columns=pd.Index(["state1", "state2"], name="state"),
         )
         block = MatrixBlock(data, row_block="obs", col_block="state")
         op = ForwardOperator(block)
 
         # Create state with MultiIndex matching operator's column structure
         state_idx = pd.MultiIndex.from_product(
-            [["state"], ["state1", "state2"]], names=["block", None]
+            [["state"], ["state1", "state2"]], names=["block", "state"]
         )
         state = pd.Series([10.0, 20.0], index=state_idx)
         result = op.convolve(state)
@@ -115,13 +123,17 @@ class TestForwardOperator:
         """Test that shape mismatch raises ValueError."""
         from fips.matrix import MatrixBlock
 
-        data = pd.DataFrame([[1.0, 2.0]], index=["obs1"], columns=["state1", "state2"])
+        data = pd.DataFrame(
+            [[1.0, 2.0]],
+            index=pd.Index(["obs1"], name="obs"),
+            columns=pd.Index(["state1", "state2"], name="state"),
+        )
         block = MatrixBlock(data, row_block="obs", col_block="state")
         op = ForwardOperator(block)
 
         # State with wrong shape - 3 elements instead of 2
         state_idx = pd.MultiIndex.from_product(
-            [["state"], ["state1", "state2", "state3"]], names=["block", None]
+            [["state"], ["state1", "state2", "state3"]], names=["block", "state"]
         )
         state = pd.Series([10.0, 20.0, 30.0], index=state_idx)
 
@@ -139,7 +151,11 @@ class TestForwardOperator:
         """Test that invalid type raises an error."""
         from fips.matrix import MatrixBlock
 
-        data = pd.DataFrame([[1.0, 2.0]], index=["obs1"], columns=["state1", "state2"])
+        data = pd.DataFrame(
+            [[1.0, 2.0]],
+            index=pd.Index(["obs1"], name="obs"),
+            columns=pd.Index(["state1", "state2"], name="state"),
+        )
         block = MatrixBlock(data, row_block="obs", col_block="state")
         op = ForwardOperator(block)
 
@@ -152,15 +168,15 @@ class TestForwardOperator:
 
         data = pd.DataFrame(
             [[1.0, 2.0, 3.0]],
-            index=["obs1"],
-            columns=["state1", "state2", "state3"],
+            index=pd.Index(["obs1"], name="obs"),
+            columns=pd.Index(["state1", "state2", "state3"], name="state"),
         )
         block = MatrixBlock(data, row_block="obs", col_block="state")
         op = ForwardOperator(block)
 
         # State with matching indices
         state_idx = pd.MultiIndex.from_product(
-            [["state"], ["state1", "state2", "state3"]], names=["block", None]
+            [["state"], ["state1", "state2", "state3"]], names=["block", "state"]
         )
         state = pd.Series([10.0, 20.0, 30.0], index=state_idx)
         result = op.convolve(state)
@@ -196,13 +212,13 @@ class TestForwardOperator:
         """Test identity operator (I)."""
         from fips.matrix import MatrixBlock
 
-        idx = ["a", "b", "c"]
+        idx = pd.Index(["a", "b", "c"], name="idx")
         data = pd.DataFrame(np.eye(3), index=idx, columns=idx)
         block = MatrixBlock(data, row_block="obs", col_block="state")
         op = ForwardOperator(block)
 
         # Create state with MultiIndex matching operator's column structure
-        state_idx = pd.MultiIndex.from_product([["state"], idx], names=["block", None])
+        state_idx = pd.MultiIndex.from_product([["state"], idx], names=["block", "idx"])
         state = pd.Series([1.0, 2.0, 3.0], index=state_idx)
         result = op.convolve(state)
         assert np.allclose(result.values, state.values)
@@ -224,6 +240,7 @@ class TestForwardOperator:
         state_idx = pd.MultiIndex.from_product(
             [["state"], ["state1", "state2"]], names=["block", "x"]
         )
+        # Note: pd.MultiIndex names already set correctly here in previous read
         state = pd.Series([10.0, 20.0], index=state_idx, name="state")
         result = op.convolve(state)
         assert np.allclose(result.values, [0.0, 0.0])
@@ -238,15 +255,15 @@ class TestConvolveFunction:
 
         data = pd.DataFrame(
             [[1.0, 2.0], [3.0, 4.0]],
-            index=["obs1", "obs2"],
-            columns=["state1", "state2"],
+            index=pd.Index(["obs1", "obs2"], name="obs"),
+            columns=pd.Index(["state1", "state2"], name="state"),
         )
         block = MatrixBlock(data, row_block="obs", col_block="state")
         op = ForwardOperator(block)
 
         # Create state with MultiIndex matching operator's column structure
         state_idx = pd.MultiIndex.from_product(
-            [["state"], ["state1", "state2"]], names=["block", None]
+            [["state"], ["state1", "state2"]], names=["block", "state"]
         )
         state = pd.Series([10.0, 20.0], index=state_idx)
 
@@ -260,15 +277,15 @@ class TestConvolveFunction:
 
         data = pd.DataFrame(
             [[1.0, 2.0], [3.0, 4.0]],
-            index=["obs1", "obs2"],
-            columns=["state1", "state2"],
+            index=pd.Index(["obs1", "obs2"], name="obs"),
+            columns=pd.Index(["state1", "state2"], name="state"),
         )
         block = MatrixBlock(data, row_block="obs", col_block="state")
         op = ForwardOperator(block)
 
         # Create state with MultiIndex matching operator's column structure
         state_idx = pd.MultiIndex.from_product(
-            [["state"], ["state1", "state2"]], names=["block", None]
+            [["state"], ["state1", "state2"]], names=["block", "state"]
         )
         state = pd.Series([10.0, 20.0], index=state_idx)
 
@@ -280,13 +297,17 @@ class TestConvolveFunction:
         """Test convolve with Vector as state."""
         from fips.matrix import MatrixBlock
 
-        data = pd.DataFrame([[1.0, 2.0]], index=["obs1"], columns=["state1", "state2"])
+        data = pd.DataFrame(
+            [[1.0, 2.0]],
+            index=pd.Index(["obs1"], name="obs"),
+            columns=pd.Index(["state1", "state2"], name="state"),
+        )
         block = MatrixBlock(data, row_block="obs", col_block="state")
         op = ForwardOperator(block)
 
         # Create state with MultiIndex matching operator's column structure
         state_idx = pd.MultiIndex.from_product(
-            [["state"], ["state1", "state2"]], names=["block", None]
+            [["state"], ["state1", "state2"]], names=["block", "state"]
         )
         state = pd.Series([10.0, 20.0], index=state_idx, name="state")
 
@@ -298,13 +319,17 @@ class TestConvolveFunction:
         """Test convolve with numpy array as state."""
         from fips.matrix import MatrixBlock
 
-        data = pd.DataFrame([[1.0, 2.0]], index=["obs1"], columns=["state1", "state2"])
+        data = pd.DataFrame(
+            [[1.0, 2.0]],
+            index=pd.Index(["obs1"], name="obs"),
+            columns=pd.Index(["state1", "state2"], name="state"),
+        )
         block = MatrixBlock(data, row_block="obs", col_block="state")
         op = ForwardOperator(block)
 
         # Create state with MultiIndex matching operator's column structure
         state_idx = pd.MultiIndex.from_product(
-            [["state"], ["state1", "state2"]], names=["block", None]
+            [["state"], ["state1", "state2"]], names=["block", "state"]
         )
         state = pd.Series([10.0, 20.0], index=state_idx)
 

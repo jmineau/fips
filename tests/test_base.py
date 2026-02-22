@@ -78,7 +78,7 @@ class DummyStructure(Structure):
 def test_structure_validate_sanitize():
     # Test NaN validation
     with pytest.raises(ValueError, match="Data contains NaN values."):
-        DummyStructure(pd.Series([1.0, np.nan]))
+        DummyStructure(pd.Series([1.0, np.nan], index=pd.Index([0, 1], name="idx")))
 
     # Test sanitize (to_numeric)
     s = pd.Series([1, 2], index=pd.Index(["1", "2"], name="a"))
@@ -157,7 +157,7 @@ class DummySingleBlock(SingleBlockMixin, DummyStructure):
 def test_single_block_mixin():
     # Missing name
     with pytest.raises(ValueError, match="must have a name property"):
-        DummySingleBlock(pd.Series([1, 2]))
+        DummySingleBlock(pd.Series([1, 2], index=pd.Index([0, 1], name="idx")))
 
     # Has block level
     midx = pd.MultiIndex.from_arrays([["b1", "b1"], [1, 2]], names=["block", "a"])

@@ -101,6 +101,16 @@ class Structure(Pickleable, ABC):
     data: pd.DataFrame | pd.Series
 
     def _validate(self):
+        # Ensure index levels are named
+        if None in self.index.names:
+            raise ValueError(
+                f"All levels in the row index of {self.__class__.__name__} must be named."
+            )
+        if hasattr(self.data, "columns") and None in self.data.columns.names:
+            raise ValueError(
+                f"All levels in the columns of {self.__class__.__name__} must be named."
+            )
+
         # Check for NaNs
         if np.any(self.data.isna().values):
             raise ValueError("Data contains NaN values.")

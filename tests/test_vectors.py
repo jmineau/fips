@@ -11,7 +11,9 @@ class TestBlock:
 
     def test_block_creation(self):
         """Test basic Block creation from Series."""
-        data = pd.Series([1, 2, 3], index=["a", "b", "c"], name="test_block")
+        data = pd.Series(
+            [1, 2, 3], index=pd.Index(["a", "b", "c"], name="idx"), name="test_block"
+        )
         block = Block(data)
 
         assert block.name == "test_block"
@@ -20,37 +22,46 @@ class TestBlock:
 
     def test_block_rejects_series_without_name(self):
         """Test that Block raises error when Series has no name and name not provided."""
-        data = pd.Series([1, 2, 3], index=["a", "b", "c"])
+        data = pd.Series([1, 2, 3], index=pd.Index(["a", "b", "c"], name="idx"))
         with pytest.raises(ValueError, match="must have a name"):
             Block(data)
 
     def test_block_creation_with_name_override(self):
         """Test Block creation overriding Series name."""
-        data = pd.Series([1, 2, 3], index=["a", "b", "c"], name="original")
+        data = pd.Series(
+            [1, 2, 3], index=pd.Index(["a", "b", "c"], name="idx"), name="original"
+        )
         block = Block(data, name="override")
 
         assert block.name == "override"
 
     def test_block_creation_from_array(self):
         """Test Block creation from array values with index and name."""
-        data = Block([10, 20, 30], index=[0, 1, 2], name="numbers")
+        data = Block(
+            [10, 20, 30], index=pd.Index([0, 1, 2], name="idx"), name="numbers"
+        )
 
         assert data.name == "numbers"
         assert data.data.index.tolist() == [0, 1, 2]
         assert data.data.values.tolist() == [10, 20, 30]
 
     def test_block_creation_from_array_auto_index(self):
-        """Test that Block auto-creates index from array."""
-        block = Block([1, 2, 3], name="test")
+        """Test that Block can be created with explicit named index."""
+        # Note: Auto-created index (RangeIndex) has no name, so it would fail validation.
+        # We must provide a named index or rely on Block automatically naming it (if implemented).
+        # Assuming we just need to test creation works with list data + named index.
+        block = Block([1, 2, 3], index=pd.Index([0, 1, 2], name="idx"), name="test")
 
         assert block.name == "test"
         assert len(block.data) == 3
-        # Auto-created index should be RangeIndex
+        # Index should be what we passed
         assert block.data.index.tolist() == [0, 1, 2]
 
     def test_block_creation_from_array_auto_name(self):
         """Test that Block can be created with index but without explicit name."""
-        block = Block([1, 2, 3], index=["a", "b", "c"], name="test")
+        block = Block(
+            [1, 2, 3], index=pd.Index(["a", "b", "c"], name="idx"), name="test"
+        )
 
         assert block.name == "test"
         assert block.data.index.tolist() == ["a", "b", "c"]
@@ -70,7 +81,9 @@ class TestVector:
 
     def test_vector_creation_single_block(self):
         """Test Vector creation with a single block."""
-        data = pd.Series([1, 2, 3], index=["a", "b", "c"], name="block1")
+        data = pd.Series(
+            [1, 2, 3], index=pd.Index(["a", "b", "c"], name="idx"), name="block1"
+        )
         block = Block(data)
         vector = Vector(data=[block], name="prior")
 
@@ -81,8 +94,14 @@ class TestVector:
 
     def test_vector_creation_multiple_blocks(self):
         """Test Vector creation with multiple blocks."""
-        block1 = Block(pd.Series([1, 2], index=["x", "y"], name="b1"))
-        block2 = Block(pd.Series([3, 4, 5], index=["a", "b", "c"], name="b2"))
+        block1 = Block(
+            pd.Series([1, 2], index=pd.Index(["x", "y"], name="idx1"), name="b1")
+        )
+        block2 = Block(
+            pd.Series(
+                [3, 4, 5], index=pd.Index(["a", "b", "c"], name="idx2"), name="b2"
+            )
+        )
         vector = Vector(data=[block1, block2], name="posterior")
 
         assert len(vector.data) == 5
@@ -92,8 +111,10 @@ class TestVector:
 
     def test_vector_creation_from_series(self):
         """Test Vector creation with pd.Series (auto-converted to Block)."""
-        series1 = pd.Series([1, 2], index=["x", "y"], name="s1")
-        series2 = pd.Series([3, 4, 5], index=["a", "b", "c"], name="s2")
+        series1 = pd.Series([1, 2], index=pd.Index(["x", "y"], name="idx1"), name="s1")
+        series2 = pd.Series(
+            [3, 4, 5], index=pd.Index(["a", "b", "c"], name="idx2"), name="s2"
+        )
         vector = Vector(data=[series1, series2], name="obs")
 
         assert len(vector.data) == 5
@@ -118,8 +139,10 @@ class TestVector:
 
     def test_vector_blocks_dict(self):
         """Test accessing blocks from vector data."""
-        series1 = pd.Series([1, 2], index=["x", "y"], name="b1")
-        series2 = pd.Series([3, 4, 5], index=["a", "b", "c"], name="b2")
+        series1 = pd.Series([1, 2], index=pd.Index(["x", "y"], name="idx1"), name="b1")
+        series2 = pd.Series(
+            [3, 4, 5], index=pd.Index(["a", "b", "c"], name="idx2"), name="b2"
+        )
         vector = Vector(data=[series1, series2], name="observation")
 
         # Extract block names
@@ -130,16 +153,24 @@ class TestVector:
 
     def test_vector_duplicate_block_names(self):
         """Test that Vector raises error on duplicate block names."""
-        series1 = pd.Series([1, 2], index=["x", "y"], name="duplicate")
-        series2 = pd.Series([3, 4, 5], index=["a", "b", "c"], name="duplicate")
+        series1 = pd.Series(
+            [1, 2], index=pd.Index(["x", "y"], name="idx1"), name="duplicate"
+        )
+        series2 = pd.Series(
+            [3, 4, 5], index=pd.Index(["a", "b", "c"], name="idx2"), name="duplicate"
+        )
 
         with pytest.raises(ValueError, match="Duplicate block name"):
             Vector(data=[series1, series2], name="state")
 
     def test_vector_data_assembly(self):
         """Test that Vector properly assembles multi-block data."""
-        series1 = pd.Series([10, 20], index=["a", "b"], name="b1")
-        series2 = pd.Series([30, 40, 50], index=["x", "y", "z"], name="b2")
+        series1 = pd.Series(
+            [10, 20], index=pd.Index(["a", "b"], name="idx1"), name="b1"
+        )
+        series2 = pd.Series(
+            [30, 40, 50], index=pd.Index(["x", "y", "z"], name="idx2"), name="b2"
+        )
         vector = Vector(data=[series1, series2], name="posterior")
 
         # Check that assembled data has proper multi-index structure
@@ -203,7 +234,9 @@ class TestVectorCrossSection:
 
     def test_vector_xs_exists(self):
         """Test that xs method exists and is callable."""
-        block = Block(pd.Series([1, 2], index=["x", "y"], name="b1"))
+        block = Block(
+            pd.Series([1, 2], index=pd.Index(["x", "y"], name="idx"), name="b1")
+        )
         vector = Vector(data=[block], name="obs")
 
         assert hasattr(vector, "xs")

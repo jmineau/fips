@@ -13,7 +13,11 @@ class TestMatrix:
 
     def test_matrix_creation(self):
         """Test basic Matrix creation from MatrixBlock."""
-        data = pd.DataFrame([[1, 2], [3, 4]], index=["a", "b"], columns=["x", "y"])
+        data = pd.DataFrame(
+            [[1, 2], [3, 4]],
+            index=pd.Index(["a", "b"], name="idx_row"),
+            columns=pd.Index(["x", "y"], name="idx_col"),
+        )
         block = MatrixBlock(data, row_block="rows", col_block="cols")
         matrix = Matrix([block])
 
@@ -23,7 +27,11 @@ class TestMatrix:
 
     def test_matrix_values_property(self):
         """Test values property returns numpy array."""
-        data = pd.DataFrame([[1, 2], [3, 4]])
+        data = pd.DataFrame(
+            [[1, 2], [3, 4]],
+            index=pd.Index([0, 1], name="idx_row"),
+            columns=pd.Index([0, 1], name="idx_col"),
+        )
         block = MatrixBlock(data, row_block="rows", col_block="cols")
         matrix = Matrix([block])
 
@@ -34,7 +42,11 @@ class TestMatrix:
 
     def test_matrix_index_property(self):
         """Test index property."""
-        data = pd.DataFrame([[1, 2], [3, 4]], index=["a", "b"])
+        data = pd.DataFrame(
+            [[1, 2], [3, 4]],
+            index=pd.Index(["a", "b"], name="idx_row"),
+            columns=pd.Index(["x", "y"], name="idx_col"),
+        )
         block = MatrixBlock(data, row_block="rows", col_block="cols")
         matrix = Matrix([block])
 
@@ -43,7 +55,11 @@ class TestMatrix:
 
     def test_matrix_columns_property(self):
         """Test columns property."""
-        data = pd.DataFrame([[1, 2], [3, 4]], columns=["x", "y"])
+        data = pd.DataFrame(
+            [[1, 2], [3, 4]],
+            columns=pd.Index(["x", "y"], name="idx_col"),
+            index=pd.Index(["a", "b"], name="idx_row"),
+        )
         block = MatrixBlock(data, row_block="rows", col_block="cols")
         matrix = Matrix([block])
 
@@ -52,7 +68,11 @@ class TestMatrix:
 
     def test_matrix_shape_property(self):
         """Test shape property."""
-        data = pd.DataFrame(np.random.randn(5, 3))
+        data = pd.DataFrame(
+            np.random.randn(5, 3),
+            index=pd.Index(range(5), name="idx_row"),
+            columns=pd.Index(range(3), name="idx_col"),
+        )
         block = MatrixBlock(data, row_block="rows", col_block="cols")
         matrix = Matrix([block])
 
@@ -60,7 +80,11 @@ class TestMatrix:
 
     def test_matrix_copies_data(self):
         """Test that Matrix creates a copy of input data."""
-        data = pd.DataFrame([[1, 2], [3, 4]])
+        data = pd.DataFrame(
+            [[1, 2], [3, 4]],
+            index=pd.Index([0, 1], name="idx_row"),
+            columns=pd.Index([0, 1], name="idx_col"),
+        )
         block = MatrixBlock(data, row_block="rows", col_block="cols")
         matrix = Matrix([block])
 
@@ -72,7 +96,11 @@ class TestMatrix:
 
     def test_matrix_repr(self):
         """Test string representation."""
-        data = pd.DataFrame(np.zeros((5, 3)))
+        data = pd.DataFrame(
+            np.zeros((5, 3)),
+            index=pd.Index(range(5), name="idx_row"),
+            columns=pd.Index(range(3), name="idx_col"),
+        )
         block = MatrixBlock(data, row_block="rows", col_block="cols")
         matrix = Matrix([block])
 
@@ -180,8 +208,8 @@ class TestForwardOperator:
         """Test basic ForwardOperator creation."""
         data = pd.DataFrame(
             np.random.randn(5, 3),
-            index=[f"obs_{i}" for i in range(5)],
-            columns=[f"state_{i}" for i in range(3)],
+            index=pd.Index([f"obs_{i}" for i in range(5)], name="obs"),
+            columns=pd.Index([f"state_{i}" for i in range(3)], name="state"),
         )
         block = MatrixBlock(data, row_block="obs", col_block="state")
         forward_op = ForwardOperator([block])
@@ -190,7 +218,11 @@ class TestForwardOperator:
 
     def test_forward_operator_is_matrix_subclass(self):
         """Test that ForwardOperator is a Matrix subclass."""
-        data = pd.DataFrame(np.ones((3, 3)))
+        data = pd.DataFrame(
+            np.ones((3, 3)),
+            index=pd.Index(range(3), name="obs"),
+            columns=pd.Index(range(3), name="state"),
+        )
         block = MatrixBlock(data, row_block="obs", col_block="state")
         forward_op = ForwardOperator([block])
 
@@ -198,7 +230,11 @@ class TestForwardOperator:
 
     def test_forward_operator_rectangular(self):
         """Test ForwardOperator with rectangular matrix."""
-        data = pd.DataFrame(np.random.randn(10, 5), index=range(10), columns=range(5))
+        data = pd.DataFrame(
+            np.random.randn(10, 5),
+            index=pd.Index(range(10), name="obs"),
+            columns=pd.Index(range(5), name="state"),
+        )
         block = MatrixBlock(data, row_block="obs", col_block="state")
         forward_op = ForwardOperator([block])
 
@@ -210,7 +246,11 @@ class TestMatrixBlock:
 
     def test_matrix_block_creation(self):
         """Test basic MatrixBlock creation."""
-        data = pd.DataFrame([[1, 2], [3, 4]], index=["a", "b"], columns=["x", "y"])
+        data = pd.DataFrame(
+            [[1, 2], [3, 4]],
+            index=pd.Index(["a", "b"], name="idx_row"),
+            columns=pd.Index(["x", "y"], name="idx_col"),
+        )
         block = MatrixBlock(data, row_block="state", col_block="obs")
 
         assert block.shape == (2, 2)
@@ -220,7 +260,11 @@ class TestMatrixBlock:
 
     def test_matrix_block_with_name(self):
         """Test MatrixBlock with custom name."""
-        data = pd.DataFrame([[1, 2], [3, 4]])
+        data = pd.DataFrame(
+            [[1, 2], [3, 4]],
+            index=pd.Index([0, 1], name="idx_row"),
+            columns=pd.Index([0, 1], name="idx_col"),
+        )
         block = MatrixBlock(
             data, row_block="state", col_block="obs", name="custom_name"
         )
@@ -229,14 +273,22 @@ class TestMatrixBlock:
 
     def test_matrix_block_default_name(self):
         """Test MatrixBlock generates default name."""
-        data = pd.DataFrame([[1, 2], [3, 4]])
+        data = pd.DataFrame(
+            [[1, 2], [3, 4]],
+            index=pd.Index([0, 1], name="idx_row"),
+            columns=pd.Index([0, 1], name="idx_col"),
+        )
         block = MatrixBlock(data, row_block="state", col_block="obs")
 
         assert block.name == "state_obs"
 
     def test_matrix_block_repr(self):
         """Test MatrixBlock string representation."""
-        data = pd.DataFrame([[1, 2], [3, 4]])
+        data = pd.DataFrame(
+            [[1, 2], [3, 4]],
+            index=pd.Index([0, 1], name="idx_row"),
+            columns=pd.Index([0, 1], name="idx_col"),
+        )
         block = MatrixBlock(data, row_block="state", col_block="obs")
 
         repr_str = repr(block)
@@ -246,7 +298,11 @@ class TestMatrixBlock:
 
     def test_matrix_block_to_frame(self):
         """Test converting MatrixBlock to frame without block level."""
-        data = pd.DataFrame([[1, 2]], index=["a"], columns=["x", "y"])
+        data = pd.DataFrame(
+            [[1, 2]],
+            index=pd.Index(["a"], name="idx_row"),
+            columns=pd.Index(["x", "y"], name="idx_col"),
+        )
         block = MatrixBlock(data, row_block="state", col_block="obs")
 
         df = block.to_frame(add_block_level=False)
@@ -255,7 +311,11 @@ class TestMatrixBlock:
 
     def test_matrix_block_to_frame_with_blocks(self):
         """Test converting MatrixBlock to frame with block level."""
-        data = pd.DataFrame([[1, 2]], index=["a"], columns=["x", "y"])
+        data = pd.DataFrame(
+            [[1, 2]],
+            index=pd.Index(["a"], name="idx_row"),
+            columns=pd.Index(["x", "y"], name="idx_col"),
+        )
         block = MatrixBlock(data, row_block="state", col_block="obs")
 
         df = block.to_frame(add_block_level=True)
@@ -266,7 +326,11 @@ class TestMatrixBlock:
 
     def test_matrix_block_pickle_support(self):
         """Test MatrixBlock pickle serialization."""
-        data = pd.DataFrame([[1, 2], [3, 4]], index=["a", "b"], columns=["x", "y"])
+        data = pd.DataFrame(
+            [[1, 2], [3, 4]],
+            index=pd.Index(["a", "b"], name="idx_row"),
+            columns=pd.Index(["x", "y"], name="idx_col"),
+        )
         block = MatrixBlock(data, row_block="state", col_block="obs", name="test_block")
 
         # Get state for pickling
@@ -277,7 +341,15 @@ class TestMatrixBlock:
         assert "col_block" in state
 
         # Create new block and restore state
-        new_block = MatrixBlock([[0]], "temp", "temp")
+        new_block = MatrixBlock(
+            pd.DataFrame(
+                [[0]],
+                index=pd.Index([0], name="temp"),
+                columns=pd.Index([0], name="temp"),
+            ),
+            "temp",
+            "temp",
+        )
         new_block.__setstate__(state)
 
         assert new_block.row_block == "state"
@@ -290,13 +362,18 @@ class TestMatrixOperations:
 
     def test_matrix_reindex(self):
         """Test reindexing a matrix with blocks."""
-        data = pd.DataFrame([[1, 2], [3, 4]], index=["a", "b"], columns=["x", "y"])
+        data = pd.DataFrame(
+            [[1, 2], [3, 4]],
+            index=pd.Index(["a", "b"], name="idx_row"),
+            columns=pd.Index(["x", "y"], name="idx_col"),
+        )
         block = MatrixBlock(data, row_block="rows", col_block="cols")
         matrix = Matrix([block])
 
         reindexed = matrix.data.reindex(
             index=pd.MultiIndex.from_tuples(
-                [("rows", "a"), ("rows", "b"), ("rows", "c")], names=["block", "x"]
+                [("rows", "a"), ("rows", "b"), ("rows", "c")],
+                names=["block", "idx_row"],
             ),
             fill_value=0,
         )
@@ -317,7 +394,11 @@ class TestMatrixOperations:
 
     def test_forward_operator_multiplication_shape(self):
         """Test that forward operator has correct multiplication properties."""
-        H = pd.DataFrame(np.random.randn(5, 3))
+        H = pd.DataFrame(
+            np.random.randn(5, 3),
+            index=pd.Index(range(5), name="obs"),
+            columns=pd.Index(range(3), name="state"),
+        )
         block = MatrixBlock(H, row_block="obs", col_block="state")
         forward_op = ForwardOperator([block])
 
@@ -334,10 +415,10 @@ class TestConvolve:
         """Test basic convolution with vector and forward operator."""
         from fips.vector import Block, Vector
 
-        idx = pd.Index([0, 1, 2], name="x")
+        idx = pd.Index([0, 1, 2], name="idx")
         state_series = pd.Series([1.0, 2.0, 3.0], index=idx, name="state")
         state = Vector(data=[Block(state_series)], name="state")
-        H_idx = pd.Index([0, 1, 2], name="x")
+        H_idx = pd.Index([0, 1, 2], name="idx")
         H = pd.DataFrame(
             [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]],
             index=H_idx,
@@ -355,10 +436,10 @@ class TestConvolve:
         """Test convolution with DataFrame forward operator."""
         from fips.vector import Block, Vector
 
-        idx = pd.Index([0, 1], name="x")
+        idx = pd.Index([0, 1], name="idx")
         state_series = pd.Series([1.0, 2.0], index=idx, name="state")
         state = Vector(data=[Block(state_series)], name="state")
-        H_idx = pd.Index([0, 1], name="x")
+        H_idx = pd.Index([0, 1], name="idx")
         H = pd.DataFrame([[1.0, 2.0], [3.0, 4.0]], index=H_idx, columns=H_idx)
         block = MatrixBlock(H, row_block="obs", col_block="state")
         forward_op = ForwardOperator([block])
@@ -372,10 +453,10 @@ class TestConvolve:
         """Test convolution with ForwardOperator object."""
         from fips.vector import Block, Vector
 
-        idx = pd.Index([0, 1], name="x")
+        idx = pd.Index([0, 1], name="idx")
         state_series = pd.Series([1.0, 2.0], index=idx, name="state")
         state = Vector(data=[Block(state_series)], name="state")
-        H_idx = pd.Index([0, 1], name="x")
+        H_idx = pd.Index([0, 1], name="idx")
         H_df = pd.DataFrame([[1.0, 2.0], [3.0, 4.0]], index=H_idx, columns=H_idx)
         block = MatrixBlock(H_df, row_block="obs", col_block="state")
         H = ForwardOperator([block])
@@ -389,10 +470,10 @@ class TestConvolve:
         from fips.vector import Block, Vector
 
         state_values = np.array([1.0, 2.0])
-        idx = pd.Index([0, 1], name="x")
+        idx = pd.Index([0, 1], name="idx")
         state_series = pd.Series(state_values, index=idx, name="state")
         state = Vector(data=[Block(state_series)], name="state")
-        H_idx = pd.Index([0, 1], name="x")
+        H_idx = pd.Index([0, 1], name="idx")
         H = pd.DataFrame([[1.0, 0.0], [0.0, 1.0]], index=H_idx, columns=H_idx)
         block = MatrixBlock(H, row_block="obs", col_block="state")
         forward_op = ForwardOperator([block])
@@ -407,10 +488,10 @@ class TestConvolve:
         from fips.vector import Block, Vector
 
         state_values = np.array([1.0, 2.0, 3.0])
-        idx = pd.Index([0, 1, 2], name="x")
+        idx = pd.Index([0, 1, 2], name="idx")
         state_series = pd.Series(state_values, index=idx, name="state")
         state = Vector(data=[Block(state_series)], name="state")
-        H_idx = pd.Index([0, 1, 2], name="x")
+        H_idx = pd.Index([0, 1, 2], name="idx")
         H_df = pd.DataFrame(np.eye(3), index=H_idx, columns=H_idx)
         block = MatrixBlock(H_df, row_block="obs", col_block="state")
         H = ForwardOperator([block])
@@ -424,10 +505,10 @@ class TestConvolve:
         """Test convolution with pandas Series state."""
         from fips.vector import Block, Vector
 
-        idx = pd.Index([0, 1, 2], name="x")
+        idx = pd.Index([0, 1, 2], name="idx")
         state_series = pd.Series([1.0, 2.0, 3.0], index=idx, name="state")
         state = Vector(data=[Block(state_series)], name="state")
-        H_idx = pd.Index([0, 1, 2], name="x")
+        H_idx = pd.Index([0, 1, 2], name="idx")
         H = pd.DataFrame(np.eye(3), index=H_idx, columns=H_idx)
         block = MatrixBlock(H, row_block="obs", col_block="state")
         forward_op = ForwardOperator([block])
