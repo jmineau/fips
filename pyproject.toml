@@ -22,6 +22,7 @@ classifiers = [
     "Programming Language :: Python :: 3.12",
 ]
 dependencies = [
+    "joblib",
     "numpy",
     "pandas",
     "typing-extensions",

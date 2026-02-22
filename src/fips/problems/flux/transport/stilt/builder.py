@@ -2,15 +2,15 @@ import datetime as dt
 import logging
 from collections import defaultdict
 from pathlib import Path
-from typing import Literal, overload
+from typing import overload
 
 import numpy as np
 import pandas as pd
+from joblib import Parallel, delayed
 from stilt import Simulation
 
 from fips.aggregators import integrate_over_time_bins
 from fips.matrix import MatrixBlock
-from fips.parallel import parallelize
 from fips.problems.flux.transport.stilt.footprint import get_footprint
 from fips.problems.flux.transport.stilt.simulation import get_sim
 
@@ -46,7 +46,7 @@ class JacobianBuilder:
         flux_times: pd.IntervalIndex,
         resolution: str | None = None,
         subset_hours: int | list[int] | None = None,
-        num_processes: int | Literal["max"] = 1,
+        num_processes: int = 1,
         location_mapper: dict[str, str] | None = None,
     ) -> MatrixBlock: ...
 
@@ -57,7 +57,7 @@ class JacobianBuilder:
         flux_times: pd.IntervalIndex,
         resolution: str | None = None,
         subset_hours: int | list[int] | None = None,
-        num_processes: int | Literal["max"] = 1,
+        num_processes: int = 1,
         location_mapper: dict[str, str] | None = None,
     ) -> dict[str, MatrixBlock]: ...
 
@@ -67,7 +67,7 @@ class JacobianBuilder:
         flux_times: pd.IntervalIndex,
         resolution: str | None = None,
         subset_hours: int | list[int] | None = None,
-        num_processes: int | Literal["max"] = 1,
+        num_processes: int = 1,
         location_mapper: dict[str, str] | None = None,
         timeout: float | int | None = None,
     ) -> MatrixBlock | dict[str, MatrixBlock]:
@@ -87,8 +87,9 @@ class JacobianBuilder:
             Resolution of the footprints to use, by default None (use highest resolution available)
         subset_hours : int | list[int] | None, optional
             Subset the simulations to specific hours of the day, by default None
-        num_processes : int | Literal['max'], optional
+        num_processes : int, optional
             Number of processes to use for parallel computation, by default 1
+            To use all cores, set num_processes=-1. Note that parallel processing may not be available on all platforms.
         location_mapper : dict[str, str] | None, optional
             Optional mapping of observation location IDs to new IDs.
         timeout : float, optional
@@ -113,21 +114,21 @@ class JacobianBuilder:
 
         # Build the Jacobian matrix in parallel
         H_rows = defaultdict(list)
-        parallelized_builder = parallelize(
-            build_jacobian_row_from_coords,
-            num_processes=num_processes,
-            timeout=timeout,
-        )
-        results = parallelized_builder(
-            self.simulations,
-            coords=coords,
-            location_dim=self.location_dim,
-            time_dim=self.time_dim,
-            flux_times=flux_times,
-            t_start=t_start,
-            t_stop=t_stop,
-            resolution=resolution,
-            subset_hours=subset_hours,
+        if num_processes > 1:
+            logger.debug(f"Building Jacobian rows with {num_processes} processes...")
+        results = Parallel(n_jobs=num_processes, timeout=timeout)(
+            delayed(build_jacobian_row_from_coords)(
+                sim,
+                coords=coords,
+                location_dim=self.location_dim,
+                time_dim=self.time_dim,
+                flux_times=flux_times,
+                t_start=t_start,
+                t_stop=t_stop,
+                resolution=resolution,
+                subset_hours=subset_hours,
+            )
+            for sim in self.simulations
         )
         logger.debug("Sorting Jacobian rows...")
         for row in results:
