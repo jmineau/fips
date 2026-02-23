@@ -58,6 +58,13 @@ class FluxInversionPipeline(InversionPipeline, ABC):
 
         return obs, prior
 
+    def run(self, **kwargs) -> FluxInversion:
+        inversion = super().run(**kwargs)
+
+        # Print summary report
+        self.summarize(inversion)
+        return inversion
+
     def summarize(self, inversion: FluxInversion) -> None:
         """Prints a comprehensive statistical summary of the inversion results."""
 
