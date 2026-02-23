@@ -40,6 +40,10 @@ class InversionPipeline(ABC):
     def get_prior(self) -> Vector:
         pass
 
+    def filter_state_space(self, obs: Vector, prior: Vector) -> tuple[Vector, Vector]:
+        """Optional hook to align or trim the state space before building covariances."""
+        return obs, prior
+
     @abstractmethod
     def get_forward_operator(self, obs: Vector, prior: Vector) -> ForwardOperator:
         pass
@@ -55,9 +59,15 @@ class InversionPipeline(ABC):
     def get_constant(self) -> Vector | None:
         return None
 
-    def filter_state_space(self, obs: Vector, prior: Vector) -> tuple[Vector, Vector]:
-        """Optional hook to align or trim the state space before building covariances."""
-        return obs, prior
+    def aggregate_obs_space(
+        self,
+        obs: Vector,
+        forward_operator: ForwardOperator,
+        mdm: CovarianceMatrix,
+        constant: Vector | None,
+    ) -> tuple[Vector, ForwardOperator, CovarianceMatrix, Vector | None]:
+        """Optional hook to aggregate the observation space (e.g. hourly → daily)."""
+        return obs, forward_operator, mdm, constant
 
     def run(self, **kwargs) -> InverseProblem:
         """Executes the standard inversion workflow."""
@@ -77,6 +87,11 @@ class InversionPipeline(ABC):
 
         # Optional constants to be removed from the observations
         constant = self.get_constant()
+
+        # Optional obs-space aggregation (e.g. hourly → daily)
+        obs, forward_operator, mdm, constant = self.aggregate_obs_space(
+            obs=obs, forward_operator=forward_operator, mdm=mdm, constant=constant
+        )
 
         print("Initializing solver...")
         inversion = self.problem(
