@@ -9,7 +9,7 @@ from abc import ABC, abstractmethod
 from functools import cached_property
 
 import numpy as np
-from scipy.linalg import solve
+from scipy.linalg import inv, solve
 
 logger = logging.getLogger(__name__)
 
@@ -221,8 +221,21 @@ class Estimator(ABC):
         logger.debug("Calculating Leverage matrix...")
         Hx = self.forward(x)
         Hx_T = Hx.T
-        HS_0H_Sz_inv = invert(self._HS_0H + self.S_z)
-        return Hx @ invert(Hx_T @ HS_0H_Sz_inv @ Hx) @ Hx_T @ HS_0H_Sz_inv
+
+        # Equation: L = Hx (Hx^T (H S_0 H^T + S_z)^-1 Hx)^-1 Hx^T (H S_0 H^T + S_z)^-1
+        # Let A = (H S_0 H^T + S_z)
+        A = self._HS_0H + self.S_z
+
+        # 1. Compute term_1 = A^-1 @ Hx using solve
+        term_1 = solve(A, Hx, assume_a="pos")
+
+        # 2. Compute the inner inverse: (Hx^T @ term_1)^-1
+        # We still have to use standard inv() here because Hx^T @ term_1 isn't
+        # guaranteed to be a standard symmetric positive-definite covariance matrix.
+        inner_inv = inv(Hx_T @ term_1)
+
+        # 3. Assemble: Hx @ inner_inv @ term_1^T
+        return Hx @ inner_inv @ term_1.T
 
     @abstractmethod
     def cost(self, x) -> float:
