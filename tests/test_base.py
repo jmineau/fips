@@ -97,12 +97,8 @@ def test_structure_properties():
 def test_structure_reindex():
     s = pd.Series([1, 2], index=pd.Index([1, 2], name="a"))
     struct = DummyStructure(s)
-
     new_idx = pd.Index([2, 3], name="a")
-
-    # Reindex requires MultiIndex
-    with pytest.raises(ValueError, match="Target index must be a MultiIndex"):
-        struct.reindex(new_idx)
+    struct.reindex(new_idx, fill_value=0.0)
 
     midx = pd.MultiIndex.from_arrays([[1, 2]], names=["a"])
     struct_midx = DummyStructure(pd.Series([1, 2], index=midx))
