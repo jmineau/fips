@@ -29,7 +29,7 @@ class InversionPipeline(ABC):
         estimator: type[Estimator] | str,
     ):
         self.config = config
-        self.problem = problem
+        self._InverseProblem = problem
         self.estimator = estimator
 
     @abstractmethod
@@ -69,9 +69,7 @@ class InversionPipeline(ABC):
         """Optional hook to aggregate the observation space (e.g. hourly → daily)."""
         return obs, forward_operator, modeldata_mistmatch, constant
 
-    def run(self, **kwargs) -> InverseProblem:
-        """Executes the standard inversion workflow."""
-        print("Loading problem inputs...")
+    def get_inputs(self) -> dict[str, Any]:
         # Obs and prior are the core inputs that define the obs and state space.
         # They are used to build the forward operator and covariance matrices.
         obs = self.get_obs()
@@ -95,19 +93,27 @@ class InversionPipeline(ABC):
             modeldata_mistmatch=mdm,
             constant=constant,
         )
-
-        print("Initializing solver...")
-        inversion = self.problem(
+        return dict(
             obs=obs,
             prior=prior,
             forward_operator=forward_operator,
             prior_error=prior_error,
             modeldata_mismatch=mdm,
             constant=constant,
+        )
+
+    def run(self, **kwargs) -> InverseProblem:
+        """Executes the standard inversion workflow."""
+        print("Getting problem inputs...")
+        inputs = self.get_inputs()
+
+        print("Initializing solver...")
+        self.problem = self._InverseProblem(
+            **inputs,
             **kwargs,
         )
 
         print("Solving...")
-        inversion.solve(estimator=self.estimator)
+        self.problem.solve(estimator=self.estimator)
 
-        return inversion
+        return self.problem

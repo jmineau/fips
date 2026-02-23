@@ -29,7 +29,7 @@ logger = logging.getLogger(__name__)
 # - Build STILT Jacobian from geometries or nested grid
 
 
-class FluxInversion(InverseProblem):
+class FluxProblem(InverseProblem):
     """Atmospheric flux inversion problem.
 
     Subclass of InverseProblem specialized for estimating spatial and temporal surface fluxes

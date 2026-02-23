@@ -8,7 +8,7 @@ import numpy as np
 import pandas as pd
 
 if TYPE_CHECKING:
-    from fips.problems.flux.problem import FluxInversion
+    from fips.problems.flux.problem import FluxProblem
 
 
 class FluxPlotter:
@@ -18,7 +18,7 @@ class FluxPlotter:
     Provides methods for visualizing prior/posterior fluxes and concentration timeseries.
     """
 
-    def __init__(self, inversion: "FluxInversion"):
+    def __init__(self, inversion: "FluxProblem"):
         """Initialize with a FluxInversion instance.
 
         Parameters

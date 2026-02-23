@@ -5,15 +5,17 @@ import pandas as pd
 
 from fips.filters import select_intervals_with_min_obs
 from fips.pipeline import InversionPipeline
-from fips.problems.flux.problem import FluxInversion
+from fips.problems.flux.problem import FluxProblem
 from fips.vector import Vector
 
 
 class FluxInversionPipeline(InversionPipeline, ABC):
+    problem: FluxProblem
+
     def __init__(self, config):
         super().__init__(
             config=config,
-            problem=FluxInversion,
+            problem=FluxProblem,
             estimator="bayesian",
         )
 
@@ -58,27 +60,29 @@ class FluxInversionPipeline(InversionPipeline, ABC):
 
         return obs, prior
 
-    def run(self, **kwargs) -> FluxInversion:
+    def run(self, **kwargs) -> FluxProblem:
         inversion = super().run(**kwargs)
 
         # Print summary report
-        self.summarize(inversion)
+        self.summarize()
+
         return inversion
 
-    def summarize(self, inversion: FluxInversion) -> None:
+    def summarize(self) -> None:
         """Prints a comprehensive statistical summary of the inversion results."""
+        problem = self.problem
 
         # --- Extract Data ---
-        obs = inversion.concentrations
-        enhancement = inversion.enhancement
+        obs = problem.concentrations
+        enhancement = problem.enhancement
 
-        prior_flux = inversion.prior_fluxes
-        post_flux = inversion.posterior_fluxes
+        prior_flux = problem.prior_fluxes
+        post_flux = problem.posterior_fluxes
 
-        prior_obs = inversion.prior_concentrations
-        post_obs = inversion.posterior_concentrations
+        prior_obs = problem.prior_concentrations
+        post_obs = problem.posterior_concentrations
 
-        est = inversion.estimator
+        est = problem.estimator
 
         # --- Calculate Atmospheric Metrics ---
         # Mean Enhancements
