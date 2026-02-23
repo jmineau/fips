@@ -4,8 +4,6 @@ This module provides functions for plotting error norms, comparing multiple seri
 and computing credible intervals for uncertainty visualization.
 """
 
-from __future__ import annotations
-
 from collections.abc import Iterable, Sequence
 
 import numpy as np

@@ -16,7 +16,7 @@ __email__ = "jameskmineau@gmail.com"
 
 from .covariance import CovarianceMatrix
 from .estimators import Estimator
-from .matrix import Matrix
+from .matrix import Matrix, MatrixBlock
 from .operators import ForwardOperator, convolve
 from .problem import InverseProblem
 from .vector import Block, Vector
@@ -27,6 +27,7 @@ __all__ = [
     "Block",
     "Vector",
     "Matrix",
+    "MatrixBlock",
     "Estimator",
     "ForwardOperator",
     "CovarianceMatrix",
