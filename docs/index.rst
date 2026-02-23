@@ -37,16 +37,43 @@ fips
    :target: https://github.com/microsoft/pyright
    :alt: Pyright
 
-Flexible Inverse Problem Solver (FIPS)
+**Flexible Inverse Problem Solver** — a Pythonic framework for solving linear
+inverse problems using Bayesian estimation.
+
+*fips* is built around familiar :mod:`pandas` and :mod:`numpy` data structures,
+and integrates naturally with the broader PyData ecosystem. It handles the
+bookkeeping - labelled vectors, covariance matrices, forward operators, and
+diagnostics - so you can focus on your science.
+
+.. note::
+
+   Inverse problems arise when you want to infer causes from observed
+   effects: recovering a signal from noisy measurements, estimating surface
+   greenhouse-gas fluxes from atmospheric concentrations, or inferring
+   subsurface structure from geophysical data. A thorough theoretical treatment
+   can be found in `Tarantola (2005) <https://doi.org/10.1137/1.9780898717921>`_
+   and `Rodgers (2000) <https://doi.org/10.1142/3171>`_. *fips* currently focuses on
+   the **linear Bayesian** case and is not intended as an authoritative reference.
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Getting Started
+
+   installation
+   quickstart
 
 .. toctree::
    :maxdepth: 2
-   :caption: Contents:
+   :caption: User Guide
 
-   installation
    usage
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Reference
+
    api
-   contributing
+
 
 .. include:: installation.rst
 

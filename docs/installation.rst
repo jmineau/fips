@@ -1,10 +1,38 @@
 Installation
 ============
 
+Requirements
+------------
+
+- Python 3.10 or higher
+- `NumPy <https://numpy.org>`_
+- `pandas <https://pandas.pydata.org>`_
+- `xarray <https://xarray.pydata.org>`_
+- `scipy <https://scipy.org>`_
+
+From PyPI
+---------
+
+.. code-block:: bash
+
+   pip install fips
+
+Optional extras
+~~~~~~~~~~~~~~~
+
+.. code-block:: bash
+
+   # Atmospheric flux inversion (STILT transport, cartopy plotting)
+   pip install "fips[flux]"
+
+   # Documentation
+   pip install "fips[docs]"
+
+   # Development (linting, testing, type-checking)
+   pip install "fips[dev]"
+
 From Source
 -----------
-
-To install from source:
 
 .. code-block:: bash
 
@@ -15,8 +43,6 @@ To install from source:
 Development Installation
 ------------------------
 
-For development, install with the development dependencies:
-
 .. code-block:: bash
 
    git clone https://github.com/jmineau/fips.git
@@ -24,8 +50,3 @@ For development, install with the development dependencies:
    python -m pip install --upgrade pip
    pip install -e ".[dev,docs]"
    pre-commit install
-
-Requirements
-------------
-
-- Python 3.10 or higher
