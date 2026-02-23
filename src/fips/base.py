@@ -303,6 +303,7 @@ class Structure2D(Structure):
         columns: pd.Index | None = None,
         dtype=None,
         copy=None,
+        sparse: bool = False,
     ):
         """
         Initialize a 2D structure with the given data, index, and columns. Validates and sanitizes the data.
@@ -321,8 +322,19 @@ class Structure2D(Structure):
             Data type to force.
         copy : bool, optional
             Whether to copy the data.
+        sparse : bool, default False
+            If True, store the data in pandas sparse format (fill_value=0.0).
+            The caller is responsible for zeroing out near-zero values before
+            setting sparse=True (e.g. via a threshold in the builder).
         """
         self.name = name
+
+        # Detect if the input data is already a sparse DataFrame so we can
+        # preserve sparsity when constructing from an existing sparse structure
+        # (e.g. inside reindex() which calls type(self)(data, name=self.name)).
+        _input_is_sparse = isinstance(data, pd.DataFrame) and any(
+            isinstance(dt, pd.SparseDtype) for dt in data.dtypes
+        )
 
         # If columns not provided, assume symmetric matrix with same index for rows and columns
         if columns is None:
@@ -337,6 +349,64 @@ class Structure2D(Structure):
 
         self._validate()
         self._sanitize()
+
+        # Sparsify after sanitize (index may have been modified by _sanitize)
+        if (sparse or _input_is_sparse) and not self.is_sparse:
+            self._sparsify()
+
+    @property
+    def is_sparse(self) -> bool:
+        """True if the internal DataFrame uses pandas sparse storage."""
+        return any(isinstance(dt, pd.SparseDtype) for dt in self.data.dtypes)
+
+    def _sparsify(self) -> None:
+        """Convert self.data to pandas sparse format in-place using scipy CSR.
+
+        The caller is responsible for ensuring near-zero floating-point noise
+        has already been zeroed out (via a threshold) before calling this.
+        """
+        from scipy.sparse import csr_matrix
+
+        csr = csr_matrix(self.data.to_numpy(dtype=float, na_value=0.0))
+        self.data = pd.DataFrame.sparse.from_spmatrix(
+            csr, index=self.data.index, columns=self.data.columns
+        )
+
+    def to_sparse(self, threshold: float | None = None) -> "Structure2D":
+        """Return a copy with sparse internal storage.
+
+        Parameters
+        ----------
+        threshold : float | None, optional
+            If provided, values whose absolute value is strictly less than
+            this threshold are zeroed out before sparsification, avoiding
+            storage of floating-point noise as explicit non-zero entries.
+            Default is None (no zeroing applied).
+
+        Returns
+        -------
+        Structure2D
+            New instance backed by a sparse DataFrame.
+        """
+        if self.is_sparse:
+            return self
+        result = self.copy()
+        if threshold is not None:
+            result.data = result.data.where(result.data.abs() >= threshold, other=0.0)
+        result._sparsify()
+        return result
+
+    def to_dense(self) -> "Structure2D":
+        """Return a copy with dense internal storage.
+
+        Returns
+        -------
+        Structure2D
+            New instance backed by a regular dense DataFrame.
+        """
+        if not self.is_sparse:
+            return self
+        return type(self)(self.data.sparse.to_dense(), name=self.name)
 
     @property
     def columns(self) -> pd.Index:

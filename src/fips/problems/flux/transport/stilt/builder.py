@@ -48,6 +48,9 @@ class JacobianBuilder:
         subset_hours: int | list[int] | None = None,
         num_processes: int = 1,
         location_mapper: dict[str, str] | None = None,
+        timeout: float | int | None = None,
+        threshold: float | None = 1e-10,
+        sparse: bool = False,
     ) -> MatrixBlock: ...
 
     @overload
@@ -59,6 +62,9 @@ class JacobianBuilder:
         subset_hours: int | list[int] | None = None,
         num_processes: int = 1,
         location_mapper: dict[str, str] | None = None,
+        timeout: float | int | None = None,
+        threshold: float | None = 1e-10,
+        sparse: bool = False,
     ) -> dict[str, MatrixBlock]: ...
 
     def build_from_coords(
@@ -70,6 +76,8 @@ class JacobianBuilder:
         num_processes: int = 1,
         location_mapper: dict[str, str] | None = None,
         timeout: float | int | None = None,
+        threshold: float | None = 1e-10,
+        sparse: bool = False,
     ) -> MatrixBlock | dict[str, MatrixBlock]:
         """
         Build the Jacobian matrix H from specified coordinates (x, y) and flux time bins.
@@ -96,6 +104,14 @@ class JacobianBuilder:
             The maximum time (in seconds) allowed for each simulation to be processed.
             If a task exceeds this time, a TimeoutError is raised.
             Default is None (no timeout).
+        threshold : float | None, optional
+            Values whose absolute value is strictly less than this threshold are set to
+            zero before the MatrixBlock is assembled.  This avoids storing floating-point
+            noise as explicit non-zero entries.  Default is 1e-10.  Pass None to disable.
+        sparse : bool, default False
+            If True, store the assembled MatrixBlock in pandas sparse format.
+            Pairs naturally with ``threshold`` — threshold zeroing is applied first
+            so that structural zeros are not stored as explicit entries.
 
         Returns
         -------
@@ -149,6 +165,9 @@ class JacobianBuilder:
                 logger.debug(f"Combining {len(rows)} rows for {key} jacobian...")
                 H = pd.concat(rows).fillna(0)
 
+                if threshold is not None:
+                    H = H.where(H.abs() >= threshold, other=0.0)
+
                 if location_mapper:
                     h = H.reset_index()
                     h[self.location_dim] = (
@@ -159,7 +178,11 @@ class JacobianBuilder:
                     H = h.set_index([self.location_dim, self.time_dim])
 
                 H = MatrixBlock(
-                    H, name="jacobian", row_block="concentration", col_block="flux"
+                    H,
+                    name="jacobian",
+                    row_block="concentration",
+                    col_block="flux",
+                    sparse=sparse,
                 )
                 H_dict[key] = H
 

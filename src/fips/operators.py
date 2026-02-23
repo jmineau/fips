@@ -45,7 +45,11 @@ class ForwardOperator(Matrix):
         )
 
         x_vals = state.values
-        y_values = op.data.values @ x_vals
+        if op.is_sparse:
+            # Use scipy CSR for efficient sparse matrix-vector multiply
+            y_values = op.data.sparse.to_coo().tocsr().dot(x_vals)
+        else:
+            y_values = op.data.values @ x_vals
         name = f"{state.name}_obs" if state.name else None
         return pd.Series(y_values, index=op.obs_index, name=name)
 

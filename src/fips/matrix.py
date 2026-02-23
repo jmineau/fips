@@ -51,6 +51,7 @@ class MatrixBlock(SingleBlockMixin, Structure2D):
         columns: pd.Index | None = None,
         dtype: Any = None,
         copy: bool = False,
+        sparse: bool = False,
     ):
         if isinstance(data, MatrixBlock):
             row_block = row_block or data.row_block
@@ -66,7 +67,13 @@ class MatrixBlock(SingleBlockMixin, Structure2D):
         name = name or f"{row_block}_{col_block}"
 
         super().__init__(
-            data, name=name, index=index, columns=columns, dtype=dtype, copy=copy
+            data,
+            name=name,
+            index=index,
+            columns=columns,
+            dtype=dtype,
+            copy=copy,
+            sparse=sparse,
         )
 
     def _validate(self):
@@ -126,6 +133,7 @@ class Matrix(MultiBlockMixin, Structure2D):
         columns: pd.Index | None = None,
         dtype=None,
         copy=None,
+        sparse: bool = False,
     ):
         """
 
@@ -143,6 +151,10 @@ class Matrix(MultiBlockMixin, Structure2D):
             Data type to force.
         copy : bool, optional
             Whether to copy the data.
+        sparse : bool, default False
+            If True, store the assembled matrix in pandas sparse format.
+            Sparsification is applied after block assembly; use threshold
+            zeroing in your builder before passing data here.
 
         Returns
         -------
@@ -206,7 +218,13 @@ class Matrix(MultiBlockMixin, Structure2D):
             data = np.diag(data)
 
         super().__init__(
-            data, name=name, index=index, columns=columns, dtype=dtype, copy=copy
+            data,
+            name=name,
+            index=index,
+            columns=columns,
+            dtype=dtype,
+            copy=copy,
+            sparse=sparse,
         )
 
     def __repr__(self):
@@ -236,15 +254,18 @@ class Matrix(MultiBlockMixin, Structure2D):
                 other.columns
             ):
                 raise ValueError("Indices and columns must match for addition.")
+            # Densify both sides before adding; sparsity is not preserved through
+            # arbitrary addition (fill positions become non-zero).
+            a = self.data.sparse.to_dense() if self.is_sparse else self.data
+            b = other.data.sparse.to_dense() if other.is_sparse else other.data
             return Klass(
-                self.data.values + other.data.values,
+                a.values + b.values,
                 index=self.index,
                 columns=self.columns,
             )
         elif np.isscalar(other):
-            return Klass(
-                self.data.values + other, index=self.index, columns=self.columns
-            )
+            a = self.data.sparse.to_dense() if self.is_sparse else self.data
+            return Klass(a.values + other, index=self.index, columns=self.columns)
         else:
             raise TypeError(f"Cannot add {type(self)} and {type(other)}")
 
@@ -264,7 +285,13 @@ class Matrix(MultiBlockMixin, Structure2D):
         """
         if not np.isscalar(factor):
             raise TypeError("Factor must be a scalar (float or int).")
-        return type(self)(self.values * factor, index=self.index, columns=self.columns)
+        # Multiplication preserves sparsity structure (scaling zeros keeps them zero)
+        result = type(self)(
+            self.values * factor, index=self.index, columns=self.columns
+        )
+        if self.is_sparse:
+            result._sparsify()
+        return result
 
     def to_xarray(self):
         # TODO what is the best way to represent a 2D matrix in xarray?

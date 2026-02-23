@@ -165,7 +165,13 @@ class InverseProblem(Pickleable):
         logger.info(f"Solving using {estimator_cls.__name__}...")
         z = self.obs.values
         x_0 = self.prior.values
-        H = self.forward_operator.values
+        # Preserve sparse structure in H — sparse matrix-vector and matrix-matrix
+        # operations in the estimator are significantly faster than dense equivalents
+        # for large, sparse Jacobians (e.g. STILT).
+        if self.forward_operator.is_sparse:
+            H = self.forward_operator.data.sparse.to_coo().tocsr()
+        else:
+            H = self.forward_operator.values
         S_0 = self.prior_error.values
         S_z = self.modeldata_mismatch.values
         c = getattr(self.constant, "values", None)

@@ -6,6 +6,7 @@ from functools import reduce
 import numpy as np
 import pandas as pd
 from joblib import Parallel, delayed
+from scipy.sparse import csr_matrix
 
 from fips.matrix import Matrix
 from fips.vector import Vector
@@ -112,17 +113,28 @@ class CovarianceBuilder:
     def __init__(self, components: list[ErrorComponent]):
         self.components = components
 
-    def build(self, index: pd.MultiIndex) -> pd.DataFrame:
-        """Builds and sums all error components into a single DataFrame."""
+    def build(self, index: pd.MultiIndex, sparse: bool = False) -> pd.DataFrame:
+        """Builds and sums all error components into a single DataFrame.
+
+        Parameters
+        ----------
+        index : pd.MultiIndex
+            The state/observation index to build the covariance over.
+        sparse : bool, default False
+            If True, return a pandas sparse DataFrame.  Apply threshold zeroing
+            in each ErrorComponent.build() before using this option.
+        """
         if not self.components:
             raise ValueError("No components provided to build.")
 
-        # Build the first component to get the index and shape, then add the rest
-        # Since we assume all components are aligned to the same index,
-        # we can just build them, sum their numpy arrays, and then re-wrap in a DataFrame at the end.
-        S = self.components[0].build(index).to_numpy()
-        for component in self.components[1:]:
-            S = np.add(S, component.build(index).to_numpy())
+        S = np.add.reduce(
+            [c.build(index).to_numpy(dtype=float) for c in self.components]
+        )
+
+        if sparse:
+            return pd.DataFrame.sparse.from_spmatrix(
+                csr_matrix(S), index=index, columns=index
+            )
         return pd.DataFrame(S, index=index, columns=index)
 
     def __add__(self, other):
@@ -156,7 +168,7 @@ class BlockDecayError(ErrorComponent):
         super().__init__(name, variances)
         self.groupers = groupers
         self.corr_func = corr_func
-    
+
     def _compute_block(self, group: pd.DataFrame) -> tuple[np.ndarray, np.ndarray]:
         """Helper function to execute safely in a joblib worker."""
         idx = group.index.to_numpy()
