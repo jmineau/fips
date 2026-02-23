@@ -9,7 +9,7 @@ from abc import ABC, abstractmethod
 from functools import cached_property
 
 import numpy as np
-from numpy.linalg import inv as invert
+from scipy.linalg import solve
 
 logger = logging.getLogger(__name__)
 
@@ -316,7 +316,13 @@ class Estimator(ABC):
             Kalman gain matrix.
         """
         logger.debug("Calculating Kalman Gain Matrix...")
-        return self._HS_0.T @ invert(self._HS_0H + self.S_z)
+        # We want K = (H S_0)^T (H S_0 H^T + S_z)^-1
+        # Let A = (H S_0 H^T + S_z) and B = (H S_0).
+        # Since A is symmetric, solve(A, B) computes A^-1 B.
+        # So K = (A^-1 B)^T = solve(A, B).T
+        A = self._HS_0H + self.S_z
+        B = self._HS_0
+        return solve(A, B, assume_a="pos").T
 
     @cached_property
     def A(self):
@@ -358,20 +364,6 @@ class Estimator(ABC):
         return self._HS_0 @ self._H_T
 
     @cached_property
-    def _S_0_inv(self):
-        """
-        Inverse of prior error covariance matrix
-        """
-        return invert(self.S_0)
-
-    @cached_property
-    def _S_z_inv(self):
-        """
-        Inverse of model-data mismatch covariance matrix
-        """
-        return invert(self.S_z)
-
-    @cached_property
     def DOFS(self) -> float:
         """
         Degrees Of Freedom for Signal (DOFS).
@@ -407,8 +399,22 @@ class Estimator(ABC):
         data_residual = self.residual(self.x_hat)
         model_residual = self.x_hat - self.x_0
 
-        scaled_data_misfit = data_residual.T @ self._S_z_inv @ data_residual
-        scaled_model_misfit = model_residual.T @ self._S_0_inv @ model_residual
+        # The Chi-square involves Mahalanobis distance terms: r^T * S^-1 * r
+        # Explicitly inverting the S_z and S_0 matrices just to multiply a vector
+        # is slow and memory-intensive.
+        #
+        # Instead, we solve the system: S * y = r  -->  y = S^-1 * r
+        # Then we compute: r^T @ y
+
+        # 1. Scaled Data Misfit: data_residual^T @ (S_z^-1 @ data_residual)
+        scaled_data_misfit = data_residual.T @ solve(
+            self.S_z, data_residual, assume_a="pos"
+        )
+
+        # 2. Scaled Model Misfit: model_residual^T @ (S_0^-1 @ model_residual)
+        scaled_model_misfit = model_residual.T @ solve(
+            self.S_0, model_residual, assume_a="pos"
+        )
 
         return float((scaled_data_misfit + scaled_model_misfit) / self.n_z)
 
@@ -528,8 +534,13 @@ class BayesianSolver(Estimator):
         logger.debug("Performing cost calculation...")
         diff_model = x - self.x_0
         diff_data = self.residual(x)
-        cost_model = diff_model.T @ self._S_0_inv @ diff_model
-        cost_data = diff_data.T @ self._S_z_inv @ diff_data
+
+        # Like the Chi-square, the cost function relies on r^T * S^-1 * r.
+        # We replace inv(S) @ r with solve(S, r) to avoid calculating the full inverse.
+
+        cost_model = diff_model.T @ solve(self.S_0, diff_model, assume_a="pos")
+        cost_data = diff_data.T @ solve(self.S_z, diff_data, assume_a="pos")
+
         return 0.5 * (cost_model + cost_data)
 
     @cached_property
@@ -553,8 +564,13 @@ class BayesianSolver(Estimator):
                 = S_0 - (H S_0)^T(H S_0 H^T + S_z)^{-1}(H S_0)
         """
         logger.debug("Calculating Posterior Error Covariance Matrix...")
-        # Both methods return the same result
-        # return invert(self.H_T @ self.S_z_inv @ self.H + self.S_0_inv)
-        return (
-            self.S_0 - self._HS_0.T @ invert(self._HS_0H + self.S_z) @ self._HS_0
-        )  # this one only has one invert call
+        # Mathematically, we want to subtract: B^T * A^-1 * B
+        # where A = (H S_0 H^T + S_z) and B = (H S_0)
+        #
+        # Using scipy.linalg.solve(A, B), we compute the (A^-1 * B) term without
+        # ever building the explicit inverse matrix.
+        # The equation simplifies to: S_0 - B^T @ solve(A, B)
+        A = self._HS_0H + self.S_z
+        B = self._HS_0
+
+        return self.S_0 - B.T @ solve(A, B, assume_a="pos")
