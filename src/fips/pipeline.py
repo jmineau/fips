@@ -63,11 +63,11 @@ class InversionPipeline(ABC):
         self,
         obs: Vector,
         forward_operator: ForwardOperator,
-        mdm: CovarianceMatrix,
+        modeldata_mistmatch: CovarianceMatrix,
         constant: Vector | None,
     ) -> tuple[Vector, ForwardOperator, CovarianceMatrix, Vector | None]:
         """Optional hook to aggregate the observation space (e.g. hourly → daily)."""
-        return obs, forward_operator, mdm, constant
+        return obs, forward_operator, modeldata_mistmatch, constant
 
     def run(self, **kwargs) -> InverseProblem:
         """Executes the standard inversion workflow."""
@@ -90,7 +90,10 @@ class InversionPipeline(ABC):
 
         # Optional obs-space aggregation (e.g. hourly → daily)
         obs, forward_operator, mdm, constant = self.aggregate_obs_space(
-            obs=obs, forward_operator=forward_operator, mdm=mdm, constant=constant
+            obs=obs,
+            forward_operator=forward_operator,
+            modeldata_mistmatch=mdm,
+            constant=constant,
         )
 
         print("Initializing solver...")
