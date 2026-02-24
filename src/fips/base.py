@@ -473,6 +473,12 @@ class MultiBlockMixin(ABC):
 
     data: pd.DataFrame | pd.Series
 
+    @property
+    @abstractmethod
+    def blocks(self):
+        """Accessor for retrieving typed block instances (Block or MatrixBlock) by name."""
+        ...
+
     def _validate(self):
         super()._validate()
 

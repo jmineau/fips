@@ -93,6 +93,16 @@ class Block(SingleBlockMixin, Structure1D):
         return self.to_series().to_xarray()
 
 
+class _BlockAccessor:
+    """Accessor for retrieving Block instances from a Vector."""
+
+    def __init__(self, vector: "Vector"):
+        self._vector = vector
+
+    def __getitem__(self, block_name: str) -> Block:
+        return Block(self._vector[block_name], name=block_name)
+
+
 class Vector(MultiBlockMixin, Structure1D):
     """State or observation vector composed of one or more Block objects.
 
@@ -194,6 +204,11 @@ class Vector(MultiBlockMixin, Structure1D):
 
     def __getitem__(self, block) -> pd.Series:
         return self.xs(block, level="block")
+
+    @property
+    def blocks(self) -> _BlockAccessor:
+        """Accessor for retrieving Block instances from the Vector."""
+        return _BlockAccessor(self)
 
     def to_xarray(self) -> xr.DataArray | xr.Dataset:
         """Convert the Vector to an xarray DataArray or Dataset."""

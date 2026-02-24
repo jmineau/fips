@@ -114,6 +114,19 @@ class MatrixBlock(SingleBlockMixin, Structure2D):
         self.col_block = state["col_block"]
 
 
+class _MatrixBlockAccessor:
+    """Accessor for retrieving MatrixBlock instances from a Matrix."""
+
+    def __init__(self, matrix: "Matrix"):
+        self._matrix = matrix
+
+    def __getitem__(self, key: tuple[str, str]) -> MatrixBlock:
+        row_block, col_block = key
+        df = self._matrix.xs(row_block, level="block", axis=0)
+        df = df.xs(col_block, level="block", axis=1)
+        return MatrixBlock(df, row_block=row_block, col_block=col_block)
+
+
 class Matrix(MultiBlockMixin, Structure2D):
     """
     Base class for all matrix-like objects in the inversion framework.
@@ -230,9 +243,16 @@ class Matrix(MultiBlockMixin, Structure2D):
     def __repr__(self):
         return f"<{self.__class__.__name__} : shape={self.shape}>"
 
-    def __getitem__(self, block) -> pd.DataFrame:
-        """Get the submatrix corresponding to the specified block (cross-block)."""
-        return self.data.loc[block]
+    def __getitem__(self, block: tuple[str, str]) -> pd.DataFrame:
+        """Get the submatrix DataFrame for the given (row_block, col_block) tuple."""
+        row_block, col_block = block
+        df = self.xs(row_block, level="block", axis=0)
+        return df.xs(col_block, level="block", axis=1)
+
+    @property
+    def blocks(self) -> _MatrixBlockAccessor:
+        """Accessor for retrieving MatrixBlock instances from the Matrix."""
+        return _MatrixBlockAccessor(self)
 
     def __add__(self, other: Any) -> Self:
         """
