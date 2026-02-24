@@ -106,6 +106,10 @@ class InverseProblem(Pickleable):
             modeldata_mismatch, row_idx=obs.index, col_idx=obs.index
         )
         prior_error = reindex(prior_error, row_idx=prior.index, col_idx=prior.index)
+        if constant is not None:
+            constant = constant.reindex(
+                index=obs.index, fill_value=0.0, verify_overlap=True
+            )
 
         self.obs = obs
         self.prior = prior
