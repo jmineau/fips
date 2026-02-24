@@ -5,7 +5,6 @@ from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Any, TypeAlias
 
-import numpy as np
 import numpy.typing as npt
 import pandas as pd
 from typing_extensions import Self
@@ -111,8 +110,8 @@ class Structure(Pickleable, ABC):
                 f"All levels in the columns of {self.__class__.__name__} must be named."
             )
 
-        # Check for NaNs
-        if np.any(self.data.isna().values):
+        # Check for NaN values
+        if self.data.isnull().any(axis=None):
             raise ValueError("Data contains NaN values.")
 
     def _sanitize(self):
@@ -281,7 +280,7 @@ class Structure1D(Structure):
         super()._sanitize()
 
         # 1D Structures must be all numeric, non nan
-        self.data = self.data.astype(float)
+        self.data = pd.to_numeric(self.data, errors="raise")
 
     @property
     def name(self) -> str | None:

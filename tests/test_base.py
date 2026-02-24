@@ -168,7 +168,9 @@ def test_single_block_mixin():
 
 
 class DummyMultiBlock(MultiBlockMixin, DummyStructure):
-    pass
+    @property
+    def blocks(self):
+        return None
 
 
 def test_multi_block_mixin():

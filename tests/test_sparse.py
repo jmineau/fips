@@ -65,7 +65,7 @@ class TestSparseMatrix:
         block = _make_block(data, "s", "s", idx, idx)
         M_dense = Matrix([block])
         M_sparse = Matrix([block], sparse=True)
-        assert np.allclose(M_dense.values, M_sparse.values)
+        assert np.allclose(M_dense.values, M_sparse.to_numpy())
 
     def test_to_sparse_roundtrip(self):
         idx = _state_idx()
@@ -128,8 +128,8 @@ class TestSparseMatrix:
         Ms = Matrix([block], sparse=True)
         scaled = Ms.scale(2.0)
         assert scaled.is_sparse
-        assert scaled.values[0, 0] == pytest.approx(2.0)
-        assert scaled.values[1, 1] == pytest.approx(0.0)
+        assert scaled.to_numpy()[0, 0] == pytest.approx(2.0)
+        assert scaled.to_numpy()[1, 1] == pytest.approx(0.0)
 
     def test_sparse_preserved_through_reindex(self):
         """Sparsity should survive a reindex call."""

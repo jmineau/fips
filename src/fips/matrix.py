@@ -305,12 +305,9 @@ class Matrix(MultiBlockMixin, Structure2D):
         """
         if not np.isscalar(factor):
             raise TypeError("Factor must be a scalar (float or int).")
-        # Multiplication preserves sparsity structure (scaling zeros keeps them zero)
-        result = type(self)(
-            self.values * factor, index=self.index, columns=self.columns
-        )
-        if self.is_sparse:
-            result._sparsify()
+        # Multiply via pandas so SparseDtype is preserved naturally
+        scaled_data = self.data * factor
+        result = type(self)(scaled_data, index=self.index, columns=self.columns)
         return result
 
     def to_xarray(self):
