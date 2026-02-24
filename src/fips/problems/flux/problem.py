@@ -75,7 +75,7 @@ class FluxProblem(InverseProblem):
     @property
     def background(self) -> pd.Series | None:
         """Background concentration."""
-        return None if self.constant is None else self.constant["background"]
+        return None if self.constant is None else self.constant["concentration"]
 
     @property
     def posterior_fluxes(self) -> pd.Series:

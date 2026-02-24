@@ -49,7 +49,7 @@ flux = [
     "cartopy",
     "h5py",
     "matplotlib",
-    "pystilt",
+    "pystilt @ git+ssh://git@github.com/jmineau/PYSTILT",
 ]
 
 [project.urls]

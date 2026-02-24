@@ -20,9 +20,18 @@ class FluxInversionPipeline(InversionPipeline, ABC):
         )
 
     def filter_state_space(self, obs: Vector, prior: Vector) -> tuple[Vector, Vector]:
-        min_obs_per_interval = self.config.get("min_obs_per_interval", 1)
-        min_sims_per_interval = self.config.get("min_sims_per_interval", 1)
-        freq = self.config.get("freq", "infer")
+        try:
+            min_obs_per_interval = self.config.min_obs_per_interval
+        except AttributeError:
+            min_obs_per_interval = 1
+        try:
+            min_sims_per_interval = self.config.min_sims_per_interval
+        except AttributeError:
+            min_sims_per_interval = 1
+        try:
+            freq = self.config.flux_freq
+        except AttributeError:
+            freq = "infer"
 
         # Handle filtering by time intervals
         if min_obs_per_interval > 1 or min_sims_per_interval > 1:

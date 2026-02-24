@@ -273,6 +273,12 @@ class Structure1D(Structure):
         self._validate()
         self._sanitize()
 
+    def _sanitize(self):
+        super()._sanitize()
+
+        # 1D Structures must be all numeric, non nan
+        self.data = self.data.astype(float)
+
     @property
     def name(self) -> str | None:
         return str(self.data.name)

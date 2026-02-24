@@ -79,9 +79,10 @@ def time_diff_matrix(times, absolute: bool = True) -> np.ndarray:
     np.ndarray
         The matrix of time differences.
     """
-    times = pd.DatetimeIndex(
-        times
-    )  # wrap in pandas DatetimeIndex as np.subtract.outer doesn't like pd.Series
+    # Normalize inputs (Series, DataFrame, ndarray) to a flat 1D sequence of datetimes.
+    times = np.asarray(times).reshape(-1)
+    # wrap in pandas DatetimeIndex as np.subtract.outer doesn't like pd.Series
+    times = pd.DatetimeIndex(times)
     diffs = np.subtract.outer(times, times)
     if absolute:
         diffs = np.abs(diffs)

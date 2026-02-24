@@ -76,7 +76,7 @@ class JacobianBuilder:
         num_processes: int = 1,
         location_mapper: dict[str, str] | None = None,
         timeout: float | int | None = None,
-        threshold: float | None = 1e-10,
+        threshold: float | None = 1e-15,  # numpy.float64 precision is 1e-15
         sparse: bool = False,
     ) -> MatrixBlock | dict[str, MatrixBlock]:
         """
@@ -107,7 +107,7 @@ class JacobianBuilder:
         threshold : float | None, optional
             Values whose absolute value is strictly less than this threshold are set to
             zero before the MatrixBlock is assembled.  This avoids storing floating-point
-            noise as explicit non-zero entries.  Default is 1e-10.  Pass None to disable.
+            noise as explicit non-zero entries.  Default is 1e-15.  Pass None to disable.
         sparse : bool, default False
             If True, store the assembled MatrixBlock in pandas sparse format.
             Pairs naturally with ``threshold`` — threshold zeroing is applied first
