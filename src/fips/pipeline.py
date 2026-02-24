@@ -64,11 +64,11 @@ class InversionPipeline(ABC):
         self,
         obs: Vector,
         forward_operator: ForwardOperator,
-        modeldata_mistmatch: CovarianceMatrix,
+        modeldata_mismatch: CovarianceMatrix,
         constant: Vector | None,
     ) -> tuple[Vector, ForwardOperator, CovarianceMatrix, Vector | None]:
         """Optional hook to aggregate the observation space (e.g. hourly → daily)."""
-        return obs, forward_operator, modeldata_mistmatch, constant
+        return obs, forward_operator, modeldata_mismatch, constant
 
     def get_inputs(self) -> dict[str, Any]:
         step_start = time.perf_counter()
@@ -124,7 +124,7 @@ class InversionPipeline(ABC):
         obs, forward_operator, mdm, constant = self.aggregate_obs_space(
             obs=obs,
             forward_operator=forward_operator,
-            modeldata_mistmatch=mdm,
+            modeldata_mismatch=mdm,
             constant=constant,
         )
         print(

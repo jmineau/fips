@@ -273,9 +273,11 @@ def test_pipeline_obs_aggregator_hook():
                 np.eye(len(obs)) * 2.0, index=obs.index, columns=obs.index
             )
 
-        def aggregate_obs_space(self, obs, forward_operator, mdm, constant):
+        def aggregate_obs_space(
+            self, obs, forward_operator, modeldata_mismatch, constant
+        ):
             agg = ObsAggregator(by=daily_groupby, func="mean")
-            return agg.apply(obs, forward_operator, mdm, constant)
+            return agg.apply(obs, forward_operator, modeldata_mismatch, constant)
 
     result = SimplePipeline(
         config=None, problem=InverseProblem, estimator="bayesian"
