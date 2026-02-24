@@ -131,7 +131,7 @@ class Structure(Pickleable, ABC):
 
     @property
     def values(self) -> npt.NDArray:
-        return self.data.to_numpy()
+        return self.to_numpy()
 
     def reindex(
         self,
@@ -250,6 +250,10 @@ class Structure(Pickleable, ABC):
             self.data, key=key, axis=axis, level=level, drop_level=drop_level
         )
 
+    def to_numpy(self) -> npt.NDArray:
+        """Get the underlying data as a NumPy array."""
+        return self.data.to_numpy()
+
 
 class Structure1D(Structure):
     """Base class for 1D structures (Block, Vector)."""
@@ -360,23 +364,51 @@ class Structure2D(Structure):
         if (sparse or _input_is_sparse) and not self.is_sparse:
             self._sparsify()
 
-    @property
-    def is_sparse(self) -> bool:
-        """True if the internal DataFrame uses pandas sparse storage."""
-        return any(isinstance(dt, pd.SparseDtype) for dt in self.data.dtypes)
-
     def _sparsify(self) -> None:
-        """Convert self.data to pandas sparse format in-place using scipy CSR.
+        """Convert self.data to pandas sparse format in-place.
 
         The caller is responsible for ensuring near-zero floating-point noise
         has already been zeroed out (via a threshold) before calling this.
         """
-        from scipy.sparse import csr_matrix
+        self.data = self.data.astype(pd.SparseDtype(float, fill_value=0.0))
 
-        csr = csr_matrix(self.data.to_numpy(dtype=float, na_value=0.0))
-        self.data = pd.DataFrame.sparse.from_spmatrix(
-            csr, index=self.data.index, columns=self.data.columns
-        )
+    @property
+    def columns(self) -> pd.Index:
+        return self.data.columns
+
+    @property
+    def values(self) -> npt.NDArray:
+        if self.is_sparse:
+            return self.data.sparse.to_coo().tocsr()
+        return self.data.to_numpy()
+
+    @property
+    def is_sparse(self) -> bool:
+        """True if the internal DataFrame uses pandas sparse storage."""
+        return all(isinstance(dt, pd.SparseDtype) for dt in self.data.dtypes)
+
+    def to_frame(self) -> pd.DataFrame:
+        """
+        Get the underlying DataFrame data.
+
+        Returns
+        -------
+        pd.DataFrame
+            The DataFrame representation of the matrix.
+        """
+        return self.data
+
+    def to_dense(self) -> "Structure2D":
+        """Return a copy with dense internal storage.
+
+        Returns
+        -------
+        Structure2D
+            New instance backed by a regular dense DataFrame.
+        """
+        if not self.is_sparse:
+            return self
+        return type(self)(self.data.sparse.to_dense(), name=self.name)
 
     def to_sparse(self, threshold: float | None = None) -> "Structure2D":
         """Return a copy with sparse internal storage.
@@ -401,33 +433,6 @@ class Structure2D(Structure):
             result.data = result.data.where(result.data.abs() >= threshold, other=0.0)
         result._sparsify()
         return result
-
-    def to_dense(self) -> "Structure2D":
-        """Return a copy with dense internal storage.
-
-        Returns
-        -------
-        Structure2D
-            New instance backed by a regular dense DataFrame.
-        """
-        if not self.is_sparse:
-            return self
-        return type(self)(self.data.sparse.to_dense(), name=self.name)
-
-    @property
-    def columns(self) -> pd.Index:
-        return self.data.columns
-
-    def to_frame(self) -> pd.DataFrame:
-        """
-        Get the underlying DataFrame data.
-
-        Returns
-        -------
-        pd.DataFrame
-            The DataFrame representation of the matrix.
-        """
-        return self.data
 
     def __getstate__(self):
         """Explicit pickle support: return state as dict."""

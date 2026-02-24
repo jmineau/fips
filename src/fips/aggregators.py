@@ -247,6 +247,9 @@ class ObsAggregator:
         Inputs may be bare pandas objects or fips wrapper types (``Vector``,
         ``ForwardOperator``, ``CovarianceMatrix``); return types mirror the
         inputs. See the class docstring for the mathematical transforms.
+
+        The aggregator ensures all inputs are properly aligned to obs.index
+        before building the weight matrix W.
         """
 
         # Unwrap fips types to the underlying pandas object for arithmetic.
@@ -257,6 +260,18 @@ class ObsAggregator:
         H_df = unwrap(forward_operator)
         S_z_df = unwrap(modeldata_mismatch)
 
+        # Ensure matrices are aligned to obs.index before aggregation
+        # This guarantees W has compatible dimensions for matrix operations
+        H_df = H_df.reindex(index=z_df.index, fill_value=0.0)
+        S_z_df = S_z_df.reindex(index=z_df.index, columns=z_df.index, fill_value=0.0)
+        if constant is not None and not np.isscalar(constant):
+            c_df = unwrap(constant)
+            c_df = c_df.reindex(index=z_df.index, fill_value=0.0)
+        else:
+            c_df = None
+        if any(len(x) == 0 for x in [z_df, H_df, S_z_df]):
+            raise ValueError("Input data contains empty dimensions, cannot aggregate.")
+
         W, agg_idx = self._build_operator(z_df.index)
 
         # Obs vector aggregation
@@ -265,7 +280,7 @@ class ObsAggregator:
 
         # Forward operator aggregation
         # H_agg = W @ H  (preserve SparseDtype if present)
-        if any(isinstance(dt, pd.SparseDtype) for dt in H_df.dtypes):
+        if all(isinstance(dt, pd.SparseDtype) for dt in H_df.dtypes):
             H_agg_vals = W @ H_df.sparse.to_coo().tocsr()
             H_agg = pd.DataFrame.sparse.from_spmatrix(
                 H_agg_vals, index=agg_idx, columns=H_df.columns
