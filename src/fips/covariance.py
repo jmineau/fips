@@ -113,7 +113,9 @@ class CovarianceBuilder:
     def __init__(self, components: list[ErrorComponent]):
         self.components = components
 
-    def build(self, index: pd.MultiIndex, sparse: bool = False) -> pd.DataFrame:
+    def build(
+        self, index: pd.MultiIndex, sparse: bool = False, **kwargs
+    ) -> pd.DataFrame:
         """Builds and sums all error components into a single DataFrame.
 
         Parameters
@@ -128,7 +130,7 @@ class CovarianceBuilder:
             raise ValueError("No components provided to build.")
 
         S = np.add.reduce(
-            [c.build(index).to_numpy(dtype=float) for c in self.components]
+            [c.build(index, **kwargs).to_numpy(dtype=float) for c in self.components]
         )
 
         if sparse:
@@ -151,7 +153,7 @@ class CovarianceBuilder:
 
 
 class DiagonalError(ErrorComponent):
-    def build(self, index: pd.MultiIndex) -> pd.DataFrame:
+    def build(self, index: pd.MultiIndex, **kwargs) -> pd.DataFrame:
         variances = self._align_variances(index)
         cov_matrix = np.diag(variances)
         return pd.DataFrame(cov_matrix, index=index, columns=index)
