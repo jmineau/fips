@@ -47,6 +47,17 @@ class EstimatorRegistry(dict):
 ESTIMATOR_REGISTRY: dict[str, type["Estimator"]] = EstimatorRegistry()
 
 
+def available_estimators() -> list[str]:
+    """Return the names of all registered estimators.
+
+    Returns
+    -------
+    list of str
+        Names that can be passed to :meth:`~fips.InverseProblem.solve`.
+    """
+    return list(ESTIMATOR_REGISTRY.keys())
+
+
 class Estimator(ABC):
     """
     Base inversion estimator class.
@@ -536,6 +547,14 @@ class BayesianSolver(Estimator):
         """
         super().__init__(z=z, x_0=x_0, H=H, S_0=S_0, S_z=S_z, c=c)
         self.rf = rf  # TOOD implement usage of regularization factor
+
+    def __repr__(self) -> str:
+        solved = "x_hat" in self.__dict__
+        return (
+            f"BayesianSolver("
+            f"n_x={self.n_x}, n_z={self.n_z}, "
+            f"rf={self.rf}, solved={solved})"
+        )
 
     def cost(self, x):
         """

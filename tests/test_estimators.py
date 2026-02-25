@@ -435,3 +435,70 @@ class TestEstimatorStatistics:
         rmse2 = estimator.RMSE
 
         assert rmse1 == rmse2
+
+
+class TestLeverage:
+    """Tests for Estimator.leverage() method."""
+
+    def test_leverage_callable(self):
+        """leverage is a callable method."""
+        z = np.array([1.0, 2.0, 3.0])
+        x_0 = np.array([1.0, 2.0])
+        H = np.array([[1.0, 0.5], [0.5, 1.0], [1.0, 1.0]])
+        S_0 = np.eye(2)
+        S_z = np.eye(3)
+        estimator = ConcreteEstimator(z, x_0, H, S_0, S_z)
+        assert callable(estimator.leverage)
+
+
+class TestAvailableEstimators:
+    """Tests for available_estimators() function."""
+
+    def test_returns_list(self):
+        from fips.estimators import available_estimators
+
+        result = available_estimators()
+        assert isinstance(result, list)
+
+    def test_contains_bayesian(self):
+        from fips.estimators import available_estimators
+
+        assert "bayesian" in available_estimators()
+
+    def test_exported_from_fips(self):
+        import fips
+
+        assert hasattr(fips, "available_estimators")
+        assert callable(fips.available_estimators)
+
+
+class TestBayesianSolverRepr:
+    """Tests for BayesianSolver.__repr__."""
+
+    def test_repr_before_solve(self):
+        from fips.estimators import BayesianSolver
+
+        z = np.array([1.0, 2.0, 3.0])
+        x_0 = np.array([1.0, 2.0])
+        H = np.array([[1.0, 0.5], [0.5, 1.0], [1.0, 1.0]])
+        S_0 = np.eye(2)
+        S_z = np.eye(3)
+        solver = BayesianSolver(z, x_0, H, S_0, S_z)
+        r = repr(solver)
+        assert "BayesianSolver" in r
+        assert "n_x=2" in r
+        assert "n_z=3" in r
+        assert "solved=False" in r
+
+    def test_repr_after_solve(self):
+        from fips.estimators import BayesianSolver
+
+        z = np.array([1.0, 2.0, 3.0])
+        x_0 = np.array([1.0, 2.0])
+        H = np.array([[1.0, 0.5], [0.5, 1.0], [1.0, 1.0]])
+        S_0 = np.eye(2)
+        S_z = np.eye(3)
+        solver = BayesianSolver(z, x_0, H, S_0, S_z)
+        _ = solver.x_hat  # trigger cached_property
+        r = repr(solver)
+        assert "solved=True" in r

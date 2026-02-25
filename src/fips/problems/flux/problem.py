@@ -16,6 +16,7 @@ of each observation to fluxes at different locations and times.
 import logging
 
 import pandas as pd
+from typing_extensions import Self
 
 from fips.estimators import Estimator
 from fips.problem import InverseProblem
@@ -37,8 +38,16 @@ class FluxProblem(InverseProblem):
     Supports multi-block state composition (e.g., fluxes + bias corrections).
     """
 
-    def solve(self, estimator: str | type[Estimator] = "bayesian", **kwargs):
+    def solve(self, estimator: str | type[Estimator] = "bayesian", **kwargs) -> Self:
         return super().solve(estimator=estimator, **kwargs)
+
+    def __repr__(self) -> str:
+        solved = self._estimator is not None
+        return (
+            f"FluxProblem("
+            f"n_obs={self.n_obs}, n_flux={len(self.prior_fluxes)}, "
+            f"n_state={self.n_state}, solved={solved})"
+        )
 
     @property
     def concentrations(self) -> pd.Series:

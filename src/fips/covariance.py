@@ -151,12 +151,19 @@ class CovarianceBuilder:
             return CovarianceBuilder([other] + self.components)
         raise TypeError(f"Cannot add {type(other)} to CovarianceBuilder")
 
+    def __repr__(self) -> str:
+        names = [c.name for c in self.components]
+        return f"CovarianceBuilder(n_components={len(self.components)}, components={names})"
+
 
 class DiagonalError(ErrorComponent):
     def build(self, index: pd.MultiIndex, **kwargs) -> pd.DataFrame:
         variances = self._align_variances(index)
         cov_matrix = np.diag(variances)
         return pd.DataFrame(cov_matrix, index=index, columns=index)
+
+    def __repr__(self) -> str:
+        return f"DiagonalError(name='{self.name}')"
 
 
 class BlockDecayError(ErrorComponent):
@@ -196,6 +203,9 @@ class BlockDecayError(ErrorComponent):
         cov_matrix = std_dev[:, None] * corr_matrix * std_dev[None, :]
 
         return pd.DataFrame(cov_matrix, index=index, columns=index)
+
+    def __repr__(self) -> str:
+        return f"BlockDecayError(name='{self.name}', groupers={self.groupers})"
 
 
 class KroneckerError(ErrorComponent):
@@ -250,3 +260,9 @@ class KroneckerError(ErrorComponent):
         cov_matrix = std_dev[:, None] * corr_matrix * std_dev[None, :]
 
         return pd.DataFrame(cov_matrix, index=index, columns=index)
+
+    def __repr__(self) -> str:
+        return (
+            f"KroneckerError(name='{self.name}', "
+            f"n_marginals={len(self.marginal_kernels)})"
+        )

@@ -41,6 +41,10 @@ html_theme_options = {
     "github_url": "https://github.com/jmineau/fips",
     "show_toc_level": 2,
     "navbar_align": "left",
+    "logo": {
+        "image_light": "_static/logo.png",
+        "image_dark": "_static/logo_dark.png",
+    },
 }
 
 # -- Extension configuration -------------------------------------------------

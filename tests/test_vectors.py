@@ -1,5 +1,6 @@
 """Test suite for fips vector types."""
 
+import numpy as np
 import pandas as pd
 import pytest
 
@@ -241,3 +242,40 @@ class TestVectorCrossSection:
 
         assert hasattr(vector, "xs")
         assert callable(vector.xs)
+
+
+class TestToXarray:
+    """Tests for Block.to_xarray() and Vector.to_xarray()."""
+
+    def test_block_to_xarray_returns_dataarray(self):
+        import xarray as xr
+
+        idx = pd.Index(["a", "b", "c"], name="loc")
+        block = Block(pd.Series([1.0, 2.0, 3.0], index=idx, name="flux"))
+        result = block.to_xarray()
+        assert isinstance(result, xr.DataArray)
+
+    def test_block_to_xarray_preserves_values(self):
+        idx = pd.Index([10, 20, 30], name="t")
+        block = Block(pd.Series([4.0, 5.0, 6.0], index=idx, name="obs"))
+        result = block.to_xarray()
+        np.testing.assert_allclose(result.values, [4.0, 5.0, 6.0])
+
+    def test_block_to_xarray_multiindex(self):
+        import xarray as xr
+
+        idx = pd.MultiIndex.from_product([["X", "Y"], [1, 2]], names=["loc", "t"])
+        block = Block(pd.Series([1.0, 2.0, 3.0, 4.0], index=idx, name="flux"))
+        result = block.to_xarray()
+        assert isinstance(result, xr.DataArray)
+        assert result.shape == (2, 2)
+
+    def test_vector_to_xarray_returns_dataset(self):
+        import xarray as xr
+
+        idx = pd.Index(["a", "b"], name="loc")
+        b1 = Block(pd.Series([1.0, 2.0], index=idx, name="flux"))
+        b2 = Block(pd.Series([3.0, 4.0], index=idx, name="concentration"))
+        vector = Vector([b1, b2], name="state")
+        result = vector.to_xarray()
+        assert isinstance(result, (xr.DataArray, xr.Dataset))

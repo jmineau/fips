@@ -143,7 +143,7 @@ What's Next
 -----------
 
 - **Domain-specific problems** — see :ref:`flux-inversion` in the User Guide for
-  the ready-made :class:`~fips.problems.flux.FluxInversion` subclass and its
+  the ready-made :class:`~fips.problems.flux.FluxProblem` subclass and its
   :class:`~fips.problems.flux.pipeline.FluxInversionPipeline`.
 - **Subclassing** — learn how to build your own :class:`~fips.InverseProblem`
   and :class:`~fips.pipeline.InversionPipeline` subclasses in :doc:`usage`.

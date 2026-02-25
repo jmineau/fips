@@ -234,6 +234,13 @@ class InverseProblem(Pickleable):
         self.constant = state["constant"]
         self._estimator = state.get("_estimator", None)
 
+    def __repr__(self) -> str:
+        solved = self._estimator is not None
+        return (
+            f"{self.__class__.__name__}("
+            f"n_obs={self.n_obs}, n_state={self.n_state}, solved={solved})"
+        )
+
     @property
     def posterior(self) -> Vector:
         """Posterior state estimate."""

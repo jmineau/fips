@@ -481,3 +481,75 @@ class TestVarianceAlignmentInComponents:
 
         with pytest.raises(ValueError, match="All levels.*must be named"):
             component._align_variances(idx)
+
+
+class TestCovarianceBuilderArithmetic:
+    """Tests for CovarianceBuilder arithmetic operators."""
+
+    def _make_idx(self):
+        return pd.MultiIndex.from_tuples(
+            [("b", "a"), ("b", "b"), ("b", "c")], names=["block", "x"]
+        )
+
+    def test_add_two_components_returns_builder(self):
+        c1 = DiagonalError("c1", 1.0)
+        c2 = DiagonalError("c2", 2.0)
+        result = c1 + c2
+        assert isinstance(result, CovarianceBuilder)
+        assert len(result.components) == 2
+
+    def test_builder_add_component(self):
+        c1 = DiagonalError("c1", 1.0)
+        c2 = DiagonalError("c2", 2.0)
+        c3 = DiagonalError("c3", 3.0)
+        builder = c1 + c2
+        result = builder + c3
+        assert isinstance(result, CovarianceBuilder)
+        assert len(result.components) == 3
+
+    def test_builder_radd_component(self):
+        c1 = DiagonalError("c1", 1.0)
+        c2 = DiagonalError("c2", 2.0)
+        c3 = DiagonalError("c3", 3.0)
+        builder = c2 + c3
+        result = c1 + builder  # c1.__add__(builder) → builder prepend
+        assert isinstance(result, CovarianceBuilder)
+        assert len(result.components) == 3
+
+    def test_builder_add_builder(self):
+        c1 = DiagonalError("c1", 1.0)
+        c2 = DiagonalError("c2", 2.0)
+        c3 = DiagonalError("c3", 3.0)
+        c4 = DiagonalError("c4", 4.0)
+        b1 = c1 + c2
+        b2 = c3 + c4
+        result = b1 + b2
+        assert isinstance(result, CovarianceBuilder)
+        assert len(result.components) == 4
+
+    def test_combined_builder_builds_correctly(self):
+        idx = self._make_idx()
+        c1 = DiagonalError("c1", 1.0)
+        c2 = DiagonalError("c2", 2.0)
+        builder = c1 + c2
+        mat = builder.build(idx)
+        assert mat.shape == (3, 3)
+        np.testing.assert_allclose(np.diag(mat.values), 3.0)
+
+
+class TestCovarianceRepr:
+    """Tests for __repr__ on covariance builder and error components."""
+
+    def test_diagonal_error_repr(self):
+        c = DiagonalError("sigma", 1.0)
+        assert repr(c) == "DiagonalError(name='sigma')"
+
+    def test_covariance_builder_repr(self):
+        c1 = DiagonalError("c1", 1.0)
+        c2 = DiagonalError("c2", 2.0)
+        builder = c1 + c2
+        r = repr(builder)
+        assert "CovarianceBuilder" in r
+        assert "n_components=2" in r
+        assert "c1" in r
+        assert "c2" in r

@@ -28,6 +28,9 @@ class FluxPlotter:
         """
         self.inversion = inversion
 
+    def __repr__(self) -> str:
+        return f"FluxPlotter(inversion={repr(self.inversion)})"
+
     def fluxes(
         self,
         time="mean",

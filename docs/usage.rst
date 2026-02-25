@@ -92,7 +92,7 @@ an existing operator:
 Domain-Specific Problem: Flux Inversion
 -----------------------------------------
 
-:class:`~fips.problems.flux.FluxInversion` is a ready-made subclass of
+:class:`~fips.problems.flux.FluxProblem` is a ready-made subclass of
 :class:`~fips.InverseProblem` for atmospheric flux estimation using STILT
 transport footprints.  It adds named accessors that speak the language of the
 application:
@@ -100,9 +100,9 @@ application:
 .. code-block:: python
 
    import pandas as pd
-   from fips.problems.flux import FluxInversion
+   from fips.problems.flux import FluxProblem
 
-   inversion = FluxInversion(
+   inversion = FluxProblem(
        obs=concentrations,        # pd.Series  — measured concentrations
        prior=prior_fluxes,        # pd.Series  — prior flux inventory
        forward_operator=jacobian, # pd.DataFrame — STILT Jacobian
@@ -128,7 +128,7 @@ Background subtraction is supported via the ``constant`` argument to
 
 .. code-block:: python
 
-   inversion = FluxInversion(
+   inversion = FluxProblem(
        ...
        constant=background_series,  # subtracted from obs before inversion
    )

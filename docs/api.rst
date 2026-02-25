@@ -92,7 +92,7 @@ Pipeline
 Flux Inversion
 --------------
 
-.. autoclass:: fips.problems.flux.FluxInversion
+.. autoclass:: fips.problems.flux.FluxProblem
    :members:
    :undoc-members:
    :special-members: __init__

@@ -9,13 +9,8 @@ flux inversion.
 
 import logging
 
-__version__ = "2025.10.0"
-__author__ = "James Mineau"
-__email__ = "jameskmineau@gmail.com"
-
-
 from .covariance import CovarianceMatrix
-from .estimators import Estimator
+from .estimators import Estimator, available_estimators
 from .matrix import Matrix, MatrixBlock
 from .operators import ForwardOperator, convolve
 from .problem import InverseProblem
@@ -29,6 +24,7 @@ __all__ = [
     "Matrix",
     "MatrixBlock",
     "Estimator",
+    "available_estimators",
     "ForwardOperator",
     "CovarianceMatrix",
     "InverseProblem",
