@@ -1,16 +1,13 @@
-fips
-====
-
 .. image:: _static/logo.png
    :class: only-light
    :align: center
-   :width: 400px
+   :width: 600px
    :alt: fips logo
 
 .. image:: _static/logo_dark.png
    :class: only-dark
    :align: center
-   :width: 400px
+   :width: 600px
    :alt: fips logo
 
 .. include:: ../README.md
