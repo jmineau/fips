@@ -1,22 +1,38 @@
+<div align=center>
 <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="/docs/_static/logo_dark.png">
-    <source media="(prefers-color-scheme: light)" srcset="/docs/_static/logo.png">
-    <img alt="fips logo" src="/docs/_static/logo.png">
+    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/jmineau/fips/main/docs/_static/logo_dark.png">
+    <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/jmineau/fips/main/docs/_static/logo.png">
+    <img alt="fips logo" src="https://raw.githubusercontent.com/jmineau/fips/main/docs/_static/logo.png">
 </picture>
-
-# Flexible Inverse Problem Solver (FIPS)
+</div>
 
 [![Tests](https://github.com/jmineau/fips/actions/workflows/tests.yml/badge.svg)](https://github.com/jmineau/fips/actions/workflows/tests.yml)
 [![Documentation](https://github.com/jmineau/fips/actions/workflows/docs.yml/badge.svg)](https://github.com/jmineau/fips/actions/workflows/docs.yml)
 [![Code Quality](https://github.com/jmineau/fips/actions/workflows/quality.yml/badge.svg)](https://github.com/jmineau/fips/actions/workflows/quality.yml)
 [![codecov](https://codecov.io/gh/jmineau/fips/branch/main/graph/badge.svg)](https://codecov.io/gh/jmineau/fips)
-[![PyPI version](https://badge.fury.io/py/fips.svg)](https://badge.fury.io/py/fips)
-[![Python Version](https://img.shields.io/pypi/pyversions/fips.svg)](https://pypi.org/project/fips/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 [![Pyright](https://img.shields.io/badge/pyright-checked-brightgreen.svg)](https://github.com/microsoft/pyright)
 
+## Bridging Physics and Data
+Inverse problems in geophysics and atmospheric science are incredibly complex, often involving massive state spaces, deeply heterogeneous observational networks, and explicit matrix-algebra requirements. While many general-purpose optimization tools exist, they often force researchers to strip away critical spatiotemporal metadata or translate pre-computed physical models into rigid, abstract array structures.
+
+**FIPS (Flexible Inverse Problem Solver)** is built from the ground up to solve linear, matrix-based inverse problems (like optimal estimation or 3D/4D-Var) without losing the context of your data. It provides the structural flexibility to handle messy, real-world realities seamlessly:
+
+- **Native N-Dimensional Alignment**: FIPS natively utilizes `pandas.MultiIndex` to smoothly align heterogeneous datasets across any dimension. Whether you are mixing temporal, spatial, spectral, or sensor-specific data, your coordinates are never dropped or misaligned.
+
+- **Modular Block Architecture**: Avoid wrangling monolithic arrays. Construct massive, multi-source state spaces and observation networks piece-by-piece using specialized `Block` and `MatrixBlock` objects.
+
+- **Speak Your Domain's Language**: Built explicitly around the standard `y = Hx + error` paradigm. Directly plug in your pre-computed forward operators ($H$), prior covariances ($S_x$), and model-data mismatches ($S_z$).
+
+- **Analytical Speed & Sparse Support**: FIPS is built for scale. By leveraging optimized sparse data structures and direct linear algebra rather than expensive sampling algorithms, it computes exact analytical Maximum A Posteriori (MAP) estimates for massive state spaces in seconds.
+
 ## Installation
+
+### From GitHub
+```bash
+pip install git+https://github.com/jmineau/fips
+```
 
 ### From Source
 
@@ -70,7 +86,6 @@ print(problem.estimator.reduced_chi2)  # reduced chi-squared statistic
 import numpy as np
 import pandas as pd
 from fips import Block, Vector, Matrix, MatrixBlock, CovarianceMatrix, InverseProblem
-from fips.covariance import
 
 # State: same gridded prior fluxes (from above)
 N_f = 12
@@ -133,11 +148,3 @@ Full documentation is available at [https://jmineau.github.io/fips/](https://jmi
 ## Contributing
 
 Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
-
-## License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
-
-## Author
-
-**James Mineau** - [jmineau](https://github.com/jmineau)
