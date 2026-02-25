@@ -178,6 +178,9 @@ class InverseProblem(Pickleable):
             z=z, x_0=x_0, H=H, S_0=S_0, S_z=S_z, c=c, **kwargs
         )
 
+        # Trigger computation of posterior
+        _ = self.posterior
+
         return self
 
     def _wrap(self, math_attr: str, friendly_name: str):
