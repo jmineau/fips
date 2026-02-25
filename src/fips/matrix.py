@@ -7,6 +7,7 @@ data into structured hierarchies with automatic index management and serializati
 
 import logging
 from collections.abc import Sequence
+from functools import reduce
 from typing import Any, TypeAlias
 
 import numpy as np
@@ -210,8 +211,10 @@ class Matrix(MultiBlockMixin, Structure2D):
             # Align all blocks to the same index structure
             aligned_dfs = outer_align_levels(dfs, axis="both")
 
-            # Concatenate aligned blocks
-            data = pd.concat(aligned_dfs).fillna(0.0)
+            # Combine aligned blocks
+            # combine_first performs an outer join, preserving all indices and filling missing values with NaN
+            data = reduce(lambda left, right: left.combine_first(right), aligned_dfs)
+            data = data.fillna(0.0)
 
         # Accept scalar - create matrix with repeated value
         elif np.isscalar(data):
