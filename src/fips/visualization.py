@@ -1,4 +1,5 @@
-"""Visualization and plotting utilities for inverse problem results.
+"""
+Visualization and plotting utilities for inverse problem results.
 
 This module provides functions for plotting error norms, comparing multiple series,
 and computing credible intervals for uncertainty visualization.
@@ -35,7 +36,31 @@ def plot_error_norm(
     norm: str = "l2",
     figsize: tuple[float, float] | None = None,
 ):
-    """Plot normed errors of prior and posterior against truth."""
+    """
+    Plot normed errors of prior and posterior against truth.
+
+    Parameters
+    ----------
+    prior : ArrayLike or Vector or Block
+        Prior estimates.
+    posterior : ArrayLike or Vector or Block
+        Posterior estimates.
+    truth : ArrayLike or Vector or Block
+        True values for comparison.
+    t : Iterable[float], optional
+        Time or x-axis values. If None, uses integer indices.
+    norm : {'l2', 'l1', 'linf'}, default 'l2'
+        Norm type to use for error calculation.
+    figsize : tuple[float, float], optional
+        Figure size (width, height) in inches.
+
+    Returns
+    -------
+    fig : matplotlib.figure.Figure
+        The figure object.
+    ax : matplotlib.axes.Axes
+        The axes object.
+    """
     plt = _require_matplotlib()
 
     # Safely extract raw values and force to 2D for consistent norm calculation
@@ -79,7 +104,33 @@ def plot_comparison(
     | None = None,
     kind: str | None = None,
 ):
-    """Compare multiple aligned series (e.g., prior, posterior, obs) with optional errors."""
+    """
+    Compare multiple aligned series with optional errors and truth values.
+
+    Plots multiple series (e.g., prior, posterior, observations) on the same axes
+    with optional error bars/bands and truth values for comparison.
+
+    Parameters
+    ----------
+    *series : pd.Series or Vector or Block
+        Variable number of series to compare.
+    x : str or int, optional
+        Name or level of the index to use for x-axis. Required if series have MultiIndex.
+    truth : pd.Series or Vector or Block, optional
+        True values to plot as reference.
+    errors : Sequence of pd.DataFrame or CovarianceMatrix or Matrix or pd.Series or None, optional
+        Error estimates for each series. Must match length of series.
+        If CovarianceMatrix or Matrix, extracts diagonal as standard deviations.
+    kind : {'line', 'bar'}, optional
+        Plot type. If None, auto-detects based on x-axis data type.
+
+    Returns
+    -------
+    fig : matplotlib.figure.Figure
+        The figure object.
+    ax : matplotlib.axes.Axes
+        The axes object.
+    """
     plt = _require_matplotlib()
 
     # Unpack data
@@ -177,6 +228,22 @@ def plot_comparison(
 def compute_credible_interval(
     samples: ArrayLike, q: tuple[float, float] = (0.05, 0.95)
 ) -> tuple[np.ndarray, np.ndarray]:
-    """Compute lower/upper quantiles along the first axis of samples."""
+    """
+    Compute lower and upper quantiles along the first axis of samples.
+
+    Parameters
+    ----------
+    samples : ArrayLike
+        Array of samples with shape (n_samples, ...). Quantiles computed along axis 0.
+    q : tuple[float, float], default (0.05, 0.95)
+        Lower and upper quantile values in [0, 1].
+
+    Returns
+    -------
+    lower : np.ndarray
+        Lower quantile values.
+    upper : np.ndarray
+        Upper quantile values.
+    """
     samples = np.asarray(samples)
     return np.quantile(samples, q[0], axis=0), np.quantile(samples, q[1], axis=0)

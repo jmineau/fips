@@ -1,4 +1,5 @@
-"""Inversion estimators for solving inverse problems.
+"""
+Inversion estimators for solving inverse problems.
 
 This module contains Bayesian and regularized estimators for state estimation
 in linear inverse problems, computing posterior distributions and diagnostics.
@@ -48,7 +49,8 @@ ESTIMATOR_REGISTRY: dict[str, type["Estimator"]] = EstimatorRegistry()
 
 
 def available_estimators() -> list[str]:
-    """Return the names of all registered estimators.
+    """
+    Return the names of all registered estimators.
 
     Returns
     -------
@@ -296,7 +298,7 @@ class Estimator(ABC):
 
     @cached_property
     def y_hat(self) -> np.ndarray:
-        """
+        r"""
         Posterior mean observation estimate.
 
         .. math::
@@ -312,7 +314,7 @@ class Estimator(ABC):
 
     @cached_property
     def y_0(self) -> np.ndarray:
-        """
+        r"""
         Prior mean data estimate.
 
         .. math::
@@ -367,22 +369,26 @@ class Estimator(ABC):
     @cached_property
     def _H_T(self):
         """
-        Transpose of the forward operator
+        Transpose of the forward operator.
         """
         return self.H.T
 
     @cached_property
     def _HS_0(self):
-        """
-        ... math::
+        r"""
+        Compute H S_0.
+
+        .. math::
             H S_0
         """
         return self.H @ self.S_0
 
     @cached_property
     def _HS_0H(self):
-        """
-        ... math::
+        r"""
+        Compute H S_0 H^T.
+
+        .. math::
             H S_0 H^T
         """
         return self._HS_0 @ self._H_T
@@ -404,8 +410,8 @@ class Estimator(ABC):
 
     @cached_property
     def reduced_chi2(self) -> float:
-        """
-        Reduced Chi-squared statistic. Tarantola (1987)
+        r"""
+        Reduced Chi-squared statistic. Tarantola (1987).
 
         .. math::
             \\chi^2 = \\frac{1}{n_z} ((z - H\\hat{x})^T S_z^{-1} (z - H\\hat{x}) + (\\hat{x} - x_0)^T S_0^{-1} (\\hat{x} - x_0))
@@ -444,7 +450,7 @@ class Estimator(ABC):
 
     @cached_property
     def R2(self) -> float:
-        """
+        r"""
         Coefficient of determination (R-squared).
 
         .. math::
@@ -460,11 +466,12 @@ class Estimator(ABC):
 
     @cached_property
     def RMSE(self) -> float:
-        """
+        r"""
         Root mean square error (RMSE).
 
         .. math::
             RMSE = \\sqrt{\\frac{(z - H\\hat{x})^2}{n_z}}
+
         Returns
         -------
         float
@@ -476,7 +483,7 @@ class Estimator(ABC):
 
     @cached_property
     def uncertainty_reduction(self) -> float:
-        """
+        r"""
         Uncertainty reduction metric.
 
         .. math::
@@ -492,7 +499,7 @@ class Estimator(ABC):
 
     @cached_property
     def U_red(self) -> np.ndarray:
-        """
+        r"""
         Uncertainty reduction vector.
 
         .. math::
@@ -510,7 +517,8 @@ class Estimator(ABC):
 @ESTIMATOR_REGISTRY.register("bayesian")
 class BayesianSolver(Estimator):
     """
-    Bayesian inversion estimator class
+    Bayesian inversion estimator class.
+
     This class implements a Bayesian inversion framework for solving inverse problems,
     also known as the batch method.
     """
@@ -526,7 +534,7 @@ class BayesianSolver(Estimator):
         rf: float = 1.0,
     ):
         """
-        Initialize inversion object
+        Initialize inversion object.
 
         Parameters
         ----------
@@ -549,6 +557,7 @@ class BayesianSolver(Estimator):
         self.rf = rf  # TOOD implement usage of regularization factor
 
     def __repr__(self) -> str:
+        """Return string representation."""
         solved = "x_hat" in self.__dict__
         return (
             f"BayesianSolver("
@@ -557,8 +566,8 @@ class BayesianSolver(Estimator):
         )
 
     def cost(self, x):
-        """
-        Cost function
+        r"""
+        Cost function.
 
         .. math::
             J(x) = \\frac{1}{2}(x - x_0)^T S_0^{-1}(x - x_0) + \\frac{1}{2}(z - Hx - c)^T S_z^{-1}(z - Hx - c)
@@ -577,8 +586,8 @@ class BayesianSolver(Estimator):
 
     @cached_property
     def x_hat(self):  # type: ignore[override]
-        """
-        Posterior Mean Model Estimate (solution)
+        r"""
+        Posterior Mean Model Estimate (solution).
 
         .. math::
             \\hat{x} = x_0 + K(z - Hx_0 - c)
@@ -588,8 +597,8 @@ class BayesianSolver(Estimator):
 
     @cached_property
     def S_hat(self):  # type: ignore[override]
-        """
-        Posterior Error Covariance Matrix
+        r"""
+        Posterior Error Covariance Matrix.
 
         .. math::
             \\hat{S} = (H^T S_z^{-1} H + S_0^{-1})^{-1}

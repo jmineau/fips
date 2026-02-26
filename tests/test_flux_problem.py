@@ -103,15 +103,19 @@ class TestFluxProblemConstruction:
     """Tests for FluxProblem initialization."""
 
     def test_creates_successfully(self, flux_problem):
+        """Test FluxProblem creation succeeds."""
         assert isinstance(flux_problem, FluxProblem)
 
     def test_n_state(self, flux_problem):
+        """Test n_state property returns correct count."""
         assert flux_problem.n_state == 4
 
     def test_n_obs(self, flux_problem):
+        """Test n_obs property returns correct count."""
         assert flux_problem.n_obs == 4
 
     def test_unsolved_by_default(self, flux_problem):
+        """Test that FluxProblem is unsolved by default."""
         assert flux_problem._estimator is None
 
 
@@ -124,15 +128,18 @@ class TestFluxProblemObsProperties:
     """Tests for FluxProblem observation-space accessors."""
 
     def test_concentrations_is_series(self, flux_problem):
+        """Test concentrations property returns a Series."""
         result = flux_problem.concentrations
         assert isinstance(result, pd.Series)
         assert len(result) == 4
 
     def test_concentrations_values(self, flux_problem):
+        """Test concentrations values are correct."""
         result = flux_problem.concentrations
         np.testing.assert_allclose(result.values, [400.0, 401.0, 402.0, 403.0])
 
     def test_enhancement_no_background(self, flux_problem):
+        """Test enhancement without background equals concentrations."""
         """Without a background, enhancement equals concentrations."""
         result = flux_problem.enhancement
         pd.testing.assert_series_equal(result, flux_problem.concentrations)
@@ -163,6 +170,7 @@ class TestFluxProblemObsProperties:
         np.testing.assert_allclose(result.to_numpy(), expected)
 
     def test_background_none_when_not_set(self, flux_problem):
+        """Test that background is None when not set."""
         assert flux_problem.background is None
 
     def test_background_returns_series_when_set(
@@ -174,6 +182,7 @@ class TestFluxProblemObsProperties:
         flux_mismatch,
         obs_idx,
     ):
+        """Test that background returns a Series when set."""
         background = Block(
             pd.Series(np.ones(4) * 390.0, index=obs_idx, name="concentration")
         )
@@ -199,26 +208,31 @@ class TestFluxProblemStateProperties:
     """Tests for FluxProblem state-space accessors."""
 
     def test_prior_fluxes_is_series(self, flux_problem):
+        """Test that prior_fluxes returns a Series."""
         result = flux_problem.prior_fluxes
         assert isinstance(result, pd.Series)
         assert len(result) == 4
 
     def test_prior_fluxes_values(self, flux_problem):
+        """Test that prior_fluxes has correct values."""
         np.testing.assert_allclose(
             flux_problem.prior_fluxes.values, [1.0, 2.0, 3.0, 4.0]
         )
 
     def test_jacobian_is_dataframe(self, flux_problem):
+        """Test that jacobian returns a DataFrame."""
         result = flux_problem.jacobian
         assert isinstance(result, pd.DataFrame)
         assert result.shape == (4, 4)
 
     def test_prior_flux_error_is_dataframe(self, flux_problem):
+        """Test that prior_flux_error returns a DataFrame."""
         result = flux_problem.prior_flux_error
         assert isinstance(result, pd.DataFrame)
         assert result.shape == (4, 4)
 
     def test_concentration_error_is_dataframe(self, flux_problem):
+        """Test that concentration_error returns a DataFrame."""
         result = flux_problem.concentration_error
         assert isinstance(result, pd.DataFrame)
         assert result.shape == (4, 4)
@@ -233,13 +247,16 @@ class TestFluxProblemSolve:
     """Tests for FluxProblem.solve()."""
 
     def test_solve_returns_self(self, flux_problem):
+        """Test that solve returns self for method chaining."""
         result = flux_problem.solve()
         assert result is flux_problem
 
     def test_solve_sets_estimator(self, solved_flux_problem):
+        """Test that solve sets the internal estimator."""
         assert solved_flux_problem._estimator is not None
 
     def test_unsolved_raises_on_posterior(self, flux_problem):
+        """Test that accessing posterior before solving raises an error."""
         with pytest.raises(RuntimeError):
             _ = flux_problem.posterior_fluxes
 
@@ -253,21 +270,25 @@ class TestFluxProblemPosteriorProperties:
     """Tests for FluxProblem posterior accessors."""
 
     def test_posterior_fluxes_is_series(self, solved_flux_problem):
+        """Test posterior_fluxes returns a Series."""
         result = solved_flux_problem.posterior_fluxes
         assert isinstance(result, pd.Series)
         assert len(result) == 4
 
     def test_posterior_flux_error_is_dataframe(self, solved_flux_problem):
+        """Test that posterior_flux_error returns a DataFrame."""
         result = solved_flux_problem.posterior_flux_error
         assert isinstance(result, pd.DataFrame)
         assert result.shape == (4, 4)
 
     def test_prior_concentrations_is_series(self, solved_flux_problem):
+        """Test that prior_concentrations returns a Series."""
         result = solved_flux_problem.prior_concentrations
         assert isinstance(result, pd.Series)
         assert len(result) == 4
 
     def test_posterior_concentrations_is_series(self, solved_flux_problem):
+        """Test that posterior_concentrations returns a Series."""
         result = solved_flux_problem.posterior_concentrations
         assert isinstance(result, pd.Series)
         assert len(result) == 4
@@ -288,6 +309,7 @@ class TestFluxProblemRepr:
     """Tests for FluxProblem __repr__."""
 
     def test_repr_unsolved(self, flux_problem):
+        """Test repr for unsolved FluxProblem."""
         r = repr(flux_problem)
         assert "FluxProblem" in r
         assert "n_flux=4" in r
@@ -295,5 +317,6 @@ class TestFluxProblemRepr:
         assert "solved=False" in r
 
     def test_repr_solved(self, solved_flux_problem):
+        """Test repr for solved FluxProblem."""
         r = repr(solved_flux_problem)
         assert "solved=True" in r

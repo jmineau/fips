@@ -1,10 +1,13 @@
 """
-Defines the InversionPipeline class, which provides a structured workflow for inversion problems.
-This class serves as a template for specific implementations, ensuring a consistent approach to loading data,
+Defines the InversionPipeline class.
+
+Provides a structured workflow for inversion problems. This class serves as a template
+for specific implementations, ensuring a consistent approach to loading data,
 building covariance matrices, and running the inversion process.
 
-The InversionPipeline class includes abstract methods that must be implemented by subclasses to handle
-the specifics of data loading and covariance construction, while providing a default implementation for the overall workflow.
+The InversionPipeline class includes abstract methods that must be implemented by subclasses
+to handle the specifics of data loading and covariance construction, while providing a default
+implementation for the overall workflow.
 """
 
 import time
@@ -23,6 +26,36 @@ _Problem = TypeVar("_Problem", bound=InverseProblem)
 class InversionPipeline(ABC, Generic[_Problem]):
     """
     Blueprint for inversion.
+
+    This class defines the standard workflow for running an inversion, including
+    methods for loading observations and priors, building the forward operator and
+    covariance matrices, and executing the solve process.
+
+    Subclasses should implement the abstract methods to handle the specifics of
+    data loading and covariance construction for their particular problem domain.
+
+    Methods
+    -------
+    get_obs()
+        Get observation vector.
+    get_prior()
+        Get prior state vector.
+    filter_state_space(obs, prior)
+        Align or trim the state space before building covariances.
+    get_forward_operator(obs, prior)
+        Get forward operator matrix.
+    get_prior_error(prior)
+        Get prior error covariance matrix.
+    get_modeldata_mismatch(obs)
+        Get model-data mismatch covariance matrix.
+    get_constant(obs)
+        Get optional constant offset vector.
+    aggregate_obs_space(obs, forward_operator, modeldata_mismatch, constant)
+        Aggregate the observation space.
+    get_inputs()
+        Gather all input components for the inverse problem.
+    run(**kwargs)
+        Execute the standard inversion workflow.
     """
 
     def __init__(
@@ -37,29 +70,39 @@ class InversionPipeline(ABC, Generic[_Problem]):
 
     @abstractmethod
     def get_obs(self) -> Vector:
+        """Get observation vector."""
         pass
 
     @abstractmethod
     def get_prior(self) -> Vector:
+        """Get prior state vector."""
         pass
 
     def filter_state_space(self, obs: Vector, prior: Vector) -> tuple[Vector, Vector]:
-        """Optional hook to align or trim the state space before building covariances."""
+        """
+        Align or trim the state space before building covariances.
+
+        Optionally filter the state space by removing intervals with insufficient observations or simulations.
+        """
         return obs, prior
 
     @abstractmethod
     def get_forward_operator(self, obs: Vector, prior: Vector) -> ForwardOperator:
+        """Get forward operator matrix."""
         pass
 
     @abstractmethod
     def get_prior_error(self, prior: Vector) -> CovarianceMatrix:
+        """Get prior error covariance matrix."""
         pass
 
     @abstractmethod
     def get_modeldata_mismatch(self, obs: Vector) -> CovarianceMatrix:
+        """Get model-data mismatch covariance matrix."""
         pass
 
     def get_constant(self, obs: Vector) -> Vector | None:
+        """Get optional constant offset vector."""
         return None
 
     def aggregate_obs_space(
@@ -69,10 +112,17 @@ class InversionPipeline(ABC, Generic[_Problem]):
         modeldata_mismatch: CovarianceMatrix,
         constant: Vector | None,
     ) -> tuple[Vector, ForwardOperator, CovarianceMatrix, Vector | None]:
-        """Optional hook to aggregate the observation space (e.g. hourly → daily)."""
+        """
+        Aggregate the observation space.
+
+        Optionally aggregate the observation space (e.g. hourly → daily) by applying the same aggregation to the obs vector, forward operator, model-data mismatch covariance, and constant term.
+        """
         return obs, forward_operator, modeldata_mismatch, constant
 
     def get_inputs(self) -> dict[str, Any]:
+        """
+        Gather all input components for the inverse problem.
+        """
         step_start = time.perf_counter()
         # Obs and prior are the core inputs that define the obs and state space.
         # They are used to build the forward operator and covariance matrices.
@@ -143,7 +193,7 @@ class InversionPipeline(ABC, Generic[_Problem]):
         )
 
     def run(self, **kwargs) -> _Problem:
-        """Executes the standard inversion workflow."""
+        """Execute the standard inversion workflow."""
         total_start = time.perf_counter()
         print("Getting problem inputs...")
         inputs = self.get_inputs()

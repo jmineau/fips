@@ -66,6 +66,9 @@ def test_integrate_raises_missing_dim():
 
 @pytest.fixture
 def obs_idx():
+    """
+    Fixture providing observation index with 2 observations per day over 2 days.
+    """
     # 2 obs per day across 2 days
     times = pd.DatetimeIndex(
         [
@@ -81,16 +84,25 @@ def obs_idx():
 
 @pytest.fixture
 def state_idx():
+    """
+    Fixture providing a simple state index.
+    """
     return assign_block(pd.Index(["s0", "s1", "s2"], name="state_id"), "state")
 
 
 @pytest.fixture
 def obs_vec(obs_idx):
+    """
+    Fixture providing observation vector.
+    """
     return Vector(pd.Series([1.0, 2.0, 3.0, 4.0], index=obs_idx, name="obs"))
 
 
 @pytest.fixture
 def fwd_op(obs_idx, state_idx):
+    """
+    Fixture providing forward operator.
+    """
     return ForwardOperator(
         pd.DataFrame(np.ones((4, 3)) * 0.5, index=obs_idx, columns=state_idx)
     )
@@ -98,6 +110,9 @@ def fwd_op(obs_idx, state_idx):
 
 @pytest.fixture
 def cov_Sz(obs_idx):
+    """
+    Fixture providing observation error covariance matrix.
+    """
     return CovarianceMatrix(
         pd.DataFrame(np.eye(4) * 2.0, index=obs_idx, columns=obs_idx)
     )
@@ -114,15 +129,28 @@ def daily_groupby(idx):
 
 
 class TestObsAggregator:
+    """
+    Tests for the ObsAggregator class.
+    """
+
     def test_invalid_func_raises(self):
+        """
+        Test that invalid aggregation function raises an error.
+        """
         with pytest.raises(ValueError, match="func"):
             ObsAggregator(by="obs_time", func="median")
 
     def test_missing_by_and_level_raises(self):
+        """
+        Test that missing both 'by' and 'level' parameters raises an error.
+        """
         with pytest.raises(ValueError):
             ObsAggregator()
 
     def test_mean_weights_sum_to_one(self, obs_idx):
+        """
+        Test that mean aggregation weights sum to one for each group.
+        """
         agg = ObsAggregator(by=daily_groupby, func="mean")
         W, _ = agg._build_operator(obs_idx)
         row_sums = np.asarray(W.sum(axis=1)).flatten()
@@ -143,6 +171,9 @@ class TestObsAggregator:
         np.testing.assert_allclose(sorted(new_obs.values), [1.5, 3.5])
 
     def test_apply_reduces_obs_count(self, obs_vec, fwd_op, cov_Sz):
+        """
+        Test that aggregation reduces the observation count from 4 to 2.
+        """
         agg = ObsAggregator(by=daily_groupby, func="mean")
         new_obs, new_H, new_Sz, new_c = agg.apply(obs_vec, fwd_op, cov_Sz)
         assert new_obs.shape[0] == 2
@@ -151,6 +182,9 @@ class TestObsAggregator:
         assert new_c is None
 
     def test_apply_returns_correct_types(self, obs_vec, fwd_op, cov_Sz):
+        """
+        Test that apply returns correct types for all outputs.
+        """
         agg = ObsAggregator(by=daily_groupby, func="mean")
         new_obs, new_H, new_Sz, _ = agg.apply(obs_vec, fwd_op, cov_Sz)
         assert isinstance(new_obs, Vector)
@@ -166,11 +200,17 @@ class TestObsAggregator:
         np.testing.assert_allclose(off, 0.0, atol=1e-12)
 
     def test_Sz_is_symmetric(self, obs_vec, fwd_op, cov_Sz):
+        """
+        Test that aggregated covariance matrix remains symmetric.
+        """
         agg = ObsAggregator(by=daily_groupby, func="mean")
         _, _, new_Sz, _ = agg.apply(obs_vec, fwd_op, cov_Sz)
         np.testing.assert_allclose(new_Sz.values, new_Sz.values.T, atol=1e-12)
 
     def test_apply_aggregates_constant_vector(self, obs_vec, fwd_op, cov_Sz):
+        """
+        Test that constant vector is properly aggregated.
+        """
         agg = ObsAggregator(by=daily_groupby, func="mean")
         c = Vector(pd.Series(obs_vec.values, index=obs_vec.index, name="constant"))
         _, _, _, new_c = agg.apply(obs_vec, fwd_op, cov_Sz, constant=c)
@@ -185,7 +225,7 @@ class TestObsAggregator:
         assert new_c == 5.0
 
     def test_level_freq_aggregation(self, obs_vec, fwd_op, cov_Sz):
-        """level + freq interface should aggregate the same as by= callable."""
+        """Level + freq interface should aggregate the same as by= callable."""
         agg_by = ObsAggregator(by=daily_groupby, func="mean")
         agg_freq = ObsAggregator(level="obs_time", freq="D", func="mean")
         obs_by, _, _, _ = agg_by.apply(obs_vec, fwd_op, cov_Sz)
@@ -236,7 +276,9 @@ class TestObsAggregator:
 
 
 def test_pipeline_obs_aggregator_hook():
-    """Pipeline subclass overriding aggregate_obs_space should solve with n_obs=2."""
+    """
+    Test that Pipeline subclass overriding aggregate_obs_space properly reduces obs count.
+    """
     from fips.pipeline import InversionPipeline
     from fips.problem import InverseProblem
 

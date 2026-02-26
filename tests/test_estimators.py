@@ -441,7 +441,7 @@ class TestLeverage:
     """Tests for Estimator.leverage() method."""
 
     def test_leverage_callable(self):
-        """leverage is a callable method."""
+        """Leverage is a callable method."""
         z = np.array([1.0, 2.0, 3.0])
         x_0 = np.array([1.0, 2.0])
         H = np.array([[1.0, 0.5], [0.5, 1.0], [1.0, 1.0]])
@@ -455,17 +455,20 @@ class TestAvailableEstimators:
     """Tests for available_estimators() function."""
 
     def test_returns_list(self):
+        """Test that available_estimators returns a list."""
         from fips.estimators import available_estimators
 
         result = available_estimators()
         assert isinstance(result, list)
 
     def test_contains_bayesian(self):
+        """Test that 'bayesian' is in available estimators."""
         from fips.estimators import available_estimators
 
         assert "bayesian" in available_estimators()
 
     def test_exported_from_fips(self):
+        """Test that available_estimators is exported from main package."""
         import fips
 
         assert hasattr(fips, "available_estimators")
@@ -476,6 +479,7 @@ class TestBayesianSolverRepr:
     """Tests for BayesianSolver.__repr__."""
 
     def test_repr_before_solve(self):
+        """Test repr before solving shows solved=False."""
         from fips.estimators import BayesianSolver
 
         z = np.array([1.0, 2.0, 3.0])
@@ -491,6 +495,7 @@ class TestBayesianSolverRepr:
         assert "solved=False" in r
 
     def test_repr_after_solve(self):
+        """Test repr after solving shows solved=True."""
         from fips.estimators import BayesianSolver
 
         z = np.array([1.0, 2.0, 3.0])

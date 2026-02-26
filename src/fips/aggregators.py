@@ -1,3 +1,11 @@
+"""
+Data aggregation utilities for inverse problems.
+
+This module provides functions for aggregating and integrating data over time
+and space, particularly useful for processing observations and state vectors
+into compatible resolutions.
+"""
+
 from collections.abc import Callable
 
 import numpy as np
@@ -62,7 +70,8 @@ def integrate_over_time_bins(
 
 
 class ObsAggregator:
-    """Aggregates the observation space of an inverse problem.
+    """
+    Aggregates the observation space of an inverse problem.
 
     Builds a sparse (n_agg x n_obs) weight matrix W and applies it to each
     component of the problem::
@@ -98,19 +107,10 @@ class ObsAggregator:
     belonging to other blocks are passed through unchanged via identity rows
     in W, so the returned arrays cover the full observation space.
 
-    Parameters
-    ----------
-    by : str | list[str] | Callable, optional
-        Explicit grouping specification. Mutually exclusive with ``level``.
-    level : str, optional
-        Index level to group / resample. Requires either a matching level
-        name in the obs index or use alongside ``freq``.
-    freq : str, optional
-        Pandas offset alias for resampling ``level`` (e.g. ``'D'``, ``'h'``).
-    func : {'mean', 'sum'}
-        Aggregation function. Default ``'mean'``.
-    blocks : str | list[str], optional
-        Block name(s) to aggregate. Unlisted blocks pass through as-is.
+    Methods
+    -------
+    apply(obs, forward_operator, modeldata_mismatch, constant)
+        Apply the aggregation to the inverse problem components.
     """
 
     def __init__(
@@ -121,6 +121,23 @@ class ObsAggregator:
         func: str = "mean",
         blocks: str | list[str] | None = None,
     ):
+        """
+        Initialize the ObsAggregator.
+
+        Parameters
+        ----------
+        by : str | list[str] | Callable, optional
+            Explicit grouping specification. Mutually exclusive with ``level``.
+        level : str, optional
+            Index level to group / resample. Requires either a matching level
+            name in the obs index or use alongside ``freq``.
+        freq : str, optional
+            Pandas offset alias for resampling ``level`` (e.g. ``'D'``, ``'h'``).
+        func : {'mean', 'sum'}
+            Aggregation function. Default ``'mean'``.
+        blocks : str | list[str], optional
+            Block name(s) to aggregate. Unlisted blocks pass through as-is.
+        """
         if func not in {"mean", "sum"}:
             raise ValueError(
                 "func must be 'mean' or 'sum' for valid covariance propagation."
@@ -136,7 +153,8 @@ class ObsAggregator:
         self.blocks = [blocks] if isinstance(blocks, str) else blocks
 
     def _build_operator(self, obs_index: pd.Index) -> tuple[csr_matrix, pd.Index]:
-        """Build W and the aggregated index from an obs ``pd.Index``.
+        """
+        Build W and the aggregated index from an obs ``pd.Index``.
 
         Constructs W in COO format (data, row, col) — one entry per input
         observation — then converts to CSR for efficient matrix products.
@@ -247,7 +265,8 @@ class ObsAggregator:
         modeldata_mismatch: pd.DataFrame | MatrixBlock | Matrix,
         constant: float | pd.Series | Block | Vector | None = None,
     ):
-        """Apply W to the inverse problem components.
+        """
+        Apply W to the inverse problem components.
 
         Inputs may be bare pandas objects or fips wrapper types (``Vector``,
         ``ForwardOperator``, ``CovarianceMatrix``); return types mirror the
@@ -255,6 +274,22 @@ class ObsAggregator:
 
         The aggregator ensures all inputs are properly aligned to obs.index
         before building the weight matrix W.
+
+        Parameters
+        ----------
+        obs : pd.Series | Block | Vector
+            Observation vector to be aggregated.
+        forward_operator : pd.DataFrame | MatrixBlock | Matrix
+            Forward operator matrix to be aggregated.
+        modeldata_mismatch : pd.DataFrame | MatrixBlock | Matrix
+            Model-data mismatch covariance matrix to be aggregated.
+        constant : float | pd.Series | Block | Vector | None, optional
+            Optional constant offset vector to be aggregated. Scalars are invariant to aggregation. Default is None.
+
+        Returns
+        -------
+        tuple
+            Aggregated (obs, forward_operator, modeldata_mismatch, constant) in the same types as the inputs.
         """
 
         # Unwrap fips types to the underlying pandas object for arithmetic.

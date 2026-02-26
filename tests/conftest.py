@@ -9,7 +9,7 @@ from fips.vector import Block, Vector
 
 @pytest.fixture
 def simple_prior():
-    """Simple prior state vector."""
+    """Provide a simple prior state vector."""
     return pd.Series(
         [1.0, 2.0, 3.0],
         index=pd.Index(["state_0", "state_1", "state_2"], name="state_id"),
@@ -19,7 +19,7 @@ def simple_prior():
 
 @pytest.fixture
 def simple_obs():
-    """Simple observation vector."""
+    """Provide a simple observation vector."""
     return pd.Series(
         [1.5, 2.5, 3.5, 4.5],
         index=pd.Index(["obs_0", "obs_1", "obs_2", "obs_3"], name="obs_id"),
@@ -29,7 +29,7 @@ def simple_obs():
 
 @pytest.fixture
 def simple_forward_operator():
-    """Simple forward operator matrix."""
+    """Provide a simple forward operator matrix."""
     H = pd.DataFrame(
         np.array(
             [[1.0, 0.5, 0.0], [0.5, 1.0, 0.5], [0.0, 0.5, 1.0], [0.25, 0.25, 0.25]]
@@ -42,7 +42,7 @@ def simple_forward_operator():
 
 @pytest.fixture
 def simple_prior_error():
-    """Simple prior error covariance matrix."""
+    """Provide a simple prior error covariance matrix."""
     idx = pd.Index(["state_0", "state_1", "state_2"], name="state_id")
     S_a = pd.DataFrame(
         np.array([[1.0, 0.2, 0.0], [0.2, 1.0, 0.2], [0.0, 0.2, 1.0]]),
@@ -54,7 +54,7 @@ def simple_prior_error():
 
 @pytest.fixture
 def simple_modeldata_mismatch():
-    """Simple model-data mismatch covariance matrix."""
+    """Provide a simple model-data mismatch covariance matrix."""
     idx = pd.Index(["obs_0", "obs_1", "obs_2", "obs_3"], name="obs_id")
     S_z = pd.DataFrame(
         np.eye(4) * 0.5,
@@ -66,7 +66,7 @@ def simple_modeldata_mismatch():
 
 @pytest.fixture
 def simple_vector_multi_block():
-    """Simple multi-block vector."""
+    """Provide a simple multi-block vector."""
     block1 = Block(
         pd.Series([1.0, 2.0], index=pd.Index(["x", "y"], name="dim"), name="state_a")
     )

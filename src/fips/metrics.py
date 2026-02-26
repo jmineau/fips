@@ -1,10 +1,18 @@
+"""
+Distance and similarity metrics.
+
+This module provides functions for calculating distances and similarities
+between data points, such as Haversine distance for geographic coordinates
+and time differences for temporal data.
+"""
+
 import numpy as np
 import pandas as pd
 
 
 def haversine_matrix(lats, lons, earth_radius=None, deg=True):
     """
-    Calculates the pairwise Haversine distance matrix between a set of coordinates.
+    Calculate the pairwise Haversine distance matrix between a set of coordinates.
 
     Parameters
     ----------

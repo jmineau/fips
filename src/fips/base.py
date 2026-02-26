@@ -1,3 +1,11 @@
+"""
+Base classes and utilities for the FIPS framework.
+
+This module provides foundational mixins and base classes used throughout the
+package, including serialization support, data structure abstractions, and
+common index manipulation utilities.
+"""
+
 import logging
 import pickle
 import warnings
@@ -19,6 +27,27 @@ ArrayLike: TypeAlias = npt.ArrayLike | pd.Series | pd.DataFrame
 def xselect(
     s_or_df: pd.DataFrame | pd.Series, key, axis=0, level=None, drop_level=True
 ) -> pd.DataFrame | pd.Series:
+    """
+    Select cross-sections and remove NaN-only index levels.
+
+    Parameters
+    ----------
+    s_or_df : pd.DataFrame or pd.Series
+        The input data to select from.
+    key : label or list of labels
+        The key(s) to select.
+    axis : {0, 1, 'index', 'columns', 'both'}, default 0
+        Axis to retrieve cross-section from.
+    level : int or str, optional
+        If the index is a MultiIndex, level(s) to select on.
+    drop_level : bool, default True
+        Whether to drop the level(s) from the resulting index.
+
+    Returns
+    -------
+    pd.DataFrame or pd.Series
+        The cross-section of the data corresponding to the key(s), with any NaN-only index levels removed.
+    """
     for ax in resolve_axes(axis):
         # Call the underlying xs method
         s_or_df = s_or_df.xs(key, axis=ax, level=level, drop_level=drop_level).copy()
@@ -35,7 +64,8 @@ def xselect(
 
 
 class Pickleable:
-    """Mixin to add to_file() and from_file() methods for pickle serialization.
+    """
+    Mixin to add to_file() and from_file() methods for pickle serialization.
 
     Provides automatic pickle file I/O with extension validation (.pkl or .pickle).
     """
@@ -43,7 +73,8 @@ class Pickleable:
     VALID_EXTENSIONS = {".pkl", ".pickle"}
 
     def to_file(self, path: str | Path) -> None:
-        """Save object to a pickle file.
+        """
+        Save object to a pickle file.
 
         Parameters
         ----------
@@ -61,7 +92,8 @@ class Pickleable:
 
     @classmethod
     def from_file(cls, path: str | Path):
-        """Load object from a pickle file.
+        """
+        Load object from a pickle file.
 
         Parameters
         ----------
@@ -96,6 +128,36 @@ class Pickleable:
 
 
 class Structure(Pickleable, ABC):
+    """
+    Abstract base class for structured data with pandas index and validation.
+
+    Attributes
+    ----------
+    name : str or property
+        Name of the structure, used for error messages and block naming.
+    data : pd.Series or pd.DataFrame
+        The underlying data, which must be numeric and non-NaN. DataFrames can be sparse.
+    index : pd.Index or MultiIndex
+        The index of the data, which must have named levels.
+    shape : tuple
+        The shape of the data.
+    values : np.ndarray
+        The values of the data as a numpy array (or sparse matrix if applicable).
+
+    Methods
+    -------
+    reindex(index, columns=None, verify_overlap=False, inplace=False, **kwargs)
+        Return a new instance with data reindexed to the specified index and columns.
+    round_index(decimals, axis=0, inplace=False)
+        Return a new instance with float indices rounded to the specified decimals on the given axis.
+    copy(deep=True)
+        Create a copy of the instance.
+    xs(key, axis=0, level=None, drop_level=True)
+        Cross-select data based on index/column values.
+    to_numpy()
+        Get the underlying data as a NumPy array (or sparse matrix if applicable).
+    """
+
     name: str | property | None
     data: pd.DataFrame | pd.Series
 
@@ -122,17 +184,21 @@ class Structure(Pickleable, ABC):
 
     @property
     def index(self) -> pd.Index:
+        """Return the index of the underlying data."""
         return self.data.index
 
     @property
     def shape(self) -> tuple[int, ...]:
+        """Return the shape of the underlying data."""
         return self.data.shape
 
     def __len__(self) -> int:
+        """Return the length of the underlying data."""
         return len(self.data)
 
     @property
     def values(self) -> npt.NDArray:
+        """Return the values as a numpy array."""
         return self.to_numpy()
 
     def reindex(
@@ -143,7 +209,27 @@ class Structure(Pickleable, ABC):
         inplace: bool = False,
         **kwargs,
     ) -> Self:
-        """Return a new instance with data reindexed to the specified index and columns."""
+        """
+        Return a new instance with data reindexed to the specified index and columns.
+
+        Parameters
+        ----------
+        index : pd.Index
+            New index for the rows.
+        columns : pd.Index, optional
+            New index for the columns (if DataFrame). If None, columns are not reindexed.
+        verify_overlap : bool, default False
+            If True, verify that the new index overlaps with the existing index and raise an error if not.
+        inplace : bool, default False
+            If True, modify the data in place and return self. Otherwise, return a new instance with the reindexed data.
+        **kwargs
+            Additional keyword arguments to pass to pandas reindex() method (e.g. fill_value, method, limit).
+
+        Returns
+        -------
+        Structure
+            A new instance with the reindexed data, or self if inplace=True.
+        """
 
         def prepare_data_for_target(
             data: pd.DataFrame | pd.Series, target: pd.Index, axis: int
@@ -198,6 +284,20 @@ class Structure(Pickleable, ABC):
     ) -> Self:
         """
         Round float indices on the specified axis to given decimals. Non-float indices are left unchanged.
+
+        Parameters
+        ----------
+        decimals : int
+            Number of decimal places to round to.
+        axis : int or {'index', 'columns', 'both'}, default 0
+            Axis to round indices on. 0 or 'index' for row index, 1 or 'columns' for columns, 'both' for both axes.
+        inplace : bool, default False
+            If True, round indices in place and return self. Otherwise, return a new instance with rounded indices.
+
+        Returns
+        -------
+        Structure
+            A new instance with rounded indices, or self if inplace=True.
         """
         data = self.data if inplace else self.data.copy(deep=True)
 
@@ -260,7 +360,14 @@ class Structure(Pickleable, ABC):
 
 
 class Structure1D(Structure):
-    """Base class for 1D structures (Block, Vector)."""
+    """
+    Base class for 1D structures (Block, Vector).
+
+    Methods
+    -------
+    to_series()
+        Get the underlying data as a pandas Series.
+    """
 
     data: pd.Series  # type: ignore[override]
 
@@ -272,6 +379,22 @@ class Structure1D(Structure):
         dtype: Any = None,
         copy: bool | None = None,
     ):
+        """
+        Initialize a 1D structure with the given data and index. Validates and sanitizes the data.
+
+        Parameters
+        ----------
+        data : array-like
+            1D data for the structure.
+        name : str, optional
+            Name for the structure. If None, uses data.name if available.
+        index : pd.Index, optional
+            Index for the data. If None, uses data.index if available.
+        dtype : data type, optional
+            Data type to force.
+        copy : bool, optional
+            Whether to copy the data.
+        """
         # Squeeze to 1D if necessary
         if hasattr(data, "squeeze"):
             data = data.squeeze()
@@ -289,6 +412,7 @@ class Structure1D(Structure):
 
     @property
     def name(self) -> str | None:
+        """Return the name of the underlying Series."""
         return str(self.data.name)
 
     def to_series(self) -> pd.Series:
@@ -305,7 +429,25 @@ class Structure1D(Structure):
 
 
 class Structure2D(Structure):
-    """Base class for 2D structures (Matrix)."""
+    """
+    Base class for 2D structures (Matrix).
+
+    Attributes
+    ----------
+    Columns : pd.Index
+        The columns of the underlying DataFrame.
+    is_sparse : bool
+        True if the internal DataFrame uses pandas sparse storage.
+
+    Methods
+    -------
+    to_frame()
+        Get the underlying DataFrame data.
+    to_dense()
+        Return a copy with dense internal storage.
+    to_sparse(threshold=None)
+        Return a copy with sparse internal storage, optionally zeroing out values below a threshold before sparsification.
+    """
 
     data: pd.DataFrame  # type: ignore[override]
 
@@ -369,7 +511,8 @@ class Structure2D(Structure):
             self._sparsify()
 
     def _sparsify(self) -> None:
-        """Convert self.data to pandas sparse format in-place.
+        """
+        Convert self.data to pandas sparse format in-place.
 
         The caller is responsible for ensuring near-zero floating-point noise
         has already been zeroed out (via a threshold) before calling this.
@@ -378,10 +521,12 @@ class Structure2D(Structure):
 
     @property
     def columns(self) -> pd.Index:
+        """Return the columns of the underlying DataFrame."""
         return self.data.columns
 
     @property
     def values(self) -> npt.NDArray:
+        """Return values as numpy array or sparse matrix."""
         if self.is_sparse:
             return self.data.sparse.to_coo().tocsr()
         return self.data.to_numpy()
@@ -392,30 +537,18 @@ class Structure2D(Structure):
         return all(isinstance(dt, pd.SparseDtype) for dt in self.data.dtypes)
 
     def to_frame(self) -> pd.DataFrame:
-        """
-        Get the underlying DataFrame data.
-
-        Returns
-        -------
-        pd.DataFrame
-            The DataFrame representation of the matrix.
-        """
+        """Get the underlying DataFrame data."""
         return self.data
 
     def to_dense(self) -> "Structure2D":
-        """Return a copy with dense internal storage.
-
-        Returns
-        -------
-        Structure2D
-            New instance backed by a regular dense DataFrame.
-        """
+        """Return a copy with dense internal storage."""
         if not self.is_sparse:
             return self
         return type(self)(self.data.sparse.to_dense(), name=self.name)
 
     def to_sparse(self, threshold: float | None = None) -> "Structure2D":
-        """Return a copy with sparse internal storage.
+        """
+        Return a copy with sparse internal storage.
 
         Parameters
         ----------

@@ -1,3 +1,11 @@
+"""
+Vector data structures for inverse problems.
+
+This module provides the `Vector` and `Block` classes for representing
+state vectors, observations, and other 1D data structures with automatic
+index management and serialization support.
+"""
+
 import logging
 from collections.abc import Sequence
 from typing import Any, TypeAlias
@@ -25,6 +33,36 @@ class Block(SingleBlockMixin, Structure1D):
     Inverse problems can be customized by creating Blocks
     with specific indices and names to represent different state or
     observation components relevant to the application.
+
+    Attributes
+    ----------
+    name : str
+        Name of the block.
+    data : pd.Series
+        The underlying Series containing the block data.
+    index : pd.Index
+        Index for the block.
+    shape : tuple
+        Shape of the block (number of elements).
+    values : np.ndarray
+        The underlying data values as a NumPy array.
+
+    Methods
+    -------
+    xs(key, axis=0, level=None, drop_level=True)
+        Cross-select data based on index values.
+    reindex(new_index, fill_value=0.0)
+        Reindex the block to new row indices, filling missing values with fill_value.
+    round_index(decimals, axis=0)
+        Round the index and to a specified number of decimal places for alignment.
+    copy()
+        Return a copy of the Block.
+    to_series(add_block_level=False)
+        Convert to a Series, optionally adding block levels to the index.
+    to_xarray()
+        Convert the Block to an xarray DataArray.
+    to_numpy()
+        Get the underlying data as a NumPy array.
     """
 
     data: pd.Series  # type: ignore[override]
@@ -39,6 +77,8 @@ class Block(SingleBlockMixin, Structure1D):
         copy: bool = False,
     ):
         """
+        Initialize a Block.
+
         Parameters
         ----------
         data : pd.Series, Block, or array-like
@@ -73,11 +113,24 @@ class Block(SingleBlockMixin, Structure1D):
                              The Series name should be used for the block name instead.""")
 
     def __repr__(self):
+        """Return string representation."""
         header = f"Block(name='{self.name}')\n"
         return header + repr(self.data)
 
     def to_series(self, add_block_level=False) -> pd.Series:
-        """Return the underlying Series data."""
+        """
+        Return the underlying Series data.
+
+        Parameters
+        ----------
+        add_block_level : bool, default False
+            Whether to add a 'block' level to the index with the block name.
+
+        Returns
+        -------
+        pd.Series
+            The underlying Series data, optionally with a 'block' level added to the index.
+        """
         if add_block_level:
             dims = self.index.names
             df = self.data.to_frame()
@@ -104,13 +157,44 @@ class _BlockAccessor:
 
 
 class Vector(MultiBlockMixin, Structure1D):
-    """State or observation vector composed of one or more Block objects.
+    """
+    State or observation vector composed of one or more Block objects.
 
     A Vector organizes one or more Blocks (prior, posterior, observations, etc.)
     into a single hierarchical structure.
 
     Vectors are used to represent the full state or observation space and are the
     1D matrix components in the inversion framework.
+
+    Attributes
+    ----------
+    name : str, optional
+        Name of the Vector. Optional.
+    data : pd.Series
+        The underlying Series containing the vector data.
+    index : pd.Index
+        Index for the vector.
+    shape : tuple
+        Shape of the vector (number of elements).
+    values : np.ndarray
+        The underlying data values as a NumPy array.
+
+    Methods
+    -------
+    xs(key, axis=0, level=None, drop_level=True)
+        Cross-select data based on index values.
+    reindex(new_index, fill_value=0.0)
+        Reindex the vector to new row indices, filling missing values with fill_value.
+    round_index(decimals, axis=0)
+        Round the index and to a specified number of decimal places for alignment.
+    copy()
+        Return a copy of the Vector.
+    to_series()
+        Convert to a Series.
+    to_xarray()
+        Convert the Vector to an xarray DataArray or Dataset.
+    to_numpy()
+        Get the underlying data as a NumPy array.
     """
 
     data: pd.Series  # type: ignore[override]
@@ -124,6 +208,8 @@ class Vector(MultiBlockMixin, Structure1D):
         copy: bool = False,
     ):
         """
+        Initialize a Vector.
+
         Parameters
         ----------
         data : pd.Series, Vector, Block, Sequence[Block | pd.Series], or array-like
@@ -199,10 +285,12 @@ class Vector(MultiBlockMixin, Structure1D):
         super().__init__(data, name=name, index=index, dtype=dtype, copy=copy)
 
     def __repr__(self) -> str:
+        """Return string representation."""
         header = f"Vector(name='{self.name}', shape={self.shape})\n"
         return header + repr(self.data)
 
     def __getitem__(self, block) -> pd.Series:
+        """Get block by name."""
         return self.xs(block, level="block")
 
     @property
@@ -211,7 +299,12 @@ class Vector(MultiBlockMixin, Structure1D):
         return _BlockAccessor(self)
 
     def to_xarray(self) -> xr.DataArray | xr.Dataset:
-        """Convert the Vector to an xarray DataArray or Dataset."""
+        """
+        Convert the Vector to xarray.
+
+        If the Vector contains multiple blocks, returns an xarray Dataset with each block as a separate DataArray.
+        If the Vector contains a single block, returns an xarray DataArray.
+        """
         ds = xr.Dataset()
 
         blocks = self.index.get_level_values("block").unique()

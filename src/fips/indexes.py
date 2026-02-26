@@ -1,4 +1,5 @@
-"""Index validation and manipulation utilities.
+"""
+Index validation and manipulation utilities.
 
 This module provides utilities for checking index overlap, promoting indices,
 and sanitizing index types for consistent handling across data structures.
@@ -12,7 +13,20 @@ import pandas as pd
 
 
 def apply_to_index(func):
-    """Decorator to apply a single-index function to each level of a MultiIndex."""
+    """
+    Apply a single-index function to each level of a MultiIndex.
+
+    Parameters
+    ----------
+    func : function
+        A function that takes a single pd.Index and returns a modified pd.Index.
+        This function will be applied to each level of a MultiIndex, or directly to a single Index.
+
+    Returns
+    -------
+    function
+        A wrapper function that applies the given function to each level of a MultiIndex or to a single Index.
+    """
 
     @wraps(func)
     def wrapper(index: pd.Index, *args, **kwargs) -> pd.Index:
@@ -31,7 +45,21 @@ def apply_to_index(func):
 
 
 def assign_block(index: pd.Index, block: str) -> pd.Index:
-    """Assigns or overwrites a 'block' level in the index."""
+    """
+    Assign or overwrite a 'block' level in the index.
+
+    Parameters
+    ----------
+    index : pd.Index
+        The original index to which the block level will be assigned.
+    block : str
+        The block name to assign to the index.
+
+    Returns
+    -------
+    pd.Index
+        A new index with the 'block' level assigned to the specified block name.
+    """
     arrays = [index.get_level_values(i) for i in range(index.nlevels)]
     names = list(index.names)
 
@@ -51,8 +79,23 @@ def outer_align_levels(
     dfs: list[pd.DataFrame], axis: int | Literal["both"] = 0, fill_value=np.nan
 ) -> list[pd.DataFrame]:
     """
-    Aligns MultiIndexes by performing an OUTER JOIN on level names,
-    strictly preserving the order of appearance (First-Seen Priority).
+    Align MultiIndexes by performing an OUTER JOIN on level names.
+
+    Strictly preserves the order of appearance (First-Seen Priority).
+
+    Parameters
+    ----------
+    dfs : list of pd.DataFrame
+        The DataFrames to align.
+    axis : int or 'both', default 0
+        The axis along which to align the DataFrames. 0 or 'index' for row alignment, 1 or 'columns' for column alignment, 'both' for both axes.
+    fill_value : scalar, default np.nan
+        The value to use for missing entries after alignment. By default, missing entries are filled with NaN.
+
+    Returns
+    -------
+    list of pd.DataFrame
+        A list of DataFrames with aligned MultiIndexes along the specified axis.
     """
     working_dfs = dfs.copy()
 
@@ -89,7 +132,21 @@ def overlaps(
 ) -> bool | Literal["partial"]:
     """
     Check if target index overlaps with available index.
-    Returns True if fully covered, 'partial' if partially covered, and False if no overlap."""
+
+    Returns True if fully covered, 'partial' if partially covered, and False if no overlap.
+
+    Parameters
+    ----------
+    target_idx : pd.Index
+        The index we want to check for coverage.
+    available_idx : pd.Index
+        The index that represents available data.
+
+    Returns
+    -------
+    bool or 'partial'
+        True if target_idx is fully covered by available_idx, 'partial' if partially covered, and False if no overlap.
+    """
     intersection = target_idx.intersection(available_idx)
     if len(intersection) == 0:
         return False
@@ -112,7 +169,20 @@ def resolve_axes(axis: int | str | Literal["both"]) -> tuple[int, ...]:
 @apply_to_index
 def round_index(index: pd.Index, decimals: int) -> pd.Index:
     """
-    Round float indices to specified decimals. Non-float indices are returned unchanged.
+    Round float indices to specified decimals.
+
+    Parameters
+    ----------
+    index : pd.Index
+        The index to round.
+    decimals : int
+        The number of decimal places to round to.
+
+    Returns
+    -------
+    pd.Index
+        A new index with float values rounded to the specified number of decimals.
+        Non-float indices are returned unchanged.
     """
     if pd.api.types.is_float_dtype(index):
         return index.round(decimals)
@@ -122,7 +192,18 @@ def round_index(index: pd.Index, decimals: int) -> pd.Index:
 @apply_to_index
 def to_numeric(index: pd.Index) -> pd.Index:
     """
-    Attempt to convert index to numeric types, if possible. If conversion fails, returns original index.
+    Attempt to convert index to numeric types.
+
+    Parameters
+    ----------
+    index : pd.Index
+        The index to convert.
+
+    Returns
+    -------
+    pd.Index
+        A new index with values converted to numeric types where possible.
+        Non-convertible values are returned unchanged.
     """
     # Prevent converting Datetime/Timedelta/Period indices to numeric
     if (

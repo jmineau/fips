@@ -2,7 +2,7 @@
 <picture>
     <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/jmineau/fips/main/docs/_static/logo_dark.png">
     <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/jmineau/fips/main/docs/_static/logo.png">
-    <img alt="fips logo" src="https://raw.githubusercontent.com/jmineau/fips/main/docs/_static/logo.png">
+    <img alt="fips logo" src="https://raw.githubusercontent.com/jmineau/fips/main/docs/_static/logo.png" width="600">
 </picture>
 </div>
 

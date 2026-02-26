@@ -1,5 +1,7 @@
-"""STILT atmospheric transport Jacobian builder.
+"""
+Atmospheric transport models for flux inversion.
 
-This package provides tools for building the Jacobian (sensitivity) matrix
-from STILT atmospheric transport simulations.
+This package provides interfaces and implementations for atmospheric
+transport models used to build the forward operator (Jacobian matrix)
+in flux inversion problems.
 """

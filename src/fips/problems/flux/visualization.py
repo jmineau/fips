@@ -36,10 +36,23 @@ class FluxPlotter:
     Plotting interface for FluxInversion results.
 
     Provides methods for visualizing prior/posterior fluxes and concentration timeseries.
+
+    Attributes
+    ----------
+    inversion : FluxProblem
+        The flux inversion problem to visualize.
+
+    Methods
+    -------
+    fluxes(time='mean', truth=None, x_dim='lon', y_dim='lat', time_dim='time', sites=False, sites_kwargs=None, **kwargs)
+        Plot prior and posterior flux maps.
+    concentrations(location=None, location_dim='obs_location', **kwargs)
+        Plot observed, prior, and posterior concentrations.
     """
 
     def __init__(self, inversion: "FluxProblem"):
-        """Initialize with a FluxInversion instance.
+        """
+        Initialize with a FluxInversion instance.
 
         Parameters
         ----------
@@ -49,6 +62,7 @@ class FluxPlotter:
         self.inversion = inversion
 
     def __repr__(self) -> str:
+        """Return string representation."""
         return f"FluxPlotter(inversion={repr(self.inversion)})"
 
     def fluxes(
@@ -319,7 +333,8 @@ class FluxPlotter:
         return fig, axes
 
     def concentrations(self, location=None, location_dim="obs_location", **kwargs):
-        """Plot observed, prior, and posterior concentrations.
+        """
+        Plot observed, prior, and posterior concentrations.
 
         Parameters
         ----------

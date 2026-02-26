@@ -1,3 +1,5 @@
+"""Utilities for generating synthetic data for testing inverse problems."""
+
 from typing import Any
 
 import numpy as np
@@ -10,7 +12,8 @@ from fips.indexes import assign_block
 def promote_index(
     index: pd.Index, block_name: str, level_name: str = "block"
 ) -> pd.Index:
-    """Promote an index by adding a block level.
+    """
+    Promote an index by adding a block level.
 
     Parameters
     ----------
@@ -32,8 +35,7 @@ def promote_index(
 def _parse_dimensions(
     dims: int | list[int] | dict[str, int], name_prefix: str
 ) -> tuple[pd.Index, np.ndarray, tuple[int, ...]]:
-    """Helper to parse flexible dimension definitions into Index and Coordinates."""
-
+    """Parse flexible dimension definitions into Index and Coordinates."""
     # Normalize input to (shape, names) pair
     if isinstance(dims, int):
         shape = (dims,)
@@ -66,7 +68,7 @@ def generate_test_data(
     seed: int = 42,
 ) -> dict[str, Any]:
     """
-    Generates synthetic data components for an inverse problem.
+    Generate synthetic data components for an inverse problem.
 
     Parameters
     ----------

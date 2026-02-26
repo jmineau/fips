@@ -1,3 +1,11 @@
+"""
+Jacobian builder for STILT transport models.
+
+This module provides the `JacobianBuilder` class, which constructs the
+forward operator (Jacobian matrix) by loading and aggregating STILT
+footprints over specified time bins and spatial resolutions.
+"""
+
 import datetime as dt
 import logging
 from collections import defaultdict
@@ -18,6 +26,26 @@ logger = logging.getLogger(__name__)
 
 
 class JacobianBuilder:
+    """
+    Builds Jacobian matrices from STILT footprint simulations.
+
+    Attributes
+    ----------
+    simulations : list[stilt.Simulation | Path]
+        List of STILT simulations or paths to simulation directories.
+    location_dim : str
+        Name of the observation location dimension.
+    time_dim : str
+        Name of the observation time dimension.
+    failed_sims : list
+        List of simulation IDs that failed to process.
+
+    Methods
+    -------
+    build_from_coords(coords, flux_times, resolution=None, subset_hours=None, num_processes=1, location_mapper=None, timeout=None, threshold=1e-15, sparse=False)
+        Build the Jacobian matrix from specified coordinates and flux time bins.
+    """
+
     def __init__(
         self,
         simulations: list[Simulation | Path],
@@ -25,8 +53,7 @@ class JacobianBuilder:
         time_dim: str = "obs_time",
     ):
         """
-        Initialize the Jacobian builder with a list of STILT simulations
-        or paths to simulation directories.
+        Initialize the Jacobian builder.
 
         Parameters
         ----------
@@ -119,7 +146,6 @@ class JacobianBuilder:
             If coords is a dict, returns a dict of MatrixBlocks for each set of coordinates.
             Otherwise, returns a single MatrixBlock.
         """
-
         logger.info("Building Jacobian matrix...")
 
         if not isinstance(coords, dict):
@@ -206,7 +232,34 @@ def build_jacobian_row_from_coords(  # must be top-level for multiprocessing
     subset_hours: int | list[int] | None = None,
 ) -> dict[str, pd.DataFrame] | str | None:
     """
-    Build a row of the Jacobian matrix for a single STILT simulation
+    Build a row of the Jacobian matrix for a single STILT simulation.
+
+    Parameters
+    ----------
+    simulation : Simulation or Path
+        STILT simulation object or path to simulation directory.
+    coords : dict[str, list[tuple[float, float]]]
+        Dictionary mapping coordinate set names to lists of (x, y) coordinate tuples.
+    location_dim : str
+        Name of the observation location dimension.
+    time_dim : str
+        Name of the observation time dimension.
+    flux_times : pd.IntervalIndex
+        Time bins for flux aggregation.
+    t_start : datetime
+        Start of the inversion time range.
+    t_stop : datetime
+        End of the inversion time range.
+    resolution : str, optional
+        Resolution of the footprint to use. If None, uses default (highest) resolution.
+    subset_hours : int or list[int], optional
+        Hour(s) of day to filter simulations. If None, uses all hours.
+
+    Returns
+    -------
+    dict[str, pd.DataFrame] or str or None
+        Dictionary mapping coordinate set names to Jacobian row DataFrames,
+        or simulation ID string if failed, or None if skipped.
     """
     t0 = dt.datetime.now()
 
@@ -292,6 +345,23 @@ def build_jacobian_row_from_coords(  # must be top-level for multiprocessing
 
 
 def build_obs_index(sim: Simulation, location_dim: str, time_dim: str) -> pd.MultiIndex:
+    """
+    Build observation index from simulation receptor location and time.
+
+    Parameters
+    ----------
+    sim : Simulation
+        STILT simulation object.
+    location_dim : str
+        Name of the location dimension.
+    time_dim : str
+        Name of the time dimension.
+
+    Returns
+    -------
+    pd.MultiIndex
+        Multi-index with location and time levels.
+    """
     return pd.MultiIndex.from_arrays(
         [[sim.receptor.location.id], [sim.receptor.time]],
         names=[location_dim, time_dim],
@@ -299,6 +369,19 @@ def build_obs_index(sim: Simulation, location_dim: str, time_dim: str) -> pd.Mul
 
 
 def calc_digits(res: float) -> int:
+    """
+    Calculate number of decimal digits to represent a resolution value.
+
+    Parameters
+    ----------
+    res : float
+        Resolution value (must be positive).
+
+    Returns
+    -------
+    int
+        Number of decimal digits needed to represent the resolution.
+    """
     if res <= 0:
         raise ValueError("Resolution must be positive")
     if res < 1:  # fractional resolution  # noqa: SIM108

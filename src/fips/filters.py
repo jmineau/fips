@@ -1,3 +1,11 @@
+"""
+Data filtering and selection utilities.
+
+This module provides functions for filtering observations and state vectors
+based on various criteria, such as data density, time intervals, and
+quality control thresholds.
+"""
+
 from typing import overload
 
 import pandas as pd

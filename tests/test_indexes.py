@@ -1,3 +1,5 @@
+"""Tests for index validation and manipulation utilities."""
+
 import numpy as np
 import pandas as pd
 import pytest
@@ -14,6 +16,8 @@ from fips.indexes import (
 
 
 def test_apply_to_index():
+    """Test apply_to_index decorator for applying functions to each index level."""
+
     @apply_to_index
     def add_one(idx):
         return idx + 1
@@ -31,6 +35,7 @@ def test_apply_to_index():
 
 
 def test_assign_block():
+    """Test assigning block level to indices."""
     # Single index
     idx = pd.Index([1, 2, 3], name="a")
     res = assign_block(idx, "block1")
@@ -55,6 +60,7 @@ def test_assign_block():
 
 
 def test_outer_align_levels():
+    """Test outer alignment of index levels across multiple objects."""
     df1 = pd.DataFrame({"val": [1, 2]}, index=pd.Index([1, 2], name="a"))
     df2 = pd.DataFrame({"val": [3, 4]}, index=pd.Index([3, 4], name="b"))
 
@@ -76,6 +82,7 @@ def test_outer_align_levels():
 
 
 def test_overlaps():
+    """Test checking overlap between two indices."""
     idx1 = pd.Index([1, 2, 3])
     idx2 = pd.Index([2, 3, 4])
     idx3 = pd.Index([4, 5, 6])
@@ -87,6 +94,7 @@ def test_overlaps():
 
 
 def test_resolve_axes():
+    """Test resolving axis specifications to numeric values."""
     assert resolve_axes(0) == (0,)
     assert resolve_axes("index") == (0,)
     assert resolve_axes(1) == (1,)
@@ -98,6 +106,7 @@ def test_resolve_axes():
 
 
 def test_round_index():
+    """Test rounding numeric values in an index."""
     # Float index
     idx = pd.Index([1.123, 2.456], name="a")
     res = round_index(idx, 1)
@@ -116,6 +125,7 @@ def test_round_index():
 
 
 def test_to_numeric():
+    """Test converting string indices to numeric where possible."""
     # String index that can be numeric
     idx = pd.Index(["1", "2", "3"], name="a")
     res = to_numeric(idx)
@@ -134,6 +144,7 @@ def test_to_numeric():
 
 
 def test_to_numeric_datetime():
+    """Test that DataFrame indices remain as DatetimeIndex after conversion."""
     # DatetimeIndex should remain DatetimeIndex
     idx = pd.Index(pd.to_datetime(["2020-01-01", "2020-01-02"]), name="date")
     res = to_numeric(idx)

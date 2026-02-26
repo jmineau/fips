@@ -95,6 +95,9 @@ filterwarnings = [
 [tool.ruff]
 target-version = "py310"
 
+[tool.ruff.lint.pydocstyle]
+convention = "numpy"
+
 [tool.ruff.format]
 docstring-code-format = true
 
@@ -106,9 +109,13 @@ select = [
     "B",  # flake8-bugbear
     "SIM",  # flake8-simplify
     "I",  # isort
+    "D",  # pydocstyle
 ]
 ignore = [
     "E501",  # line too long, handled by formatter
+    "D200",  # One-line docstring should fit on one line with quotes
+    "D212",  # Multi-line docstring summary should start at the first line
+    "D400", # First line should end with a period, question mark, or exclamation point
 ]
 
 [tool.ruff.lint.isort]

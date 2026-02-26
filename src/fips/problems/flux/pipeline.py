@@ -1,3 +1,11 @@
+"""
+Pipeline for atmospheric flux inversion.
+
+This module provides the `FluxInversionPipeline` class, which extends the
+base `InversionPipeline` to handle the specific requirements of flux
+inversion problems, such as loading STILT footprints and building Jacobians.
+"""
+
 from abc import ABC
 
 import numpy as np
@@ -10,6 +18,44 @@ from fips.vector import Vector
 
 
 class FluxInversionPipeline(InversionPipeline[FluxProblem], ABC):
+    """
+    Abstract pipeline for atmospheric flux inversions.
+
+    Attributes
+    ----------
+    config : Any
+        Configuration object containing pipeline settings.
+    problem : FluxProblem
+        The solved flux inversion problem (available after calling run()).
+    estimator : str or type[Estimator]
+        Estimator to use for solving the inverse problem.
+
+    Methods
+    -------
+    get_obs()
+        Get observation vector (abstract, must be implemented by subclass).
+    get_prior()
+        Get prior state vector (abstract, must be implemented by subclass).
+    filter_state_space(obs, prior)
+        Filter state space by removing intervals with insufficient observations.
+    get_forward_operator(obs, prior)
+        Get forward operator matrix (abstract, must be implemented by subclass).
+    get_prior_error(prior)
+        Get prior error covariance matrix (abstract, must be implemented by subclass).
+    get_modeldata_mismatch(obs)
+        Get model-data mismatch covariance matrix (abstract, must be implemented by subclass).
+    get_constant(obs)
+        Get optional constant offset vector.
+    aggregate_obs_space(obs, forward_operator, modeldata_mismatch, constant)
+        Aggregate the observation space.
+    get_inputs()
+        Gather all input components for the inverse problem.
+    run(**kwargs)
+        Execute the flux inversion workflow and print summary.
+    summarize()
+        Print comprehensive statistical summary of the inversion results.
+    """
+
     problem: FluxProblem
 
     def __init__(self, config):
@@ -20,6 +66,21 @@ class FluxInversionPipeline(InversionPipeline[FluxProblem], ABC):
         )
 
     def filter_state_space(self, obs: Vector, prior: Vector) -> tuple[Vector, Vector]:
+        """
+        Filter state space by removing intervals with insufficient observations.
+
+        Parameters
+        ----------
+        obs : Vector
+            Observation vector.
+        prior : Vector
+            Prior state vector.
+
+        Returns
+        -------
+        tuple[Vector, Vector]
+            Filtered observation and prior vectors.
+        """
         try:
             min_obs_per_interval = self.config.min_obs_per_interval
         except AttributeError:
@@ -70,6 +131,18 @@ class FluxInversionPipeline(InversionPipeline[FluxProblem], ABC):
         return obs, prior
 
     def run(self, **kwargs) -> FluxProblem:
+        """Run the flux inversion pipeline.
+
+        Parameters
+        ----------
+        **kwargs
+            Additional keyword arguments passed to the inverse problem initialization.
+
+        Returns
+        -------
+        FluxProblem
+            The solved flux inversion problem.
+        """
         inversion = super().run(**kwargs)
 
         # Print summary report
@@ -78,7 +151,7 @@ class FluxInversionPipeline(InversionPipeline[FluxProblem], ABC):
         return inversion
 
     def summarize(self) -> None:
-        """Prints a comprehensive statistical summary of the inversion results."""
+        """Print a comprehensive statistical summary of the inversion results."""
         problem = self.problem
 
         # --- Extract Data ---

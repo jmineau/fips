@@ -1,4 +1,5 @@
-"""Inverse problem framework for state estimation.
+"""
+Inverse problem framework for state estimation.
 
 This module provides the core InverseProblem class which combines observations,
 prior estimates, forward operators, and error covariances into a unified framework
@@ -21,10 +22,47 @@ logger = logging.getLogger(__name__)
 
 
 class InverseProblem(Pickleable):
-    """Inverse problem combining observations, priors, and forward model.
+    """
+    Inverse problem combining observations, priors, and forward model.
 
     Organizes state vectors, observations, forward operators, and error covariances
     into a unified framework for solving inverse problems via different estimators.
+
+    Attributes
+    ----------
+    obs : Vector
+        Observation vector.
+    prior : Vector
+        Prior state vector.
+    forward_operator : ForwardOperator
+        Forward operator mapping state space to observation space.
+    modeldata_mismatch : CovarianceMatrix
+        Covariance matrix representing model-data mismatch (observation error).
+    prior_error : CovarianceMatrix
+        Covariance matrix representing prior error.
+    constant : Vector or float, optional
+        Optional constant term added to the forward model (e.g., background or bias).
+    estimator : Estimator, optional
+        The fitted estimator after solving the problem. Initially None until .solve() is called.
+    posterior : Vector
+        Posterior state estimate after solving the problem.
+    posterior_error : CovarianceMatrix
+        Posterior error covariance after solving the problem.
+    posterior_obs : Vector
+        Modeled observations using the posterior state.
+    prior_obs : Vector
+        Modeled observations using the prior state.
+    kalman_gain : Matrix
+        Kalman gain matrix (K) after solving the problem.
+    averaging_kernel : Matrix
+        Averaging kernel matrix (A) after solving the problem.
+
+    Methods
+    -------
+    get_block(component, block, crossblock=None)
+        Retrieve a specific block of data from a component (Vector or Matrix).
+    solve(estimator, **kwargs)
+        Solve the inverse problem using the specified estimator and store the fitted estimator.
     """
 
     def __init__(
@@ -37,6 +75,27 @@ class InverseProblem(Pickleable):
         constant: "VectorLike | float | None" = None,
         round_index: int | None = 6,
     ):
+        """
+        Initialize the inverse problem.
+
+        Parameters
+        ----------
+        obs : VectorLike
+            Observation vector.
+        prior : VectorLike
+            Prior state vector.
+        forward_operator : MatrixLike
+            Forward operator mapping state space to observation space.
+        modeldata_mismatch : MatrixLike
+            Covariance matrix representing model-data mismatch (observation error).
+        prior_error : MatrixLike
+            Covariance matrix representing prior error.
+        constant : VectorLike or float, optional
+            Optional constant term added to the forward model (e.g., background or bias).
+        round_index : int, optional
+            Number of decimal places to round to. If None, no rounding is performed.
+        """
+
         def promote_1d(data, default_block: str):
             if isinstance(data, pd.Series) and "block" not in data.index.names:
                 # Wrap naked Series in a Block
@@ -121,22 +180,27 @@ class InverseProblem(Pickleable):
 
     @property
     def state_index(self) -> pd.Index:
+        """Return the state space index."""
         return self.prior.index
 
     @property
     def obs_index(self) -> pd.Index:
+        """Return the observation space index."""
         return self.obs.index
 
     @property
     def n_state(self) -> int:
+        """Return number of state variables."""
         return len(self.state_index)
 
     @property
     def n_obs(self) -> int:
+        """Return number of observations."""
         return len(self.obs_index)
 
     @property
     def estimator(self) -> Estimator:
+        """Return the fitted estimator (raises if not solved)."""
         if self._estimator is None:
             raise RuntimeError("Problem has not been solved. Call .solve() first.")
         return self._estimator
@@ -144,6 +208,23 @@ class InverseProblem(Pickleable):
     def get_block(
         self, component: str, block: str, crossblock: str | None = None
     ) -> pd.DataFrame | pd.Series:
+        """
+        Get block from a component (Vector or Matrix).
+
+        Parameters
+        ----------
+        component : str
+            Name of the component ('obs', 'prior', 'forward_operator', 'modeldata_mismatch', 'prior_error', or 'constant').
+        block : str
+            Name of the block to retrieve.
+        crossblock : str, optional
+            For matrices, the name of the cross block (e.g., 'state' for forward_operator). If None, defaults to the same as 'block'.
+
+        Returns
+        -------
+        pd.Series or pd.DataFrame
+            The requested block of data.
+        """
         obj = getattr(self, component)
 
         if isinstance(obj, Vector):
@@ -156,6 +237,21 @@ class InverseProblem(Pickleable):
             raise TypeError(f"Object '{component}' is neither a Vector nor a Matrix.")
 
     def solve(self, estimator: str | type[Estimator], **kwargs) -> Self:
+        """
+        Solve the inverse problem using the specified estimator.
+
+        Parameters
+        ----------
+        estimator : str or type[Estimator]
+            Estimator to use for solving the inverse problem. Can be a string key for registered estimators or a subclass of Estimator.
+        **kwargs
+            Additional keyword arguments to pass to the estimator.
+
+        Returns
+        -------
+        Self
+            The InverseProblem instance with the estimator fitted.
+        """
         # Get estimator class
         if isinstance(estimator, str):
             if estimator not in ESTIMATOR_REGISTRY:
@@ -184,7 +280,7 @@ class InverseProblem(Pickleable):
         return self
 
     def _wrap(self, math_attr: str, friendly_name: str):
-        """Fetches raw math from the estimator and wraps it using the Estimator's space manifest."""
+        """Fetch raw math from the estimator and wrap it using the Estimator's space manifest."""
         # Get the raw numpy data
         raw_data = getattr(self.estimator, math_attr)
 
@@ -235,6 +331,7 @@ class InverseProblem(Pickleable):
         self._estimator = state.get("_estimator", None)
 
     def __repr__(self) -> str:
+        """Return string representation."""
         solved = self._estimator is not None
         return (
             f"{self.__class__.__name__}("

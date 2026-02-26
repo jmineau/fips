@@ -492,6 +492,7 @@ class TestCovarianceBuilderArithmetic:
         )
 
     def test_add_two_components_returns_builder(self):
+        """Test that adding two error components returns a CovarianceBuilder."""
         c1 = DiagonalError("c1", 1.0)
         c2 = DiagonalError("c2", 2.0)
         result = c1 + c2
@@ -499,6 +500,7 @@ class TestCovarianceBuilderArithmetic:
         assert len(result.components) == 2
 
     def test_builder_add_component(self):
+        """Test adding a component to a builder."""
         c1 = DiagonalError("c1", 1.0)
         c2 = DiagonalError("c2", 2.0)
         c3 = DiagonalError("c3", 3.0)
@@ -508,6 +510,7 @@ class TestCovarianceBuilderArithmetic:
         assert len(result.components) == 3
 
     def test_builder_radd_component(self):
+        """Test right-adding a component to a builder."""
         c1 = DiagonalError("c1", 1.0)
         c2 = DiagonalError("c2", 2.0)
         c3 = DiagonalError("c3", 3.0)
@@ -517,6 +520,7 @@ class TestCovarianceBuilderArithmetic:
         assert len(result.components) == 3
 
     def test_builder_add_builder(self):
+        """Test adding two builders together."""
         c1 = DiagonalError("c1", 1.0)
         c2 = DiagonalError("c2", 2.0)
         c3 = DiagonalError("c3", 3.0)
@@ -528,6 +532,7 @@ class TestCovarianceBuilderArithmetic:
         assert len(result.components) == 4
 
     def test_combined_builder_builds_correctly(self):
+        """Test that combined builder builds correctly."""
         idx = self._make_idx()
         c1 = DiagonalError("c1", 1.0)
         c2 = DiagonalError("c2", 2.0)
@@ -541,10 +546,12 @@ class TestCovarianceRepr:
     """Tests for __repr__ on covariance builder and error components."""
 
     def test_diagonal_error_repr(self):
+        """Test string representation of DiagonalError."""
         c = DiagonalError("sigma", 1.0)
         assert repr(c) == "DiagonalError(name='sigma')"
 
     def test_covariance_builder_repr(self):
+        """Test string representation of CovarianceBuilder."""
         c1 = DiagonalError("c1", 1.0)
         c2 = DiagonalError("c2", 2.0)
         builder = c1 + c2

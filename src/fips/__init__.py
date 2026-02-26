@@ -1,4 +1,5 @@
-"""Flexible Inverse Problem Solver (FIPS).
+"""
+Flexible Inverse Problem Solver (FIPS).
 
 A Pythonic framework for solving linear inverse problems using Bayesian estimation.
 Provides data structures for state vectors, observations, forward operators, and

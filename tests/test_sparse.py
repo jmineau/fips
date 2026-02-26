@@ -1,5 +1,9 @@
-"""Tests for sparse matrix support across Structure2D, Matrix, ForwardOperator,
-CovarianceBuilder, and InverseProblem."""
+"""
+Tests for sparse matrix support.
+
+Sparse storage is available in Structure2D, Matrix, ForwardOperator,
+CovarianceBuilder, and InverseProblem.
+"""
 
 import numpy as np
 import pandas as pd
@@ -47,19 +51,24 @@ def _make_block(data, row_block, col_block, row_idx, col_idx):
 
 
 class TestSparseMatrix:
+    """Tests for sparse matrix creation and conversion."""
+
     def test_sparse_flag_creates_sparse_dataframe(self):
+        """Test that sparse=True creates a sparse dataframe."""
         idx = _state_idx()
         block = _make_block(np.eye(4), "s", "s", idx, idx)
         M = Matrix([block], sparse=True)
         assert M.is_sparse
 
     def test_dense_flag_creates_dense_dataframe(self):
+        """Test that sparse=False creates a dense dataframe."""
         idx = _state_idx()
         block = _make_block(np.eye(4), "s", "s", idx, idx)
         M = Matrix([block], sparse=False)
         assert not M.is_sparse
 
     def test_values_equal_after_sparsification(self):
+        """Test that values remain equal after converting to sparse."""
         idx = _state_idx()
         data = np.diag([1.0, 0.0, 3.0, 0.0])
         block = _make_block(data, "s", "s", idx, idx)
@@ -68,6 +77,7 @@ class TestSparseMatrix:
         assert np.allclose(M_dense.values, M_sparse.to_numpy())
 
     def test_to_sparse_roundtrip(self):
+        """Test converting to sparse and back to dense preserves values."""
         idx = _state_idx()
         block = _make_block(np.eye(4), "s", "s", idx, idx)
         M = Matrix([block])
@@ -79,6 +89,7 @@ class TestSparseMatrix:
         assert np.allclose(M.values, Md.values)
 
     def test_to_sparse_with_threshold(self):
+        """Test that to_sparse with threshold zeros out small values."""
         idx = _state_idx()
         data = np.array(
             [
@@ -97,6 +108,8 @@ class TestSparseMatrix:
         assert Ms.values[0, 0] == 1.0
 
     def test_to_sparse_no_threshold_preserves_small_values(self):
+        """Test that to_sparse without threshold preserves all values."""
+        """Test that to_sparse without threshold preserves all values."""
         idx = _state_idx()
         data = np.eye(4)
         data[0, 1] = 1e-12
@@ -115,6 +128,7 @@ class TestSparseMatrix:
         assert np.allclose(result.values, 2 * np.eye(4))
 
     def test_add_sparse_and_sparse(self):
+        """Test adding two sparse matrices together."""
         idx = _state_idx()
         block = _make_block(np.eye(4), "s", "s", idx, idx)
         Ms1 = Matrix([block], sparse=True)
@@ -123,6 +137,7 @@ class TestSparseMatrix:
         assert np.allclose(result.values, 2 * np.eye(4))
 
     def test_scale_preserves_sparsity(self):
+        """Test that scaling a sparse matrix preserves sparsity."""
         idx = _state_idx()
         block = _make_block(np.diag([1.0, 0.0, 3.0, 0.0]), "s", "s", idx, idx)
         Ms = Matrix([block], sparse=True)
@@ -151,17 +166,22 @@ class TestSparseMatrix:
 
 
 class TestSparseForwardOperator:
+    """Tests for sparse forward operator operations."""
+
     @pytest.fixture
     def H_data(self):
+        """Provide sparse forward operator data."""
         return _make_sparse_H(m=3, n=4)
 
     @pytest.fixture
     def state_vec(self):
+        """Provide state vector fixture."""
         idx = _state_idx(4)
         block = Block(pd.Series([1.0, 2.0, 3.0, 4.0], index=idx, name="state"))
         return Vector([block])
 
     def test_sparse_forward_operator_is_sparse(self, H_data):
+        """Test that sparse forward operator is marked as sparse."""
         obs_idx = _obs_idx(3)
         state_idx = _state_idx(4)
         hblock = _make_block(H_data, "obs", "state", obs_idx, state_idx)
@@ -169,6 +189,7 @@ class TestSparseForwardOperator:
         assert H.is_sparse
 
     def test_sparse_convolve_matches_dense(self, H_data, state_vec):
+        """Test that sparse convolve produces same result as dense."""
         obs_idx = _obs_idx(3)
         state_idx = _state_idx(4)
         hblock = _make_block(H_data, "obs", "state", obs_idx, state_idx)
@@ -182,6 +203,7 @@ class TestSparseForwardOperator:
         assert np.allclose(y_dense.to_numpy(), y_sparse.to_numpy())
 
     def test_sparse_convolve_returns_series(self, H_data, state_vec):
+        """Test that sparse convolve returns a Series."""
         obs_idx = _obs_idx(3)
         state_idx = _state_idx(4)
         hblock = _make_block(H_data, "obs", "state", obs_idx, state_idx)
@@ -197,20 +219,25 @@ class TestSparseForwardOperator:
 
 
 class TestSparseCovarianceBuilder:
+    """Tests for building sparse covariance matrices."""
+
     @pytest.fixture
     def midx(self):
+        """Provide multi-index fixture."""
         return pd.MultiIndex.from_tuples(
             [(f"loc{i}", t) for i in range(3) for t in range(4)],
             names=["location", "time"],
         )
 
     def test_sparse_build_returns_sparse_dataframe(self, midx):
+        """Test that sparse build returns a sparse DataFrame."""
         # sparse=True lives on CovarianceBuilder, not ErrorComponent directly
         builder = CovarianceBuilder([DiagonalError("diag", variances=1.0)])
         df = builder.build(midx, sparse=True)
         assert any(isinstance(dt, pd.SparseDtype) for dt in df.dtypes)
 
     def test_sparse_and_dense_build_are_numerically_equal(self, midx):
+        """Test that sparse and dense builds produce numerically equal results."""
         builder = DiagonalError("d1", variances=1.0) + DiagonalError(
             "d2", variances=0.5
         )
@@ -222,6 +249,7 @@ class TestSparseCovarianceBuilder:
         )
 
     def test_single_component_sparse_build(self, midx):
+        """Test building sparse covariance from a single component."""
         builder = CovarianceBuilder([DiagonalError("diag", variances=2.0)])
         df = builder.build(midx, sparse=True)
         assert any(isinstance(dt, pd.SparseDtype) for dt in df.dtypes)
@@ -234,9 +262,11 @@ class TestSparseCovarianceBuilder:
 
 
 class TestSparseInverseProblem:
+    """Tests for inverse problems with sparse matrices."""
+
     @pytest.fixture
     def sparse_problem(self):
-        """InverseProblem with a sparse forward operator."""
+        """Fixture providing an InverseProblem with a sparse forward operator."""
         n_state = 6
         n_obs = 4
         rng = np.random.default_rng(42)
@@ -266,17 +296,19 @@ class TestSparseInverseProblem:
 
     @pytest.fixture
     def dense_problem(self, sparse_problem):
-        """Same problem but reconstructed with a dense forward operator."""
+        """Fixture providing the same problem with a dense forward operator."""
         # Re-expose using the same underlying data
         return sparse_problem
 
     def test_forward_operator_can_be_made_sparse(self, sparse_problem):
+        """Test that forward operator can be converted to sparse representation."""
         sparse_problem.forward_operator = sparse_problem.forward_operator.to_sparse(
             threshold=1e-10
         )
         assert sparse_problem.forward_operator.is_sparse
 
     def test_sparse_solve_produces_finite_posterior(self, sparse_problem):
+        """Test that solving with sparse operators produces finite posterior values."""
         sparse_problem.forward_operator = sparse_problem.forward_operator.to_sparse(
             threshold=1e-10
         )
@@ -300,6 +332,7 @@ class TestSparseInverseProblem:
         assert np.allclose(x_dense, x_sparse, rtol=1e-10)
 
     def test_posterior_shape_with_sparse_operator(self, sparse_problem):
+        """Test that posterior has correct shape when using sparse operators."""
         sparse_problem.forward_operator = sparse_problem.forward_operator.to_sparse(
             threshold=1e-10
         )

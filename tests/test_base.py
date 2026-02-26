@@ -1,3 +1,5 @@
+"""Tests for base classes and core utilities."""
+
 import numpy as np
 import pandas as pd
 import pytest
@@ -14,6 +16,9 @@ from fips.base import (
 
 
 def test_xselect():
+    """
+    Test the xselect utility function for MultiIndex selection.
+    """
     midx = pd.MultiIndex.from_product([["A", "B"], [1, 2]], names=["L1", "L2"])
     df = pd.DataFrame({"val": [10, 20, 30, 40]}, index=midx)
 
@@ -29,17 +34,26 @@ def test_xselect():
 
 
 class DummyPickleable(Pickleable):
+    """
+    Dummy class to test the Pickleable mixin.
+    """
+
     def __init__(self, val):
         self.val = val
 
     def __getstate__(self):
+        """Return state for pickling."""
         return {"val": self.val}
 
     def __setstate__(self, state):
+        """Restore state from pickling."""
         self.val = state["val"]
 
 
 def test_pickleable(tmp_path):
+    """
+    Test serialization and deserialization using the Pickleable mixin.
+    """
     obj = DummyPickleable(42)
     file_path = tmp_path / "test.pkl"
 
@@ -61,6 +75,10 @@ def test_pickleable(tmp_path):
 
 
 class DummyStructure(Structure):
+    """
+    Dummy class to test the base Structure class.
+    """
+
     def __init__(self, data, name=None):
         self.data = data
         self.name = name
@@ -68,14 +86,19 @@ class DummyStructure(Structure):
         self._sanitize()
 
     def __getstate__(self):
+        """Return state for pickling."""
         return {"data": self.data, "name": self.name}
 
     def __setstate__(self, state):
+        """Restore state from pickling."""
         self.data = state["data"]
         self.name = state["name"]
 
 
 def test_structure_validate_sanitize():
+    """
+    Test validation and sanitization of data within a Structure.
+    """
     # Test NaN validation
     with pytest.raises(ValueError, match="Data contains NaN values."):
         DummyStructure(pd.Series([1.0, np.nan], index=pd.Index([0, 1], name="idx")))
@@ -87,6 +110,7 @@ def test_structure_validate_sanitize():
 
 
 def test_structure_properties():
+    """Test basic properties of a Structure object."""
     s = pd.Series([1, 2], index=pd.Index([1, 2], name="a"))
     struct = DummyStructure(s)
 
@@ -95,6 +119,7 @@ def test_structure_properties():
 
 
 def test_structure_reindex():
+    """Test reindexing a Structure with new indices."""
     s = pd.Series([1, 2], index=pd.Index([1, 2], name="a"))
     struct = DummyStructure(s)
     new_idx = pd.Index([2, 3], name="a")
@@ -111,6 +136,7 @@ def test_structure_reindex():
 
 
 def test_structure_round_index():
+    """Test rounding of numeric indices in a Structure."""
     s = pd.Series([1, 2], index=pd.Index([1.123, 2.456], name="a"))
     struct = DummyStructure(s)
 
@@ -120,6 +146,7 @@ def test_structure_round_index():
 
 
 def test_structure1d():
+    """Test Structure1D initialization and conversion to Series."""
     s = pd.Series([1, 2], name="test", index=pd.Index([1, 2], name="a"))
     struct = Structure1D(s)
 
@@ -128,6 +155,7 @@ def test_structure1d():
 
 
 def test_structure2d():
+    """Test Structure2D initialization and conversion to DataFrame."""
     df = pd.DataFrame(
         [[1, 2], [3, 4]],
         index=pd.Index([1, 2], name="a"),
@@ -147,10 +175,13 @@ def test_structure2d():
 
 
 class DummySingleBlock(SingleBlockMixin, DummyStructure):
+    """Dummy class to test the SingleBlockMixin."""
+
     pass
 
 
 def test_single_block_mixin():
+    """Test SingleBlockMixin validation and requirements."""
     # Missing name
     with pytest.raises(ValueError, match="must have a name property"):
         DummySingleBlock(pd.Series([1, 2], index=pd.Index([0, 1], name="idx")))
@@ -168,12 +199,16 @@ def test_single_block_mixin():
 
 
 class DummyMultiBlock(MultiBlockMixin, DummyStructure):
+    """Dummy class to test the MultiBlockMixin."""
+
     @property
     def blocks(self):
+        """Return blocks property."""
         return None
 
 
 def test_multi_block_mixin():
+    """Test MultiBlockMixin validation and requirements."""
     # Missing block level
     with pytest.raises(ValueError, match="must have a 'block' level"):
         DummyMultiBlock(
