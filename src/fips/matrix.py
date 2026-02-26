@@ -39,8 +39,8 @@ class MatrixBlock(SingleBlockMixin, Structure2D):
     semantics for how different components interact.
     """
 
-    data: pd.DataFrame
-    name: str
+    data: pd.DataFrame  # type: ignore[override]
+    name: str  # type: ignore[override]
 
     def __init__(
         self,
@@ -137,7 +137,7 @@ class Matrix(MultiBlockMixin, Structure2D):
     such as forward operators and covariance matrices.
     """
 
-    data: pd.DataFrame
+    data: pd.DataFrame  # type: ignore[override]
 
     def __init__(
         self,
@@ -253,7 +253,7 @@ class Matrix(MultiBlockMixin, Structure2D):
         return df.xs(col_block, level="block", axis=1)
 
     @property
-    def blocks(self) -> _MatrixBlockAccessor:
+    def blocks(self) -> _MatrixBlockAccessor:  # type: ignore[override]
         """Accessor for retrieving MatrixBlock instances from the Matrix."""
         return _MatrixBlockAccessor(self)
 

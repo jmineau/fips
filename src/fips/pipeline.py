@@ -9,7 +9,7 @@ the specifics of data loading and covariance construction, while providing a def
 
 import time
 from abc import ABC, abstractmethod
-from typing import Any
+from typing import Any, Generic, TypeVar
 
 from fips.covariance import CovarianceMatrix
 from fips.estimators import Estimator
@@ -17,8 +17,10 @@ from fips.operators import ForwardOperator
 from fips.problem import InverseProblem
 from fips.vector import Vector
 
+_Problem = TypeVar("_Problem", bound=InverseProblem)
 
-class InversionPipeline(ABC):
+
+class InversionPipeline(ABC, Generic[_Problem]):
     """
     Blueprint for inversion.
     """
@@ -26,7 +28,7 @@ class InversionPipeline(ABC):
     def __init__(
         self,
         config: Any,
-        problem: type[InverseProblem],
+        problem: type[_Problem],
         estimator: type[Estimator] | str,
     ):
         self.config = config
@@ -140,7 +142,7 @@ class InversionPipeline(ABC):
             constant=constant,
         )
 
-    def run(self, **kwargs) -> InverseProblem:
+    def run(self, **kwargs) -> _Problem:
         """Executes the standard inversion workflow."""
         total_start = time.perf_counter()
         print("Getting problem inputs...")

@@ -244,29 +244,29 @@ class InverseProblem(Pickleable):
     @property
     def posterior(self) -> Vector:
         """Posterior state estimate."""
-        return self._wrap("x_hat", "posterior")
+        return self._wrap("x_hat", "posterior")  # type: ignore[return-value]
 
     @property
     def posterior_error(self) -> CovarianceMatrix:
         """Posterior error covariance."""
-        return self._wrap("S_hat", "posterior_error")
+        return self._wrap("S_hat", "posterior_error")  # type: ignore[return-value]
 
     @property
     def posterior_obs(self) -> Vector:
         """Modeled observations (H @ posterior)."""
-        return self._wrap("y_hat", "modeled_obs")
+        return self._wrap("y_hat", "modeled_obs")  # type: ignore[return-value]
 
     @property
     def prior_obs(self) -> Vector:
         """Modeled observations using the prior (H @ prior)."""
-        return self._wrap("y_0", "prior_obs")
+        return self._wrap("y_0", "prior_obs")  # type: ignore[return-value]
 
     @property
     def kalman_gain(self) -> Matrix:
         """Kalman gain matrix (K)."""
-        return self._wrap("K", "kalman_gain")
+        return self._wrap("K", "kalman_gain")  # type: ignore[return-value]
 
     @property
     def averaging_kernel(self) -> Matrix:
         """Averaging kernel matrix (A)."""
-        return self._wrap("A", "averaging_kernel")
+        return self._wrap("A", "averaging_kernel")  # type: ignore[return-value]

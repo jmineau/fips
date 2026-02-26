@@ -576,7 +576,7 @@ class BayesianSolver(Estimator):
         return 0.5 * (cost_model + cost_data)
 
     @cached_property
-    def x_hat(self):
+    def x_hat(self):  # type: ignore[override]
         """
         Posterior Mean Model Estimate (solution)
 
@@ -587,7 +587,7 @@ class BayesianSolver(Estimator):
         return self.x_0 + self.K @ self.residual(self.x_0)
 
     @cached_property
-    def S_hat(self):
+    def S_hat(self):  # type: ignore[override]
         """
         Posterior Error Covariance Matrix
 

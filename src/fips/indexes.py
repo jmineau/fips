@@ -48,7 +48,7 @@ def assign_block(index: pd.Index, block: str) -> pd.Index:
 
 
 def outer_align_levels(
-    dfs: list[pd.DataFrame], axis=0, fill_value=np.nan
+    dfs: list[pd.DataFrame], axis: int | Literal["both"] = 0, fill_value=np.nan
 ) -> list[pd.DataFrame]:
     """
     Aligns MultiIndexes by performing an OUTER JOIN on level names,

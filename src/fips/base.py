@@ -3,7 +3,7 @@ import pickle
 import warnings
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import Any, TypeAlias
+from typing import Any, Literal, TypeAlias
 
 import numpy.typing as npt
 import pandas as pd
@@ -128,6 +128,9 @@ class Structure(Pickleable, ABC):
     def shape(self) -> tuple[int, ...]:
         return self.data.shape
 
+    def __len__(self) -> int:
+        return len(self.data)
+
     @property
     def values(self) -> npt.NDArray:
         return self.to_numpy()
@@ -159,7 +162,7 @@ class Structure(Pickleable, ABC):
                     f"Cannot reindex: target index names {target.names} do not match data index names {current.names}."
                 )
             if current.names != target.names:  # Reorder levels to match target index
-                data = data.reorder_levels(target.names, axis=axis)
+                data = data.reorder_levels(list(target.names), axis=axis)
                 current = data.axes[axis]
             if verify_overlap:
                 overlap = overlaps(target_idx=target, available_idx=current)
@@ -188,9 +191,11 @@ class Structure(Pickleable, ABC):
             self.data = data
             return self
 
-        return type(self)(data, name=self.name)  # create new instance
+        return type(self)(data, name=self.name)  # type: ignore[call-arg]  # create new instance
 
-    def round_index(self, decimals: int, axis=0, inplace: bool = False) -> Self:
+    def round_index(
+        self, decimals: int, axis: int | Literal["both"] = 0, inplace: bool = False
+    ) -> Self:
         """
         Round float indices on the specified axis to given decimals. Non-float indices are left unchanged.
         """
@@ -207,7 +212,7 @@ class Structure(Pickleable, ABC):
             self.data = data
             return self
 
-        return type(self)(data, name=self.name)
+        return type(self)(data, name=self.name)  # type: ignore[call-arg]
 
     def copy(self, deep: bool = True) -> Self:
         """
@@ -223,7 +228,7 @@ class Structure(Pickleable, ABC):
         Matrix
             Copy of the Matrix instance.
         """
-        return type(self)(self.data.copy(deep=deep), name=self.name)
+        return type(self)(self.data.copy(deep=deep), name=self.name)  # type: ignore[call-arg]
 
     def xs(self, key, axis=0, level=None, drop_level=True):
         """
@@ -257,7 +262,7 @@ class Structure(Pickleable, ABC):
 class Structure1D(Structure):
     """Base class for 1D structures (Block, Vector)."""
 
-    data: pd.Series
+    data: pd.Series  # type: ignore[override]
 
     def __init__(
         self,
@@ -302,7 +307,7 @@ class Structure1D(Structure):
 class Structure2D(Structure):
     """Base class for 2D structures (Matrix)."""
 
-    data: pd.DataFrame
+    data: pd.DataFrame  # type: ignore[override]
 
     def __init__(
         self,
@@ -450,7 +455,7 @@ class SingleBlockMixin(ABC):
     name: str | property
 
     def _validate(self):
-        super()._validate()
+        super()._validate()  # type: ignore[attr-defined]
 
         # Check for name property
         if self.name is None:
@@ -479,7 +484,7 @@ class MultiBlockMixin(ABC):
         ...
 
     def _validate(self):
-        super()._validate()
+        super()._validate()  # type: ignore[attr-defined]
 
         # Check for 'block' level in index for Series, columns for DataFrame
         if "block" not in self.data.index.names:

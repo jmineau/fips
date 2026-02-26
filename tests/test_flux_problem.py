@@ -159,8 +159,8 @@ class TestFluxProblemObsProperties:
             constant=background,
         )
         result = problem.enhancement
-        expected = flux_obs.data.values - 390.0
-        np.testing.assert_allclose(result.values, expected)
+        expected = flux_obs.data.to_numpy() - 390.0
+        np.testing.assert_allclose(result.to_numpy(), expected)
 
     def test_background_none_when_not_set(self, flux_problem):
         assert flux_problem.background is None
@@ -187,7 +187,7 @@ class TestFluxProblemObsProperties:
         )
         result = problem.background
         assert isinstance(result, pd.Series)
-        np.testing.assert_allclose(result.values, 390.0)
+        np.testing.assert_allclose(result.to_numpy(), 390.0)
 
 
 # ---------------------------------------------------------------------------

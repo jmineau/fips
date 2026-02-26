@@ -2,13 +2,33 @@
 
 from typing import TYPE_CHECKING
 
-import cartopy.crs as ccrs
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
 if TYPE_CHECKING:
     from fips.problems.flux.problem import FluxProblem
+
+
+def _require_cartopy():
+    try:
+        import cartopy.crs as ccrs  # type: ignore
+
+        return ccrs
+    except ImportError as exc:
+        raise ImportError(
+            "cartopy is required for map plotting; install with `pip install fips[flux]`."
+        ) from exc
+
+
+def _require_matplotlib():
+    try:
+        import matplotlib.pyplot as plt  # type: ignore
+
+        return plt
+    except ImportError as exc:
+        raise ImportError(
+            "matplotlib is required for plotting; install with `pip install fips[flux]`."
+        ) from exc
 
 
 class FluxPlotter:
@@ -38,7 +58,7 @@ class FluxPlotter:
         x_dim="lon",
         y_dim="lat",
         time_dim="time",
-        sites=False,
+        sites: bool | dict = False,
         sites_kwargs=None,
         **kwargs,
     ):
@@ -69,6 +89,8 @@ class FluxPlotter:
         fig, axes : matplotlib Figure and Axes
             The created figure and axes.
         """
+        plt = _require_matplotlib()
+
         # Get xarray representations of fluxes
         prior = self.inversion.prior_fluxes.to_xarray()
         posterior = self.inversion.posterior_fluxes.to_xarray()
@@ -91,6 +113,7 @@ class FluxPlotter:
         tiler = kwargs.pop("tiler", None)
         subplot_kw = kwargs.pop("subplot_kw", {})
         if tiler is not None:
+            ccrs = _require_cartopy()
             subplot_kw["projection"] = tiler.crs
 
         ncols = 3
@@ -112,6 +135,8 @@ class FluxPlotter:
         # Create figure and axes
         fig, axes = plt.subplots(ncols=ncols, sharey=True, subplot_kw=subplot_kw)
 
+        ax_truth = None
+        ax_res = None
         if truth is None:
             ax_prior = axes[0]
             ax_post = axes[1]
@@ -261,7 +286,7 @@ class FluxPlotter:
                 # Extract coordinates from dict map
                 lats = []
                 lons = []
-                for site_id, (lat, lon) in sites.items():
+                for _site_id, (lat, lon) in sites.items():
                     lats.append(lat)
                     lons.append(lon)
 
@@ -310,6 +335,8 @@ class FluxPlotter:
         axes : np.ndarray
             Array of axes objects, one per location.
         """
+        plt = _require_matplotlib()
+
         obs = self.inversion.concentrations.rename("observed")
         prior = self.inversion.prior_concentrations.rename("prior")
         posterior = self.inversion.posterior_concentrations.rename("posterior")

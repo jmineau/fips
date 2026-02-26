@@ -27,8 +27,8 @@ class Block(SingleBlockMixin, Structure1D):
     observation components relevant to the application.
     """
 
-    data: pd.Series
-    name: str
+    data: pd.Series  # type: ignore[override]
+    name: str  # type: ignore[override]
 
     def __init__(
         self,
@@ -113,7 +113,7 @@ class Vector(MultiBlockMixin, Structure1D):
     1D matrix components in the inversion framework.
     """
 
-    data: pd.Series
+    data: pd.Series  # type: ignore[override]
 
     def __init__(
         self,
@@ -206,7 +206,7 @@ class Vector(MultiBlockMixin, Structure1D):
         return self.xs(block, level="block")
 
     @property
-    def blocks(self) -> _BlockAccessor:
+    def blocks(self) -> _BlockAccessor:  # type: ignore[override]
         """Accessor for retrieving Block instances from the Vector."""
         return _BlockAccessor(self)
 

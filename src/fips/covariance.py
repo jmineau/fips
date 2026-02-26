@@ -196,7 +196,7 @@ class BlockDecayError(ErrorComponent):
             for _, group in coords.groupby(self.groupers)
         )
 
-        for idx, block in results:
+        for idx, block in results or []:
             corr_matrix[np.ix_(idx, idx)] = block
 
         std_dev = np.sqrt(variances.to_numpy())

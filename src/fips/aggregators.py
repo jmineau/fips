@@ -4,9 +4,8 @@ import numpy as np
 import pandas as pd
 from scipy.sparse import csr_matrix
 
-from fips.covariance import CovarianceMatrix
-from fips.operators import ForwardOperator
-from fips.vector import Vector
+from fips.matrix import Matrix, MatrixBlock
+from fips.vector import Block, Vector
 
 
 def integrate_over_time_bins(
@@ -54,7 +53,7 @@ def integrate_over_time_bins(
 
     # Order the index levels if MultiIndex
     if isinstance(integrated.index, pd.MultiIndex):
-        integrated = integrated.reorder_levels(dims)
+        integrated = integrated.reorder_levels(list(dims))
 
     if is_series:
         # Return a Series if the input was a Series
@@ -203,7 +202,7 @@ class ObsAggregator:
 
             # ngroup() maps each obs to a consecutive integer row id in W.
             agg_target_idx = grouper.size().index
-            target_group_ids = grouper.ngroup().values
+            target_group_ids = grouper.ngroup().to_numpy()
             n_agg_targets = len(agg_target_idx)
 
             row_indices[mask] = target_group_ids
@@ -241,7 +240,13 @@ class ObsAggregator:
 
         return W, agg_index
 
-    def apply(self, obs, forward_operator, modeldata_mismatch, constant=None):
+    def apply(
+        self,
+        obs: pd.Series | Block | Vector,
+        forward_operator: pd.DataFrame | MatrixBlock | Matrix,
+        modeldata_mismatch: pd.DataFrame | MatrixBlock | Matrix,
+        constant: float | pd.Series | Block | Vector | None = None,
+    ):
         """Apply W to the inverse problem components.
 
         Inputs may be bare pandas objects or fips wrapper types (``Vector``,
@@ -296,23 +301,26 @@ class ObsAggregator:
             S_z_agg_vals = S_z_agg_vals.toarray()
         S_z_agg = pd.DataFrame(S_z_agg_vals, index=agg_idx, columns=agg_idx)
 
-        def repack(orig_obj, new_df, cls):
-            """Re-wrap new_df in cls if the original was a fips wrapper."""
-            return cls(new_df) if hasattr(orig_obj, "data") else new_df
+        def repack(orig_obj, new_df):
+            """Re-wrap new_df in the same type as orig_obj if it is a fips wrapper."""
+            return (
+                type(orig_obj)(new_df, name=orig_obj.name)
+                if hasattr(orig_obj, "data")
+                else new_df
+            )
 
         # c_agg = W @ c  (scalars are invariant to aggregation)
-        c_agg = None
-        if constant is not None:
-            if np.isscalar(constant):
-                c_agg = constant
-            else:
-                c_df = unwrap(constant)
-                c_vals = pd.Series(W @ c_df.values, index=agg_idx, name=c_df.name)
-                c_agg = repack(constant, c_vals, Vector)
+        if constant is None:
+            c_agg = None
+        elif np.isscalar(constant):
+            c_agg = constant  # scalars pass through unchanged
+        else:
+            c_vals = pd.Series(W @ c_df.values, index=agg_idx, name=c_df.name)
+            c_agg = repack(constant, c_vals)
 
         return (
-            repack(obs, z_agg, Vector),
-            repack(forward_operator, H_agg, ForwardOperator),
-            repack(modeldata_mismatch, S_z_agg, CovarianceMatrix),
+            repack(obs, z_agg),
+            repack(forward_operator, H_agg),
+            repack(modeldata_mismatch, S_z_agg),
             c_agg,
         )

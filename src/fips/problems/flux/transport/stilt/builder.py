@@ -7,7 +7,7 @@ from typing import overload
 import numpy as np
 import pandas as pd
 from joblib import Parallel, delayed
-from stilt import Simulation
+from stilt import Simulation  # type: ignore[import]
 
 from fips.aggregators import integrate_over_time_bins
 from fips.matrix import MatrixBlock
@@ -301,7 +301,7 @@ def build_obs_index(sim: Simulation, location_dim: str, time_dim: str) -> pd.Mul
 def calc_digits(res: float) -> int:
     if res <= 0:
         raise ValueError("Resolution must be positive")
-    if res < 1:  # fractional resolution
+    if res < 1:  # fractional resolution  # noqa: SIM108
         digits = int(np.ceil(np.abs(np.log10(res)))) + 1
     else:
         digits = int(-np.log10(res))

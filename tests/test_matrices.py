@@ -163,7 +163,7 @@ class TestCovarianceMatrixAddition:
         result = cov1 + cov2
 
         expected = np.eye(3) * 3
-        assert np.allclose(result.values, expected)
+        assert np.allclose(result.to_numpy(), expected)
         assert isinstance(result, CovarianceMatrix)
 
     def test_add_nondiagonal_covariances(self):
@@ -180,13 +180,10 @@ class TestCovarianceMatrixAddition:
         result = cov1 + cov2
 
         expected = np.array([[1.5, 0.7], [0.7, 2.5]])
-        assert np.allclose(result.values, expected)
+        assert np.allclose(result.to_numpy(), expected)
 
     def test_add_preserves_multiindex(self):
         """Test that addition preserves MultiIndex structure."""
-        idx = pd.MultiIndex.from_product(
-            [["b1", "b2"], [1, 2], ["block"]], names=["block", "num", "extra"]
-        )
         uidx = pd.MultiIndex.from_product(
             [["b1", "b2"], [1, 2]], names=["block", "num"]
         )
@@ -481,7 +478,7 @@ class TestConvolve:
         result = forward_op.convolve(state)
 
         # For identity matrix, result should match input
-        assert np.allclose(result.values, state_values)
+        assert np.allclose(result.to_numpy(), state_values)
 
     def test_forward_operator_convolve_method(self):
         """Test ForwardOperator.convolve method directly."""
@@ -499,7 +496,7 @@ class TestConvolve:
         result = H.convolve(state)
 
         assert isinstance(result, pd.Series)
-        assert np.allclose(result.values, state_values)
+        assert np.allclose(result.to_numpy(), state_values)
 
     def test_convolve_with_series(self):
         """Test convolution with pandas Series state."""

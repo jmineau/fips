@@ -96,7 +96,7 @@ def plot_comparison(
             name = getattr(s, "name", df.columns[i])
 
             if isinstance(err, CovarianceMatrix):
-                e = np.sqrt(err.get_variances())
+                e = pd.Series(np.sqrt(err.variances.values), index=err.index, name=name)
             elif isinstance(err, Matrix):
                 e = pd.Series(np.sqrt(np.diag(err.values)), index=err.index, name=name)
             else:

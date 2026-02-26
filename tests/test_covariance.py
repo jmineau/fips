@@ -468,7 +468,7 @@ class TestVarianceAlignmentInComponents:
         aligned = component._align_variances(idx)
 
         assert len(aligned) == 3
-        assert np.allclose(aligned.values, 5.0)
+        assert np.allclose(aligned.to_numpy(), 5.0)
 
     def test_align_variances_with_missing_names_raises(self):
         """Test that unnamed index levels raise error."""

@@ -3,7 +3,7 @@ import logging
 from pathlib import Path
 
 import pandas as pd
-from stilt import Simulation
+from stilt import Simulation  # type: ignore[import]
 
 logger = logging.getLogger(__name__)
 
@@ -18,7 +18,7 @@ def get_sim(
 
     if sim.status != "SUCCESS":
         logger.debug(f"Skipping simulation {sim.id} with status {sim.status}")
-        return sim.id
+        return str(sim.id)
 
     if not sim_in_time_range(
         sim=sim, t_start=t_start, t_stop=t_stop, subset_hours=subset_hours

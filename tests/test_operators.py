@@ -96,7 +96,7 @@ class TestForwardOperator:
         state = pd.Series([10.0, 20.0], index=state_idx, name="test_state")
         result = op.convolve(state)
         assert isinstance(result, pd.Series)
-        assert np.allclose(result.values, [50.0, 110.0])
+        assert np.allclose(result.to_numpy(), [50.0, 110.0])
 
     def test_convolve_with_numpy_array(self):
         """Test convolving a numpy array through the operator."""
@@ -117,7 +117,7 @@ class TestForwardOperator:
         state = pd.Series([10.0, 20.0], index=state_idx)
         result = op.convolve(state)
         assert isinstance(result, pd.Series)
-        assert np.allclose(result.values, [50.0, 110.0])
+        assert np.allclose(result.to_numpy(), [50.0, 110.0])
 
     def test_convolve_shape_mismatch_raises(self):
         """Test that shape mismatch raises ValueError."""
@@ -145,7 +145,7 @@ class TestForwardOperator:
         # Therefore, no warning is raised, and the state vector is simply truncated.
         result = op.convolve(state)
         assert isinstance(result, pd.Series)
-        assert np.allclose(result.values, [50.0])
+        assert np.allclose(result.to_numpy(), [50.0])
 
     def test_convolve_invalid_type_raises(self):
         """Test that invalid type raises an error."""
@@ -206,7 +206,7 @@ class TestForwardOperator:
         result = op.convolve(state)
         # [1, 2, 3] @ [10, 20, 30] = 140
         # [4, 5, 6] @ [10, 20, 30] = 320
-        assert np.allclose(result.values, [140.0, 320.0])
+        assert np.allclose(result.to_numpy(), [140.0, 320.0])
 
     def test_identity_operator(self):
         """Test identity operator (I)."""
@@ -221,7 +221,7 @@ class TestForwardOperator:
         state_idx = pd.MultiIndex.from_product([["state"], idx], names=["block", "idx"])
         state = pd.Series([1.0, 2.0, 3.0], index=state_idx)
         result = op.convolve(state)
-        assert np.allclose(result.values, state.values)
+        assert np.allclose(result.to_numpy(), state.to_numpy())
 
     def test_zero_operator(self):
         """Test zero operator (all zeros)."""
@@ -243,7 +243,7 @@ class TestForwardOperator:
         # Note: pd.MultiIndex names already set correctly here in previous read
         state = pd.Series([10.0, 20.0], index=state_idx, name="state")
         result = op.convolve(state)
-        assert np.allclose(result.values, [0.0, 0.0])
+        assert np.allclose(result.to_numpy(), [0.0, 0.0])
 
 
 class TestConvolveFunction:
@@ -269,7 +269,7 @@ class TestConvolveFunction:
 
         result = convolve(state, op)
         assert isinstance(result, pd.Series)
-        assert np.allclose(result.values, [50.0, 110.0])
+        assert np.allclose(result.to_numpy(), [50.0, 110.0])
 
     def test_convolve_with_dataframe(self):
         """Test convolve with DataFrame (auto-converts to ForwardOperator)."""
@@ -291,7 +291,7 @@ class TestConvolveFunction:
 
         result = convolve(state, op)
         assert isinstance(result, pd.Series)
-        assert np.allclose(result.values, [50.0, 110.0])
+        assert np.allclose(result.to_numpy(), [50.0, 110.0])
 
     def test_convolve_with_vector(self):
         """Test convolve with Vector as state."""
@@ -313,7 +313,7 @@ class TestConvolveFunction:
 
         result = convolve(state, op)
         assert isinstance(result, pd.Series)
-        assert np.allclose(result.values, [50.0])
+        assert np.allclose(result.to_numpy(), [50.0])
 
     def test_convolve_with_numpy_array(self):
         """Test convolve with numpy array as state."""
@@ -335,7 +335,7 @@ class TestConvolveFunction:
 
         result = convolve(state, op)
         assert isinstance(result, pd.Series)
-        assert np.allclose(result.values, [50.0])
+        assert np.allclose(result.to_numpy(), [50.0])
 
     def test_convolve_with_float_precision(self):
         """Test convolve with round_index parameter."""

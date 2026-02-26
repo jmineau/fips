@@ -28,7 +28,7 @@ def test_integrate_over_time_bins_series():
 
     assert len(result) == 5
     assert result.index.name == "time"
-    assert (result.values == 2.0).all()
+    assert (result.to_numpy() == 2.0).all()
 
 
 def test_integrate_over_time_bins_dataframe_multiindex():
@@ -174,6 +174,7 @@ class TestObsAggregator:
         agg = ObsAggregator(by=daily_groupby, func="mean")
         c = Vector(pd.Series(obs_vec.values, index=obs_vec.index, name="constant"))
         _, _, _, new_c = agg.apply(obs_vec, fwd_op, cov_Sz, constant=c)
+        print(f"{new_c = }")
         assert isinstance(new_c, Vector)
         assert new_c.shape[0] == 2
 
@@ -189,7 +190,9 @@ class TestObsAggregator:
         agg_freq = ObsAggregator(level="obs_time", freq="D", func="mean")
         obs_by, _, _, _ = agg_by.apply(obs_vec, fwd_op, cov_Sz)
         obs_freq, _, _, _ = agg_freq.apply(obs_vec, fwd_op, cov_Sz)
-        np.testing.assert_allclose(sorted(obs_by.values), sorted(obs_freq.values))
+        np.testing.assert_allclose(
+            sorted(obs_by.to_numpy()), sorted(obs_freq.to_numpy())
+        )
 
     def test_blocks_filter_only_aggregates_target_block(self, obs_idx, state_idx):
         """With blocks=, untargeted blocks should pass through as identity rows."""

@@ -231,7 +231,7 @@ class TestVectorCrossSection:
         # Access specific index value
         result = vector.xs("a", level="dim")
 
-        assert isinstance(result, pd.Series) or isinstance(result, (int, float))
+        assert isinstance(result, (pd.Series, int, float))
 
     def test_vector_xs_exists(self):
         """Test that xs method exists and is callable."""

@@ -51,7 +51,7 @@ def _parse_dimensions(
     axes = [np.arange(s) for s in shape]
     index = pd.MultiIndex.from_product(axes, names=names)
     coords = np.stack(
-        [index.get_level_values(i).values for i in range(len(shape))], axis=1
+        [index.get_level_values(i).to_numpy() for i in range(len(shape))], axis=1
     )
 
     return index, coords, shape

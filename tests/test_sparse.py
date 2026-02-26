@@ -179,7 +179,7 @@ class TestSparseForwardOperator:
         y_dense = H_dense.convolve(state_vec)
         y_sparse = H_sparse.convolve(state_vec)
 
-        assert np.allclose(y_dense.values, y_sparse.values)
+        assert np.allclose(y_dense.to_numpy(), y_sparse.to_numpy())
 
     def test_sparse_convolve_returns_series(self, H_data, state_vec):
         obs_idx = _obs_idx(3)

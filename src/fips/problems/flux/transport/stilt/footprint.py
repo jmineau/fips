@@ -1,7 +1,7 @@
 import datetime as dt
 import logging
 
-from stilt import Footprint, Simulation
+from stilt import Footprint, Simulation  # type: ignore[import]
 
 logger = logging.getLogger(__name__)
 

@@ -9,7 +9,7 @@ from fips.problems.flux.problem import FluxProblem
 from fips.vector import Vector
 
 
-class FluxInversionPipeline(InversionPipeline, ABC):
+class FluxInversionPipeline(InversionPipeline[FluxProblem], ABC):
     problem: FluxProblem
 
     def __init__(self, config):
