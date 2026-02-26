@@ -9,13 +9,14 @@ Requirements
 - `pandas <https://pandas.pydata.org>`_
 - `xarray <https://xarray.pydata.org>`_
 - `scipy <https://scipy.org>`_
+- `joblib <https://joblib.readthedocs.io>`_
 
-From PyPI
+From GitHub
 ---------
 
 .. code-block:: bash
 
-   pip install fips
+   pip install git+https://github.com/jmineau/fips
 
 Optional extras
 ~~~~~~~~~~~~~~~

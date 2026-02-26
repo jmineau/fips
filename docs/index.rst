@@ -1,3 +1,8 @@
+.. rst-class:: hidden-title
+
+fips |release|
+==============
+
 .. image:: _static/logo.png
    :class: only-light
    :align: center
@@ -13,6 +18,7 @@
 .. include:: ../README.md
    :parser: myst_parser.sphinx_
    :start-line: 8
+   :end-before: ## Documentation
 
 .. toctree::
    :maxdepth: 1
@@ -34,6 +40,11 @@
    :caption: Reference
    :hidden:
 
-   api
+   api/index
+
+----
+
+**Contributing:** See our `Contributing Guide <https://github.com/jmineau/fips/blob/main/CONTRIBUTING.md>`_ on GitHub.
+
 * :ref:`modindex`
 * :ref:`search`

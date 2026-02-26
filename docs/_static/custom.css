@@ -1,0 +1,4 @@
+/* Hide the page title on the index page while keeping it for browser title */
+.hidden-title {
+    display: none;
+}

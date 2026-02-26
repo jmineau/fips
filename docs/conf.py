@@ -3,6 +3,7 @@
 # For the full list of built-in configuration values, see the documentation:
 # https://www.sphinx-doc.org/en/master/usage/configuration.html
 
+from importlib.metadata import version
 import os
 import sys
 
@@ -14,7 +15,8 @@ sys.path.insert(0, os.path.abspath("../src"))
 project = "fips"
 copyright = "2025, James Mineau"
 author = "James Mineau"
-release = "2025.10.0"
+release = version("fips")
+
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
@@ -40,6 +42,7 @@ myst_enable_extensions = ["html_image", "colon_fence"]
 
 html_theme = "pydata_sphinx_theme"
 html_static_path = ["_static"]
+html_css_files = ["custom.css"]
 
 html_theme_options = {
     "github_url": "https://github.com/jmineau/fips",
