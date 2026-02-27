@@ -8,12 +8,18 @@ transport models, and visualization tools.
 
 from fips.problems.flux.pipeline import FluxInversionPipeline
 from fips.problems.flux.problem import FluxProblem
-from fips.problems.flux.transport.stilt import JacobianBuilder
 from fips.problems.flux.visualization import FluxPlotter
 
 __all__ = [
     "FluxProblem",
     "FluxPlotter",
-    "JacobianBuilder",
     "FluxInversionPipeline",
 ]
+
+# Optional STILT transport backend (requires stilt package)
+try:
+    from fips.problems.flux.transport.stilt import JacobianBuilder  # noqa: F401
+
+    __all__.append("JacobianBuilder")
+except ImportError:
+    pass
