@@ -103,11 +103,6 @@ STILT
 
    Use this module at your own risk. The API may change without notice.
 
-.. autosummary::
-   :toctree: ../api/
-
-   builder.JacobianBuilder
-   footprint.load_footprint
-   footprint.load_footprints
-   simulation.get_sim
-   simulation.load_simulation
+The STILT transport backend provides the ``JacobianBuilder`` class for
+constructing forward operators from STILT atmospheric transport simulations.
+See the source code for implementation details.
