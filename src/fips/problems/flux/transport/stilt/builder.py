@@ -29,22 +29,20 @@ class JacobianBuilder:
     """
     Builds Jacobian matrices from STILT footprint simulations.
 
-    Attributes
+    Parameters
     ----------
     simulations : list[stilt.Simulation | Path]
         List of STILT simulations or paths to simulation directories.
-    location_dim : str
-        Name of the observation location dimension.
-    time_dim : str
-        Name of the observation time dimension.
-    failed_sims : list
-        List of simulation IDs that failed to process.
-
-    Methods
-    -------
-    build_from_coords(coords, flux_times, resolution=None, subset_hours=None, num_processes=1, location_mapper=None, timeout=None, threshold=1e-15, sparse=False)
-        Build the Jacobian matrix from specified coordinates and flux time bins.
     """
+
+    simulations: list[Simulation | Path]
+    """List of STILT simulations or paths to simulation directories."""
+    location_dim: str
+    """Name of the observation location dimension."""
+    time_dim: str
+    """Name of the observation time dimension."""
+    failed_sims: list[str]
+    """List of simulation IDs that failed to process."""
 
     def __init__(
         self,
@@ -52,14 +50,6 @@ class JacobianBuilder:
         location_dim: str = "obs_location",
         time_dim: str = "obs_time",
     ):
-        """
-        Initialize the Jacobian builder.
-
-        Parameters
-        ----------
-        simulations : list[stilt.Simulation | Path]
-            List of STILT simulations or paths to simulation directories.
-        """
         self.simulations = simulations
         self.location_dim = location_dim
         self.time_dim = time_dim

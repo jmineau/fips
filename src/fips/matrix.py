@@ -38,49 +38,36 @@ class MatrixBlock(SingleBlockMixin, Structure2D):
     users can create modular and interpretable representations of complex inverse problems, with clear
     semantics for how different components interact.
 
-    Attributes
+    Parameters
     ----------
-    name : str
-        Name of the block. Defaults to "{row_block}_{col_block}" if not provided.
-    data : pd.DataFrame
-        The underlying DataFrame containing the block's data.
-    row_block : str
-        Name of the row block (e.g., "state", "obs").
-    col_block : str
-        Name of the column block (e.g., "state", "obs").
-    index : pd.Index
+    data : np.ndarray or pd.DataFrame or MatrixBlock or scalar
+        2D data representing the block. If MatrixBlock, creates a copy.
+    row_block : str, optional
+        Name of the row block (e.g., "state", "obs"). Required if data is not a MatrixBlock.
+    col_block : str, optional
+        Name of the column block (e.g., "state", "obs"). Required if data is not a MatrixBlock.
+    name : str, optional
+        Name for the block. If None, defaults to "{row_block}_{col_block}".
+    index : pd.Index, optional
         Index for the rows of the DataFrame.
-    columns : pd.Index
-        Index for the columns of the DataFrame.
-    shape : tuple
-        Shape of the block (number of rows, number of columns).
-    values : np.ndarray
-        The underlying data values, whether sparse or dense.
-    is_sparse : bool
-        Whether the block is stored in sparse format.
-
-    Methods
-    -------
-    xs(key, axis=0, level=None, drop_level=True)
-        Cross-select data based on index/column values.
-    reindex(new_index, new_columns, fill_value=0.0)
-        Reindex the block to new row and column indices, filling missing values with fill_value.
-    round_index(decimals, axis='both')
-        Round the index and/or columns to a specified number of decimal places for alignment.
-    copy()
-        Return a copy of the MatrixBlock.
-    to_frame(add_block_level=False)
-        Convert to a DataFrame, optionally adding block levels to the index and columns.
-    to_dense()
-        Return a copy of the block with dense internal storage.
-    to_sparse(threshold=None)
-        Return a copy of the block with sparse internal storage, zeroing values below the threshold.
-    to_numpy()
-        Get the underlying data as a NumPy array.
+    columns : pd.Index, optional
+        Index for the columns of the DataFrame. If None, uses the same as `index`.
+    dtype : data type, optional
+        Data type to force.
+    copy : bool, optional
+        Whether to copy the data.
+    sparse : bool, default False
+        If True, store the block in pandas sparse format.
+        Sparsification is applied after initialization.
+        Use threshold zeroing in your builder before passing data here for best results.
     """
 
     data: pd.DataFrame  # type: ignore[override]
     name: str  # type: ignore[override]
+    row_block: str
+    """Name of the row block (e.g., 'state', 'obs')."""
+    col_block: str
+    """Name of the column block (e.g., 'state', 'obs')."""
 
     def __init__(
         self,
@@ -94,32 +81,6 @@ class MatrixBlock(SingleBlockMixin, Structure2D):
         copy: bool = False,
         sparse: bool = False,
     ):
-        """
-        Initialize a MatrixBlock.
-
-        Parameters
-        ----------
-        data : np.ndarray or pd.DataFrame or MatrixBlock or scalar
-            2D data representing the block. If MatrixBlock, creates a copy.
-        row_block : str, optional
-            Name of the row block (e.g., "state", "obs"). Required if data is not a MatrixBlock.
-        col_block : str, optional
-            Name of the column block (e.g., "state", "obs"). Required if data is not a MatrixBlock.
-        name : str, optional
-            Name for the block. If None, defaults to "{row_block}_{col_block}".
-        index : pd.Index, optional
-            Index for the rows of the DataFrame.
-        columns : pd.Index, optional
-            Index for the columns of the DataFrame. If None, uses the same as `index`.
-        dtype : data type, optional
-            Data type to force.
-        copy : bool, optional
-            Whether to copy the data.
-        sparse : bool, default False
-            If True, store the block in pandas sparse format.
-            Sparsification is applied after initialization.
-            Use threshold zeroing in your builder before passing data here for best results.
-        """
         if isinstance(data, MatrixBlock):
             row_block = row_block or data.row_block
             col_block = col_block or data.col_block
@@ -216,44 +177,28 @@ class Matrix(MultiBlockMixin, Structure2D):
     Matrices represent 2D components of the inversion problem,
     such as forward operators and covariance matrices.
 
-    Attributes
+    Parameters
     ----------
-    name : str | None
-        Name of the matrix. Optional.
-    data : pd.DataFrame
-        The underlying DataFrame containing the matrix data.
+    data : np.ndarray or pd.DataFrame or Matrix or scalar
+        2D data representing the matrix.
+    name : str, optional
+        Name for the Matrix.
     index : pd.MultiIndex
         Index for the rows of the DataFrame.
-    columns : pd.MultiIndex
-        Index for the columns of the DataFrame.
-    shape : tuple
-        Shape of the matrix (number of rows, number of columns).
-    values : np.ndarray
-        The underlying data values, whether sparse or dense.
-    is_sparse : bool
-        Whether the matrix is stored in sparse format.
-
-    Methods
-    -------
-    xs(key, axis=0, level=None, drop_level=True)
-        Cross-select data based on index/column values.
-    reindex(new_index, new_columns, fill_value=0.0)
-        Reindex the matrix to new row and column indices, filling missing values with fill_value.
-    round_index(decimals, axis='both')
-        Round the index and/or columns to a specified number of decimal places for alignment.
-    copy()
-        Return a copy of the Matrix.
-    to_frame()
-        Convert to a DataFrame.
-    to_dense()
-        Return a copy of the matrix with dense internal storage.
-    to_sparse(threshold=None)
-        Return a copy of the matrix with sparse internal storage, zeroing values below the threshold.
-    to_numpy()
-        Get the underlying data as a NumPy array.
+    columns : pd.MultiIndex, optional
+        Index for the columns of the DataFrame. If None, uses the same as `index`.
+    dtype : data type, optional
+        Data type to force.
+    copy : bool, optional
+        Whether to copy the data.
+    sparse : bool, default False
+        If True, store the assembled matrix in pandas sparse format.
+        Sparsification is applied after block assembly; use threshold
+        zeroing in your builder before passing data here.
     """
 
     data: pd.DataFrame  # type: ignore[override]
+    """The underlying data, which must be numeric and non-NaN. Can be stored in sparse format."""
 
     def __init__(
         self,
@@ -265,33 +210,6 @@ class Matrix(MultiBlockMixin, Structure2D):
         copy=None,
         sparse: bool = False,
     ):
-        """
-        Initialize a Matrix.
-
-        Parameters
-        ----------
-        data : np.ndarray or pd.DataFrame or Matrix or scalar
-            2D data representing the matrix.
-        name : str, optional
-            Name for the Matrix.
-        index : pd.MultiIndex
-            Index for the rows of the DataFrame.
-        columns : pd.MultiIndex, optional
-            Index for the columns of the DataFrame. If None, uses the same as `index`.
-        dtype : data type, optional
-            Data type to force.
-        copy : bool, optional
-            Whether to copy the data.
-        sparse : bool, default False
-            If True, store the assembled matrix in pandas sparse format.
-            Sparsification is applied after block assembly; use threshold
-            zeroing in your builder before passing data here.
-
-        Returns
-        -------
-        Matrix
-            Instance of Matrix wrapping the DataFrame.
-        """
         blocks = None
 
         # Accept Matrix - extract DataFrame

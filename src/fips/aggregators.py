@@ -107,11 +107,36 @@ class ObsAggregator:
     belonging to other blocks are passed through unchanged via identity rows
     in W, so the returned arrays cover the full observation space.
 
-    Methods
-    -------
+    Parameters
+    ----------
+    by : str | list[str] | Callable, optional
+        Explicit grouping specification. Mutually exclusive with ``level``.
+    level : str, optional
+        Index level to group / resample. Requires either a matching level
+        name in the obs index or use alongside ``freq``.
+    freq : str, optional
+        Pandas offset alias for resampling ``level`` (e.g. ``'D'``, ``'h'``).
+    func : {'mean', 'sum'}
+        Aggregation function. Default ``'mean'``.
+    blocks : str | list[str], optional
+        Block name(s) to aggregate. Unlisted blocks pass through as-is.
+
+    Apply to inverse problem components
+    -----------------------------------
     apply(obs, forward_operator, modeldata_mismatch, constant)
         Apply the aggregation to the inverse problem components.
     """
+
+    by: str | list[str] | Callable | None
+    """Explicit grouping specification. Mutually exclusive with 'level'."""
+    level: str | None
+    """Index level to group / resample. Requires either a matching level name in the obs index or use alongside 'freq'."""
+    freq: str | None
+    """Pandas offset alias for resampling 'level' (e.g. 'D', 'h')."""
+    func: str
+    """Aggregation function, either 'mean' or 'sum'. Default is 'mean'."""
+    blocks: list[str] | None
+    """Block name(s) to aggregate. Unlisted blocks pass through as-is."""
 
     def __init__(
         self,
@@ -121,23 +146,6 @@ class ObsAggregator:
         func: str = "mean",
         blocks: str | list[str] | None = None,
     ):
-        """
-        Initialize the ObsAggregator.
-
-        Parameters
-        ----------
-        by : str | list[str] | Callable, optional
-            Explicit grouping specification. Mutually exclusive with ``level``.
-        level : str, optional
-            Index level to group / resample. Requires either a matching level
-            name in the obs index or use alongside ``freq``.
-        freq : str, optional
-            Pandas offset alias for resampling ``level`` (e.g. ``'D'``, ``'h'``).
-        func : {'mean', 'sum'}
-            Aggregation function. Default ``'mean'``.
-        blocks : str | list[str], optional
-            Block name(s) to aggregate. Unlisted blocks pass through as-is.
-        """
         if func not in {"mean", "sum"}:
             raise ValueError(
                 "func must be 'mean' or 'sum' for valid covariance propagation."

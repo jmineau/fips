@@ -1,3 +1,9 @@
+# Documentation generated files #
+#################################
+docs/_build/
+docs/reference/api/
+
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]

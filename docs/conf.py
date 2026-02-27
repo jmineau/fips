@@ -3,9 +3,9 @@
 # For the full list of built-in configuration values, see the documentation:
 # https://www.sphinx-doc.org/en/master/usage/configuration.html
 
-from importlib.metadata import version
 import os
 import sys
+from importlib.metadata import version
 
 sys.path.insert(0, os.path.abspath("../src"))
 
@@ -54,12 +54,19 @@ html_theme_options = {
     },
 }
 
+# Hide primary (left) sidebar on specific pages
+html_sidebars = {
+    "installation": [],
+    "quickstart": [],
+    "usage": [],
+}
+
 # -- Extension configuration -------------------------------------------------
 
 # Napoleon settings
 napoleon_google_docstring = False
 napoleon_numpy_docstring = True
-napoleon_include_init_with_doc = True
+napoleon_include_init_with_doc = False
 napoleon_include_private_with_doc = False
 napoleon_include_special_with_doc = True
 napoleon_use_admonition_for_examples = False
@@ -72,14 +79,7 @@ napoleon_preprocess_types = False
 napoleon_type_aliases = None
 napoleon_attr_annotations = True
 
-# Autodoc settings
-autodoc_default_options = {
-    "members": True,
-    "member-order": "bysource",
-    "special-members": "__init__",
-    "undoc-members": True,
-    "exclude-members": "__weakref__",
-}
+autoclass_content = "class"
 
 # Autosummary settings
 autosummary_generate = True
@@ -94,3 +94,52 @@ intersphinx_mapping = {
     "scipy": ("https://docs.scipy.org/doc/scipy/", None),
     "xarray": ("https://xarray.pydata.org/en/stable/", None),
 }
+
+
+def process_class_docstrings(app, what, name, obj, options, lines) -> None:
+    """
+    Process class docstrings to remove empty autosummary sections.
+
+    For classes using custom autosummary templates, this removes any
+    Attributes or Methods sections that contain only 'None' as placeholder,
+    preventing Sphinx warnings and ugly HTML output.
+
+    This is called during the "autodoc-process-docstring" event for each
+    docstring being processed.
+    """
+    if what == "class":
+        joined = "\n".join(lines)
+
+        templates = [
+            """.. rubric:: Attributes
+
+.. autosummary::
+   :toctree:
+
+   None
+""",
+            """.. rubric:: Methods
+
+.. autosummary::
+   :toctree:
+
+   None
+""",
+        ]
+
+        for template in templates:
+            if template in joined:
+                joined = joined.replace(template, "")
+        lines[:] = joined.split("\n")
+
+
+def setup(app):
+    """
+    Set up Sphinx extension hooks.
+
+    Parameters
+    ----------
+    app : sphinx.application.Sphinx
+        The Sphinx application object.
+    """
+    app.connect("autodoc-process-docstring", process_class_docstrings)

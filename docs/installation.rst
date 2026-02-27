@@ -12,7 +12,7 @@ Requirements
 - `joblib <https://joblib.readthedocs.io>`_
 
 From GitHub
----------
+-----------
 
 .. code-block:: bash
 

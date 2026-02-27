@@ -14,6 +14,7 @@ from .covariance import CovarianceMatrix
 from .estimators import Estimator, available_estimators
 from .matrix import Matrix, MatrixBlock
 from .operators import ForwardOperator, convolve
+from .pipeline import InversionPipeline
 from .problem import InverseProblem
 from .vector import Block, Vector
 
@@ -28,6 +29,7 @@ __all__ = [
     "available_estimators",
     "ForwardOperator",
     "CovarianceMatrix",
+    "InversionPipeline",
     "InverseProblem",
     "convolve",
 ]

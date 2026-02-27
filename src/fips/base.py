@@ -130,36 +130,14 @@ class Pickleable:
 class Structure(Pickleable, ABC):
     """
     Abstract base class for structured data with pandas index and validation.
-
-    Attributes
-    ----------
-    name : str or property
-        Name of the structure, used for error messages and block naming.
-    data : pd.Series or pd.DataFrame
-        The underlying data, which must be numeric and non-NaN. DataFrames can be sparse.
-    index : pd.Index or MultiIndex
-        The index of the data, which must have named levels.
-    shape : tuple
-        The shape of the data.
-    values : np.ndarray
-        The values of the data as a numpy array (or sparse matrix if applicable).
-
-    Methods
-    -------
-    reindex(index, columns=None, verify_overlap=False, inplace=False, **kwargs)
-        Return a new instance with data reindexed to the specified index and columns.
-    round_index(decimals, axis=0, inplace=False)
-        Return a new instance with float indices rounded to the specified decimals on the given axis.
-    copy(deep=True)
-        Create a copy of the instance.
-    xs(key, axis=0, level=None, drop_level=True)
-        Cross-select data based on index/column values.
-    to_numpy()
-        Get the underlying data as a NumPy array (or sparse matrix if applicable).
     """
 
-    name: str | property | None
-    data: pd.DataFrame | pd.Series
+    name: (
+        str | property | None
+    )  #: Name of the structure, used for error messages and block naming.
+    data: (
+        pd.Series | pd.DataFrame
+    )  #: The underlying data, which must be numeric and non-NaN. DataFrames can be sparse.
 
     def _validate(self):
         # Ensure index levels are named
@@ -363,13 +341,22 @@ class Structure1D(Structure):
     """
     Base class for 1D structures (Block, Vector).
 
-    Methods
-    -------
-    to_series()
-        Get the underlying data as a pandas Series.
+    Parameters
+    ----------
+    data : array-like
+        1D data for the structure.
+    name : str, optional
+        Name for the structure. If None, uses data.name if available.
+    index : pd.Index, optional
+        Index for the data. If None, uses data.index if available.
+    dtype : data type, optional
+        Data type to force.
+    copy : bool, optional
+        Whether to copy the data.
     """
 
     data: pd.Series  # type: ignore[override]
+    """The underlying data, which must be numeric and non-NaN."""
 
     def __init__(
         self,
@@ -381,19 +368,6 @@ class Structure1D(Structure):
     ):
         """
         Initialize a 1D structure with the given data and index. Validates and sanitizes the data.
-
-        Parameters
-        ----------
-        data : array-like
-            1D data for the structure.
-        name : str, optional
-            Name for the structure. If None, uses data.name if available.
-        index : pd.Index, optional
-            Index for the data. If None, uses data.index if available.
-        dtype : data type, optional
-            Data type to force.
-        copy : bool, optional
-            Whether to copy the data.
         """
         # Squeeze to 1D if necessary
         if hasattr(data, "squeeze"):
@@ -412,7 +386,7 @@ class Structure1D(Structure):
 
     @property
     def name(self) -> str | None:
-        """Return the name of the underlying Series."""
+        """The name of the underlying Series."""
         return str(self.data.name)
 
     def to_series(self) -> pd.Series:
@@ -432,24 +406,30 @@ class Structure2D(Structure):
     """
     Base class for 2D structures (Matrix).
 
-    Attributes
+    Parameters
     ----------
-    Columns : pd.Index
-        The columns of the underlying DataFrame.
-    is_sparse : bool
-        True if the internal DataFrame uses pandas sparse storage.
-
-    Methods
-    -------
-    to_frame()
-        Get the underlying DataFrame data.
-    to_dense()
-        Return a copy with dense internal storage.
-    to_sparse(threshold=None)
-        Return a copy with sparse internal storage, optionally zeroing out values below a threshold before sparsification.
+    data : np.ndarray
+        2D data.
+    name : str, optional
+        Name for the Structure.
+    index : pd.Index
+        Index for the rows of the DataFrame.
+    columns : pd.Index, optional
+        Index for the columns of the DataFrame. If None, uses the same as `index`.
+    dtype : data type, optional
+        Data type to force.
+    copy : bool, optional
+        Whether to copy the data.
+    sparse : bool, default False
+        If True, store the data in pandas sparse format (fill_value=0.0).
+        The caller is responsible for zeroing out near-zero values before
+        setting sparse=True (e.g. via a threshold in the builder).
     """
 
+    name: str | None
+    """Name of the structure, used for error messages and block naming."""
     data: pd.DataFrame  # type: ignore[override]
+    """The underlying data, which must be numeric and non-NaN. Can be stored in sparse format."""
 
     def __init__(
         self,
@@ -463,25 +443,6 @@ class Structure2D(Structure):
     ):
         """
         Initialize a 2D structure with the given data, index, and columns. Validates and sanitizes the data.
-
-        Parameters
-        ----------
-        data : np.ndarray
-            2D data.
-        name : str, optional
-            Name for the Structure.
-        index : pd.Index
-            Index for the rows of the DataFrame.
-        columns : pd.Index, optional
-            Index for the columns of the DataFrame. If None, uses the same as `index`.
-        dtype : data type, optional
-            Data type to force.
-        copy : bool, optional
-            Whether to copy the data.
-        sparse : bool, default False
-            If True, store the data in pandas sparse format (fill_value=0.0).
-            The caller is responsible for zeroing out near-zero values before
-            setting sparse=True (e.g. via a threshold in the builder).
         """
         self.name = name
 

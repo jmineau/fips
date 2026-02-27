@@ -64,7 +64,7 @@ class Estimator(ABC):
     """
     Base inversion estimator class.
 
-    Attributes
+    Parameters
     ----------
     z : np.ndarray
         Observed data.
@@ -78,42 +78,24 @@ class Estimator(ABC):
         Model-data mismatch covariance.
     c : np.ndarray or float, optional
         Constant data, defaults to 0.0.
-    n_z : int
-        Number of observations.
-    n_x : int
-        Number of state variables.
-    x_hat : np.ndarray
-        Posterior mean model state estimate (solution).
-    S_hat : np.ndarray
-        Posterior error covariance.
-    y_hat : np.ndarray
-        Posterior modeled observations.
-    y_0 : np.ndarray
-        Prior modeled observations.
-    K : np.ndarray
-        Kalman gain.
-    A : np.ndarray
-        Averaging kernel.
-    chi2 : float
-       Chi-squared statistic.
-    R2 : float
-       Coefficient of determination.
-    RMSE : float
-       Root mean square error.
-    U_red : np.ndarray
-       Reduced uncertainty.
-
-    Methods
-    -------
-    cost(x: np.ndarray) -> float
-        Cost/loss/misfit function.
-    forward(x: np.ndarray) -> np.ndarray
-        Forward model calculation.
-    residual(x: np.ndarray) -> np.ndarray
-        Forward model residual.
-    leverage(x: np.ndarray) -> np.ndarray
-        Calculate the leverage matrix.
     """
+
+    z: np.ndarray
+    """Observed data."""
+    x_0: np.ndarray
+    """Prior model state estimate."""
+    H: np.ndarray
+    """Forward operator."""
+    S_0: np.ndarray
+    """Prior error covariance."""
+    S_z: np.ndarray
+    """Model-data mismatch covariance."""
+    c: np.ndarray
+    """Constant data, which can be a scalar or an array matching the shape of z."""
+    n_z: int
+    """Number of observations (length of z)."""
+    n_x: int
+    """Number of state variables (length of x_0)."""
 
     _output_meta = {
         # attr : (row_space, col_space, is_covariance)
@@ -135,24 +117,6 @@ class Estimator(ABC):
         S_z: np.ndarray,
         c: np.ndarray | float | None = None,
     ):
-        """
-        Initialize the Estimator object.
-
-        Parameters
-        ----------
-        z : np.ndarray
-            Observed data.
-        x_0 : np.ndarray
-            Prior model state estimate.
-        H : np.ndarray
-            Forward operator.
-        S_0 : np.ndarray
-            Prior error covariance.
-        S_z : np.ndarray
-            Model-data mismatch covariance.
-        c : np.ndarray or float, optional
-            Constant data, defaults to 0.0.
-        """
         self.z = z.astype(float)
         self.x_0 = x_0.astype(float)
         self.H = H.astype(float)
@@ -521,7 +485,27 @@ class BayesianSolver(Estimator):
 
     This class implements a Bayesian inversion framework for solving inverse problems,
     also known as the batch method.
+
+    Parameters
+    ----------
+    z : np.ndarray
+        Observed data
+    x_0 : np.ndarray
+        Prior model estimate
+    H : np.ndarray
+        Forward operator
+    S_0 : np.ndarray
+        Prior error covariance
+    S_z : np.ndarray
+        Model-data mismatch covariance
+    c : np.ndarray | float, optional
+        Constant data, defaults to 0.0
+    rf : float, optional
+        Regularization factor, by default 1.0
     """
+
+    rf: float
+    """Regularization factor to apply to the cost function, which can help prevent overfitting in cases of ill-posed problems or noisy data. Currently not implemented."""
 
     def __init__(
         self,
@@ -533,26 +517,6 @@ class BayesianSolver(Estimator):
         c: np.ndarray | float | None = None,
         rf: float = 1.0,
     ):
-        """
-        Initialize inversion object.
-
-        Parameters
-        ----------
-        z : np.ndarray
-            Observed data
-        x_0 : np.ndarray
-            Prior model estimate
-        H : np.ndarray
-            Forward operator
-        S_0 : np.ndarray
-            Prior error covariance
-        S_z : np.ndarray
-            Model-data mismatch covariance
-        c : np.ndarray | float, optional
-            Constant data, defaults to 0.0
-        rf : float, optional
-            Regularization factor, by default 1.0
-        """
         super().__init__(z=z, x_0=x_0, H=H, S_0=S_0, S_z=S_z, c=c)
         self.rf = rf  # TOOD implement usage of regularization factor
 

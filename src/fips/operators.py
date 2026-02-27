@@ -23,48 +23,6 @@ class ForwardOperator(Matrix):
     The foward operator, or Jacobian matrix, is a key component of inverse problems.
     It defines how changes in the state vector affect the observations.
     The rows correspond to observations and the columns to state variables.
-
-    Attributes
-    ----------
-    name : str
-        Name of the forward operator. Optional.
-    data : pd.DataFrame
-        The underlying DataFrame containing the operator data.
-    index : pd.MultiIndex
-        Index for the rows of the ForwardOperator.
-    obs_index : pd.MultiIndex
-        Alias for index, representing the observation space index.
-    columns : pd.MultiIndex
-        Index for the columns of the ForwardOperator.
-    state_index : pd.MultiIndex
-        Alias for columns, representing the state space index.
-    shape : tuple
-        Shape of the ForwardOperator (number of rows, number of columns).
-    values : np.ndarray
-        The underlying data values as a NumPy array.
-    is_sparse : bool
-        Whether the data is stored in sparse format.
-
-    Methods
-    -------
-    convolve(state, round_index=None, verify_overlap=True)
-        Convolve a state vector through the forward operator.
-    xs(key, axis=0, level=None, drop_level=True)
-        Cross-select data based on index/column values.
-    reindex(new_index, new_columns, fill_value=0.0)
-        Reindex the matrix to new row and column indices, filling missing values with fill_value.
-    round_index(decimals, axis='both')
-        Round the index and/or columns to a specified number of decimal places for alignment.
-    copy()
-        Return a copy of the ForwardOperator.
-    to_frame(add_block_level=False)
-        Convert to a DataFrame, optionally adding block levels to the index and columns.
-    to_dense()
-        Return a copy of the matrix with dense internal storage.
-    to_sparse(threshold=None)
-        Return a copy of the matrix with sparse internal storage, zeroing values below the threshold.
-    to_numpy()
-        Get the underlying data as a NumPy array.
     """
 
     @property

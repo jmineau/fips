@@ -34,29 +34,20 @@ class InversionPipeline(ABC, Generic[_Problem]):
     Subclasses should implement the abstract methods to handle the specifics of
     data loading and covariance construction for their particular problem domain.
 
-    Methods
-    -------
-    get_obs()
-        Get observation vector.
-    get_prior()
-        Get prior state vector.
-    filter_state_space(obs, prior)
-        Align or trim the state space before building covariances.
-    get_forward_operator(obs, prior)
-        Get forward operator matrix.
-    get_prior_error(prior)
-        Get prior error covariance matrix.
-    get_modeldata_mismatch(obs)
-        Get model-data mismatch covariance matrix.
-    get_constant(obs)
-        Get optional constant offset vector.
-    aggregate_obs_space(obs, forward_operator, modeldata_mismatch, constant)
-        Aggregate the observation space.
-    get_inputs()
-        Gather all input components for the inverse problem.
-    run(**kwargs)
-        Execute the standard inversion workflow.
+    Parameters
+    ----------
+    config : Any
+        Configuration object containing necessary parameters and settings for the pipeline.
+    problem : type[_Problem]
+        The specific InverseProblem class that defines the mathematical formulation of the problem.
+    estimator : type[Estimator] | str
+        The estimator to use for solving the inverse problem, either as a class or a string identifier.
     """
+
+    config: Any
+    """Configuration object containing necessary parameters and settings for the pipeline."""
+    estimator: type[Estimator] | str
+    """The estimator to use for solving the inverse problem, either as a class or a string identifier."""
 
     def __init__(
         self,

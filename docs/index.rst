@@ -17,7 +17,7 @@ fips |release|
 
 .. include:: ../README.md
    :parser: myst_parser.sphinx_
-   :start-line: 8
+   :start-line: 16
    :end-before: ## Documentation
 
 .. toctree::
@@ -40,11 +40,10 @@ fips |release|
    :caption: Reference
    :hidden:
 
-   api/index
+   reference/index
 
 ----
 
-**Contributing:** See our `Contributing Guide <https://github.com/jmineau/fips/blob/main/CONTRIBUTING.md>`_ on GitHub.
-
+* `Contributing Guide <https://github.com/jmineau/fips/blob/main/CONTRIBUTING.md>`_
 * :ref:`modindex`
 * :ref:`search`

@@ -28,42 +28,36 @@ class InverseProblem(Pickleable):
     Organizes state vectors, observations, forward operators, and error covariances
     into a unified framework for solving inverse problems via different estimators.
 
-    Attributes
+    Parameters
     ----------
-    obs : Vector
+    obs : VectorLike
         Observation vector.
-    prior : Vector
+    prior : VectorLike
         Prior state vector.
-    forward_operator : ForwardOperator
+    forward_operator : MatrixLike
         Forward operator mapping state space to observation space.
-    modeldata_mismatch : CovarianceMatrix
+    modeldata_mismatch : MatrixLike
         Covariance matrix representing model-data mismatch (observation error).
-    prior_error : CovarianceMatrix
+    prior_error : MatrixLike
         Covariance matrix representing prior error.
-    constant : Vector or float, optional
+    constant : VectorLike or float, optional
         Optional constant term added to the forward model (e.g., background or bias).
-    estimator : Estimator, optional
-        The fitted estimator after solving the problem. Initially None until .solve() is called.
-    posterior : Vector
-        Posterior state estimate after solving the problem.
-    posterior_error : CovarianceMatrix
-        Posterior error covariance after solving the problem.
-    posterior_obs : Vector
-        Modeled observations using the posterior state.
-    prior_obs : Vector
-        Modeled observations using the prior state.
-    kalman_gain : Matrix
-        Kalman gain matrix (K) after solving the problem.
-    averaging_kernel : Matrix
-        Averaging kernel matrix (A) after solving the problem.
-
-    Methods
-    -------
-    get_block(component, block, crossblock=None)
-        Retrieve a specific block of data from a component (Vector or Matrix).
-    solve(estimator, **kwargs)
-        Solve the inverse problem using the specified estimator and store the fitted estimator.
+    round_index : int, optional
+        Number of decimal places to round to. If None, no rounding is performed.
     """
+
+    obs: Vector
+    """Observation vector."""
+    prior: Vector
+    """Prior state vector."""
+    forward_operator: ForwardOperator
+    """Forward operator mapping state space to observation space."""
+    prior_error: CovarianceMatrix
+    """Covariance matrix representing prior error."""
+    modeldata_mismatch: CovarianceMatrix
+    """Covariance matrix representing model-data mismatch (observation error)."""
+    constant: Vector | float | None
+    """Optional constant term added to the forward model (e.g., background or bias)."""
 
     def __init__(
         self,
@@ -75,27 +69,6 @@ class InverseProblem(Pickleable):
         constant: "VectorLike | float | None" = None,
         round_index: int | None = 6,
     ):
-        """
-        Initialize the inverse problem.
-
-        Parameters
-        ----------
-        obs : VectorLike
-            Observation vector.
-        prior : VectorLike
-            Prior state vector.
-        forward_operator : MatrixLike
-            Forward operator mapping state space to observation space.
-        modeldata_mismatch : MatrixLike
-            Covariance matrix representing model-data mismatch (observation error).
-        prior_error : MatrixLike
-            Covariance matrix representing prior error.
-        constant : VectorLike or float, optional
-            Optional constant term added to the forward model (e.g., background or bias).
-        round_index : int, optional
-            Number of decimal places to round to. If None, no rounding is performed.
-        """
-
         def promote_1d(data, default_block: str):
             if isinstance(data, pd.Series) and "block" not in data.index.names:
                 # Wrap naked Series in a Block

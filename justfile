@@ -7,7 +7,7 @@ list:
 # Build HTML documentation using Sphinx
 build-docs:
 	@echo "Building HTML documentation..."
-	rm -rf docs/_build/
+	rm -rf docs/_build/ docs/reference/api/
 	sphinx-build -M html docs docs/_build
 
 # Clean up build artifacts and cache files

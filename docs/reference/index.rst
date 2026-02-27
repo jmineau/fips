@@ -6,9 +6,12 @@ This reference provides detailed documentation for all public classes, functions
 .. toctree::
    :maxdepth: 2
 
-   core
+   blocks
+   multiblocks
+   operators
+   covariance
    inverse
    estimators
    pipeline
-   flux
-   utilities
+   utilities/index
+   problems/index

@@ -34,35 +34,18 @@ class Block(SingleBlockMixin, Structure1D):
     with specific indices and names to represent different state or
     observation components relevant to the application.
 
-    Attributes
+    Parameters
     ----------
-    name : str
-        Name of the block.
-    data : pd.Series
-        The underlying Series containing the block data.
-    index : pd.Index
-        Index for the block.
-    shape : tuple
-        Shape of the block (number of elements).
-    values : np.ndarray
-        The underlying data values as a NumPy array.
-
-    Methods
-    -------
-    xs(key, axis=0, level=None, drop_level=True)
-        Cross-select data based on index values.
-    reindex(new_index, fill_value=0.0)
-        Reindex the block to new row indices, filling missing values with fill_value.
-    round_index(decimals, axis=0)
-        Round the index and to a specified number of decimal places for alignment.
-    copy()
-        Return a copy of the Block.
-    to_series(add_block_level=False)
-        Convert to a Series, optionally adding block levels to the index.
-    to_xarray()
-        Convert the Block to an xarray DataArray.
-    to_numpy()
-        Get the underlying data as a NumPy array.
+    data : pd.Series, Block, or array-like
+        Data for the block. If Block, creates a copy.
+    name : str, optional
+        Name for the block. If None, uses data.name.
+    index : pd.Index, optional
+        Index for the block. If None, uses data.index.
+    dtype : dtype, optional
+        Data type to force.
+    copy : bool, default False
+        Whether to copy the underlying data.
     """
 
     data: pd.Series  # type: ignore[override]
@@ -76,22 +59,6 @@ class Block(SingleBlockMixin, Structure1D):
         dtype: Any = None,
         copy: bool = False,
     ):
-        """
-        Initialize a Block.
-
-        Parameters
-        ----------
-        data : pd.Series, Block, or array-like
-            Data for the block. If Block, creates a copy.
-        name : str, optional
-            Name for the block. If None, uses data.name.
-        index : pd.Index, optional
-            Index for the block. If None, uses data.index.
-        dtype : dtype, optional
-            Data type to force.
-        copy : bool, default False
-            Whether to copy the underlying data.
-        """
         # Accept Block - extract Series
         if isinstance(data, Block):
             if name is None:
@@ -166,38 +133,23 @@ class Vector(MultiBlockMixin, Structure1D):
     Vectors are used to represent the full state or observation space and are the
     1D matrix components in the inversion framework.
 
-    Attributes
+    Parameters
     ----------
+    data : pd.Series, Vector, Block, Sequence[Block | pd.Series], or array-like
+        Data for the vector.
     name : str, optional
-        Name of the Vector. Optional.
-    data : pd.Series
-        The underlying Series containing the vector data.
-    index : pd.Index
-        Index for the vector.
-    shape : tuple
-        Shape of the vector (number of elements).
-    values : np.ndarray
-        The underlying data values as a NumPy array.
-
-    Methods
-    -------
-    xs(key, axis=0, level=None, drop_level=True)
-        Cross-select data based on index values.
-    reindex(new_index, fill_value=0.0)
-        Reindex the vector to new row indices, filling missing values with fill_value.
-    round_index(decimals, axis=0)
-        Round the index and to a specified number of decimal places for alignment.
-    copy()
-        Return a copy of the Vector.
-    to_series()
-        Convert to a Series.
-    to_xarray()
-        Convert the Vector to an xarray DataArray or Dataset.
-    to_numpy()
-        Get the underlying data as a NumPy array.
+        Name for the Vector.
+    index : pd.Index, optional
+        Index for the Vector. If None, uses data.index.
+        Index must have a 'block' level if data is a Series.
+    dtype : dtype, optional
+        Data type to force.
+    copy : bool, default False
+        Whether to copy the underlying data.
     """
 
     data: pd.Series  # type: ignore[override]
+    """The underlying data, which must be numeric and non-NaN. Can be stored in sparse format."""
 
     def __init__(
         self,
@@ -207,23 +159,6 @@ class Vector(MultiBlockMixin, Structure1D):
         dtype: Any = None,
         copy: bool = False,
     ):
-        """
-        Initialize a Vector.
-
-        Parameters
-        ----------
-        data : pd.Series, Vector, Block, Sequence[Block | pd.Series], or array-like
-            Data for the vector.
-        name : str, optional
-            Name for the Vector.
-        index : pd.Index, optional
-            Index for the Vector. If None, uses data.index.
-            Index must have a 'block' level if data is a Series.
-        dtype : dtype, optional
-            Data type to force.
-        copy : bool, default False
-            Whether to copy the underlying data.
-        """
         # There are two main paths to build a Vector:
         # 1) From a single Series or Block
         # 2) From a sequence of Blocks or Series (which are combined into one Series with a 'block' level)

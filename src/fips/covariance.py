@@ -28,46 +28,6 @@ class CovarianceMatrix(Matrix):
 
     Covariance matrices are used to represent error covariances in the inversion framework.
     They can be constructed from variances and correlation matrices.
-
-    Attributes
-    ----------
-    name : str
-        Name of the covariance matrix. Optional.
-    data : pd.DataFrame
-        The underlying DataFrame containing the matrix data.
-    index : pd.MultiIndex
-        Index for the rows of the CovarianceMatrix.
-    columns : pd.MultiIndex
-        Index for the columns of the CovarianceMatrix.
-    shape : tuple
-        Shape of the CovarianceMatrix (number of rows, number of columns).
-    variances : Vector
-        The variances (diagonal elements) of the covariance matrix, represented as a Vector.
-    values : np.ndarray
-        The underlying data values as a NumPy array.
-    is_sparse : bool
-        Whether the data is stored in sparse format.
-
-    Methods
-    -------
-    force_symmetry(keep='lower')
-        Force the matrix to be perfectly symmetric by copying one triangle to the other.
-    xs(key, axis=0, level=None, drop_level=True)
-        Cross-select data based on index/column values.
-    reindex(new_index, new_columns, fill_value=0.0)
-        Reindex the matrix to new row and column indices, filling missing values with fill_value.
-    round_index(decimals, axis='both')
-        Round the index and/or columns to a specified number of decimal places for alignment.
-    copy()
-        Return a copy of the CovarianceMatrix.
-    to_frame(add_block_level=False)
-        Convert to a DataFrame, optionally adding block levels to the index and columns.
-    to_dense()
-        Return a copy of the matrix with dense internal storage.
-    to_sparse(threshold=None)
-        Return a copy of the matrix with sparse internal storage, zeroing values below the threshold.
-    to_numpy()
-        Get the underlying data as a NumPy array.
     """
 
     @property
@@ -109,20 +69,12 @@ class CovarianceMatrix(Matrix):
 class ErrorComponent(ABC):
     """
     Abstract base class for error components in covariance matrices.
-
-    Attributes
-    ----------
-    name : str
-        Name of the error component.
-    variances : float or pd.Series
-        Variances for the diagonal of the covariance matrix. Can be a single float or a Series
-        indexed by the same MultiIndex as the covariance matrix.
-
-    Methods
-    -------
-    build(index, **kwargs)
-        Must return a pd.DataFrame with the given index on both rows and columns representing the covariance matrix for this error component.
     """
+
+    name: str
+    """Name of the error component."""
+    variances: float | pd.Series
+    """Variances for the diagonal of the covariance matrix. Can be a single float or a Series indexed by the same MultiIndex as the covariance matrix."""
 
     def __init__(self, name: str, variances: float | pd.Series):
         self.name = name
@@ -179,17 +131,10 @@ class ErrorComponent(ABC):
 class CovarianceBuilder:
     """
     Builds covariance matrices by combining multiple error components.
-
-    Attributes
-    ----------
-    components : list of ErrorComponent
-        The list of error components that will be built and summed to create the final covariance matrix.
-
-    Methods
-    -------
-    build(index, sparse=False)
-        Build and sum all error components into a single DataFrame with the given index.
     """
+
+    components: list[ErrorComponent]
+    """The list of error components to build and sum."""
 
     def __init__(self, components: list[ErrorComponent]):
         self.components = components
@@ -262,6 +207,12 @@ class BlockDecayError(ErrorComponent):
     Error component with block-structured correlation decay.
     """
 
+    groupers: list
+    """List of groupers to use for block structure."""
+
+    corr_func: Callable
+    """Function that takes a DataFrame group and returns a correlation matrix for that block."""
+
     def __init__(
         self,
         name: str,
@@ -310,7 +261,25 @@ class KroneckerError(ErrorComponent):
     Builds a full covariance matrix for a strict grid.
 
     Uses Kronecker products of N arbitrary marginal correlation matrices.
+
+    Parameters
+    ----------
+    name : str
+        Name of the error component.
+    variances : float or pd.Series
+        Variances for the diagonal of the covariance matrix.
+        Can be a single float or a Series indexed by the same MultiIndex as the covariance matrix.
+    marginal_kernels : list of tuples
+        Each tuple contains:
+        1. The dimension name(s) as a string or list of strings.
+        2. The Callable kernel function that takes a DataFrame of those
+           unique coordinates and returns a 2D correlation matrix.
+        ORDER MATTERS: These must be provided in the exact order
+        that the dimensions appear in the matrix's MultiIndex!
     """
+
+    marginal_kernels: list[tuple[str | list[str], Callable]]
+    """List of marginal kernels, each defined by a tuple of dimension name(s) and a kernel function."""
 
     def __init__(
         self,
@@ -318,24 +287,6 @@ class KroneckerError(ErrorComponent):
         variances: float | pd.Series,
         marginal_kernels: list[tuple[str | list[str], Callable]],
     ):
-        """
-        Initialize the Kronecker error component.
-
-        Parameters
-        ----------
-        name : str
-            Name of the error component.
-        variances : float or pd.Series
-            Variances for the diagonal of the covariance matrix.
-            Can be a single float or a Series indexed by the same MultiIndex as the covariance matrix.
-        marginal_kernels : list of tuples
-            Each tuple contains:
-            1. The dimension name(s) as a string or list of strings.
-            2. The Callable kernel function that takes a DataFrame of those
-               unique coordinates and returns a 2D correlation matrix.
-            ORDER MATTERS: These must be provided in the exact order
-            that the dimensions appear in the matrix's MultiIndex!
-        """
         super().__init__(name, variances)
         self.marginal_kernels = marginal_kernels
 
