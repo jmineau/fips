@@ -82,7 +82,7 @@ napoleon_attr_annotations = True
 autoclass_content = "class"
 
 # Mock imports for dependencies not available during doc builds
-autodoc_mock_imports = ["stilt"]
+autodoc_mock_imports = ["stilt", "cartopy", "matplotlib"]
 
 # Autosummary settings
 autosummary_generate = True
