@@ -17,7 +17,7 @@
 ## Bridging Physics and Data
 Inverse problems in geophysics and atmospheric science are incredibly complex, often involving massive state spaces, deeply heterogeneous observational networks, and explicit matrix-algebra requirements. While many general-purpose optimization tools exist, they often force researchers to strip away critical spatiotemporal metadata or translate pre-computed physical models into rigid, abstract array structures.
 
-**FIPS (Flexible Inverse Problem Solver)** is built from the ground up to solve linear, matrix-based inverse problems (like optimal estimation or 3D/4D-Var) without losing the context of your data. It provides the structural flexibility to handle messy, real-world realities seamlessly:
+**FIPS (Flexible Inverse Problem Solver)** is built from the ground up to solve linear, matrix-based inverse problems without losing the context of your data. It provides the structural flexibility to handle messy, real-world realities seamlessly:
 
 - **Native N-Dimensional Alignment**: FIPS natively utilizes `pandas.MultiIndex` to smoothly align heterogeneous datasets across any dimension. Whether you are mixing temporal, spatial, spectral, or sensor-specific data, your coordinates are never dropped or misaligned.
 
@@ -68,12 +68,12 @@ obs = pd.Series(np.ones(8) * 400.0, index=obs_idx, name="concentration")
 
 # Forward operator (Jacobian), flux error covariance, obs error covariance
 H   = pd.DataFrame(np.random.rand(8, 12), index=obs_idx,  columns=flux_idx)
-S_x = pd.DataFrame(np.eye(12) * 0.5,  index=flux_idx, columns=flux_idx)
+S_0 = pd.DataFrame(np.eye(12) * 0.5,  index=flux_idx, columns=flux_idx)
 S_z = pd.DataFrame(np.eye(8)  * 0.1,  index=obs_idx,  columns=obs_idx)
 
 problem = FluxProblem(
     obs=obs, prior=prior,
-    forward_operator=H, prior_error=S_x, modeldata_mismatch=S_z,
+    forward_operator=H, prior_error=S_0, modeldata_mismatch=S_z,
 ).solve()
 
 print(problem.posterior_fluxes)        # posterior pd.Series indexed by (time, lat, lon)
@@ -123,7 +123,7 @@ H_blks = [
     ),]
 
 # Prior error covariance: only flux errors, no cross-block covariances
-S_x = CovarianceMatrix(np.eye(N_f) * 0.5, index=flux_idx, columns=flux_idx)
+S_0 = CovarianceMatrix(np.eye(N_f) * 0.5, index=flux_idx, columns=flux_idx)
 
 # Model-data mismatch covariance: block-diagonal with separate error levels for stations vs. satellite
 S_z_blks = [
@@ -134,7 +134,7 @@ S_z_blks = [
 # Pass blocks to the InverseProblem and solve
 problem = InverseProblem(
     obs=obs_blks, prior=prior,
-    forward_operator=H_blks, prior_error=S_x, modeldata_mismatch=S_z_blks,
+    forward_operator=H_blks, prior_error=S_0, modeldata_mismatch=S_z_blks,
 ).solve()
 
 print(problem.posterior['flux'])       # posterior pd.Series indexed by (time, lat, lon)
