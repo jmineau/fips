@@ -185,7 +185,9 @@ def round_index(index: pd.Index, decimals: int) -> pd.Index:
         Non-float indices are returned unchanged.
     """
     if pd.api.types.is_float_dtype(index):
-        return index.round(decimals)
+        # Round the underlying numpy array and reconstruct the index
+        rounded_values = np.round(index.values, decimals)
+        return pd.Index(rounded_values, name=index.name)
     return index
 
 

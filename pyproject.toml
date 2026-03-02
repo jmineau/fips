@@ -22,19 +22,19 @@ classifiers = [
     "Programming Language :: Python :: 3.12",
 ]
 dependencies = [
-    "joblib",
-    "numpy",
-    "pandas",
-    "scipy",
-    "typing-extensions",
-    "xarray",
+    "joblib>=1.4.0",
+    "numpy>=1.22.0",
+    "pandas>=2.0.0",  # need pandas 2.0 for upgraded Index object
+    "scipy>=1.8.0",
+    "typing-extensions>=4.0.0",
+    "xarray>=2022.3.0",
 ]
 
 [project.optional-dependencies]
 flux = [
-    "cartopy",
-    "h5py",
-    "matplotlib",
+    "cartopy>=0.24.0",  # numpy 2.0 support
+    "h5py>=3.11.0",  # numpy 2.0 support
+    "matplotlib>=3.6.0",
     "stilt @ git+https://github.com/jmineau/PYSTILT",
 ]
 
