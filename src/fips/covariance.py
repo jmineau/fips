@@ -274,8 +274,11 @@ class KroneckerError(ErrorComponent):
         1. The dimension name(s) as a string or list of strings.
         2. The Callable kernel function that takes a DataFrame of those
            unique coordinates and returns a 2D correlation matrix.
-        ORDER MATTERS: These must be provided in the exact order
-        that the dimensions appear in the matrix's MultiIndex!
+
+    Note
+    ----
+    ORDER MATTERS: These must be provided in the exact order
+    that the dimensions appear in the matrix's MultiIndex!
     """
 
     marginal_kernels: list[tuple[str | list[str], Callable]]

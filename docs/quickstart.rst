@@ -147,4 +147,4 @@ What's Next
   :class:`~fips.problems.flux.pipeline.FluxInversionPipeline`.
 - **Subclassing** — learn how to build your own :class:`~fips.InverseProblem`
   and :class:`~fips.pipeline.InversionPipeline` subclasses in :doc:`usage`.
-- **Full API** — every class and method is documented in :doc:`api`.
+- **Full API** — every class and method is documented in :doc:`reference`.
