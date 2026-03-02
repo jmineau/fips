@@ -35,7 +35,7 @@ flux = [
     "cartopy",
     "h5py",
     "matplotlib",
-    "stilt @ git+ssh://git@github.com/jmineau/PYSTILT.git",
+    "stilt @ git+https://github.com/jmineau/PYSTILT",
 ]
 
 [dependency-groups]
