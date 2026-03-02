@@ -163,7 +163,7 @@ class CovarianceBuilder:
         if sparse:
             return pd.DataFrame.sparse.from_spmatrix(
                 csr_matrix(S), index=index, columns=index
-            )
+            ).fillna(0.0)  # Ensure fill_value is 0.0 for sparse DataFrame
         return pd.DataFrame(S, index=index, columns=index)
 
     def __add__(self, other):
@@ -195,7 +195,8 @@ class DiagonalError(ErrorComponent):
         """Build diagonal covariance matrix."""
         variances = self._align_variances(index)
         cov_matrix = np.diag(variances)
-        return pd.DataFrame(cov_matrix, index=index, columns=index)
+        df = pd.DataFrame(cov_matrix, index=index, columns=index)
+        return df
 
     def __repr__(self) -> str:
         """Return string representation."""

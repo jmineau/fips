@@ -332,7 +332,7 @@ class ObsAggregator:
             H_agg_vals = W @ H_df.sparse.to_coo().tocsr()
             H_agg = pd.DataFrame.sparse.from_spmatrix(
                 H_agg_vals, index=agg_idx, columns=H_df.columns
-            )
+            ).fillna(0.0)  # Ensure fill_value is 0.0 for sparse DataFrame
         else:
             H_agg = pd.DataFrame(W @ H_df.values, index=agg_idx, columns=H_df.columns)
 
