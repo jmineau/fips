@@ -22,24 +22,12 @@ fips |release|
 
 .. toctree::
    :maxdepth: 1
-   :caption: Getting Started
    :hidden:
 
    installation
    getting_started
-
-.. toctree::
-   :maxdepth: 2
-   :caption: User Guide
-   :hidden:
-
    usage
-
-.. toctree::
-   :maxdepth: 2
-   :caption: Reference
-   :hidden:
-
+   examples/index
    reference/index
 
 ----

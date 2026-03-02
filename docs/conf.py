@@ -24,6 +24,7 @@ version = ".".join(release.split(".")[:2])
 
 extensions = [
     "myst_parser",
+    "nbsphinx",
     "sphinx.ext.autodoc",
     "sphinx.ext.autosummary",
     "sphinx.ext.napoleon",
@@ -84,6 +85,12 @@ autoclass_content = "class"
 
 # Autosummary settings
 autosummary_generate = True
+
+# Nbsphinx settings
+nbsphinx_execute = (
+    "never"  # Don't execute notebooks during build (they should be pre-run)
+)
+nbsphinx_allow_errors = False  # Fail if a notebook has errors
 
 # Intersphinx settings
 intersphinx_mapping = {
