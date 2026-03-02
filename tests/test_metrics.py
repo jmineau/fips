@@ -55,7 +55,7 @@ def test_time_diff_matrix():
 
     # Expected: 2 hours in nanoseconds
     # (2 * 3600 * 1e9)
-    expected_ns = pd.Timedelta("2h").value
+    expected_ns = pd.Timedelta("2h")
 
     assert diffs.shape == (2, 2)
     assert diffs[0, 0] == 0
@@ -71,7 +71,7 @@ def test_time_diff_matrix_signed():
     # Calculate signed difference
     diffs = time_diff_matrix(times, absolute=False)
 
-    expected_ns = pd.Timedelta("2h").value
+    expected_ns = pd.Timedelta("2h")
 
     # t0 - t1 = 10:00 - 12:00 = -2h
     assert diffs[0, 1] == -expected_ns
