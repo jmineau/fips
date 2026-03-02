@@ -3,9 +3,9 @@
 # For the full list of built-in configuration values, see the documentation:
 # https://www.sphinx-doc.org/en/master/usage/configuration.html
 
+import importlib.metadata
 import os
 import sys
-from importlib.metadata import version
 
 sys.path.insert(0, os.path.abspath("../src"))
 
@@ -15,7 +15,8 @@ sys.path.insert(0, os.path.abspath("../src"))
 project = "fips"
 copyright = "2025, James Mineau"
 author = "James Mineau"
-release = version("fips")
+release = importlib.metadata.version("fips")
+version = ".".join(release.split(".")[:2])
 
 
 # -- General configuration ---------------------------------------------------
@@ -92,7 +93,7 @@ intersphinx_mapping = {
     "numpy": ("https://numpy.org/doc/stable/", None),
     "pandas": ("https://pandas.pydata.org/docs/", None),
     "scipy": ("https://docs.scipy.org/doc/scipy/", None),
-    "xarray": ("https://xarray.pydata.org/en/stable/", None),
+    "xarray": ("https://docs.xarray.dev/en/stable/", None),
 }
 
 
