@@ -1,19 +1,19 @@
-Quick Start
-===========
+Getting Started
+===============
 
 *fips* solves the standard Bayesian linear inverse problem:
 
 .. math::
 
-   \hat{x} = x_0 + K(z - Hx_0), \qquad \hat{S} = S_x - K H S_x
+   \hat{x} = x_0 + K(z - Hx_0), \qquad \hat{S} = S_0 - K H S_0
 
 where :math:`x_0` is the prior state, :math:`z` the observations, :math:`H` the
-forward (Jacobian) operator, :math:`S_x` the prior-error covariance, and
+forward (Jacobian) operator, :math:`S_0` the prior-error covariance, and
 :math:`S_z` the observation-error covariance.  The Kalman gain is
 
 .. math::
 
-   K = S_x H^T (H S_x H^T + S_z)^{-1}.
+   K = S_0 H^T (H S_0 H^T + S_z)^{-1}.
 
 The three building blocks are:
 
@@ -56,7 +56,7 @@ Minimal Example
    )
 
    # --- Error covariances ---
-   S_x = pd.DataFrame(np.diag([1.0, 1.0, 1.0]), index=state_idx, columns=state_idx)
+   S_0 = pd.DataFrame(np.diag([1.0, 1.0, 1.0]), index=state_idx, columns=state_idx)
    S_z = pd.DataFrame(np.diag([0.1, 0.1]),       index=obs_idx,   columns=obs_idx)
 
    # --- Solve ---
@@ -65,7 +65,7 @@ Minimal Example
        prior=prior,
        forward_operator=H,
        modeldata_mismatch=S_z,
-       prior_error=S_x,
+       prior_error=S_0,
    )
    problem.solve("bayesian")
 
@@ -146,5 +146,5 @@ What's Next
   the ready-made :class:`~fips.problems.flux.FluxProblem` subclass and its
   :class:`~fips.problems.flux.pipeline.FluxInversionPipeline`.
 - **Subclassing** — learn how to build your own :class:`~fips.InverseProblem`
-  and :class:`~fips.pipeline.InversionPipeline` subclasses in :doc:`usage`.
-- **Full API** — every class and method is documented in :doc:`reference`.
+   and :class:`~fips.pipeline.InversionPipeline` subclasses in :doc:`usage`.
+- **Full API** — every class and method is documented in :doc:`reference/index`.

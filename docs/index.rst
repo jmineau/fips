@@ -1,5 +1,5 @@
 .. rst-class:: hidden-title
-
+==============
 fips |release|
 ==============
 
@@ -26,7 +26,7 @@ fips |release|
    :hidden:
 
    installation
-   quickstart
+   getting_started
 
 .. toctree::
    :maxdepth: 2

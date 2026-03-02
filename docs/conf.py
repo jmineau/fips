@@ -58,7 +58,7 @@ html_theme_options = {
 # Hide primary (left) sidebar on specific pages
 html_sidebars = {
     "installation": [],
-    "quickstart": [],
+    "getting_started": [],
     "usage": [],
 }
 

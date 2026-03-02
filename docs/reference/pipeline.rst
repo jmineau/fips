@@ -2,7 +2,7 @@
 Pipeline
 ========
 
-.. currentmodule:: fips.pipeline
+.. currentmodule:: fips
 
 InversionPipeline
 =================

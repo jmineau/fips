@@ -2,7 +2,7 @@
 Covariance Matrices
 ===================
 
-.. currentmodule:: fips.covariance
+.. currentmodule:: fips
 
 Covariance matrices are used in FIPS to represent uncertainty in the data provided to the inverse problem.
 
@@ -73,6 +73,8 @@ Computations
 
    CovarianceMatrix.force_symmetry
 
+
+.. currentmodule:: fips.covariance
 
 ErrorComponents
 ===============
