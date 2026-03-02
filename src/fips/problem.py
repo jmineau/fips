@@ -16,7 +16,7 @@ from fips.covariance import CovarianceMatrix
 from fips.estimators import ESTIMATOR_REGISTRY, Estimator
 from fips.matrix import Matrix, MatrixBlock, MatrixLike
 from fips.operators import ForwardOperator
-from fips.vector import Block, Vector, VectorLike
+from fips.vector import Vector, VectorLike
 
 logger = logging.getLogger(__name__)
 
@@ -69,49 +69,61 @@ class InverseProblem(Pickleable):
         constant: "VectorLike | float | None" = None,
         round_index: int | None = 6,
     ):
-        def promote_1d(data, default_block: str):
-            if isinstance(data, pd.Series) and "block" not in data.index.names:
-                # Wrap naked Series in a Block
-                return Block(data, name=default_block)
-            return data
+        obs = Vector(obs)
+        prior = Vector(prior)
 
-        def promote_2d(data, default_row: str, default_col: str):
+        def promote_2d(
+            data, target_index: pd.MultiIndex, target_columns: pd.MultiIndex
+        ):
+            """Promote 2D DataFrame to MatrixBlock, using block levels from target index/columns if needed."""
             if isinstance(data, pd.DataFrame):
                 has_row = "block" in data.axes[0].names
                 has_col = "block" in data.axes[1].names
+
+                if not has_row:
+                    row_blks = target_index.get_level_values("block").unique()
+                    if len(row_blks) > 1:
+                        raise ValueError(
+                            "Data has no row 'block' level but target index has multiple blocks."
+                        )
+                    row_block = str(row_blks[0]) if len(row_blks) == 1 else None
+                else:
+                    row_block = None
+
+                if not has_col:
+                    col_blks = target_columns.get_level_values("block").unique()
+                    if len(col_blks) > 1:
+                        raise ValueError(
+                            "Data has no col 'block' level but target columns has multiple blocks."
+                        )
+                    col_block = str(col_blks[0]) if len(col_blks) == 1 else None
+                else:
+                    col_block = None
+
                 if not has_row or not has_col:
                     # Wrap naked DataFrame in a MatrixBlock
-                    return MatrixBlock(
-                        data, row_block=default_row, col_block=default_col
-                    )
+                    return MatrixBlock(data, row_block=row_block, col_block=col_block)
             return data
 
-        def getname(obj, default):
-            return getattr(obj, "name", default)
-
-        obs = Vector(promote_1d(obs, "obs"), name=getname(obs, "obs"))
-        prior = Vector(promote_1d(prior, "state"), name=getname(prior, "prior"))
-
         forward_operator = ForwardOperator(
-            promote_2d(forward_operator, default_row="obs", default_col="state"),
-            name=getname(forward_operator, "forward_operator"),
+            promote_2d(
+                forward_operator, target_index=obs.index, target_columns=prior.index
+            )
         )
-
-        modeldata_mismatch = CovarianceMatrix(
-            promote_2d(modeldata_mismatch, default_row="obs", default_col="obs"),
-            name=getname(modeldata_mismatch, "modeldata_mismatch"),
-        )
-
         prior_error = CovarianceMatrix(
-            promote_2d(prior_error, default_row="state", default_col="state"),
-            name=getname(prior_error, "prior_error"),
+            promote_2d(
+                prior_error, target_index=prior.index, target_columns=prior.index
+            )
+        )
+        modeldata_mismatch = CovarianceMatrix(
+            promote_2d(
+                modeldata_mismatch, target_index=obs.index, target_columns=obs.index
+            )
         )
 
         if constant is not None:
             constant_index = obs.index if isinstance(constant, (int, float)) else None
-            constant = Vector(
-                constant, name=getname(constant, "constant"), index=constant_index
-            )
+            constant = Vector(constant, index=constant_index)
 
         # Round to specified precision if provided
         if round_index is not None:

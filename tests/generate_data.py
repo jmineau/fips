@@ -128,7 +128,7 @@ def generate_test_data(
     # 3. Prior State (Distorted Truth)
     noise = rng.normal(0, prior_sigma, n_state_tot)
     prior_vals = truth_vals * rng.uniform(0.8, 1.2) + noise
-    prior_state = pd.Series(prior_vals, index=idx_state, name="prior")
+    prior_state = pd.Series(prior_vals, index=idx_state, name="state")
 
     # 4. Forward Operator (Distance-based)
     # Pad to max dimensions so distances include all spatial dims
@@ -150,7 +150,7 @@ def generate_test_data(
 
     H_df = pd.DataFrame(H_vals, index=idx_obs, columns=idx_state)
     # Promote to include block level so H aligns with Vector/Covariance indices
-    # Use "state" and "obs" as block names to match what InverseProblem expects
+    # Use "state" and "obs" as block names to match the Series names
     H_df.index = promote_index(H_df.index, "obs", "block")
     H_df.columns = promote_index(H_df.columns, "state", "block")
 

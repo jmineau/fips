@@ -13,7 +13,7 @@ def simple_prior():
     return pd.Series(
         [1.0, 2.0, 3.0],
         index=pd.Index(["state_0", "state_1", "state_2"], name="state_id"),
-        name="prior",
+        name="state",
     )
 
 
@@ -92,7 +92,7 @@ def random_prior(random_state):
     return pd.Series(
         data,
         index=pd.Index([f"state_{i}" for i in range(n)], name="state_id"),
-        name="prior",
+        name="state",
     )
 
 

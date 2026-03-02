@@ -570,6 +570,7 @@ class MultiBlockMixin(ABC):
     """Base class for high-level structures (Vector, Matrix) that wrap Series/DataFrames with block levels."""
 
     data: pd.DataFrame | pd.Series
+    index: pd.MultiIndex
 
     @property
     @abstractmethod
@@ -590,7 +591,7 @@ class MultiBlockMixin(ABC):
             raise ValueError("DataFrame must have a 'block' level in the columns.")
 
     def _sanitize(self):
-        super()._sanitize()
+        super()._sanitize()  # type: ignore[attr-defined]
 
         def block_as_first_level(index):
             if index.names[0] != "block":
