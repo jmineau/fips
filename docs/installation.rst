@@ -26,12 +26,6 @@ Optional extras
    # Atmospheric flux inversion (STILT transport, cartopy plotting)
    pip install "fips[flux]"
 
-   # Documentation
-   pip install "fips[docs]"
-
-   # Development (linting, testing, type-checking)
-   pip install "fips[dev]"
-
 From Source
 -----------
 
@@ -49,5 +43,5 @@ Development Installation
    git clone https://github.com/jmineau/fips.git
    cd fips
    python -m pip install --upgrade pip
-   pip install -e ".[dev,docs]"
+   pip install --group dev -e .
    pre-commit install

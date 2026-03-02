@@ -107,7 +107,7 @@ application:
        prior=prior_fluxes,        # pd.Series  — prior flux inventory
        forward_operator=jacobian, # pd.DataFrame — STILT Jacobian
        modeldata_mismatch=S_z,    # concentration error covariance
-       prior_error=S_x,           # flux error covariance
+       prior_error=S_0,           # flux error covariance
    )
    inversion.solve()
 

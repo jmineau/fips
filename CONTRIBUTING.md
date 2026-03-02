@@ -21,7 +21,7 @@ Thank you for considering contributing to fips! We welcome contributions from th
    conda activate myenv
 
    # Install development dependencies:
-   pip install -e ".[dev]"
+   pip install --group dev -e .
    ```
 
 4. Install pre-commit hooks:
