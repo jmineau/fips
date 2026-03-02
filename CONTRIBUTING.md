@@ -24,7 +24,10 @@ Thank you for considering contributing to fips! We welcome contributions from th
    pip install --group dev -e .
    ```
 
-4. Install pre-commit hooks:
+4. Install system dependencies (for building documentation):
+   - [Pandoc](https://pandoc.org/installing.html) - Required for rendering notebooks and markdown
+
+5. Install pre-commit hooks:
    ```bash
    pre-commit install
    ```

@@ -32,6 +32,9 @@ jobs:
           python -m pip install --upgrade pip
           pip install --group dev .
 
+      - name: Install pandoc
+        uses: pandoc/actions/setup@v1
+
       - name: Setup just
         uses: extractions/setup-just@v3
 
