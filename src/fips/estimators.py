@@ -567,6 +567,7 @@ class BayesianSolver(Estimator):
         .. math::
             \\hat{S} = (H^T S_z^{-1} H + S_0^{-1})^{-1}
                 = S_0 - (H S_0)^T(H S_0 H^T + S_z)^{-1}(H S_0)
+                = S_0 - K H S_0
         """
         logger.debug("Calculating Posterior Error Covariance Matrix...")
         # Mathematically, we want to subtract: B^T * A^-1 * B
@@ -575,7 +576,5 @@ class BayesianSolver(Estimator):
         # Using scipy.linalg.solve(A, B), we compute the (A^-1 * B) term without
         # ever building the explicit inverse matrix.
         # The equation simplifies to: S_0 - B^T @ solve(A, B)
-        A = self._HS_0H + self.S_z
-        B = self._HS_0
-
-        return self.S_0 - B.T @ solve(A, B, assume_a="pos")
+        # which is the same as S_0 - K @ H @ S_0 since K = (H S_0)^T (H S_0 H^T + S_z)^{-1}
+        return self.S_0 - self.K @ self._HS_0

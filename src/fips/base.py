@@ -294,7 +294,7 @@ class Structure(Pickleable, ABC):
 
     def copy(self, deep: bool = True) -> Self:
         """
-        Create a copy of the SymmetricMatrix instance.
+        Create a copy of the structure.
 
         Parameters
         ----------
@@ -303,8 +303,8 @@ class Structure(Pickleable, ABC):
 
         Returns
         -------
-        Matrix
-            Copy of the Matrix instance.
+        Structure
+            Copy of the structure instance.
         """
         return type(self)(self.data.copy(deep=deep), name=self.name)  # type: ignore[call-arg]
 

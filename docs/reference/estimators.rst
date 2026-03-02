@@ -66,3 +66,18 @@ Constructor
    :toctree: api/
 
    BayesianSolver
+
+Methods
+~~~~~~~
+.. autosummary::
+   :toctree: api/
+
+   BayesianSolver.cost
+
+Results
+~~~~~~~
+.. autosummary::
+   :toctree: api/
+
+   BayesianSolver.x_hat
+   BayesianSolver.S_hat
