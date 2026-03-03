@@ -10,25 +10,26 @@ Thank you for considering contributing to fips! We welcome contributions from th
    git clone https://github.com/YOUR_USERNAME/fips.git
    cd fips
    ```
-3. Create a python environment and install development dependencies:
+3. Install system tools:
+   - [just](https://just.systems/man/en/prerequisites.html) - Task runner
+   - [Pandoc](https://pandoc.org/installing.html) - For building documentation
+   - [uv](https://docs.astral.sh/uv/getting-started/installation/) - Recommended for faster dependency management
+
+4. Install dependencies:
    ```bash
-   # Using venv:
-   python -m venv .venv
-   source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+   # Using uv (recommended - faster):
+   uv sync --all-extras
 
-   # OR using conda:
-   conda create -n myenv python=3.10 -y
-   conda activate myenv
-
-   # Install development dependencies:
+   # OR using pip:
    pip install --group dev -e .
    ```
 
-4. Install system dependencies (for building documentation):
-   - [Pandoc](https://pandoc.org/installing.html) - Required for rendering notebooks and markdown
-
 5. Install pre-commit hooks:
    ```bash
+   # If using uv:
+   uv run pre-commit install
+
+   # Or with activated venv/without uv:
    pre-commit install
    ```
 
@@ -53,11 +54,13 @@ Thank you for considering contributing to fips! We welcome contributions from th
 4. Run test suite:
    ```bash
    just test
+   # Or directly: uv run pytest
    ```
 
 5. Run pre-commit checks:
    ```bash
    just pre-commit
+   # Or directly: uv run pre-commit run --all-files
    ```
 
 6. Commit your changes:
