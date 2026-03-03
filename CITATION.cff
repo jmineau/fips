@@ -1,0 +1,24 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+type: software
+title: "FIPS: Flexible Inverse Problem Solver"
+version: 0.1.0b1
+date-released: 2026-03-02
+abstract: "Inverse problems in geophysics and atmospheric science are incredibly complex, often involving massive state spaces, deeply heterogeneous observational networks, and explicit matrix-algebra requirements. FIPS (Flexible Inverse Problem Solver) is built from the ground up to solve linear, matrix-based inverse problems without losing the context of your data. It provides structural flexibility to handle messy, real-world realities seamlessly with native N-dimensional alignment, modular block architecture, and analytical speed with sparse support."
+authors:
+  - family-names: Mineau
+    given-names: James
+    email: jameskmineau@gmail.com
+    affiliation: University of Utah
+    orcid: https://orcid.org/0000-0002-2289-2252
+repository-code: https://github.com/jmineau/fips
+url: jmineau.github.io/fips
+license: MIT
+keywords:
+  - inverse-problem
+  - bayesian-estimation
+  - geophysics
+  - atmospheric-science
+  - linear-algebra
+  - sparse-matrices
+  - python

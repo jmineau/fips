@@ -14,6 +14,8 @@
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 [![Pyright](https://img.shields.io/badge/pyright-checked-brightgreen.svg)](https://github.com/microsoft/pyright)
 
+> **⚠️ Beta Release**: FIPS is currently in beta (v0.1.0b1). The core API is stable and ready for testing, but may evolve based on user feedback. Please [report any issues or edge cases](https://github.com/jmineau/fips/issues) you encounter.
+
 ## Bridging Physics and Data
 Inverse problems in geophysics and atmospheric science are incredibly complex, often involving massive state spaces, deeply heterogeneous observational networks, and explicit matrix-algebra requirements. While many general-purpose optimization tools exist, they often force researchers to strip away critical spatiotemporal metadata or translate pre-computed physical models into rigid, abstract array structures.
 
