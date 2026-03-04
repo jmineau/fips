@@ -183,8 +183,25 @@ class InversionPipeline(ABC, Generic[_Problem]):
             constant=constant,
         )
 
-    def run(self, **kwargs) -> _Problem:
-        """Execute the standard inversion workflow."""
+    def run(self, estimator_kwargs: dict[str, Any] | None = None, **kwargs) -> _Problem:
+        """
+        Execute the standard inversion workflow.
+
+        Parameters
+        ----------
+        estimator_kwargs : dict[str, Any], optional
+            Additional keyword arguments to pass to the estimator (e.g., gamma for BayesianSolver).
+        **kwargs
+            Additional keyword arguments to pass to the InverseProblem constructor.
+
+        Returns
+        -------
+        _Problem
+            The solved inverse problem.
+        """
+        if estimator_kwargs is None:
+            estimator_kwargs = {}
+
         total_start = time.perf_counter()
         print("Getting problem inputs...")
         inputs = self.get_inputs()
@@ -200,7 +217,7 @@ class InversionPipeline(ABC, Generic[_Problem]):
 
         step_start = time.perf_counter()
         print("Solving...")
-        self.problem.solve(estimator=self.estimator)
+        self.problem.solve(estimator=self.estimator, **estimator_kwargs)
         print(f"Solve completed in {time.perf_counter() - step_start:.2f}s")
 
         print(f"Total pipeline time: {time.perf_counter() - total_start:.2f}s")

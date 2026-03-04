@@ -96,11 +96,13 @@ class FluxInversionPipeline(InversionPipeline[FluxProblem], ABC):
 
         return obs, prior
 
-    def run(self, **kwargs) -> FluxProblem:
+    def run(self, estimator_kwargs: dict | None = None, **kwargs) -> FluxProblem:
         """Run the flux inversion pipeline.
 
         Parameters
         ----------
+        estimator_kwargs : dict, optional
+            Additional keyword arguments to pass to the estimator (e.g., gamma for BayesianSolver).
         **kwargs
             Additional keyword arguments passed to the inverse problem initialization.
 
@@ -109,7 +111,7 @@ class FluxInversionPipeline(InversionPipeline[FluxProblem], ABC):
         FluxProblem
             The solved flux inversion problem.
         """
-        inversion = super().run(**kwargs)
+        inversion = super().run(estimator_kwargs=estimator_kwargs, **kwargs)
 
         # Print summary report
         self.summarize()
