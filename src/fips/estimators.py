@@ -483,12 +483,12 @@ class BayesianSolver(Estimator):
     This class implements a Bayesian inversion framework for solving inverse problems,
     also known as the batch method.
 
-    The regularization factor (gamma) controls the balance between fitting observations and 
+    The regularization factor (gamma) controls the balance between fitting observations and
     staying close to the prior. In the cost function, gamma (γ) multiplies the observation term:
     J(x) = (x - x_0)^T S_0^{-1} (x - x_0) + gamma*(z - Hx)^T S_z^{-1} (z - Hx)
-    
+
     This amounts to scaling S_z by 1/gamma.
-    
+
     - gamma > 1: Increases weight on data fitting (less regularization, fits observations more closely)
     - gamma = 1: Standard Bayesian inversion (default)
     - gamma < 1: Decreases weight on data fitting (more regularization, stays closer to prior)
