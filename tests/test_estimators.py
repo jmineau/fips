@@ -507,3 +507,357 @@ class TestBayesianSolverRepr:
         _ = solver.x_hat  # trigger cached_property
         r = repr(solver)
         assert "solved=True" in r
+
+
+class TestBayesianSolverRegularization:
+    """Tests for BayesianSolver regularization factor."""
+
+    @pytest.fixture
+    def simple_problem(self):
+        """Setup a simple inverse problem for testing."""
+        np.random.seed(42)
+        n_x = 3
+        n_z = 4
+        
+        # True state
+        x_true = np.array([1.0, 2.0, 3.0])
+        
+        # Forward operator
+        H = np.random.randn(n_z, n_x)
+        
+        # Generate synthetic observations with noise
+        y_true = H @ x_true
+        obs_noise = np.random.randn(n_z) * 0.1
+        z = y_true + obs_noise
+        
+        # Prior
+        x_0 = np.zeros(n_x)
+        S_0 = np.eye(n_x) * 2.0  # Prior uncertainty
+        
+        # Observation error covariance
+        S_z = np.eye(n_z) * 0.01
+        
+        return {
+            'z': z,
+            'x_0': x_0,
+            'H': H,
+            'S_0': S_0,
+            'S_z': S_z,
+            'x_true': x_true,
+        }
+
+    def test_default_regularization_factor(self, simple_problem):
+        """Test that default gamma=1.0 doesn't change S_z."""
+        from fips.estimators import BayesianSolver
+        
+        solver = BayesianSolver(
+            simple_problem['z'],
+            simple_problem['x_0'],
+            simple_problem['H'],
+            simple_problem['S_0'],
+            simple_problem['S_z'],
+            gamma=1.0
+        )
+        
+        assert solver.gamma == 1.0
+        # With gamma=1.0, S_z should equal the original (S_z / 1.0 = S_z)
+        assert np.allclose(solver.S_z, simple_problem['S_z'])
+        # _S_z_orig should store the unmodified original
+        assert np.allclose(solver._S_z_orig, simple_problem['S_z'])
+
+    def test_regularization_factor_scales_S_z(self, simple_problem):
+        """Test that gamma scales S_z correctly (divides by gamma)."""
+        from fips.estimators import BayesianSolver
+        
+        gamma = 2.5
+        solver = BayesianSolver(
+            simple_problem['z'],
+            simple_problem['x_0'],
+            simple_problem['H'],
+            simple_problem['S_0'],
+            simple_problem['S_z'],
+            gamma=gamma
+        )
+        
+        # S_z should be scaled by 1/gamma (so S_z^{-1} is scaled by gamma)
+        expected_S_z = simple_problem['S_z'] / gamma
+        assert np.allclose(solver.S_z, expected_S_z)
+        # Original should be unchanged
+        assert np.allclose(solver._S_z_orig, simple_problem['S_z'])
+
+    def test_high_regularization_factor_increases_uncertainty(self, simple_problem):
+        """Test that gamma > 1 increases weight on data fitting (less regularization)."""
+        from fips.estimators import BayesianSolver
+        
+        # Create solvers with different regularization factors
+        solver_standard = BayesianSolver(
+            simple_problem['z'],
+            simple_problem['x_0'],
+            simple_problem['H'],
+            simple_problem['S_0'],
+            simple_problem['S_z'],
+            gamma=1.0
+        )
+        
+        solver_less_reg = BayesianSolver(
+            simple_problem['z'],
+            simple_problem['x_0'],
+            simple_problem['H'],
+            simple_problem['S_0'],
+            simple_problem['S_z'],
+            gamma=10.0  # Less regularization (fits data more closely)
+        )
+        
+        # Higher gamma increases weight on data, resulting in tighter posterior (smaller uncertainty)
+        posterior_std_standard = np.sqrt(np.diag(solver_standard.S_hat))
+        posterior_std_less_reg = np.sqrt(np.diag(solver_less_reg.S_hat))
+        
+        # With less regularization (higher gamma), posterior should be tighter
+        assert np.all(posterior_std_less_reg <= posterior_std_standard + 1e-10)
+
+    def test_low_regularization_factor_decreases_uncertainty(self, simple_problem):
+        """Test that gamma < 1 decreases weight on data fitting (more regularization)."""
+        from fips.estimators import BayesianSolver
+        
+        solver_standard = BayesianSolver(
+            simple_problem['z'],
+            simple_problem['x_0'],
+            simple_problem['H'],
+            simple_problem['S_0'],
+            simple_problem['S_z'],
+            gamma=1.0
+        )
+        
+        solver_more_reg = BayesianSolver(
+            simple_problem['z'],
+            simple_problem['x_0'],
+            simple_problem['H'],
+            simple_problem['S_0'],
+            simple_problem['S_z'],
+            gamma=0.1  # More regularization (stays closer to prior)
+        )
+        
+        # Lower gamma decreases weight on data, solution stays closer to prior
+        # This results in larger posterior uncertainty
+        posterior_std_standard = np.sqrt(np.diag(solver_standard.S_hat))
+        posterior_std_more_reg = np.sqrt(np.diag(solver_more_reg.S_hat))
+        
+        # With more regularization (lower gamma), posterior should have more uncertainty
+        assert np.all(posterior_std_more_reg >= posterior_std_standard - 1e-10)
+
+    def test_regularization_affects_posterior_mean(self, simple_problem):
+        """Test that regularization factor affects the posterior mean estimate."""
+        from fips.estimators import BayesianSolver
+        
+        solver_less_reg = BayesianSolver(
+            simple_problem['z'],
+            simple_problem['x_0'],
+            simple_problem['H'],
+            simple_problem['S_0'],
+            simple_problem['S_z'],
+            gamma=100.0  # Less regularization (fit data more)
+        )
+        
+        solver_more_reg = BayesianSolver(
+            simple_problem['z'],
+            simple_problem['x_0'],
+            simple_problem['H'],
+            simple_problem['S_0'],
+            simple_problem['S_z'],
+            gamma=0.01  # More regularization (stay closer to prior)
+        )
+        
+        # With more regularization (low gamma), solution should be closer to prior
+        distance_to_prior_less_reg = np.linalg.norm(solver_less_reg.x_hat - simple_problem['x_0'])
+        distance_to_prior_more_reg = np.linalg.norm(solver_more_reg.x_hat - simple_problem['x_0'])
+        
+        assert distance_to_prior_more_reg < distance_to_prior_less_reg
+
+    def test_regularization_in_cost_function(self, simple_problem):
+        """Test that regularization factor is used in cost function."""
+        from fips.estimators import BayesianSolver
+        
+        x_test = simple_problem['x_0'] + np.array([0.1, 0.2, 0.3])
+        
+        solver_rf1 = BayesianSolver(
+            simple_problem['z'],
+            simple_problem['x_0'],
+            simple_problem['H'],
+            simple_problem['S_0'],
+            simple_problem['S_z'],
+            gamma=1.0
+        )
+        
+        solver_rf2 = BayesianSolver(
+            simple_problem['z'],
+            simple_problem['x_0'],
+            simple_problem['H'],
+            simple_problem['S_0'],
+            simple_problem['S_z'],
+            gamma=2.0
+        )
+        
+        cost1 = solver_rf1.cost(x_test)
+        cost2 = solver_rf2.cost(x_test)
+        
+        # Costs should be different due to different regularization
+        assert not np.isclose(cost1, cost2)
+
+    def test_kalman_gain_affected_by_regularization(self, simple_problem):
+        """Test that Kalman gain matrix accounts for regularization."""
+        from fips.estimators import BayesianSolver
+        
+        solver_rf1 = BayesianSolver(
+            simple_problem['z'],
+            simple_problem['x_0'],
+            simple_problem['H'],
+            simple_problem['S_0'],
+            simple_problem['S_z'],
+            gamma=1.0
+        )
+        
+        solver_rf5 = BayesianSolver(
+            simple_problem['z'],
+            simple_problem['x_0'],
+            simple_problem['H'],
+            simple_problem['S_0'],
+            simple_problem['S_z'],
+            gamma=5.0
+        )
+        
+        K1 = solver_rf1.K
+        K5 = solver_rf5.K
+        
+        # Kalman gains should differ
+        assert not np.allclose(K1, K5)
+
+    def test_averaging_kernel_affected_by_regularization(self, simple_problem):
+        """Test that averaging kernel matrix accounts for regularization."""
+        from fips.estimators import BayesianSolver
+        
+        solver_rf1 = BayesianSolver(
+            simple_problem['z'],
+            simple_problem['x_0'],
+            simple_problem['H'],
+            simple_problem['S_0'],
+            simple_problem['S_z'],
+            gamma=1.0
+        )
+        
+        solver_rf5 = BayesianSolver(
+            simple_problem['z'],
+            simple_problem['x_0'],
+            simple_problem['H'],
+            simple_problem['S_0'],
+            simple_problem['S_z'],
+            gamma=5.0
+        )
+        
+        A1 = solver_rf1.A
+        A5 = solver_rf5.A
+        
+        # Averaging kernels should differ
+        assert not np.allclose(A1, A5)
+
+    def test_dofs_affected_by_regularization(self, simple_problem):
+        """Test that DOFS changes with regularization factor."""
+        from fips.estimators import BayesianSolver
+        
+        solver_less_reg = BayesianSolver(
+            simple_problem['z'],
+            simple_problem['x_0'],
+            simple_problem['H'],
+            simple_problem['S_0'],
+            simple_problem['S_z'],
+            gamma=10.0  # Less regularization (fit data more)
+        )
+        
+        solver_more_reg = BayesianSolver(
+            simple_problem['z'],
+            simple_problem['x_0'],
+            simple_problem['H'],
+            simple_problem['S_0'],
+            simple_problem['S_z'],
+            gamma=0.1  # More regularization (fit data less)
+        )
+        
+        dofs_less_reg = solver_less_reg.DOFS
+        dofs_more_reg = solver_more_reg.DOFS
+        
+        # DOFS should differ with different regularization
+        assert not np.isclose(dofs_less_reg, dofs_more_reg)
+        
+        # With more regularization (lower gamma), DOFS should generally be lower
+        # (less freedom to fit the data)
+        assert dofs_more_reg < dofs_less_reg
+
+    def test_uncertainty_reduction_affected_by_regularization(self, simple_problem):
+        """Test that uncertainty reduction metrics work with regularization."""
+        from fips.estimators import BayesianSolver
+        
+        solver = BayesianSolver(
+            simple_problem['z'],
+            simple_problem['x_0'],
+            simple_problem['H'],
+            simple_problem['S_0'],
+            simple_problem['S_z'],
+            gamma=2.0
+        )
+        
+        # Should be able to compute uncertainty reduction
+        ur = solver.uncertainty_reduction
+        U_red = solver.U_red
+        
+        assert isinstance(ur, float)
+        assert 0.0 <= ur <= 1.0
+        assert U_red.shape == (simple_problem['x_0'].shape[0],)
+
+    def test_repr_includes_regularization_factor(self, simple_problem):
+        """Test that __repr__ includes the regularization factor."""
+        from fips.estimators import BayesianSolver
+        
+        solver = BayesianSolver(
+            simple_problem['z'],
+            simple_problem['x_0'],
+            simple_problem['H'],
+            simple_problem['S_0'],
+            simple_problem['S_z'],
+            gamma=3.5
+        )
+        
+        r = repr(solver)
+        assert "gamma=3.5" in r
+
+    def test_regularization_with_extreme_values(self, simple_problem):
+        """Test that extreme regularization values don't break the solver."""
+        from fips.estimators import BayesianSolver
+        
+        # Very small gamma (low weight on data fitting → more regularization → stay close to prior)
+        solver_tiny = BayesianSolver(
+            simple_problem['z'],
+            simple_problem['x_0'],
+            simple_problem['H'],
+            simple_problem['S_0'],
+            simple_problem['S_z'],
+            gamma=1e-6
+        )
+        
+        # Very large gamma (high weight on data fitting → less regularization → fit data closely)
+        solver_huge = BayesianSolver(
+            simple_problem['z'],
+            simple_problem['x_0'],
+            simple_problem['H'],
+            simple_problem['S_0'],
+            simple_problem['S_z'],
+            gamma=1e6
+        )
+        
+        # Should be able to compute solutions without errors
+        x_hat_tiny = solver_tiny.x_hat
+        x_hat_huge = solver_huge.x_hat
+        
+        assert x_hat_tiny.shape == simple_problem['x_0'].shape
+        assert x_hat_huge.shape == simple_problem['x_0'].shape
+        
+        # Tiny gamma (more regularization) should keep solution very close to prior
+        assert np.linalg.norm(x_hat_tiny - simple_problem['x_0']) < 0.1

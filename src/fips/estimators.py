@@ -14,9 +14,6 @@ from scipy.linalg import inv, solve
 
 logger = logging.getLogger(__name__)
 
-# TODO
-# - implement bayesian regularization factor usage
-
 
 class EstimatorRegistry(dict):
     """
@@ -486,6 +483,16 @@ class BayesianSolver(Estimator):
     This class implements a Bayesian inversion framework for solving inverse problems,
     also known as the batch method.
 
+    The regularization factor (gamma) controls the balance between fitting observations and 
+    staying close to the prior. In the cost function, gamma (γ) multiplies the observation term:
+    J(x) = (x - x_0)^T S_0^{-1} (x - x_0) + gamma*(z - Hx)^T S_z^{-1} (z - Hx)
+    
+    This amounts to scaling S_z by 1/gamma.
+    
+    - gamma > 1: Increases weight on data fitting (less regularization, fits observations more closely)
+    - gamma = 1: Standard Bayesian inversion (default)
+    - gamma < 1: Decreases weight on data fitting (more regularization, stays closer to prior)
+
     Parameters
     ----------
     z : np.ndarray
@@ -500,12 +507,18 @@ class BayesianSolver(Estimator):
         Model-data mismatch covariance
     c : np.ndarray | float, optional
         Constant data, defaults to 0.0
-    rf : float, optional
-        Regularization factor, by default 1.0
+    gamma : float, optional
+        Regularization factor (γ) that multiplies the observation term in the cost function, by default 1.0
     """
 
-    rf: float
-    """Regularization factor to apply to the cost function, which can help prevent overfitting in cases of ill-posed problems or noisy data. Currently not implemented."""
+    gamma: float
+    """
+    Regularization factor (γ) that multiplies the observation term in the cost function.
+    Values > 1 increase weight on data fitting (less regularization),
+    values < 1 decrease weight on data fitting (more regularization).
+    """
+    _S_z_orig: np.ndarray
+    """Original observation error covariance before regularization."""
 
     def __init__(
         self,
@@ -515,10 +528,14 @@ class BayesianSolver(Estimator):
         S_0: np.ndarray,
         S_z: np.ndarray,
         c: np.ndarray | float | None = None,
-        rf: float = 1.0,
+        gamma: float = 1.0,
     ):
-        super().__init__(z=z, x_0=x_0, H=H, S_0=S_0, S_z=S_z, c=c)
-        self.rf = rf  # TOOD implement usage of regularization factor
+        # Store original S_z and gamma, then pass regularized S_z to parent
+        # Note: S_z is scaled by 1/gamma so that S_z^{-1} is scaled by gamma in the cost function
+        self._S_z_orig = S_z.astype(float)
+        self.gamma = gamma
+        S_z_reg = self._S_z_orig / gamma
+        super().__init__(z=z, x_0=x_0, H=H, S_0=S_0, S_z=S_z_reg, c=c)
 
     def __repr__(self) -> str:
         """Return string representation."""
@@ -526,15 +543,17 @@ class BayesianSolver(Estimator):
         return (
             f"BayesianSolver("
             f"n_x={self.n_x}, n_z={self.n_z}, "
-            f"rf={self.rf}, solved={solved})"
+            f"gamma={self.gamma}, solved={solved})"
         )
 
     def cost(self, x):
         r"""
-        Cost function.
+        Cost function with regularization.
 
         .. math::
-            J(x) = \\frac{1}{2}(x - x_0)^T S_0^{-1}(x - x_0) + \\frac{1}{2}(z - Hx - c)^T S_z^{-1}(z - Hx - c)
+            J(x) = \\frac{1}{2}(x - x_0)^T S_0^{-1}(x - x_0) + λ\\frac{1}{2}(z - Hx - c)^T S_z^{-1}(z - Hx - c)
+
+        Note: S_z has already been scaled by the regularization factor gamma during initialization.
         """
         logger.debug("Performing cost calculation...")
         diff_model = x - self.x_0
@@ -562,12 +581,14 @@ class BayesianSolver(Estimator):
     @cached_property
     def S_hat(self):  # type: ignore[override]
         r"""
-        Posterior Error Covariance Matrix.
+        Posterior Error Covariance Matrix with regularization.
 
         .. math::
             \\hat{S} = (H^T S_z^{-1} H + S_0^{-1})^{-1}
                 = S_0 - (H S_0)^T(H S_0 H^T + S_z)^{-1}(H S_0)
                 = S_0 - K H S_0
+
+        Note: S_z has already been scaled by the regularization factor gamma during initialization.
         """
         logger.debug("Calculating Posterior Error Covariance Matrix...")
         # Mathematically, we want to subtract: B^T * A^-1 * B
@@ -577,4 +598,7 @@ class BayesianSolver(Estimator):
         # ever building the explicit inverse matrix.
         # The equation simplifies to: S_0 - B^T @ solve(A, B)
         # which is the same as S_0 - K @ H @ S_0 since K = (H S_0)^T (H S_0 H^T + S_z)^{-1}
+
+        # Since gamma is already applied to S_z during initialization, all calculations
+        # automatically use the regularized covariance.
         return self.S_0 - self.K @ self._HS_0
