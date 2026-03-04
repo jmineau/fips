@@ -4,6 +4,11 @@ Estimators
 
 .. currentmodule:: fips
 
+.. seealso::
+
+   For notation and terminology (:math:`x_0`, :math:`H`, :math:`S_0`, DOFS, etc.),
+   see :doc:`../terminology`.
+
 Estimator (Base Class)
 ======================
 

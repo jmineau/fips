@@ -61,6 +61,7 @@ html_sidebars = {
     "installation": [],
     "getting_started": [],
     "usage": [],
+    "terminology": [],
 }
 
 # -- Extension configuration -------------------------------------------------

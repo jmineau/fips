@@ -73,6 +73,11 @@ sparse storage gives significant memory and speed savings.  Pass
 ``sparse=True`` to :class:`~fips.MatrixBlock` at construction time, or convert
 an existing operator:
 
+.. note::
+
+   The forward operator :math:`H` is also called the Jacobian or observation operator.
+   See :ref:`operators-notation` for details.
+
 .. code-block:: python
 
    from fips import MatrixBlock

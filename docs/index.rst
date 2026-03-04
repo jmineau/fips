@@ -27,6 +27,7 @@ fips |release|
    installation
    getting_started
    usage
+   terminology
    examples/index
    reference/index
 

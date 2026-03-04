@@ -4,6 +4,11 @@ Inverse Problem
 
 .. currentmodule:: fips
 
+.. seealso::
+
+   See :doc:`../terminology` for definitions of prior, posterior, forward operator,
+   and other inverse problem terminology.
+
 Constructor
 ~~~~~~~~~~~
 .. autosummary::

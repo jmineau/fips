@@ -15,6 +15,12 @@ forward (Jacobian) operator, :math:`S_0` the prior-error covariance, and
 
    K = S_0 H^T (H S_0 H^T + S_z)^{-1}.
 
+.. tip::
+
+   See :doc:`terminology` for a complete guide to mathematical notation and abbreviations
+   used throughout FIPS. Different fields use different conventions — this reference
+   helps clarify the terminology.
+
 The three building blocks are:
 
 - :class:`~fips.Block` / :class:`~fips.Vector` — labelled 1-D state and observation vectors
