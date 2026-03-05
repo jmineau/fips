@@ -6,6 +6,33 @@ import pytest
 
 from fips.vector import Block, Vector
 
+# ---------------------------------------------------------------------------
+# Pandas version compatibility utilities
+# ---------------------------------------------------------------------------
+
+
+def get_pandas_version():
+    """Get pandas version as a tuple of integers."""
+    return tuple(int(x) for x in pd.__version__.split(".")[:3])
+
+
+@pytest.fixture
+def pandas_version():
+    """Fixture providing pandas version tuple."""
+    return get_pandas_version()
+
+
+def pandas_ge(major, minor=0, patch=0):
+    """Check if pandas version is >= specified version."""
+    version = get_pandas_version()
+    return version >= (major, minor, patch)
+
+
+def pandas_lt(major, minor=0, patch=0):
+    """Check if pandas version is < specified version."""
+    version = get_pandas_version()
+    return version < (major, minor, patch)
+
 
 @pytest.fixture
 def simple_prior():

@@ -304,7 +304,12 @@ def build_jacobian_row_from_coords(  # must be top-level for multiprocessing
     for key, coord_list in coords.items():
         # Round input coordinates to match footprint rounding
         coord_index = pd.MultiIndex.from_tuples(coord_list)
-        coord_index = coord_index.round([xdigits, ydigits]).set_names([x_dim, y_dim])
+        coord_index = pd.MultiIndex.from_arrays(
+            [
+                coord_index.get_level_values(0).round(xdigits),
+                coord_index.get_level_values(1).round(ydigits),
+            ]
+        ).set_names([x_dim, y_dim])
 
         # Filter to xy points defined by grid
         filtered_foot = (

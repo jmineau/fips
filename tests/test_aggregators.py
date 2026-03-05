@@ -58,6 +58,56 @@ def test_integrate_raises_missing_dim():
         integrate_over_time_bins(data, bins, time_dim="time")
 
 
+def test_integrate_over_time_bins_datetime_subtype_compat():
+    """Test that integrate_over_time_bins handles different datetime subtypes correctly.
+
+    This ensures pandas 3.x compatibility where datetime64[ns] and datetime64[us]
+    subtypes must be matched to avoid ValueError in pd.cut.
+    """
+    # Create data with datetime64[ns] resolution (default pandas behavior)
+    times_ns = pd.date_range("2023-01-01", periods=10, freq="h", name="time")
+    data = pd.Series(1.0, index=times_ns, name="flux")
+
+    # Create bins with datetime64[us] resolution (microseconds)
+    # In pandas 3.x, IntervalIndex can have different datetime resolution than the data
+    bins_us = pd.interval_range(
+        start=pd.Timestamp("2023-01-01 00:00").as_unit("us"),
+        periods=5,
+        freq="2h",
+        closed="left",
+    )
+
+    # This should not raise a ValueError despite different datetime subtypes
+    result = integrate_over_time_bins(data, bins_us, time_dim="time")
+
+    assert len(result) == 5
+    assert result.index.name == "time"
+    assert (result.to_numpy() == 2.0).all()
+
+
+def test_integrate_over_time_bins_mixed_resolutions():
+    """Test integration with data and bins having explicitly different datetime resolutions."""
+    # Create data with datetime64[ms] resolution
+    times = pd.DatetimeIndex(
+        pd.date_range("2023-01-01", periods=6, freq="h").as_unit("ms"), name="time"
+    )
+    data = pd.Series(1.0, index=times, name="flux")
+
+    # Create bins with datetime64[s] resolution
+    bins = pd.interval_range(
+        start=pd.Timestamp("2023-01-01 00:00").as_unit("s"),
+        periods=3,
+        freq="2h",
+        closed="left",
+    )
+
+    # Should work without errors despite resolution mismatch
+    result = integrate_over_time_bins(data, bins, time_dim="time")
+
+    assert len(result) == 3
+    assert (result.to_numpy() == 2.0).all()
+
+
 # ---------------------------------------------------------------------------
 # Fixtures for ObsAggregator tests
 # ---------------------------------------------------------------------------

@@ -45,13 +45,21 @@ def integrate_over_time_bins(
 
     data = data.reset_index()
 
-    # Use pd.cut to bin the data by time into time bins
-    data[time_dim] = pd.cut(
-        data[time_dim], bins=time_bins, include_lowest=True, right=False
-    )
+    # Use pd.cut to bin the data by time into time bins.
+    # Cast the time column to match the resolution of time_bins (e.g. datetime64[us]
+    # vs datetime64[ns]) to avoid a ValueError on pandas 3.x when the dtypes differ.
+    time_col = data[time_dim]
+    if hasattr(time_bins, "dtype") and hasattr(time_bins.dtype, "subtype"):
+        target_dtype = time_bins.dtype.subtype
+        if hasattr(time_col, "dt") and time_col.dtype != target_dtype:
+            time_col = time_col.astype(target_dtype)
+    data[time_dim] = pd.cut(time_col, bins=time_bins, include_lowest=True, right=False)
 
-    # Set Intervals to the left edge of the bin (start of time interval)
-    data[time_dim] = data[time_dim].apply(lambda x: x.left)
+    # Set Intervals to the left edge of the bin (start of time interval).
+    # Use cat.rename_categories() instead of .apply() so that NaN values
+    # (observations outside all bins) are left untouched — .apply() in
+    # pandas 3.x also passes np.nan through the mapper, which has no .left.
+    data[time_dim] = data[time_dim].cat.rename_categories(lambda x: x.left)
 
     # Group the date by the time bins & any other existing levels
     grouped = data.groupby([time_dim] + other_levels, observed=True)
