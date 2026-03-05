@@ -126,6 +126,12 @@ class InversionPipeline(ABC, Generic[_Problem]):
         prior = self.get_prior()
         print(f"Prior loaded in {time.perf_counter() - step_start:.2f}s")
 
+        # Optional constants to be removed from the observations
+        step_start = time.perf_counter()
+        print("Loading constant term (if any)...")
+        constant = self.get_constant(obs=obs)
+        print(f"Constant term loaded in {time.perf_counter() - step_start:.2f}s")
+
         # Optional filtering step to align state space (e.g. trim to observed subset)
         step_start = time.perf_counter()
         print("Optionally, filtering state space...")
@@ -154,12 +160,6 @@ class InversionPipeline(ABC, Generic[_Problem]):
         print(
             f"Model-data mismatch covariance built in {time.perf_counter() - step_start:.2f}s"
         )
-
-        # Optional constants to be removed from the observations
-        step_start = time.perf_counter()
-        print("Loading constant term (if any)...")
-        constant = self.get_constant(obs=obs)
-        print(f"Constant term loaded in {time.perf_counter() - step_start:.2f}s")
 
         # Optional obs-space aggregation (e.g. hourly → daily)
         step_start = time.perf_counter()
