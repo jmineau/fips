@@ -226,7 +226,10 @@ class Structure(Pickleable, ABC):
                     f"Cannot reindex: target index names {target.names} do not match data index names {current.names}."
                 )
             if current.names != target.names:  # Reorder levels to match target index
-                data = data.reorder_levels(list(target.names), axis=axis)
+                if isinstance(data, pd.Series):
+                    data = data.reorder_levels(list(target.names))
+                else:
+                    data = data.reorder_levels(list(target.names), axis=axis)
                 current = data.axes[axis]
             if verify_overlap:
                 overlap = overlaps(target_idx=target, available_idx=current)
