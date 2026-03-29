@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed
+- **Concentration plot improvements** (`FluxPlotter.concentrations`): Overhauled the concentration timeseries plot for better readability:
+  - Raw observations shown as subtle background dots (smaller, more transparent)
+  - Smoothed lines use a time-based rolling window (`rolling_window`, default 30 days) instead of a fixed fraction of data length
+  - Grey shaded spans highlight data gaps exceeding `gap_threshold` (default 7 days), with rolling mean lines broken at gaps
+  - Y-axis auto-scaled to the 1st–99th percentile range to prevent outlier stretching
+  - Clean legend built from smoothed lines only, with a "no data" entry when gaps exist
+
 ## [0.1.0b2] - 2026-03-23
 
 ### Added

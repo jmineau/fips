@@ -320,7 +320,15 @@ class FluxPlotter:
 
         return fig, axes
 
-    def concentrations(self, location=None, location_dim="obs_location", **kwargs):
+    def concentrations(
+        self,
+        location=None,
+        location_dim="obs_location",
+        rolling_window="30d",
+        gap_threshold="7d",
+        show_raw=True,
+        **kwargs,
+    ):
         """
         Plot observed, prior, and posterior concentrations.
 
@@ -330,6 +338,12 @@ class FluxPlotter:
             Observation location(s) to plot. If None, plots all locations.
         location_dim : str, default 'obs_location'
             Name of the location dimension in the data.
+        rolling_window : str or int, default '30d'
+            Rolling window for smoothed lines. Passed to ``DataFrame.rolling``.
+        gap_threshold : str, default '7d'
+            Minimum gap duration to highlight as missing data.
+        show_raw : bool, default True
+            Whether to show raw data points behind the smoothed lines.
         **kwargs
             Additional arguments passed to pandas plotting.
 
@@ -355,6 +369,9 @@ class FluxPlotter:
         else:
             raise ValueError("location must be None, a string, or a list of strings")
 
+        colors = ["black", "red", "blue"]
+        gap_td = pd.Timedelta(gap_threshold)
+
         axes = []
         for location in locations:
             df = data.loc[location]
@@ -362,20 +379,63 @@ class FluxPlotter:
 
             fig, ax = plt.subplots()
 
-            df.plot(
+            if show_raw:
+                df.plot(
+                    ax=ax,
+                    style=".",
+                    alpha=0.3,
+                    markersize=4,
+                    color=colors,
+                    markeredgecolor="None",
+                    legend=False,
+                )
+
+            # Detect gaps in observed data
+            times = df.index.sort_values()
+            diffs = times.to_series().diff()
+            gap_starts = times[diffs > gap_td]
+
+            # Compute smoothed lines, inserting NaNs at gaps to break lines
+            smoothed = df.rolling(
+                window=rolling_window, center=True, min_periods=1
+            ).mean()
+            for gap_start in gap_starts:
+                gap_end = gap_start
+                gap_begin = times[times < gap_start][-1]
+                mid = gap_begin + (gap_end - gap_begin) / 2
+                smoothed.loc[mid:gap_start] = np.nan
+
+            smoothed.plot(
                 ax=ax,
-                style=".",
-                alpha=0.6,
-                color=["black", "red", "blue"],
-                markeredgecolor="None",
+                linewidth=1.5,
+                color=colors,
                 legend=False,
             )
-            df.rolling(window=max(1, int(len(df) / 10)), center=True).mean().plot(
-                ax=ax,
-                linewidth=2,
-                color=["black", "red", "blue"],
-                label=["Observed", "Posterior", "Prior"],
-            )
+
+            # Shade data gaps
+            for gap_start in gap_starts:
+                gap_begin = times[times < gap_start][-1]
+                ax.axvspan(gap_begin, gap_start, color="grey", alpha=0.15)
+
+            # Build legend from smoothed lines only
+            handles = [
+                plt.Line2D([], [], color=c, linewidth=1.5, label=label)
+                for c, label in zip(colors, df.columns, strict=False)
+            ]
+            if len(gap_starts) > 0:
+                from matplotlib.patches import Patch
+
+                handles.append(Patch(facecolor="grey", alpha=0.15, label="no data"))
+            ax.legend(handles=handles)
+
+            # Set y-limits based on percentiles to avoid outlier stretching
+            all_vals = df.values.ravel()
+            all_vals = all_vals[~np.isnan(all_vals)]
+            if len(all_vals) > 0:
+                p01, p99 = np.percentile(all_vals, [1, 99])
+                margin = (p99 - p01) * 0.1
+                ax.set_ylim(p01 - margin, p99 + margin)
+
             ax.set(
                 title=f"Concentrations at site: {location}",
                 ylabel="Concentration",
