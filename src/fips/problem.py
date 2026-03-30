@@ -352,3 +352,8 @@ class InverseProblem(Pickleable):
     def averaging_kernel(self) -> Matrix:
         """Averaging kernel matrix (A)."""
         return self._wrap("A", "averaging_kernel")  # type: ignore[return-value]
+
+    @property
+    def desroziers(self) -> CovarianceMatrix:
+        """Desroziers et al. (2005) diagnosed observation error covariance."""
+        return self._wrap("desroziers", "desroziers")  # type: ignore[return-value]

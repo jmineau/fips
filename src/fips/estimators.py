@@ -103,6 +103,7 @@ class Estimator(ABC):
         "K": ("state", "obs", False),
         "A": ("state", "state", False),
         "U_red": ("state", None, False),
+        "desroziers": ("obs", "obs", True),
     }
 
     def __init__(
@@ -457,6 +458,39 @@ class Estimator(ABC):
         """
         logger.debug("Calculating uncertainty reduction metric...")
         return float(1 - (np.sqrt(np.trace(self.S_hat)) / np.sqrt(np.trace(self.S_0))))
+
+    @cached_property
+    def desroziers(self) -> np.ndarray:
+        r"""
+        Desroziers et al. (2005) diagnosed observation error covariance.
+
+        Estimates the observation error covariance from the innovation
+        (prior departure) and analysis departure (posterior residual):
+
+        .. math::
+            R_{diag} = \frac{1}{2}(d^a {d^b}^T + d^b {d^a}^T)
+
+        where :math:`d^b = z - Hx_0 - c` (innovation) and
+        :math:`d^a = z - H\hat{x} - c` (analysis departure).
+
+        Symmetrized since the single-realization outer product is not
+        symmetric but the expectation is.
+
+        Returns
+        -------
+        np.ndarray
+            Diagnosed observation error covariance matrix (n_z × n_z).
+
+        References
+        ----------
+        Desroziers, G., Berre, L., Chapnik, B., & Poli, P. (2005).
+        Diagnosis of observation, background and analysis-error statistics
+        in observation space. Q.J.R. Meteorol. Soc., 131, 3385–3396.
+        """
+        d_b = self.residual(self.x_0)  # innovation
+        d_a = self.residual(self.x_hat)  # analysis departure
+        raw = np.outer(d_a, d_b)
+        return 0.5 * (raw + raw.T)
 
     @cached_property
     def U_red(self) -> np.ndarray:
