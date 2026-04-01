@@ -152,11 +152,22 @@ class FluxPlotter:
         # Add background tiles
         if tiler is not None:
             tiler_zoom = kwargs.pop("tiler_zoom", 10)
+            # Expand extent by half a cell so edge cells aren't clipped
+            dx = (
+                float(posterior.lon.diff("lon").median())
+                if len(posterior.lon) > 1
+                else 0
+            )
+            dy = (
+                float(posterior.lat.diff("lat").median())
+                if len(posterior.lat) > 1
+                else 0
+            )
             extent = [
-                posterior.lon.min(),
-                posterior.lon.max(),
-                posterior.lat.min(),
-                posterior.lat.max(),
+                float(posterior.lon.min()) - dx / 2,
+                float(posterior.lon.max()) + dx / 2,
+                float(posterior.lat.min()) - dy / 2,
+                float(posterior.lat.max()) + dy / 2,
             ]
             for ax in axes:
                 ax.set_extent(extent, crs=ccrs.PlateCarree())
