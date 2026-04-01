@@ -120,6 +120,8 @@ class FluxInversionPipeline(InversionPipeline[FluxProblem], ABC):
 
     def summarize(self) -> None:
         """Print a comprehensive statistical summary of the inversion results."""
+        from scipy import stats
+
         problem = self.problem
 
         # --- Extract Data ---
@@ -135,18 +137,14 @@ class FluxInversionPipeline(InversionPipeline[FluxProblem], ABC):
         est = problem.estimator
 
         # --- Calculate Atmospheric Metrics ---
-        # Mean Enhancements
         mean_enhancement = np.mean(enhancement)
 
-        # Root Mean Square Error (RMSE)
         rmse_prior = np.sqrt(((prior_obs - obs) ** 2).mean())
         rmse_post = np.sqrt(((post_obs - obs) ** 2).mean())
 
-        # Mean Bias (Model - Obs)
         mb_prior = np.mean(prior_obs - obs)
         mb_post = np.mean(post_obs - obs)
 
-        # R-squared (Coefficient of Determination)
         ss_tot = ((obs - obs.mean()) ** 2).sum()
         r2_prior = 1 - (((obs - prior_obs) ** 2).sum() / ss_tot)
         r2_post = 1 - (((obs - post_obs) ** 2).sum() / ss_tot)
@@ -155,14 +153,37 @@ class FluxInversionPipeline(InversionPipeline[FluxProblem], ABC):
         mean_prior_flux = prior_flux.mean()
         mean_post_flux = post_flux.mean()
 
-        # Bayesian Diagnostics
-        n = len(prior_flux)  # Size of state vector
-        m = len(obs)  # Size of observation vector
-        dofs = est.DOFS  # Degrees of Freedom for Signal
-        chi2 = est.reduced_chi2  # Reduced Chi-Square
-        R2 = est.R2  # Bayesian R-squared
-        RMSE = est.RMSE  # Bayesian RMSE
-        uncertainty_reduction = est.uncertainty_reduction * 100  # Convert to percentage
+        n = len(prior_flux)
+        m = len(obs)
+        dofs = est.DOFS
+        chi2 = est.reduced_chi2
+        R2 = est.R2
+        RMSE = est.RMSE
+        uncertainty_reduction = est.uncertainty_reduction * 100
+
+        # --- Negative cells ---
+        n_negative = int((post_flux < 0).sum())
+        pct_negative = n_negative / n * 100
+
+        # --- Per-timestep means ---
+        time_level = "time"
+        prior_by_time = prior_flux.groupby(level=time_level).mean()
+        post_by_time = post_flux.groupby(level=time_level).mean()
+        change_pct = ((post_by_time / prior_by_time) - 1) * 100
+
+        # --- Trend ---
+        trend_str = None
+        if len(post_by_time) > 2:
+            t = post_by_time.index
+            t_years = t.year + (t.day_of_year - 1) / 365.25
+            slope, intercept, r_value, p_value, std_err = stats.linregress(
+                t_years, post_by_time.values
+            )
+            trend_str = (
+                f"  Slope:   {slope:+.4f} /yr\n"
+                f"  R^2:     {r_value**2:.3f}\n"
+                f"  p-value: {p_value:.3g}"
+            )
 
         # --- Print Report ---
         print("==================================================")
@@ -178,16 +199,31 @@ class FluxInversionPipeline(InversionPipeline[FluxProblem], ABC):
         print(f"Bayesian RMSE:               {RMSE:.3f}")
         print(f"Uncertainty Reduction:       {uncertainty_reduction:.1f}%")
         print("--------------------------------------------------")
-        print("FLUX ESTIMATES:")
-        print(f"  Mean Prior Flux:     {mean_prior_flux:.2f}")
-        print(f"  Mean Posterior Flux: {mean_post_flux:.2f}")
+        print("FLUX ESTIMATES (per grid cell):")
+        print(f"  Mean Prior Flux:     {mean_prior_flux:.4f}")
+        print(f"  Mean Posterior Flux: {mean_post_flux:.4f}")
+        print(f"  Negative Cells:     {n_negative} / {n} ({pct_negative:.1f}%)")
         print("--------------------------------------------------")
         print("ATMOSPHERIC CONCENTRATIONS (Model vs Obs):")
-        print(f"  Mean Obs Enhancement: {mean_enhancement:.2f}")
-        print(f"  RMSE (Prior):         {rmse_prior:.2f}")
-        print(f"  RMSE (Posterior):     {rmse_post:.2f}")
-        print(f"  Mean Bias (Prior):    {mb_prior:.2f}")
-        print(f"  Mean Bias (Posterior):{mb_post:.2f}")
+        print(f"  Mean Obs Enhancement: {mean_enhancement:.4f}")
+        print(f"  RMSE (Prior):         {rmse_prior:.4f}")
+        print(f"  RMSE (Posterior):     {rmse_post:.4f}")
+        print(f"  Mean Bias (Prior):    {mb_prior:.4f}")
+        print(f"  Mean Bias (Posterior):{mb_post:.4f}")
         print(f"  R^2 (Prior):          {r2_prior:.3f}")
         print(f"  R^2 (Posterior):      {r2_post:.3f}")
+        print("--------------------------------------------------")
+        print("MEAN FLUX BY TIMESTEP:")
+        timestep_df = pd.DataFrame(
+            {
+                "prior": prior_by_time,
+                "posterior": post_by_time,
+                "change_%": change_pct,
+            }
+        )
+        print(timestep_df.to_string(float_format="%.4f"))
+        if trend_str is not None:
+            print("--------------------------------------------------")
+            print("POSTERIOR FLUX TREND:")
+            print(trend_str)
         print("==================================================")
