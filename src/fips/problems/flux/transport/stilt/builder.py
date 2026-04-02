@@ -174,6 +174,14 @@ class JacobianBuilder:
                 else:
                     raise ValueError("Unexpected output from build_jacobian_row")
 
+        if not H_rows:
+            n_failed = len(self.failed_sims)
+            raise ValueError(
+                f"No Jacobian rows were produced from {len(self.simulations)} "
+                f"simulations ({n_failed} failed). Check that footprints exist "
+                f"at the requested resolution ('{resolution}')."
+            )
+
         H_dict = {}
         for key, rows in H_rows.items():
             if rows:
