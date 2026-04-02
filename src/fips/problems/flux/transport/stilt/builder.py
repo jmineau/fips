@@ -193,13 +193,13 @@ class JacobianBuilder:
                     H = H.where(H.abs() >= threshold, other=0.0)
 
                 if location_mapper:
-                    h = H.reset_index()
-                    h[self.location_dim] = (
-                        h[self.location_dim]
+                    idx = H.index.to_frame(index=False)
+                    idx[self.location_dim] = (
+                        idx[self.location_dim]
                         .map(location_mapper)
-                        .fillna(h[self.location_dim])
+                        .fillna(idx[self.location_dim])
                     )
-                    H = h.set_index([self.location_dim, self.time_dim])
+                    H.index = pd.MultiIndex.from_frame(idx)
 
                 H = MatrixBlock(
                     H,
