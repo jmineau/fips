@@ -399,13 +399,23 @@ class Estimator(ABC):
         # Then we compute: r^T @ y
 
         # 1. Scaled Data Misfit: data_residual^T @ (S_z^-1 @ data_residual)
+        # Add small regularization to avoid singular matrices (can occur after aggregation)
+        S_z_reg = self.S_z.copy()
+        S_z_reg[np.arange(len(S_z_reg)), np.arange(len(S_z_reg))] += np.sqrt(
+            np.finfo(float).eps
+        )
         scaled_data_misfit = data_residual.T @ solve(
-            self.S_z, data_residual, assume_a="pos"
+            S_z_reg, data_residual, assume_a="pos"
         )
 
         # 2. Scaled Model Misfit: model_residual^T @ (S_0^-1 @ model_residual)
+        # Add small regularization to avoid singular matrices
+        S_0_reg = self.S_0.copy()
+        S_0_reg[np.arange(len(S_0_reg)), np.arange(len(S_0_reg))] += np.sqrt(
+            np.finfo(float).eps
+        )
         scaled_model_misfit = model_residual.T @ solve(
-            self.S_0, model_residual, assume_a="pos"
+            S_0_reg, model_residual, assume_a="pos"
         )
 
         return float((scaled_data_misfit + scaled_model_misfit) / self.n_z)
