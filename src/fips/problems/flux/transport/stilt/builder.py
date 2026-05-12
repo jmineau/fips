@@ -6,389 +6,230 @@ forward operator (Jacobian matrix) by loading and aggregating STILT
 footprints over specified time bins and spatial resolutions.
 """
 
-import datetime as dt
 import logging
 from collections import defaultdict
-from pathlib import Path
-from typing import overload
 
-import numpy as np
 import pandas as pd
 from joblib import Parallel, delayed
-from stilt import Simulation  # type: ignore[import]
+from stilt.footprint import Footprint  # type: ignore[import]
+from stilt.model import Model  # type: ignore[import]
 
-from fips.aggregators import integrate_over_time_bins
 from fips.matrix import MatrixBlock
-from fips.problems.flux.transport.stilt.footprint import get_footprint
-from fips.problems.flux.transport.stilt.simulation import get_sim
 
 logger = logging.getLogger(__name__)
 
 
 class JacobianBuilder:
     """
-    Builds Jacobian matrices from STILT footprint simulations.
+    Builds Jacobian matrices from STILT footprints via a PYSTILT Model.
 
     Parameters
     ----------
-    simulations : list[stilt.Simulation | Path]
-        List of STILT simulations or paths to simulation directories.
+    model : stilt.Model
+        A configured PYSTILT Model used to load footprints via
+        ``model.get_footprints()``.
+    location_dim : str
+        Name of the observation location dimension.
+    time_dim : str
+        Name of the observation time dimension.
     """
 
-    simulations: list[Simulation | Path]
-    """List of STILT simulations or paths to simulation directories."""
     location_dim: str
-    """Name of the observation location dimension."""
     time_dim: str
-    """Name of the observation time dimension."""
     failed_sims: list[str]
-    """List of simulation IDs that failed to process."""
 
     def __init__(
         self,
-        simulations: list[Simulation | Path],
+        model: Model,
         location_dim: str = "obs_location",
         time_dim: str = "obs_time",
     ):
-        self.simulations = simulations
+        self.model = model
         self.location_dim = location_dim
         self.time_dim = time_dim
-
         self.failed_sims = []
-
-    @overload
-    def build_from_coords(
-        self,
-        coords: list[tuple[float, float]],
-        flux_times: pd.IntervalIndex,
-        resolution: str | None = None,
-        subset_hours: int | list[int] | None = None,
-        num_processes: int = 1,
-        location_mapper: dict[str, str] | None = None,
-        timeout: float | int | None = None,
-        threshold: float | None = 1e-10,
-        sparse: bool = False,
-    ) -> MatrixBlock: ...
-
-    @overload
-    def build_from_coords(
-        self,
-        coords: dict[str, list[tuple[float, float]]],
-        flux_times: pd.IntervalIndex,
-        resolution: str | None = None,
-        subset_hours: int | list[int] | None = None,
-        num_processes: int = 1,
-        location_mapper: dict[str, str] | None = None,
-        timeout: float | int | None = None,
-        threshold: float | None = 1e-10,
-        sparse: bool = False,
-    ) -> dict[str, MatrixBlock]: ...
 
     def build_from_coords(
         self,
         coords: list[tuple[float, float]] | dict[str, list[tuple[float, float]]],
         flux_times: pd.IntervalIndex,
-        resolution: str | None = None,
+        footprint: str,
+        *,
+        mets: str | list[str] | None = None,
+        time_range: tuple | None = None,
+        location_ids: set[str] | None = None,
         subset_hours: int | list[int] | None = None,
         num_processes: int = 1,
         location_mapper: dict[str, str] | None = None,
         timeout: float | int | None = None,
-        threshold: float | None = 1e-15,  # numpy.float64 precision is 1e-15
+        threshold: float | None = 1e-15,
         sparse: bool = False,
-    ) -> MatrixBlock | dict[str, MatrixBlock]:
+    ) -> "MatrixBlock | dict[str, MatrixBlock]":
         """
-        Build the Jacobian matrix H from specified coordinates (x, y) and flux time bins.
+        Build the Jacobian matrix H from specified coordinates and flux time bins.
 
         Parameters
         ----------
         coords : list[tuple[float, float]] | dict[str, list[tuple[float, float]]]
-            Coordinates of the output grid points.
-            Multiple sets of coordinates can be provided as a dictionary of lists of coordinate tuples.
-            Otherwise, a single list of coordinate tuples can be provided.
-            Coordinates should be in the same CRS as the STILT footprints and specified as (x, y) tuples.
+            Coordinates of the output grid points as (x, y) tuples. Pass a
+            dict to build multiple Jacobians over different coordinate sets.
         flux_times : pd.IntervalIndex
-            Time bins for the fluxes
-        resolution : str | None, optional
-            Resolution of the footprints to use, by default None (use highest resolution available)
-        subset_hours : int | list[int] | None, optional
-            Subset the simulations to specific hours of the day, by default None
-        num_processes : int, optional
-            Number of processes to use for parallel computation, by default 1
-            To use all cores, set num_processes=-1. Note that parallel processing may not be available on all platforms.
-        location_mapper : dict[str, str] | None, optional
-            Optional mapping of observation location IDs to new IDs.
-        timeout : float, optional
-            The maximum time (in seconds) allowed for each simulation to be processed.
-            If a task exceeds this time, a TimeoutError is raised.
-            Default is None (no timeout).
-        threshold : float | None, optional
-            Values whose absolute value is strictly less than this threshold are set to
-            zero before the MatrixBlock is assembled.  This avoids storing floating-point
-            noise as explicit non-zero entries.  Default is 1e-15.  Pass None to disable.
-        sparse : bool, default False
-            If True, store the assembled MatrixBlock in pandas sparse format.
-            Pairs naturally with ``threshold`` — threshold zeroing is applied first
-            so that structural zeros are not stored as explicit entries.
+            Time bins for the fluxes.
+        footprint : str
+            Name of the footprint to load from each simulation.
+        mets : str, list[str], or None
+            Restrict to specific met configurations. None = all.
+        time_range : tuple or None
+            ``(start, end)`` to filter simulations by receptor time. Defaults
+            to the full flux window derived from ``flux_times``.
+        location_ids : set[str] or None
+            Restrict to specific location IDs.
+        subset_hours : int | list[int] | None
+            Filter simulations to specific hours of the day (receptor time).
+        num_processes : int
+            Number of parallel workers (joblib). -1 = all cores.
+        location_mapper : dict[str, str] | None
+            Optional mapping of location IDs to new IDs (e.g. site names).
+        timeout : float | None
+            Per-task timeout in seconds passed to joblib.
+        threshold : float | None
+            Absolute value cutoff; entries below this are zeroed. Default
+            1e-15. Pass None to disable.
+        sparse : bool
+            Store the assembled MatrixBlock in sparse format.
 
         Returns
         -------
         MatrixBlock | dict[str, MatrixBlock]
-            If coords is a dict, returns a dict of MatrixBlocks for each set of coordinates.
-            Otherwise, returns a single MatrixBlock.
+            Single MatrixBlock when coords is a list; dict when coords is a dict.
         """
         logger.info("Building Jacobian matrix...")
 
         if not isinstance(coords, dict):
             coords = {"DEFAULT": coords}
 
-        # Determine overall time range from flux_times
-        t_start, t_stop = flux_times[0].left, flux_times[-1].right
+        if time_range is None:
+            time_range = (flux_times[0].left, flux_times[-1].right)
 
-        # Build the Jacobian matrix in parallel
-        H_rows = defaultdict(list)
-        if num_processes > 1:
-            logger.debug(f"Building Jacobian rows with {num_processes} processes...")
+        footprints = self.model.footprints[footprint].load(
+            mets=mets,
+            time_range=time_range,
+            location_ids=location_ids,
+        )
+
+        if subset_hours is not None:
+            if isinstance(subset_hours, int):
+                subset_hours = [subset_hours]
+            footprints = [
+                fp for fp in footprints
+                if fp.receptor.time.hour in subset_hours
+            ]
+
+        if not footprints:
+            raise ValueError(
+                f"No footprints found for '{footprint}' after filtering. "
+                "Check that footprints exist and filters are not too restrictive."
+            )
+
+        logger.debug("Dispatching %d footprints...", len(footprints))
         results = Parallel(n_jobs=num_processes, timeout=timeout)(
             delayed(build_jacobian_row_from_coords)(
-                sim,
+                fp=fp,
                 coords=coords,
                 location_dim=self.location_dim,
                 time_dim=self.time_dim,
                 flux_times=flux_times,
-                t_start=t_start,
-                t_stop=t_stop,
-                resolution=resolution,
-                subset_hours=subset_hours,
             )
-            for sim in self.simulations
+            for fp in footprints
         )
-        logger.debug("Sorting Jacobian rows...")
+
+        H_rows: dict[str, list[pd.DataFrame]] = defaultdict(list)
         for row in results:
             if row is not None:
-                if isinstance(row, dict):
-                    for key, df in row.items():
-                        H_rows[key].append(df)
-                elif isinstance(row, str):
-                    if row not in self.failed_sims:
-                        self.failed_sims.append(row)
-                else:
-                    raise ValueError("Unexpected output from build_jacobian_row")
+                for key, df in row.items():
+                    H_rows[key].append(df)
 
         if not H_rows:
-            n_failed = len(self.failed_sims)
             raise ValueError(
-                f"No Jacobian rows were produced from {len(self.simulations)} "
-                f"simulations ({n_failed} failed). Check that footprints exist "
-                f"at the requested resolution ('{resolution}')."
+                f"No Jacobian rows were produced from {len(footprints)} footprints. "
+                "Check that footprints overlap with the given coordinates."
             )
 
-        H_dict = {}
+        H_dict: dict[str, MatrixBlock] = {}
         for key, rows in H_rows.items():
-            if rows:
-                rows: list[pd.DataFrame]
-                logger.debug(f"Combining {len(rows)} rows for {key} jacobian...")
-                H = pd.concat(rows).fillna(0)
+            H = pd.concat(rows).fillna(0)
 
-                if threshold is not None:
-                    H = H.where(H.abs() >= threshold, other=0.0)
+            if threshold is not None:
+                H = H.where(H.abs() >= threshold, other=0.0)
 
-                if location_mapper:
-                    idx = H.index.to_frame(index=False)
-                    idx[self.location_dim] = (
-                        idx[self.location_dim]
-                        .map(location_mapper)
-                        .fillna(idx[self.location_dim])
-                    )
-                    H.index = pd.MultiIndex.from_frame(idx)
-
-                H = MatrixBlock(
-                    H,
-                    name="jacobian",
-                    row_block="concentration",
-                    col_block="flux",
-                    sparse=sparse,
+            if location_mapper:
+                idx = H.index.to_frame(index=False)
+                idx[self.location_dim] = (
+                    idx[self.location_dim]
+                    .map(location_mapper)
+                    .fillna(idx[self.location_dim])
                 )
-                H_dict[key] = H
+                H.index = pd.MultiIndex.from_frame(idx)
 
-                if key == "DEFAULT":
-                    return H
+            H = MatrixBlock(
+                H,
+                name="jacobian",
+                row_block="concentration",
+                col_block="flux",
+                sparse=sparse,
+            )
+            H_dict[key] = H
+
+            if key == "DEFAULT":
+                logger.info("Jacobian matrix built successfully.")
+                return H
 
         logger.info("Jacobian matrix built successfully.")
-
         return H_dict
 
 
 def build_jacobian_row_from_coords(  # must be top-level for multiprocessing
-    simulation: Simulation | Path,
+    fp: Footprint,
     coords: dict[str, list[tuple[float, float]]],
     location_dim: str,
     time_dim: str,
     flux_times: pd.IntervalIndex,
-    t_start: dt.datetime,
-    t_stop: dt.datetime,
-    resolution: str | None = None,
-    subset_hours: int | list[int] | None = None,
-) -> dict[str, pd.DataFrame] | str | None:
+) -> "dict[str, pd.DataFrame] | None":
     """
-    Build a row of the Jacobian matrix for a single STILT simulation.
+    Build a row of the Jacobian matrix for a single STILT footprint.
 
     Parameters
     ----------
-    simulation : Simulation or Path
-        STILT simulation object or path to simulation directory.
+    fp : stilt.Footprint
+        Loaded STILT footprint.
     coords : dict[str, list[tuple[float, float]]]
-        Dictionary mapping coordinate set names to lists of (x, y) coordinate tuples.
+        Coordinate sets to aggregate over; keys become keys in the output dict.
     location_dim : str
-        Name of the observation location dimension.
+        Name of the observation location index level.
     time_dim : str
-        Name of the observation time dimension.
+        Name of the observation time index level.
     flux_times : pd.IntervalIndex
-        Time bins for flux aggregation.
-    t_start : datetime
-        Start of the inversion time range.
-    t_stop : datetime
-        End of the inversion time range.
-    resolution : str, optional
-        Resolution of the footprint to use. If None, uses default (highest) resolution.
-    subset_hours : int or list[int], optional
-        Hour(s) of day to filter simulations. If None, uses all hours.
+        Flux time bins for aggregation.
 
     Returns
     -------
-    dict[str, pd.DataFrame] or str or None
-        Dictionary mapping coordinate set names to Jacobian row DataFrames,
-        or simulation ID string if failed, or None if skipped.
+    dict[str, pd.DataFrame] or None
+        Jacobian row DataFrames keyed by coordinate set name, or None if the
+        footprint has no overlap with any coordinate set.
     """
-    t0 = dt.datetime.now()
-
-    # Get simulation object
-    sim = get_sim(
-        simulation=simulation, t_start=t_start, t_stop=t_stop, subset_hours=subset_hours
-    )
-    if not isinstance(sim, Simulation):
-        return sim  # could be None or sim.id if failed
-
-    # Get footprint for the simulation
-    try:
-        footprint = get_footprint(
-            sim=sim, t_start=t_start, t_stop=t_stop, resolution=resolution
-        )
-    except Exception as e:
-        foot_file = sim.paths["footprints"][str(resolution)]
-        logger.exception(f"Error loading footprint file {foot_file}")
-        raise e
-
-    if footprint is None:
-        return None
-
-    # print(f"Computing Jacobian row for {sim.id}...")
-
-    # Convert xarray to pandas for sparse representation
-    foot = footprint.data.to_series()
-
-    # Get the x and y dimension names
-    is_latlon = "lon" in foot.index.names and "lat" in foot.index.names
-    x_dim = "lon" if is_latlon else "x"
-    y_dim = "lat" if is_latlon else "y"
-
-    foot = foot.reset_index()
-
-    # Round coordinates to avoid floating point issues
-    xres, yres = footprint.xres, footprint.yres
-    xdigits = calc_digits(xres)
-    ydigits = calc_digits(yres)
-
-    foot[x_dim] = foot[x_dim].round(xdigits)
-    foot[y_dim] = foot[y_dim].round(ydigits)
-
-    # Reorder dimensions to x, y, time
-    foot = foot.set_index([x_dim, y_dim, "time"])  # still a df
-
-    # Build index value for the observation
-    obs_index = build_obs_index(sim=sim, location_dim=location_dim, time_dim=time_dim)
-
-    # Build Jacobian row for each set of coordinates
-    rows = {}
-    for key, coord_list in coords.items():
-        # Round input coordinates to match footprint rounding
-        coord_index = pd.MultiIndex.from_tuples(coord_list)
-        coord_index = pd.MultiIndex.from_arrays(
-            [
-                coord_index.get_level_values(0).round(xdigits),
-                coord_index.get_level_values(1).round(ydigits),
-            ]
-        ).set_names([x_dim, y_dim])
-
-        # Filter to xy points defined by grid
-        filtered_foot = (
-            foot.reset_index(level="time")
-            .loc[coord_index]
-            .set_index("time", append=True)
-        )
-
-        if filtered_foot.size == 0:
-            continue
-
-        # Integrate each simulation over flux_time bins
-        integrated_foot = integrate_over_time_bins(
-            data=filtered_foot, time_bins=flux_times
-        )
-
-        # Transpose and set index as (obs_location, obs_time) multiindex
-        transposed_foot = integrated_foot.T
-        transposed_foot.index = obs_index
-
-        rows[key] = transposed_foot
-    logger.debug(
-        "Finished computing Jacobian row for %s in %s",
-        sim.id,
-        dt.datetime.now() - t0,
-    )
-    return rows
-
-
-def build_obs_index(sim: Simulation, location_dim: str, time_dim: str) -> pd.MultiIndex:
-    """
-    Build observation index from simulation receptor location and time.
-
-    Parameters
-    ----------
-    sim : Simulation
-        STILT simulation object.
-    location_dim : str
-        Name of the location dimension.
-    time_dim : str
-        Name of the time dimension.
-
-    Returns
-    -------
-    pd.MultiIndex
-        Multi-index with location and time levels.
-    """
-    return pd.MultiIndex.from_arrays(
-        [[sim.receptor.location.id], [sim.receptor.time]],
+    obs_index = pd.MultiIndex.from_arrays(
+        [[fp.receptor.location_id], [fp.receptor.time]],
         names=[location_dim, time_dim],
     )
 
+    rows: dict[str, pd.DataFrame] = {}
+    for key, coord_list in coords.items():
+        agg = fp.aggregate(coord_list, flux_times)
+        if not agg.values.any():
+            continue
 
-def calc_digits(res: float) -> int:
-    """
-    Calculate number of decimal digits to represent a resolution value.
+        row = agg.stack().to_frame().T
+        row.index = obs_index
+        rows[key] = row
 
-    Parameters
-    ----------
-    res : float
-        Resolution value (must be positive).
-
-    Returns
-    -------
-    int
-        Number of decimal digits needed to represent the resolution.
-    """
-    if res <= 0:
-        raise ValueError("Resolution must be positive")
-    if res < 1:  # fractional resolution  # noqa: SIM108
-        digits = int(np.ceil(np.abs(np.log10(res)))) + 1
-    else:
-        digits = int(-np.log10(res))
-    return digits
+    return rows or None

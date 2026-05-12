@@ -35,7 +35,7 @@ flux = [
     "cartopy>=0.24.0",  # numpy 2.0 support
     "h5py>=3.11.0",  # numpy 2.0 support
     "matplotlib>=3.6.0",
-    "stilt @ git+https://github.com/jmineau/PYSTILT",
+    "pystilt>=0.1.0a1",
 ]
 
 [dependency-groups]
