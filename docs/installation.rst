@@ -11,12 +11,12 @@ Requirements
 - `scipy <https://scipy.org>`_
 - `joblib <https://joblib.readthedocs.io>`_
 
-From GitHub
------------
+From PyPI
+---------
 
 .. code-block:: bash
 
-   pip install git+https://github.com/jmineau/fips
+   pip install fips
 
 Optional extras
 ~~~~~~~~~~~~~~~
@@ -26,15 +26,6 @@ Optional extras
    # Atmospheric flux inversion (STILT transport, cartopy plotting)
    pip install "fips[flux]"
 
-From Source
------------
-
-.. code-block:: bash
-
-   git clone https://github.com/jmineau/fips.git
-   cd fips
-   pip install -e .
-
 Development Installation
 ------------------------
 
@@ -43,5 +34,5 @@ Development Installation
    git clone https://github.com/jmineau/fips.git
    cd fips
    python -m pip install --upgrade pip
-   pip install --group dev -e .
+   uv sync --dev
    pre-commit install

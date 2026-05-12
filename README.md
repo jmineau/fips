@@ -31,17 +31,17 @@ Inverse problems in geophysics and atmospheric science are incredibly complex, o
 
 ## Installation
 
-### From GitHub
+### From PyPI
 ```bash
-pip install git+https://github.com/jmineau/fips
+pip install fips
 ```
 
-### From Source
+### For development
 
 ```bash
 git clone https://github.com/jmineau/fips.git
 cd fips
-pip install -e .
+uv sync --dev
 ```
 
 ## Usage
