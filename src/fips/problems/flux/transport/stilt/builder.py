@@ -8,6 +8,7 @@ footprints over specified time bins and spatial resolutions.
 
 import logging
 from collections import defaultdict
+from pathlib import Path
 
 import pandas as pd
 from joblib import Parallel, delayed
@@ -17,6 +18,17 @@ from stilt.model import Model  # type: ignore[import]
 from fips.matrix import MatrixBlock
 
 logger = logging.getLogger(__name__)
+
+
+def _hour_from_sim_id(sim_id: str) -> int | None:
+    """Extract receptor hour (UTC) from a PYSTILT sim_id: '{met}_{YYYYMMDDHHMM}_{loc}'."""
+    parts = sim_id.split("_", 2)
+    if len(parts) < 2 or len(parts[1]) < 10:
+        return None
+    try:
+        return int(parts[1][8:10])
+    except ValueError:
+        return None
 
 
 class JacobianBuilder:
@@ -111,36 +123,37 @@ class JacobianBuilder:
         if time_range is None:
             time_range = (flux_times[0].left, flux_times[-1].right)
 
-        footprints = self.model.footprints[footprint].load(
+        # Get paths without loading — footprints are loaded inside each worker
+        # to avoid serial NFS I/O and large object pickling overhead.
+        paths = self.model.footprints[footprint].paths(
             mets=mets,
             time_range=time_range,
             location_ids=location_ids,
         )
 
+        # Pre-filter by hour using sim_id before dispatching workers
         if subset_hours is not None:
             if isinstance(subset_hours, int):
                 subset_hours = [subset_hours]
-            footprints = [
-                fp for fp in footprints
-                if fp.receptor.time.hour in subset_hours
-            ]
+            hours_set = set(subset_hours)
+            paths = [p for p in paths if _hour_from_sim_id(p.parent.name) in hours_set]
 
-        if not footprints:
+        if not paths:
             raise ValueError(
                 f"No footprints found for '{footprint}' after filtering. "
                 "Check that footprints exist and filters are not too restrictive."
             )
 
-        logger.debug("Dispatching %d footprints...", len(footprints))
+        logger.debug("Dispatching %d footprints...", len(paths))
         results = Parallel(n_jobs=num_processes, timeout=timeout)(
-            delayed(build_jacobian_row_from_coords)(
-                fp=fp,
+            delayed(_build_jacobian_row_from_path)(
+                path=path,
                 coords=coords,
                 location_dim=self.location_dim,
                 time_dim=self.time_dim,
                 flux_times=flux_times,
             )
-            for fp in footprints
+            for path in paths
         )
 
         H_rows: dict[str, list[pd.DataFrame]] = defaultdict(list)
@@ -151,7 +164,7 @@ class JacobianBuilder:
 
         if not H_rows:
             raise ValueError(
-                f"No Jacobian rows were produced from {len(footprints)} footprints. "
+                f"No Jacobian rows were produced from {len(paths)} footprints. "
                 "Check that footprints overlap with the given coordinates."
             )
 
@@ -166,7 +179,7 @@ class JacobianBuilder:
                 idx = H.index.to_frame(index=False)
                 idx[self.location_dim] = (
                     idx[self.location_dim]
-                    .map(location_mapper)
+                    .map(location_mapper.get)
                     .fillna(idx[self.location_dim])
                 )
                 H.index = pd.MultiIndex.from_frame(idx)
@@ -188,35 +201,24 @@ class JacobianBuilder:
         return H_dict
 
 
-def build_jacobian_row_from_coords(  # must be top-level for multiprocessing
-    fp: Footprint,
+def _build_jacobian_row_from_path(  # must be top-level for multiprocessing
+    path: Path,
     coords: dict[str, list[tuple[float, float]]],
     location_dim: str,
     time_dim: str,
     flux_times: pd.IntervalIndex,
 ) -> "dict[str, pd.DataFrame] | None":
     """
-    Build a row of the Jacobian matrix for a single STILT footprint.
+    Load one footprint from disk and build its Jacobian row.
 
-    Parameters
-    ----------
-    fp : stilt.Footprint
-        Loaded STILT footprint.
-    coords : dict[str, list[tuple[float, float]]]
-        Coordinate sets to aggregate over; keys become keys in the output dict.
-    location_dim : str
-        Name of the observation location index level.
-    time_dim : str
-        Name of the observation time index level.
-    flux_times : pd.IntervalIndex
-        Flux time bins for aggregation.
-
-    Returns
-    -------
-    dict[str, pd.DataFrame] or None
-        Jacobian row DataFrames keyed by coordinate set name, or None if the
-        footprint has no overlap with any coordinate set.
+    Loading inside the worker avoids serial NFS reads and large object
+    pickling that would occur if footprints were pre-loaded before dispatch.
     """
+    try:
+        fp = Footprint.from_netcdf(path)
+    except Exception:
+        return None
+
     obs_index = pd.MultiIndex.from_arrays(
         [[fp.receptor.location_id], [fp.receptor.time]],
         names=[location_dim, time_dim],
@@ -228,6 +230,8 @@ def build_jacobian_row_from_coords(  # must be top-level for multiprocessing
         if not agg.values.any():
             continue
 
+        if agg.columns.name is None:
+            agg.columns.name = "time"
         row = agg.stack().to_frame().T
         row.index = obs_index
         rows[key] = row
