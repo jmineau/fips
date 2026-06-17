@@ -6,9 +6,12 @@ forward operator (Jacobian matrix) by loading and aggregating STILT
 footprints over specified time bins and spatial resolutions.
 """
 
+from __future__ import annotations
+
 import logging
 from collections import defaultdict
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import pandas as pd
 from joblib import Parallel, delayed
@@ -16,6 +19,12 @@ from stilt.footprint import Footprint  # type: ignore[import]
 from stilt.model import Model  # type: ignore[import]
 
 from fips.matrix import MatrixBlock
+
+if TYPE_CHECKING:
+    import xarray as xr
+
+    # An aggregation target: an (x, y) coords list or an xarray grid.
+    Target = list[tuple[float, float]] | xr.DataArray | xr.Dataset
 
 logger = logging.getLogger(__name__)
 
@@ -66,6 +75,43 @@ class JacobianBuilder:
         coords: list[tuple[float, float]] | dict[str, list[tuple[float, float]]],
         flux_times: pd.IntervalIndex,
         footprint: str,
+        **kwargs,
+    ) -> MatrixBlock | dict[str, MatrixBlock]:
+        """
+        Build the Jacobian H from output-grid coordinates and flux time bins.
+
+        Convenience wrapper over :meth:`build_from_grid` for callers that have a
+        plain list of ``(x, y)`` cell centers (a regular grid is assumed; PYSTILT
+        infers the cell size from the coordinate spacing). Prefer
+        :meth:`build_from_grid` when you already have an xarray grid, since it
+        carries resolution, bounds, CRS, and any mask explicitly.
+
+        Parameters
+        ----------
+        coords : list[tuple[float, float]] | dict[str, list[tuple[float, float]]]
+            Output grid cell centers as (x, y) tuples. Pass a dict to build
+            multiple Jacobians over different coordinate sets.
+        flux_times : pd.IntervalIndex
+            Time bins for the fluxes.
+        footprint : str
+            Name of the footprint to load from each simulation.
+        **kwargs
+            Forwarded to :meth:`build_from_grid` (``mets``, ``time_range``,
+            ``location_ids``, ``subset_hours``, ``num_processes``,
+            ``location_mapper``, ``timeout``, ``threshold``, ``sparse``).
+
+        Returns
+        -------
+        MatrixBlock | dict[str, MatrixBlock]
+            Single MatrixBlock when coords is a list; dict when coords is a dict.
+        """
+        return self.build_from_grid(coords, flux_times, footprint, **kwargs)
+
+    def build_from_grid(
+        self,
+        grid: Target | dict[str, Target],
+        flux_times: pd.IntervalIndex,
+        footprint: str,
         *,
         mets: str | list[str] | None = None,
         time_range: tuple | None = None,
@@ -76,15 +122,21 @@ class JacobianBuilder:
         timeout: float | int | None = None,
         threshold: float | None = 1e-15,
         sparse: bool = False,
-    ) -> "MatrixBlock | dict[str, MatrixBlock]":
+    ) -> MatrixBlock | dict[str, MatrixBlock]:
         """
-        Build the Jacobian matrix H from specified coordinates and flux time bins.
+        Build the Jacobian matrix H over a target grid and flux time bins.
+
+        Each footprint is conservatively regridded onto ``grid`` (see
+        :meth:`stilt.Footprint.aggregate`) and its time-binned sensitivities
+        become one Jacobian row.
 
         Parameters
         ----------
-        coords : list[tuple[float, float]] | dict[str, list[tuple[float, float]]]
-            Coordinates of the output grid points as (x, y) tuples. Pass a
-            dict to build multiple Jacobians over different coordinate sets.
+        grid : xr.DataArray | xr.Dataset | list[tuple[float, float]] | dict
+            The target grid: a CF xarray grid (``lon``/``lat`` or ``x``/``y``
+            coordinates; ``NaN`` cells in a 2-D DataArray are masked out) or a
+            plain list of ``(x, y)`` cell centers. Pass a dict to build multiple
+            Jacobians over different grids.
         flux_times : pd.IntervalIndex
             Time bins for the fluxes.
         footprint : str
@@ -113,12 +165,11 @@ class JacobianBuilder:
         Returns
         -------
         MatrixBlock | dict[str, MatrixBlock]
-            Single MatrixBlock when coords is a list; dict when coords is a dict.
+            Single MatrixBlock when ``grid`` is a single grid; dict when a dict.
         """
         logger.info("Building Jacobian matrix...")
 
-        if not isinstance(coords, dict):
-            coords = {"DEFAULT": coords}
+        targets = grid if isinstance(grid, dict) else {"DEFAULT": grid}
 
         if time_range is None:
             time_range = (flux_times[0].left, flux_times[-1].right)
@@ -148,7 +199,7 @@ class JacobianBuilder:
         results = Parallel(n_jobs=num_processes, timeout=timeout)(
             delayed(_build_jacobian_row_from_path)(
                 path=path,
-                coords=coords,
+                targets=targets,
                 location_dim=self.location_dim,
                 time_dim=self.time_dim,
                 flux_times=flux_times,
@@ -201,13 +252,46 @@ class JacobianBuilder:
         return H_dict
 
 
-def _build_jacobian_row_from_path(  # must be top-level for multiprocessing
-    path: Path,
-    coords: dict[str, list[tuple[float, float]]],
+def _build_jacobian_row(
+    fp: Footprint,
+    targets: dict[str, Target],
     location_dim: str,
     time_dim: str,
     flux_times: pd.IntervalIndex,
-) -> "dict[str, pd.DataFrame] | None":
+) -> dict[str, pd.DataFrame] | None:
+    """
+    Build one footprint's Jacobian row by aggregating it onto each target.
+
+    Returns ``None`` when the footprint does not overlap any target (all-zero
+    aggregate), so it contributes no row.
+    """
+    obs_index = pd.MultiIndex.from_arrays(
+        [[fp.receptor.location_id], [fp.receptor.time]],
+        names=[location_dim, time_dim],
+    )
+
+    rows: dict[str, pd.DataFrame] = {}
+    for key, target in targets.items():
+        agg = fp.aggregate(target, flux_times)
+        if not agg.values.any():
+            continue
+
+        if agg.columns.name is None:
+            agg.columns.name = "time"
+        row = agg.stack().to_frame().T
+        row.index = obs_index
+        rows[key] = row
+
+    return rows or None
+
+
+def _build_jacobian_row_from_path(  # must be top-level for multiprocessing
+    path: Path,
+    targets: dict[str, Target],
+    location_dim: str,
+    time_dim: str,
+    flux_times: pd.IntervalIndex,
+) -> dict[str, pd.DataFrame] | None:
     """
     Load one footprint from disk and build its Jacobian row.
 
@@ -219,21 +303,4 @@ def _build_jacobian_row_from_path(  # must be top-level for multiprocessing
     except Exception:
         return None
 
-    obs_index = pd.MultiIndex.from_arrays(
-        [[fp.receptor.location_id], [fp.receptor.time]],
-        names=[location_dim, time_dim],
-    )
-
-    rows: dict[str, pd.DataFrame] = {}
-    for key, coord_list in coords.items():
-        agg = fp.aggregate(coord_list, flux_times)
-        if not agg.values.any():
-            continue
-
-        if agg.columns.name is None:
-            agg.columns.name = "time"
-        row = agg.stack().to_frame().T
-        row.index = obs_index
-        rows[key] = row
-
-    return rows or None
+    return _build_jacobian_row(fp, targets, location_dim, time_dim, flux_times)
