@@ -888,7 +888,7 @@ wheels = [
 
 [[package]]
 name = "fips"
-version = "0.1.0b2"
+version = "0.1.0b5"
 source = { editable = "." }
 dependencies = [
     { name = "joblib" },
@@ -941,7 +941,7 @@ requires-dist = [
     { name = "matplotlib", marker = "extra == 'flux'", specifier = ">=3.6.0" },
     { name = "numpy", specifier = ">=1.22.0" },
     { name = "pandas", specifier = ">=2.0.0" },
-    { name = "pystilt", marker = "extra == 'flux'", specifier = ">=0.1.0a1" },
+    { name = "pystilt", marker = "extra == 'flux'", specifier = ">=0.1.0a3" },
     { name = "scipy", specifier = ">=1.8.0" },
     { name = "typing-extensions", specifier = ">=4.0.0" },
     { name = "xarray", specifier = ">=2022.3.0" },
@@ -2831,7 +2831,7 @@ wheels = [
 
 [[package]]
 name = "pystilt"
-version = "0.1.0a1"
+version = "0.1.0a3"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "arlmet" },
@@ -2854,9 +2854,9 @@ dependencies = [
     { name = "xarray", version = "2025.6.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
     { name = "xarray", version = "2026.2.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/c6/f4/4be88fbf101a7ea6e08b1c6b4a4c4afb4ce069a15f967acc7e4fca520aef/pystilt-0.1.0a1.tar.gz", hash = "sha256:f0e6aecf320ecc6756701535098fda9ccef144310d0cd2739f795aea16e79188", size = 1827457, upload-time = "2026-05-12T11:45:24.859Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/b5/8d/547f93bbf825f4744d585b6428995a9d4ee4ca33bf19a7776322a1cc6126/pystilt-0.1.0a3.tar.gz", hash = "sha256:28564ea6a868611d78b4e26b70c70738fbe16cee83377a7d04c982945d00ab0b", size = 1828355, upload-time = "2026-06-17T21:16:45.526Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/3d/01/dca11c8e2181335295d9f90081c1b99076d1a6008842d5998f32df9089ac/pystilt-0.1.0a1-py3-none-any.whl", hash = "sha256:cba59f2c1a5e64511ae2259ba0881a8222cd52a458a3e23c0eb7e6c61aebf6ea", size = 1805995, upload-time = "2026-05-12T11:45:22.734Z" },
+    { url = "https://files.pythonhosted.org/packages/46/71/b4aaea72e3b3618c855a6a5651ebd6ef078241e3e17a3a5ba31e69cc231f/pystilt-0.1.0a3-py3-none-any.whl", hash = "sha256:6dd628c7a94799eef9ea4a46886008623f89689e682f634c8924947234c85c42", size = 1801752, upload-time = "2026-06-17T21:16:43.902Z" },
 ]
 
 [[package]]
