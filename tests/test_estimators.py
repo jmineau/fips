@@ -1,9 +1,12 @@
 """Test suite for fips.estimators module."""
 
+import logging
+
 import numpy as np
 import pytest
+from scipy.linalg import LinAlgError, solve
 
-from fips.estimators import Estimator
+from fips.estimators import BayesianSolver, Estimator, _solve_psd
 
 
 class ConcreteEstimator(Estimator):
@@ -865,3 +868,102 @@ class TestBayesianSolverRegularization:
 
         # Tiny gamma (more regularization) should keep solution very close to prior
         assert np.linalg.norm(x_hat_tiny - simple_problem["x_0"]) < 0.1
+
+
+class TestRoundoffIndefiniteGain:
+    """Regression tests for the sub-yearly ``singular matrix`` gain-solve bug.
+
+    When an informative Jacobian makes ``H S_0 H^T`` dominate a small ``S_z``,
+    floating-point roundoff tips ``A = H S_0 H^T + S_z`` just off
+    positive-definite even though it is positive-definite in exact arithmetic
+    (``S_z`` is strictly positive). The fast Cholesky path (``assume_a="pos"``)
+    then raised ``LinAlgError: singular matrix``. The estimators now fall back to
+    a symmetric ``LDL^T`` solve via :func:`fips.estimators._solve_psd`.
+    """
+
+    @staticmethod
+    def _roundoff_indefinite_problem(seed: int = 0):
+        """Build a problem whose ``A`` is exact-PD but numerically non-PD.
+
+        Returns ``(z, x_0, H, S_0, S_z)`` for a many-time-bin state with a smooth
+        (near low-rank) prior correlation and a strong Jacobian, so that the
+        Cholesky gain solve fails on the assembled ``A``.
+        """
+        rng = np.random.default_rng(seed)
+        n_time, n_grid, m = 10, 15, 200
+        n_x = n_time * n_grid
+
+        # Smooth time correlation over many bins -> near low-rank, high dynamic range
+        t = np.arange(n_time)
+        T = np.exp(-((t[:, None] - t[None, :]) ** 2) / (2 * n_time**2))
+        g = np.arange(n_grid)
+        G = np.exp(-np.abs(g[:, None] - g[None, :]) / (n_grid / 3))
+        S_0 = 100.0 * np.kron(T, G)
+
+        # Strong, footprint-like Jacobian and a tiny obs error so H S_0 H^T >> S_z
+        H = np.abs(rng.standard_normal((m, n_x))) * 50.0
+        S_z = np.eye(m) * 1e-7
+
+        x_true = rng.standard_normal(n_x)
+        z = H @ x_true + rng.standard_normal(m) * 1e-3
+        x_0 = np.zeros(n_x)
+        return z, x_0, H, S_0, S_z
+
+    def test_cholesky_path_actually_fails(self):
+        """The fixture genuinely triggers the Cholesky failure it guards against."""
+        _, _, H, S_0, S_z = self._roundoff_indefinite_problem()
+        # A is positive-definite in exact arithmetic: S_z is strictly positive.
+        assert np.all(np.diag(S_z) > 0)
+        A = H @ S_0 @ H.T + S_z
+        with pytest.raises(LinAlgError):
+            solve(A, H @ S_0, assume_a="pos")
+
+    def test_solve_psd_recovers_backward_stably(self):
+        """``_solve_psd`` solves the failing system with a small backward error."""
+        _, _, H, S_0, S_z = self._roundoff_indefinite_problem()
+        B = H @ S_0
+        A = B @ H.T + S_z
+        X = _solve_psd(A, B)
+        assert np.isfinite(X).all()
+        backward_err = np.linalg.norm(A @ X - B) / np.linalg.norm(B)
+        assert backward_err < 1e-6
+
+    def test_solve_psd_matches_cholesky_when_well_conditioned(self):
+        """On a comfortably PD matrix, ``_solve_psd`` equals the Cholesky solve."""
+        rng = np.random.default_rng(1)
+        n = 20
+        M = rng.standard_normal((n, n))
+        A = M @ M.T + n * np.eye(n)  # well-conditioned, strictly PD
+        B = rng.standard_normal((n, 3))
+        np.testing.assert_allclose(_solve_psd(A, B), solve(A, B, assume_a="pos"))
+
+    def test_solve_psd_warns_on_fallback(self, caplog):
+        """The LDL^T fallback logs a warning so poor conditioning stays visible."""
+        _, _, H, S_0, S_z = self._roundoff_indefinite_problem()
+        B = H @ S_0
+        A = B @ H.T + S_z
+        with caplog.at_level(logging.WARNING, logger="fips.estimators"):
+            _solve_psd(A, B)
+        assert any("non-positive-definite" in r.message for r in caplog.records)
+
+    def test_kalman_gain_solves_without_raising(self):
+        """``Estimator.K`` computes despite the roundoff-indefinite ``A``."""
+        z, x_0, H, S_0, S_z = self._roundoff_indefinite_problem()
+        est = ConcreteEstimator(z, x_0, H, S_0, S_z)
+        K = est.K
+        assert K.shape == (H.shape[1], H.shape[0])
+        assert np.isfinite(K).all()
+        # K satisfies its defining equation A K^T = H S_0 (backward-stable).
+        B = est._HS_0
+        A = est._HS_0H + est.S_z
+        assert np.linalg.norm(A @ K.T - B) / np.linalg.norm(B) < 1e-6
+
+    def test_subyearly_state_solves(self):
+        """A full Bayesian solve over many time-bins runs without ``LinAlgError``."""
+        z, x_0, H, S_0, S_z = self._roundoff_indefinite_problem()
+        solver = BayesianSolver(z, x_0, H, S_0, S_z)
+        x_hat = solver.x_hat
+        assert x_hat.shape == x_0.shape
+        assert np.isfinite(x_hat).all()
+        assert np.isfinite(solver.DOFS)
+        assert np.isfinite(solver.S_hat).all()

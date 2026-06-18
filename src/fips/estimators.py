@@ -10,9 +10,46 @@ from abc import ABC, abstractmethod
 from functools import cached_property
 
 import numpy as np
-from scipy.linalg import inv, solve
+from scipy.linalg import LinAlgError, inv, solve
 
 logger = logging.getLogger(__name__)
+
+
+def _solve_psd(A: np.ndarray, B: np.ndarray) -> np.ndarray:
+    r"""
+    Solve ``A X = B`` for a symmetric positive-definite ``A``, robust to roundoff.
+
+    Covariance-like matrices such as ``A = H S_0 H^T + S_z`` are positive-definite
+    in exact arithmetic (``S_z`` is positive-definite), so the fast Cholesky path
+    (``assume_a="pos"``) is tried first. When ``A`` is ill-conditioned -- a wide
+    eigenvalue spread, with ``H S_0 H^T`` large relative to ``S_z`` -- roundoff in
+    forming ``A`` can tip it just off positive-definite, and Cholesky raises
+    :class:`~numpy.linalg.LinAlgError`. In that case we symmetrize ``A`` and fall
+    back to the symmetric-indefinite ``LDL^T`` factorization (``assume_a="sym"``),
+    which tolerates the roundoff and stays backward-stable.
+
+    Parameters
+    ----------
+    A : np.ndarray
+        Symmetric matrix, positive-definite in exact arithmetic.
+    B : np.ndarray
+        Right-hand side.
+
+    Returns
+    -------
+    np.ndarray
+        Solution ``X`` of ``A X = B``.
+    """
+    try:
+        return solve(A, B, assume_a="pos")
+    except LinAlgError:
+        logger.warning(
+            "Covariance matrix is numerically non-positive-definite (likely "
+            "roundoff from a dominant H S_0 H^T term); falling back to a symmetric "
+            "LDL^T solve. Inspect problem conditioning if results look unphysical."
+        )
+        A = 0.5 * (A + A.T)
+        return solve(A, B, assume_a="sym")
 
 
 class EstimatorRegistry(dict):
@@ -202,7 +239,7 @@ class Estimator(ABC):
         A = self._HS_0H + self.S_z
 
         # 1. Compute term_1 = A^-1 @ Hx using solve
-        term_1 = solve(A, Hx, assume_a="pos")
+        term_1 = _solve_psd(A, Hx)
 
         # 2. Compute the inner inverse: (Hx^T @ term_1)^-1
         # We still have to use standard inv() here because Hx^T @ term_1 isn't
@@ -310,7 +347,7 @@ class Estimator(ABC):
         # So K = (A^-1 B)^T = solve(A, B).T
         A = self._HS_0H + self.S_z
         B = self._HS_0
-        return solve(A, B, assume_a="pos").T
+        return _solve_psd(A, B).T
 
     @cached_property
     def A(self):
@@ -396,27 +433,15 @@ class Estimator(ABC):
         # is slow and memory-intensive.
         #
         # Instead, we solve the system: S * y = r  -->  y = S^-1 * r
-        # Then we compute: r^T @ y
+        # Then we compute: r^T @ y. _solve_psd falls back to a symmetric LDL^T
+        # solve if roundoff (e.g. after aggregation) tips the covariance off
+        # positive-definite.
 
         # 1. Scaled Data Misfit: data_residual^T @ (S_z^-1 @ data_residual)
-        # Add small regularization to avoid singular matrices (can occur after aggregation)
-        S_z_reg = self.S_z.copy()
-        S_z_reg[np.arange(len(S_z_reg)), np.arange(len(S_z_reg))] += np.sqrt(
-            np.finfo(float).eps
-        )
-        scaled_data_misfit = data_residual.T @ solve(
-            S_z_reg, data_residual, assume_a="pos"
-        )
+        scaled_data_misfit = data_residual.T @ _solve_psd(self.S_z, data_residual)
 
         # 2. Scaled Model Misfit: model_residual^T @ (S_0^-1 @ model_residual)
-        # Add small regularization to avoid singular matrices
-        S_0_reg = self.S_0.copy()
-        S_0_reg[np.arange(len(S_0_reg)), np.arange(len(S_0_reg))] += np.sqrt(
-            np.finfo(float).eps
-        )
-        scaled_model_misfit = model_residual.T @ solve(
-            S_0_reg, model_residual, assume_a="pos"
-        )
+        scaled_model_misfit = model_residual.T @ _solve_psd(self.S_0, model_residual)
 
         return float((scaled_data_misfit + scaled_model_misfit) / self.n_z)
 
@@ -606,8 +631,8 @@ class BayesianSolver(Estimator):
         # Like the Chi-square, the cost function relies on r^T * S^-1 * r.
         # We replace inv(S) @ r with solve(S, r) to avoid calculating the full inverse.
 
-        cost_model = diff_model.T @ solve(self.S_0, diff_model, assume_a="pos")
-        cost_data = diff_data.T @ solve(self.S_z, diff_data, assume_a="pos")
+        cost_model = diff_model.T @ _solve_psd(self.S_0, diff_model)
+        cost_data = diff_data.T @ _solve_psd(self.S_z, diff_data)
 
         return 0.5 * (cost_model + cost_data)
 
