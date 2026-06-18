@@ -1,10 +1,22 @@
 """Shared test fixtures and utilities for FIPS tests."""
 
-import numpy as np
-import pandas as pd
-import pytest
+import os
 
-from fips.vector import Block, Vector
+# Force a non-interactive matplotlib backend before any test imports pyplot, so
+# the visualization tests never reach for an interactive backend (e.g. TkAgg)
+# that may be missing on CI runners -- this caused flaky `_tkinter.TclError`
+# failures on the Windows runners. matplotlib reads MPLBACKEND when it first
+# selects a backend, and the viz modules import pyplot lazily, so setting it
+# here is sufficient. Set via env var (rather than `matplotlib.use`) to avoid
+# importing matplotlib in conftest, preserving its optional-dependency status.
+# `setdefault` lets a developer still override the backend locally.
+os.environ.setdefault("MPLBACKEND", "Agg")
+
+import numpy as np  # noqa: E402
+import pandas as pd  # noqa: E402
+import pytest  # noqa: E402
+
+from fips.vector import Block, Vector  # noqa: E402
 
 # ---------------------------------------------------------------------------
 # Pandas version compatibility utilities
