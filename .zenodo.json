@@ -1,5 +1,5 @@
 {
-  "title": "fips: Flexible Inverse Problem Solver",
+  "title": "fips",
   "description": "fips (Flexible Inverse Problem Solver) solves linear, matrix-based inverse problems with native N-dimensional alignment, modular block architecture, and sparse support.",
   "creators": [
     {
