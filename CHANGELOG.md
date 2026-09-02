@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.0b6] - 2026-09-02
+
+### Added
+- `.zenodo.json` citation metadata; releases are archived (and DOI-minted) on Zenodo
+
+### Fixed
+- Flaky Windows Tk test failures (force Agg matplotlib backend in tests)
+
 ## [0.1.0b5] - 2026-06-17
 
 ### Fixed

@@ -1,0 +1,14 @@
+{
+  "title": "FIPS: Flexible Inverse Problem Solver",
+  "description": "FIPS (Flexible Inverse Problem Solver) solves linear, matrix-based inverse problems with native N-dimensional alignment, modular block architecture, and sparse support.",
+  "creators": [
+    {
+      "name": "Mineau, James K.",
+      "affiliation": "University of Utah",
+      "orcid": "0000-0002-2289-2252"
+    }
+  ],
+  "license": "MIT",
+  "upload_type": "software",
+  "keywords": ["inverse-problem", "bayesian-estimation", "geophysics", "atmospheric-science", "linear-algebra", "sparse-matrices", "python"]
+}
