@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- `JacobianBuilder.build_from_target(target, flux_times, footprint)`: the
+  primary Jacobian entry point. `target` is any PYSTILT spatial target
+  (`stilt.Grid`, `stilt.Mesh`, `stilt.Zones`, an xarray grid, or a coords
+  list), and the Jacobian's column index is the target's state index
+  (`(cell, time)` for meshes and zones). Pass a `stilt.FootprintConfig` as `footprint` to
+  regenerate each footprint from stored trajectories on that grid instead of
+  regridding a stored raster. `build_from_grid` and `build_from_coords` are
+  now thin aliases. Requires PYSTILT with spatial targets (> 0.1.0a8).
+
 ## [0.1.0b6] - 2026-09-02
 
 ### Added

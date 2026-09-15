@@ -10,21 +10,23 @@ from __future__ import annotations
 
 import logging
 from collections import defaultdict
+from collections.abc import Mapping
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 import pandas as pd
 from joblib import Parallel, delayed
+from stilt.config import FootprintConfig  # type: ignore[import]
 from stilt.footprint import Footprint  # type: ignore[import]
 from stilt.model import Model  # type: ignore[import]
+from stilt.trajectory import Trajectories  # type: ignore[import]
 
 from fips.matrix import MatrixBlock
 
 if TYPE_CHECKING:
-    import xarray as xr
-
-    # An aggregation target: an (x, y) coords list or an xarray grid.
-    Target = list[tuple[float, float]] | xr.DataArray | xr.Dataset
+    # The state geometry a footprint is aggregated onto: stilt.Grid,
+    # stilt.Mesh, stilt.Zones, an xarray grid, or an (x, y) coords list.
+    from stilt.geometry import SpatialTarget as Target  # type: ignore[import]
 
 logger = logging.getLogger(__name__)
 
@@ -80,11 +82,11 @@ class JacobianBuilder:
         """
         Build the Jacobian H from output-grid coordinates and flux time bins.
 
-        Convenience wrapper over :meth:`build_from_grid` for callers that have a
-        plain list of ``(x, y)`` cell centers (a regular grid is assumed; PYSTILT
-        infers the cell size from the coordinate spacing). Prefer
-        :meth:`build_from_grid` when you already have an xarray grid, since it
-        carries resolution, bounds, CRS, and any mask explicitly.
+        Convenience wrapper over :meth:`build_from_target` for callers that have
+        a plain list of ``(x, y)`` cell centers (a regular grid is assumed;
+        PYSTILT infers the cell size from the coordinate spacing). Prefer
+        :meth:`build_from_target` with a ``stilt.Grid`` or ``stilt.Mesh``,
+        which carry resolution, CRS, and the state index explicitly.
 
         Parameters
         ----------
@@ -105,13 +107,23 @@ class JacobianBuilder:
         MatrixBlock | dict[str, MatrixBlock]
             Single MatrixBlock when coords is a list; dict when coords is a dict.
         """
-        return self.build_from_grid(coords, flux_times, footprint, **kwargs)
+        return self.build_from_target(coords, flux_times, footprint, **kwargs)
 
     def build_from_grid(
         self,
-        grid: Target | dict[str, Target],
+        grid: Target | Mapping[str, Target],
         flux_times: pd.IntervalIndex,
         footprint: str,
+        **kwargs,
+    ) -> MatrixBlock | dict[str, MatrixBlock]:
+        """Alias of :meth:`build_from_target` kept for existing callers."""
+        return self.build_from_target(grid, flux_times, footprint, **kwargs)
+
+    def build_from_target(
+        self,
+        target: Target | Mapping[str, Target],
+        flux_times: pd.IntervalIndex,
+        footprint: str | FootprintConfig,
         *,
         mets: str | list[str] | None = None,
         time_range: tuple | None = None,
@@ -124,23 +136,31 @@ class JacobianBuilder:
         sparse: bool = False,
     ) -> MatrixBlock | dict[str, MatrixBlock]:
         """
-        Build the Jacobian matrix H over a target grid and flux time bins.
+        Build the Jacobian matrix H over a spatial target and flux time bins.
 
-        Each footprint is conservatively regridded onto ``grid`` (see
+        Each footprint is conservatively regridded onto ``target`` (see
         :meth:`stilt.Footprint.aggregate`) and its time-binned sensitivities
-        become one Jacobian row.
+        become one Jacobian row.  The Jacobian's column index is the target's
+        state index (``(lon, lat, time)`` for grids, ``(cell, time)`` for
+        ``stilt.Mesh`` / ``stilt.Zones``).
 
         Parameters
         ----------
-        grid : xr.DataArray | xr.Dataset | list[tuple[float, float]] | dict
-            The target grid: a CF xarray grid (``lon``/``lat`` or ``x``/``y``
-            coordinates; ``NaN`` cells in a 2-D DataArray are masked out) or a
-            plain list of ``(x, y)`` cell centers. Pass a dict to build multiple
-            Jacobians over different grids.
+        target : stilt.Grid | stilt.Mesh | xr.DataArray | xr.Dataset | list | dict
+            The state geometry: a ``stilt.Grid`` (every cell), ``stilt.Mesh``
+            (polygons: shapefile, H3, point windows), ``stilt.Zones``
+            (super-cells), a CF xarray grid
+            (``lon``/``lat`` or ``x``/``y`` coordinates; ``NaN`` cells in a 2-D
+            DataArray are masked out), or a plain list of ``(x, y)`` cell
+            centers. Pass a dict to build multiple Jacobians over different
+            targets.
         flux_times : pd.IntervalIndex
             Time bins for the fluxes.
-        footprint : str
-            Name of the footprint to load from each simulation.
+        footprint : str | stilt.FootprintConfig
+            Name of the stored footprint to load from each simulation, **or** a
+            ``FootprintConfig`` to regenerate each footprint from the stored
+            trajectory particles on that grid (full kernel fidelity when the
+            state grid differs from every stored raster; slower).
         mets : str, list[str], or None
             Restrict to specific met configurations. None = all.
         time_range : tuple or None
@@ -169,18 +189,29 @@ class JacobianBuilder:
         """
         logger.info("Building Jacobian matrix...")
 
-        targets = grid if isinstance(grid, dict) else {"DEFAULT": grid}
+        targets: dict[str, Target]
+        if isinstance(target, dict):
+            targets = dict(target)
+        else:
+            targets = {"DEFAULT": cast("Target", target)}
 
         if time_range is None:
             time_range = (flux_times[0].left, flux_times[-1].right)
 
-        # Get paths without loading — footprints are loaded inside each worker
-        # to avoid serial NFS I/O and large object pickling overhead.
-        paths = self.model.footprints[footprint].paths(
-            mets=mets,
-            time_range=time_range,
-            location_ids=location_ids,
-        )
+        # Get paths without loading — footprints are loaded (or regenerated
+        # from trajectories) inside each worker to avoid serial NFS I/O and
+        # large object pickling overhead.
+        regenerate = isinstance(footprint, FootprintConfig)
+        if regenerate:
+            paths = self.model.trajectories.paths(
+                mets=mets, time_range=time_range, location_ids=location_ids
+            )
+        else:
+            paths = self.model.footprints[footprint].paths(
+                mets=mets,
+                time_range=time_range,
+                location_ids=location_ids,
+            )
 
         # Pre-filter by hour using sim_id before dispatching workers
         if subset_hours is not None:
@@ -190,12 +221,21 @@ class JacobianBuilder:
             paths = [p for p in paths if _hour_from_sim_id(p.parent.name) in hours_set]
 
         if not paths:
+            what = (
+                "No trajectories found"
+                if regenerate
+                else f"No footprints found for '{footprint}'"
+            )
             raise ValueError(
-                f"No footprints found for '{footprint}' after filtering. "
-                "Check that footprints exist and filters are not too restrictive."
+                f"{what} after filtering. "
+                "Check that outputs exist and filters are not too restrictive."
             )
 
-        logger.debug("Dispatching %d footprints...", len(paths))
+        logger.debug(
+            "Dispatching %d %s...",
+            len(paths),
+            "trajectories" if regenerate else "footprints",
+        )
         results = Parallel(n_jobs=num_processes, timeout=timeout)(
             delayed(_build_jacobian_row_from_path)(
                 path=path,
@@ -203,6 +243,7 @@ class JacobianBuilder:
                 location_dim=self.location_dim,
                 time_dim=self.time_dim,
                 flux_times=flux_times,
+                footprint_config=footprint if regenerate else None,
             )
             for path in paths
         )
@@ -291,15 +332,21 @@ def _build_jacobian_row_from_path(  # must be top-level for multiprocessing
     location_dim: str,
     time_dim: str,
     flux_times: pd.IntervalIndex,
+    footprint_config: FootprintConfig | None = None,
 ) -> dict[str, pd.DataFrame] | None:
     """
-    Load one footprint from disk and build its Jacobian row.
+    Load one footprint from disk (or regenerate it) and build its Jacobian row.
 
+    With ``footprint_config`` the path is a trajectory parquet and the
+    footprint is recalculated from its particles on that config's grid.
     Loading inside the worker avoids serial NFS reads and large object
-    pickling that would occur if footprints were pre-loaded before dispatch.
+    pickling that would occur if outputs were pre-loaded before dispatch.
     """
     try:
-        fp = Footprint.from_netcdf(path)
+        if footprint_config is not None:
+            fp = Trajectories.from_parquet(path).footprint(footprint_config)
+        else:
+            fp = Footprint.from_netcdf(path)
     except Exception:
         return None
 

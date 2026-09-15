@@ -286,3 +286,86 @@ def test_location_mapper_applied(load_footprints):
     )
     assert isinstance(result, MatrixBlock)  # list coords -> single block
     assert "wbb" in result.data.index.get_level_values("obs_location")
+
+
+# ---------------------------------------------------------------------------
+# build_from_target: spatial targets and regeneration
+# ---------------------------------------------------------------------------
+
+
+def _fake_points_footprint(location_id="site_A", time="2023-01-01 12:00"):
+    """Mock Footprint whose aggregate() returns an id-indexed DataFrame."""
+    fp = MagicMock()
+    fp.receptor.location_id = location_id
+    fp.receptor.time = pd.Timestamp(time)
+    fp.aggregate.return_value = pd.DataFrame(
+        [[1.0], [2.0]],
+        index=pd.Index(["landfill", "wwtp"], name="cell"),
+        columns=pd.DatetimeIndex(["2023-01-01"], name="time"),
+    )
+    return fp
+
+
+def test_build_from_target_mesh_columns_are_cell_time(load_footprints):
+    """A labelled Mesh target yields a (cell, time) Jacobian column index."""
+    from stilt import Mesh
+
+    p = _fake_path()
+    fp = _fake_points_footprint()
+    load_footprints({p: fp})
+    builder = JacobianBuilder(_model(p))
+    target = Mesh.from_windows(
+        [(-111.97, 40.515), (-112.015, 40.779)], 0.01, ids=["landfill", "wwtp"]
+    )
+
+    H = builder.build_from_target(target, _flux_times(), footprint="slv")
+
+    assert isinstance(H, MatrixBlock)
+    assert fp.aggregate.call_args.args[0] is target
+    cols = H.data.columns
+    assert cols.names == ["cell", "time"]
+    assert list(cols.get_level_values("cell")) == ["landfill", "wwtp"]
+
+
+def test_build_from_grid_is_alias_of_build_from_target(load_footprints):
+    """build_from_grid forwards to build_from_target unchanged."""
+    p = _fake_path()
+    load_footprints({p: _fake_footprint()})
+    builder = JacobianBuilder(_model(p))
+    grid = xr.Dataset(coords={"lon": [-111.85], "lat": [40.77]})
+    a = builder.build_from_grid(grid, _flux_times(), footprint="slv")
+    b = builder.build_from_target(grid, _flux_times(), footprint="slv")
+    pd.testing.assert_frame_equal(a.data, b.data)
+
+
+def test_build_from_target_regenerates_from_trajectories(monkeypatch):
+    """A FootprintConfig target source loads trajectories, not footprints."""
+    from stilt import FootprintConfig, Grid
+
+    traj_path = Path("/fake/hrrr_202301011200_-111.85_40.77_5/hrrr_..._traj.parquet")
+    model = MagicMock()
+    model.trajectories.paths.return_value = [traj_path]
+
+    config = FootprintConfig(
+        grid=Grid(xmin=-112.0, xmax=-111.0, ymin=40.0, ymax=41.0, xres=0.1, yres=0.1)
+    )
+    fp = _fake_footprint()
+    traj = MagicMock()
+    traj.footprint.return_value = fp
+
+    def fake_from_parquet(path, *args, **kwargs):
+        assert str(path) == str(traj_path)
+        return traj
+
+    monkeypatch.setattr(
+        "fips.problems.flux.transport.stilt.builder.Trajectories.from_parquet",
+        staticmethod(fake_from_parquet),
+    )
+
+    builder = JacobianBuilder(model)
+    H = builder.build_from_target([(-111.85, 40.77)], _flux_times(), footprint=config)
+
+    model.trajectories.paths.assert_called_once()
+    model.footprints.__getitem__.assert_not_called()
+    traj.footprint.assert_called_once_with(config)
+    assert isinstance(H, MatrixBlock)
