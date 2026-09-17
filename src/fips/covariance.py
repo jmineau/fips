@@ -81,6 +81,7 @@ class ErrorComponent(ABC):
         self.variances = variances
 
     def _align_variances(self, index: pd.MultiIndex) -> pd.Series:
+        """Return the variances reindexed onto ``index``, filling gaps with zeros."""
         if isinstance(self.variances, pd.Series):
             if self.variances.index.equals(index):
                 return self.variances.fillna(0.0)

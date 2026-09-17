@@ -70,6 +70,7 @@ class Block(SingleBlockMixin, Structure1D):
         super().__init__(data, name=name, index=index, dtype=dtype, copy=copy)
 
     def _validate(self):
+        """Raise unless the underlying Series has a name."""
         super()._validate()
 
         if self.data.name is None:

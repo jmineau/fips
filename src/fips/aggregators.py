@@ -310,6 +310,7 @@ class ObsAggregator:
 
         # Unwrap fips types to the underlying pandas object for arithmetic.
         def unwrap(obj):
+            """Return the underlying pandas object of a fips structure."""
             return obj.data if hasattr(obj, "data") else obj
 
         z_df = unwrap(obs)

@@ -140,6 +140,7 @@ class Structure(Pickleable, ABC):
     )  #: The underlying data, which must be numeric and non-NaN. DataFrames can be sparse.
 
     def _validate(self):
+        """Raise when index (or column) levels are unnamed."""
         # Ensure index levels are named
         if None in self.index.names:
             raise ValueError(
@@ -155,6 +156,7 @@ class Structure(Pickleable, ABC):
             raise ValueError("Data contains NaN values.")
 
     def _sanitize(self):
+        """Coerce index and column labels to numeric where possible."""
         # Force numeric indices where possible
         self.data.index = to_numeric(self.data.index)
         if isinstance(self.data, pd.DataFrame):
@@ -212,6 +214,7 @@ class Structure(Pickleable, ABC):
         def prepare_data_for_target(
             data: pd.DataFrame | pd.Series, target: pd.Index, axis: int
         ) -> pd.DataFrame | pd.Series:
+            """Make ``data`` comparable to ``target`` along ``axis``."""
             current = data.axes[axis]
 
             if (
@@ -382,6 +385,7 @@ class Structure1D(Structure):
         self._sanitize()
 
     def _sanitize(self):
+        """Coerce the 1-D values to numeric, raising on failure."""
         super()._sanitize()
 
         # 1D Structures must be all numeric, non nan
@@ -552,6 +556,7 @@ class SingleBlockMixin(ABC):
     name: str | property
 
     def _validate(self):
+        """Raise unless the single-block structure has a name."""
         super()._validate()  # type: ignore[attr-defined]
 
         # Check for name property
@@ -582,6 +587,7 @@ class MultiBlockMixin(ABC):
         ...
 
     def _validate(self):
+        """Raise unless the data carries a 'block' index level."""
         super()._validate()  # type: ignore[attr-defined]
 
         # Check for 'block' level in index for Series, columns for DataFrame
@@ -594,9 +600,11 @@ class MultiBlockMixin(ABC):
             raise ValueError("DataFrame must have a 'block' level in the columns.")
 
     def _sanitize(self):
+        """Coerce values and move the 'block' level first in the index."""
         super()._sanitize()  # type: ignore[attr-defined]
 
         def block_as_first_level(index):
+            """Return ``index`` with its 'block' level first."""
             if index.names[0] != "block":
                 return index.reorder_levels(
                     ["block"] + [n for n in index.names if n != "block"]

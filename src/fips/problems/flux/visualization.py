@@ -10,6 +10,7 @@ if TYPE_CHECKING:
 
 
 def _require_cartopy():
+    """Import and return ``cartopy.crs``, with an install hint when missing."""
     try:
         import cartopy.crs as ccrs  # type: ignore
 
@@ -21,6 +22,7 @@ def _require_cartopy():
 
 
 def _require_matplotlib():
+    """Import and return ``matplotlib.pyplot``, with an install hint when missing."""
     try:
         import matplotlib.pyplot as plt  # type: ignore
 

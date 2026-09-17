@@ -15,10 +15,12 @@ from fips.metrics import haversine_matrix, time_diff_matrix
 
 
 def _exponential_decay(d, scale):
+    """Return ``exp(-d / scale)``."""
     return np.exp(-d / scale)
 
 
 def _time_decay(times, scale, decay_func=_exponential_decay):
+    """Return ``decay_func`` applied to the pairwise time-difference matrix."""
     diffs = time_diff_matrix(times)
     # diffs is already timedelta64[ns] from time_diff_matrix
     return decay_func(diffs, pd.Timedelta(scale))
@@ -54,6 +56,7 @@ def RaggedTimeDecay(
     """
 
     def kernel(group_df: pd.DataFrame):
+        """Return the time-decay correlation matrix for one group."""
         times = group_df[time_dim]
         return _time_decay(times, scale, decay_func)
 
@@ -105,6 +108,7 @@ def GridSpatialDecay(
     """
 
     def kernel(unique_space_coords: pd.DataFrame):
+        """Return the distance-decay correlation matrix for the given coordinates."""
         lats = unique_space_coords[lat_dim].to_numpy()
         lons = unique_space_coords[lon_dim].to_numpy()
         distances = haversine_matrix(lats, lons)

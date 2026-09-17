@@ -105,6 +105,7 @@ class MatrixBlock(SingleBlockMixin, Structure2D):
         )
 
     def _validate(self):
+        """Raise unless both row and column block names are set."""
         super()._validate()
 
         if self.row_block is None or self.col_block is None:

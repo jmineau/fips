@@ -30,6 +30,7 @@ def apply_to_index(func):
 
     @wraps(func)
     def wrapper(index: pd.Index, *args, **kwargs) -> pd.Index:
+        """Apply ``func`` to every level of ``index`` and rebuild it."""
         if isinstance(index, pd.MultiIndex):
             # Extract fully materialized arrays, apply the function, and rebuild
             new_arrays = [

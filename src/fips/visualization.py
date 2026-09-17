@@ -18,6 +18,7 @@ ArrayLike = Sequence | np.ndarray
 
 
 def _require_matplotlib():
+    """Import and return ``matplotlib.pyplot``, with an install hint when missing."""
     try:
         import matplotlib.pyplot as plt  # type: ignore
 
@@ -65,6 +66,7 @@ def plot_error_norm(
 
     # Safely extract raw values and force to 2D for consistent norm calculation
     def _format(x):
+        """Return ``x`` as a 2-D numpy array."""
         arr = np.asarray(getattr(x, "values", x))
         return arr[:, None] if arr.ndim == 1 else arr
 

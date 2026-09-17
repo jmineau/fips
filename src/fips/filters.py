@@ -46,6 +46,7 @@ def enough_obs_per_interval(
     return (counts >= threshold).tolist()
 
 
+# docstr-coverage: excused `@overload stub`
 @overload
 def select_intervals_with_min_obs(
     data: pd.Series,
@@ -55,6 +56,7 @@ def select_intervals_with_min_obs(
 ) -> pd.Series: ...
 
 
+# docstr-coverage: excused `@overload stub`
 @overload
 def select_intervals_with_min_obs(
     data: pd.DataFrame,

@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- `transport.stilt.errors` used `matplotlib` in a return annotation without
+  importing it; it is now imported under `TYPE_CHECKING`.
+- Restored the Code Quality gates, which had failed on `main` since 0.1.0b6:
+  docstrings in `transport.stilt.errors` are in imperative mood, and the
+  remaining private helpers and nested functions have one-line docstrings
+  (docstring coverage is back to 100%). The `@overload` stubs in `filters`
+  carry a docstr-coverage excuse rather than a docstring, which ruff forbids.
+
 ## [0.1.0b7] - 2026-09-17
 
 ### Added

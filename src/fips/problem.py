@@ -139,6 +139,7 @@ class InverseProblem(Pickleable):
 
         # Reindex matrices to obs and prior (state) indices
         def reindex(matrix, row_idx, col_idx):
+            """Reindex ``matrix`` onto the given labels, filling gaps with zeros."""
             return matrix.reindex(
                 index=row_idx, columns=col_idx, fill_value=0.0, verify_overlap=True
             )

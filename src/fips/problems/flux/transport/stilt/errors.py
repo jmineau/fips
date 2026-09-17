@@ -7,14 +7,18 @@ particle runs.
 """
 
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import pandas as pd
 import xarray as xr
 
+if TYPE_CHECKING:
+    import matplotlib.axes
+
 
 def extract_flux(fluxes, particles):
     """
-    Extracts flux values from a flux dataset for given particle locations.
+    Extract flux values from a flux dataset for given particle locations.
 
     Parameters
     ----------
@@ -38,7 +42,7 @@ def calculate_particle_concentrations(
     trajectory_path: str | Path, fluxes: xr.DataArray
 ) -> pd.DataFrame:
     """
-    Calculates the concentration of dCH4 for particles in a given trajectory file.
+    Calculate the concentration of dCH4 for particles in a given trajectory file.
 
     Parameters
     ----------
@@ -68,7 +72,7 @@ def calculate_particle_variance(
     trajectory_path: str | Path, fluxes: xr.DataArray
 ) -> float:
     """
-    Calculates the variance of dCH4 for particles in a given trajectory file.
+    Calculate the variance of dCH4 for particles in a given trajectory file.
 
     Parameters
     ----------
@@ -100,7 +104,7 @@ def plot_particle_variances(
     sim_dir: str | Path, fluxes: xr.DataArray
 ) -> "matplotlib.axes.Axes":
     """
-    Plots the variances of dCH4 for regular and error particles.
+    Plot the variances of dCH4 for regular and error particles.
 
     Parameters
     ----------
@@ -134,11 +138,9 @@ def plot_particle_variances(
     return ax
 
 
-def calculate_transport_error(
-    sim_dir: str | Path, fluxes: xr.DataArray
-) -> float:
+def calculate_transport_error(sim_dir: str | Path, fluxes: xr.DataArray) -> float:
     """
-    Calculates the transport error for a given STILT simulation directory.
+    Calculate the transport error for a given STILT simulation directory.
 
     Parameters
     ----------
@@ -153,5 +155,6 @@ def calculate_transport_error(
         The calculated transport error (error variance minus regular variance).
     """
     regular_path, error_path = _resolve_paths(sim_dir)
-    return calculate_particle_variance(error_path, fluxes=fluxes) - \
-        calculate_particle_variance(regular_path, fluxes=fluxes)
+    return calculate_particle_variance(
+        error_path, fluxes=fluxes
+    ) - calculate_particle_variance(regular_path, fluxes=fluxes)

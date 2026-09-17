@@ -73,6 +73,7 @@ class EstimatorRegistry(dict):
         """
 
         def decorator(cls: type[Estimator]) -> type[Estimator]:
+            """Register ``cls`` under ``name`` and return it unchanged."""
             self[name] = cls
             return cls
 
