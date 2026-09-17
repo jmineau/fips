@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.0b7] - 2026-09-17
+
 ### Added
 - `JacobianBuilder.build_from_target(target, flux_times, footprint)`: the
   primary Jacobian entry point. `target` is any PYSTILT spatial target
