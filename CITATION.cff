@@ -4,6 +4,13 @@ type: software
 title: "fips"
 version: 0.1.0b6
 date-released: 2026-09-02
+# Concept DOI (always resolves to the latest release) — same convention as
+# pandas/astropy/xarray. `doi` is the shorthand GitHub's "Cite this
+# repository" popup actually renders in APA/BibTeX (it ignores
+# `identifiers`, per citation-file-format/ruby-cff's formatters);
+# `identifiers` is kept too for tools that prefer that form. Deliberately
+# not tracking the per-version DOI here — none of the above do either.
+doi: "10.5281/zenodo.22258484"
 abstract: "Inverse problems in geophysics and atmospheric science are incredibly complex, often involving massive state spaces, deeply heterogeneous observational networks, and explicit matrix-algebra requirements. fips (Flexible Inverse Problem Solver) is built from the ground up to solve linear, matrix-based inverse problems without losing the context of your data. It provides structural flexibility to handle messy, real-world realities seamlessly with native N-dimensional alignment, modular block architecture, and analytical speed with sparse support."
 authors:
   - family-names: Mineau
@@ -14,6 +21,10 @@ authors:
 repository-code: https://github.com/jmineau/fips
 url: jmineau.github.io/fips
 license: MIT
+identifiers:
+  - type: doi
+    value: "10.5281/zenodo.22258484"
+    description: "The concept DOI for all versions of fips."
 keywords:
   - inverse-problem
   - bayesian-estimation
