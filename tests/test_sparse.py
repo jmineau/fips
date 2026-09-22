@@ -342,3 +342,90 @@ class TestSparseInverseProblem:
             sparse_problem.n_state,
             sparse_problem.n_state,
         )
+
+
+# ---------------------------------------------------------------------------
+# fill_value normalization (fips#2)
+# ---------------------------------------------------------------------------
+
+
+def _pandas_native_sparse(m=6, n=5, density=0.3, seed=0):
+    """Build a sparse frame the ordinary pandas way.
+
+    On pandas >= 3 `from_spmatrix` gives float frames `fill_value=NaN`
+    (pandas-dev/pandas#59212), losing scipy's definition that unstored
+    entries are zero.
+    """
+    sp = pytest.importorskip("scipy.sparse")
+    matrix = sp.random(m, n, density=density, format="csr", random_state=seed)
+    frame = pd.DataFrame.sparse.from_spmatrix(
+        matrix,
+        index=pd.Index([f"o{i}" for i in range(m)], name="obs_id"),
+        columns=pd.Index([f"s{i}" for i in range(n)], name="state_id"),
+    )
+    return frame, matrix
+
+
+class TestSparseFillValue:
+    """Sparse blocks must fill with 0.0, whatever pandas hands back."""
+
+    def test_normalize_sets_fill_value_to_zero(self):
+        """Normalizing must leave no NaN and a 0.0 fill."""
+        from fips._sparse import normalize_fill_value
+
+        frame, _ = _pandas_native_sparse()
+        out = normalize_fill_value(frame)
+        assert all(dt.fill_value == 0.0 for dt in out.dtypes)
+        assert not out.isna().to_numpy().any()
+
+    def test_normalize_preserves_values_and_sparsity(self):
+        """Normalizing must not densify: the point of sparse storage."""
+        from fips._sparse import normalize_fill_value
+
+        frame, matrix = _pandas_native_sparse(m=200, n=100, density=0.01)
+        out = normalize_fill_value(frame)
+        np.testing.assert_allclose(out.sparse.to_dense().to_numpy(), matrix.toarray())
+        # the point of sparse storage: normalizing must not densify
+        assert out.sparse.density == pytest.approx(frame.sparse.density)
+
+    def test_normalize_is_a_no_op_when_already_zero_filled(self):
+        """An already zero-filled frame is returned untouched."""
+        from fips._sparse import normalize_fill_value
+
+        frame = pd.DataFrame(np.eye(3)).astype(pd.SparseDtype(float, fill_value=0.0))
+        assert normalize_fill_value(frame) is frame
+
+    def test_normalize_passes_dense_frames_through(self):
+        """Dense frames are returned untouched."""
+        from fips._sparse import normalize_fill_value
+
+        frame = pd.DataFrame(np.eye(3))
+        assert normalize_fill_value(frame) is frame
+
+    def test_structure_accepts_pandas_native_sparse_frame(self):
+        """A user-supplied sparse frame must not be rejected as containing NaN."""
+        frame, matrix = _pandas_native_sparse()
+        block = MatrixBlock(frame, row_block="o", col_block="s")
+        assert block.is_sparse
+        assert all(dt.fill_value == 0.0 for dt in block.data.dtypes)
+        values = block.values
+        dense = values.toarray() if hasattr(values, "toarray") else np.asarray(values)  # pyright: ignore[reportAttributeAccessIssue]
+        np.testing.assert_allclose(dense, matrix.toarray())
+        assert not np.isnan(dense).any()
+
+    def test_covariance_builder_sparse_has_zero_fill(self):
+        """CovarianceBuilder.build(sparse=True) — the path named in fips#2."""
+        idx = pd.MultiIndex.from_product([["a"], range(4)], names=["block", "state_id"])
+        built = CovarianceBuilder([DiagonalError("e", 2.0)]).build(idx, sparse=True)
+        assert all(dt.fill_value == 0.0 for dt in built.dtypes)
+        assert not built.isna().to_numpy().any()
+        np.testing.assert_allclose(built.sparse.to_dense().to_numpy(), np.eye(4) * 2.0)
+
+    def test_covariance_sparse_matches_dense(self):
+        """Sparse and dense builds must hold the same numbers."""
+        idx = pd.MultiIndex.from_product([["a"], range(4)], names=["block", "state_id"])
+        builder = CovarianceBuilder([DiagonalError("e", 2.0)])
+        np.testing.assert_allclose(
+            builder.build(idx, sparse=True).sparse.to_dense().to_numpy(),
+            builder.build(idx, sparse=False).to_numpy(),
+        )

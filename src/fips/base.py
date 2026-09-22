@@ -17,6 +17,7 @@ import numpy.typing as npt
 import pandas as pd
 from typing_extensions import Self
 
+from fips._sparse import normalize_fill_value
 from fips.indexes import overlaps, resolve_axes, round_index, to_numeric
 
 logger = logging.getLogger(__name__)
@@ -459,6 +460,10 @@ class Structure2D(Structure):
         _input_is_sparse = isinstance(data, pd.DataFrame) and any(
             isinstance(dt, pd.SparseDtype) for dt in data.dtypes
         )
+        if _input_is_sparse:
+            # pandas 3's from_spmatrix fills float frames with NaN, which
+            # _validate would reject. The implicit entries are zeros.
+            data = normalize_fill_value(data)
 
         # If columns not provided, assume symmetric matrix with same index for rows and columns
         if columns is None:

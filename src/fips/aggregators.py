@@ -12,6 +12,7 @@ import numpy as np
 import pandas as pd
 from scipy.sparse import csr_matrix
 
+from fips._sparse import normalize_fill_value
 from fips.matrix import Matrix, MatrixBlock
 from fips.vector import Block, Vector
 
@@ -339,9 +340,12 @@ class ObsAggregator:
         # H_agg = W @ H  (preserve SparseDtype if present)
         if all(isinstance(dt, pd.SparseDtype) for dt in H_df.dtypes):
             H_agg_vals = W @ H_df.sparse.to_coo().tocsr()
-            H_agg = pd.DataFrame.sparse.from_spmatrix(
-                H_agg_vals, index=agg_idx, columns=H_df.columns
-            ).fillna(0.0)  # Ensure fill_value is 0.0 for sparse DataFrame
+            # from_spmatrix fills with NaN on pandas 3; see fips._sparse
+            H_agg = normalize_fill_value(
+                pd.DataFrame.sparse.from_spmatrix(
+                    H_agg_vals, index=agg_idx, columns=H_df.columns
+                )
+            )
         else:
             H_agg = pd.DataFrame(W @ H_df.values, index=agg_idx, columns=H_df.columns)
 
