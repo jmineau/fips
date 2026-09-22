@@ -281,6 +281,15 @@ class TestFluxProblemPosteriorProperties:
         assert isinstance(result, pd.DataFrame)
         assert result.shape == (4, 4)
 
+    def test_prior_concentration_error_is_on_the_obs_index(self, solved_flux_problem):
+        """The prior flux error mapped to concentrations, block-indexed like the obs."""
+        S = solved_flux_problem.prior_concentration_error
+        assert isinstance(S, pd.DataFrame)
+        assert S.shape == (solved_flux_problem.n_obs, solved_flux_problem.n_obs)
+        H = solved_flux_problem.jacobian.to_numpy()
+        S_0 = solved_flux_problem.prior_flux_error.to_numpy()
+        np.testing.assert_allclose(S.to_numpy(), H @ S_0 @ H.T)
+
     def test_prior_concentrations_is_series(self, solved_flux_problem):
         """Test that prior_concentrations returns a Series."""
         result = solved_flux_problem.prior_concentrations

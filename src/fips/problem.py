@@ -345,6 +345,18 @@ class InverseProblem(Pickleable):
         return self._wrap("y_0", "prior_obs")  # type: ignore[return-value]
 
     @property
+    def prior_obs_error(self) -> CovarianceMatrix:
+        """
+        Prior error covariance in observation space (H @ S_0 @ H.T).
+
+        The uncertainty of ``prior_obs`` that the prior error implies, on the
+        observation index. Its diagonal, square-rooted, is the prior's share
+        of each observation's error budget; add the model-data mismatch in
+        quadrature for the total the solve expects.
+        """
+        return self._wrap("S_y0", "prior_obs_error")  # type: ignore[return-value]
+
+    @property
     def kalman_gain(self) -> Matrix:
         """Kalman gain matrix (K)."""
         return self._wrap("K", "kalman_gain")  # type: ignore[return-value]

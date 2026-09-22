@@ -591,3 +591,27 @@ class TestInverseProblemSolve:
         assert np.isfinite(estimator.x_hat).all()
         assert np.isfinite(estimator.y_hat).all()
         assert np.isfinite(estimator.S_hat).all()
+
+    def test_prior_obs_error_is_h_s0_ht_on_the_obs_index(self):
+        """``prior_obs_error`` wraps H S_0 H^T as a covariance on the observations."""
+        data = generate_test_data(n_state=5, n_obs=8, seed=2, correlation_len=1.5)
+        problem = InverseProblem(
+            prior=data["prior"],
+            obs=data["obs"],
+            forward_operator=data["forward_operator"],
+            prior_error=data["prior_error"],
+            modeldata_mismatch=data["modeldata_mismatch"],
+        )
+        with pytest.raises(RuntimeError, match="not been solved"):
+            _ = problem.prior_obs_error
+        problem.solve(estimator="bayesian")
+
+        S_y0 = problem.prior_obs_error
+        assert isinstance(S_y0, CovarianceMatrix)
+        assert S_y0.index.equals(problem.obs_index)
+        assert S_y0.columns.equals(problem.obs_index)
+        est = problem.estimator
+        expected = est.H @ est.S_0 @ est.H.T
+        np.testing.assert_allclose(S_y0.to_numpy(), expected)
+        np.testing.assert_allclose(S_y0.to_numpy(), S_y0.to_numpy().T)
+        assert (np.diag(S_y0.to_numpy()) >= 0).all()

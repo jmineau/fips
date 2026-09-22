@@ -119,6 +119,11 @@ class FluxProblem(InverseProblem):
         return self.prior_obs["concentration"]
 
     @property
+    def prior_concentration_error(self) -> pd.DataFrame:
+        """Covariance of the prior modelled concentrations from the prior flux error."""
+        return self.prior_obs_error["concentration", "concentration"]
+
+    @property
     def posterior_concentrations(self) -> pd.Series:
         """Modelled concentrations from posterior fluxes."""
         return self.posterior_obs["concentration"]

@@ -138,6 +138,7 @@ class Estimator(ABC):
         "S_hat": ("state", "state", True),
         "y_hat": ("obs", None, False),
         "y_0": ("obs", None, False),
+        "S_y0": ("obs", "obs", True),
         "K": ("state", "obs", False),
         "A": ("state", "state", False),
         "U_red": ("state", None, False),
@@ -392,6 +393,23 @@ class Estimator(ABC):
             H S_0 H^T
         """
         return self._HS_0 @ self._H_T
+
+    @cached_property
+    def S_y0(self) -> np.ndarray:
+        r"""
+        Prior error covariance in observation space.
+
+        .. math::
+            S_{y_0} = H S_0 H^T
+
+        The covariance of the prior modelled observations ``y_0`` that the
+        prior error ``S_0`` implies: how uncertain each modelled observation
+        is because the prior state is, and how those uncertainties co-vary
+        between observations that see the same state. The square root of its
+        diagonal is the prior's share of the error budget at each
+        observation, alongside the model-data mismatch ``S_z``.
+        """
+        return self._HS_0H
 
     @cached_property
     def DOFS(self) -> float:

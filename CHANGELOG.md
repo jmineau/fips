@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `InverseProblem.prior_obs_error` (and `FluxProblem.prior_concentration_error`):
+  the prior error covariance mapped into observation space, `H S_0 H^T`, as a
+  labelled `CovarianceMatrix` on the observation index. Its diagonal is the
+  prior's share of each observation's error budget; the solve already
+  computed it, so this only exposes it (`Estimator.S_y0`).
+
 ### Fixed
 
 - `transport.stilt.errors` used `matplotlib` in a return annotation without

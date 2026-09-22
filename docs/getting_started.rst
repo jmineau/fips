@@ -94,6 +94,7 @@ labelled *fips* objects that behave like pandas Series / DataFrames:
    # Modelled observations for prior and posterior
    y_0   = problem.prior_obs        # Vector  (index = obs_idx)
    y_hat = problem.posterior_obs    # Vector  (index = obs_idx)
+   S_y0  = problem.prior_obs_error  # CovarianceMatrix: H S_0 H^T, the prior's error on y_0
 
    # Kalman gain and averaging kernel
    K = problem.kalman_gain          # Matrix  (obs × state)
