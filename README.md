@@ -151,3 +151,8 @@ Full documentation is available at [https://jmineau.github.io/fips/](https://jmi
 ## Contributing
 
 Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+
+## Use of AI coding agents
+
+This project is developed with the help of AI coding agents, directed and
+reviewed by the maintainer, who owns the design and the science.
