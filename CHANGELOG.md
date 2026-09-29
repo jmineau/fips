@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - **`JacobianBuilder` selects PYSTILT simulations by variant** (breaking;
-  needs the PYSTILT release that introduced variants). PYSTILT projects are
+  requires `pystilt>=0.1.0a21`). PYSTILT projects are
   now receptors crossed with named variants, each with at most one footprint,
   so `build_from_target(target, flux_times, variant)` takes the variant name
   (`"hrrr"`) where it took a footprint name. Regenerating footprints from
