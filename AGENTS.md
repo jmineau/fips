@@ -69,7 +69,7 @@ Specialization for atmospheric flux inversion. Public exports:
 - `FluxInversionPipeline` — `InversionPipeline` subclass
 - `FluxPlotter` — visualization
 - `JacobianBuilder` — optional, imported only if `pystilt` is available
-  (lives in `problems/flux/transport/stilt.py`)
+  (lives in `problems/flux/transport/stilt/builder.py`)
 
 The `flux` extra pulls in `pystilt`, `cartopy`, `h5py`, `matplotlib`.
 

@@ -31,26 +31,19 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
-def _hour_from_sim_id(sim_id: str) -> int | None:
-    """Extract receptor hour (UTC) from a PYSTILT sim_id: '{met}_{YYYYMMDDHHMM}_{loc}'."""
-    parts = sim_id.split("_", 2)
-    if len(parts) < 2 or len(parts[1]) < 10:
-        return None
-    try:
-        return int(parts[1][8:10])
-    except ValueError:
-        return None
-
-
 class JacobianBuilder:
     """
     Builds Jacobian matrices from STILT footprints via a PYSTILT Model.
 
+    Each Jacobian row is one simulation of the model: one receptor under one
+    variant (a named set of PYSTILT settings, each with at most one footprint).
+
     Parameters
     ----------
     model : stilt.Model
-        A configured PYSTILT Model used to load footprints via
-        ``model.get_footprints()``.
+        A PYSTILT Model; its simulations are selected with
+        ``model.simulations.sel(...)`` and their footprints (or trajectories)
+        loaded by path.
     location_dim : str
         Name of the observation location dimension.
     time_dim : str
@@ -76,7 +69,7 @@ class JacobianBuilder:
         self,
         coords: list[tuple[float, float]] | dict[str, list[tuple[float, float]]],
         flux_times: pd.IntervalIndex,
-        footprint: str,
+        variant: str,
         **kwargs,
     ) -> MatrixBlock | dict[str, MatrixBlock]:
         """
@@ -95,37 +88,38 @@ class JacobianBuilder:
             multiple Jacobians over different coordinate sets.
         flux_times : pd.IntervalIndex
             Time bins for the fluxes.
-        footprint : str
-            Name of the footprint to load from each simulation.
+        variant : str
+            PYSTILT variant whose footprints make the rows.
         **kwargs
-            Forwarded to :meth:`build_from_grid` (``mets``, ``time_range``,
-            ``location_ids``, ``subset_hours``, ``num_processes``,
-            ``location_mapper``, ``timeout``, ``threshold``, ``sparse``).
+            Forwarded to :meth:`build_from_target` (``footprint``,
+            ``time_range``, ``location_ids``, ``subset_hours``,
+            ``num_processes``, ``location_mapper``, ``timeout``, ``threshold``,
+            ``sparse``).
 
         Returns
         -------
         MatrixBlock | dict[str, MatrixBlock]
             Single MatrixBlock when coords is a list; dict when coords is a dict.
         """
-        return self.build_from_target(coords, flux_times, footprint, **kwargs)
+        return self.build_from_target(coords, flux_times, variant, **kwargs)
 
     def build_from_grid(
         self,
         grid: Target | Mapping[str, Target],
         flux_times: pd.IntervalIndex,
-        footprint: str,
+        variant: str,
         **kwargs,
     ) -> MatrixBlock | dict[str, MatrixBlock]:
         """Alias of :meth:`build_from_target` kept for existing callers."""
-        return self.build_from_target(grid, flux_times, footprint, **kwargs)
+        return self.build_from_target(grid, flux_times, variant, **kwargs)
 
     def build_from_target(
         self,
         target: Target | Mapping[str, Target],
         flux_times: pd.IntervalIndex,
-        footprint: str | FootprintConfig,
+        variant: str,
         *,
-        mets: str | list[str] | None = None,
+        footprint: FootprintConfig | None = None,
         time_range: tuple | None = None,
         location_ids: set[str] | None = None,
         subset_hours: int | list[int] | None = None,
@@ -156,20 +150,22 @@ class JacobianBuilder:
             targets.
         flux_times : pd.IntervalIndex
             Time bins for the fluxes.
-        footprint : str | stilt.FootprintConfig
-            Name of the stored footprint to load from each simulation, **or** a
-            ``FootprintConfig`` to regenerate each footprint from the stored
-            trajectory particles on that grid (full kernel fidelity when the
-            state grid differs from every stored raster; slower).
-        mets : str, list[str], or None
-            Restrict to specific met configurations. None = all.
+        variant : str
+            PYSTILT variant whose simulations make the rows (``"hrrr"``). A
+            realization group's name selects every realization.
+        footprint : stilt.FootprintConfig, optional
+            Regenerate each footprint from the variant's stored trajectory
+            particles with these settings instead of loading the stored
+            footprint (full kernel fidelity when the state grid differs from
+            the stored raster; slower).
         time_range : tuple or None
-            ``(start, end)`` to filter simulations by receptor time. Defaults
-            to the full flux window derived from ``flux_times``.
+            ``(start, end)`` to filter simulations by receptor time, both
+            inclusive. Defaults to the full flux window from ``flux_times``.
         location_ids : set[str] or None
             Restrict to specific location IDs.
         subset_hours : int | list[int] | None
-            Filter simulations to specific hours of the day (receptor time).
+            Filter simulations to specific hours of the day (receptor time,
+            UTC).
         num_processes : int
             Number of parallel workers (joblib). -1 = all cores.
         location_mapper : dict[str, str] | None
@@ -198,33 +194,30 @@ class JacobianBuilder:
         if time_range is None:
             time_range = (flux_times[0].left, flux_times[-1].right)
 
+        hours = None
+        if subset_hours is not None:
+            hours = (
+                {subset_hours} if isinstance(subset_hours, int) else set(subset_hours)
+            )
+        sims = self.model.simulations.sel(
+            variant=variant,
+            time=slice(*time_range),
+            location=location_ids,
+            where=None if hours is None else (lambda r: r.time.hour in hours),
+        )
+
         # Get paths without loading — footprints are loaded (or regenerated
         # from trajectories) inside each worker to avoid serial NFS I/O and
         # large object pickling overhead.
-        regenerate = isinstance(footprint, FootprintConfig)
-        if regenerate:
-            paths = self.model.trajectories.paths(
-                mets=mets, time_range=time_range, location_ids=location_ids
-            )
-        else:
-            paths = self.model.footprints[footprint].paths(
-                mets=mets,
-                time_range=time_range,
-                location_ids=location_ids,
-            )
-
-        # Pre-filter by hour using sim_id before dispatching workers
-        if subset_hours is not None:
-            if isinstance(subset_hours, int):
-                subset_hours = [subset_hours]
-            hours_set = set(subset_hours)
-            paths = [p for p in paths if _hour_from_sim_id(p.parent.name) in hours_set]
+        regenerate = footprint is not None
+        outputs = sims.trajectories if regenerate else sims.footprint
+        paths = list(outputs.paths().values())
 
         if not paths:
             what = (
-                "No trajectories found"
+                f"No trajectories found for variant '{variant}'"
                 if regenerate
-                else f"No footprints found for '{footprint}'"
+                else f"No footprints found for variant '{variant}'"
             )
             raise ValueError(
                 f"{what} after filtering. "
@@ -243,7 +236,7 @@ class JacobianBuilder:
                 location_dim=self.location_dim,
                 time_dim=self.time_dim,
                 flux_times=flux_times,
-                footprint_config=footprint if regenerate else None,
+                footprint_config=footprint,
             )
             for path in paths
         )

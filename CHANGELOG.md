@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **`JacobianBuilder` selects PYSTILT simulations by variant** (breaking;
+  needs the PYSTILT release that introduced variants). PYSTILT projects are
+  now receptors crossed with named variants, each with at most one footprint,
+  so `build_from_target(target, flux_times, variant)` takes the variant name
+  (`"hrrr"`) where it took a footprint name. Regenerating footprints from
+  stored particles moves to the keyword `footprint=FootprintConfig(...)`.
+  `mets` is gone (a variant fixes its met). Selection goes through
+  `model.simulations.sel(...)`, so `subset_hours` filters on the receptor's
+  time instead of parsing directory names, and an unknown variant raises
+  `KeyError`. `build_from_grid` and `build_from_coords` follow.
+
 ### Added
 
 - `InverseProblem.prior_obs_error` (and `FluxProblem.prior_concentration_error`):

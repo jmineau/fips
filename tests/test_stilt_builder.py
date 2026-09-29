@@ -45,16 +45,45 @@ def _fake_footprint(
     return fp
 
 
-def _fake_path(sim_id: str = "hrrr_202301011200_-111.85_40.77_5") -> Path:
-    """Return a footprint path whose parent dir encodes the sim_id (for hour filters)."""
-    return Path(f"/fake/{sim_id}/{sim_id}_slv_foot.nc")
+def _receptor(time: str = "2023-01-01 12:00", longitude: float = -111.85):
+    from stilt import PointReceptor
+
+    return PointReceptor(time=time, longitude=longitude, latitude=40.77, altitude=5.0)
 
 
-def _model(*paths: Path):
-    """Mock Model whose footprints[name].paths() returns the given paths."""
-    model = MagicMock()
-    model.footprints.__getitem__.return_value.paths.return_value = list(paths)
-    return model
+def _project(tmp_path, *receptors, variants=None):
+    """Build a real PYSTILT model over *receptors*; outputs exist only once stubbed."""
+    from stilt import Model
+
+    settings = {
+        "mets": {
+            "hrrr": {
+                "directory": str(tmp_path / "met"),
+                "file_format": "%Y%m%d_%H",
+                "file_tres": "6h",
+            }
+        },
+        "grid": {
+            "xmin": -112,
+            "xmax": -111,
+            "ymin": 40,
+            "ymax": 41,
+            "xres": 0.1,
+            "yres": 0.1,
+        },
+    }
+    if variants is not None:
+        settings["variants"] = variants
+    return Model(project=tmp_path / "project", receptors=list(receptors), **settings)
+
+
+def _stub(model, receptor, variant: str = "hrrr", output: str = "footprint") -> Path:
+    """Write a placeholder output file where PYSTILT expects it and return its path."""
+    sim = model.simulations[receptor.id, variant]
+    path = sim.footprint_path if output == "footprint" else sim.trajectories_path
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_bytes(b"stub")
+    return path
 
 
 @pytest.fixture
@@ -148,144 +177,148 @@ def test_row_accepts_xarray_grid_target():
 
 def test_builder_init():
     """The builder stores the model and default dimension names."""
-    model = _model()
+    model = MagicMock()
     builder = JacobianBuilder(model)
     assert builder.model is model
     assert builder.location_dim == "obs_location"
     assert builder.time_dim == "obs_time"
 
 
-def test_build_from_coords_queries_paths(load_footprints):
-    """build_from_coords queries footprint paths over the flux window."""
-    p = _fake_path()
-    model = _model(p)
-    load_footprints({p: _fake_footprint()})
-    flux_times = _flux_times()
-
-    builder = JacobianBuilder(model)
-    builder.build_from_coords(
-        coords=[(-111.85, 40.77)],
-        flux_times=flux_times,
-        footprint="slv",
+def test_rows_come_from_the_variant_within_the_flux_window(tmp_path, load_footprints):
+    """Only the named variant's footprints inside the flux window make rows."""
+    inside, outside = _receptor(), _receptor(time="2023-02-01 12:00")
+    model = _project(
+        tmp_path, inside, outside, variants={"hrrr": {}, "zi08": {"ziscale": 0.8}}
     )
-
-    model.footprints.__getitem__.assert_any_call("slv")
-    model.footprints["slv"].paths.assert_called_once_with(
-        mets=None,
-        time_range=(flux_times[0].left, flux_times[-1].right),
-        location_ids=None,
-    )
-
-
-def test_build_from_coords_passes_filters(load_footprints):
-    """met/time_range/location filters are forwarded to paths()."""
-    p = _fake_path()
-    model = _model(p)
-    load_footprints({p: _fake_footprint()})
-    flux_times = _flux_times()
-    tr = (pd.Timestamp("2023-01-01"), pd.Timestamp("2023-01-31"))
-
-    builder = JacobianBuilder(model)
-    builder.build_from_coords(
-        coords=[(-111.85, 40.77)],
-        flux_times=flux_times,
-        footprint="slv",
-        mets="hrrr",
-        time_range=tr,
-        location_ids={"site_A"},
-    )
-
-    model.footprints["slv"].paths.assert_called_once_with(
-        mets="hrrr",
-        time_range=tr,
-        location_ids={"site_A"},
-    )
-
-
-def test_build_from_grid_accepts_xarray(load_footprints):
-    """build_from_grid accepts an xarray grid target end-to-end."""
-    p = _fake_path()
-    model = _model(p)
-    load_footprints({p: _fake_footprint()})
-    grid = xr.Dataset(coords={"lon": [-111.85], "lat": [40.77]})
-
-    builder = JacobianBuilder(model)
-    result = builder.build_from_grid(grid, _flux_times(), "slv")
-
-    assert result is not None
-    model.footprints["slv"].paths.assert_called_once()
-
-
-def test_subset_hours_filters_footprints(load_footprints):
-    """subset_hours drops paths whose receptor hour is excluded."""
-    p_noon = _fake_path("hrrr_202301011200_-111.85_40.77_5")
-    p_midnight = _fake_path("hrrr_202301010000_-111.85_40.77_5")
-    model = _model(p_noon, p_midnight)
     load_footprints(
         {
-            p_noon: _fake_footprint(location_id="A", time="2023-01-01 12:00"),
-            p_midnight: _fake_footprint(location_id="B", time="2023-01-01 00:00"),
+            _stub(model, inside): _fake_footprint(location_id="hrrr-inside"),
+            _stub(model, outside): _fake_footprint(location_id="hrrr-outside"),
+            _stub(model, inside, "zi08"): _fake_footprint(location_id="zi08-inside"),
         }
     )
 
-    builder = JacobianBuilder(model)
-    result = builder.build_from_coords(
+    H = JacobianBuilder(model).build_from_coords(
+        coords=[(-111.85, 40.77)], flux_times=_flux_times(), variant="hrrr"
+    )
+
+    assert isinstance(H, MatrixBlock)
+    assert list(H.data.index.get_level_values("obs_location")) == ["hrrr-inside"]
+
+
+def test_time_range_and_location_filters(tmp_path, load_footprints):
+    """time_range and location_ids narrow the simulations used."""
+    a = _receptor(time="2023-01-01 06:00", longitude=-111.85)
+    b = _receptor(time="2023-01-01 07:00", longitude=-111.80)
+    c = _receptor(time="2023-01-01 20:00", longitude=-111.85)
+    model = _project(tmp_path, a, b, c)
+    load_footprints(
+        {
+            _stub(model, r): _fake_footprint(location_id=n, time=str(r.time))
+            for n, r in zip("abc", (a, b, c), strict=True)
+        }
+    )
+
+    H = JacobianBuilder(model).build_from_coords(
         coords=[(-111.85, 40.77)],
         flux_times=_flux_times(),
-        footprint="slv",
+        variant="hrrr",
+        time_range=(pd.Timestamp("2023-01-01 00:00"), pd.Timestamp("2023-01-01 12:00")),
+        location_ids={a.location_id},
+    )
+
+    assert isinstance(H, MatrixBlock)
+    assert list(H.data.index.get_level_values("obs_location")) == ["a"]
+
+
+def test_build_from_grid_accepts_xarray(tmp_path, load_footprints):
+    """build_from_grid accepts an xarray grid target end-to-end."""
+    r = _receptor()
+    model = _project(tmp_path, r)
+    load_footprints({_stub(model, r): _fake_footprint()})
+    grid = xr.Dataset(coords={"lon": [-111.85], "lat": [40.77]})
+
+    result = JacobianBuilder(model).build_from_grid(grid, _flux_times(), "hrrr")
+
+    assert isinstance(result, MatrixBlock)
+
+
+def test_subset_hours_filters_by_receptor_hour(tmp_path, load_footprints):
+    """subset_hours keeps only receptors at those UTC hours."""
+    noon, midnight = (
+        _receptor(time="2023-01-01 12:00"),
+        _receptor(time="2023-01-01 00:00"),
+    )
+    model = _project(tmp_path, noon, midnight)
+    load_footprints(
+        {
+            _stub(model, noon): _fake_footprint(
+                location_id="A", time="2023-01-01 12:00"
+            ),
+            _stub(model, midnight): _fake_footprint(
+                location_id="B", time="2023-01-01 00:00"
+            ),
+        }
+    )
+
+    result = JacobianBuilder(model).build_from_coords(
+        coords=[(-111.85, 40.77)],
+        flux_times=_flux_times(),
+        variant="hrrr",
         subset_hours=12,
     )
-    # Only the noon footprint (hour=12) should produce a row
+
     assert isinstance(result, MatrixBlock)  # list coords -> single block
-    df = result.data
-    assert "A" in df.index.get_level_values("obs_location")
-    assert "B" not in df.index.get_level_values("obs_location")
+    assert list(result.data.index.get_level_values("obs_location")) == ["A"]
 
 
-def test_raises_when_no_footprints_after_filter():
-    """An empty path set raises a clear 'No footprints found' error."""
-    model = _model()  # paths() returns nothing
-    builder = JacobianBuilder(model)
+def test_raises_when_no_footprints_after_filter(tmp_path):
+    """No stored footprint for the selection raises a clear error."""
+    model = _project(tmp_path, _receptor())  # nothing has run
 
-    with pytest.raises(ValueError, match="No footprints found"):
-        builder.build_from_coords(
-            coords=[(-111.85, 40.77)],
-            flux_times=_flux_times(),
-            footprint="slv",
+    with pytest.raises(ValueError, match="No footprints found for variant 'hrrr'"):
+        JacobianBuilder(model).build_from_coords(
+            coords=[(-111.85, 40.77)], flux_times=_flux_times(), variant="hrrr"
         )
 
 
-def test_raises_when_no_rows_produced(load_footprints):
-    """All-zero aggregates across paths raise 'No Jacobian rows'."""
-    p = _fake_path()
-    model = _model(p)
-    load_footprints({p: _fake_footprint(agg_value=0.0)})  # all-zero → no overlap
-    builder = JacobianBuilder(model)
+def test_unknown_variant_raises(tmp_path):
+    """A variant the project does not define is an error, not an empty Jacobian."""
+    model = _project(tmp_path, _receptor())
+
+    with pytest.raises(KeyError, match="hrr"):
+        JacobianBuilder(model).build_from_coords(
+            coords=[(-111.85, 40.77)], flux_times=_flux_times(), variant="hrr"
+        )
+
+
+def test_raises_when_no_rows_produced(tmp_path, load_footprints):
+    """All-zero aggregates across footprints raise 'No Jacobian rows'."""
+    r = _receptor()
+    model = _project(tmp_path, r)
+    load_footprints({_stub(model, r): _fake_footprint(agg_value=0.0)})
 
     with pytest.raises(ValueError, match="No Jacobian rows"):
-        builder.build_from_coords(
-            coords=[(-111.85, 40.77)],
-            flux_times=_flux_times(),
-            footprint="slv",
+        JacobianBuilder(model).build_from_coords(
+            coords=[(-111.85, 40.77)], flux_times=_flux_times(), variant="hrrr"
         )
 
 
-def test_location_mapper_applied(load_footprints):
+def test_location_mapper_applied(tmp_path, load_footprints):
     """location_mapper renames location ids in the assembled index."""
-    p = _fake_path()
-    model = _model(p)
-    load_footprints({p: _fake_footprint(location_id="202301011200_-111.85_40.77_5")})
-    mapper = {"202301011200_-111.85_40.77_5": "wbb"}
+    r = _receptor()
+    model = _project(tmp_path, r)
+    load_footprints({_stub(model, r): _fake_footprint(location_id=str(r.location_id))})
 
-    builder = JacobianBuilder(model)
-    result = builder.build_from_coords(
+    result = JacobianBuilder(model).build_from_coords(
         coords=[(-111.85, 40.77)],
         flux_times=_flux_times(),
-        footprint="slv",
-        location_mapper=mapper,
+        variant="hrrr",
+        location_mapper={str(r.location_id): "wbb"},
     )
+
     assert isinstance(result, MatrixBlock)  # list coords -> single block
-    assert "wbb" in result.data.index.get_level_values("obs_location")
+    assert list(result.data.index.get_level_values("obs_location")) == ["wbb"]
 
 
 # ---------------------------------------------------------------------------
@@ -306,19 +339,20 @@ def _fake_points_footprint(location_id="site_A", time="2023-01-01 12:00"):
     return fp
 
 
-def test_build_from_target_mesh_columns_are_cell_time(load_footprints):
+def test_build_from_target_mesh_columns_are_cell_time(tmp_path, load_footprints):
     """A labelled Mesh target yields a (cell, time) Jacobian column index."""
     from stilt import Mesh
 
-    p = _fake_path()
+    r = _receptor()
+    model = _project(tmp_path, r)
     fp = _fake_points_footprint()
-    load_footprints({p: fp})
-    builder = JacobianBuilder(_model(p))
+    load_footprints({_stub(model, r): fp})
+    builder = JacobianBuilder(model)
     target = Mesh.from_windows(
         [(-111.97, 40.515), (-112.015, 40.779)], 0.01, ids=["landfill", "wwtp"]
     )
 
-    H = builder.build_from_target(target, _flux_times(), footprint="slv")
+    H = builder.build_from_target(target, _flux_times(), "hrrr")
 
     assert isinstance(H, MatrixBlock)
     assert fp.aggregate.call_args.args[0] is target
@@ -327,27 +361,38 @@ def test_build_from_target_mesh_columns_are_cell_time(load_footprints):
     assert list(cols.get_level_values("cell")) == ["landfill", "wwtp"]
 
 
-def test_build_from_grid_is_alias_of_build_from_target(load_footprints):
+def test_build_from_grid_is_alias_of_build_from_target(tmp_path, load_footprints):
     """build_from_grid forwards to build_from_target unchanged."""
-    p = _fake_path()
-    load_footprints({p: _fake_footprint()})
-    builder = JacobianBuilder(_model(p))
+    r = _receptor()
+    model = _project(tmp_path, r)
+    load_footprints({_stub(model, r): _fake_footprint()})
+    builder = JacobianBuilder(model)
     grid = xr.Dataset(coords={"lon": [-111.85], "lat": [40.77]})
-    a = builder.build_from_grid(grid, _flux_times(), footprint="slv")
-    b = builder.build_from_target(grid, _flux_times(), footprint="slv")
+    a = builder.build_from_grid(grid, _flux_times(), "hrrr")
+    b = builder.build_from_target(grid, _flux_times(), "hrrr")
+    assert isinstance(a, MatrixBlock) and isinstance(b, MatrixBlock)
     pd.testing.assert_frame_equal(a.data, b.data)
 
 
-def test_build_from_target_regenerates_from_trajectories(monkeypatch):
-    """A FootprintConfig target source loads trajectories, not footprints."""
-    from stilt import FootprintConfig, Grid
+def test_build_from_target_regenerates_from_trajectories(tmp_path, monkeypatch):
+    """A FootprintConfig regenerates from the variant's trajectories, not its footprints."""
+    from stilt import FootprintConfig
 
-    traj_path = Path("/fake/hrrr_202301011200_-111.85_40.77_5/hrrr_..._traj.parquet")
-    model = MagicMock()
-    model.trajectories.paths.return_value = [traj_path]
+    r = _receptor()
+    model = _project(tmp_path, r)
+    traj_path = _stub(model, r, output="trajectory")  # no stored footprint at all
 
-    config = FootprintConfig(
-        grid=Grid(xmin=-112.0, xmax=-111.0, ymin=40.0, ymax=41.0, xres=0.1, yres=0.1)
+    config = FootprintConfig.model_validate(
+        {
+            "grid": {
+                "xmin": -112.0,
+                "xmax": -111.0,
+                "ymin": 40.0,
+                "ymax": 41.0,
+                "xres": 0.1,
+                "yres": 0.1,
+            }
+        }
     )
     fp = _fake_footprint()
     traj = MagicMock()
@@ -363,9 +408,9 @@ def test_build_from_target_regenerates_from_trajectories(monkeypatch):
     )
 
     builder = JacobianBuilder(model)
-    H = builder.build_from_target([(-111.85, 40.77)], _flux_times(), footprint=config)
+    H = builder.build_from_target(
+        [(-111.85, 40.77)], _flux_times(), "hrrr", footprint=config
+    )
 
-    model.trajectories.paths.assert_called_once()
-    model.footprints.__getitem__.assert_not_called()
     traj.footprint.assert_called_once_with(config)
     assert isinstance(H, MatrixBlock)
