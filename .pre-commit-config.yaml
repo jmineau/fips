@@ -3,7 +3,9 @@ repos:
     rev: v6.0.0
     hooks:
       - id: trailing-whitespace
+        exclude: ^pyrefly-baseline\.json$  # written by pyrefly
       - id: end-of-file-fixer
+        exclude: ^pyrefly-baseline\.json$  # written by pyrefly
       - id: check-yaml
       - id: check-added-large-files
       - id: check-json
@@ -20,8 +22,13 @@ repos:
       # Run the formatter
       - id: ruff-format
 
-  - repo: https://github.com/RobertCraigie/pyright-python
-    rev: v1.1.408
+  - repo: local
     hooks:
-      - id: pyright
-        language: system  # Use the active conda/venv so pyright can resolve numpy, pandas, etc.
+      # Runs in .venv, so pyrefly sees fips's dependencies. --no-sync: a hook
+      # never re-syncs .venv (run `uv sync` after changing dependencies).
+      - id: pyrefly
+        name: pyrefly
+        entry: uv run --no-sync pyrefly check
+        language: system
+        types: [python]
+        pass_filenames: false

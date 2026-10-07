@@ -13,7 +13,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.22258484.svg)](https://doi.org/10.5281/zenodo.22258484)
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
-[![Pyright](https://img.shields.io/badge/pyright-checked-brightgreen.svg)](https://github.com/microsoft/pyright)
+[![Pyrefly](https://img.shields.io/badge/types-pyrefly-blue.svg)](https://pyrefly.org)
 
 > **⚠️ Beta Release**: FIPS is currently in beta (v0.1.0b1). The core API is stable and ready for testing, but may evolve based on user feedback. Please [report any issues or edge cases](https://github.com/jmineau/fips/issues) you encounter.
 
