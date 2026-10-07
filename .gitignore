@@ -2,6 +2,7 @@
 *.local.md
 .claude/settings.local.json
 .aider*
+.pyrefly_cache/
 
 # Documentation generated files #
 #################################

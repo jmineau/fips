@@ -147,7 +147,7 @@ Driven by `just` + `uv`:
 |---|---|
 | `just install` | `uv sync --all-extras` |
 | `just test` | `uv run pytest -v` |
-| `just quality-check` | ruff (`src/fips`) + pyright (`src/fips`) + tests |
+| `just quality-check` | ruff (`src/fips`) + pyrefly + tests |
 | `just ruff` | `uv run ruff check --fix` + `uv run ruff format` on `src/fips` |
 | `just build-docs` | clean + Sphinx HTML build into `docs/_build` |
 | `just pre-commit` | `uv run pre-commit run --all-files` |
@@ -161,8 +161,10 @@ workflows in `.github/workflows/`.
 - **Python**: 3.10+ target (`ruff.target-version = "py310"`).
 - **Linting**: ruff selects `E, F, UP, B, SIM, I, D` and ignores `E501,
   D200, D212, D400` (see `pyproject.toml`).
-- **Types**: pyright on `src/`. `py.typed` is shipped — keep new public API
-  fully typed.
+- **Types**: pyrefly on `src/`, checked against `pyrefly-baseline.json`: the
+  errors that predate the switch from pyright. New errors fail the check; prune
+  fixed ones with `uv run pyrefly check --prune-baseline`. `py.typed` is
+  shipped — keep new public API fully typed.
 - **Docstrings**: numpy convention, format docstring code blocks
   (`docstring-code-format = true`).
 - **Coverage**: configured in `pyproject.toml`; `tests/` is the only
