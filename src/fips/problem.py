@@ -7,9 +7,9 @@ for state estimation.
 """
 
 import logging
+from typing import Self
 
 import pandas as pd
-from typing_extensions import Self
 
 from fips.base import Pickleable
 from fips.covariance import CovarianceMatrix

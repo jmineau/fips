@@ -15,9 +15,9 @@ of each observation to fluxes at different locations and times.
 """
 
 import logging
+from typing import Self
 
 import pandas as pd
-from typing_extensions import Self
 
 from fips.estimators import Estimator
 from fips.problem import InverseProblem

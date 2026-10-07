@@ -8,11 +8,10 @@ data into structured hierarchies with automatic index management and serializati
 import logging
 from collections.abc import Sequence
 from functools import reduce
-from typing import Any, TypeAlias
+from typing import Any, Self, TypeAlias
 
 import numpy as np
 import pandas as pd
-from typing_extensions import Self
 
 from fips.base import ArrayLike, MultiBlockMixin, SingleBlockMixin, Structure2D
 from fips.indexes import assign_block, outer_align_levels

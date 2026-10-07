@@ -7,7 +7,7 @@ name = "fips"
 dynamic = ["version"]  # from git tags, via setuptools-scm
 description = "Flexible Inverse Problem Solver (FIPS)"
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 license = "MIT"
 license-files = ["LICENSE"]
 authors = [
@@ -17,16 +17,16 @@ classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
 ]
 dependencies = [
     "joblib>=1.4.0",
     "numpy>=1.22.0",
     "pandas>=2.0.0",  # need pandas 2.0 for upgraded Index object
     "scipy>=1.8.0",
-    "typing-extensions>=4.0.0",
     "xarray>=2022.3.0",
 ]
 
@@ -99,7 +99,7 @@ filterwarnings = [
 ]
 
 [tool.ruff]
-target-version = "py310"
+# target-version comes from project.requires-python
 
 [tool.ruff.lint.pydocstyle]
 convention = "numpy"

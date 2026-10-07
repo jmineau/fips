@@ -158,7 +158,7 @@ workflows in `.github/workflows/`.
 
 ## Conventions and tooling
 
-- **Python**: 3.10+ target (`ruff.target-version = "py310"`).
+- **Python**: 3.11+ (`requires-python`; ruff takes its target from it).
 - **Linting**: ruff selects `E, F, UP, B, SIM, I, D` and ignores `E501,
   D200, D212, D400` (see `pyproject.toml`).
 - **Types**: pyrefly on `src/`, checked against `pyrefly-baseline.json`: the

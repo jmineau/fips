@@ -11,11 +11,10 @@ import pickle
 import warnings
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import Any, Literal, TypeAlias
+from typing import Any, Literal, Self, TypeAlias
 
 import numpy.typing as npt
 import pandas as pd
-from typing_extensions import Self
 
 from fips._sparse import normalize_fill_value
 from fips.indexes import overlaps, resolve_axes, round_index, to_numeric
