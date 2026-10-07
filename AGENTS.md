@@ -189,6 +189,37 @@ The tooling comes from
   cartopy/h5py/matplotlib/pystilt; the `dev` group is what `just sync`
   syncs.
 
+## Dependency policy — what fips owns and what it delegates
+
+Decided 2026-10-05 after surveying the inverse-problem libraries in other
+fields (pyemu, pyOptimalEstimation, CoFI, CUQIpy, hippylib, pylops, MNE, CIF,
+IMI, FLEXINVERT, LUMIA; see issues #21–#30). None of them provides a labeled
+linear-Gaussian solve with posterior covariance at flux scale, and the ones
+that come close use dense `inv`. So:
+
+- **fips owns the core solve.** The analytic estimator is ~50 lines of
+  `scipy.linalg` (Cholesky, triangular solves, `eigh`); the value of fips is
+  the labeled/block layer around it, and routing arrays through an external
+  solver is exactly where labels get lost. Do not add a dependency to replace
+  `BayesianSolver`; improve it in place (#22).
+- **Delegate factorizations and operator plumbing to scipy.** `scipy.linalg`
+  for dense factorizations, `scipy.sparse` for storage,
+  `scipy.sparse.linalg.LinearOperator` as the matvec abstraction when
+  covariances or H become factored/matrix-free (#6), and
+  `scipy.sparse.linalg.eigsh`/`lobpcg` for low-rank posteriors before porting
+  any randomized eigensolver.
+- **Optional, not required:** `pylops` (ready-made `Kronecker`/`BlockDiag`/
+  `VStack` operators — decide at #6 whether to write the few we need instead),
+  `GSTools` (covariance models, only if `kernels.py` outgrows exponential
+  decay). If adopted, they go in an extra, never in `[project]` dependencies.
+- **Never write a sampler.** If MCMC lands (#18), use PyMC or CUQIpy for
+  sampling and ArviZ for diagnostics, as `openghg_inversions` does. Same for a
+  bounded/variational optimiser (#15, #19): `scipy.optimize`, not custom code.
+- **The reference libraries are test oracles, not dependencies.** Their
+  closed-form identities (pyOE's χ² eigenvalue forms, hippylib's `d/(1+d)`
+  posterior, pyemu's Schur posterior, the Yadav & Michalak supplement code) are
+  for cross-checking new estimators on small random problems in `tests/`.
+
 ## Common workflows
 
 ### Single-block solve (one obs source, one state block)
