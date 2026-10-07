@@ -50,6 +50,8 @@ jobs:
           path: docs/_build/html
 
   deploy:
+    # Pull requests only build the docs; pushes to main deploy them.
+    if: github.event_name != 'pull_request'
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
