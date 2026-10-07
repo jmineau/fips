@@ -3,20 +3,19 @@
 # For the full list of built-in configuration values, see the documentation:
 # https://www.sphinx-doc.org/en/master/usage/configuration.html
 
+import datetime
 import importlib.metadata
-import os
-import sys
-
-sys.path.insert(0, os.path.abspath("../src"))
 
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 project = "fips"
-copyright = "2025, James Mineau"
+copyright = f"2025-{datetime.date.today().year}, James Mineau"
 author = "James Mineau"
 release = importlib.metadata.version("fips")
 version = ".".join(release.split(".")[:2])
+# Builds from main (and local builds) are "dev"; release builds are their version.
+version_match = "dev" if (".dev" in release or "+" in release) else release
 
 
 # -- General configuration ---------------------------------------------------
@@ -31,9 +30,14 @@ extensions = [
     "sphinx.ext.viewcode",
     "sphinx.ext.intersphinx",
     "sphinx_autodoc_typehints",
+    "sphinx_copybutton",
 ]
 
 templates_path = ["_templates"]
+# The docs build treats warnings as errors; these two are known and harmless:
+# - BlockLike is a TYPE_CHECKING-only alias, so typehints cannot resolve it
+# - the README (included in index.rst) starts its headings at H2
+suppress_warnings = ["sphinx_autodoc_typehints.forward_reference", "myst.header"]
 exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 
 # MyST settings
@@ -54,6 +58,15 @@ html_theme_options = {
         "image_light": "_static/logo.png",
         "image_dark": "_static/logo_dark.png",
     },
+    "navbar_end": ["version-switcher", "theme-switcher", "navbar-icon-links"],
+    # The version dropdown. The Documentation workflow publishes dev/ (main),
+    # one folder per release and stable/, and writes switcher.json listing them.
+    "switcher": {
+        "json_url": "https://jmineau.github.io/fips/switcher.json",
+        "version_match": version_match,
+    },
+    "check_switcher": False,  # switcher.json exists only on the deployed site
+    "show_version_warning_banner": True,  # point old versions at stable
 }
 
 # Hide primary (left) sidebar on specific pages

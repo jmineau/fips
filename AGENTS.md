@@ -141,26 +141,41 @@ From `fips.__init__`:
 
 ## Dev commands
 
-Driven by `just` + `uv`:
+Driven by `just` + `uv`; CI runs the same recipes.
 
 | Command | What it does |
 |---|---|
-| `just install` | `uv sync --all-extras` |
-| `just test` | `uv run pytest -v` |
-| `just quality-check` | ruff (`src/fips`) + pyrefly + tests |
-| `just ruff` | `uv run ruff check --fix` + `uv run ruff format` on `src/fips` |
-| `just build-docs` | clean + Sphinx HTML build into `docs/_build` |
-| `just pre-commit` | `uv run pre-commit run --all-files` |
+| `just sync` | `uv sync`: fips, its `flux` extra, and the dev tools |
+| `just quality-check` | `lint` + `type-check` + `docstr` + `test`: what CI checks |
+| `just test` | pytest in parallel (up to 8 workers), skipping `network`/`slow`; extra args go to pytest (`-n 0` for serial) |
+| `just lint` / `just format` | ruff check and format check / fix and format |
+| `just type-check` | pyrefly, against `pyrefly-baseline.json` |
+| `just build-docs` | Sphinx HTML into `docs/_build`; warnings are errors (needs pandoc) |
+| `just docs-serve` | live docs preview on port 8000 |
+| `just changelog` | draft CHANGELOG entries from the commits since the last tag |
+| `just pre-commit` | every hook on every file |
+| `just dist` | build and check the sdist and wheel |
+| `just release X.Y.Z` | tag and push a release (the maintainer runs it, never an agent) |
 | `just clean` | wipe build, dist, coverage, caches, `__pycache__`, docs build |
 
-CI mirrors quality-check via the `tests.yml`, `quality.yml`, and `docs.yml`
-workflows in `.github/workflows/`.
+Workflows in `.github/workflows/`: `tests.yml` (Linux/macOS/Windows x Python
+3.11-3.14), `quality.yml`, `docs.yml` (versioned docs on GitHub Pages: `dev/`
+from main, one folder per release, `stable/`), and `publish.yml` (a `vX.Y.Z`
+tag builds the release, uploads it to PyPI by trusted publishing, and creates
+the GitHub Release from its CHANGELOG section). The version comes from git tags
+(setuptools-scm); never bump, tag or push unless the maintainer asks.
+
+The tooling comes from
+[jmineau/python-template](https://github.com/jmineau/python-template) via copier
+(`.copier-answers.yml`); `copier update` pulls in template changes.
 
 ## Conventions and tooling
 
 - **Python**: 3.11+ (`requires-python`; ruff takes its target from it).
-- **Linting**: ruff selects `E, F, UP, B, SIM, I, D` and ignores `E501,
-  D200, D212, D400` (see `pyproject.toml`).
+- **Linting**: ruff selects `E, F, UP, B, SIM, I, D, D213, NPY, RUF100` and
+  ignores `E501, D200, D212, D400`; tests and the example notebooks may use
+  numpy's legacy seeded RNG (`NPY002`). The whole repo is linted, tests included
+  (see `pyproject.toml`).
 - **Types**: pyrefly on `src/`, checked against `pyrefly-baseline.json`: the
   errors that predate the switch from pyright. New errors fail the check; prune
   fixed ones with `uv run pyrefly check --prune-baseline`. `py.typed` is
@@ -171,7 +186,7 @@ workflows in `.github/workflows/`.
   testpath. `coverage.exclude_also` skips `__repr__`, abstract methods,
   `if __name__ == "__main__":`, etc.
 - **Dependency groups**: runtime deps in `[project]`; the `flux` extra adds
-  cartopy/h5py/matplotlib/pystilt; the `dev` group is what `just install`
+  cartopy/h5py/matplotlib/pystilt; the `dev` group is what `just sync`
   syncs.
 
 ## Common workflows

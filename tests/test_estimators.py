@@ -517,7 +517,7 @@ class TestBayesianSolverRegularization:
 
     @pytest.fixture
     def simple_problem(self):
-        """Setup a simple inverse problem for testing."""
+        """Set up a simple inverse problem for testing."""
         np.random.seed(42)
         n_x = 3
         n_z = 4
@@ -870,8 +870,12 @@ class TestBayesianSolverRegularization:
         assert np.linalg.norm(x_hat_tiny - simple_problem["x_0"]) < 0.1
 
 
+# These matrices are ill-conditioned on purpose, so SciPy's LinAlgWarning is
+# expected here (and only here; anywhere else it fails the test).
+@pytest.mark.filterwarnings("ignore::scipy.linalg.LinAlgWarning")
 class TestRoundoffIndefiniteGain:
-    """Regression tests for the sub-yearly ``singular matrix`` gain-solve bug.
+    """
+    Regression tests for the sub-yearly ``singular matrix`` gain-solve bug.
 
     When an informative Jacobian makes ``H S_0 H^T`` dominate a small ``S_z``,
     floating-point roundoff tips ``A = H S_0 H^T + S_z`` just off
@@ -883,7 +887,8 @@ class TestRoundoffIndefiniteGain:
 
     @staticmethod
     def _roundoff_indefinite_problem(seed: int = 0):
-        """Build a problem whose ``A`` is exact-PD but numerically non-PD.
+        """
+        Build a problem whose ``A`` is exact-PD but numerically non-PD.
 
         Returns ``(z, x_0, H, S_0, S_z)`` for a many-time-bin state with a smooth
         (near low-rank) prior correlation and a strong Jacobian, so that the

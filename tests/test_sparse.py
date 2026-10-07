@@ -350,7 +350,8 @@ class TestSparseInverseProblem:
 
 
 def _pandas_native_sparse(m=6, n=5, density=0.3, seed=0):
-    """Build a sparse frame the ordinary pandas way.
+    """
+    Build a sparse frame the ordinary pandas way.
 
     On pandas >= 3 `from_spmatrix` gives float frames `fill_value=NaN`
     (pandas-dev/pandas#59212), losing scipy's definition that unstored

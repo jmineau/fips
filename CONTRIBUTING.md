@@ -16,14 +16,14 @@ the orientation file it should read.
    cd fips
    ```
 3. Install system tools:
-   - [just](https://just.systems/man/en/prerequisites.html) - Task runner
    - [Pandoc](https://pandoc.org/installing.html) - For building documentation
-   - [uv](https://docs.astral.sh/uv/getting-started/installation/) - Recommended for faster dependency management
+   - [uv](https://docs.astral.sh/uv/getting-started/installation/) - Environment and dependency management
+   - [just](https://just.systems/) (the task runner) comes with the dev tools: `uv run just ...`
 
 4. Install dependencies:
    ```bash
    # Using uv (recommended - faster):
-   uv sync --all-extras
+   uv sync  # fips, its flux extra, and the dev tools
 
    # OR using pip:
    pip install --group dev -e .
@@ -71,7 +71,7 @@ the orientation file it should read.
 6. Commit your changes:
    ```bash
    git add .
-   git commit -m "Description of your changes"
+   git commit -m "fix(matrix): keep labels when slicing"  # Conventional Commits
    ```
 
 7. Push to your fork:
@@ -121,3 +121,28 @@ Please be respectful and constructive in all interactions. We aim to maintain a 
 ## License
 
 By contributing, you agree that your contributions will be licensed under the same license as the project (MIT License).
+
+## Releasing
+
+The version comes from git tags (setuptools-scm), so there is no version string
+to bump.
+
+1. Run `just changelog` to draft entries from the commit messages, edit them
+   into `CHANGELOG.md` under `## [Unreleased]`, then rename that heading to
+   `## [X.Y.Z] - YYYY-MM-DD` and start a new empty `## [Unreleased]` above it.
+   Commit (`chore(release): cut X.Y.Z`) and push to `main`.
+2. Run `just release X.Y.Z`. It checks that the tree is clean, that `main` is in
+   sync with GitHub, and that the version is newer than every existing tag,
+   then pushes the tag `vX.Y.Z`.
+3. The Publish workflow builds the tag, uploads it to PyPI and creates the
+   GitHub Release from the CHANGELOG section; Zenodo archives it. The
+   Documentation workflow publishes its docs as `X.Y.Z/` in the version
+   dropdown.
+
+## Template
+
+The tooling (CI workflows, pre-commit, justfile, packaging configuration) comes
+from [jmineau/python-template](https://github.com/jmineau/python-template).
+`.copier-answers.yml` records the template version; `copier update` pulls in
+later template changes. Improvements that would help every package are best
+made in the template.

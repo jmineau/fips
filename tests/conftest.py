@@ -12,11 +12,11 @@ import os
 # `setdefault` lets a developer still override the backend locally.
 os.environ.setdefault("MPLBACKEND", "Agg")
 
-import numpy as np  # noqa: E402
-import pandas as pd  # noqa: E402
-import pytest  # noqa: E402
+import numpy as np
+import pandas as pd
+import pytest
 
-from fips.vector import Block, Vector  # noqa: E402
+from fips.vector import Block, Vector
 
 # ---------------------------------------------------------------------------
 # Pandas version compatibility utilities

@@ -41,7 +41,8 @@ class FluxProblem(InverseProblem):
     """
 
     def solve(self, estimator: str | type[Estimator] = "bayesian", **kwargs) -> Self:
-        """Solve the flux inversion problem using specified estimator.
+        """
+        Solve the flux inversion problem using specified estimator.
 
         Parameters
         ----------

@@ -11,7 +11,7 @@ requires-python = ">=3.11"
 license = "MIT"
 license-files = ["LICENSE"]
 authors = [
-    {name = "James Mineau", email = "jameskmineau@gmail.com"}
+    {name = "James Mineau", email = "jameskmineau@gmail.com"},
 ]
 classifiers = [
     "Development Status :: 4 - Beta",
@@ -21,6 +21,7 @@ classifiers = [
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
     "Programming Language :: Python :: 3.14",
+    "Typing :: Typed",
 ]
 dependencies = [
     "joblib>=1.4.0",
@@ -38,52 +39,51 @@ flux = [
     "pystilt>=0.1.0a21",  # variants: model.simulations.sel(variant=...)
 ]
 
-[dependency-groups]
-dev = [
-    "fips[flux]",
-    "docstr-coverage>=2.0.0",
-    "ipykernel>=7.2.0",
-    "myst-parser>=2.0.0",
-    "nbsphinx>=0.9.0",
-    "pre-commit>=3.0.0",
-    "pydata-sphinx-theme>=0.14.0",
-    "pyrefly>=1.3",
-    "pytest>=7.0.0",
-    "pytest-cov>=4.0.0",
-    "setuptools-scm>=8",
-    "ruff>=0.1.0",
-    "sphinx>=7.0.0",
-    "sphinx-autodoc-typehints>=1.24.0",
-]
-
 [project.urls]
 Homepage = "https://github.com/jmineau/fips"
 Documentation = "https://jmineau.github.io/fips/"
 Repository = "https://github.com/jmineau/fips"
 Issues = "https://github.com/jmineau/fips/issues"
+Changelog = "https://github.com/jmineau/fips/blob/main/CHANGELOG.md"
+
+[dependency-groups]
+# Dev tooling and docs together; `uv sync` installs it by default.
+dev = [
+    "fips[flux]",
+    "docstr-coverage>=2.3",
+    "git-cliff>=2.10",  # `just changelog`
+    "ipykernel>=7.2.0",  # run the example notebooks
+    "myst-parser>=2.0.0",  # Markdown in the docs (README include)
+    "nbsphinx>=0.9.0",  # example notebooks in the docs; needs pandoc
+    "pre-commit>=4.0",
+    "pydata-sphinx-theme>=0.16",
+    "pyrefly>=1.3",
+    "pytest>=9.0",
+    "pytest-cov>=6.0",
+    "pytest-xdist>=3.6",
+    "ruff>=0.16",
+    "rust-just>=1.40",
+    "setuptools-scm>=8",  # `just version`
+    "sphinx>=8.1",
+    "sphinx-autobuild>=2024.10",  # `just docs-serve`
+    "sphinx-autodoc-typehints>=3.0",
+    "sphinx-copybutton>=0.5",
+    "twine>=6.0",  # `just dist`
+]
 
 [tool.coverage.run]
-source = ["src/fips"]
-omit = ["*/tests/*", "*/test_*.py"]
+source = ["fips"]
+branch = true
 
 [tool.coverage.report]
-# Regexes for lines to exclude from consideration
+show_missing = true
 exclude_also = [
-    # Don't complain about missing debug-only code:
-    "def __repr__",
-    "if self\\.debug",
-
-    # Don't complain if tests don't hit defensive assertion code:
-    "raise AssertionError",
-    "raise NotImplementedError",
-
-    # Don't complain if non-runnable code isn't run:
-    "if 0:",
+    "if TYPE_CHECKING:",
     "if __name__ == .__main__.:",
-
-    # Don't complain about abstract methods, they aren't run:
+    "raise NotImplementedError",
     "@(abc\\.)?abstractmethod",
-    ]
+    "def __repr__",
+]
 
 [tool.pyrefly]
 project-includes = ["src"]
@@ -92,20 +92,41 @@ project-includes = ["src"]
 # `uv run pyrefly check --update-baseline` (or `--prune-baseline`) to shrink it.
 baseline = "pyrefly-baseline.json"
 
-[tool.pytest.ini_options]
+[tool.pytest]
+minversion = "9.0"
 testpaths = ["tests"]
-filterwarnings = [
-    "ignore:numpy.core.multiarray is deprecated:DeprecationWarning",
+strict = true  # strict markers, config, xfail and parametrize ids
+addopts = ["-ra"]
+log_level = "INFO"  # show captured logs for failing tests
+# Warnings are errors, so deprecations surface early. Ignore a specific
+# third-party warning with e.g. "ignore:some message:DeprecationWarning:pkg".
+filterwarnings = ["error"]
+markers = [
+    "network: needs live network access; excluded from default runs",
+    "slow: expensive in time, bandwidth or disk; excluded from default runs",
+]
+
+[tool.repo-review]
+# Scientific Python repo-review (`uvx --from "sp-repo-review[cli]" sp-repo-review .`)
+# checks that this template skips on purpose:
+ignore = [
+    "PY007",  # task runner: just, not nox/tox
+    "MY101",  # pyrefly's default preset; tighten per project
+    "PC110", "PC190",  # ruff runs as a local `uv run` hook, so uv.lock pins its version
+    "PC140",  # pyrefly runs as a local `uv run` hook, so it sees the project's dependencies
+    "PC160",  # no spell checker
+    "PC180",  # no markdown formatter
+    "PC901", "PC902", "PC903",  # pre-commit.ci is not used
 ]
 
 [tool.ruff]
 # target-version comes from project.requires-python
 
-[tool.ruff.lint.pydocstyle]
-convention = "numpy"
-
 [tool.ruff.format]
 docstring-code-format = true
+# ruff also formats code blocks in Markdown; the README's example keeps its
+# hand-aligned columns.
+exclude = ["README.md"]
 
 [tool.ruff.lint]
 select = [
@@ -115,14 +136,26 @@ select = [
     "B",  # flake8-bugbear
     "SIM",  # flake8-simplify
     "I",  # isort
-    "D",  # pydocstyle
+    "D",  # pydocstyle, numpy convention (below)
+    "D213",  # docstring summary on the second line
+    "NPY",  # NumPy-specific, incl. NumPy 2 deprecations
+    "RUF100",  # unused noqa
 ]
 ignore = [
     "E501",  # line too long, handled by formatter
     "D200",  # One-line docstring should fit on one line with quotes
     "D212",  # Multi-line docstring summary should start at the first line
-    "D400", # First line should end with a period, question mark, or exclamation point
+    "D400",  # First line should end with a period, question mark, or exclamation point
 ]
+
+[tool.ruff.lint.per-file-ignores]
+# Tests and the pre-run example notebooks seed numpy's legacy global RNG on
+# purpose; switching them to np.random.default_rng would change their numbers.
+"tests/**" = ["NPY002"]
+"docs/**/*.ipynb" = ["NPY002"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "numpy"
 
 [tool.ruff.lint.isort]
 known-first-party = ["fips"]
