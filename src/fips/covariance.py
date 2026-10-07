@@ -277,6 +277,7 @@ class KroneckerError(ErrorComponent):
         Can be a single float or a Series indexed by the same MultiIndex as the covariance matrix.
     marginal_kernels : list of tuples
         Each tuple contains:
+
         1. The dimension name(s) as a string or list of strings.
         2. The Callable kernel function that takes a DataFrame of those
            unique coordinates and returns a 2D correlation matrix.

@@ -87,7 +87,7 @@ Transport Backends
 ==================
 
 STILT
------
+~~~~~
 
 .. currentmodule:: fips.problems.flux.transport.stilt
 

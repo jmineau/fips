@@ -6,7 +6,7 @@ Utilities
 
 Utilities are functions and classes that are not specific to a particular problem, but are useful for a variety of problems.
 
-.. toctree:: ../api/
+.. toctree::
    :maxdepth: 1
 
    aggregators

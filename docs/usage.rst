@@ -76,7 +76,7 @@ an existing operator:
 .. note::
 
    The forward operator :math:`H` is also called the Jacobian or observation operator.
-   See :ref:`operators-notation` for details.
+   See :ref:`inverse-problem-terms` for details.
 
 .. code-block:: python
 

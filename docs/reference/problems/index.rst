@@ -1,7 +1,7 @@
 Problems
 ========
 
-.. toctree:: ../api/
+.. toctree::
    :maxdepth: 2
 
    flux
