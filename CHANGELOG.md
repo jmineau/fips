@@ -13,9 +13,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Requires Python 3.11 or newer** (breaking): Python 3.10 reaches its end of
+  life in October 2026. Tested on 3.11 through 3.14.
 - The version now comes from git tags (setuptools-scm). An install from git
   between releases reports a development version such as
   `0.1.0b9.dev3+g1a2b3c4` rather than the last release's number.
+
+### Removed
+
+- The `typing-extensions` dependency (`typing.Self` is in the standard library
+  from Python 3.11).
 
 ## [0.1.0b8] - 2026-09-29
 
