@@ -9,6 +9,8 @@ flux inversion.
 """
 
 import logging
+from importlib.metadata import PackageNotFoundError
+from importlib.metadata import version as _version
 
 from .covariance import CovarianceMatrix
 from .estimators import Estimator, available_estimators
@@ -18,9 +20,15 @@ from .pipeline import InversionPipeline
 from .problem import InverseProblem
 from .vector import Block, Vector
 
+try:
+    __version__ = _version("fips")  # set by setuptools-scm from git tags
+except PackageNotFoundError:  # pragma: no cover - not installed
+    __version__ = "0+unknown"
+
 logging.getLogger(__name__).addHandler(logging.NullHandler())
 
 __all__ = [
+    "__version__",
     "Block",
     "Vector",
     "Matrix",

@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `fips.__version__`.
+
+### Changed
+
+- The version now comes from git tags (setuptools-scm). An install from git
+  between releases reports a development version such as
+  `0.1.0b9.dev3+g1a2b3c4` rather than the last release's number.
+
 ## [0.1.0b8] - 2026-09-29
 
 ### Changed
