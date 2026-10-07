@@ -1,0 +1,6 @@
+﻿fips.ForwardOperator.reindex
+============================
+
+.. currentmodule:: fips
+
+.. automethod:: ForwardOperator.reindex

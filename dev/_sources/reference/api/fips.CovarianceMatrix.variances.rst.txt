@@ -1,0 +1,6 @@
+﻿fips.CovarianceMatrix.variances
+===============================
+
+.. currentmodule:: fips
+
+.. autoproperty:: CovarianceMatrix.variances

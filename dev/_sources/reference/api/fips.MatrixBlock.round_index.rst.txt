@@ -1,0 +1,6 @@
+﻿fips.MatrixBlock.round\_index
+=============================
+
+.. currentmodule:: fips
+
+.. automethod:: MatrixBlock.round_index

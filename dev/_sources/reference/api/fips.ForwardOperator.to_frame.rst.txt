@@ -1,0 +1,6 @@
+﻿fips.ForwardOperator.to\_frame
+==============================
+
+.. currentmodule:: fips
+
+.. automethod:: ForwardOperator.to_frame

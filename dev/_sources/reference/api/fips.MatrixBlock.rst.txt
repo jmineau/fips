@@ -1,0 +1,43 @@
+﻿fips.MatrixBlock
+================
+
+.. currentmodule:: fips
+
+.. autoclass:: MatrixBlock
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~MatrixBlock.columns
+      ~MatrixBlock.index
+      ~MatrixBlock.is_sparse
+      ~MatrixBlock.shape
+      ~MatrixBlock.values
+      ~MatrixBlock.data
+      ~MatrixBlock.name
+      ~MatrixBlock.row_block
+      ~MatrixBlock.col_block
+   
+   
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~MatrixBlock.copy
+      ~MatrixBlock.from_file
+      ~MatrixBlock.reindex
+      ~MatrixBlock.round_index
+      ~MatrixBlock.to_dense
+      ~MatrixBlock.to_file
+      ~MatrixBlock.to_frame
+      ~MatrixBlock.to_numpy
+      ~MatrixBlock.to_sparse
+      ~MatrixBlock.xs
+   
+   

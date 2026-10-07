@@ -1,0 +1,47 @@
+﻿fips.InverseProblem
+===================
+
+.. currentmodule:: fips
+
+.. autoclass:: InverseProblem
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~InverseProblem.averaging_kernel
+      ~InverseProblem.desroziers
+      ~InverseProblem.estimator
+      ~InverseProblem.kalman_gain
+      ~InverseProblem.n_obs
+      ~InverseProblem.n_state
+      ~InverseProblem.obs_index
+      ~InverseProblem.posterior
+      ~InverseProblem.posterior_error
+      ~InverseProblem.posterior_obs
+      ~InverseProblem.prior_obs
+      ~InverseProblem.prior_obs_error
+      ~InverseProblem.state_index
+      ~InverseProblem.obs
+      ~InverseProblem.prior
+      ~InverseProblem.forward_operator
+      ~InverseProblem.prior_error
+      ~InverseProblem.modeldata_mismatch
+      ~InverseProblem.constant
+   
+   
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~InverseProblem.from_file
+      ~InverseProblem.get_block
+      ~InverseProblem.solve
+      ~InverseProblem.to_file
+   
+   

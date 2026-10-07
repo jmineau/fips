@@ -1,0 +1,6 @@
+﻿fips.InversionPipeline.get\_inputs
+==================================
+
+.. currentmodule:: fips
+
+.. automethod:: InversionPipeline.get_inputs

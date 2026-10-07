@@ -1,0 +1,44 @@
+﻿fips.Matrix
+===========
+
+.. currentmodule:: fips
+
+.. autoclass:: Matrix
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~Matrix.blocks
+      ~Matrix.columns
+      ~Matrix.index
+      ~Matrix.is_sparse
+      ~Matrix.shape
+      ~Matrix.values
+      ~Matrix.data
+      ~Matrix.name
+   
+   
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~Matrix.copy
+      ~Matrix.from_file
+      ~Matrix.reindex
+      ~Matrix.round_index
+      ~Matrix.scale
+      ~Matrix.to_dense
+      ~Matrix.to_file
+      ~Matrix.to_frame
+      ~Matrix.to_numpy
+      ~Matrix.to_sparse
+      ~Matrix.to_xarray
+      ~Matrix.xs
+   
+   

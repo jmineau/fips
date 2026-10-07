@@ -1,0 +1,6 @@
+﻿fips.Estimator.R2
+=================
+
+.. currentmodule:: fips
+
+.. autoproperty:: Estimator.R2

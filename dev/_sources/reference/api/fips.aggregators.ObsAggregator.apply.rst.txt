@@ -1,0 +1,6 @@
+﻿fips.aggregators.ObsAggregator.apply
+====================================
+
+.. currentmodule:: fips.aggregators
+
+.. automethod:: ObsAggregator.apply

@@ -1,0 +1,30 @@
+﻿fips.aggregators.ObsAggregator
+==============================
+
+.. currentmodule:: fips.aggregators
+
+.. autoclass:: ObsAggregator
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~ObsAggregator.by
+      ~ObsAggregator.level
+      ~ObsAggregator.freq
+      ~ObsAggregator.func
+      ~ObsAggregator.blocks
+   
+   
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~ObsAggregator.apply
+   
+   

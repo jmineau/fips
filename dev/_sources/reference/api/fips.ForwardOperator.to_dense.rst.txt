@@ -1,0 +1,6 @@
+﻿fips.ForwardOperator.to\_dense
+==============================
+
+.. currentmodule:: fips
+
+.. automethod:: ForwardOperator.to_dense

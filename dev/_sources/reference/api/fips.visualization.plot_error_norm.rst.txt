@@ -1,0 +1,6 @@
+﻿fips.visualization.plot\_error\_norm
+====================================
+
+.. currentmodule:: fips.visualization
+
+.. autofunction:: plot_error_norm

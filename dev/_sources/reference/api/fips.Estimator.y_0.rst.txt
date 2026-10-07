@@ -1,0 +1,6 @@
+﻿fips.Estimator.y\_0
+===================
+
+.. currentmodule:: fips
+
+.. autoproperty:: Estimator.y_0

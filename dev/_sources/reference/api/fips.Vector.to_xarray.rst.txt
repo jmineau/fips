@@ -1,0 +1,6 @@
+﻿fips.Vector.to\_xarray
+======================
+
+.. currentmodule:: fips
+
+.. automethod:: Vector.to_xarray

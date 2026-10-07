@@ -1,0 +1,6 @@
+﻿fips.indexes.round\_index
+=========================
+
+.. currentmodule:: fips.indexes
+
+.. autofunction:: round_index

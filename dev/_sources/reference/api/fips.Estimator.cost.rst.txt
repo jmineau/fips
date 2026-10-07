@@ -1,0 +1,6 @@
+﻿fips.Estimator.cost
+===================
+
+.. currentmodule:: fips
+
+.. automethod:: Estimator.cost

@@ -1,0 +1,46 @@
+﻿fips.CovarianceMatrix
+=====================
+
+.. currentmodule:: fips
+
+.. autoclass:: CovarianceMatrix
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~CovarianceMatrix.blocks
+      ~CovarianceMatrix.columns
+      ~CovarianceMatrix.index
+      ~CovarianceMatrix.is_sparse
+      ~CovarianceMatrix.shape
+      ~CovarianceMatrix.values
+      ~CovarianceMatrix.variances
+      ~CovarianceMatrix.data
+      ~CovarianceMatrix.name
+   
+   
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~CovarianceMatrix.copy
+      ~CovarianceMatrix.force_symmetry
+      ~CovarianceMatrix.from_file
+      ~CovarianceMatrix.reindex
+      ~CovarianceMatrix.round_index
+      ~CovarianceMatrix.scale
+      ~CovarianceMatrix.to_dense
+      ~CovarianceMatrix.to_file
+      ~CovarianceMatrix.to_frame
+      ~CovarianceMatrix.to_numpy
+      ~CovarianceMatrix.to_sparse
+      ~CovarianceMatrix.to_xarray
+      ~CovarianceMatrix.xs
+   
+   

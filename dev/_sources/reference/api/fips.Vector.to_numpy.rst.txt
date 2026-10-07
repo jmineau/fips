@@ -1,0 +1,6 @@
+﻿fips.Vector.to\_numpy
+=====================
+
+.. currentmodule:: fips
+
+.. automethod:: Vector.to_numpy

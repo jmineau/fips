@@ -1,0 +1,6 @@
+﻿fips.Estimator.RMSE
+===================
+
+.. currentmodule:: fips
+
+.. autoproperty:: Estimator.RMSE

@@ -1,0 +1,47 @@
+﻿fips.ForwardOperator
+====================
+
+.. currentmodule:: fips
+
+.. autoclass:: ForwardOperator
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~ForwardOperator.blocks
+      ~ForwardOperator.columns
+      ~ForwardOperator.index
+      ~ForwardOperator.is_sparse
+      ~ForwardOperator.obs_index
+      ~ForwardOperator.shape
+      ~ForwardOperator.state_index
+      ~ForwardOperator.values
+      ~ForwardOperator.data
+      ~ForwardOperator.name
+   
+   
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~ForwardOperator.convolve
+      ~ForwardOperator.copy
+      ~ForwardOperator.from_file
+      ~ForwardOperator.reindex
+      ~ForwardOperator.round_index
+      ~ForwardOperator.scale
+      ~ForwardOperator.to_dense
+      ~ForwardOperator.to_file
+      ~ForwardOperator.to_frame
+      ~ForwardOperator.to_numpy
+      ~ForwardOperator.to_sparse
+      ~ForwardOperator.to_xarray
+      ~ForwardOperator.xs
+   
+   

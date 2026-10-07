@@ -1,0 +1,6 @@
+﻿fips.Block.to\_xarray
+=====================
+
+.. currentmodule:: fips
+
+.. automethod:: Block.to_xarray

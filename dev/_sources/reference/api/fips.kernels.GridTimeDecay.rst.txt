@@ -1,0 +1,6 @@
+﻿fips.kernels.GridTimeDecay
+==========================
+
+.. currentmodule:: fips.kernels
+
+.. autofunction:: GridTimeDecay

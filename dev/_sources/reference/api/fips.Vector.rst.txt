@@ -1,0 +1,39 @@
+﻿fips.Vector
+===========
+
+.. currentmodule:: fips
+
+.. autoclass:: Vector
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~Vector.blocks
+      ~Vector.index
+      ~Vector.name
+      ~Vector.shape
+      ~Vector.values
+      ~Vector.data
+   
+   
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~Vector.copy
+      ~Vector.from_file
+      ~Vector.reindex
+      ~Vector.round_index
+      ~Vector.to_file
+      ~Vector.to_numpy
+      ~Vector.to_series
+      ~Vector.to_xarray
+      ~Vector.xs
+   
+   

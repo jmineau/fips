@@ -1,0 +1,6 @@
+﻿fips.problems.flux.pipeline.FluxInversionPipeline.summarize
+===========================================================
+
+.. currentmodule:: fips.problems.flux.pipeline
+
+.. automethod:: FluxInversionPipeline.summarize

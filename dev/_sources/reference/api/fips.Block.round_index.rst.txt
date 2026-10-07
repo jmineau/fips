@@ -1,0 +1,6 @@
+﻿fips.Block.round\_index
+=======================
+
+.. currentmodule:: fips
+
+.. automethod:: Block.round_index

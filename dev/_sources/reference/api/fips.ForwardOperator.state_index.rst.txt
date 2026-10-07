@@ -1,0 +1,6 @@
+﻿fips.ForwardOperator.state\_index
+=================================
+
+.. currentmodule:: fips
+
+.. autoproperty:: ForwardOperator.state_index

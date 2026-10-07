@@ -1,0 +1,27 @@
+﻿fips.covariance.ErrorComponent
+==============================
+
+.. currentmodule:: fips.covariance
+
+.. autoclass:: ErrorComponent
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~ErrorComponent.name
+      ~ErrorComponent.variances
+   
+   
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~ErrorComponent.build
+   
+   

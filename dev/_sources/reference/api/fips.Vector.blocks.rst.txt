@@ -1,0 +1,6 @@
+﻿fips.Vector.blocks
+==================
+
+.. currentmodule:: fips
+
+.. autoproperty:: Vector.blocks

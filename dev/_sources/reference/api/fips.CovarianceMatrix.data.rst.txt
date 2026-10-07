@@ -1,0 +1,6 @@
+﻿fips.CovarianceMatrix.data
+==========================
+
+.. currentmodule:: fips
+
+.. autoattribute:: CovarianceMatrix.data

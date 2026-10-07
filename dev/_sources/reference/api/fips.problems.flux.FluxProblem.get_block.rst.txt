@@ -1,0 +1,6 @@
+﻿fips.problems.flux.FluxProblem.get\_block
+=========================================
+
+.. currentmodule:: fips.problems.flux
+
+.. automethod:: FluxProblem.get_block

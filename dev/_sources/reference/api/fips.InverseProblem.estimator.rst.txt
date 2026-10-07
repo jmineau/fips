@@ -1,0 +1,6 @@
+﻿fips.InverseProblem.estimator
+=============================
+
+.. currentmodule:: fips
+
+.. autoproperty:: InverseProblem.estimator

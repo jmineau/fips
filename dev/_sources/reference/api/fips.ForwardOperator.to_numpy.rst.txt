@@ -1,0 +1,6 @@
+﻿fips.ForwardOperator.to\_numpy
+==============================
+
+.. currentmodule:: fips
+
+.. automethod:: ForwardOperator.to_numpy

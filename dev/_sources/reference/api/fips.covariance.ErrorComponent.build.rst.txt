@@ -1,0 +1,6 @@
+﻿fips.covariance.ErrorComponent.build
+====================================
+
+.. currentmodule:: fips.covariance
+
+.. automethod:: ErrorComponent.build

@@ -1,0 +1,6 @@
+﻿fips.InversionPipeline.get\_constant
+====================================
+
+.. currentmodule:: fips
+
+.. automethod:: InversionPipeline.get_constant

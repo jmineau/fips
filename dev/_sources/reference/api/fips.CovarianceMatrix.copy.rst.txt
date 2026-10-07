@@ -1,0 +1,6 @@
+﻿fips.CovarianceMatrix.copy
+==========================
+
+.. currentmodule:: fips
+
+.. automethod:: CovarianceMatrix.copy

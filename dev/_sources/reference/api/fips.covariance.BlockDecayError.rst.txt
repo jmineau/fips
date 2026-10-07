@@ -1,0 +1,29 @@
+﻿fips.covariance.BlockDecayError
+===============================
+
+.. currentmodule:: fips.covariance
+
+.. autoclass:: BlockDecayError
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~BlockDecayError.groupers
+      ~BlockDecayError.corr_func
+      ~BlockDecayError.name
+      ~BlockDecayError.variances
+   
+   
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~BlockDecayError.build
+   
+   

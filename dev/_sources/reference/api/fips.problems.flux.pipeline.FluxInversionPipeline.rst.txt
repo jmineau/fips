@@ -1,0 +1,38 @@
+﻿fips.problems.flux.pipeline.FluxInversionPipeline
+=================================================
+
+.. currentmodule:: fips.problems.flux.pipeline
+
+.. autoclass:: FluxInversionPipeline
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~FluxInversionPipeline.problem
+      ~FluxInversionPipeline.config
+      ~FluxInversionPipeline.estimator
+   
+   
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~FluxInversionPipeline.aggregate_obs_space
+      ~FluxInversionPipeline.filter_state_space
+      ~FluxInversionPipeline.get_constant
+      ~FluxInversionPipeline.get_forward_operator
+      ~FluxInversionPipeline.get_inputs
+      ~FluxInversionPipeline.get_modeldata_mismatch
+      ~FluxInversionPipeline.get_obs
+      ~FluxInversionPipeline.get_prior
+      ~FluxInversionPipeline.get_prior_error
+      ~FluxInversionPipeline.run
+      ~FluxInversionPipeline.summarize
+   
+   

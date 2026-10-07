@@ -1,0 +1,6 @@
+﻿fips.CovarianceMatrix.force\_symmetry
+=====================================
+
+.. currentmodule:: fips
+
+.. automethod:: CovarianceMatrix.force_symmetry

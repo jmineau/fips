@@ -1,0 +1,6 @@
+﻿fips.InverseProblem.solve
+=========================
+
+.. currentmodule:: fips
+
+.. automethod:: InverseProblem.solve

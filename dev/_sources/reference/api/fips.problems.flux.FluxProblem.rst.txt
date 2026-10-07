@@ -1,0 +1,60 @@
+﻿fips.problems.flux.FluxProblem
+==============================
+
+.. currentmodule:: fips.problems.flux
+
+.. autoclass:: FluxProblem
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~FluxProblem.averaging_kernel
+      ~FluxProblem.background
+      ~FluxProblem.concentration_error
+      ~FluxProblem.concentrations
+      ~FluxProblem.desroziers
+      ~FluxProblem.enhancement
+      ~FluxProblem.estimator
+      ~FluxProblem.jacobian
+      ~FluxProblem.kalman_gain
+      ~FluxProblem.n_obs
+      ~FluxProblem.n_state
+      ~FluxProblem.obs_index
+      ~FluxProblem.plot
+      ~FluxProblem.posterior
+      ~FluxProblem.posterior_concentrations
+      ~FluxProblem.posterior_error
+      ~FluxProblem.posterior_flux_error
+      ~FluxProblem.posterior_fluxes
+      ~FluxProblem.posterior_obs
+      ~FluxProblem.prior_concentration_error
+      ~FluxProblem.prior_concentrations
+      ~FluxProblem.prior_flux_error
+      ~FluxProblem.prior_fluxes
+      ~FluxProblem.prior_obs
+      ~FluxProblem.prior_obs_error
+      ~FluxProblem.state_index
+      ~FluxProblem.obs
+      ~FluxProblem.prior
+      ~FluxProblem.forward_operator
+      ~FluxProblem.prior_error
+      ~FluxProblem.modeldata_mismatch
+      ~FluxProblem.constant
+   
+   
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~FluxProblem.from_file
+      ~FluxProblem.get_block
+      ~FluxProblem.solve
+      ~FluxProblem.to_file
+   
+   

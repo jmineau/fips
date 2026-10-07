@@ -1,0 +1,6 @@
+﻿fips.MatrixBlock.row\_block
+===========================
+
+.. currentmodule:: fips
+
+.. autoattribute:: MatrixBlock.row_block

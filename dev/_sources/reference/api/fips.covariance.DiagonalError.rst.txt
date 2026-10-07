@@ -1,0 +1,27 @@
+﻿fips.covariance.DiagonalError
+=============================
+
+.. currentmodule:: fips.covariance
+
+.. autoclass:: DiagonalError
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~DiagonalError.name
+      ~DiagonalError.variances
+   
+   
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~DiagonalError.build
+   
+   

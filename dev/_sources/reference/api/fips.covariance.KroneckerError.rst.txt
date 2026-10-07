@@ -1,0 +1,28 @@
+﻿fips.covariance.KroneckerError
+==============================
+
+.. currentmodule:: fips.covariance
+
+.. autoclass:: KroneckerError
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~KroneckerError.marginal_kernels
+      ~KroneckerError.name
+      ~KroneckerError.variances
+   
+   
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~KroneckerError.build
+   
+   

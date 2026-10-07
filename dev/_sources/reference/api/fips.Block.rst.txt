@@ -1,0 +1,38 @@
+﻿fips.Block
+==========
+
+.. currentmodule:: fips
+
+.. autoclass:: Block
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~Block.index
+      ~Block.name
+      ~Block.shape
+      ~Block.values
+      ~Block.data
+   
+   
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~Block.copy
+      ~Block.from_file
+      ~Block.reindex
+      ~Block.round_index
+      ~Block.to_file
+      ~Block.to_numpy
+      ~Block.to_series
+      ~Block.to_xarray
+      ~Block.xs
+   
+   

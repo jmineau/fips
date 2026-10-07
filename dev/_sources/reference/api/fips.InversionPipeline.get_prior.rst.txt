@@ -1,0 +1,6 @@
+﻿fips.InversionPipeline.get\_prior
+=================================
+
+.. currentmodule:: fips
+
+.. automethod:: InversionPipeline.get_prior

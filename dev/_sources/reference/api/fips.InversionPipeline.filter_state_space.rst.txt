@@ -1,0 +1,6 @@
+﻿fips.InversionPipeline.filter\_state\_space
+===========================================
+
+.. currentmodule:: fips
+
+.. automethod:: InversionPipeline.filter_state_space

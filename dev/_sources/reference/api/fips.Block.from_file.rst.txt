@@ -1,0 +1,6 @@
+﻿fips.Block.from\_file
+=====================
+
+.. currentmodule:: fips
+
+.. automethod:: Block.from_file

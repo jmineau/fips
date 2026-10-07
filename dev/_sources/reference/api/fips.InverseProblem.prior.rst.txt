@@ -1,0 +1,6 @@
+﻿fips.InverseProblem.prior
+=========================
+
+.. currentmodule:: fips
+
+.. autoattribute:: InverseProblem.prior

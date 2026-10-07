@@ -1,0 +1,6 @@
+﻿fips.Vector.index
+=================
+
+.. currentmodule:: fips
+
+.. autoproperty:: Vector.index

@@ -1,0 +1,6 @@
+﻿fips.filters.select\_intervals\_with\_min\_obs
+==============================================
+
+.. currentmodule:: fips.filters
+
+.. autofunction:: select_intervals_with_min_obs

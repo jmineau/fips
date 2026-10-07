@@ -1,0 +1,44 @@
+﻿fips.estimators.BayesianSolver
+==============================
+
+.. currentmodule:: fips.estimators
+
+.. autoclass:: BayesianSolver
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~BayesianSolver.S_hat
+      ~BayesianSolver.S_y0
+      ~BayesianSolver.U_red
+      ~BayesianSolver.desroziers
+      ~BayesianSolver.reduced_chi2
+      ~BayesianSolver.uncertainty_reduction
+      ~BayesianSolver.x_hat
+      ~BayesianSolver.y_0
+      ~BayesianSolver.y_hat
+      ~BayesianSolver.gamma
+      ~BayesianSolver.z
+      ~BayesianSolver.x_0
+      ~BayesianSolver.S_z
+      ~BayesianSolver.c
+      ~BayesianSolver.n_z
+      ~BayesianSolver.n_x
+   
+   
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~BayesianSolver.cost
+      ~BayesianSolver.forward
+      ~BayesianSolver.leverage
+      ~BayesianSolver.residual
+   
+   

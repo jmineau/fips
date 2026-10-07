@@ -1,0 +1,6 @@
+﻿fips.problems.flux.pipeline.FluxInversionPipeline.estimator
+===========================================================
+
+.. currentmodule:: fips.problems.flux.pipeline
+
+.. autoattribute:: FluxInversionPipeline.estimator

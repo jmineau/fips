@@ -1,0 +1,6 @@
+﻿fips.InverseProblem.get\_block
+==============================
+
+.. currentmodule:: fips
+
+.. automethod:: InverseProblem.get_block

@@ -1,0 +1,27 @@
+﻿fips.problems.flux.visualization.FluxPlotter
+============================================
+
+.. currentmodule:: fips.problems.flux.visualization
+
+.. autoclass:: FluxPlotter
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~FluxPlotter.inversion
+   
+   
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~FluxPlotter.concentrations
+      ~FluxPlotter.fluxes
+   
+   

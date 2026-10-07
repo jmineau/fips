@@ -1,0 +1,6 @@
+﻿fips.InverseProblem.averaging\_kernel
+=====================================
+
+.. currentmodule:: fips
+
+.. autoproperty:: InverseProblem.averaging_kernel

@@ -1,0 +1,6 @@
+﻿fips.Matrix.to\_sparse
+======================
+
+.. currentmodule:: fips
+
+.. automethod:: Matrix.to_sparse

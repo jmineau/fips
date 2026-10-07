@@ -1,0 +1,6 @@
+﻿fips.indexes.resolve\_axes
+==========================
+
+.. currentmodule:: fips.indexes
+
+.. autofunction:: resolve_axes

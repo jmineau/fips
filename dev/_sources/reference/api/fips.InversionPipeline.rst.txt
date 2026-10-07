@@ -1,0 +1,36 @@
+﻿fips.InversionPipeline
+======================
+
+.. currentmodule:: fips
+
+.. autoclass:: InversionPipeline
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~InversionPipeline.config
+      ~InversionPipeline.estimator
+   
+   
+
+   
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~InversionPipeline.aggregate_obs_space
+      ~InversionPipeline.filter_state_space
+      ~InversionPipeline.get_constant
+      ~InversionPipeline.get_forward_operator
+      ~InversionPipeline.get_inputs
+      ~InversionPipeline.get_modeldata_mismatch
+      ~InversionPipeline.get_obs
+      ~InversionPipeline.get_prior
+      ~InversionPipeline.get_prior_error
+      ~InversionPipeline.run
+   
+   
