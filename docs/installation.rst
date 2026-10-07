@@ -33,6 +33,9 @@ Development Installation
 
    git clone https://github.com/jmineau/fips.git
    cd fips
-   python -m pip install --upgrade pip
-   uv sync --dev
-   pre-commit install
+   uv sync                    # fips, its flux extra, and the dev tools
+   uv run pre-commit install
+   uv run just quality-check
+
+Building the docs also needs `Pandoc <https://pandoc.org/installing.html>`_.
+See ``CONTRIBUTING.md`` for the full workflow.

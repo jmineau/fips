@@ -5,7 +5,7 @@ Operators
 .. currentmodule:: fips
 
 Operators perfom mathematical operations on blocks and vectors, such as addition, multiplication, etc.
-The `ForwardOperator` class represents the forward operator in an inverse problem, and provides methods for applying the operator and its adjoint to vectors.
+The ``ForwardOperator`` class represents the forward operator in an inverse problem, and provides methods for applying the operator and its adjoint to vectors.
 
 
 ForwardOperator
@@ -82,7 +82,7 @@ Convolution
 
 .. currentmodule:: fips.operators
 
-The `convolve` method applies the forward operator to a vector, and can be used to compute the predicted observations given a model state.
+The ``convolve`` method applies the forward operator to a vector, and can be used to compute the predicted observations given a model state.
 
 .. autosummary::
    :toctree: api/

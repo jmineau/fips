@@ -97,7 +97,8 @@ class FluxInversionPipeline(InversionPipeline[FluxProblem], ABC):
         return obs, prior
 
     def run(self, estimator_kwargs: dict | None = None, **kwargs) -> FluxProblem:
-        """Run the flux inversion pipeline.
+        """
+        Run the flux inversion pipeline.
 
         Parameters
         ----------

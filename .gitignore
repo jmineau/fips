@@ -2,13 +2,12 @@
 *.local.md
 .claude/settings.local.json
 .aider*
-.pyrefly_cache/
 
-# Documentation generated files #
-#################################
-docs/_build/
+# Generated docs and test reports
+docs/_autosummary/
 docs/reference/api/
-
+junit.xml
+.pyrefly_cache/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

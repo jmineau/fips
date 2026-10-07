@@ -59,7 +59,8 @@ def test_integrate_raises_missing_dim():
 
 
 def test_integrate_over_time_bins_datetime_subtype_compat():
-    """Test that integrate_over_time_bins handles different datetime subtypes correctly.
+    """
+    Test that integrate_over_time_bins handles different datetime subtypes correctly.
 
     This ensures pandas 3.x compatibility where datetime64[ns] and datetime64[us]
     subtypes must be matched to avoid ValueError in pd.cut.
