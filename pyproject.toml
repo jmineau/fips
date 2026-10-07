@@ -1,21 +1,21 @@
 [build-system]
-requires = ["setuptools>=61.0", "wheel"]
+requires = ["setuptools>=77", "setuptools-scm>=8"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "fips"
-version = "0.1.0b8"
+dynamic = ["version"]  # from git tags, via setuptools-scm
 description = "Flexible Inverse Problem Solver (FIPS)"
 readme = "README.md"
 requires-python = ">=3.10"
-license = {text = "MIT"}
+license = "MIT"
+license-files = ["LICENSE"]
 authors = [
     {name = "James Mineau", email = "jameskmineau@gmail.com"}
 ]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
-    "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
@@ -50,6 +50,7 @@ dev = [
     "pyright[nodejs]>=1.1.0",
     "pytest>=7.0.0",
     "pytest-cov>=4.0.0",
+    "setuptools-scm>=8",
     "ruff>=0.1.0",
     "sphinx>=7.0.0",
     "sphinx-autodoc-typehints>=1.24.0",
@@ -128,3 +129,14 @@ where = ["src"]
 
 [tool.setuptools.package-data]
 "fips" = ["py.typed"]
+
+[tool.setuptools_scm]
+# Releases are git tags vX.Y.Z (see CONTRIBUTING.md). Between releases the
+# version is the next one as a dev version, e.g. 0.1.0b9.dev3+g1a2b3c4.
+fallback_version = "0.0.0"  # no git metadata at all (e.g. a bare source copy)
+
+[tool.uv]
+required-version = ">=0.12"
+# Rebuild the editable install when pyproject.toml or the git state changes, so
+# `__version__` follows new commits and tags.
+cache-keys = [{ file = "pyproject.toml" }, { git = { commit = true, tags = true } }]
