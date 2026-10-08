@@ -1,5 +1,5 @@
 # Changes here will be overwritten by Copier; NEVER EDIT MANUALLY
-_commit: v1.0.0
+_commit: v1.1.1
 _src_path: gh:jmineau/python-template
 affiliation: University of Utah
 copyright_year: '2026'
@@ -14,3 +14,7 @@ project_short_description: Flexible Inverse Problem Solver (FIPS)
 publish_to_pypi: true
 python_min: '3.11'
 repository_name: fips
+test_os:
+- ubuntu-latest
+- macos-latest
+- windows-latest

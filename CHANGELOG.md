@@ -10,6 +10,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - `fips.__version__`.
+- The API reference has a page for each class, with tables of its attributes and
+  methods, and a subclass links to the members it inherits. The base classes
+  (`fips.base`) and `Estimator` have reference pages.
 
 ### Changed
 
