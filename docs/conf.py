@@ -5,6 +5,10 @@
 
 import datetime
 import importlib.metadata
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).parent / "_ext"))
 
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
@@ -28,6 +32,7 @@ extensions = [
     "sphinx.ext.autosummary",
     "sphinx.ext.napoleon",
     "sphinx.ext.viewcode",
+    "api_pages",  # _ext/api_pages.py: class pages with member tables
     "sphinx.ext.intersphinx",
     "sphinx_autodoc_typehints",
     "sphinx_copybutton",
@@ -88,7 +93,7 @@ napoleon_include_special_with_doc = True
 napoleon_use_admonition_for_examples = False
 napoleon_use_admonition_for_notes = False
 napoleon_use_admonition_for_references = False
-napoleon_use_ivar = False
+napoleon_use_ivar = True  # what a class page's tables leave in "Attributes"
 napoleon_use_param = True
 napoleon_use_rtype = True
 napoleon_preprocess_types = False
@@ -116,52 +121,3 @@ intersphinx_mapping = {
     "scipy": ("https://docs.scipy.org/doc/scipy/", None),
     "xarray": ("https://docs.xarray.dev/en/stable/", None),
 }
-
-
-def process_class_docstrings(app, what, name, obj, options, lines) -> None:
-    """
-    Process class docstrings to remove empty autosummary sections.
-
-    For classes using custom autosummary templates, this removes any
-    Attributes or Methods sections that contain only 'None' as placeholder,
-    preventing Sphinx warnings and ugly HTML output.
-
-    This is called during the "autodoc-process-docstring" event for each
-    docstring being processed.
-    """
-    if what == "class":
-        joined = "\n".join(lines)
-
-        templates = [
-            """.. rubric:: Attributes
-
-.. autosummary::
-   :toctree:
-
-   None
-""",
-            """.. rubric:: Methods
-
-.. autosummary::
-   :toctree:
-
-   None
-""",
-        ]
-
-        for template in templates:
-            if template in joined:
-                joined = joined.replace(template, "")
-        lines[:] = joined.split("\n")
-
-
-def setup(app):
-    """
-    Set up Sphinx extension hooks.
-
-    Parameters
-    ----------
-    app : sphinx.application.Sphinx
-        The Sphinx application object.
-    """
-    app.connect("autodoc-process-docstring", process_class_docstrings)

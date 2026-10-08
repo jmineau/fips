@@ -182,6 +182,13 @@ The tooling comes from
   shipped — keep new public API fully typed.
 - **Docstrings**: numpy convention, format docstring code blocks
   (`docstring-code-format = true`).
+- **Docs**: `docs/reference/` groups the API by topic, as pandas does. Each
+  class also gets its own page, with tables of its attributes and methods, and
+  each member a page of its own; a subclass lists what it defines and links to
+  what it inherits (`docs/_templates/autosummary/` and `docs/_ext/api_pages.py`,
+  from python-template). Document a new base class in `reference/base.rst`, or
+  its inherited members show as plain names. Give each public property a
+  docstring: an undocumented one shows an empty row.
 - **Coverage**: configured in `pyproject.toml`; `tests/` is the only
   testpath. `coverage.exclude_also` skips `__repr__`, abstract methods,
   `if __name__ == "__main__":`, etc.
