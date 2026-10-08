@@ -159,7 +159,7 @@ Driven by `just` + `uv`; CI runs the same recipes.
 | `just clean` | wipe build, dist, coverage, caches, `__pycache__`, docs build |
 
 Workflows in `.github/workflows/`: `tests.yml` (Linux/macOS/Windows x Python
-3.11-3.14), `quality.yml`, `docs.yml` (versioned docs on GitHub Pages: `dev/`
+3.11-3.14), `quality.yml`, `docs.yml` (versioned docs: it pushes the gh-pages branch, which GitHub Pages serves; `dev/`
 from main, one folder per release, `stable/`), and `publish.yml` (a `vX.Y.Z`
 tag builds the release, uploads it to PyPI by trusted publishing, and creates
 the GitHub Release from its CHANGELOG section). The version comes from git tags
