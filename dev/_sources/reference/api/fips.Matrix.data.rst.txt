@@ -1,4 +1,4 @@
-﻿fips.Matrix.data
+fips.Matrix.data
 ================
 
 .. currentmodule:: fips

@@ -1,0 +1,6 @@
+fips.estimators.BayesianSolver.gamma
+====================================
+
+.. currentmodule:: fips.estimators
+
+.. autoattribute:: BayesianSolver.gamma

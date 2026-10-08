@@ -4,43 +4,46 @@
 .. currentmodule:: fips
 
 .. autoclass:: CovarianceMatrix
+   :no-members:
+   :show-inheritance:
 
-   
-   
-   .. rubric:: Attributes
 
-   .. autosummary::
-   
-      ~CovarianceMatrix.blocks
-      ~CovarianceMatrix.columns
-      ~CovarianceMatrix.index
-      ~CovarianceMatrix.is_sparse
-      ~CovarianceMatrix.shape
-      ~CovarianceMatrix.values
-      ~CovarianceMatrix.variances
-      ~CovarianceMatrix.data
-      ~CovarianceMatrix.name
-   
-   
 
-   
-   
-   .. rubric:: Methods
 
-   .. autosummary::
-   
-      ~CovarianceMatrix.copy
-      ~CovarianceMatrix.force_symmetry
-      ~CovarianceMatrix.from_file
-      ~CovarianceMatrix.reindex
-      ~CovarianceMatrix.round_index
-      ~CovarianceMatrix.scale
-      ~CovarianceMatrix.to_dense
-      ~CovarianceMatrix.to_file
-      ~CovarianceMatrix.to_frame
-      ~CovarianceMatrix.to_numpy
-      ~CovarianceMatrix.to_sparse
-      ~CovarianceMatrix.to_xarray
-      ~CovarianceMatrix.xs
-   
-   
+.. rubric:: Attributes
+
+.. autosummary::
+   :toctree:
+
+   ~CovarianceMatrix.variances
+
+
+
+.. rubric:: Methods
+
+.. autosummary::
+   :toctree:
+
+   ~CovarianceMatrix.force_symmetry
+
+
+
+
+.. rubric:: Inherited
+
+
+From :class:`~.Matrix`: :py:obj:`~.Matrix.blocks`, :py:obj:`~.Matrix.data`, :py:obj:`~.Matrix.scale`, :py:obj:`~.Matrix.to_xarray`
+
+
+
+From :class:`~.Structure2D`: :py:obj:`~.Structure2D.columns`, :py:obj:`~.Structure2D.is_sparse`, :py:obj:`~.Structure2D.name`, :py:obj:`~.Structure2D.to_dense`, :py:obj:`~.Structure2D.to_frame`, :py:obj:`~.Structure2D.to_sparse`, :py:obj:`~.Structure2D.values`
+
+
+
+From :class:`~.Structure`: :py:obj:`~.Structure.copy`, :py:obj:`~.Structure.reindex`, :py:obj:`~.Structure.round_index`, :py:obj:`~.Structure.shape`, :py:obj:`~.Structure.to_numpy`, :py:obj:`~.Structure.xs`
+
+
+
+From :class:`~.Pickleable`: :py:obj:`~.Pickleable.from_file`, :py:obj:`~.Pickleable.to_file`
+
+

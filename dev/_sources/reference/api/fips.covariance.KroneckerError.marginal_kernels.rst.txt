@@ -1,0 +1,6 @@
+fips.covariance.KroneckerError.marginal\_kernels
+================================================
+
+.. currentmodule:: fips.covariance
+
+.. autoattribute:: KroneckerError.marginal_kernels

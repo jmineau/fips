@@ -1,4 +1,4 @@
-﻿fips.covariance.CovarianceBuilder.build
+fips.covariance.CovarianceBuilder.build
 =======================================
 
 .. currentmodule:: fips.covariance

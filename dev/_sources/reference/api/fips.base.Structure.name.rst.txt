@@ -1,0 +1,6 @@
+fips.base.Structure.name
+========================
+
+.. currentmodule:: fips.base
+
+.. autoattribute:: Structure.name

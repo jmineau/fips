@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>fips.estimators &#8212; fips 0.1.0b9.dev7+g7eb35d62e documentation</title>
+    <title>fips.estimators &#8212; fips 0.1.0b9.dev8+gf2fc85b25 documentation</title>
   
   
   
@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=277e9a98"></script>
+    <script src="../../_static/documentation_options.js?v=c055b280"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -123,8 +123,8 @@
       
     
     
-    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.1.0b9.dev7+g7eb35d62e documentation - Home"/>
-    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.1.0b9.dev7+g7eb35d62e documentation - Home"/>
+    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.1.0b9.dev8+gf2fc85b25 documentation - Home"/>
+    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.1.0b9.dev8+gf2fc85b25 documentation - Home"/>
   
   
 </a></div>
@@ -549,6 +549,8 @@
     <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">ESTIMATOR_REGISTRY</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
 
 
+<div class="viewcode-block" id="Estimator">
+<a class="viewcode-back" href="../../reference/api/fips.Estimator.html#fips.Estimator">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">Estimator</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Base inversion estimator class.</span>
@@ -872,6 +874,8 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_HS_0</span> <span class="o">@</span> <span class="bp">self</span><span class="o">.</span><span class="n">_H_T</span>
 
+<div class="viewcode-block" id="Estimator.S_y0">
+<a class="viewcode-back" href="../../reference/api/fips.Estimator.S_y0.html#fips.Estimator.S_y0">[docs]</a>
     <span class="nd">@cached_property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">S_y0</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
@@ -887,8 +891,11 @@
 <span class="sd">        diagonal is the prior&#39;s share of the error budget at each</span>
 <span class="sd">        observation, alongside the model-data mismatch ``S_z``.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_HS_0H</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_HS_0H</span></div>
 
+
+<div class="viewcode-block" id="Estimator.DOFS">
+<a class="viewcode-back" href="../../reference/api/fips.Estimator.DOFS.html#fips.Estimator.DOFS">[docs]</a>
     <span class="nd">@cached_property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">DOFS</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -902,7 +909,8 @@
 <span class="sd">        float</span>
 <span class="sd">            Degrees of Freedom value.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">A</span><span class="p">))</span>
+        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">A</span><span class="p">))</span></div>
+
 
 <div class="viewcode-block" id="Estimator.reduced_chi2">
 <a class="viewcode-back" href="../../reference/api/fips.Estimator.reduced_chi2.html#fips.Estimator.reduced_chi2">[docs]</a>
@@ -1003,6 +1011,8 @@
         <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">S_hat</span><span class="p">))</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">S_0</span><span class="p">))))</span></div>
 
 
+<div class="viewcode-block" id="Estimator.desroziers">
+<a class="viewcode-back" href="../../reference/api/fips.Estimator.desroziers.html#fips.Estimator.desroziers">[docs]</a>
     <span class="nd">@cached_property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">desroziers</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
@@ -1034,7 +1044,8 @@
         <span class="n">d_b</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">residual</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x_0</span><span class="p">)</span>  <span class="c1"># innovation</span>
         <span class="n">d_a</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">residual</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x_hat</span><span class="p">)</span>  <span class="c1"># analysis departure</span>
         <span class="n">raw</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">outer</span><span class="p">(</span><span class="n">d_a</span><span class="p">,</span> <span class="n">d_b</span><span class="p">)</span>
-        <span class="k">return</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">raw</span> <span class="o">+</span> <span class="n">raw</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+        <span class="k">return</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">raw</span> <span class="o">+</span> <span class="n">raw</span><span class="o">.</span><span class="n">T</span><span class="p">)</span></div>
+
 
 <div class="viewcode-block" id="Estimator.U_red">
 <a class="viewcode-back" href="../../reference/api/fips.Estimator.U_red.html#fips.Estimator.U_red">[docs]</a>
@@ -1053,6 +1064,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Calculating uncertainty reduction vector...&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">S_hat</span><span class="p">))</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">S_0</span><span class="p">))))</span> <span class="o">*</span> <span class="mf">100.0</span></div>
+</div>
 
 
 

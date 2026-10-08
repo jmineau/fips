@@ -1,4 +1,4 @@
-﻿fips.InversionPipeline.get\_prior\_error
+fips.InversionPipeline.get\_prior\_error
 ========================================
 
 .. currentmodule:: fips

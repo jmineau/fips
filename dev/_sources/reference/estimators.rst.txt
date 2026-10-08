@@ -12,6 +12,13 @@ Estimators
 Estimator (Base Class)
 ======================
 
+Constructor
+~~~~~~~~~~~
+.. autosummary::
+   :toctree: api/
+
+   Estimator
+
 Inputs
 ~~~~~~
 .. autosummary::

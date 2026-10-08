@@ -1,4 +1,4 @@
-﻿fips.InversionPipeline.aggregate\_obs\_space
+fips.InversionPipeline.aggregate\_obs\_space
 ============================================
 
 .. currentmodule:: fips

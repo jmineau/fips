@@ -1,4 +1,4 @@
-﻿fips.Estimator.y\_hat
+fips.Estimator.y\_hat
 =====================
 
 .. currentmodule:: fips

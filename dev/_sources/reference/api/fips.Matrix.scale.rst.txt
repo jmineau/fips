@@ -1,4 +1,4 @@
-﻿fips.Matrix.scale
+fips.Matrix.scale
 =================
 
 .. currentmodule:: fips

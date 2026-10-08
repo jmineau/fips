@@ -1,0 +1,54 @@
+﻿fips.Estimator
+==============
+
+.. currentmodule:: fips
+
+.. autoclass:: Estimator
+   :no-members:
+   :show-inheritance:
+
+
+
+
+.. rubric:: Attributes
+
+.. autosummary::
+   :toctree:
+
+   ~Estimator.A
+   ~Estimator.c
+   ~Estimator.desroziers
+   ~Estimator.DOFS
+   ~Estimator.H
+   ~Estimator.K
+   ~Estimator.n_x
+   ~Estimator.n_z
+   ~Estimator.R2
+   ~Estimator.reduced_chi2
+   ~Estimator.RMSE
+   ~Estimator.S_0
+   ~Estimator.S_hat
+   ~Estimator.S_y0
+   ~Estimator.S_z
+   ~Estimator.U_red
+   ~Estimator.uncertainty_reduction
+   ~Estimator.x_0
+   ~Estimator.x_hat
+   ~Estimator.y_0
+   ~Estimator.y_hat
+   ~Estimator.z
+
+
+
+.. rubric:: Methods
+
+.. autosummary::
+   :toctree:
+
+   ~Estimator.cost
+   ~Estimator.forward
+   ~Estimator.leverage
+   ~Estimator.residual
+
+
+

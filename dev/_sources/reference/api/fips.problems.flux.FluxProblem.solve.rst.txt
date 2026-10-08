@@ -1,4 +1,4 @@
-﻿fips.problems.flux.FluxProblem.solve
+fips.problems.flux.FluxProblem.solve
 ====================================
 
 .. currentmodule:: fips.problems.flux

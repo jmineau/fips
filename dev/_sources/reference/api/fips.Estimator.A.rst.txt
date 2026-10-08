@@ -1,4 +1,4 @@
-﻿fips.Estimator.A
+fips.Estimator.A
 ================
 
 .. currentmodule:: fips

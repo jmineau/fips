@@ -1,0 +1,6 @@
+fips.base.Pickleable.to\_file
+=============================
+
+.. currentmodule:: fips.base
+
+.. automethod:: Pickleable.to_file

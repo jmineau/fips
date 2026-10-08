@@ -1,4 +1,4 @@
-﻿fips.ForwardOperator.convolve
+fips.ForwardOperator.convolve
 =============================
 
 .. currentmodule:: fips

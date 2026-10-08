@@ -1,4 +1,4 @@
-﻿fips.CovarianceMatrix.force\_symmetry
+fips.CovarianceMatrix.force\_symmetry
 =====================================
 
 .. currentmodule:: fips

@@ -1,0 +1,6 @@
+fips.base.MultiBlockMixin.blocks
+================================
+
+.. currentmodule:: fips.base
+
+.. autoproperty:: MultiBlockMixin.blocks

@@ -1,4 +1,4 @@
-﻿fips.InversionPipeline.get\_modeldata\_mismatch
+fips.InversionPipeline.get\_modeldata\_mismatch
 ===============================================
 
 .. currentmodule:: fips

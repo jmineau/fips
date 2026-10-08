@@ -1,4 +1,4 @@
-﻿fips.InverseProblem.get\_block
+fips.InverseProblem.get\_block
 ==============================
 
 .. currentmodule:: fips

@@ -1,4 +1,4 @@
-﻿fips.InverseProblem.posterior
+fips.InverseProblem.posterior
 =============================
 
 .. currentmodule:: fips

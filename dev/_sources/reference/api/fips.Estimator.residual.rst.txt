@@ -1,4 +1,4 @@
-﻿fips.Estimator.residual
+fips.Estimator.residual
 =======================
 
 .. currentmodule:: fips

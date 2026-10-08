@@ -4,57 +4,50 @@
 .. currentmodule:: fips.problems.flux
 
 .. autoclass:: FluxProblem
+   :no-members:
+   :show-inheritance:
 
-   
-   
-   .. rubric:: Attributes
 
-   .. autosummary::
-   
-      ~FluxProblem.averaging_kernel
-      ~FluxProblem.background
-      ~FluxProblem.concentration_error
-      ~FluxProblem.concentrations
-      ~FluxProblem.desroziers
-      ~FluxProblem.enhancement
-      ~FluxProblem.estimator
-      ~FluxProblem.jacobian
-      ~FluxProblem.kalman_gain
-      ~FluxProblem.n_obs
-      ~FluxProblem.n_state
-      ~FluxProblem.obs_index
-      ~FluxProblem.plot
-      ~FluxProblem.posterior
-      ~FluxProblem.posterior_concentrations
-      ~FluxProblem.posterior_error
-      ~FluxProblem.posterior_flux_error
-      ~FluxProblem.posterior_fluxes
-      ~FluxProblem.posterior_obs
-      ~FluxProblem.prior_concentration_error
-      ~FluxProblem.prior_concentrations
-      ~FluxProblem.prior_flux_error
-      ~FluxProblem.prior_fluxes
-      ~FluxProblem.prior_obs
-      ~FluxProblem.prior_obs_error
-      ~FluxProblem.state_index
-      ~FluxProblem.obs
-      ~FluxProblem.prior
-      ~FluxProblem.forward_operator
-      ~FluxProblem.prior_error
-      ~FluxProblem.modeldata_mismatch
-      ~FluxProblem.constant
-   
-   
 
-   
-   
-   .. rubric:: Methods
 
-   .. autosummary::
-   
-      ~FluxProblem.from_file
-      ~FluxProblem.get_block
-      ~FluxProblem.solve
-      ~FluxProblem.to_file
-   
-   
+.. rubric:: Attributes
+
+.. autosummary::
+   :toctree:
+
+   ~FluxProblem.background
+   ~FluxProblem.concentration_error
+   ~FluxProblem.concentrations
+   ~FluxProblem.enhancement
+   ~FluxProblem.jacobian
+   ~FluxProblem.plot
+   ~FluxProblem.posterior_concentrations
+   ~FluxProblem.posterior_flux_error
+   ~FluxProblem.posterior_fluxes
+   ~FluxProblem.prior_concentration_error
+   ~FluxProblem.prior_concentrations
+   ~FluxProblem.prior_flux_error
+   ~FluxProblem.prior_fluxes
+
+
+
+.. rubric:: Methods
+
+.. autosummary::
+   :toctree:
+
+   ~FluxProblem.solve
+
+
+
+
+.. rubric:: Inherited
+
+
+From :class:`~.InverseProblem`: :py:obj:`~.InverseProblem.averaging_kernel`, :py:obj:`~.InverseProblem.constant`, :py:obj:`~.InverseProblem.desroziers`, :py:obj:`~.InverseProblem.estimator`, :py:obj:`~.InverseProblem.forward_operator`, :py:obj:`~.InverseProblem.get_block`, :py:obj:`~.InverseProblem.kalman_gain`, :py:obj:`~.InverseProblem.modeldata_mismatch`, :py:obj:`~.InverseProblem.n_obs`, :py:obj:`~.InverseProblem.n_state`, :py:obj:`~.InverseProblem.obs`, :py:obj:`~.InverseProblem.obs_index`, :py:obj:`~.InverseProblem.posterior`, :py:obj:`~.InverseProblem.posterior_error`, :py:obj:`~.InverseProblem.posterior_obs`, :py:obj:`~.InverseProblem.prior`, :py:obj:`~.InverseProblem.prior_error`, :py:obj:`~.InverseProblem.prior_obs`, :py:obj:`~.InverseProblem.prior_obs_error`, :py:obj:`~.InverseProblem.state_index`
+
+
+
+From :class:`~.Pickleable`: :py:obj:`~.Pickleable.from_file`, :py:obj:`~.Pickleable.to_file`
+
+

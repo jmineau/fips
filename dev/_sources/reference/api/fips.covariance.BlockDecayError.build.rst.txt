@@ -1,0 +1,6 @@
+fips.covariance.BlockDecayError.build
+=====================================
+
+.. currentmodule:: fips.covariance
+
+.. automethod:: BlockDecayError.build

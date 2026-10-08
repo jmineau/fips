@@ -1,4 +1,4 @@
-﻿fips.InversionPipeline.get\_obs
+fips.InversionPipeline.get\_obs
 ===============================
 
 .. currentmodule:: fips

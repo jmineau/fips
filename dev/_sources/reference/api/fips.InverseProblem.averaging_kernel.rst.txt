@@ -1,4 +1,4 @@
-﻿fips.InverseProblem.averaging\_kernel
+fips.InverseProblem.averaging\_kernel
 =====================================
 
 .. currentmodule:: fips

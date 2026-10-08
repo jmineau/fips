@@ -1,4 +1,4 @@
-﻿fips.problems.flux.pipeline.FluxInversionPipeline.filter\_state\_space
+fips.problems.flux.pipeline.FluxInversionPipeline.filter\_state\_space
 ======================================================================
 
 .. currentmodule:: fips.problems.flux.pipeline

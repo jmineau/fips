@@ -1,4 +1,4 @@
-﻿fips.InverseProblem.modeldata\_mismatch
+fips.InverseProblem.modeldata\_mismatch
 =======================================
 
 .. currentmodule:: fips

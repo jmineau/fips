@@ -1,4 +1,4 @@
-﻿fips.InversionPipeline.filter\_state\_space
+fips.InversionPipeline.filter\_state\_space
 ===========================================
 
 .. currentmodule:: fips

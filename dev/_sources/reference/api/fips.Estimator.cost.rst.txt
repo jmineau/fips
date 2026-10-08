@@ -1,4 +1,4 @@
-﻿fips.Estimator.cost
+fips.Estimator.cost
 ===================
 
 .. currentmodule:: fips

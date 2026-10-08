@@ -1,4 +1,4 @@
-﻿fips.aggregators.ObsAggregator.apply
+fips.aggregators.ObsAggregator.apply
 ====================================
 
 .. currentmodule:: fips.aggregators

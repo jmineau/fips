@@ -1,4 +1,4 @@
-﻿fips.Estimator.RMSE
+fips.Estimator.RMSE
 ===================
 
 .. currentmodule:: fips

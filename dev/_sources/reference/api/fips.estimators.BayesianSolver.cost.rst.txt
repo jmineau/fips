@@ -1,4 +1,4 @@
-﻿fips.estimators.BayesianSolver.cost
+fips.estimators.BayesianSolver.cost
 ===================================
 
 .. currentmodule:: fips.estimators

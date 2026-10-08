@@ -1,4 +1,4 @@
-﻿fips.InversionPipeline.run
+fips.InversionPipeline.run
 ==========================
 
 .. currentmodule:: fips

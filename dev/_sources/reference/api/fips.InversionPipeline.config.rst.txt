@@ -1,0 +1,6 @@
+fips.InversionPipeline.config
+=============================
+
+.. currentmodule:: fips
+
+.. autoattribute:: InversionPipeline.config

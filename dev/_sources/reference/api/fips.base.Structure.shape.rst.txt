@@ -1,0 +1,6 @@
+fips.base.Structure.shape
+=========================
+
+.. currentmodule:: fips.base
+
+.. autoproperty:: Structure.shape

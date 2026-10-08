@@ -1,0 +1,16 @@
+﻿fips.base.SingleBlockMixin
+==========================
+
+.. currentmodule:: fips.base
+
+.. autoclass:: SingleBlockMixin
+   :no-members:
+   :show-inheritance:
+
+
+
+
+
+
+
+

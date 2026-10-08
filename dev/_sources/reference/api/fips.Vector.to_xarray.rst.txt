@@ -1,4 +1,4 @@
-﻿fips.Vector.to\_xarray
+fips.Vector.to\_xarray
 ======================
 
 .. currentmodule:: fips

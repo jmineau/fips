@@ -1,4 +1,4 @@
-﻿fips.problems.flux.visualization.FluxPlotter.fluxes
+fips.problems.flux.visualization.FluxPlotter.fluxes
 ===================================================
 
 .. currentmodule:: fips.problems.flux.visualization

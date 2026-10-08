@@ -1,0 +1,6 @@
+fips.aggregators.ObsAggregator.level
+====================================
+
+.. currentmodule:: fips.aggregators
+
+.. autoattribute:: ObsAggregator.level

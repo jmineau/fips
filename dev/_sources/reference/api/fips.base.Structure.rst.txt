@@ -1,0 +1,45 @@
+﻿fips.base.Structure
+===================
+
+.. currentmodule:: fips.base
+
+.. autoclass:: Structure
+   :no-members:
+   :show-inheritance:
+
+
+
+
+.. rubric:: Attributes
+
+.. autosummary::
+   :toctree:
+
+   ~Structure.data
+   ~Structure.index
+   ~Structure.name
+   ~Structure.shape
+   ~Structure.values
+
+
+
+.. rubric:: Methods
+
+.. autosummary::
+   :toctree:
+
+   ~Structure.copy
+   ~Structure.reindex
+   ~Structure.round_index
+   ~Structure.to_numpy
+   ~Structure.xs
+
+
+
+
+.. rubric:: Inherited
+
+
+From :class:`~.Pickleable`: :py:obj:`~.Pickleable.from_file`, :py:obj:`~.Pickleable.to_file`
+
+

@@ -1,4 +1,4 @@
-﻿fips.MatrixBlock.col\_block
+fips.MatrixBlock.col\_block
 ===========================
 
 .. currentmodule:: fips

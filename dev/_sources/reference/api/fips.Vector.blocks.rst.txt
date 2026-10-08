@@ -1,4 +1,4 @@
-﻿fips.Vector.blocks
+fips.Vector.blocks
 ==================
 
 .. currentmodule:: fips

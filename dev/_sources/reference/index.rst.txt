@@ -13,5 +13,6 @@ This reference provides detailed documentation for all public classes, functions
    inverse
    estimators
    pipeline
+   base
    utilities/index
    problems/index

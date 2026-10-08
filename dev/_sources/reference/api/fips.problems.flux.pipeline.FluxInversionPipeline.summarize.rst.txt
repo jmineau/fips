@@ -1,4 +1,4 @@
-﻿fips.problems.flux.pipeline.FluxInversionPipeline.summarize
+fips.problems.flux.pipeline.FluxInversionPipeline.summarize
 ===========================================================
 
 .. currentmodule:: fips.problems.flux.pipeline

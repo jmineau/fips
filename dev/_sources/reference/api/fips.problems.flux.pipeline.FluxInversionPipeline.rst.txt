@@ -4,35 +4,29 @@
 .. currentmodule:: fips.problems.flux.pipeline
 
 .. autoclass:: FluxInversionPipeline
+   :no-members:
+   :show-inheritance:
 
-   
-   
-   .. rubric:: Attributes
 
-   .. autosummary::
-   
-      ~FluxInversionPipeline.problem
-      ~FluxInversionPipeline.config
-      ~FluxInversionPipeline.estimator
-   
-   
 
-   
-   
-   .. rubric:: Methods
 
-   .. autosummary::
-   
-      ~FluxInversionPipeline.aggregate_obs_space
-      ~FluxInversionPipeline.filter_state_space
-      ~FluxInversionPipeline.get_constant
-      ~FluxInversionPipeline.get_forward_operator
-      ~FluxInversionPipeline.get_inputs
-      ~FluxInversionPipeline.get_modeldata_mismatch
-      ~FluxInversionPipeline.get_obs
-      ~FluxInversionPipeline.get_prior
-      ~FluxInversionPipeline.get_prior_error
-      ~FluxInversionPipeline.run
-      ~FluxInversionPipeline.summarize
-   
-   
+
+
+.. rubric:: Methods
+
+.. autosummary::
+   :toctree:
+
+   ~FluxInversionPipeline.filter_state_space
+   ~FluxInversionPipeline.run
+   ~FluxInversionPipeline.summarize
+
+
+
+
+.. rubric:: Inherited
+
+
+From :class:`~.InversionPipeline`: :py:obj:`~.InversionPipeline.aggregate_obs_space`, :py:obj:`~.InversionPipeline.config`, :py:obj:`~.InversionPipeline.estimator`, :py:obj:`~.InversionPipeline.get_constant`, :py:obj:`~.InversionPipeline.get_forward_operator`, :py:obj:`~.InversionPipeline.get_inputs`, :py:obj:`~.InversionPipeline.get_modeldata_mismatch`, :py:obj:`~.InversionPipeline.get_obs`, :py:obj:`~.InversionPipeline.get_prior`, :py:obj:`~.InversionPipeline.get_prior_error`
+
+

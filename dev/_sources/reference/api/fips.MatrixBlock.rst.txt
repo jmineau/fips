@@ -4,40 +4,43 @@
 .. currentmodule:: fips
 
 .. autoclass:: MatrixBlock
+   :no-members:
+   :show-inheritance:
 
-   
-   
-   .. rubric:: Attributes
 
-   .. autosummary::
-   
-      ~MatrixBlock.columns
-      ~MatrixBlock.index
-      ~MatrixBlock.is_sparse
-      ~MatrixBlock.shape
-      ~MatrixBlock.values
-      ~MatrixBlock.data
-      ~MatrixBlock.name
-      ~MatrixBlock.row_block
-      ~MatrixBlock.col_block
-   
-   
 
-   
-   
-   .. rubric:: Methods
 
-   .. autosummary::
-   
-      ~MatrixBlock.copy
-      ~MatrixBlock.from_file
-      ~MatrixBlock.reindex
-      ~MatrixBlock.round_index
-      ~MatrixBlock.to_dense
-      ~MatrixBlock.to_file
-      ~MatrixBlock.to_frame
-      ~MatrixBlock.to_numpy
-      ~MatrixBlock.to_sparse
-      ~MatrixBlock.xs
-   
-   
+.. rubric:: Attributes
+
+.. autosummary::
+   :toctree:
+
+   ~MatrixBlock.col_block
+   ~MatrixBlock.row_block
+
+
+
+.. rubric:: Methods
+
+.. autosummary::
+   :toctree:
+
+   ~MatrixBlock.to_frame
+
+
+
+
+.. rubric:: Inherited
+
+
+From :class:`~.Structure2D`: :py:obj:`~.Structure2D.columns`, :py:obj:`~.Structure2D.data`, :py:obj:`~.Structure2D.is_sparse`, :py:obj:`~.Structure2D.name`, :py:obj:`~.Structure2D.to_dense`, :py:obj:`~.Structure2D.to_sparse`, :py:obj:`~.Structure2D.values`
+
+
+
+From :class:`~.Structure`: :py:obj:`~.Structure.copy`, :py:obj:`~.Structure.index`, :py:obj:`~.Structure.reindex`, :py:obj:`~.Structure.round_index`, :py:obj:`~.Structure.shape`, :py:obj:`~.Structure.to_numpy`, :py:obj:`~.Structure.xs`
+
+
+
+From :class:`~.Pickleable`: :py:obj:`~.Pickleable.from_file`, :py:obj:`~.Pickleable.to_file`
+
+

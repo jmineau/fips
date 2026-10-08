@@ -1,4 +1,4 @@
-﻿fips.ForwardOperator.obs\_index
+fips.ForwardOperator.obs\_index
 ===============================
 
 .. currentmodule:: fips

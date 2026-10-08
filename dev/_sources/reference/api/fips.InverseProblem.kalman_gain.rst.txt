@@ -1,4 +1,4 @@
-﻿fips.InverseProblem.kalman\_gain
+fips.InverseProblem.kalman\_gain
 ================================
 
 .. currentmodule:: fips

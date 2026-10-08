@@ -1,4 +1,4 @@
-﻿fips.InversionPipeline.get\_constant
+fips.InversionPipeline.get\_constant
 ====================================
 
 .. currentmodule:: fips

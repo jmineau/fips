@@ -1,4 +1,4 @@
-﻿fips.InverseProblem.constant
+fips.InverseProblem.constant
 ============================
 
 .. currentmodule:: fips

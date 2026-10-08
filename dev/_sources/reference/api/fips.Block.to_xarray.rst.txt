@@ -1,4 +1,4 @@
-﻿fips.Block.to\_xarray
+fips.Block.to\_xarray
 =====================
 
 .. currentmodule:: fips

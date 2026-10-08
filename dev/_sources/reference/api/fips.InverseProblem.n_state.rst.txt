@@ -1,0 +1,6 @@
+fips.InverseProblem.n\_state
+============================
+
+.. currentmodule:: fips
+
+.. autoproperty:: InverseProblem.n_state

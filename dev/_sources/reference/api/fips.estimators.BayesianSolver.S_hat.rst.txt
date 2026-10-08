@@ -1,4 +1,4 @@
-﻿fips.estimators.BayesianSolver.S\_hat
+fips.estimators.BayesianSolver.S\_hat
 =====================================
 
 .. currentmodule:: fips.estimators

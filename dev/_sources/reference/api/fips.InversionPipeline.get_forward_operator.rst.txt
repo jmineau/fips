@@ -1,4 +1,4 @@
-﻿fips.InversionPipeline.get\_forward\_operator
+fips.InversionPipeline.get\_forward\_operator
 =============================================
 
 .. currentmodule:: fips

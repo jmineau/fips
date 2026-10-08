@@ -4,24 +4,28 @@
 .. currentmodule:: fips.covariance
 
 .. autoclass:: ErrorComponent
+   :no-members:
+   :show-inheritance:
 
-   
-   
-   .. rubric:: Attributes
 
-   .. autosummary::
-   
-      ~ErrorComponent.name
-      ~ErrorComponent.variances
-   
-   
 
-   
-   
-   .. rubric:: Methods
 
-   .. autosummary::
-   
-      ~ErrorComponent.build
-   
-   
+.. rubric:: Attributes
+
+.. autosummary::
+   :toctree:
+
+   ~ErrorComponent.name
+   ~ErrorComponent.variances
+
+
+
+.. rubric:: Methods
+
+.. autosummary::
+   :toctree:
+
+   ~ErrorComponent.build
+
+
+

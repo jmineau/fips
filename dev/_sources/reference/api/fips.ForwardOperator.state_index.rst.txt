@@ -1,4 +1,4 @@
-﻿fips.ForwardOperator.state\_index
+fips.ForwardOperator.state\_index
 =================================
 
 .. currentmodule:: fips

@@ -1,4 +1,4 @@
-﻿fips.Estimator.uncertainty\_reduction
+fips.Estimator.uncertainty\_reduction
 =====================================
 
 .. currentmodule:: fips

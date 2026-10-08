@@ -4,24 +4,27 @@
 .. currentmodule:: fips.problems.flux.visualization
 
 .. autoclass:: FluxPlotter
+   :no-members:
 
-   
-   
-   .. rubric:: Attributes
 
-   .. autosummary::
-   
-      ~FluxPlotter.inversion
-   
-   
 
-   
-   
-   .. rubric:: Methods
 
-   .. autosummary::
-   
-      ~FluxPlotter.concentrations
-      ~FluxPlotter.fluxes
-   
-   
+.. rubric:: Attributes
+
+.. autosummary::
+   :toctree:
+
+   ~FluxPlotter.inversion
+
+
+
+.. rubric:: Methods
+
+.. autosummary::
+   :toctree:
+
+   ~FluxPlotter.concentrations
+   ~FluxPlotter.fluxes
+
+
+

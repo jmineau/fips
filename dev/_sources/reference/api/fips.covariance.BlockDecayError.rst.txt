@@ -4,26 +4,35 @@
 .. currentmodule:: fips.covariance
 
 .. autoclass:: BlockDecayError
+   :no-members:
+   :show-inheritance:
 
-   
-   
-   .. rubric:: Attributes
 
-   .. autosummary::
-   
-      ~BlockDecayError.groupers
-      ~BlockDecayError.corr_func
-      ~BlockDecayError.name
-      ~BlockDecayError.variances
-   
-   
 
-   
-   
-   .. rubric:: Methods
 
-   .. autosummary::
-   
-      ~BlockDecayError.build
-   
-   
+.. rubric:: Attributes
+
+.. autosummary::
+   :toctree:
+
+   ~BlockDecayError.corr_func
+   ~BlockDecayError.groupers
+
+
+
+.. rubric:: Methods
+
+.. autosummary::
+   :toctree:
+
+   ~BlockDecayError.build
+
+
+
+
+.. rubric:: Inherited
+
+
+From :class:`~.ErrorComponent`: :py:obj:`~.ErrorComponent.name`, :py:obj:`~.ErrorComponent.variances`
+
+

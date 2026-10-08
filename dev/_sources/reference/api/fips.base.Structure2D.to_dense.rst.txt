@@ -1,0 +1,6 @@
+fips.base.Structure2D.to\_dense
+===============================
+
+.. currentmodule:: fips.base
+
+.. automethod:: Structure2D.to_dense

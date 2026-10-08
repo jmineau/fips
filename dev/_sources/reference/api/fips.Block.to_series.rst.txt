@@ -1,4 +1,4 @@
-﻿fips.Block.to\_series
+fips.Block.to\_series
 =====================
 
 .. currentmodule:: fips

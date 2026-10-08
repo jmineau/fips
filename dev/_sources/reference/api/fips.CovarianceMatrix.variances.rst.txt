@@ -1,4 +1,4 @@
-﻿fips.CovarianceMatrix.variances
+fips.CovarianceMatrix.variances
 ===============================
 
 .. currentmodule:: fips

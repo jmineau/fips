@@ -1,4 +1,4 @@
-﻿fips.covariance.ErrorComponent.build
+fips.covariance.ErrorComponent.build
 ====================================
 
 .. currentmodule:: fips.covariance
