@@ -252,7 +252,7 @@ covariance). See README "Multi-block" example.
 2. Subclass `InverseProblem` for the domain-specific orchestration; subclass
    `InversionPipeline` for the workflow template.
 3. Mirror the `flux` package's layout (`problem.py`, `pipeline.py`,
-   `visualization.py`, optional `transport/`).
+   `visualization.py`).
 
 ## Gotchas
 
