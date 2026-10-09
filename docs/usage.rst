@@ -110,7 +110,7 @@ application:
    inversion = FluxProblem(
        obs=concentrations,        # pd.Series  — measured concentrations
        prior=prior_fluxes,        # pd.Series  — prior flux inventory
-       forward_operator=jacobian, # pd.DataFrame — STILT Jacobian
+       forward_operator=jacobian, # pd.DataFrame — transport Jacobian
        modeldata_mismatch=S_z,    # concentration error covariance
        prior_error=S_0,           # flux error covariance
    )
@@ -127,6 +127,25 @@ application:
    # Built-in plots (requires cartopy)
    inversion.plot.fluxes()
    inversion.plot.concentrations()
+
+For a STILT Jacobian, `PYSTILT <https://jmineau.github.io/PYSTILT>`_ sums the
+footprints onto your flux grid and time bins. Wrap its matrix in a
+:class:`~fips.MatrixBlock`:
+
+.. code-block:: python
+
+   import stilt
+   from fips import MatrixBlock
+
+   project = stilt.Project("my_project")
+   sims = project.simulations
+   H = project.jacobian(sims[sims.variant == "hrrr"], grid, time_bins)
+   jacobian = MatrixBlock(
+       H.to_frame(sparse=True), row_block="concentration", col_block="flux", sparse=True
+   )
+
+Its rows are receptor ids and its columns ``(time, lon, lat)``, so label the
+observations and the prior to match.
 
 Background subtraction is supported via the ``constant`` argument to
 :class:`~fips.InverseProblem`:

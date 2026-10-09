@@ -23,7 +23,7 @@ Optional extras
 
 .. code-block:: bash
 
-   # Atmospheric flux inversion (STILT transport, cartopy plotting)
+   # Atmospheric flux inversion (cartopy plotting)
    pip install "fips[flux]"
 
 Development Installation

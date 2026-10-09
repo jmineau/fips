@@ -15,11 +15,3 @@ __all__ = [
     "FluxPlotter",
     "FluxInversionPipeline",
 ]
-
-# Optional STILT transport backend (requires stilt package)
-try:
-    from fips.problems.flux.transport.stilt import JacobianBuilder  # noqa: F401
-
-    __all__.append("JacobianBuilder")
-except ImportError:
-    pass

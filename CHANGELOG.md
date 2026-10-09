@@ -24,6 +24,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 
+- **`JacobianBuilder`** (breaking): it called PYSTILT's `Model` API, which
+  PYSTILT 0.1.0a23 removed. PYSTILT now builds the Jacobian itself
+  (`project.jacobian()`); wrap its matrix in a `MatrixBlock` (see Usage). The
+  `flux` extra no longer installs `pystilt`.
+  ([#5](https://github.com/jmineau/fips/issues/5))
 - The `typing-extensions` dependency (`typing.Self` is in the standard library
   from Python 3.11).
 
