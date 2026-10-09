@@ -29,6 +29,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   (`project.jacobian()`); wrap its matrix in a `MatrixBlock` (see Usage). The
   `flux` extra no longer installs `pystilt`.
   ([#5](https://github.com/jmineau/fips/issues/5))
+- **`fips.problems.flux.transport`** (breaking), which held only
+  `transport.stilt.errors`. It read STILT-R column names from PYSTILT's old
+  `by-id` simulation folders; PYSTILT computes the transport error itself
+  (`sim.transport_error`).
 - The `typing-extensions` dependency (`typing.Self` is in the standard library
   from Python 3.11).
 
