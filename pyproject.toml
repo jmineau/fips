@@ -36,7 +36,6 @@ flux = [
     "cartopy>=0.24.0",  # numpy 2.0 support
     "h5py>=3.11.0",  # numpy 2.0 support
     "matplotlib>=3.6.0",
-    "pystilt>=0.1.0a21",  # variants: model.simulations.sel(variant=...)
 ]
 
 [project.urls]

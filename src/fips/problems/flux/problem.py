@@ -28,7 +28,6 @@ logger = logging.getLogger(__name__)
 # TODO:
 # - Support multiple flux sources (farfield/bio/etc)
 # - Enable regridding
-# - Build STILT Jacobian from geometries or nested grid
 
 
 class FluxProblem(InverseProblem):

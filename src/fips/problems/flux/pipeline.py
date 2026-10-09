@@ -3,7 +3,7 @@ Pipeline for atmospheric flux inversion.
 
 This module provides the `FluxInversionPipeline` class, which extends the
 base `InversionPipeline` to handle the specific requirements of flux
-inversion problems, such as loading STILT footprints and building Jacobians.
+inversion problems, such as a forward operator from transport footprints.
 """
 
 from abc import ABC

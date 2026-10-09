@@ -68,10 +68,10 @@ Specialization for atmospheric flux inversion. Public exports:
 - `FluxProblem` — `InverseProblem` subclass with flux-specific defaults
 - `FluxInversionPipeline` — `InversionPipeline` subclass
 - `FluxPlotter` — visualization
-- `JacobianBuilder` — optional, imported only if `pystilt` is available
-  (lives in `problems/flux/transport/stilt/builder.py`)
 
-The `flux` extra pulls in `pystilt`, `cartopy`, `h5py`, `matplotlib`.
+The `flux` extra pulls in `cartopy`, `h5py`, `matplotlib`. fips does not
+build transport Jacobians: PYSTILT's `project.jacobian()` does, and the
+caller wraps it in a `MatrixBlock`.
 
 ## Public API summary
 
@@ -193,7 +193,7 @@ The tooling comes from
   testpath. `coverage.exclude_also` skips `__repr__`, abstract methods,
   `if __name__ == "__main__":`, etc.
 - **Dependency groups**: runtime deps in `[project]`; the `flux` extra adds
-  cartopy/h5py/matplotlib/pystilt; the `dev` group is what `just sync`
+  cartopy/h5py/matplotlib; the `dev` group is what `just sync`
   syncs.
 
 ## Dependency policy — what fips owns and what it delegates
@@ -256,10 +256,6 @@ covariance). See README "Multi-block" example.
 
 ## Gotchas
 
-- The `flux` extra hard-depends on `pystilt`; without it, `JacobianBuilder`
-  is silently omitted from `fips.problems.flux.__all__` (try/except in
-  `problems/flux/__init__.py`). Don't surprise users — keep the optional
-  import contract.
 - `convolve(state, H)` returns a `Vector`, not a numpy array. Don't expect
   raw arrays out of public APIs.
 - `reduced_chi2` lives on the *estimator*, not the problem
