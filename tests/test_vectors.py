@@ -76,6 +76,14 @@ class TestBlock:
         assert isinstance(block.data.index, pd.MultiIndex)
         assert block.data.index.nlevels == 2
 
+    def test_block_one_element(self):
+        """Test Block creation from a one-element Series (e.g. one bias for one site)."""
+        data = pd.Series([0.1], index=pd.Index(["site_A"], name="site_id"), name="bias")
+        block = Block(data)
+
+        assert block.name == "bias"
+        pd.testing.assert_series_equal(block.data, data)
+
 
 class TestVector:
     """Tests for Vector class."""
@@ -136,6 +144,26 @@ class TestVector:
         assert len(vector.data.index.get_level_values("block").unique()) == 2
         assert "b1" in vector.data.index.get_level_values("block")
         assert "b2" in vector.data.index.get_level_values("block")
+
+    def test_vector_creation_one_element_block(self):
+        """Test Vector creation when a block has a single element."""
+        flux = pd.Series(
+            [1.0, 2.0],
+            index=pd.Index(["cell_0", "cell_1"], name="cell_id"),
+            name="flux",
+        )
+        bias = pd.Series([0.1], index=pd.Index(["site_A"], name="site_id"), name="bias")
+
+        # Alongside another block
+        vector = Vector(data=[flux, bias], name="prior")
+        assert len(vector.data) == 3
+        pd.testing.assert_series_equal(vector.blocks["bias"].data, bias)
+
+        # As the only block, and from a Vector that holds one element
+        alone = Vector(data=[bias], name="prior")
+        assert len(alone.data) == 1
+        assert alone.data.index.names == ["block", "site_id"]
+        pd.testing.assert_series_equal(Vector(alone).data, alone.data)
 
     def test_vector_creation_from_series(self):
         """Test Vector creation with pd.Series (auto-converted to Block)."""

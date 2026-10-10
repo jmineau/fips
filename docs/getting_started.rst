@@ -115,10 +115,10 @@ Use :class:`~fips.Block` and :class:`~fips.MatrixBlock` explicitly when your
 state space is composed of **named components** — for example, fluxes and a
 per-site bias correction:
 
-.. code-block:: python
+.. ipython:: python
 
    import pandas as pd
-   from fips import Block, Vector, MatrixBlock, ForwardOperator, CovarianceMatrix, InverseProblem
+   from fips import Block, Vector, MatrixBlock, ForwardOperator
 
    # --- Two state components ---
    flux_idx = pd.Index(["cell_0", "cell_1"], name="cell_id")
@@ -127,7 +127,13 @@ per-site bias correction:
 
    flux_block = Block(pd.Series([1.0, 2.0], index=flux_idx, name="flux"))
    bias_block = Block(pd.Series([0.1],      index=bias_idx, name="bias"))
-   prior = Vector([flux_block, bias_block])
+   prior = Vector([flux_block, bias_block], name="prior")
+   print(prior)
+
+Each forward-operator sub-block names the observation block it maps to and the
+state block it maps from:
+
+.. ipython:: python
 
    # --- Matching forward-operator sub-blocks ---
    H_flux = MatrixBlock(
@@ -141,9 +147,11 @@ per-site bias correction:
        col_block="bias",
    )
    H = ForwardOperator([H_flux, H_bias])
+   print(H.to_frame())
 
-   # Covariances follow the same pattern …
-   # Then pass to InverseProblem as before.
+The covariances follow the same pattern (one :class:`~fips.MatrixBlock` per
+component, combined in a :class:`~fips.CovarianceMatrix`). Then pass everything
+to :class:`~fips.InverseProblem` as before.
 
 
 What's Next
