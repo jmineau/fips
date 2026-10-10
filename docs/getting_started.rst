@@ -37,7 +37,7 @@ The three building blocks are:
 Minimal Example
 ---------------
 
-.. code-block:: python
+.. ipython:: python
 
    import numpy as np
    import pandas as pd
@@ -85,7 +85,7 @@ Inspecting the Solution
 After calling :meth:`~fips.InverseProblem.solve`, results are available as
 labelled *fips* objects that behave like pandas Series / DataFrames:
 
-.. code-block:: python
+.. ipython:: python
 
    # Posterior state and uncertainty
    x_hat = problem.posterior        # Vector  (index = state_idx)
@@ -103,7 +103,7 @@ labelled *fips* objects that behave like pandas Series / DataFrames:
    # Scalar diagnostics from the estimator
    est = problem.estimator
    print(f"DOFS:       {est.DOFS:.2f}")
-   print(f"χ²:         {est.chi2:.3f}")
+   print(f"reduced χ²: {est.reduced_chi2:.3f}")
    print(f"R²:         {est.R2:.3f}")
    print(f"RMSE:       {est.RMSE:.4f}")
 
