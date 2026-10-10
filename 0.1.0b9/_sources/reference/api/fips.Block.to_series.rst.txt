@@ -1,0 +1,6 @@
+fips.Block.to\_series
+=====================
+
+.. currentmodule:: fips
+
+.. automethod:: Block.to_series

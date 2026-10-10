@@ -1,0 +1,6 @@
+﻿fips.Vector.copy
+================
+
+.. currentmodule:: fips
+
+.. automethod:: Vector.copy

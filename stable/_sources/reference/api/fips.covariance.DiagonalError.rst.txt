@@ -1,0 +1,30 @@
+﻿fips.covariance.DiagonalError
+=============================
+
+.. currentmodule:: fips.covariance
+
+.. autoclass:: DiagonalError
+   :no-members:
+   :show-inheritance:
+
+
+
+
+
+
+.. rubric:: Methods
+
+.. autosummary::
+   :toctree:
+
+   ~DiagonalError.build
+
+
+
+
+.. rubric:: Inherited
+
+
+From :class:`~.ErrorComponent`: :py:obj:`~.ErrorComponent.name`, :py:obj:`~.ErrorComponent.variances`
+
+

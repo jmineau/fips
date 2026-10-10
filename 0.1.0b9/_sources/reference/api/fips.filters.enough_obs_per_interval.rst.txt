@@ -1,0 +1,6 @@
+﻿fips.filters.enough\_obs\_per\_interval
+=======================================
+
+.. currentmodule:: fips.filters
+
+.. autofunction:: enough_obs_per_interval

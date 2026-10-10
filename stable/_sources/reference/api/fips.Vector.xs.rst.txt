@@ -1,0 +1,6 @@
+﻿fips.Vector.xs
+==============
+
+.. currentmodule:: fips
+
+.. automethod:: Vector.xs

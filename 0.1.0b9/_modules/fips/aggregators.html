@@ -1,0 +1,919 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>fips.aggregators &#8212; fips 0.1.0b9 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../_static/custom.css?v=4b8357b6" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../../_static/documentation_options.js?v=c776a47b"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/fips/aggregators';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.16.1';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://jmineau.github.io/fips/switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.1.0b9';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner =
+            true;
+        </script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.1" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class=" navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.1.0b9 documentation - Home"/>
+    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.1.0b9 documentation - Home"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class=" navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../installation.html">
+    Installation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../getting_started.html">
+    Getting Started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../usage.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../terminology.html">
+    Terminology & Notation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../examples/index.html">
+    Examples
+  </a>
+</li>
+
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false"
+                aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../reference/index.html">
+    API Reference
+  </a>
+</li>
+
+                </ul>
+            </li>
+            
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/jmineau/fips" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar hide-on-wide">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../installation.html">
+    Installation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../getting_started.html">
+    Getting Started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../usage.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../terminology.html">
+    Terminology & Notation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../examples/index.html">
+    Examples
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../reference/index.html">
+    API Reference
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-3"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-3"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-3"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-3">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/jmineau/fips" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../index.html" class="nav-link">Module code</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">fips.aggregators</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for fips.aggregators</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Data aggregation utilities for inverse problems.</span>
+
+<span class="sd">This module provides functions for aggregating and integrating data over time</span>
+<span class="sd">and space, particularly useful for processing observations and state vectors</span>
+<span class="sd">into compatible resolutions.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">scipy.sparse</span><span class="w"> </span><span class="kn">import</span> <span class="n">csr_matrix</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">fips._sparse</span><span class="w"> </span><span class="kn">import</span> <span class="n">normalize_fill_value</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fips.matrix</span><span class="w"> </span><span class="kn">import</span> <span class="n">Matrix</span><span class="p">,</span> <span class="n">MatrixBlock</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fips.vector</span><span class="w"> </span><span class="kn">import</span> <span class="n">Block</span><span class="p">,</span> <span class="n">Vector</span>
+
+
+<div class="viewcode-block" id="integrate_over_time_bins">
+<a class="viewcode-back" href="../../reference/api/fips.aggregators.integrate_over_time_bins.html#fips.aggregators.integrate_over_time_bins">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">integrate_over_time_bins</span><span class="p">(</span>
+    <span class="n">data</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span> <span class="o">|</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span> <span class="n">time_bins</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">IntervalIndex</span><span class="p">,</span> <span class="n">time_dim</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;time&quot;</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span> <span class="o">|</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Integrate data over time bins.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    data : pd.DataFrame | pd.Series</span>
+<span class="sd">        Data to integrate.</span>
+<span class="sd">    time_bins : pd.IntervalIndex</span>
+<span class="sd">        Time bins for integration.</span>
+<span class="sd">    time_dim : str, optional</span>
+<span class="sd">        Time dimension name, by default &#39;time&#39;</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    pd.DataFrame | pd.Series</span>
+<span class="sd">        Integrated footprint. The bin labels are set to the left edge of the bin.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">is_series</span> <span class="o">=</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">)</span>
+
+    <span class="n">dims</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">names</span>
+    <span class="k">if</span> <span class="n">time_dim</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">dims</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;time_dim &#39;</span><span class="si">{</span><span class="n">time_dim</span><span class="si">}</span><span class="s2">&#39; not found in data index levels </span><span class="si">{</span><span class="n">dims</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">other_levels</span> <span class="o">=</span> <span class="p">[</span><span class="n">lvl</span> <span class="k">for</span> <span class="n">lvl</span> <span class="ow">in</span> <span class="n">dims</span> <span class="k">if</span> <span class="n">lvl</span> <span class="o">!=</span> <span class="n">time_dim</span><span class="p">]</span>
+
+    <span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">reset_index</span><span class="p">()</span>
+
+    <span class="c1"># Use pd.cut to bin the data by time into time bins.</span>
+    <span class="c1"># Cast the time column to match the resolution of time_bins (e.g. datetime64[us]</span>
+    <span class="c1"># vs datetime64[ns]) to avoid a ValueError on pandas 3.x when the dtypes differ.</span>
+    <span class="n">time_col</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">time_dim</span><span class="p">]</span>
+    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">time_bins</span><span class="p">,</span> <span class="s2">&quot;dtype&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">time_bins</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="s2">&quot;subtype&quot;</span><span class="p">):</span>
+        <span class="n">target_dtype</span> <span class="o">=</span> <span class="n">time_bins</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">subtype</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">time_col</span><span class="p">,</span> <span class="s2">&quot;dt&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">time_col</span><span class="o">.</span><span class="n">dtype</span> <span class="o">!=</span> <span class="n">target_dtype</span><span class="p">:</span>
+            <span class="n">time_col</span> <span class="o">=</span> <span class="n">time_col</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">target_dtype</span><span class="p">)</span>
+    <span class="n">data</span><span class="p">[</span><span class="n">time_dim</span><span class="p">]</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">cut</span><span class="p">(</span><span class="n">time_col</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="n">time_bins</span><span class="p">,</span> <span class="n">include_lowest</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">right</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+    <span class="c1"># Set Intervals to the left edge of the bin (start of time interval).</span>
+    <span class="c1"># Use cat.rename_categories() instead of .apply() so that NaN values</span>
+    <span class="c1"># (observations outside all bins) are left untouched — .apply() in</span>
+    <span class="c1"># pandas 3.x also passes np.nan through the mapper, which has no .left.</span>
+    <span class="n">data</span><span class="p">[</span><span class="n">time_dim</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">time_dim</span><span class="p">]</span><span class="o">.</span><span class="n">cat</span><span class="o">.</span><span class="n">rename_categories</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="o">.</span><span class="n">left</span><span class="p">)</span>
+
+    <span class="c1"># Group the date by the time bins &amp; any other existing levels</span>
+    <span class="n">grouped</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">groupby</span><span class="p">([</span><span class="n">time_dim</span><span class="p">]</span> <span class="o">+</span> <span class="n">other_levels</span><span class="p">,</span> <span class="n">observed</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="c1"># Sum over the groups</span>
+    <span class="n">integrated</span> <span class="o">=</span> <span class="n">grouped</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+
+    <span class="c1"># Order the index levels if MultiIndex</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">integrated</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">MultiIndex</span><span class="p">):</span>
+        <span class="n">integrated</span> <span class="o">=</span> <span class="n">integrated</span><span class="o">.</span><span class="n">reorder_levels</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">dims</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="n">is_series</span><span class="p">:</span>
+        <span class="c1"># Return a Series if the input was a Series</span>
+        <span class="k">return</span> <span class="n">integrated</span><span class="o">.</span><span class="n">iloc</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">integrated</span></div>
+
+
+
+<div class="viewcode-block" id="ObsAggregator">
+<a class="viewcode-back" href="../../reference/api/fips.aggregators.ObsAggregator.html#fips.aggregators.ObsAggregator">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">ObsAggregator</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Aggregates the observation space of an inverse problem.</span>
+
+<span class="sd">    Builds a sparse (n_agg x n_obs) weight matrix W and applies it to each</span>
+<span class="sd">    component of the problem::</span>
+
+<span class="sd">        z_agg = W @ z  # aggregated observations</span>
+<span class="sd">        H_agg = W @ H  # aggregated forward operator</span>
+<span class="sd">        S_z_agg = W @ S_z @ W.T  # covariance propagation</span>
+<span class="sd">        c_agg = W @ c  # aggregated constant (if vector)</span>
+
+<span class="sd">    For ``func=&#39;mean&#39;`` each non-zero entry in row i equals 1/nᵢ (the</span>
+<span class="sd">    reciprocal of the group size), so ``W @ z`` yields group means and</span>
+<span class="sd">    ``W @ S_z @ W.T`` scales variances by 1/nᵢ². For ``func=&#39;sum&#39;`` every</span>
+<span class="sd">    entry is 1. Only ``&#39;mean&#39;`` and ``&#39;sum&#39;`` are supported because other</span>
+<span class="sd">    functions do not have a well-defined covariance propagation rule.</span>
+
+<span class="sd">    Grouping interface</span>
+<span class="sd">    ------------------</span>
+<span class="sd">    Exactly one of ``by`` or ``level`` must be provided:</span>
+
+<span class="sd">    - ``by`` : an index level name (str), a list of level names, or a</span>
+<span class="sd">      callable that accepts the obs ``pd.Index`` and returns group labels.</span>
+<span class="sd">    - ``level`` + ``freq`` : resample a datetime index level at the given</span>
+<span class="sd">      pandas offset alias (e.g. ``level=&#39;obs_time&#39;, freq=&#39;D&#39;``). All other</span>
+<span class="sd">      index levels are preserved as exact-match grouping keys.</span>
+
+<span class="sd">    When the obs index has a ``&#39;block&#39;`` level it is always prepended as a</span>
+<span class="sd">    grouping key, ensuring observations from different blocks are never</span>
+<span class="sd">    merged.</span>
+
+<span class="sd">    Partial aggregation</span>
+<span class="sd">    -------------------</span>
+<span class="sd">    ``blocks`` restricts aggregation to the named block(s). Observations</span>
+<span class="sd">    belonging to other blocks are passed through unchanged via identity rows</span>
+<span class="sd">    in W, so the returned arrays cover the full observation space.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    by : str | list[str] | Callable, optional</span>
+<span class="sd">        Explicit grouping specification. Mutually exclusive with ``level``.</span>
+<span class="sd">    level : str, optional</span>
+<span class="sd">        Index level to group / resample. Requires either a matching level</span>
+<span class="sd">        name in the obs index or use alongside ``freq``.</span>
+<span class="sd">    freq : str, optional</span>
+<span class="sd">        Pandas offset alias for resampling ``level`` (e.g. ``&#39;D&#39;``, ``&#39;h&#39;``).</span>
+<span class="sd">    func : {&#39;mean&#39;, &#39;sum&#39;}</span>
+<span class="sd">        Aggregation function. Default ``&#39;mean&#39;``.</span>
+<span class="sd">    blocks : str | list[str], optional</span>
+<span class="sd">        Block name(s) to aggregate. Unlisted blocks pass through as-is.</span>
+
+<span class="sd">    Apply to inverse problem components</span>
+<span class="sd">    -----------------------------------</span>
+<span class="sd">    apply(obs, forward_operator, modeldata_mismatch, constant)</span>
+<span class="sd">        Apply the aggregation to the inverse problem components.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">by</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="n">Callable</span> <span class="o">|</span> <span class="kc">None</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Explicit grouping specification. Mutually exclusive with &#39;level&#39;.&quot;&quot;&quot;</span>
+    <span class="n">level</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Index level to group / resample. Requires either a matching level name in the obs index or use alongside &#39;freq&#39;.&quot;&quot;&quot;</span>
+    <span class="n">freq</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Pandas offset alias for resampling &#39;level&#39; (e.g. &#39;D&#39;, &#39;h&#39;).&quot;&quot;&quot;</span>
+    <span class="n">func</span><span class="p">:</span> <span class="nb">str</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Aggregation function, either &#39;mean&#39; or &#39;sum&#39;. Default is &#39;mean&#39;.&quot;&quot;&quot;</span>
+    <span class="n">blocks</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Block name(s) to aggregate. Unlisted blocks pass through as-is.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">by</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="n">Callable</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">level</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">freq</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">func</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;mean&quot;</span><span class="p">,</span>
+        <span class="n">blocks</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="k">if</span> <span class="n">func</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;mean&quot;</span><span class="p">,</span> <span class="s2">&quot;sum&quot;</span><span class="p">}:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;func must be &#39;mean&#39; or &#39;sum&#39; for valid covariance propagation.&quot;</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">by</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">level</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Must provide either &#39;by&#39; or &#39;level&#39;.&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">by</span> <span class="o">=</span> <span class="n">by</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">level</span> <span class="o">=</span> <span class="n">level</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">freq</span> <span class="o">=</span> <span class="n">freq</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">func</span> <span class="o">=</span> <span class="n">func</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">blocks</span> <span class="o">=</span> <span class="p">[</span><span class="n">blocks</span><span class="p">]</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">blocks</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">else</span> <span class="n">blocks</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_build_operator</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obs_index</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">csr_matrix</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Build W and the aggregated index from an obs ``pd.Index``.</span>
+
+<span class="sd">        Constructs W in COO format (data, row, col) — one entry per input</span>
+<span class="sd">        observation — then converts to CSR for efficient matrix products.</span>
+<span class="sd">        Returns the (n_agg x n_obs) weight matrix and the new row index.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">n_obs</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">obs_index</span><span class="p">)</span>
+
+        <span class="c1"># Which observations are targeted for aggregation?</span>
+        <span class="c1"># Untargeted observations become identity (passthrough) rows in W.</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">blocks</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="s2">&quot;block&quot;</span> <span class="ow">in</span> <span class="n">obs_index</span><span class="o">.</span><span class="n">names</span><span class="p">:</span>
+            <span class="n">mask</span> <span class="o">=</span> <span class="n">obs_index</span><span class="o">.</span><span class="n">get_level_values</span><span class="p">(</span><span class="s2">&quot;block&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">blocks</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">n_obs</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">)</span>
+
+        <span class="c1"># COO triplets — one entry per obs; col_indices[i] = i always</span>
+        <span class="c1"># (each obs maps to exactly one output row).</span>
+        <span class="n">row_indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">n_obs</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+        <span class="n">col_indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">n_obs</span><span class="p">)</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">n_obs</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+
+        <span class="n">new_index_list</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># index labels for each output row</span>
+        <span class="n">n_agg_targets</span> <span class="o">=</span> <span class="mi">0</span>  <span class="c1"># rows produced by aggregation (excludes passthrough)</span>
+
+        <span class="c1"># --- Build aggregated rows for the targeted block(s) ---</span>
+        <span class="k">if</span> <span class="n">mask</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+            <span class="n">target_idx</span> <span class="o">=</span> <span class="n">obs_index</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span>
+            <span class="c1"># dummy_series is just a carrier for the index so we can use groupby</span>
+            <span class="n">dummy_series</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">target_idx</span><span class="p">)),</span> <span class="n">index</span><span class="o">=</span><span class="n">target_idx</span><span class="p">)</span>
+
+            <span class="c1"># Build grouping keys. &quot;block&quot; is always first to prevent</span>
+            <span class="c1"># cross-block merging even when other index values coincide.</span>
+            <span class="n">keys</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">if</span> <span class="s2">&quot;block&quot;</span> <span class="ow">in</span> <span class="n">target_idx</span><span class="o">.</span><span class="n">names</span><span class="p">:</span>
+                <span class="n">keys</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">Grouper</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="s2">&quot;block&quot;</span><span class="p">))</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">by</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="c1"># Use explicit user instructions if provided</span>
+                <span class="n">user_keys</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">by</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">by</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">))</span> <span class="k">else</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">by</span><span class="p">]</span>
+                <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">user_keys</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+                        <span class="n">keys</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">Grouper</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="n">k</span><span class="p">))</span>
+                    <span class="k">elif</span> <span class="nb">callable</span><span class="p">(</span><span class="n">k</span><span class="p">):</span>
+                        <span class="n">keys</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">k</span><span class="p">(</span><span class="n">target_idx</span><span class="p">))</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">keys</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">lvl</span> <span class="ow">in</span> <span class="n">target_idx</span><span class="o">.</span><span class="n">names</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">lvl</span> <span class="o">==</span> <span class="s2">&quot;block&quot;</span><span class="p">:</span>
+                        <span class="k">continue</span>  <span class="c1"># already grouped as the first key</span>
+                    <span class="k">if</span> <span class="n">lvl</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">level</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">freq</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                            <span class="n">keys</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">Grouper</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="n">lvl</span><span class="p">,</span> <span class="n">freq</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">freq</span><span class="p">))</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="n">keys</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">Grouper</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="n">lvl</span><span class="p">))</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">keys</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">Grouper</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="n">lvl</span><span class="p">))</span>
+
+            <span class="c1"># pandas groupby requires a scalar (not a list) for a single key</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">keys</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">keys</span> <span class="o">=</span> <span class="n">keys</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+            <span class="n">grouper</span> <span class="o">=</span> <span class="n">dummy_series</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="n">keys</span><span class="p">,</span> <span class="n">sort</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+            <span class="c1"># ngroup() maps each obs to a consecutive integer row id in W.</span>
+            <span class="n">agg_target_idx</span> <span class="o">=</span> <span class="n">grouper</span><span class="o">.</span><span class="n">size</span><span class="p">()</span><span class="o">.</span><span class="n">index</span>
+            <span class="n">target_group_ids</span> <span class="o">=</span> <span class="n">grouper</span><span class="o">.</span><span class="n">ngroup</span><span class="p">()</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
+            <span class="n">n_agg_targets</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">agg_target_idx</span><span class="p">)</span>
+
+            <span class="n">row_indices</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span> <span class="o">=</span> <span class="n">target_group_ids</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">func</span> <span class="o">==</span> <span class="s2">&quot;mean&quot;</span><span class="p">:</span>
+                <span class="n">counts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">bincount</span><span class="p">(</span><span class="n">target_group_ids</span><span class="p">,</span> <span class="n">minlength</span><span class="o">=</span><span class="n">n_agg_targets</span><span class="p">)</span>
+                <span class="n">data</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="n">counts</span><span class="p">[</span><span class="n">target_group_ids</span><span class="p">]</span>  <span class="c1"># weight = 1/nᵢ</span>
+            <span class="k">else</span><span class="p">:</span>  <span class="c1"># &quot;sum&quot;</span>
+                <span class="n">data</span><span class="p">[</span><span class="n">mask</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.0</span>
+
+            <span class="n">new_index_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">agg_target_idx</span><span class="p">)</span>
+
+        <span class="c1"># --- Identity passthrough rows for untargeted observations ---</span>
+        <span class="k">if</span> <span class="p">(</span><span class="o">~</span><span class="n">mask</span><span class="p">)</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+            <span class="n">other_idx</span> <span class="o">=</span> <span class="n">obs_index</span><span class="p">[</span><span class="o">~</span><span class="n">mask</span><span class="p">]</span>
+            <span class="n">n_other</span> <span class="o">=</span> <span class="p">(</span><span class="o">~</span><span class="n">mask</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+
+            <span class="c1"># Row ids continue after the aggregated rows.</span>
+            <span class="n">other_group_ids</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">n_agg_targets</span><span class="p">,</span> <span class="n">n_agg_targets</span> <span class="o">+</span> <span class="n">n_other</span><span class="p">)</span>
+            <span class="n">row_indices</span><span class="p">[</span><span class="o">~</span><span class="n">mask</span><span class="p">]</span> <span class="o">=</span> <span class="n">other_group_ids</span>
+            <span class="n">data</span><span class="p">[</span><span class="o">~</span><span class="n">mask</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.0</span>
+
+            <span class="n">new_index_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">other_idx</span><span class="p">)</span>
+
+        <span class="n">W</span> <span class="o">=</span> <span class="n">csr_matrix</span><span class="p">(</span>
+            <span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="p">(</span><span class="n">row_indices</span><span class="p">,</span> <span class="n">col_indices</span><span class="p">)),</span>
+            <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="n">n_agg_targets</span> <span class="o">+</span> <span class="p">(</span><span class="o">~</span><span class="n">mask</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">(),</span> <span class="n">n_obs</span><span class="p">),</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Aggregated rows first, passthrough rows second.</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">new_index_list</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">agg_index</span> <span class="o">=</span> <span class="n">new_index_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">agg_index</span> <span class="o">=</span> <span class="n">new_index_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">new_index_list</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+
+        <span class="k">return</span> <span class="n">W</span><span class="p">,</span> <span class="n">agg_index</span>
+
+<div class="viewcode-block" id="ObsAggregator.apply">
+<a class="viewcode-back" href="../../reference/api/fips.aggregators.ObsAggregator.apply.html#fips.aggregators.ObsAggregator.apply">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">apply</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">obs</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span> <span class="o">|</span> <span class="n">Block</span> <span class="o">|</span> <span class="n">Vector</span><span class="p">,</span>
+        <span class="n">forward_operator</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span> <span class="o">|</span> <span class="n">MatrixBlock</span> <span class="o">|</span> <span class="n">Matrix</span><span class="p">,</span>
+        <span class="n">modeldata_mismatch</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span> <span class="o">|</span> <span class="n">MatrixBlock</span> <span class="o">|</span> <span class="n">Matrix</span><span class="p">,</span>
+        <span class="n">constant</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span> <span class="o">|</span> <span class="n">Block</span> <span class="o">|</span> <span class="n">Vector</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Apply W to the inverse problem components.</span>
+
+<span class="sd">        Inputs may be bare pandas objects or fips wrapper types (``Vector``,</span>
+<span class="sd">        ``ForwardOperator``, ``CovarianceMatrix``); return types mirror the</span>
+<span class="sd">        inputs. See the class docstring for the mathematical transforms.</span>
+
+<span class="sd">        The aggregator ensures all inputs are properly aligned to obs.index</span>
+<span class="sd">        before building the weight matrix W.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        obs : pd.Series | Block | Vector</span>
+<span class="sd">            Observation vector to be aggregated.</span>
+<span class="sd">        forward_operator : pd.DataFrame | MatrixBlock | Matrix</span>
+<span class="sd">            Forward operator matrix to be aggregated.</span>
+<span class="sd">        modeldata_mismatch : pd.DataFrame | MatrixBlock | Matrix</span>
+<span class="sd">            Model-data mismatch covariance matrix to be aggregated.</span>
+<span class="sd">        constant : float | pd.Series | Block | Vector | None, optional</span>
+<span class="sd">            Optional constant offset vector to be aggregated. Scalars are invariant to aggregation. Default is None.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        tuple</span>
+<span class="sd">            Aggregated (obs, forward_operator, modeldata_mismatch, constant) in the same types as the inputs.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Unwrap fips types to the underlying pandas object for arithmetic.</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">unwrap</span><span class="p">(</span><span class="n">obj</span><span class="p">):</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;Return the underlying pandas object of a fips structure.&quot;&quot;&quot;</span>
+            <span class="k">return</span> <span class="n">obj</span><span class="o">.</span><span class="n">data</span> <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="s2">&quot;data&quot;</span><span class="p">)</span> <span class="k">else</span> <span class="n">obj</span>
+
+        <span class="n">z_df</span> <span class="o">=</span> <span class="n">unwrap</span><span class="p">(</span><span class="n">obs</span><span class="p">)</span>
+        <span class="n">H_df</span> <span class="o">=</span> <span class="n">unwrap</span><span class="p">(</span><span class="n">forward_operator</span><span class="p">)</span>
+        <span class="n">S_z_df</span> <span class="o">=</span> <span class="n">unwrap</span><span class="p">(</span><span class="n">modeldata_mismatch</span><span class="p">)</span>
+
+        <span class="c1"># Ensure matrices are aligned to obs.index before aggregation</span>
+        <span class="c1"># This guarantees W has compatible dimensions for matrix operations</span>
+        <span class="n">H_df</span> <span class="o">=</span> <span class="n">H_df</span><span class="o">.</span><span class="n">reindex</span><span class="p">(</span><span class="n">index</span><span class="o">=</span><span class="n">z_df</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">fill_value</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)</span>
+        <span class="n">S_z_df</span> <span class="o">=</span> <span class="n">S_z_df</span><span class="o">.</span><span class="n">reindex</span><span class="p">(</span><span class="n">index</span><span class="o">=</span><span class="n">z_df</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="n">z_df</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">fill_value</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">constant</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isscalar</span><span class="p">(</span><span class="n">constant</span><span class="p">):</span>
+            <span class="n">c_df</span> <span class="o">=</span> <span class="n">unwrap</span><span class="p">(</span><span class="n">constant</span><span class="p">)</span>
+            <span class="n">c_df</span> <span class="o">=</span> <span class="n">c_df</span><span class="o">.</span><span class="n">reindex</span><span class="p">(</span><span class="n">index</span><span class="o">=</span><span class="n">z_df</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">fill_value</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">c_df</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="p">[</span><span class="n">z_df</span><span class="p">,</span> <span class="n">H_df</span><span class="p">,</span> <span class="n">S_z_df</span><span class="p">]):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Input data contains empty dimensions, cannot aggregate.&quot;</span><span class="p">)</span>
+
+        <span class="n">W</span><span class="p">,</span> <span class="n">agg_idx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_operator</span><span class="p">(</span><span class="n">z_df</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+
+        <span class="c1"># Obs vector aggregation</span>
+        <span class="c1"># z_agg = W @ z</span>
+        <span class="n">z_agg</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">W</span> <span class="o">@</span> <span class="n">z_df</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">agg_idx</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">z_df</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+
+        <span class="c1"># Forward operator aggregation</span>
+        <span class="c1"># H_agg = W @ H  (preserve SparseDtype if present)</span>
+        <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">dt</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">SparseDtype</span><span class="p">)</span> <span class="k">for</span> <span class="n">dt</span> <span class="ow">in</span> <span class="n">H_df</span><span class="o">.</span><span class="n">dtypes</span><span class="p">):</span>
+            <span class="n">H_agg_vals</span> <span class="o">=</span> <span class="n">W</span> <span class="o">@</span> <span class="n">H_df</span><span class="o">.</span><span class="n">sparse</span><span class="o">.</span><span class="n">to_coo</span><span class="p">()</span><span class="o">.</span><span class="n">tocsr</span><span class="p">()</span>
+            <span class="c1"># from_spmatrix fills with NaN on pandas 3; see fips._sparse</span>
+            <span class="n">H_agg</span> <span class="o">=</span> <span class="n">normalize_fill_value</span><span class="p">(</span>
+                <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="o">.</span><span class="n">sparse</span><span class="o">.</span><span class="n">from_spmatrix</span><span class="p">(</span>
+                    <span class="n">H_agg_vals</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">agg_idx</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="n">H_df</span><span class="o">.</span><span class="n">columns</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">H_agg</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">W</span> <span class="o">@</span> <span class="n">H_df</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">agg_idx</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="n">H_df</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
+
+        <span class="c1"># Covariance aggregation with full propagation</span>
+        <span class="c1"># S_z_agg = W @ S_z @ W.T  — for diagonal S_z with variance σ² and</span>
+        <span class="c1"># mean aggregation of n obs this yields σ²/n on the diagonal.</span>
+        <span class="n">S_z_agg_vals</span> <span class="o">=</span> <span class="n">W</span> <span class="o">@</span> <span class="n">S_z_df</span><span class="o">.</span><span class="n">values</span> <span class="o">@</span> <span class="n">W</span><span class="o">.</span><span class="n">T</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">S_z_agg_vals</span><span class="p">,</span> <span class="s2">&quot;toarray&quot;</span><span class="p">):</span>
+            <span class="n">S_z_agg_vals</span> <span class="o">=</span> <span class="n">S_z_agg_vals</span><span class="o">.</span><span class="n">toarray</span><span class="p">()</span>
+        <span class="n">S_z_agg</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">S_z_agg_vals</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">agg_idx</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="n">agg_idx</span><span class="p">)</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">repack</span><span class="p">(</span><span class="n">orig_obj</span><span class="p">,</span> <span class="n">new_df</span><span class="p">):</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;Re-wrap new_df in the same type as orig_obj if it is a fips wrapper.&quot;&quot;&quot;</span>
+            <span class="k">return</span> <span class="p">(</span>
+                <span class="nb">type</span><span class="p">(</span><span class="n">orig_obj</span><span class="p">)(</span><span class="n">new_df</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">orig_obj</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+                <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">orig_obj</span><span class="p">,</span> <span class="s2">&quot;data&quot;</span><span class="p">)</span>
+                <span class="k">else</span> <span class="n">new_df</span>
+            <span class="p">)</span>
+
+        <span class="c1"># c_agg = W @ c  (scalars are invariant to aggregation)</span>
+        <span class="k">if</span> <span class="n">constant</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">c_agg</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">elif</span> <span class="n">np</span><span class="o">.</span><span class="n">isscalar</span><span class="p">(</span><span class="n">constant</span><span class="p">):</span>
+            <span class="n">c_agg</span> <span class="o">=</span> <span class="n">constant</span>  <span class="c1"># scalars pass through unchanged</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">c_vals</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">W</span> <span class="o">@</span> <span class="n">c_df</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">agg_idx</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">c_df</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+            <span class="n">c_agg</span> <span class="o">=</span> <span class="n">repack</span><span class="p">(</span><span class="n">constant</span><span class="p">,</span> <span class="n">c_vals</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="n">repack</span><span class="p">(</span><span class="n">obs</span><span class="p">,</span> <span class="n">z_agg</span><span class="p">),</span>
+            <span class="n">repack</span><span class="p">(</span><span class="n">forward_operator</span><span class="p">,</span> <span class="n">H_agg</span><span class="p">),</span>
+            <span class="n">repack</span><span class="p">(</span><span class="n">modeldata_mismatch</span><span class="p">,</span> <span class="n">S_z_agg</span><span class="p">),</span>
+            <span class="n">c_agg</span><span class="p">,</span>
+        <span class="p">)</span></div>
+</div>
+
+</pre></div>
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2025-2026, James Mineau.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.1.0.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

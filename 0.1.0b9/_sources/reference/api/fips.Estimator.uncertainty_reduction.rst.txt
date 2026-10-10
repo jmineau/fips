@@ -1,0 +1,6 @@
+fips.Estimator.uncertainty\_reduction
+=====================================
+
+.. currentmodule:: fips
+
+.. autoproperty:: Estimator.uncertainty_reduction

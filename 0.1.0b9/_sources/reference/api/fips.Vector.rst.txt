@@ -1,0 +1,46 @@
+﻿fips.Vector
+===========
+
+.. currentmodule:: fips
+
+.. autoclass:: Vector
+   :no-members:
+   :show-inheritance:
+
+
+
+
+.. rubric:: Attributes
+
+.. autosummary::
+   :toctree:
+
+   ~Vector.blocks
+   ~Vector.data
+
+
+
+.. rubric:: Methods
+
+.. autosummary::
+   :toctree:
+
+   ~Vector.to_xarray
+
+
+
+
+.. rubric:: Inherited
+
+
+From :class:`~.Structure1D`: :py:obj:`~.Structure1D.name`, :py:obj:`~.Structure1D.to_series`
+
+
+
+From :class:`~.Structure`: :py:obj:`~.Structure.copy`, :py:obj:`~.Structure.reindex`, :py:obj:`~.Structure.round_index`, :py:obj:`~.Structure.shape`, :py:obj:`~.Structure.to_numpy`, :py:obj:`~.Structure.values`, :py:obj:`~.Structure.xs`
+
+
+
+From :class:`~.Pickleable`: :py:obj:`~.Pickleable.from_file`, :py:obj:`~.Pickleable.to_file`
+
+

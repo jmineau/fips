@@ -1,0 +1,56 @@
+﻿fips.InverseProblem
+===================
+
+.. currentmodule:: fips
+
+.. autoclass:: InverseProblem
+   :no-members:
+   :show-inheritance:
+
+
+
+
+.. rubric:: Attributes
+
+.. autosummary::
+   :toctree:
+
+   ~InverseProblem.averaging_kernel
+   ~InverseProblem.constant
+   ~InverseProblem.desroziers
+   ~InverseProblem.estimator
+   ~InverseProblem.forward_operator
+   ~InverseProblem.kalman_gain
+   ~InverseProblem.modeldata_mismatch
+   ~InverseProblem.n_obs
+   ~InverseProblem.n_state
+   ~InverseProblem.obs
+   ~InverseProblem.obs_index
+   ~InverseProblem.posterior
+   ~InverseProblem.posterior_error
+   ~InverseProblem.posterior_obs
+   ~InverseProblem.prior
+   ~InverseProblem.prior_error
+   ~InverseProblem.prior_obs
+   ~InverseProblem.prior_obs_error
+   ~InverseProblem.state_index
+
+
+
+.. rubric:: Methods
+
+.. autosummary::
+   :toctree:
+
+   ~InverseProblem.get_block
+   ~InverseProblem.solve
+
+
+
+
+.. rubric:: Inherited
+
+
+From :class:`~.Pickleable`: :py:obj:`~.Pickleable.from_file`, :py:obj:`~.Pickleable.to_file`
+
+

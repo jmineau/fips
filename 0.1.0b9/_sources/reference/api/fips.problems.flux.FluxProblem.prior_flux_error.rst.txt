@@ -1,0 +1,6 @@
+fips.problems.flux.FluxProblem.prior\_flux\_error
+=================================================
+
+.. currentmodule:: fips.problems.flux
+
+.. autoproperty:: FluxProblem.prior_flux_error

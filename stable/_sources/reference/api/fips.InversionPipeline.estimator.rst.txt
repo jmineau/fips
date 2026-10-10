@@ -1,0 +1,6 @@
+fips.InversionPipeline.estimator
+================================
+
+.. currentmodule:: fips
+
+.. autoattribute:: InversionPipeline.estimator

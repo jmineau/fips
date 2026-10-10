@@ -1,0 +1,6 @@
+fips.Matrix.blocks
+==================
+
+.. currentmodule:: fips
+
+.. autoproperty:: Matrix.blocks

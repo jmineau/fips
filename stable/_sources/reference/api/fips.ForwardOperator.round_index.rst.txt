@@ -1,0 +1,6 @@
+﻿fips.ForwardOperator.round\_index
+=================================
+
+.. currentmodule:: fips
+
+.. automethod:: ForwardOperator.round_index

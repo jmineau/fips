@@ -1,0 +1,6 @@
+fips.base.Structure2D.is\_sparse
+================================
+
+.. currentmodule:: fips.base
+
+.. autoproperty:: Structure2D.is_sparse

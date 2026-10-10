@@ -1,0 +1,6 @@
+﻿fips.Vector.round\_index
+========================
+
+.. currentmodule:: fips
+
+.. automethod:: Vector.round_index

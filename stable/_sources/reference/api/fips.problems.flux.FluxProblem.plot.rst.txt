@@ -1,0 +1,6 @@
+fips.problems.flux.FluxProblem.plot
+===================================
+
+.. currentmodule:: fips.problems.flux
+
+.. autoproperty:: FluxProblem.plot

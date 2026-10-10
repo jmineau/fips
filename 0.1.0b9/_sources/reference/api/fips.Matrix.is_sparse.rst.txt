@@ -1,0 +1,6 @@
+﻿fips.Matrix.is\_sparse
+======================
+
+.. currentmodule:: fips
+
+.. autoproperty:: Matrix.is_sparse

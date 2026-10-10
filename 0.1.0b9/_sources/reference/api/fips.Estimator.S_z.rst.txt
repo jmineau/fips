@@ -1,0 +1,6 @@
+fips.Estimator.S\_z
+===================
+
+.. currentmodule:: fips
+
+.. autoattribute:: Estimator.S_z

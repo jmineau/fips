@@ -1,0 +1,6 @@
+﻿fips.Matrix.to\_numpy
+=====================
+
+.. currentmodule:: fips
+
+.. automethod:: Matrix.to_numpy

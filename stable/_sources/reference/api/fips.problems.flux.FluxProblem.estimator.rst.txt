@@ -1,0 +1,6 @@
+﻿fips.problems.flux.FluxProblem.estimator
+========================================
+
+.. currentmodule:: fips.problems.flux
+
+.. autoproperty:: FluxProblem.estimator

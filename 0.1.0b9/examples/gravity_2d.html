@@ -1,0 +1,1106 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>2D Gravity Inversion &#8212; fips 0.1.0b9 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/nbsphinx-code-cells.css?v=2aa19091" />
+    <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=4b8357b6" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../_static/documentation_options.js?v=c776a47b"></script>
+    <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=f281be69"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>window.MathJax = {"options": {"processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'examples/gravity_2d';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.16.1';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://jmineau.github.io/fips/switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.1.0b9';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner =
+            true;
+        </script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="API Reference" href="../reference/index.html" />
+    <link rel="prev" title="Regional Flux Inversion" href="flux_regional.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.1" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class=" navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../_static/logo.png" class="logo__image only-light" alt="fips 0.1.0b9 documentation - Home"/>
+    <img src="../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.1.0b9 documentation - Home"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class=" navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../installation.html">
+    Installation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../getting_started.html">
+    Getting Started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../usage.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../terminology.html">
+    Terminology & Notation
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="index.html">
+    Examples
+  </a>
+</li>
+
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false"
+                aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../reference/index.html">
+    API Reference
+  </a>
+</li>
+
+                </ul>
+            </li>
+            
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/jmineau/fips" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../installation.html">
+    Installation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../getting_started.html">
+    Getting Started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../usage.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../terminology.html">
+    Terminology & Notation
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="index.html">
+    Examples
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../reference/index.html">
+    API Reference
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-3"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-3"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-3"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-3">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/jmineau/fips" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="flux_regional.html">Regional Flux Inversion</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">2D Gravity Inversion</a></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="index.html" class="nav-link">Examples</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">2D Gravity Inversion</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="2D-Gravity-Inversion">
+<h1>2D Gravity Inversion<a class="headerlink" href="#2D-Gravity-Inversion" title="Link to this heading">#</a></h1>
+<section id="Bayesian-Inversion-for-Subsurface-Density-Estimation">
+<h2>Bayesian Inversion for Subsurface Density Estimation<a class="headerlink" href="#Bayesian-Inversion-for-Subsurface-Density-Estimation" title="Link to this heading">#</a></h2>
+<p>This notebook demonstrates solving a 2D gravity inverse problem using Bayesian estimation.</p>
+<section id="Problem-Setup">
+<h3>Problem Setup<a class="headerlink" href="#Problem-Setup" title="Link to this heading">#</a></h3>
+<div class="line-block">
+<div class="line"><strong>State (x):</strong> Density anomalies in subsurface prisms [g/cm³]</div>
+<div class="line"><strong>Observations (z):</strong> Vertical component of gravity field at surface [mGal]</div>
+<div class="line"><strong>Forward model:</strong> z = H &#64; x (Newtonian gravity from rectangular prisms)</div>
+</div>
+</section>
+<section id="Geometry">
+<h3>Geometry<a class="headerlink" href="#Geometry" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p><strong>Domain:</strong> 100m horizontal × 40m depth</p></li>
+<li><p><strong>Mesh:</strong> 10 × 4 prisms (horizontal × vertical)</p></li>
+<li><p><strong>Observations:</strong> 41 surface gravity measurements</p></li>
+</ul>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">mpl_toolkits.axes_grid1</span><span class="w"> </span><span class="kn">import</span> <span class="n">make_axes_locatable</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">fips</span><span class="w"> </span><span class="kn">import</span> <span class="n">Block</span><span class="p">,</span> <span class="n">CovarianceMatrix</span><span class="p">,</span> <span class="n">ForwardOperator</span><span class="p">,</span> <span class="n">InverseProblem</span><span class="p">,</span> <span class="n">Vector</span>
+
+<span class="c1"># Configure plotting</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">style</span><span class="o">.</span><span class="n">use</span><span class="p">(</span><span class="s2">&quot;seaborn-v0_8-darkgrid&quot;</span><span class="p">)</span>
+<span class="o">%</span><span class="k">matplotlib</span> inline
+</pre></div>
+</div>
+</div>
+</section>
+</section>
+<section id="Configuration">
+<h2>Configuration<a class="headerlink" href="#Configuration" title="Link to this heading">#</a></h2>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Physical constant</span>
+<span class="n">GAMMA</span> <span class="o">=</span> <span class="mf">6.67e-4</span>  <span class="c1"># Gravitational constant in CGS units</span>
+</pre></div>
+</div>
+</div>
+</section>
+<section id="Define-Geometry-and-Generate-Synthetic-Data">
+<h2>Define Geometry and Generate Synthetic Data<a class="headerlink" href="#Define-Geometry-and-Generate-Synthetic-Data" title="Link to this heading">#</a></h2>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Observed gravity anomalies</span>
+<span class="n">z_obs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+    <span class="p">[</span>
+        <span class="mf">6.5112333e-03</span><span class="p">,</span>
+        <span class="mf">7.1144759e-03</span><span class="p">,</span>
+        <span class="mf">7.8050213e-03</span><span class="p">,</span>
+        <span class="mf">8.6004187e-03</span><span class="p">,</span>
+        <span class="mf">9.5228049e-03</span><span class="p">,</span>
+        <span class="mf">1.0600394e-02</span><span class="p">,</span>
+        <span class="mf">1.1869543e-02</span><span class="p">,</span>
+        <span class="mf">1.3377636e-02</span><span class="p">,</span>
+        <span class="mf">1.5187140e-02</span><span class="p">,</span>
+        <span class="mf">1.7381291e-02</span><span class="p">,</span>
+        <span class="mf">2.0071869e-02</span><span class="p">,</span>
+        <span class="mf">2.3409173e-02</span><span class="p">,</span>
+        <span class="mf">2.7592423e-02</span><span class="p">,</span>
+        <span class="mf">3.2872699e-02</span><span class="p">,</span>
+        <span class="mf">3.9524661e-02</span><span class="p">,</span>
+        <span class="mf">4.7739666e-02</span><span class="p">,</span>
+        <span class="mf">5.7427097e-02</span><span class="p">,</span>
+        <span class="mf">6.8126652e-02</span><span class="p">,</span>
+        <span class="mf">7.9261565e-02</span><span class="p">,</span>
+        <span class="mf">9.0330964e-02</span><span class="p">,</span>
+        <span class="mf">1.0070638e-01</span><span class="p">,</span>
+        <span class="mf">1.0950167e-01</span><span class="p">,</span>
+        <span class="mf">1.1588202e-01</span><span class="p">,</span>
+        <span class="mf">1.1936106e-01</span><span class="p">,</span>
+        <span class="mf">1.1961197e-01</span><span class="p">,</span>
+        <span class="mf">1.1617789e-01</span><span class="p">,</span>
+        <span class="mf">1.0868957e-01</span><span class="p">,</span>
+        <span class="mf">9.7370419e-02</span><span class="p">,</span>
+        <span class="mf">8.3429883e-02</span><span class="p">,</span>
+        <span class="mf">6.9002570e-02</span><span class="p">,</span>
+        <span class="mf">5.6079733e-02</span><span class="p">,</span>
+        <span class="mf">4.5525921e-02</span><span class="p">,</span>
+        <span class="mf">3.7267881e-02</span><span class="p">,</span>
+        <span class="mf">3.0880404e-02</span><span class="p">,</span>
+        <span class="mf">2.5919366e-02</span><span class="p">,</span>
+        <span class="mf">2.2024198e-02</span><span class="p">,</span>
+        <span class="mf">1.8925481e-02</span><span class="p">,</span>
+        <span class="mf">1.6427182e-02</span><span class="p">,</span>
+        <span class="mf">1.4387142e-02</span><span class="p">,</span>
+        <span class="mf">1.2701558e-02</span><span class="p">,</span>
+        <span class="mf">1.1293783e-02</span><span class="p">,</span>
+    <span class="p">]</span>
+<span class="p">)</span>
+
+<span class="c1"># Create observation locations (41 points from 0 to 1000 m)</span>
+<span class="n">obs_locs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1000</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">z_obs</span><span class="p">))</span>
+
+<span class="c1"># Create mesh boundaries (10 x 4 prisms)</span>
+<span class="n">prism_x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1000</span><span class="p">,</span> <span class="mi">11</span><span class="p">)</span>  <span class="c1"># 11 boundaries for 10 prisms</span>
+<span class="n">prism_z</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">25</span><span class="p">,</span> <span class="mi">250</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>  <span class="c1"># 5 boundaries for 4 prisms</span>
+
+<span class="n">n_obs</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">z_obs</span><span class="p">)</span>
+<span class="n">n_x</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">prism_x</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
+<span class="n">n_z</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">prism_z</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
+<span class="n">n_state</span> <span class="o">=</span> <span class="n">n_x</span> <span class="o">*</span> <span class="n">n_z</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Data created:&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Observations: </span><span class="si">{</span><span class="n">n_obs</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  State dimension: </span><span class="si">{</span><span class="n">n_state</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">n_x</span><span class="si">}</span><span class="s2"> × </span><span class="si">{</span><span class="n">n_z</span><span class="si">}</span><span class="s2"> prisms)&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Gravity range: [</span><span class="si">{</span><span class="n">z_obs</span><span class="o">.</span><span class="n">min</span><span class="p">()</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">z_obs</span><span class="o">.</span><span class="n">max</span><span class="p">()</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">] mGal&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span>
+    <span class="sa">f</span><span class="s2">&quot;  Domain: </span><span class="si">{</span><span class="n">prism_x</span><span class="o">.</span><span class="n">min</span><span class="p">()</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="n">prism_x</span><span class="o">.</span><span class="n">max</span><span class="p">()</span><span class="si">}</span><span class="s2"> m (horizontal), </span><span class="si">{</span><span class="n">prism_z</span><span class="o">.</span><span class="n">min</span><span class="p">()</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="n">prism_z</span><span class="o">.</span><span class="n">max</span><span class="p">()</span><span class="si">}</span><span class="s2"> m (depth)&quot;</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Data created:
+  Observations: 41
+  State dimension: 40 (10 × 4 prisms)
+  Gravity range: [0.0065, 0.1196] mGal
+  Domain: 0.0-1000.0 m (horizontal), 25.0-250.0 m (depth)
+</pre></div></div>
+</div>
+</section>
+<section id="Build-Forward-Operator">
+<h2>Build Forward Operator<a class="headerlink" href="#Build-Forward-Operator" title="Link to this heading">#</a></h2>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">gravity_integral</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">z</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Analytical integral for Newtonian gravity from a rectangular prism.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    x, z : array_like</span>
+<span class="sd">        Horizontal and vertical distances</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    array_like</span>
+<span class="sd">        Integrated gravity contribution</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">z</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">arctan</span><span class="p">(</span><span class="n">x</span> <span class="o">/</span> <span class="n">z</span><span class="p">)</span> <span class="o">+</span> <span class="n">x</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">z</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">build_forward_operator</span><span class="p">(</span><span class="n">obs_locs</span><span class="p">,</span> <span class="n">prism_x</span><span class="p">,</span> <span class="n">prism_z</span><span class="p">,</span> <span class="n">gamma</span><span class="o">=</span><span class="n">GAMMA</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Build forward operator H relating density to gravity.</span>
+
+<span class="sd">    Maps state (density in prisms) to observations (gravity at surface):</span>
+<span class="sd">        z = H @ x</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    obs_locs : array</span>
+<span class="sd">        Observation locations (horizontal positions) [m]</span>
+<span class="sd">    prism_x : array</span>
+<span class="sd">        Prism boundaries in x-direction [m]</span>
+<span class="sd">    prism_z : array</span>
+<span class="sd">        Prism boundaries in z-direction (depth) [m]</span>
+<span class="sd">    gamma : float</span>
+<span class="sd">        Gravitational constant</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    H : ndarray</span>
+<span class="sd">        Forward operator [n_obs × n_state]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">n_obs</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">obs_locs</span><span class="p">)</span>
+    <span class="n">n_x</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">prism_x</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
+    <span class="n">n_z</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">prism_z</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
+    <span class="n">n_state</span> <span class="o">=</span> <span class="n">n_x</span> <span class="o">*</span> <span class="n">n_z</span>
+
+    <span class="n">H</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">n_obs</span><span class="p">,</span> <span class="n">n_state</span><span class="p">))</span>
+
+    <span class="n">idx</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">ix</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">prism_x</span><span class="p">)):</span>
+        <span class="n">x1</span> <span class="o">=</span> <span class="n">prism_x</span><span class="p">[</span><span class="n">ix</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">obs_locs</span>  <span class="c1"># Lower x boundary</span>
+        <span class="n">x2</span> <span class="o">=</span> <span class="n">prism_x</span><span class="p">[</span><span class="n">ix</span><span class="p">]</span> <span class="o">-</span> <span class="n">obs_locs</span>  <span class="c1"># Upper x boundary</span>
+
+        <span class="k">for</span> <span class="n">iz</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">prism_z</span><span class="p">)):</span>
+            <span class="n">z1</span> <span class="o">=</span> <span class="n">prism_z</span><span class="p">[</span><span class="n">iz</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span>  <span class="c1"># Upper z boundary (shallow)</span>
+            <span class="n">z2</span> <span class="o">=</span> <span class="n">prism_z</span><span class="p">[</span><span class="n">iz</span><span class="p">]</span>  <span class="c1"># Lower z boundary (deep)</span>
+
+            <span class="c1"># Compute gravity contribution using analytical formula</span>
+            <span class="n">contrib</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">gravity_integral</span><span class="p">(</span><span class="n">x2</span><span class="p">,</span> <span class="n">z2</span><span class="p">)</span>
+                <span class="o">-</span> <span class="n">gravity_integral</span><span class="p">(</span><span class="n">x2</span><span class="p">,</span> <span class="n">z1</span><span class="p">)</span>
+                <span class="o">-</span> <span class="n">gravity_integral</span><span class="p">(</span><span class="n">x1</span><span class="p">,</span> <span class="n">z2</span><span class="p">)</span>
+                <span class="o">+</span> <span class="n">gravity_integral</span><span class="p">(</span><span class="n">x1</span><span class="p">,</span> <span class="n">z1</span><span class="p">)</span>
+            <span class="p">)</span>
+
+            <span class="n">H</span><span class="p">[:,</span> <span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">gamma</span> <span class="o">*</span> <span class="n">contrib</span>
+            <span class="n">idx</span> <span class="o">+=</span> <span class="mi">1</span>
+
+    <span class="k">return</span> <span class="n">H</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Build forward operator</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Building forward operator...&quot;</span><span class="p">)</span>
+<span class="n">H</span> <span class="o">=</span> <span class="n">build_forward_operator</span><span class="p">(</span><span class="n">obs_locs</span><span class="p">,</span> <span class="n">prism_x</span><span class="p">,</span> <span class="n">prism_z</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Forward operator shape: </span><span class="si">{</span><span class="n">H</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Condition number: </span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">cond</span><span class="p">(</span><span class="n">H</span><span class="p">)</span><span class="si">:</span><span class="s2">.2e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Building forward operator...
+Forward operator shape: (41, 40)
+  Condition number: 5.38e+07
+</pre></div></div>
+</div>
+</section>
+<section id="Setup-Inverse-Problem">
+<h2>Setup Inverse Problem<a class="headerlink" href="#Setup-Inverse-Problem" title="Link to this heading">#</a></h2>
+<section id="Prior-Information">
+<h3>Prior Information<a class="headerlink" href="#Prior-Information" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p><strong>Mean:</strong> x₀ = 0 (zero density anomaly)</p></li>
+<li><p><strong>Covariance:</strong> S_0 = 0.5² I (independent prisms)</p></li>
+</ul>
+</section>
+<section id="Observation-Error">
+<h3>Observation Error<a class="headerlink" href="#Observation-Error" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>S_z = (0.05 · max(z))² I (5% of maximum signal)</p></li>
+</ul>
+</section>
+<section id="Bayesian-Framework">
+<h3>Bayesian Framework<a class="headerlink" href="#Bayesian-Framework" title="Link to this heading">#</a></h3>
+<p><strong>Posterior estimate:</strong></p>
+<div class="math notranslate nohighlight">
+\[\hat{x} = x_0 + K(z - Hx_0)\]</div>
+<p><strong>Posterior covariance:</strong></p>
+<div class="math notranslate nohighlight">
+\[\hat{S} = S_0 - (HS_0)^T(HS_0H^T + S_z)^{-1}(HS_0)\]</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Create indices</span>
+<span class="n">obs_idx</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">([</span><span class="sa">f</span><span class="s2">&quot;obs_</span><span class="si">{</span><span class="n">i</span><span class="si">:</span><span class="s2">03d</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_obs</span><span class="p">)],</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;x&quot;</span><span class="p">)</span>
+<span class="n">state_idx</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">([</span><span class="sa">f</span><span class="s2">&quot;prism_</span><span class="si">{</span><span class="n">i</span><span class="si">:</span><span class="s2">03d</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_state</span><span class="p">)],</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;prism&quot;</span><span class="p">)</span>
+
+<span class="c1"># Observation vector</span>
+<span class="n">z</span> <span class="o">=</span> <span class="n">Vector</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;observations&quot;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="p">[</span><span class="n">Block</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">z_obs</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">obs_idx</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;gravity&quot;</span><span class="p">))]</span>
+<span class="p">)</span>
+
+<span class="c1"># Prior state (zero density anomaly)</span>
+<span class="n">x_0</span> <span class="o">=</span> <span class="n">Vector</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;prior&quot;</span><span class="p">,</span>
+    <span class="n">data</span><span class="o">=</span><span class="p">[</span><span class="n">Block</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n_state</span><span class="p">),</span> <span class="n">index</span><span class="o">=</span><span class="n">state_idx</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;density&quot;</span><span class="p">))],</span>
+<span class="p">)</span>
+
+<span class="c1"># Prior error covariance (independent prisms)</span>
+<span class="n">sigma_x</span> <span class="o">=</span> <span class="mf">0.5</span>  <span class="c1"># Prior uncertainty [g/cm³]</span>
+<span class="n">S_0</span> <span class="o">=</span> <span class="n">CovarianceMatrix</span><span class="p">(</span>
+    <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">sigma_x</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">n_state</span><span class="p">)),</span> <span class="n">index</span><span class="o">=</span><span class="n">x_0</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="n">x_0</span><span class="o">.</span><span class="n">index</span>
+    <span class="p">)</span>
+<span class="p">)</span>
+
+<span class="c1"># Observation error covariance</span>
+<span class="n">sigma_z</span> <span class="o">=</span> <span class="mf">0.05</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">z_obs</span><span class="p">)</span>  <span class="c1"># 5% of max signal</span>
+<span class="n">S_z</span> <span class="o">=</span> <span class="n">CovarianceMatrix</span><span class="p">(</span>
+    <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">sigma_z</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">n_obs</span><span class="p">)),</span> <span class="n">index</span><span class="o">=</span><span class="n">z</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="n">z</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+<span class="p">)</span>
+
+<span class="c1"># Forward operator</span>
+<span class="n">H_mat</span> <span class="o">=</span> <span class="n">ForwardOperator</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">H</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">z</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="n">x_0</span><span class="o">.</span><span class="n">index</span><span class="p">))</span>
+
+<span class="c1"># Create problem</span>
+<span class="n">problem</span> <span class="o">=</span> <span class="n">InverseProblem</span><span class="p">(</span>
+    <span class="n">prior</span><span class="o">=</span><span class="n">x_0</span><span class="p">,</span> <span class="n">obs</span><span class="o">=</span><span class="n">z</span><span class="p">,</span> <span class="n">forward_operator</span><span class="o">=</span><span class="n">H_mat</span><span class="p">,</span> <span class="n">prior_error</span><span class="o">=</span><span class="n">S_0</span><span class="p">,</span> <span class="n">modeldata_mismatch</span><span class="o">=</span><span class="n">S_z</span>
+<span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Inverse problem configured.&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Prior uncertainty: </span><span class="si">{</span><span class="n">sigma_x</span><span class="si">}</span><span class="s2"> g/cm³&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Observation uncertainty: </span><span class="si">{</span><span class="n">sigma_z</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2"> mGal&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Inverse problem configured.
+  Prior uncertainty: 0.5 g/cm³
+  Observation uncertainty: 0.0060 mGal
+</pre></div></div>
+</div>
+</section>
+</section>
+<section id="Solve-Problem">
+<h2>Solve Problem<a class="headerlink" href="#Solve-Problem" title="Link to this heading">#</a></h2>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Solve using Bayesian estimator</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Solving...&quot;</span><span class="p">)</span>
+<span class="n">problem</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">estimator</span><span class="o">=</span><span class="s2">&quot;bayesian&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;✓ Solution complete&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Solving...
+✓ Solution complete
+</pre></div></div>
+</div>
+</section>
+<section id="Diagnostics">
+<h2>Diagnostics<a class="headerlink" href="#Diagnostics" title="Link to this heading">#</a></h2>
+<p>Analyze the solution quality and information content.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Extract results</span>
+<span class="n">x_post</span> <span class="o">=</span> <span class="n">problem</span><span class="o">.</span><span class="n">posterior</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">values</span>
+<span class="n">z_obs_vals</span> <span class="o">=</span> <span class="n">problem</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">values</span>
+<span class="n">z_post</span> <span class="o">=</span> <span class="n">problem</span><span class="o">.</span><span class="n">posterior_obs</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">values</span>
+<span class="n">z_prior</span> <span class="o">=</span> <span class="n">problem</span><span class="o">.</span><span class="n">prior_obs</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">values</span>
+
+<span class="c1"># Posterior state</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;POSTERIOR STATE (DENSITY)&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Mean: </span><span class="si">{</span><span class="n">x_post</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2"> g/cm³&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Std:  </span><span class="si">{</span><span class="n">x_post</span><span class="o">.</span><span class="n">std</span><span class="p">()</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2"> g/cm³&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Range: [</span><span class="si">{</span><span class="n">x_post</span><span class="o">.</span><span class="n">min</span><span class="p">()</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">x_post</span><span class="o">.</span><span class="n">max</span><span class="p">()</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">] g/cm³&quot;</span><span class="p">)</span>
+
+<span class="c1"># Observation fit</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">OBSERVATION FIT&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  RMSE: </span><span class="si">{</span><span class="n">problem</span><span class="o">.</span><span class="n">estimator</span><span class="o">.</span><span class="n">RMSE</span><span class="si">:</span><span class="s2">.6e</span><span class="si">}</span><span class="s2"> mGal&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  R²: </span><span class="si">{</span><span class="n">problem</span><span class="o">.</span><span class="n">estimator</span><span class="o">.</span><span class="n">R2</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="n">residuals</span> <span class="o">=</span> <span class="n">z_obs_vals</span> <span class="o">-</span> <span class="n">z_post</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Max residual: </span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">residuals</span><span class="p">)</span><span class="o">.</span><span class="n">max</span><span class="p">()</span><span class="si">:</span><span class="s2">.6e</span><span class="si">}</span><span class="s2"> mGal&quot;</span><span class="p">)</span>
+
+<span class="c1"># Uncertainty reduction</span>
+<span class="n">prior_std</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">problem</span><span class="o">.</span><span class="n">prior_error</span><span class="o">.</span><span class="n">values</span><span class="p">))</span>
+<span class="n">post_std</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">problem</span><span class="o">.</span><span class="n">posterior_error</span><span class="o">.</span><span class="n">values</span><span class="p">))</span>
+<span class="n">reduction</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">post_std</span> <span class="o">/</span> <span class="n">prior_std</span><span class="p">)</span> <span class="o">*</span> <span class="mi">100</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">UNCERTAINTY REDUCTION&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Mean: </span><span class="si">{</span><span class="n">reduction</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2">%&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Range: [</span><span class="si">{</span><span class="n">reduction</span><span class="o">.</span><span class="n">min</span><span class="p">()</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2">%, </span><span class="si">{</span><span class="n">reduction</span><span class="o">.</span><span class="n">max</span><span class="p">()</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2">%]&quot;</span><span class="p">)</span>
+
+<span class="c1"># Information content</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">INFORMATION CONTENT&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  DOFS: </span><span class="si">{</span><span class="n">problem</span><span class="o">.</span><span class="n">estimator</span><span class="o">.</span><span class="n">DOFS</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Reduced χ²: </span><span class="si">{</span><span class="n">problem</span><span class="o">.</span><span class="n">estimator</span><span class="o">.</span><span class="n">reduced_chi2</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+POSTERIOR STATE (DENSITY)
+  Mean: 0.0609 g/cm³
+  Std:  0.0931 g/cm³
+  Range: [-0.0185, 0.3153] g/cm³
+
+OBSERVATION FIT
+  RMSE: 4.625043e-04 mGal
+  R²: 0.9999
+  Max residual: 1.205564e-03 mGal
+
+UNCERTAINTY REDUCTION
+  Mean: 18.9%
+  Range: [2.0%, 59.1%]
+
+INFORMATION CONTENT
+  DOFS: 12.0
+  Reduced χ²: 0.054
+</pre></div></div>
+</div>
+</section>
+<section id="Visualization">
+<h2>Visualization<a class="headerlink" href="#Visualization" title="Link to this heading">#</a></h2>
+<section id="Data-Fit">
+<h3>Data Fit<a class="headerlink" href="#Data-Fit" title="Link to this heading">#</a></h3>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Combined visualization: all plots with shared x-axis</span>
+<span class="n">fig</span><span class="p">,</span> <span class="n">axes</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span>
+    <span class="mi">4</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span> <span class="mi">14</span><span class="p">),</span> <span class="n">sharex</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">gridspec_kw</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;hspace&quot;</span><span class="p">:</span> <span class="mf">0.4</span><span class="p">}</span>
+<span class="p">)</span>
+
+<span class="c1"># Prepare data for pcolormesh plots</span>
+<span class="n">x_post_2d</span> <span class="o">=</span> <span class="n">x_post</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">n_x</span><span class="p">,</span> <span class="n">n_z</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
+<span class="n">x_post_std</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">problem</span><span class="o">.</span><span class="n">posterior_error</span><span class="o">.</span><span class="n">values</span><span class="p">))</span>
+<span class="n">x_post_std_2d</span> <span class="o">=</span> <span class="n">x_post_std</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">n_x</span><span class="p">,</span> <span class="n">n_z</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
+<span class="n">X</span><span class="p">,</span> <span class="n">Z</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="n">prism_x</span><span class="p">,</span> <span class="n">prism_z</span><span class="p">)</span>
+
+<span class="c1"># Plot 1: Data fit</span>
+<span class="n">ax</span> <span class="o">=</span> <span class="n">axes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">obs_locs</span><span class="p">,</span> <span class="n">z_obs_vals</span><span class="p">,</span> <span class="s2">&quot;kx&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Observed&quot;</span><span class="p">,</span> <span class="n">markersize</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">markeredgewidth</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">obs_locs</span><span class="p">,</span> <span class="n">z_post</span><span class="p">,</span> <span class="s2">&quot;b-&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Posterior&quot;</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mf">2.5</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">obs_locs</span><span class="p">,</span> <span class="n">z_prior</span><span class="p">,</span> <span class="s2">&quot;g--&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Prior&quot;</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.7</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">ylabel</span><span class="o">=</span><span class="s2">&quot;Gravity (mGal)&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;Data Fit&quot;</span><span class="p">,</span> <span class="n">fontweight</span><span class="o">=</span><span class="s2">&quot;bold&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">fontsize</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="kc">True</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">)</span>
+
+<span class="c1"># Plot 2: Posterior density</span>
+<span class="n">ax</span> <span class="o">=</span> <span class="n">axes</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+<span class="n">im1</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">pcolormesh</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Z</span><span class="p">,</span> <span class="n">x_post_2d</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s2">&quot;Greys&quot;</span><span class="p">,</span> <span class="n">shading</span><span class="o">=</span><span class="s2">&quot;flat&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">ylabel</span><span class="o">=</span><span class="s2">&quot;Depth (m)&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;Posterior State&quot;</span><span class="p">,</span> <span class="n">fontweight</span><span class="o">=</span><span class="s2">&quot;bold&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">invert_yaxis</span><span class="p">()</span>
+<span class="n">cax1</span> <span class="o">=</span> <span class="n">make_axes_locatable</span><span class="p">(</span><span class="n">ax</span><span class="p">)</span><span class="o">.</span><span class="n">append_axes</span><span class="p">(</span><span class="s2">&quot;bottom&quot;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="s2">&quot;8%&quot;</span><span class="p">,</span> <span class="n">pad</span><span class="o">=</span><span class="mf">0.3</span><span class="p">)</span>
+<span class="n">cbar1</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">(</span><span class="n">im1</span><span class="p">,</span> <span class="n">cax</span><span class="o">=</span><span class="n">cax1</span><span class="p">,</span> <span class="n">orientation</span><span class="o">=</span><span class="s2">&quot;horizontal&quot;</span><span class="p">)</span>
+<span class="n">cbar1</span><span class="o">.</span><span class="n">set_label</span><span class="p">(</span><span class="s2">&quot;Density (g/cm³)&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+
+<span class="c1"># Plot 3: Posterior uncertainty</span>
+<span class="n">ax</span> <span class="o">=</span> <span class="n">axes</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+<span class="n">im2</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">pcolormesh</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Z</span><span class="p">,</span> <span class="n">x_post_std_2d</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s2">&quot;viridis&quot;</span><span class="p">,</span> <span class="n">shading</span><span class="o">=</span><span class="s2">&quot;flat&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">ylabel</span><span class="o">=</span><span class="s2">&quot;Depth (m)&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;Posterior Uncertainty&quot;</span><span class="p">,</span> <span class="n">fontweight</span><span class="o">=</span><span class="s2">&quot;bold&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">invert_yaxis</span><span class="p">()</span>
+<span class="n">cax2</span> <span class="o">=</span> <span class="n">make_axes_locatable</span><span class="p">(</span><span class="n">ax</span><span class="p">)</span><span class="o">.</span><span class="n">append_axes</span><span class="p">(</span><span class="s2">&quot;bottom&quot;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="s2">&quot;8%&quot;</span><span class="p">,</span> <span class="n">pad</span><span class="o">=</span><span class="mf">0.3</span><span class="p">)</span>
+<span class="n">cbar2</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">(</span><span class="n">im2</span><span class="p">,</span> <span class="n">cax</span><span class="o">=</span><span class="n">cax2</span><span class="p">,</span> <span class="n">orientation</span><span class="o">=</span><span class="s2">&quot;horizontal&quot;</span><span class="p">)</span>
+<span class="n">cbar2</span><span class="o">.</span><span class="n">set_label</span><span class="p">(</span><span class="s2">&quot;Std Dev (g/cm³)&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+
+<span class="c1"># Plot 4: Residuals</span>
+<span class="n">ax</span> <span class="o">=</span> <span class="n">axes</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
+<span class="n">residuals</span> <span class="o">=</span> <span class="n">z_obs_vals</span> <span class="o">-</span> <span class="n">z_post</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">bar</span><span class="p">(</span><span class="n">obs_locs</span><span class="p">,</span> <span class="n">residuals</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.7</span><span class="p">,</span> <span class="n">edgecolor</span><span class="o">=</span><span class="s2">&quot;black&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">axhline</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;r&quot;</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s2">&quot;--&quot;</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Zero&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">xlabel</span><span class="o">=</span><span class="s2">&quot;x (m)&quot;</span><span class="p">,</span> <span class="n">ylabel</span><span class="o">=</span><span class="s2">&quot;Residual (mGal)&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;Observation Residuals&quot;</span><span class="p">,</span> <span class="n">fontweight</span><span class="o">=</span><span class="s2">&quot;bold&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">fontsize</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="kc">True</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="s2">&quot;y&quot;</span><span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/examples_gravity_2d_16_0.png" src="../_images/examples_gravity_2d_16_0.png" />
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>
+</pre></div>
+</div>
+</div>
+</section>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="flux_regional.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Regional Flux Inversion</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="../reference/index.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">API Reference</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Bayesian-Inversion-for-Subsurface-Density-Estimation">Bayesian Inversion for Subsurface Density Estimation</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#Problem-Setup">Problem Setup</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#Geometry">Geometry</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Configuration">Configuration</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Define-Geometry-and-Generate-Synthetic-Data">Define Geometry and Generate Synthetic Data</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Build-Forward-Operator">Build Forward Operator</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Setup-Inverse-Problem">Setup Inverse Problem</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#Prior-Information">Prior Information</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#Observation-Error">Observation Error</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#Bayesian-Framework">Bayesian Framework</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Solve-Problem">Solve Problem</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Diagnostics">Diagnostics</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Visualization">Visualization</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#Data-Fit">Data Fit</a></li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/examples/gravity_2d.ipynb.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2025-2026, James Mineau.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.1.0.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

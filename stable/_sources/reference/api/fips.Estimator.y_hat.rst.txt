@@ -1,0 +1,6 @@
+fips.Estimator.y\_hat
+=====================
+
+.. currentmodule:: fips
+
+.. autoproperty:: Estimator.y_hat

@@ -1,0 +1,6 @@
+﻿fips.ForwardOperator.is\_sparse
+===============================
+
+.. currentmodule:: fips
+
+.. autoproperty:: ForwardOperator.is_sparse

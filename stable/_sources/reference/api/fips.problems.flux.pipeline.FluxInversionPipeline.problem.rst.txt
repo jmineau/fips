@@ -1,0 +1,6 @@
+﻿fips.problems.flux.pipeline.FluxInversionPipeline.problem
+=========================================================
+
+.. currentmodule:: fips.problems.flux.pipeline
+
+.. autoattribute:: FluxInversionPipeline.problem

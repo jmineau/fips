@@ -1,0 +1,6 @@
+fips.base.Structure1D.name
+==========================
+
+.. currentmodule:: fips.base
+
+.. autoproperty:: Structure1D.name

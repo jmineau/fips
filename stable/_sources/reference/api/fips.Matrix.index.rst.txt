@@ -1,0 +1,6 @@
+﻿fips.Matrix.index
+=================
+
+.. currentmodule:: fips
+
+.. autoproperty:: Matrix.index

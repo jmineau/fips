@@ -1,0 +1,6 @@
+fips.InversionPipeline.get\_obs
+===============================
+
+.. currentmodule:: fips
+
+.. automethod:: InversionPipeline.get_obs

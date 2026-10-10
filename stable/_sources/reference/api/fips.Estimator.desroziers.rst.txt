@@ -1,0 +1,6 @@
+fips.Estimator.desroziers
+=========================
+
+.. currentmodule:: fips
+
+.. autoproperty:: Estimator.desroziers

@@ -1,0 +1,6 @@
+﻿fips.Block.data
+===============
+
+.. currentmodule:: fips
+
+.. autoattribute:: Block.data

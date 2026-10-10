@@ -1,0 +1,6 @@
+﻿fips.covariance.ErrorComponent.\_\_add\_\_
+==========================================
+
+.. currentmodule:: fips.covariance
+
+.. automethod:: ErrorComponent.__add__

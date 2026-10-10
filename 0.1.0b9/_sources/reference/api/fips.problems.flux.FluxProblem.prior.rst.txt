@@ -1,0 +1,6 @@
+﻿fips.problems.flux.FluxProblem.prior
+====================================
+
+.. currentmodule:: fips.problems.flux
+
+.. autoattribute:: FluxProblem.prior

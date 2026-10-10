@@ -1,0 +1,6 @@
+﻿fips.Matrix.reindex
+===================
+
+.. currentmodule:: fips
+
+.. automethod:: Matrix.reindex

@@ -1,0 +1,6 @@
+fips.base.Structure2D.to\_frame
+===============================
+
+.. currentmodule:: fips.base
+
+.. automethod:: Structure2D.to_frame

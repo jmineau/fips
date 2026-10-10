@@ -1,0 +1,1411 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Regional Flux Inversion &#8212; fips 0.1.0b9 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/nbsphinx-code-cells.css?v=2aa19091" />
+    <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=4b8357b6" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../_static/documentation_options.js?v=c776a47b"></script>
+    <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=f281be69"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>window.MathJax = {"options": {"processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'examples/flux_regional';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.16.1';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://jmineau.github.io/fips/switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.1.0b9';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner =
+            true;
+        </script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="2D Gravity Inversion" href="gravity_2d.html" />
+    <link rel="prev" title="Examples" href="index.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.1" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class=" navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../_static/logo.png" class="logo__image only-light" alt="fips 0.1.0b9 documentation - Home"/>
+    <img src="../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.1.0b9 documentation - Home"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class=" navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../installation.html">
+    Installation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../getting_started.html">
+    Getting Started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../usage.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../terminology.html">
+    Terminology & Notation
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="index.html">
+    Examples
+  </a>
+</li>
+
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false"
+                aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../reference/index.html">
+    API Reference
+  </a>
+</li>
+
+                </ul>
+            </li>
+            
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/jmineau/fips" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../installation.html">
+    Installation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../getting_started.html">
+    Getting Started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../usage.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../terminology.html">
+    Terminology & Notation
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="index.html">
+    Examples
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../reference/index.html">
+    API Reference
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-3"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-3"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-3"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-3">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/jmineau/fips" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Regional Flux Inversion</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gravity_2d.html">2D Gravity Inversion</a></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="index.html" class="nav-link">Examples</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Regional Flux Inversion</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="Regional-Flux-Inversion">
+<h1>Regional Flux Inversion<a class="headerlink" href="#Regional-Flux-Inversion" title="Link to this heading">#</a></h1>
+<section id="Bayesian-Inversion-for-Regional-CH₄-Emissions">
+<h2>Bayesian Inversion for Regional CH₄ Emissions<a class="headerlink" href="#Bayesian-Inversion-for-Regional-CH₄-Emissions" title="Link to this heading">#</a></h2>
+<p>This notebook demonstrates solving a regional atmospheric inverse problem using Bayesian estimation.</p>
+<section id="Problem-Setup">
+<h3>Problem Setup<a class="headerlink" href="#Problem-Setup" title="Link to this heading">#</a></h3>
+<div class="line-block">
+<div class="line"><strong>State (x):</strong> Regional CH₄ flux anomalies on a spatial grid [µmol/m²/s]</div>
+<div class="line"><strong>Observations (z):</strong> CH₄ concentration enhancements at observation sites [ppm]</div>
+<div class="line"><strong>Forward model:</strong> z = H &#64; x (atmospheric transport from fluxes to concentrations)</div>
+</div>
+</section>
+<section id="Approach">
+<h3>Approach<a class="headerlink" href="#Approach" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p><strong>Synthetic Jacobian:</strong> Distance-based Gaussian sensitivity (flux → concentration)</p></li>
+<li><p><strong>Synthetic Truth:</strong> Gaussian emission hotspots within domain</p></li>
+<li><p><strong>Synthetic Observations:</strong> Concentrations from truth + noise</p></li>
+<li><p><strong>Bayesian Estimation:</strong> Recover fluxes from noisy concentration measurements</p></li>
+</ul>
+</section>
+</section>
+<section id="1.-Imports">
+<h2>1. Imports<a class="headerlink" href="#1.-Imports" title="Link to this heading">#</a></h2>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">fips.problems.flux</span><span class="w"> </span><span class="kn">import</span> <span class="n">FluxProblem</span>
+
+<span class="c1"># Configure plotting</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">style</span><span class="o">.</span><span class="n">use</span><span class="p">(</span><span class="s2">&quot;seaborn-v0_8-darkgrid&quot;</span><span class="p">)</span>
+<span class="o">%</span><span class="k">matplotlib</span> inline
+</pre></div>
+</div>
+</div>
+</section>
+<section id="2.-Configuration">
+<h2>2. Configuration<a class="headerlink" href="#2.-Configuration" title="Link to this heading">#</a></h2>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># ==============================================================================</span>
+<span class="c1"># RANDOM SEED</span>
+<span class="c1"># ==============================================================================</span>
+
+<span class="n">RANDOM_SEED</span> <span class="o">=</span> <span class="mi">42</span>
+
+<span class="c1"># ==============================================================================</span>
+<span class="c1"># DOMAIN CONFIGURATION</span>
+<span class="c1"># ==============================================================================</span>
+
+<span class="c1"># Spatial domain (lat/lon bounds)</span>
+<span class="n">XMIN</span><span class="p">,</span> <span class="n">XMAX</span> <span class="o">=</span> <span class="o">-</span><span class="mf">112.0</span><span class="p">,</span> <span class="o">-</span><span class="mf">111.5</span>  <span class="c1"># longitude [deg]</span>
+<span class="n">YMIN</span><span class="p">,</span> <span class="n">YMAX</span> <span class="o">=</span> <span class="mf">40.5</span><span class="p">,</span> <span class="mf">41.0</span>  <span class="c1"># latitude [deg]</span>
+<span class="n">DX</span><span class="p">,</span> <span class="n">DY</span> <span class="o">=</span> <span class="mf">0.05</span><span class="p">,</span> <span class="mf">0.05</span>  <span class="c1"># grid spacing [deg]</span>
+
+<span class="c1"># Time domain</span>
+<span class="n">T_START</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Timestamp</span><span class="p">(</span><span class="s2">&quot;2024-01-01&quot;</span><span class="p">)</span>
+<span class="n">T_STOP</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Timestamp</span><span class="p">(</span><span class="s2">&quot;2025-01-01&quot;</span><span class="p">)</span>
+<span class="n">STATE_FREQ</span> <span class="o">=</span> <span class="s2">&quot;MS&quot;</span>  <span class="c1"># state frequency</span>
+<span class="n">OBS_FREQ</span> <span class="o">=</span> <span class="s2">&quot;D&quot;</span>  <span class="c1"># observation frequency</span>
+
+<span class="c1"># ==============================================================================</span>
+<span class="c1"># OBSERVATION SITES</span>
+<span class="c1"># ==============================================================================</span>
+
+<span class="n">N_SITES</span> <span class="o">=</span> <span class="mi">3</span>  <span class="c1"># number of observation locations</span>
+
+<span class="c1"># ==============================================================================</span>
+<span class="c1"># EMISSION HOTSPOTS (Truth field)</span>
+<span class="c1"># ==============================================================================</span>
+
+<span class="n">N_HOTSPOTS</span> <span class="o">=</span> <span class="mi">2</span>  <span class="c1"># number of Gaussian emission centers</span>
+<span class="n">HOTSPOT_AMPLITUDE</span> <span class="o">=</span> <span class="mf">1.0</span>  <span class="c1"># peak flux [µmol/m²/s]</span>
+<span class="n">HOTSPOT_WIDTH</span> <span class="o">=</span> <span class="mf">0.1</span>  <span class="c1"># Gaussian width [deg] (std dev)</span>
+
+<span class="c1"># ==============================================================================</span>
+<span class="c1"># PRIOR CONFIGURATION</span>
+<span class="c1"># ==============================================================================</span>
+
+<span class="n">PRIOR_MEAN</span> <span class="o">=</span> <span class="mf">0.05</span>  <span class="c1"># prior flux mean [µmol/m²/s]</span>
+<span class="n">PRIOR_STD_FRACTION</span> <span class="o">=</span> <span class="mf">0.5</span>  <span class="c1"># prior uncertainty as fraction of prior mean</span>
+
+<span class="c1"># ==============================================================================</span>
+<span class="c1"># JACOBIAN (SENSITIVITY)</span>
+<span class="c1"># ==============================================================================</span>
+
+<span class="n">INFLUENCE_RADIUS</span> <span class="o">=</span> <span class="mf">0.3</span>  <span class="c1"># Gaussian influence radius [deg]</span>
+
+<span class="c1"># ==============================================================================</span>
+<span class="c1"># OBSERVATION ERROR</span>
+<span class="c1"># ==============================================================================</span>
+
+<span class="n">OBS_NOISE_STD</span> <span class="o">=</span> <span class="mf">0.001</span>  <span class="c1"># observation noise [ppm]</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Configuration:&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Domain: [</span><span class="si">{</span><span class="n">XMIN</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">XMAX</span><span class="si">}</span><span class="s2">] × [</span><span class="si">{</span><span class="n">YMIN</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">YMAX</span><span class="si">}</span><span class="s2">] (spacing </span><span class="si">{</span><span class="n">DX</span><span class="si">}</span><span class="s2">°)&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Time: </span><span class="si">{</span><span class="n">T_START</span><span class="si">}</span><span class="s2"> to </span><span class="si">{</span><span class="n">T_STOP</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Observation sites: </span><span class="si">{</span><span class="n">N_SITES</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Hotspots: </span><span class="si">{</span><span class="n">N_HOTSPOTS</span><span class="si">}</span><span class="s2"> @ </span><span class="si">{</span><span class="n">HOTSPOT_AMPLITUDE</span><span class="si">}</span><span class="s2"> µmol/m²/s&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Prior: </span><span class="si">{</span><span class="n">PRIOR_MEAN</span><span class="si">}</span><span class="s2"> ± </span><span class="si">{</span><span class="n">PRIOR_MEAN</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">PRIOR_STD_FRACTION</span><span class="si">}</span><span class="s2"> µmol/m²/s&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Configuration:
+  Domain: [-112.0, -111.5] × [40.5, 41.0] (spacing 0.05°)
+  Time: 2024-01-01 00:00:00 to 2025-01-01 00:00:00
+  Observation sites: 3
+  Hotspots: 2 @ 1.0 µmol/m²/s
+  Prior: 0.05 ± 0.025 µmol/m²/s
+</pre></div></div>
+</div>
+</section>
+<section id="3.-Helper-Functions">
+<h2>3. Helper Functions<a class="headerlink" href="#3.-Helper-Functions" title="Link to this heading">#</a></h2>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">build_grid</span><span class="p">(</span><span class="n">xmin</span><span class="p">,</span> <span class="n">xmax</span><span class="p">,</span> <span class="n">ymin</span><span class="p">,</span> <span class="n">ymax</span><span class="p">,</span> <span class="n">dx</span><span class="p">,</span> <span class="n">dy</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Build spatial grid.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    lons : array</span>
+<span class="sd">        Longitude cell centers</span>
+<span class="sd">    lats : array</span>
+<span class="sd">        Latitude cell centers</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">lons</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">xmin</span> <span class="o">+</span> <span class="n">dx</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="n">xmax</span><span class="p">,</span> <span class="n">dx</span><span class="p">)</span>
+    <span class="n">lats</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">ymin</span> <span class="o">+</span> <span class="n">dy</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="n">ymax</span><span class="p">,</span> <span class="n">dy</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">lons</span><span class="p">,</span> <span class="n">lats</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">build_obs_sites</span><span class="p">(</span><span class="n">n_sites</span><span class="p">,</span> <span class="n">xmin</span><span class="p">,</span> <span class="n">xmax</span><span class="p">,</span> <span class="n">ymin</span><span class="p">,</span> <span class="n">ymax</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">42</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Generate random observation site locations within domain.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    obs_lons : array</span>
+<span class="sd">        Observation longitude coordinates</span>
+<span class="sd">    obs_lats : array</span>
+<span class="sd">        Observation latitude coordinates</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span>
+    <span class="n">obs_lons</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="n">xmin</span><span class="p">,</span> <span class="n">xmax</span><span class="p">,</span> <span class="n">n_sites</span><span class="p">)</span>
+    <span class="n">obs_lats</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="n">ymin</span><span class="p">,</span> <span class="n">ymax</span><span class="p">,</span> <span class="n">n_sites</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">obs_lons</span><span class="p">,</span> <span class="n">obs_lats</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">gaussian_2d</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">x0</span><span class="p">,</span> <span class="n">y0</span><span class="p">,</span> <span class="n">sigma</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Evaluate 2D Gaussian.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    x, y : array</span>
+<span class="sd">        Coordinates (can be meshgrid)</span>
+<span class="sd">    x0, y0 : float</span>
+<span class="sd">        Gaussian center</span>
+<span class="sd">    sigma : float</span>
+<span class="sd">        Gaussian width</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    z : array</span>
+<span class="sd">        Gaussian values</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mf">0.5</span> <span class="o">*</span> <span class="p">((</span><span class="n">x</span> <span class="o">-</span> <span class="n">x0</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="n">y</span> <span class="o">-</span> <span class="n">y0</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span> <span class="o">/</span> <span class="n">sigma</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">build_truth_field</span><span class="p">(</span><span class="n">lons</span><span class="p">,</span> <span class="n">lats</span><span class="p">,</span> <span class="n">hotspots</span><span class="p">,</span> <span class="n">amplitude</span><span class="p">,</span> <span class="n">width</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Build synthetic truth field from Gaussian hotspots.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    lons, lats : array</span>
+<span class="sd">        Grid coordinates</span>
+<span class="sd">    hotspots : list of (lon, lat)</span>
+<span class="sd">        Hotspot center locations</span>
+<span class="sd">    amplitude : float</span>
+<span class="sd">        Peak flux amplitude</span>
+<span class="sd">    width : float</span>
+<span class="sd">        Gaussian width</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    flux : 2D array</span>
+<span class="sd">        Flux field [n_lon × n_lat]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">X</span><span class="p">,</span> <span class="n">Y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="n">lons</span><span class="p">,</span> <span class="n">lats</span><span class="p">,</span> <span class="n">indexing</span><span class="o">=</span><span class="s2">&quot;ij&quot;</span><span class="p">)</span>
+    <span class="n">flux</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">lon0</span><span class="p">,</span> <span class="n">lat0</span> <span class="ow">in</span> <span class="n">hotspots</span><span class="p">:</span>
+        <span class="n">flux</span> <span class="o">+=</span> <span class="n">amplitude</span> <span class="o">*</span> <span class="n">gaussian_2d</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="n">lon0</span><span class="p">,</span> <span class="n">lat0</span><span class="p">,</span> <span class="n">width</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">flux</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">build_jacobian</span><span class="p">(</span><span class="n">obs_lons</span><span class="p">,</span> <span class="n">obs_lats</span><span class="p">,</span> <span class="n">state_lons</span><span class="p">,</span> <span class="n">state_lats</span><span class="p">,</span> <span class="n">influence_radius</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Build synthetic Jacobian using distance-based Gaussian sensitivity.</span>
+
+<span class="sd">    H[i,j] = sensitivity of observation i to flux j</span>
+<span class="sd">           = exp(-0.5 * (distance_ij / influence_radius)^2)</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    obs_lons, obs_lats : array</span>
+<span class="sd">        Observation site coordinates</span>
+<span class="sd">    state_lons, state_lats : array</span>
+<span class="sd">        State grid coordinates</span>
+<span class="sd">    influence_radius : float</span>
+<span class="sd">        Gaussian influence radius</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    H : 2D array</span>
+<span class="sd">        Jacobian [n_obs × n_state]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">n_obs</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">obs_lons</span><span class="p">)</span>
+    <span class="n">n_lon</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">state_lons</span><span class="p">)</span>
+    <span class="n">n_lat</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">state_lats</span><span class="p">)</span>
+    <span class="n">n_state</span> <span class="o">=</span> <span class="n">n_lon</span> <span class="o">*</span> <span class="n">n_lat</span>
+
+    <span class="n">H</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">n_obs</span><span class="p">,</span> <span class="n">n_state</span><span class="p">))</span>
+
+    <span class="n">idx</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">i_lon</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_lon</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">i_lat</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_lat</span><span class="p">):</span>
+            <span class="n">state_lon</span> <span class="o">=</span> <span class="n">state_lons</span><span class="p">[</span><span class="n">i_lon</span><span class="p">]</span>
+            <span class="n">state_lat</span> <span class="o">=</span> <span class="n">state_lats</span><span class="p">[</span><span class="n">i_lat</span><span class="p">]</span>
+
+            <span class="k">for</span> <span class="n">i_obs</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_obs</span><span class="p">):</span>
+                <span class="c1"># Great-circle distance (simplified for small distances)</span>
+                <span class="n">dlon</span> <span class="o">=</span> <span class="n">obs_lons</span><span class="p">[</span><span class="n">i_obs</span><span class="p">]</span> <span class="o">-</span> <span class="n">state_lon</span>
+                <span class="n">dlat</span> <span class="o">=</span> <span class="n">obs_lats</span><span class="p">[</span><span class="n">i_obs</span><span class="p">]</span> <span class="o">-</span> <span class="n">state_lat</span>
+                <span class="n">distance</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">dlon</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">dlat</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+
+                <span class="c1"># Gaussian sensitivity</span>
+                <span class="n">H</span><span class="p">[</span><span class="n">i_obs</span><span class="p">,</span> <span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">distance</span> <span class="o">/</span> <span class="n">influence_radius</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+
+            <span class="n">idx</span> <span class="o">+=</span> <span class="mi">1</span>
+
+    <span class="k">return</span> <span class="n">H</span>
+
+
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Helper functions loaded.&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Helper functions loaded.
+</pre></div></div>
+</div>
+</section>
+<section id="4.-Build-Domain-and-Observation-Network">
+<h2>4. Build Domain and Observation Network<a class="headerlink" href="#4.-Build-Domain-and-Observation-Network" title="Link to this heading">#</a></h2>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Build grid</span>
+<span class="n">lons</span><span class="p">,</span> <span class="n">lats</span> <span class="o">=</span> <span class="n">build_grid</span><span class="p">(</span><span class="n">XMIN</span><span class="p">,</span> <span class="n">XMAX</span><span class="p">,</span> <span class="n">YMIN</span><span class="p">,</span> <span class="n">YMAX</span><span class="p">,</span> <span class="n">DX</span><span class="p">,</span> <span class="n">DY</span><span class="p">)</span>
+<span class="n">X_grid</span><span class="p">,</span> <span class="n">Y_grid</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="n">lons</span><span class="p">,</span> <span class="n">lats</span><span class="p">,</span> <span class="n">indexing</span><span class="o">=</span><span class="s2">&quot;ij&quot;</span><span class="p">)</span>
+
+<span class="n">n_lon</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">lons</span><span class="p">)</span>
+<span class="n">n_lat</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">lats</span><span class="p">)</span>
+<span class="n">n_state_spatial</span> <span class="o">=</span> <span class="n">n_lon</span> <span class="o">*</span> <span class="n">n_lat</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Spatial grid: </span><span class="si">{</span><span class="n">n_lon</span><span class="si">}</span><span class="s2"> × </span><span class="si">{</span><span class="n">n_lat</span><span class="si">}</span><span class="s2"> = </span><span class="si">{</span><span class="n">n_state_spatial</span><span class="si">}</span><span class="s2"> cells&quot;</span><span class="p">)</span>
+
+<span class="c1"># Generate observation sites</span>
+<span class="n">obs_lons</span><span class="p">,</span> <span class="n">obs_lats</span> <span class="o">=</span> <span class="n">build_obs_sites</span><span class="p">(</span><span class="n">N_SITES</span><span class="p">,</span> <span class="n">XMIN</span><span class="p">,</span> <span class="n">XMAX</span><span class="p">,</span> <span class="n">YMIN</span><span class="p">,</span> <span class="n">YMAX</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="n">RANDOM_SEED</span><span class="p">)</span>
+<span class="n">location_mapper</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Observation sites: </span><span class="si">{</span><span class="n">N_SITES</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">lon</span><span class="p">,</span> <span class="n">lat</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">obs_lons</span><span class="p">,</span> <span class="n">obs_lats</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="kc">False</span><span class="p">)):</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Site </span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">: (</span><span class="si">{</span><span class="n">lon</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">lat</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
+    <span class="n">location_mapper</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">lat</span><span class="p">,</span> <span class="n">lon</span><span class="p">)</span>
+
+<span class="c1"># Generate hotspot locations</span>
+<span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="n">RANDOM_SEED</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+<span class="n">hotspot_lons</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="n">XMIN</span><span class="p">,</span> <span class="n">XMAX</span><span class="p">,</span> <span class="n">N_HOTSPOTS</span><span class="p">)</span>
+<span class="n">hotspot_lats</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="n">YMIN</span><span class="p">,</span> <span class="n">YMAX</span><span class="p">,</span> <span class="n">N_HOTSPOTS</span><span class="p">)</span>
+<span class="n">hotspots</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">hotspot_lons</span><span class="p">,</span> <span class="n">hotspot_lats</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="kc">False</span><span class="p">))</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Hotspots: </span><span class="si">{</span><span class="n">N_HOTSPOTS</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">lon</span><span class="p">,</span> <span class="n">lat</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">hotspots</span><span class="p">):</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Hotspot </span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">: (</span><span class="si">{</span><span class="n">lon</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">lat</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Spatial grid: 10 × 10 = 100 cells
+Observation sites: 3
+  Site 0: (-111.813, 40.799)
+  Site 1: (-111.525, 40.578)
+  Site 2: (-111.634, 40.578)
+Hotspots: 2
+  Hotspot 0: (-111.942, 40.567)
+  Hotspot 1: (-111.695, 40.620)
+</pre></div></div>
+</div>
+</section>
+<section id="5.-Build-Time-Grids">
+<h2>5. Build Time Grids<a class="headerlink" href="#5.-Build-Time-Grids" title="Link to this heading">#</a></h2>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># State time bins (fluxes)</span>
+<span class="n">state_times</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">date_range</span><span class="p">(</span>
+    <span class="n">start</span><span class="o">=</span><span class="n">T_START</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="n">T_STOP</span><span class="p">,</span> <span class="n">freq</span><span class="o">=</span><span class="n">STATE_FREQ</span><span class="p">,</span> <span class="n">inclusive</span><span class="o">=</span><span class="s2">&quot;left&quot;</span>
+<span class="p">)</span>
+<span class="n">n_time_state</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">state_times</span><span class="p">)</span>
+
+<span class="c1"># Observation time bins</span>
+<span class="n">obs_times</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">date_range</span><span class="p">(</span><span class="n">start</span><span class="o">=</span><span class="n">T_START</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="n">T_STOP</span><span class="p">,</span> <span class="n">freq</span><span class="o">=</span><span class="n">OBS_FREQ</span><span class="p">,</span> <span class="n">inclusive</span><span class="o">=</span><span class="s2">&quot;left&quot;</span><span class="p">)</span>
+<span class="n">n_time_obs</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">obs_times</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;State time bins: </span><span class="si">{</span><span class="n">n_time_state</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">state_times</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  </span><span class="si">{</span><span class="n">t</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Observation times: </span><span class="si">{</span><span class="n">n_time_obs</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  </span><span class="si">{</span><span class="n">obs_times</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2"> to </span><span class="si">{</span><span class="n">obs_times</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+State time bins: 12
+  2024-01-01 00:00:00
+  2024-02-01 00:00:00
+  2024-03-01 00:00:00
+  2024-04-01 00:00:00
+  2024-05-01 00:00:00
+  2024-06-01 00:00:00
+  2024-07-01 00:00:00
+  2024-08-01 00:00:00
+  2024-09-01 00:00:00
+  2024-10-01 00:00:00
+  2024-11-01 00:00:00
+  2024-12-01 00:00:00
+
+Observation times: 366
+  2024-01-01 00:00:00 to 2024-12-31 00:00:00
+</pre></div></div>
+</div>
+</section>
+<section id="6.-Build-Jacobian">
+<h2>6. Build Jacobian<a class="headerlink" href="#6.-Build-Jacobian" title="Link to this heading">#</a></h2>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Building Jacobian...&quot;</span><span class="p">)</span>
+<span class="n">H</span> <span class="o">=</span> <span class="n">build_jacobian</span><span class="p">(</span><span class="n">obs_lons</span><span class="p">,</span> <span class="n">obs_lats</span><span class="p">,</span> <span class="n">lons</span><span class="p">,</span> <span class="n">lats</span><span class="p">,</span> <span class="n">INFLUENCE_RADIUS</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Jacobian shape: </span><span class="si">{</span><span class="n">H</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Range: [</span><span class="si">{</span><span class="n">H</span><span class="o">.</span><span class="n">min</span><span class="p">()</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">H</span><span class="o">.</span><span class="n">max</span><span class="p">()</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">]&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Mean sensitivity: </span><span class="si">{</span><span class="n">H</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Building Jacobian...
+Jacobian shape: (3, 100)
+  Range: [0.1350, 0.9999]
+  Mean sensitivity: 0.6698
+</pre></div></div>
+</div>
+</section>
+<section id="7.-Generate-Synthetic-Truth-and-Observations">
+<h2>7. Generate Synthetic Truth and Observations<a class="headerlink" href="#7.-Generate-Synthetic-Truth-and-Observations" title="Link to this heading">#</a></h2>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Build truth field with seasonal cycle</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Building truth field with seasonal cycle...&quot;</span><span class="p">)</span>
+<span class="n">truth_2d</span> <span class="o">=</span> <span class="n">build_truth_field</span><span class="p">(</span><span class="n">lons</span><span class="p">,</span> <span class="n">lats</span><span class="p">,</span> <span class="n">hotspots</span><span class="p">,</span> <span class="n">HOTSPOT_AMPLITUDE</span><span class="p">,</span> <span class="n">HOTSPOT_WIDTH</span><span class="p">)</span>
+
+<span class="c1"># Create time-varying truth with seasonal cycle</span>
+<span class="c1"># Amplitude varies from 0.5x to 1.5x the base, peaking in summer (day ~180)</span>
+<span class="n">truth_3d</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">n_lon</span><span class="p">,</span> <span class="n">n_lat</span><span class="p">,</span> <span class="n">n_time_state</span><span class="p">))</span>
+
+<span class="k">for</span> <span class="n">t_idx</span><span class="p">,</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">state_times</span><span class="p">):</span>
+    <span class="c1"># Seasonal cycle: sinusoid with peak in summer</span>
+    <span class="c1"># day_of_year: 0-365, peak amplitude at day ~180 (June-July)</span>
+    <span class="n">day_of_year</span> <span class="o">=</span> <span class="n">t</span><span class="o">.</span><span class="n">dayofyear</span>
+    <span class="n">seasonal_factor</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">+</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="p">(</span><span class="n">day_of_year</span> <span class="o">-</span> <span class="mi">152</span><span class="p">)</span> <span class="o">/</span> <span class="mf">365.25</span><span class="p">)</span>
+    <span class="n">truth_3d</span><span class="p">[:,</span> <span class="p">:,</span> <span class="n">t_idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">seasonal_factor</span> <span class="o">*</span> <span class="n">truth_2d</span>
+
+<span class="c1"># Reshape to flat vector in the correct order: iterate over lon, lat, then time</span>
+<span class="n">truth_data</span> <span class="o">=</span> <span class="n">truth_3d</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+
+<span class="c1"># Create state index to match this ordering</span>
+<span class="n">state_index</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">MultiIndex</span><span class="o">.</span><span class="n">from_product</span><span class="p">(</span>
+    <span class="p">[</span><span class="n">lons</span><span class="p">,</span> <span class="n">lats</span><span class="p">,</span> <span class="n">state_times</span><span class="p">],</span> <span class="n">names</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;lon&quot;</span><span class="p">,</span> <span class="s2">&quot;lat&quot;</span><span class="p">,</span> <span class="s2">&quot;time&quot;</span><span class="p">]</span>
+<span class="p">)</span>
+
+<span class="n">truth_series</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">truth_data</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">state_index</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;truth&quot;</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Truth field: mean=</span><span class="si">{</span><span class="n">truth_series</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">, max=</span><span class="si">{</span><span class="n">truth_series</span><span class="o">.</span><span class="n">max</span><span class="p">()</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Seasonal range: </span><span class="si">{</span><span class="n">truth_series</span><span class="o">.</span><span class="n">min</span><span class="p">()</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2"> to </span><span class="si">{</span><span class="n">truth_series</span><span class="o">.</span><span class="n">max</span><span class="p">()</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="c1"># Prior (uniform, independent of season)</span>
+<span class="n">prior_series</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">PRIOR_MEAN</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">state_index</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;flux&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Prior field: </span><span class="si">{</span><span class="n">prior_series</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2"> ± </span><span class="si">{</span><span class="n">PRIOR_MEAN</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">PRIOR_STD_FRACTION</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Building truth field with seasonal cycle...
+Truth field: mean=0.3525, max=1.5691
+  Seasonal range: 0.0001 to 1.5691
+Prior field: 0.0500 ± 0.0250
+</pre></div></div>
+</div>
+</section>
+<section id="8.-Generate-Synthetic-Observations">
+<h2>8. Generate Synthetic Observations<a class="headerlink" href="#8.-Generate-Synthetic-Observations" title="Link to this heading">#</a></h2>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Generating synthetic observations...&quot;</span><span class="p">)</span>
+
+<span class="c1"># For each observation time, compute concentrations from time-varying fluxes</span>
+<span class="n">syn_obs_data</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="n">syn_obs_index</span> <span class="o">=</span> <span class="p">[]</span>
+
+<span class="k">for</span> <span class="n">t_obs</span> <span class="ow">in</span> <span class="n">obs_times</span><span class="p">:</span>
+    <span class="c1"># Find nearest state time</span>
+    <span class="n">idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">searchsorted</span><span class="p">(</span><span class="n">state_times</span><span class="p">,</span> <span class="n">t_obs</span><span class="p">,</span> <span class="n">side</span><span class="o">=</span><span class="s2">&quot;left&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">idx</span> <span class="o">&gt;=</span> <span class="n">n_time_state</span><span class="p">:</span>
+        <span class="n">idx</span> <span class="o">=</span> <span class="n">n_time_state</span> <span class="o">-</span> <span class="mi">1</span>
+
+    <span class="c1"># Extract truth for this time step from the 3D array</span>
+    <span class="n">state_flat</span> <span class="o">=</span> <span class="n">truth_3d</span><span class="p">[:,</span> <span class="p">:,</span> <span class="n">idx</span><span class="p">]</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span>
+
+    <span class="c1"># Compute concentrations</span>
+    <span class="n">conc</span> <span class="o">=</span> <span class="n">H</span> <span class="o">@</span> <span class="n">state_flat</span>
+
+    <span class="c1"># Add noise</span>
+    <span class="n">noise</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">OBS_NOISE_STD</span><span class="p">,</span> <span class="n">N_SITES</span><span class="p">)</span>
+    <span class="n">conc_noisy</span> <span class="o">=</span> <span class="n">conc</span> <span class="o">+</span> <span class="n">noise</span>
+
+    <span class="n">syn_obs_data</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">conc_noisy</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i_site</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N_SITES</span><span class="p">):</span>
+        <span class="n">syn_obs_index</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">i_site</span><span class="p">,</span> <span class="n">t_obs</span><span class="p">))</span>
+
+<span class="n">obs_index</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">MultiIndex</span><span class="o">.</span><span class="n">from_tuples</span><span class="p">(</span><span class="n">syn_obs_index</span><span class="p">,</span> <span class="n">names</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;site_idx&quot;</span><span class="p">,</span> <span class="s2">&quot;time&quot;</span><span class="p">])</span>
+<span class="n">syn_obs</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">syn_obs_data</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">obs_index</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;concentration&quot;</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Observations: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">syn_obs</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Range: [</span><span class="si">{</span><span class="n">syn_obs</span><span class="o">.</span><span class="n">min</span><span class="p">()</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">syn_obs</span><span class="o">.</span><span class="n">max</span><span class="p">()</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2">]&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Mean: </span><span class="si">{</span><span class="n">syn_obs</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span><span class="si">:</span><span class="s2">.6f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Generating synthetic observations...
+Observations: 1098
+  Range: [11.480887, 42.115867]
+  Mean: 26.427648
+</pre></div></div>
+</div>
+</section>
+<section id="9.-Setup-Inverse-Problem">
+<h2>9. Setup Inverse Problem<a class="headerlink" href="#9.-Setup-Inverse-Problem" title="Link to this heading">#</a></h2>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Setting up flux inversion problem...&quot;</span><span class="p">)</span>
+
+<span class="c1"># Prior covariance (diagonal)</span>
+<span class="n">prior_std</span> <span class="o">=</span> <span class="n">PRIOR_MEAN</span> <span class="o">*</span> <span class="n">PRIOR_STD_FRACTION</span>
+<span class="n">S_0</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
+    <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">((</span><span class="n">prior_std</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">prior_series</span><span class="p">))),</span>
+    <span class="n">index</span><span class="o">=</span><span class="n">state_index</span><span class="p">,</span>
+    <span class="n">columns</span><span class="o">=</span><span class="n">state_index</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1"># Observation covariance (diagonal)</span>
+<span class="n">S_z</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
+    <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">((</span><span class="n">OBS_NOISE_STD</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">syn_obs</span><span class="p">))),</span>
+    <span class="n">index</span><span class="o">=</span><span class="n">obs_index</span><span class="p">,</span>
+    <span class="n">columns</span><span class="o">=</span><span class="n">obs_index</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1"># Forward operator: map state (lon, lat, time_state) to obs (site, time_obs)</span>
+<span class="c1"># The state_index is organized as: (lon[0], lat[0], t[0]), (lon[0], lat[0], t[1]), ...,</span>
+<span class="c1">#                                   (lon[0], lat[1], t[0]), (lon[0], lat[1], t[1]), ...</span>
+<span class="c1"># So for each observation at time t_obs, we need to find all spatial cells at the corresponding state time</span>
+<span class="n">H_full</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">syn_obs</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">prior_series</span><span class="p">)))</span>
+
+<span class="n">obs_row</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="k">for</span> <span class="n">t_obs</span> <span class="ow">in</span> <span class="n">obs_times</span><span class="p">:</span>
+    <span class="c1"># Find corresponding state time index</span>
+    <span class="n">state_time_idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">searchsorted</span><span class="p">(</span><span class="n">state_times</span><span class="p">,</span> <span class="n">t_obs</span><span class="p">,</span> <span class="n">side</span><span class="o">=</span><span class="s2">&quot;left&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">state_time_idx</span> <span class="o">&gt;=</span> <span class="n">n_time_state</span><span class="p">:</span>
+        <span class="n">state_time_idx</span> <span class="o">=</span> <span class="n">n_time_state</span> <span class="o">-</span> <span class="mi">1</span>
+
+    <span class="c1"># For each observation site at this time</span>
+    <span class="k">for</span> <span class="n">site_idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N_SITES</span><span class="p">):</span>
+        <span class="c1"># Fill in Jacobian row for all spatial locations</span>
+        <span class="k">for</span> <span class="n">lon_idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_lon</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">lat_idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_lat</span><span class="p">):</span>
+                <span class="n">spatial_idx</span> <span class="o">=</span> <span class="n">lon_idx</span> <span class="o">*</span> <span class="n">n_lat</span> <span class="o">+</span> <span class="n">lat_idx</span>
+                <span class="n">col_pos</span> <span class="o">=</span> <span class="n">spatial_idx</span> <span class="o">*</span> <span class="n">n_time_state</span> <span class="o">+</span> <span class="n">state_time_idx</span>
+                <span class="n">H_full</span><span class="p">[</span><span class="n">obs_row</span><span class="p">,</span> <span class="n">col_pos</span><span class="p">]</span> <span class="o">=</span> <span class="n">H</span><span class="p">[</span><span class="n">site_idx</span><span class="p">,</span> <span class="n">spatial_idx</span><span class="p">]</span>
+        <span class="n">obs_row</span> <span class="o">+=</span> <span class="mi">1</span>
+
+<span class="n">H_mat</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">H_full</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">obs_index</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="n">state_index</span><span class="p">)</span>
+
+<span class="c1"># Create flux inversion problem</span>
+<span class="c1"># The prepare functions will handle conversion of pandas objects to Vector/Matrix types</span>
+<span class="n">problem</span> <span class="o">=</span> <span class="n">FluxProblem</span><span class="p">(</span>
+    <span class="n">obs</span><span class="o">=</span><span class="n">syn_obs</span><span class="p">,</span>
+    <span class="n">prior</span><span class="o">=</span><span class="n">prior_series</span><span class="p">,</span>
+    <span class="n">forward_operator</span><span class="o">=</span><span class="n">H_mat</span><span class="p">,</span>
+    <span class="n">prior_error</span><span class="o">=</span><span class="n">S_0</span><span class="p">,</span>
+    <span class="n">modeldata_mismatch</span><span class="o">=</span><span class="n">S_z</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Flux inversion problem configured.&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  State dimension: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">prior_series</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Observation dimension: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">syn_obs</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Jacobian shape: </span><span class="si">{</span><span class="n">H_full</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Setting up flux inversion problem...
+Flux inversion problem configured.
+  State dimension: 1200
+  Observation dimension: 1098
+  Jacobian shape: (1098, 1200)
+</pre></div></div>
+</div>
+</section>
+<section id="10.-Solve">
+<h2>10. Solve<a class="headerlink" href="#10.-Solve" title="Link to this heading">#</a></h2>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Solving...&quot;</span><span class="p">)</span>
+<span class="n">problem</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">estimator</span><span class="o">=</span><span class="s2">&quot;bayesian&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;✓ Solution complete&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Solving...
+✓ Solution complete
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">problem</span><span class="o">.</span><span class="n">obs</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Vector(name=&#39;None&#39;, shape=(1098,))
+block          site_idx  time
+concentration  0         2024-01-01    19.783718
+               1         2024-01-01    17.022029
+               2         2024-01-01    20.813514
+               0         2024-01-02    14.939326
+               1         2024-01-02    12.854288
+                                         ...
+                         2024-12-30    22.693028
+               2         2024-12-30    27.748752
+               0         2024-12-31    26.374392
+               1         2024-12-31    22.694512
+               2         2024-12-31    27.747134
+Name: None, Length: 1098, dtype: float64
+</pre></div></div>
+</div>
+</section>
+<section id="11.-Diagnostics">
+<h2>11. Diagnostics<a class="headerlink" href="#11.-Diagnostics" title="Link to this heading">#</a></h2>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Extract results</span>
+<span class="n">x_post</span> <span class="o">=</span> <span class="n">problem</span><span class="o">.</span><span class="n">posterior</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">values</span>
+<span class="n">z_obs_vals</span> <span class="o">=</span> <span class="n">problem</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">values</span>
+<span class="n">z_post</span> <span class="o">=</span> <span class="n">problem</span><span class="o">.</span><span class="n">posterior_obs</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">values</span>
+<span class="n">z_prior</span> <span class="o">=</span> <span class="n">problem</span><span class="o">.</span><span class="n">prior_obs</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">values</span>
+
+<span class="c1"># Posterior state diagnostics</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;POSTERIOR STATE (FLUX)&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Mean: </span><span class="si">{</span><span class="n">x_post</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2"> µmol/m²/s&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Std:  </span><span class="si">{</span><span class="n">x_post</span><span class="o">.</span><span class="n">std</span><span class="p">()</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2"> µmol/m²/s&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Range: [</span><span class="si">{</span><span class="n">x_post</span><span class="o">.</span><span class="n">min</span><span class="p">()</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">x_post</span><span class="o">.</span><span class="n">max</span><span class="p">()</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">]&quot;</span><span class="p">)</span>
+
+<span class="c1"># Observation fit</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">OBSERVATION FIT&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  RMSE: </span><span class="si">{</span><span class="n">problem</span><span class="o">.</span><span class="n">estimator</span><span class="o">.</span><span class="n">RMSE</span><span class="si">:</span><span class="s2">.6e</span><span class="si">}</span><span class="s2"> ppm&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  R²: </span><span class="si">{</span><span class="n">problem</span><span class="o">.</span><span class="n">estimator</span><span class="o">.</span><span class="n">R2</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="n">residuals</span> <span class="o">=</span> <span class="n">z_obs_vals</span> <span class="o">-</span> <span class="n">z_post</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Max residual: </span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">residuals</span><span class="p">)</span><span class="o">.</span><span class="n">max</span><span class="p">()</span><span class="si">:</span><span class="s2">.6e</span><span class="si">}</span><span class="s2"> ppm&quot;</span><span class="p">)</span>
+
+<span class="c1"># Uncertainty reduction</span>
+<span class="n">prior_std_full</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">problem</span><span class="o">.</span><span class="n">prior_error</span><span class="o">.</span><span class="n">values</span><span class="p">))</span>
+<span class="n">post_std_full</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">problem</span><span class="o">.</span><span class="n">posterior_error</span><span class="o">.</span><span class="n">values</span><span class="p">))</span>
+<span class="n">reduction</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">post_std_full</span> <span class="o">/</span> <span class="n">prior_std_full</span><span class="p">)</span> <span class="o">*</span> <span class="mi">100</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">UNCERTAINTY REDUCTION&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Mean: </span><span class="si">{</span><span class="n">reduction</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2">%&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Range: [</span><span class="si">{</span><span class="n">reduction</span><span class="o">.</span><span class="n">min</span><span class="p">()</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2">%, </span><span class="si">{</span><span class="n">reduction</span><span class="o">.</span><span class="n">max</span><span class="p">()</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2">%]&quot;</span><span class="p">)</span>
+
+<span class="c1"># Information content</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">INFORMATION CONTENT&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  DOFS: </span><span class="si">{</span><span class="n">problem</span><span class="o">.</span><span class="n">estimator</span><span class="o">.</span><span class="n">DOFS</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Reduced χ²: </span><span class="si">{</span><span class="n">problem</span><span class="o">.</span><span class="n">estimator</span><span class="o">.</span><span class="n">reduced_chi2</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+POSTERIOR STATE (FLUX)
+  Mean: 0.3492 µmol/m²/s
+  Std:  0.3724 µmol/m²/s
+  Range: [-0.2208, 1.4783]
+
+OBSERVATION FIT
+  RMSE: 1.017315e-03 ppm
+  R²: 1.0000
+  Max residual: 5.317285e-03 ppm
+
+UNCERTAINTY REDUCTION
+  Mean: 1.5%
+  Range: [0.7%, 3.2%]
+
+INFORMATION CONTENT
+  DOFS: 36.0
+  Reduced χ²: 400.136
+</pre></div></div>
+</div>
+</section>
+<section id="12.-Visualization">
+<h2>12. Visualization<a class="headerlink" href="#12.-Visualization" title="Link to this heading">#</a></h2>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">problem</span><span class="o">.</span><span class="n">plot</span><span class="o">.</span><span class="n">fluxes</span><span class="p">(</span><span class="n">truth</span><span class="o">=</span><span class="n">truth_series</span><span class="p">,</span> <span class="n">sites</span><span class="o">=</span><span class="n">location_mapper</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+(&lt;Figure size 640x480 with 6 Axes&gt;,
+ array([&lt;Axes: title={&#39;center&#39;: &#39;Truth&#39;}&gt;,
+        &lt;Axes: title={&#39;center&#39;: &#39;Prior&#39;}&gt;,
+        &lt;Axes: title={&#39;center&#39;: &#39;Posterior&#39;}&gt;,
+        &lt;Axes: title={&#39;center&#39;: &#39;Residual&#39;}&gt;], dtype=object))
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/examples_flux_regional_25_1.png" src="../_images/examples_flux_regional_25_1.png" />
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">problem</span><span class="o">.</span><span class="n">plot</span><span class="o">.</span><span class="n">concentrations</span><span class="p">(</span><span class="n">location_dim</span><span class="o">=</span><span class="s2">&quot;site_idx&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/examples_flux_regional_26_0.png" src="../_images/examples_flux_regional_26_0.png" />
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/examples_flux_regional_26_1.png" src="../_images/examples_flux_regional_26_1.png" />
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/examples_flux_regional_26_2.png" src="../_images/examples_flux_regional_26_2.png" />
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+array([&lt;Axes: title={&#39;center&#39;: &#39;Concentrations at site: 0&#39;}, xlabel=&#39;Time&#39;, ylabel=&#39;Concentration&#39;&gt;,
+       &lt;Axes: title={&#39;center&#39;: &#39;Concentrations at site: 1&#39;}, xlabel=&#39;Time&#39;, ylabel=&#39;Concentration&#39;&gt;,
+       &lt;Axes: title={&#39;center&#39;: &#39;Concentrations at site: 2&#39;}, xlabel=&#39;Time&#39;, ylabel=&#39;Concentration&#39;&gt;],
+      dtype=object)
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">problem</span><span class="o">.</span><span class="n">posterior</span><span class="p">[</span><span class="s2">&quot;flux&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">to_xarray</span><span class="p">()</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="s2">&quot;lon&quot;</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="s2">&quot;lat&quot;</span><span class="p">,</span> <span class="n">col</span><span class="o">=</span><span class="s2">&quot;time&quot;</span><span class="p">,</span> <span class="n">col_wrap</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+&lt;xarray.plot.facetgrid.FacetGrid at 0x1471f84cd090&gt;
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/examples_flux_regional_27_1.png" src="../_images/examples_flux_regional_27_1.png" />
+</div>
+</div>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="index.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Examples</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="gravity_2d.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">2D Gravity Inversion</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Bayesian-Inversion-for-Regional-CH₄-Emissions">Bayesian Inversion for Regional CH₄ Emissions</a><ul class="visible nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#Problem-Setup">Problem Setup</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#Approach">Approach</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#1.-Imports">1. Imports</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#2.-Configuration">2. Configuration</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#3.-Helper-Functions">3. Helper Functions</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#4.-Build-Domain-and-Observation-Network">4. Build Domain and Observation Network</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#5.-Build-Time-Grids">5. Build Time Grids</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#6.-Build-Jacobian">6. Build Jacobian</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#7.-Generate-Synthetic-Truth-and-Observations">7. Generate Synthetic Truth and Observations</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#8.-Generate-Synthetic-Observations">8. Generate Synthetic Observations</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#9.-Setup-Inverse-Problem">9. Setup Inverse Problem</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#10.-Solve">10. Solve</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#11.-Diagnostics">11. Diagnostics</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#12.-Visualization">12. Visualization</a></li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/examples/flux_regional.ipynb.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2025-2026, James Mineau.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.1.0.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

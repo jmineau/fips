@@ -1,0 +1,6 @@
+fips.InversionPipeline.get\_forward\_operator
+=============================================
+
+.. currentmodule:: fips
+
+.. automethod:: InversionPipeline.get_forward_operator

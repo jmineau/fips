@@ -1,0 +1,6 @@
+﻿fips.MatrixBlock.to\_sparse
+===========================
+
+.. currentmodule:: fips
+
+.. automethod:: MatrixBlock.to_sparse

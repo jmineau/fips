@@ -1,0 +1,6 @@
+fips.aggregators.ObsAggregator.by
+=================================
+
+.. currentmodule:: fips.aggregators
+
+.. autoattribute:: ObsAggregator.by

@@ -1,0 +1,6 @@
+﻿fips.MatrixBlock.to\_numpy
+==========================
+
+.. currentmodule:: fips
+
+.. automethod:: MatrixBlock.to_numpy

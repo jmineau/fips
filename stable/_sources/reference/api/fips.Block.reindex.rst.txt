@@ -1,0 +1,6 @@
+﻿fips.Block.reindex
+==================
+
+.. currentmodule:: fips
+
+.. automethod:: Block.reindex

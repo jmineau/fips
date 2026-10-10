@@ -1,0 +1,6 @@
+﻿fips.ForwardOperator.to\_sparse
+===============================
+
+.. currentmodule:: fips
+
+.. automethod:: ForwardOperator.to_sparse

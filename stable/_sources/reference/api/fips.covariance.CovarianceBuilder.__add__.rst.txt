@@ -1,0 +1,6 @@
+﻿fips.covariance.CovarianceBuilder.\_\_add\_\_
+=============================================
+
+.. currentmodule:: fips.covariance
+
+.. automethod:: CovarianceBuilder.__add__

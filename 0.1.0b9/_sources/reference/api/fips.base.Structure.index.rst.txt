@@ -1,0 +1,6 @@
+fips.base.Structure.index
+=========================
+
+.. currentmodule:: fips.base
+
+.. autoproperty:: Structure.index

@@ -1,0 +1,6 @@
+﻿fips.operators.convolve
+=======================
+
+.. currentmodule:: fips.operators
+
+.. autofunction:: convolve

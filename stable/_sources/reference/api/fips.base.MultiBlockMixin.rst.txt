@@ -1,0 +1,23 @@
+﻿fips.base.MultiBlockMixin
+=========================
+
+.. currentmodule:: fips.base
+
+.. autoclass:: MultiBlockMixin
+   :no-members:
+   :show-inheritance:
+
+
+
+
+.. rubric:: Attributes
+
+.. autosummary::
+   :toctree:
+
+   ~MultiBlockMixin.blocks
+
+
+
+
+

@@ -1,0 +1,6 @@
+fips.Estimator.reduced\_chi2
+============================
+
+.. currentmodule:: fips
+
+.. autoproperty:: Estimator.reduced_chi2

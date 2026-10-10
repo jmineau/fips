@@ -1,0 +1,6 @@
+﻿fips.Matrix.to\_file
+====================
+
+.. currentmodule:: fips
+
+.. automethod:: Matrix.to_file

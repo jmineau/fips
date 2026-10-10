@@ -1,0 +1,1283 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>fips.estimators &#8212; fips 0.1.0b9 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../_static/custom.css?v=4b8357b6" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../../_static/documentation_options.js?v=c776a47b"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/fips/estimators';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.16.1';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://jmineau.github.io/fips/switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.1.0b9';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner =
+            true;
+        </script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.1" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class=" navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.1.0b9 documentation - Home"/>
+    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.1.0b9 documentation - Home"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class=" navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../installation.html">
+    Installation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../getting_started.html">
+    Getting Started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../usage.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../terminology.html">
+    Terminology & Notation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../examples/index.html">
+    Examples
+  </a>
+</li>
+
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false"
+                aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../reference/index.html">
+    API Reference
+  </a>
+</li>
+
+                </ul>
+            </li>
+            
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/jmineau/fips" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar hide-on-wide">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../installation.html">
+    Installation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../getting_started.html">
+    Getting Started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../usage.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../terminology.html">
+    Terminology & Notation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../examples/index.html">
+    Examples
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../reference/index.html">
+    API Reference
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-3"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-3"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-3"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-3">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/jmineau/fips" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../index.html" class="nav-link">Module code</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">fips.estimators</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for fips.estimators</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Inversion estimators for solving inverse problems.</span>
+
+<span class="sd">This module contains Bayesian and regularized estimators for state estimation</span>
+<span class="sd">in linear inverse problems, computing posterior distributions and diagnostics.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">ABC</span><span class="p">,</span> <span class="n">abstractmethod</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">functools</span><span class="w"> </span><span class="kn">import</span> <span class="n">cached_property</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">scipy.linalg</span><span class="w"> </span><span class="kn">import</span> <span class="n">LinAlgError</span><span class="p">,</span> <span class="n">inv</span><span class="p">,</span> <span class="n">solve</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_solve_psd</span><span class="p">(</span><span class="n">A</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">B</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Solve ``A X = B`` for a symmetric positive-definite ``A``, robust to roundoff.</span>
+
+<span class="sd">    Covariance-like matrices such as ``A = H S_0 H^T + S_z`` are positive-definite</span>
+<span class="sd">    in exact arithmetic (``S_z`` is positive-definite), so the fast Cholesky path</span>
+<span class="sd">    (``assume_a=&quot;pos&quot;``) is tried first. When ``A`` is ill-conditioned -- a wide</span>
+<span class="sd">    eigenvalue spread, with ``H S_0 H^T`` large relative to ``S_z`` -- roundoff in</span>
+<span class="sd">    forming ``A`` can tip it just off positive-definite, and Cholesky raises</span>
+<span class="sd">    :class:`~numpy.linalg.LinAlgError`. In that case we symmetrize ``A`` and fall</span>
+<span class="sd">    back to the symmetric-indefinite ``LDL^T`` factorization (``assume_a=&quot;sym&quot;``),</span>
+<span class="sd">    which tolerates the roundoff and stays backward-stable.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    A : np.ndarray</span>
+<span class="sd">        Symmetric matrix, positive-definite in exact arithmetic.</span>
+<span class="sd">    B : np.ndarray</span>
+<span class="sd">        Right-hand side.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    np.ndarray</span>
+<span class="sd">        Solution ``X`` of ``A X = B``.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">solve</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="n">assume_a</span><span class="o">=</span><span class="s2">&quot;pos&quot;</span><span class="p">)</span>
+    <span class="k">except</span> <span class="n">LinAlgError</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+            <span class="s2">&quot;Covariance matrix is numerically non-positive-definite (likely &quot;</span>
+            <span class="s2">&quot;roundoff from a dominant H S_0 H^T term); falling back to a symmetric &quot;</span>
+            <span class="s2">&quot;LDL^T solve. Inspect problem conditioning if results look unphysical.&quot;</span>
+        <span class="p">)</span>
+        <span class="n">A</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">A</span> <span class="o">+</span> <span class="n">A</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">solve</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="n">assume_a</span><span class="o">=</span><span class="s2">&quot;sym&quot;</span><span class="p">)</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">EstimatorRegistry</span><span class="p">(</span><span class="nb">dict</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Registry for estimator classes.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">register</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Register an estimator class under a given name.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        name : str</span>
+<span class="sd">            Name to register the estimator under.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        decorator : function</span>
+<span class="sd">            Decorator to register the class.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">decorator</span><span class="p">(</span><span class="bp">cls</span><span class="p">:</span> <span class="nb">type</span><span class="p">[</span><span class="n">Estimator</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">type</span><span class="p">[</span><span class="n">Estimator</span><span class="p">]:</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;Register ``cls`` under ``name`` and return it unchanged.&quot;&quot;&quot;</span>
+            <span class="bp">self</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="bp">cls</span>
+            <span class="k">return</span> <span class="bp">cls</span>
+
+        <span class="k">return</span> <span class="n">decorator</span>
+
+
+<span class="n">ESTIMATOR_REGISTRY</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">type</span><span class="p">[</span><span class="s2">&quot;Estimator&quot;</span><span class="p">]]</span> <span class="o">=</span> <span class="n">EstimatorRegistry</span><span class="p">()</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">available_estimators</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return the names of all registered estimators.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    list of str</span>
+<span class="sd">        Names that can be passed to :meth:`~fips.InverseProblem.solve`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">ESTIMATOR_REGISTRY</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+
+
+<div class="viewcode-block" id="Estimator">
+<a class="viewcode-back" href="../../reference/api/fips.Estimator.html#fips.Estimator">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">Estimator</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Base inversion estimator class.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    z : np.ndarray</span>
+<span class="sd">        Observed data.</span>
+<span class="sd">    x_0 : np.ndarray</span>
+<span class="sd">        Prior model state estimate.</span>
+<span class="sd">    H : np.ndarray</span>
+<span class="sd">        Forward operator.</span>
+<span class="sd">    S_0 : np.ndarray</span>
+<span class="sd">        Prior error covariance.</span>
+<span class="sd">    S_z : np.ndarray</span>
+<span class="sd">        Model-data mismatch covariance.</span>
+<span class="sd">    c : np.ndarray or float, optional</span>
+<span class="sd">        Constant data, defaults to 0.0.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">z</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Observed data.&quot;&quot;&quot;</span>
+    <span class="n">x_0</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Prior model state estimate.&quot;&quot;&quot;</span>
+    <span class="n">H</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Forward operator.&quot;&quot;&quot;</span>
+    <span class="n">S_0</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Prior error covariance.&quot;&quot;&quot;</span>
+    <span class="n">S_z</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Model-data mismatch covariance.&quot;&quot;&quot;</span>
+    <span class="n">c</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Constant data, which can be a scalar or an array matching the shape of z.&quot;&quot;&quot;</span>
+    <span class="n">n_z</span><span class="p">:</span> <span class="nb">int</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Number of observations (length of z).&quot;&quot;&quot;</span>
+    <span class="n">n_x</span><span class="p">:</span> <span class="nb">int</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Number of state variables (length of x_0).&quot;&quot;&quot;</span>
+
+    <span class="n">_output_meta</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="c1"># attr : (row_space, col_space, is_covariance)</span>
+        <span class="s2">&quot;x_hat&quot;</span><span class="p">:</span> <span class="p">(</span><span class="s2">&quot;state&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">False</span><span class="p">),</span>
+        <span class="s2">&quot;S_hat&quot;</span><span class="p">:</span> <span class="p">(</span><span class="s2">&quot;state&quot;</span><span class="p">,</span> <span class="s2">&quot;state&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">),</span>
+        <span class="s2">&quot;y_hat&quot;</span><span class="p">:</span> <span class="p">(</span><span class="s2">&quot;obs&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">False</span><span class="p">),</span>
+        <span class="s2">&quot;y_0&quot;</span><span class="p">:</span> <span class="p">(</span><span class="s2">&quot;obs&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">False</span><span class="p">),</span>
+        <span class="s2">&quot;S_y0&quot;</span><span class="p">:</span> <span class="p">(</span><span class="s2">&quot;obs&quot;</span><span class="p">,</span> <span class="s2">&quot;obs&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">),</span>
+        <span class="s2">&quot;K&quot;</span><span class="p">:</span> <span class="p">(</span><span class="s2">&quot;state&quot;</span><span class="p">,</span> <span class="s2">&quot;obs&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">),</span>
+        <span class="s2">&quot;A&quot;</span><span class="p">:</span> <span class="p">(</span><span class="s2">&quot;state&quot;</span><span class="p">,</span> <span class="s2">&quot;state&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">),</span>
+        <span class="s2">&quot;U_red&quot;</span><span class="p">:</span> <span class="p">(</span><span class="s2">&quot;state&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">False</span><span class="p">),</span>
+        <span class="s2">&quot;desroziers&quot;</span><span class="p">:</span> <span class="p">(</span><span class="s2">&quot;obs&quot;</span><span class="p">,</span> <span class="s2">&quot;obs&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">),</span>
+    <span class="p">}</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">z</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+        <span class="n">x_0</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+        <span class="n">H</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+        <span class="n">S_0</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+        <span class="n">S_z</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+        <span class="n">c</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">|</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">z</span> <span class="o">=</span> <span class="n">z</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">x_0</span> <span class="o">=</span> <span class="n">x_0</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">H</span> <span class="o">=</span> <span class="n">H</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">S_0</span> <span class="o">=</span> <span class="n">S_0</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">S_z</span> <span class="o">=</span> <span class="n">S_z</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span>
+
+        <span class="c1"># Handle optional constant data</span>
+        <span class="k">if</span> <span class="n">c</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">c</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">)):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">c</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">z</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="nb">float</span><span class="p">(</span><span class="n">c</span><span class="p">))</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">c</span> <span class="o">=</span> <span class="n">c</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;c must be None, a float, or a numpy ndarray.&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_z</span> <span class="o">=</span> <span class="n">z</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_x</span> <span class="o">=</span> <span class="n">x_0</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+<div class="viewcode-block" id="Estimator.forward">
+<a class="viewcode-back" href="../../reference/api/fips.Estimator.forward.html#fips.Estimator.forward">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Forward model calculation.</span>
+
+<span class="sd">        .. math::</span>
+<span class="sd">            y = Hx + c</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        x : np.ndarray</span>
+<span class="sd">            State vector.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        np.ndarray</span>
+<span class="sd">            Model output (Hx + c).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Performing forward calculation...&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">H</span> <span class="o">@</span> <span class="n">x</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">c</span></div>
+
+
+<div class="viewcode-block" id="Estimator.residual">
+<a class="viewcode-back" href="../../reference/api/fips.Estimator.residual.html#fips.Estimator.residual">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">residual</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Forward model residual.</span>
+
+<span class="sd">        .. math::</span>
+<span class="sd">            r = z - (Hx + c)</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        x : np.ndarray</span>
+<span class="sd">            State vector.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        np.ndarray</span>
+<span class="sd">            Residual (z - (Hx + c)).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Performing residual calculation...&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">z</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">forward</span><span class="p">(</span><span class="n">x</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Estimator.leverage">
+<a class="viewcode-back" href="../../reference/api/fips.Estimator.leverage.html#fips.Estimator.leverage">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">leverage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculate the leverage matrix.</span>
+
+<span class="sd">        Which observations are likely to have more impact on the solution.</span>
+
+<span class="sd">        .. math::</span>
+<span class="sd">            L = Hx ((Hx)^T (H S_0 H^T + S_z)^{-1} Hx)^{-1} (Hx)^T (H S_0 H^T + S_z)^{-1}</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        x : np.ndarray</span>
+<span class="sd">            State vector.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        np.ndarray</span>
+<span class="sd">            Leverage matrix.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Calculating Leverage matrix...&quot;</span><span class="p">)</span>
+        <span class="n">Hx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">forward</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">Hx_T</span> <span class="o">=</span> <span class="n">Hx</span><span class="o">.</span><span class="n">T</span>
+
+        <span class="c1"># Equation: L = Hx (Hx^T (H S_0 H^T + S_z)^-1 Hx)^-1 Hx^T (H S_0 H^T + S_z)^-1</span>
+        <span class="c1"># Let A = (H S_0 H^T + S_z)</span>
+        <span class="n">A</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_HS_0H</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">S_z</span>
+
+        <span class="c1"># 1. Compute term_1 = A^-1 @ Hx using solve</span>
+        <span class="n">term_1</span> <span class="o">=</span> <span class="n">_solve_psd</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">Hx</span><span class="p">)</span>
+
+        <span class="c1"># 2. Compute the inner inverse: (Hx^T @ term_1)^-1</span>
+        <span class="c1"># We still have to use standard inv() here because Hx^T @ term_1 isn&#39;t</span>
+        <span class="c1"># guaranteed to be a standard symmetric positive-definite covariance matrix.</span>
+        <span class="n">inner_inv</span> <span class="o">=</span> <span class="n">inv</span><span class="p">(</span><span class="n">Hx_T</span> <span class="o">@</span> <span class="n">term_1</span><span class="p">)</span>
+
+        <span class="c1"># 3. Assemble: Hx @ inner_inv @ term_1^T</span>
+        <span class="k">return</span> <span class="n">Hx</span> <span class="o">@</span> <span class="n">inner_inv</span> <span class="o">@</span> <span class="n">term_1</span><span class="o">.</span><span class="n">T</span></div>
+
+
+<div class="viewcode-block" id="Estimator.cost">
+<a class="viewcode-back" href="../../reference/api/fips.Estimator.cost.html#fips.Estimator.cost">[docs]</a>
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">cost</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Cost/loss/misfit function.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        x : np.ndarray</span>
+<span class="sd">            State vector.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        float</span>
+<span class="sd">            Cost value.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Performing cost calculation...&quot;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span></div>
+
+
+    <span class="nd">@property</span>
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">x_hat</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Posterior mean model state estimate (solution).</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        np.ndarray</span>
+<span class="sd">            Posterior state estimate.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Calculating Posterior Mean Model State Estimate...&quot;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+
+    <span class="nd">@property</span>
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">S_hat</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Posterior error covariance matrix.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        np.ndarray</span>
+<span class="sd">            Posterior error covariance matrix.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Calculating Posterior Error Covariance Matrix...&quot;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+
+<div class="viewcode-block" id="Estimator.y_hat">
+<a class="viewcode-back" href="../../reference/api/fips.Estimator.y_hat.html#fips.Estimator.y_hat">[docs]</a>
+    <span class="nd">@cached_property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">y_hat</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Posterior mean observation estimate.</span>
+
+<span class="sd">        .. math::</span>
+<span class="sd">            \\hat{y} = H \\hat{x} + c</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        np.ndarray</span>
+<span class="sd">            Posterior observation estimate.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Calculating Posterior Mean Observation Estimate...&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">forward</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x_hat</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Estimator.y_0">
+<a class="viewcode-back" href="../../reference/api/fips.Estimator.y_0.html#fips.Estimator.y_0">[docs]</a>
+    <span class="nd">@cached_property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">y_0</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Prior mean data estimate.</span>
+
+<span class="sd">        .. math::</span>
+<span class="sd">            \\hat{y}_0 = H x_0 + c</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        np.ndarray</span>
+<span class="sd">            Prior data estimate.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Calculating Prior Mean Data Estimate...&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">forward</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x_0</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Estimator.K">
+<a class="viewcode-back" href="../../reference/api/fips.Estimator.K.html#fips.Estimator.K">[docs]</a>
+    <span class="nd">@cached_property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">K</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Kalman gain matrix.</span>
+
+<span class="sd">        .. math::</span>
+<span class="sd">            K = (H S_0)^T (H S_0 H^T + S_z)^{-1}</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        np.ndarray</span>
+<span class="sd">            Kalman gain matrix.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Calculating Kalman Gain Matrix...&quot;</span><span class="p">)</span>
+        <span class="c1"># We want K = (H S_0)^T (H S_0 H^T + S_z)^-1</span>
+        <span class="c1"># Let A = (H S_0 H^T + S_z) and B = (H S_0).</span>
+        <span class="c1"># Since A is symmetric, solve(A, B) computes A^-1 B.</span>
+        <span class="c1"># So K = (A^-1 B)^T = solve(A, B).T</span>
+        <span class="n">A</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_HS_0H</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">S_z</span>
+        <span class="n">B</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_HS_0</span>
+        <span class="k">return</span> <span class="n">_solve_psd</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">)</span><span class="o">.</span><span class="n">T</span></div>
+
+
+<div class="viewcode-block" id="Estimator.A">
+<a class="viewcode-back" href="../../reference/api/fips.Estimator.A.html#fips.Estimator.A">[docs]</a>
+    <span class="nd">@cached_property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">A</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Averaging kernel matrix.</span>
+
+<span class="sd">        .. math::</span>
+<span class="sd">            A = KH = (H S_0)^T (H S_0 H^T + S_z)^{-1} H</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        np.ndarray</span>
+<span class="sd">            Averaging kernel matrix.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Calculating Averaging Kernel Matrix...&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">K</span> <span class="o">@</span> <span class="bp">self</span><span class="o">.</span><span class="n">H</span></div>
+
+
+    <span class="nd">@cached_property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_H_T</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Transpose of the forward operator.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">H</span><span class="o">.</span><span class="n">T</span>
+
+    <span class="nd">@cached_property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_HS_0</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Compute H S_0.</span>
+
+<span class="sd">        .. math::</span>
+<span class="sd">            H S_0</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">H</span> <span class="o">@</span> <span class="bp">self</span><span class="o">.</span><span class="n">S_0</span>
+
+    <span class="nd">@cached_property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_HS_0H</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Compute H S_0 H^T.</span>
+
+<span class="sd">        .. math::</span>
+<span class="sd">            H S_0 H^T</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_HS_0</span> <span class="o">@</span> <span class="bp">self</span><span class="o">.</span><span class="n">_H_T</span>
+
+<div class="viewcode-block" id="Estimator.S_y0">
+<a class="viewcode-back" href="../../reference/api/fips.Estimator.S_y0.html#fips.Estimator.S_y0">[docs]</a>
+    <span class="nd">@cached_property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">S_y0</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Prior error covariance in observation space.</span>
+
+<span class="sd">        .. math::</span>
+<span class="sd">            S_{y_0} = H S_0 H^T</span>
+
+<span class="sd">        The covariance of the prior modelled observations ``y_0`` that the</span>
+<span class="sd">        prior error ``S_0`` implies: how uncertain each modelled observation</span>
+<span class="sd">        is because the prior state is, and how those uncertainties co-vary</span>
+<span class="sd">        between observations that see the same state. The square root of its</span>
+<span class="sd">        diagonal is the prior&#39;s share of the error budget at each</span>
+<span class="sd">        observation, alongside the model-data mismatch ``S_z``.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_HS_0H</span></div>
+
+
+<div class="viewcode-block" id="Estimator.DOFS">
+<a class="viewcode-back" href="../../reference/api/fips.Estimator.DOFS.html#fips.Estimator.DOFS">[docs]</a>
+    <span class="nd">@cached_property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">DOFS</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Degrees Of Freedom for Signal (DOFS).</span>
+
+<span class="sd">        .. math::</span>
+<span class="sd">            DOFS = Tr(A)</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        float</span>
+<span class="sd">            Degrees of Freedom value.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">A</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="Estimator.reduced_chi2">
+<a class="viewcode-back" href="../../reference/api/fips.Estimator.reduced_chi2.html#fips.Estimator.reduced_chi2">[docs]</a>
+    <span class="nd">@cached_property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">reduced_chi2</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Reduced Chi-squared statistic. Tarantola (1987).</span>
+
+<span class="sd">        .. math::</span>
+<span class="sd">            \\chi^2 = \\frac{1}{n_z} ((z - H\\hat{x})^T S_z^{-1} (z - H\\hat{x}) + (\\hat{x} - x_0)^T S_0^{-1} (\\hat{x} - x_0))</span>
+
+<span class="sd">        .. note::</span>
+<span class="sd">            I can&#39;t find a copy of Tarantola (1987) to verify this equation, but it appears in</span>
+<span class="sd">            Kunik et al. (2019) https://doi.org/10.1525/elementa.375</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        float</span>
+<span class="sd">            Reduced Chi-squared value.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Calculating Reduced Chi-squared statistic...&quot;</span><span class="p">)</span>
+        <span class="n">data_residual</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">residual</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x_hat</span><span class="p">)</span>
+        <span class="n">model_residual</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">x_hat</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">x_0</span>
+
+        <span class="c1"># The Chi-square involves Mahalanobis distance terms: r^T * S^-1 * r</span>
+        <span class="c1"># Explicitly inverting the S_z and S_0 matrices just to multiply a vector</span>
+        <span class="c1"># is slow and memory-intensive.</span>
+        <span class="c1">#</span>
+        <span class="c1"># Instead, we solve the system: S * y = r  --&gt;  y = S^-1 * r</span>
+        <span class="c1"># Then we compute: r^T @ y. _solve_psd falls back to a symmetric LDL^T</span>
+        <span class="c1"># solve if roundoff (e.g. after aggregation) tips the covariance off</span>
+        <span class="c1"># positive-definite.</span>
+
+        <span class="c1"># 1. Scaled Data Misfit: data_residual^T @ (S_z^-1 @ data_residual)</span>
+        <span class="n">scaled_data_misfit</span> <span class="o">=</span> <span class="n">data_residual</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">_solve_psd</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">S_z</span><span class="p">,</span> <span class="n">data_residual</span><span class="p">)</span>
+
+        <span class="c1"># 2. Scaled Model Misfit: model_residual^T @ (S_0^-1 @ model_residual)</span>
+        <span class="n">scaled_model_misfit</span> <span class="o">=</span> <span class="n">model_residual</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">_solve_psd</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">S_0</span><span class="p">,</span> <span class="n">model_residual</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="nb">float</span><span class="p">((</span><span class="n">scaled_data_misfit</span> <span class="o">+</span> <span class="n">scaled_model_misfit</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_z</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Estimator.R2">
+<a class="viewcode-back" href="../../reference/api/fips.Estimator.R2.html#fips.Estimator.R2">[docs]</a>
+    <span class="nd">@cached_property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">R2</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Coefficient of determination (R-squared).</span>
+
+<span class="sd">        .. math::</span>
+<span class="sd">            R^2 = corr(z, H\\hat{x})^2</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        float</span>
+<span class="sd">            R-squared value.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Calculating Coefficient of determination (R-squared)...&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">corrcoef</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">z</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">y_hat</span><span class="p">)[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Estimator.RMSE">
+<a class="viewcode-back" href="../../reference/api/fips.Estimator.RMSE.html#fips.Estimator.RMSE">[docs]</a>
+    <span class="nd">@cached_property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">RMSE</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Root mean square error (RMSE).</span>
+
+<span class="sd">        .. math::</span>
+<span class="sd">            RMSE = \\sqrt{\\frac{(z - H\\hat{x})^2}{n_z}}</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        float</span>
+<span class="sd">            RMSE value.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Calculating Root Mean Square Error (RMSE)...&quot;</span><span class="p">)</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">residual</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x_hat</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">((</span><span class="n">r</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_z</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="Estimator.uncertainty_reduction">
+<a class="viewcode-back" href="../../reference/api/fips.Estimator.uncertainty_reduction.html#fips.Estimator.uncertainty_reduction">[docs]</a>
+    <span class="nd">@cached_property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">uncertainty_reduction</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Uncertainty reduction metric.</span>
+
+<span class="sd">        .. math::</span>
+<span class="sd">            U_{red} = 1 - \\frac{\\sqrt{trace(\\hat{S})}}{\\sqrt{trace(S_0)}}</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        float</span>
+<span class="sd">            Uncertainty reduction value.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Calculating uncertainty reduction metric...&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">S_hat</span><span class="p">))</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">S_0</span><span class="p">))))</span></div>
+
+
+<div class="viewcode-block" id="Estimator.desroziers">
+<a class="viewcode-back" href="../../reference/api/fips.Estimator.desroziers.html#fips.Estimator.desroziers">[docs]</a>
+    <span class="nd">@cached_property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">desroziers</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Desroziers et al. (2005) diagnosed observation error covariance.</span>
+
+<span class="sd">        Estimates the observation error covariance from the innovation</span>
+<span class="sd">        (prior departure) and analysis departure (posterior residual):</span>
+
+<span class="sd">        .. math::</span>
+<span class="sd">            R_{diag} = \frac{1}{2}(d^a {d^b}^T + d^b {d^a}^T)</span>
+
+<span class="sd">        where :math:`d^b = z - Hx_0 - c` (innovation) and</span>
+<span class="sd">        :math:`d^a = z - H\hat{x} - c` (analysis departure).</span>
+
+<span class="sd">        Symmetrized since the single-realization outer product is not</span>
+<span class="sd">        symmetric but the expectation is.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        np.ndarray</span>
+<span class="sd">            Diagnosed observation error covariance matrix (n_z × n_z).</span>
+
+<span class="sd">        References</span>
+<span class="sd">        ----------</span>
+<span class="sd">        Desroziers, G., Berre, L., Chapnik, B., &amp; Poli, P. (2005).</span>
+<span class="sd">        Diagnosis of observation, background and analysis-error statistics</span>
+<span class="sd">        in observation space. Q.J.R. Meteorol. Soc., 131, 3385–3396.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">d_b</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">residual</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x_0</span><span class="p">)</span>  <span class="c1"># innovation</span>
+        <span class="n">d_a</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">residual</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x_hat</span><span class="p">)</span>  <span class="c1"># analysis departure</span>
+        <span class="n">raw</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">outer</span><span class="p">(</span><span class="n">d_a</span><span class="p">,</span> <span class="n">d_b</span><span class="p">)</span>
+        <span class="k">return</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">raw</span> <span class="o">+</span> <span class="n">raw</span><span class="o">.</span><span class="n">T</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Estimator.U_red">
+<a class="viewcode-back" href="../../reference/api/fips.Estimator.U_red.html#fips.Estimator.U_red">[docs]</a>
+    <span class="nd">@cached_property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">U_red</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Uncertainty reduction vector.</span>
+
+<span class="sd">        .. math::</span>
+<span class="sd">            U_{red} = \\left( 1 - \\frac{\\sqrt{diag(\\hat{S})}}{\\sqrt{diag(S_0)}} \\right) * 100\\%</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        np.ndarray</span>
+<span class="sd">            Uncertainty reduction vector.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Calculating uncertainty reduction vector...&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">S_hat</span><span class="p">))</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">S_0</span><span class="p">))))</span> <span class="o">*</span> <span class="mf">100.0</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="BayesianSolver">
+<a class="viewcode-back" href="../../reference/api/fips.estimators.BayesianSolver.html#fips.BayesianSolver">[docs]</a>
+<span class="nd">@ESTIMATOR_REGISTRY</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s2">&quot;bayesian&quot;</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">BayesianSolver</span><span class="p">(</span><span class="n">Estimator</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Bayesian inversion estimator class.</span>
+
+<span class="sd">    This class implements a Bayesian inversion framework for solving inverse problems,</span>
+<span class="sd">    also known as the batch method.</span>
+
+<span class="sd">    The regularization factor (gamma) controls the balance between fitting observations and</span>
+<span class="sd">    staying close to the prior. In the cost function, gamma (γ) multiplies the observation term:</span>
+<span class="sd">    J(x) = (x - x_0)^T S_0^{-1} (x - x_0) + gamma*(z - Hx)^T S_z^{-1} (z - Hx)</span>
+
+<span class="sd">    This amounts to scaling S_z by 1/gamma.</span>
+
+<span class="sd">    - gamma &gt; 1: Increases weight on data fitting (less regularization, fits observations more closely)</span>
+<span class="sd">    - gamma = 1: Standard Bayesian inversion (default)</span>
+<span class="sd">    - gamma &lt; 1: Decreases weight on data fitting (more regularization, stays closer to prior)</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    z : np.ndarray</span>
+<span class="sd">        Observed data</span>
+<span class="sd">    x_0 : np.ndarray</span>
+<span class="sd">        Prior model estimate</span>
+<span class="sd">    H : np.ndarray</span>
+<span class="sd">        Forward operator</span>
+<span class="sd">    S_0 : np.ndarray</span>
+<span class="sd">        Prior error covariance</span>
+<span class="sd">    S_z : np.ndarray</span>
+<span class="sd">        Model-data mismatch covariance</span>
+<span class="sd">    c : np.ndarray | float, optional</span>
+<span class="sd">        Constant data, defaults to 0.0</span>
+<span class="sd">    gamma : float, optional</span>
+<span class="sd">        Regularization factor (γ) that multiplies the observation term in the cost function, by default 1.0</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">gamma</span><span class="p">:</span> <span class="nb">float</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Regularization factor (γ) that multiplies the observation term in the cost function.</span>
+<span class="sd">    Values &gt; 1 increase weight on data fitting (less regularization),</span>
+<span class="sd">    values &lt; 1 decrease weight on data fitting (more regularization).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_S_z_orig</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Original observation error covariance before regularization.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">z</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+        <span class="n">x_0</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+        <span class="n">H</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+        <span class="n">S_0</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+        <span class="n">S_z</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+        <span class="n">c</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">|</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">gamma</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="c1"># Store original S_z and gamma, then pass regularized S_z to parent</span>
+        <span class="c1"># Note: S_z is scaled by 1/gamma so that S_z^{-1} is scaled by gamma in the cost function</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_S_z_orig</span> <span class="o">=</span> <span class="n">S_z</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">gamma</span> <span class="o">=</span> <span class="n">gamma</span>
+        <span class="n">S_z_reg</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_S_z_orig</span> <span class="o">/</span> <span class="n">gamma</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">z</span><span class="o">=</span><span class="n">z</span><span class="p">,</span> <span class="n">x_0</span><span class="o">=</span><span class="n">x_0</span><span class="p">,</span> <span class="n">H</span><span class="o">=</span><span class="n">H</span><span class="p">,</span> <span class="n">S_0</span><span class="o">=</span><span class="n">S_0</span><span class="p">,</span> <span class="n">S_z</span><span class="o">=</span><span class="n">S_z_reg</span><span class="p">,</span> <span class="n">c</span><span class="o">=</span><span class="n">c</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return string representation.&quot;&quot;&quot;</span>
+        <span class="n">solved</span> <span class="o">=</span> <span class="s2">&quot;x_hat&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;BayesianSolver(&quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;n_x=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">n_x</span><span class="si">}</span><span class="s2">, n_z=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">n_z</span><span class="si">}</span><span class="s2">, &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;gamma=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">gamma</span><span class="si">}</span><span class="s2">, solved=</span><span class="si">{</span><span class="n">solved</span><span class="si">}</span><span class="s2">)&quot;</span>
+        <span class="p">)</span>
+
+<div class="viewcode-block" id="BayesianSolver.cost">
+<a class="viewcode-back" href="../../reference/api/fips.estimators.BayesianSolver.cost.html#fips.BayesianSolver.cost">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">cost</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Cost function with regularization.</span>
+
+<span class="sd">        .. math::</span>
+<span class="sd">            J(x) = \\frac{1}{2}(x - x_0)^T S_0^{-1}(x - x_0) + λ\\frac{1}{2}(z - Hx - c)^T S_z^{-1}(z - Hx - c)</span>
+
+<span class="sd">        Note: S_z has already been scaled by the regularization factor gamma during initialization.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Performing cost calculation...&quot;</span><span class="p">)</span>
+        <span class="n">diff_model</span> <span class="o">=</span> <span class="n">x</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">x_0</span>
+        <span class="n">diff_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">residual</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+
+        <span class="c1"># Like the Chi-square, the cost function relies on r^T * S^-1 * r.</span>
+        <span class="c1"># We replace inv(S) @ r with solve(S, r) to avoid calculating the full inverse.</span>
+
+        <span class="n">cost_model</span> <span class="o">=</span> <span class="n">diff_model</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">_solve_psd</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">S_0</span><span class="p">,</span> <span class="n">diff_model</span><span class="p">)</span>
+        <span class="n">cost_data</span> <span class="o">=</span> <span class="n">diff_data</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">_solve_psd</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">S_z</span><span class="p">,</span> <span class="n">diff_data</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">cost_model</span> <span class="o">+</span> <span class="n">cost_data</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="BayesianSolver.x_hat">
+<a class="viewcode-back" href="../../reference/api/fips.estimators.BayesianSolver.x_hat.html#fips.BayesianSolver.x_hat">[docs]</a>
+    <span class="nd">@cached_property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">x_hat</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># type: ignore[override]</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Posterior Mean Model Estimate (solution).</span>
+
+<span class="sd">        .. math::</span>
+<span class="sd">            \\hat{x} = x_0 + K(z - Hx_0 - c)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Calculating Posterior Mean Model Estimate...&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">x_0</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">K</span> <span class="o">@</span> <span class="bp">self</span><span class="o">.</span><span class="n">residual</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x_0</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="BayesianSolver.S_hat">
+<a class="viewcode-back" href="../../reference/api/fips.estimators.BayesianSolver.S_hat.html#fips.BayesianSolver.S_hat">[docs]</a>
+    <span class="nd">@cached_property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">S_hat</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># type: ignore[override]</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Posterior Error Covariance Matrix with regularization.</span>
+
+<span class="sd">        .. math::</span>
+<span class="sd">            \\hat{S} = (H^T S_z^{-1} H + S_0^{-1})^{-1}</span>
+<span class="sd">                = S_0 - (H S_0)^T(H S_0 H^T + S_z)^{-1}(H S_0)</span>
+<span class="sd">                = S_0 - K H S_0</span>
+
+<span class="sd">        Note: S_z has already been scaled by the regularization factor gamma during initialization.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Calculating Posterior Error Covariance Matrix...&quot;</span><span class="p">)</span>
+        <span class="c1"># Mathematically, we want to subtract: B^T * A^-1 * B</span>
+        <span class="c1"># where A = (H S_0 H^T + S_z) and B = (H S_0)</span>
+        <span class="c1">#</span>
+        <span class="c1"># Using scipy.linalg.solve(A, B), we compute the (A^-1 * B) term without</span>
+        <span class="c1"># ever building the explicit inverse matrix.</span>
+        <span class="c1"># The equation simplifies to: S_0 - B^T @ solve(A, B)</span>
+        <span class="c1"># which is the same as S_0 - K @ H @ S_0 since K = (H S_0)^T (H S_0 H^T + S_z)^{-1}</span>
+
+        <span class="c1"># Since gamma is already applied to S_z during initialization, all calculations</span>
+        <span class="c1"># automatically use the regularized covariance.</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">S_0</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">K</span> <span class="o">@</span> <span class="bp">self</span><span class="o">.</span><span class="n">_HS_0</span></div>
+</div>
+
+</pre></div>
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2025-2026, James Mineau.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.1.0.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

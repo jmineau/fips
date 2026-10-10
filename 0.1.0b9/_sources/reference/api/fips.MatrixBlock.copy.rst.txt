@@ -1,0 +1,6 @@
+﻿fips.MatrixBlock.copy
+=====================
+
+.. currentmodule:: fips
+
+.. automethod:: MatrixBlock.copy

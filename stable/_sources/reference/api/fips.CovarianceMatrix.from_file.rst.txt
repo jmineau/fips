@@ -1,0 +1,6 @@
+﻿fips.CovarianceMatrix.from\_file
+================================
+
+.. currentmodule:: fips
+
+.. automethod:: CovarianceMatrix.from_file

@@ -1,0 +1,6 @@
+fips.problems.flux.FluxProblem.enhancement
+==========================================
+
+.. currentmodule:: fips.problems.flux
+
+.. autoproperty:: FluxProblem.enhancement

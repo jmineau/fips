@@ -1,0 +1,6 @@
+fips.base.Structure.reindex
+===========================
+
+.. currentmodule:: fips.base
+
+.. automethod:: Structure.reindex

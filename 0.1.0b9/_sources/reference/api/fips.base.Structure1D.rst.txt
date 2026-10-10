@@ -1,0 +1,42 @@
+﻿fips.base.Structure1D
+=====================
+
+.. currentmodule:: fips.base
+
+.. autoclass:: Structure1D
+   :no-members:
+   :show-inheritance:
+
+
+
+
+.. rubric:: Attributes
+
+.. autosummary::
+   :toctree:
+
+   ~Structure1D.data
+   ~Structure1D.name
+
+
+
+.. rubric:: Methods
+
+.. autosummary::
+   :toctree:
+
+   ~Structure1D.to_series
+
+
+
+
+.. rubric:: Inherited
+
+
+From :class:`~.Structure`: :py:obj:`~.Structure.copy`, :py:obj:`~.Structure.index`, :py:obj:`~.Structure.reindex`, :py:obj:`~.Structure.round_index`, :py:obj:`~.Structure.shape`, :py:obj:`~.Structure.to_numpy`, :py:obj:`~.Structure.values`, :py:obj:`~.Structure.xs`
+
+
+
+From :class:`~.Pickleable`: :py:obj:`~.Pickleable.from_file`, :py:obj:`~.Pickleable.to_file`
+
+

@@ -1,0 +1,6 @@
+﻿fips.aggregators.integrate\_over\_time\_bins
+============================================
+
+.. currentmodule:: fips.aggregators
+
+.. autofunction:: integrate_over_time_bins

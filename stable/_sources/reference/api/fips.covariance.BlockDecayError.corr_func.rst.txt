@@ -1,0 +1,6 @@
+fips.covariance.BlockDecayError.corr\_func
+==========================================
+
+.. currentmodule:: fips.covariance
+
+.. autoattribute:: BlockDecayError.corr_func

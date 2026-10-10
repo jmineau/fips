@@ -1,0 +1,6 @@
+﻿fips.Block.to\_numpy
+====================
+
+.. currentmodule:: fips
+
+.. automethod:: Block.to_numpy

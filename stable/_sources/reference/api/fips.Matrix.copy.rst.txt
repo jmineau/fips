@@ -1,0 +1,6 @@
+﻿fips.Matrix.copy
+================
+
+.. currentmodule:: fips
+
+.. automethod:: Matrix.copy

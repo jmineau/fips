@@ -1,0 +1,37 @@
+﻿fips.covariance.KroneckerError
+==============================
+
+.. currentmodule:: fips.covariance
+
+.. autoclass:: KroneckerError
+   :no-members:
+   :show-inheritance:
+
+
+
+
+.. rubric:: Attributes
+
+.. autosummary::
+   :toctree:
+
+   ~KroneckerError.marginal_kernels
+
+
+
+.. rubric:: Methods
+
+.. autosummary::
+   :toctree:
+
+   ~KroneckerError.build
+
+
+
+
+.. rubric:: Inherited
+
+
+From :class:`~.ErrorComponent`: :py:obj:`~.ErrorComponent.name`, :py:obj:`~.ErrorComponent.variances`
+
+

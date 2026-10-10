@@ -1,0 +1,6 @@
+﻿fips.MatrixBlock.data
+=====================
+
+.. currentmodule:: fips
+
+.. autoattribute:: MatrixBlock.data

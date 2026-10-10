@@ -1,0 +1,6 @@
+﻿fips.visualization.compute\_credible\_interval
+==============================================
+
+.. currentmodule:: fips.visualization
+
+.. autofunction:: compute_credible_interval

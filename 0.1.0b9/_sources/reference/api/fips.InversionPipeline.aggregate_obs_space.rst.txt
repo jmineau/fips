@@ -1,0 +1,6 @@
+fips.InversionPipeline.aggregate\_obs\_space
+============================================
+
+.. currentmodule:: fips
+
+.. automethod:: InversionPipeline.aggregate_obs_space

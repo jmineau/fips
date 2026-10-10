@@ -3,5 +3,11 @@
     "name": "dev",
     "version": "dev",
     "url": "https://jmineau.github.io/fips/dev/"
+  },
+  {
+    "name": "0.1.0b9 (latest)",
+    "version": "0.1.0b9",
+    "url": "https://jmineau.github.io/fips/stable/",
+    "preferred": true
   }
 ]

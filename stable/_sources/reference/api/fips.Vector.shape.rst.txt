@@ -1,0 +1,6 @@
+﻿fips.Vector.shape
+=================
+
+.. currentmodule:: fips
+
+.. autoproperty:: Vector.shape

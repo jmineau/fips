@@ -1,0 +1,31 @@
+﻿fips.covariance.ErrorComponent
+==============================
+
+.. currentmodule:: fips.covariance
+
+.. autoclass:: ErrorComponent
+   :no-members:
+   :show-inheritance:
+
+
+
+
+.. rubric:: Attributes
+
+.. autosummary::
+   :toctree:
+
+   ~ErrorComponent.name
+   ~ErrorComponent.variances
+
+
+
+.. rubric:: Methods
+
+.. autosummary::
+   :toctree:
+
+   ~ErrorComponent.build
+
+
+

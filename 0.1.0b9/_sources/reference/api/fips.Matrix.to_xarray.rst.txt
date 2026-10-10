@@ -1,0 +1,6 @@
+fips.Matrix.to\_xarray
+======================
+
+.. currentmodule:: fips
+
+.. automethod:: Matrix.to_xarray

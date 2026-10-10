@@ -1,0 +1,39 @@
+﻿fips.estimators.BayesianSolver
+==============================
+
+.. currentmodule:: fips.estimators
+
+.. autoclass:: BayesianSolver
+   :no-members:
+   :show-inheritance:
+
+
+
+
+.. rubric:: Attributes
+
+.. autosummary::
+   :toctree:
+
+   ~BayesianSolver.gamma
+   ~BayesianSolver.S_hat
+   ~BayesianSolver.x_hat
+
+
+
+.. rubric:: Methods
+
+.. autosummary::
+   :toctree:
+
+   ~BayesianSolver.cost
+
+
+
+
+.. rubric:: Inherited
+
+
+From :class:`~.Estimator`: :py:obj:`~.Estimator.A`, :py:obj:`~.Estimator.c`, :py:obj:`~.Estimator.desroziers`, :py:obj:`~.Estimator.DOFS`, :py:obj:`~.Estimator.forward`, :py:obj:`~.Estimator.H`, :py:obj:`~.Estimator.K`, :py:obj:`~.Estimator.leverage`, :py:obj:`~.Estimator.n_x`, :py:obj:`~.Estimator.n_z`, :py:obj:`~.Estimator.R2`, :py:obj:`~.Estimator.reduced_chi2`, :py:obj:`~.Estimator.residual`, :py:obj:`~.Estimator.RMSE`, :py:obj:`~.Estimator.S_0`, :py:obj:`~.Estimator.S_y0`, :py:obj:`~.Estimator.S_z`, :py:obj:`~.Estimator.U_red`, :py:obj:`~.Estimator.uncertainty_reduction`, :py:obj:`~.Estimator.x_0`, :py:obj:`~.Estimator.y_0`, :py:obj:`~.Estimator.y_hat`, :py:obj:`~.Estimator.z`
+
+

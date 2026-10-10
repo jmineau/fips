@@ -1,0 +1,6 @@
+﻿fips.InverseProblem.from\_file
+==============================
+
+.. currentmodule:: fips
+
+.. automethod:: InverseProblem.from_file

@@ -1,0 +1,23 @@
+﻿fips.base.Pickleable
+====================
+
+.. currentmodule:: fips.base
+
+.. autoclass:: Pickleable
+   :no-members:
+
+
+
+
+
+
+.. rubric:: Methods
+
+.. autosummary::
+   :toctree:
+
+   ~Pickleable.from_file
+   ~Pickleable.to_file
+
+
+

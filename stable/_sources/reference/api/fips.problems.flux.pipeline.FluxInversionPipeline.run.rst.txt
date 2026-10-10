@@ -1,0 +1,6 @@
+fips.problems.flux.pipeline.FluxInversionPipeline.run
+=====================================================
+
+.. currentmodule:: fips.problems.flux.pipeline
+
+.. automethod:: FluxInversionPipeline.run

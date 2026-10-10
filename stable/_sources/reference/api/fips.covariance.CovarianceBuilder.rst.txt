@@ -1,0 +1,29 @@
+﻿fips.covariance.CovarianceBuilder
+=================================
+
+.. currentmodule:: fips.covariance
+
+.. autoclass:: CovarianceBuilder
+   :no-members:
+
+
+
+
+.. rubric:: Attributes
+
+.. autosummary::
+   :toctree:
+
+   ~CovarianceBuilder.components
+
+
+
+.. rubric:: Methods
+
+.. autosummary::
+   :toctree:
+
+   ~CovarianceBuilder.build
+
+
+

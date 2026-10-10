@@ -1,0 +1,32 @@
+﻿fips.problems.flux.pipeline.FluxInversionPipeline
+=================================================
+
+.. currentmodule:: fips.problems.flux.pipeline
+
+.. autoclass:: FluxInversionPipeline
+   :no-members:
+   :show-inheritance:
+
+
+
+
+
+
+.. rubric:: Methods
+
+.. autosummary::
+   :toctree:
+
+   ~FluxInversionPipeline.filter_state_space
+   ~FluxInversionPipeline.run
+   ~FluxInversionPipeline.summarize
+
+
+
+
+.. rubric:: Inherited
+
+
+From :class:`~.InversionPipeline`: :py:obj:`~.InversionPipeline.aggregate_obs_space`, :py:obj:`~.InversionPipeline.config`, :py:obj:`~.InversionPipeline.estimator`, :py:obj:`~.InversionPipeline.get_constant`, :py:obj:`~.InversionPipeline.get_forward_operator`, :py:obj:`~.InversionPipeline.get_inputs`, :py:obj:`~.InversionPipeline.get_modeldata_mismatch`, :py:obj:`~.InversionPipeline.get_obs`, :py:obj:`~.InversionPipeline.get_prior`, :py:obj:`~.InversionPipeline.get_prior_error`
+
+

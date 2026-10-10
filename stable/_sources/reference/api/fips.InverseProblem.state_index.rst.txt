@@ -1,0 +1,6 @@
+fips.InverseProblem.state\_index
+================================
+
+.. currentmodule:: fips
+
+.. autoproperty:: InverseProblem.state_index

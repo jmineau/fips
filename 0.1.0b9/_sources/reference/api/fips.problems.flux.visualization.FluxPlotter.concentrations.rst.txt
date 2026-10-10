@@ -1,0 +1,6 @@
+fips.problems.flux.visualization.FluxPlotter.concentrations
+===========================================================
+
+.. currentmodule:: fips.problems.flux.visualization
+
+.. automethod:: FluxPlotter.concentrations

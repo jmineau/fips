@@ -1,0 +1,6 @@
+fips.InverseProblem.prior\_error
+================================
+
+.. currentmodule:: fips
+
+.. autoattribute:: InverseProblem.prior_error

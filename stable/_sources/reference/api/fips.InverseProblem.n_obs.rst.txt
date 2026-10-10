@@ -1,0 +1,6 @@
+fips.InverseProblem.n\_obs
+==========================
+
+.. currentmodule:: fips
+
+.. autoproperty:: InverseProblem.n_obs

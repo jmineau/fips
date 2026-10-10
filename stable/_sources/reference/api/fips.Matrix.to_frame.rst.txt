@@ -1,0 +1,6 @@
+﻿fips.Matrix.to\_frame
+=====================
+
+.. currentmodule:: fips
+
+.. automethod:: Matrix.to_frame

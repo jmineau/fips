@@ -1,0 +1,6 @@
+﻿fips.CovarianceMatrix.to\_numpy
+===============================
+
+.. currentmodule:: fips
+
+.. automethod:: CovarianceMatrix.to_numpy

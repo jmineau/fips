@@ -1,0 +1,6 @@
+﻿fips.kernels.GridSpatialDecay
+=============================
+
+.. currentmodule:: fips.kernels
+
+.. autofunction:: GridSpatialDecay

@@ -1,0 +1,6 @@
+fips.base.Structure1D.to\_series
+================================
+
+.. currentmodule:: fips.base
+
+.. automethod:: Structure1D.to_series

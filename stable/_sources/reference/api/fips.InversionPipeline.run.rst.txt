@@ -1,0 +1,6 @@
+fips.InversionPipeline.run
+==========================
+
+.. currentmodule:: fips
+
+.. automethod:: InversionPipeline.run

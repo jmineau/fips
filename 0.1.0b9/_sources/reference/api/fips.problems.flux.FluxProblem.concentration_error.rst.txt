@@ -1,0 +1,6 @@
+fips.problems.flux.FluxProblem.concentration\_error
+===================================================
+
+.. currentmodule:: fips.problems.flux
+
+.. autoproperty:: FluxProblem.concentration_error

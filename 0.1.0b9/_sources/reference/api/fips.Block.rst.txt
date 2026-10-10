@@ -1,0 +1,39 @@
+﻿fips.Block
+==========
+
+.. currentmodule:: fips
+
+.. autoclass:: Block
+   :no-members:
+   :show-inheritance:
+
+
+
+
+
+
+.. rubric:: Methods
+
+.. autosummary::
+   :toctree:
+
+   ~Block.to_series
+   ~Block.to_xarray
+
+
+
+
+.. rubric:: Inherited
+
+
+From :class:`~.Structure1D`: :py:obj:`~.Structure1D.data`, :py:obj:`~.Structure1D.name`
+
+
+
+From :class:`~.Structure`: :py:obj:`~.Structure.copy`, :py:obj:`~.Structure.index`, :py:obj:`~.Structure.reindex`, :py:obj:`~.Structure.round_index`, :py:obj:`~.Structure.shape`, :py:obj:`~.Structure.to_numpy`, :py:obj:`~.Structure.values`, :py:obj:`~.Structure.xs`
+
+
+
+From :class:`~.Pickleable`: :py:obj:`~.Pickleable.from_file`, :py:obj:`~.Pickleable.to_file`
+
+

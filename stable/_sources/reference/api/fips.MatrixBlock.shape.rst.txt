@@ -1,0 +1,6 @@
+﻿fips.MatrixBlock.shape
+======================
+
+.. currentmodule:: fips
+
+.. autoproperty:: MatrixBlock.shape

@@ -1,0 +1,6 @@
+fips.Estimator.residual
+=======================
+
+.. currentmodule:: fips
+
+.. automethod:: Estimator.residual

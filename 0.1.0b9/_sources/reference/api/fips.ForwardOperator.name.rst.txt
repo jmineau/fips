@@ -1,0 +1,6 @@
+﻿fips.ForwardOperator.name
+=========================
+
+.. currentmodule:: fips
+
+.. autoattribute:: ForwardOperator.name

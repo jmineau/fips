@@ -1,0 +1,6 @@
+﻿fips.Matrix.round\_index
+========================
+
+.. currentmodule:: fips
+
+.. automethod:: Matrix.round_index

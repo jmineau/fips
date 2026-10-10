@@ -1,0 +1,6 @@
+﻿fips.metrics.time\_diff\_matrix
+===============================
+
+.. currentmodule:: fips.metrics
+
+.. autofunction:: time_diff_matrix

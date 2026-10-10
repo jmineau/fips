@@ -1,0 +1,6 @@
+﻿fips.CovarianceMatrix.xs
+========================
+
+.. currentmodule:: fips
+
+.. automethod:: CovarianceMatrix.xs

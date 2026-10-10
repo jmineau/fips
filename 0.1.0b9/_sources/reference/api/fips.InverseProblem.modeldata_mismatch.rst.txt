@@ -1,0 +1,6 @@
+fips.InverseProblem.modeldata\_mismatch
+=======================================
+
+.. currentmodule:: fips
+
+.. autoattribute:: InverseProblem.modeldata_mismatch

@@ -1,0 +1,6 @@
+fips.Estimator.forward
+======================
+
+.. currentmodule:: fips
+
+.. automethod:: Estimator.forward

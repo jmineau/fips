@@ -1,0 +1,6 @@
+﻿fips.kernels.RaggedTimeDecay
+============================
+
+.. currentmodule:: fips.kernels
+
+.. autofunction:: RaggedTimeDecay

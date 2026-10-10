@@ -1,0 +1,6 @@
+﻿fips.CovarianceMatrix.is\_sparse
+================================
+
+.. currentmodule:: fips
+
+.. autoproperty:: CovarianceMatrix.is_sparse

@@ -1,0 +1,6 @@
+fips.covariance.CovarianceBuilder.components
+============================================
+
+.. currentmodule:: fips.covariance
+
+.. autoattribute:: CovarianceBuilder.components

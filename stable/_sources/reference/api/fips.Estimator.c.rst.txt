@@ -1,0 +1,6 @@
+fips.Estimator.c
+================
+
+.. currentmodule:: fips
+
+.. autoattribute:: Estimator.c
