@@ -16,7 +16,6 @@ the orientation file it should read.
    cd fips
    ```
 3. Install system tools:
-   - [Pandoc](https://pandoc.org/installing.html) - For building documentation
    - [uv](https://docs.astral.sh/uv/getting-started/installation/) - Environment and dependency management
    - [just](https://just.systems/) (the task runner) comes with the dev tools: `uv run just ...`
 

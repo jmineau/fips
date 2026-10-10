@@ -48,8 +48,6 @@ jobs:
       - name: Install
         run: uv sync --locked
 
-      - uses: pandoc/actions/setup@v1  # nbsphinx converts the notebooks with pandoc
-
       - name: Build
         run: uv run just build-docs
 
