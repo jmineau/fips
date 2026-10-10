@@ -150,7 +150,7 @@ Driven by `just` + `uv`; CI runs the same recipes.
 | `just test` | pytest in parallel (up to 8 workers), skipping `network`/`slow`; extra args go to pytest (`-n 0` for serial) |
 | `just lint` / `just format` | ruff check and format check / fix and format |
 | `just type-check` | pyrefly, against `pyrefly-baseline.json` |
-| `just build-docs` | Sphinx HTML into `docs/_build`; warnings are errors (needs pandoc) |
+| `just build-docs` | Sphinx HTML into `docs/_build`, running every example; warnings are errors |
 | `just docs-serve` | live docs preview on port 8000 |
 | `just changelog` | draft CHANGELOG entries from the commits since the last tag |
 | `just pre-commit` | every hook on every file |
@@ -188,13 +188,94 @@ The tooling comes from
   what it inherits (`docs/_templates/autosummary/` and `docs/_ext/api_pages.py`,
   from python-template). Document a new base class in `reference/base.rst`, or
   its inherited members show as plain names. Give each public property a
-  docstring: an undocumented one shows an empty row.
+  docstring: an undocumented one shows an empty row. Examples run when the docs
+  build (see "Examples in the docs").
 - **Coverage**: configured in `pyproject.toml`; `tests/` is the only
   testpath. `coverage.exclude_also` skips `__repr__`, abstract methods,
   `if __name__ == "__main__":`, etc.
 - **Dependency groups**: runtime deps in `[project]`; the `flux` extra adds
   cartopy/h5py/matplotlib; the `dev` group is what `just sync`
   syncs.
+
+## Examples in the docs
+
+Examples run when the docs build, so they show real output, and the build fails
+when one breaks.
+
+- **A figure in a docstring:** put a `.. plot::` directive in the Examples
+  section. Its code runs (doctest `>>>` lines work), and the figure appears
+  under it.
+
+  ```rst
+  Examples
+  --------
+  .. plot::
+
+     >>> import matplotlib.pyplot as plt
+     >>> _ = plt.plot([0, 1, 2], [0, 1, 4])
+  ```
+
+- **Code in an `.rst` page:** a `.. ipython:: python` block runs, and shows each
+  line with its output, as in an IPython session. Changing a
+  `.. code-block:: python` to `.. ipython:: python` is enough to make it run. For
+  a figure, put `@savefig name.png` on the line above the plotting call.
+
+  ```rst
+  .. ipython:: python
+
+     import matplotlib.pyplot as plt
+     import fips
+
+     fips.__version__
+
+     @savefig squares.png width=5in
+     plt.plot([0, 1, 2], [0, 1, 4]);
+  ```
+
+  A block that raises or warns fails the build; `:okexcept:` or `:okwarning:`
+  under the directive allows one that is meant to. All `.rst` pages share one
+  session, so each page imports and defines what it uses.
+- **Code cells in a Markdown page:** a page (`.md`) under `docs/` can mix prose
+  with code cells that run, each showing what it prints and plots, as in a
+  notebook. The header makes the cells run:
+
+  ````markdown
+  ---
+  file_format: mystnb
+  kernelspec:
+    name: python3
+  ---
+
+  # Getting started
+
+  Some prose.
+
+  ```{code-cell}
+  import fips
+
+  print(fips.__version__)
+  ```
+  ````
+
+- **A notebook:** an `.ipynb` under `docs/` (the worked examples are in
+  `docs/examples/`), listed in a toctree like any page. Commit it without
+  outputs: the build runs every cell.
+- **When they run:** `just build-docs` runs everything, as CI does.
+  `just docs-serve` reruns a Markdown page or notebook only when its code
+  changes, and an `.rst` page's blocks whenever that page is rebuilt. A cell
+  times out after 30 s; for a slower one, set `mystnb: {execution_timeout: 120}`
+  in the page's header, or `"mystnb": {"execution_timeout": 120}` in the
+  notebook's metadata.
+- **Data:** the docs build on GitHub Actions, so an example uses synthetic data,
+  a small file in the repository, or a public download, never a machine-specific
+  path. Seed random numbers so the figures don't change from build to build.
+- **Optional dependencies:** the `dev` group already lists `fips[flux]` (cartopy,
+  h5py, matplotlib), so `uv sync` installs them here and in CI. If an example
+  needs another extra, add `fips[extra]` the same way.
+- **A notebook that can't run in CI** (it needs data only one machine has) is
+  committed with its outputs and `"mystnb": {"execution_mode": "off"}` in its
+  metadata. The page then shows the outputs from its last run, so rerun it when
+  the code it uses changes.
 
 ## Dependency policy — what fips owns and what it delegates
 

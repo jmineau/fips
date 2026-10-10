@@ -51,9 +51,9 @@ dev = [
     "fips[flux]",
     "docstr-coverage>=2.3",
     "git-cliff>=2.10",  # `just changelog`
-    "ipykernel>=7.2.0",  # run the example notebooks
-    "myst-parser>=2.0.0",  # Markdown in the docs (README include)
-    "nbsphinx>=0.9.0",  # example notebooks in the docs; needs pandoc
+    "ipython>=9.0",  # `.. ipython::` in the docs
+    "matplotlib>=3.8",  # `.. plot::` in the docs
+    "myst-nb>=1.2",  # notebooks and Markdown code cells in the docs
     "pre-commit>=4.0",
     "pydata-sphinx-theme>=0.16",
     "pyrefly>=1.3",

@@ -26,16 +26,18 @@ version_match = "dev" if (".dev" in release or "+" in release) else release
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
 extensions = [
-    "myst_parser",
-    "nbsphinx",
     "sphinx.ext.autodoc",
     "sphinx.ext.autosummary",
+    "sphinx.ext.intersphinx",
     "sphinx.ext.napoleon",
     "sphinx.ext.viewcode",
-    "api_pages",  # _ext/api_pages.py: class pages with member tables
-    "sphinx.ext.intersphinx",
+    "matplotlib.sphinxext.plot_directive",  # `.. plot::` runs code, shows the figure
+    "IPython.sphinxext.ipython_directive",  # `.. ipython::` runs code in an .rst page
+    "IPython.sphinxext.ipython_console_highlighting",  # colors its In/Out prompts
+    "myst_nb",  # notebooks (.ipynb, or Markdown with code cells), run at build time
     "sphinx_autodoc_typehints",
     "sphinx_copybutton",
+    "api_pages",  # _ext/api_pages.py: class pages with member tables
 ]
 
 templates_path = ["_templates"]
@@ -43,7 +45,7 @@ templates_path = ["_templates"]
 # - BlockLike is a TYPE_CHECKING-only alias, so typehints cannot resolve it
 # - the README (included in index.rst) starts its headings at H2
 suppress_warnings = ["sphinx_autodoc_typehints.forward_reference", "myst.header"]
-exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
+exclude_patterns = ["_build", "Thumbs.db", ".DS_Store", "**.ipynb_checkpoints"]
 
 # MyST settings
 myst_enable_extensions = ["html_image", "colon_fence", "dollarmath"]
@@ -105,11 +107,27 @@ autoclass_content = "class"
 # Autosummary settings
 autosummary_generate = True
 
-# Nbsphinx settings
-nbsphinx_execute = (
-    "never"  # Don't execute notebooks during build (they should be pre-run)
-)
-nbsphinx_allow_errors = False  # Fail if a notebook has errors
+# Examples run when the docs build, so they show real output and fail the build
+# when they break. A `.. plot::` directive (in a docstring's Examples section or
+# on any page) shows its code and the figure it draws.
+plot_include_source = True
+plot_html_show_source_link = False
+plot_html_show_formats = False
+plot_formats = [("png", 100)]
+
+# In an .rst page, `.. ipython:: python` runs its code and shows each line with
+# its output; a block that raises or warns fails the build. Its figures (a line
+# `@savefig name.png` above the plotting call) are saved under docs/_build.
+ipython_savefig_dir = "_build/savefig"
+
+# Code cells run too, in notebooks and in Markdown pages whose header names a
+# kernel, and show every output; a cell that raises fails the build. Outputs are
+# cached in docs/_build/.jupyter_cache, so `just build-docs` (which starts clean,
+# as CI does) runs them all, and `just docs-serve` reruns a page only when its
+# code changes. A notebook that cannot run in CI keeps the outputs it was
+# committed with if its metadata has "mystnb": {"execution_mode": "off"}.
+nb_execution_mode = "cache"
+nb_execution_show_tb = True  # print the traceback of a failing cell in the log
 
 # Intersphinx settings
 intersphinx_mapping = {

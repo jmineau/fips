@@ -37,5 +37,4 @@ Development Installation
    uv run pre-commit install
    uv run just quality-check
 
-Building the docs also needs `Pandoc <https://pandoc.org/installing.html>`_.
 See ``CONTRIBUTING.md`` for the full workflow.
