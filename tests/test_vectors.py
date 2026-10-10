@@ -88,6 +88,33 @@ class TestBlock:
 class TestVector:
     """Tests for Vector class."""
 
+    @pytest.mark.parametrize("operation", ["name", "copy", "reindex", "round_index"])
+    def test_unnamed_vector_keeps_missing_name(self, operation):
+        """An unnamed vector stays unnamed when reconstructed."""
+        data = pd.Series([1.0, 2.0], index=pd.Index([1.25, 2.75], name="k"), name="x")
+        vector = Vector([data])
+
+        if operation == "copy":
+            result = vector.copy()
+        elif operation == "reindex":
+            result = vector.reindex(vector.index)
+        elif operation == "round_index":
+            result = vector.round_index(1)
+        else:
+            result = vector
+
+        assert result.name is None
+        assert result.data.name is None
+        assert vector.data.name is None
+
+    @pytest.mark.parametrize("name", ["state", "None", 0, 42])
+    def test_supplied_vector_name_retains_string_conversion(self, name):
+        """A supplied name keeps its existing string representation."""
+        data = pd.Series([1.0, 2.0], index=pd.Index(["a", "b"], name="k"), name="x")
+        vector = Vector([data], name=name)
+
+        assert vector.name == str(name)
+
     def test_vector_creation_single_block(self):
         """Test Vector creation with a single block."""
         data = pd.Series(

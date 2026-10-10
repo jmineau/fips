@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- An unnamed `Vector` keeps its missing name when copied, reindexed, or its
+  index is rounded, instead of acquiring the string name `"None"`.
 - A `Block` or `Vector` with a single element could not be built from a
   Series: `Block(pd.Series([0.1], index=..., name="bias"))` raised "All levels
   in the row index of Block must be named", because the one element was
