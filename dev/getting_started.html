@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Getting Started &#8212; fips 0.1.0b10.dev3+ga550bf12d documentation</title>
+    <title>Getting Started &#8212; fips 0.1.0b10.dev5+g106398ed2 documentation</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0" />
 
-    <script src="_static/documentation_options.js?v=a9f3cee4"></script>
+    <script src="_static/documentation_options.js?v=2f0cf6ab"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -135,8 +135,8 @@
       
     
     
-    <img src="_static/logo.png" class="logo__image only-light" alt="fips 0.1.0b10.dev3+ga550bf12d documentation - Home"/>
-    <img src="_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.1.0b10.dev3+ga550bf12d documentation - Home"/>
+    <img src="_static/logo.png" class="logo__image only-light" alt="fips 0.1.0b10.dev5+g106398ed2 documentation - Home"/>
+    <img src="_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.1.0b10.dev5+g106398ed2 documentation - Home"/>
   
   
 </a></div>
@@ -594,35 +594,63 @@ labelled <em>fips</em> objects that behave like pandas Series / DataFrames:</p>
 <p>Use <a class="reference internal" href="reference/api/fips.Block.html#fips.Block" title="fips.Block"><code class="xref py py-class docutils literal notranslate"><span class="pre">Block</span></code></a> and <a class="reference internal" href="reference/api/fips.MatrixBlock.html#fips.MatrixBlock" title="fips.MatrixBlock"><code class="xref py py-class docutils literal notranslate"><span class="pre">MatrixBlock</span></code></a> explicitly when your
 state space is composed of <strong>named components</strong> — for example, fluxes and a
 per-site bias correction:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">fips</span><span class="w"> </span><span class="kn">import</span> <span class="n">Block</span><span class="p">,</span> <span class="n">Vector</span><span class="p">,</span> <span class="n">MatrixBlock</span><span class="p">,</span> <span class="n">ForwardOperator</span><span class="p">,</span> <span class="n">CovarianceMatrix</span><span class="p">,</span> <span class="n">InverseProblem</span>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [27]: </span><span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
 
-<span class="c1"># --- Two state components ---</span>
-<span class="n">flux_idx</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">([</span><span class="s2">&quot;cell_0&quot;</span><span class="p">,</span> <span class="s2">&quot;cell_1&quot;</span><span class="p">],</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;cell_id&quot;</span><span class="p">)</span>
-<span class="n">bias_idx</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">([</span><span class="s2">&quot;site_A&quot;</span><span class="p">],</span>           <span class="n">name</span><span class="o">=</span><span class="s2">&quot;site_id&quot;</span><span class="p">)</span>
-<span class="n">obs_idx</span>  <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">([</span><span class="s2">&quot;o0&quot;</span><span class="p">,</span> <span class="s2">&quot;o1&quot;</span><span class="p">],</span>         <span class="n">name</span><span class="o">=</span><span class="s2">&quot;obs_id&quot;</span><span class="p">)</span>
+<span class="gp">In [28]: </span><span class="kn">from</span><span class="w"> </span><span class="nn">fips</span><span class="w"> </span><span class="kn">import</span> <span class="n">Block</span><span class="p">,</span> <span class="n">Vector</span><span class="p">,</span> <span class="n">MatrixBlock</span><span class="p">,</span> <span class="n">ForwardOperator</span>
 
-<span class="n">flux_block</span> <span class="o">=</span> <span class="n">Block</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">([</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">],</span> <span class="n">index</span><span class="o">=</span><span class="n">flux_idx</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;flux&quot;</span><span class="p">))</span>
-<span class="n">bias_block</span> <span class="o">=</span> <span class="n">Block</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">([</span><span class="mf">0.1</span><span class="p">],</span>      <span class="n">index</span><span class="o">=</span><span class="n">bias_idx</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;bias&quot;</span><span class="p">))</span>
-<span class="n">prior</span> <span class="o">=</span> <span class="n">Vector</span><span class="p">([</span><span class="n">flux_block</span><span class="p">,</span> <span class="n">bias_block</span><span class="p">])</span>
+<span class="go"># --- Two state components ---</span>
+<span class="gp">In [29]: </span><span class="n">flux_idx</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">([</span><span class="s2">&quot;cell_0&quot;</span><span class="p">,</span> <span class="s2">&quot;cell_1&quot;</span><span class="p">],</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;cell_id&quot;</span><span class="p">)</span>
 
-<span class="c1"># --- Matching forward-operator sub-blocks ---</span>
-<span class="n">H_flux</span> <span class="o">=</span> <span class="n">MatrixBlock</span><span class="p">(</span>
-    <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">([[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">]],</span> <span class="n">index</span><span class="o">=</span><span class="n">obs_idx</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="n">flux_idx</span><span class="p">),</span>
-    <span class="n">row_block</span><span class="o">=</span><span class="s2">&quot;obs&quot;</span><span class="p">,</span>
-    <span class="n">col_block</span><span class="o">=</span><span class="s2">&quot;flux&quot;</span><span class="p">,</span>
-<span class="p">)</span>
-<span class="n">H_bias</span> <span class="o">=</span> <span class="n">MatrixBlock</span><span class="p">(</span>
-    <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">([[</span><span class="mf">1.0</span><span class="p">],</span> <span class="p">[</span><span class="mf">1.0</span><span class="p">]],</span> <span class="n">index</span><span class="o">=</span><span class="n">obs_idx</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="n">bias_idx</span><span class="p">),</span>
-    <span class="n">row_block</span><span class="o">=</span><span class="s2">&quot;obs&quot;</span><span class="p">,</span>
-    <span class="n">col_block</span><span class="o">=</span><span class="s2">&quot;bias&quot;</span><span class="p">,</span>
-<span class="p">)</span>
-<span class="n">H</span> <span class="o">=</span> <span class="n">ForwardOperator</span><span class="p">([</span><span class="n">H_flux</span><span class="p">,</span> <span class="n">H_bias</span><span class="p">])</span>
+<span class="gp">In [30]: </span><span class="n">bias_idx</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">([</span><span class="s2">&quot;site_A&quot;</span><span class="p">],</span>           <span class="n">name</span><span class="o">=</span><span class="s2">&quot;site_id&quot;</span><span class="p">)</span>
 
-<span class="c1"># Covariances follow the same pattern …</span>
-<span class="c1"># Then pass to InverseProblem as before.</span>
+<span class="gp">In [31]: </span><span class="n">obs_idx</span>  <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">([</span><span class="s2">&quot;o0&quot;</span><span class="p">,</span> <span class="s2">&quot;o1&quot;</span><span class="p">],</span>         <span class="n">name</span><span class="o">=</span><span class="s2">&quot;obs_id&quot;</span><span class="p">)</span>
+
+<span class="gp">In [32]: </span><span class="n">flux_block</span> <span class="o">=</span> <span class="n">Block</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">([</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">],</span> <span class="n">index</span><span class="o">=</span><span class="n">flux_idx</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;flux&quot;</span><span class="p">))</span>
+
+<span class="gp">In [33]: </span><span class="n">bias_block</span> <span class="o">=</span> <span class="n">Block</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">([</span><span class="mf">0.1</span><span class="p">],</span>      <span class="n">index</span><span class="o">=</span><span class="n">bias_idx</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;bias&quot;</span><span class="p">))</span>
+
+<span class="gp">In [34]: </span><span class="n">prior</span> <span class="o">=</span> <span class="n">Vector</span><span class="p">([</span><span class="n">flux_block</span><span class="p">,</span> <span class="n">bias_block</span><span class="p">],</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;prior&quot;</span><span class="p">)</span>
+
+<span class="gp">In [35]: </span><span class="nb">print</span><span class="p">(</span><span class="n">prior</span><span class="p">)</span>
+<span class="go">Vector(name=&#39;prior&#39;, shape=(3,))</span>
+<span class="go">block  cell_id  site_id</span>
+<span class="go">flux   cell_0   nan        1.0</span>
+<span class="go">       cell_1   nan        2.0</span>
+<span class="go">bias   nan      site_A     0.1</span>
+<span class="go">Name: prior, dtype: float64</span>
 </pre></div>
 </div>
+<p>Each forward-operator sub-block names the observation block it maps to and the
+state block it maps from:</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="go"># --- Matching forward-operator sub-blocks ---</span>
+<span class="gp">In [36]: </span><span class="n">H_flux</span> <span class="o">=</span> <span class="n">MatrixBlock</span><span class="p">(</span>
+<span class="gp">   ....: </span>    <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">([[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">]],</span> <span class="n">index</span><span class="o">=</span><span class="n">obs_idx</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="n">flux_idx</span><span class="p">),</span>
+<span class="gp">   ....: </span>    <span class="n">row_block</span><span class="o">=</span><span class="s2">&quot;obs&quot;</span><span class="p">,</span>
+<span class="gp">   ....: </span>    <span class="n">col_block</span><span class="o">=</span><span class="s2">&quot;flux&quot;</span><span class="p">,</span>
+<span class="gp">   ....: </span><span class="p">)</span>
+<span class="gp">   ....: </span>
+
+<span class="gp">In [37]: </span><span class="n">H_bias</span> <span class="o">=</span> <span class="n">MatrixBlock</span><span class="p">(</span>
+<span class="gp">   ....: </span>    <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">([[</span><span class="mf">1.0</span><span class="p">],</span> <span class="p">[</span><span class="mf">1.0</span><span class="p">]],</span> <span class="n">index</span><span class="o">=</span><span class="n">obs_idx</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="n">bias_idx</span><span class="p">),</span>
+<span class="gp">   ....: </span>    <span class="n">row_block</span><span class="o">=</span><span class="s2">&quot;obs&quot;</span><span class="p">,</span>
+<span class="gp">   ....: </span>    <span class="n">col_block</span><span class="o">=</span><span class="s2">&quot;bias&quot;</span><span class="p">,</span>
+<span class="gp">   ....: </span><span class="p">)</span>
+<span class="gp">   ....: </span>
+
+<span class="gp">In [38]: </span><span class="n">H</span> <span class="o">=</span> <span class="n">ForwardOperator</span><span class="p">([</span><span class="n">H_flux</span><span class="p">,</span> <span class="n">H_bias</span><span class="p">])</span>
+
+<span class="gp">In [39]: </span><span class="nb">print</span><span class="p">(</span><span class="n">H</span><span class="o">.</span><span class="n">to_frame</span><span class="p">())</span>
+<span class="go">block          flux          bias</span>
+<span class="go">cell_id      cell_0 cell_1    NaN</span>
+<span class="go">site_id         NaN    NaN site_A</span>
+<span class="go">block obs_id                     </span>
+<span class="go">obs   o0        1.0    0.5    1.0</span>
+<span class="go">      o1        0.5    1.0    1.0</span>
+</pre></div>
+</div>
+<p>The covariances follow the same pattern (one <a class="reference internal" href="reference/api/fips.MatrixBlock.html#fips.MatrixBlock" title="fips.MatrixBlock"><code class="xref py py-class docutils literal notranslate"><span class="pre">MatrixBlock</span></code></a> per
+component, combined in a <a class="reference internal" href="reference/api/fips.CovarianceMatrix.html#fips.CovarianceMatrix" title="fips.CovarianceMatrix"><code class="xref py py-class docutils literal notranslate"><span class="pre">CovarianceMatrix</span></code></a>). Then pass everything
+to <a class="reference internal" href="reference/api/fips.InverseProblem.html#fips.InverseProblem" title="fips.InverseProblem"><code class="xref py py-class docutils literal notranslate"><span class="pre">InverseProblem</span></code></a> as before.</p>
 </section>
 <section id="what-s-next">
 <h2>What’s Next<a class="headerlink" href="#what-s-next" title="Link to this heading">#</a></h2>
