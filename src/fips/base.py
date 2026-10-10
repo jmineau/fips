@@ -393,8 +393,8 @@ class Structure1D(Structure):
 
     @property
     def name(self) -> str | None:
-        """The name of the underlying Series."""
-        return str(self.data.name)
+        """The Series name as a string, or None if the Series is unnamed."""
+        return None if self.data.name is None else str(self.data.name)
 
     def to_series(self) -> pd.Series:
         """Get the underlying Series data."""

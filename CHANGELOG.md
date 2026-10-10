@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- An unnamed `Vector` keeps its missing name when copied, reindexed, or its
+  index is rounded, instead of acquiring the string name `"None"`.
+
 ## [0.1.0b9] - 2026-10-09
 
 ### Added
