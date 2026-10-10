@@ -375,8 +375,13 @@ class Structure1D(Structure):
         """
         Initialize a 1D structure with the given data and index. Validates and sanitizes the data.
         """
-        # Squeeze to 1D if necessary
-        if hasattr(data, "squeeze"):
+        # Reduce 2D input to 1D. squeeze() drops every length-1 axis, so on a
+        # one-element Series or a one-row, one-column DataFrame it returns a
+        # scalar and the index is lost: leave 1D input alone and take a single
+        # column as it is.
+        if isinstance(data, pd.DataFrame) and data.shape[1] == 1:
+            data = data.iloc[:, 0]
+        elif getattr(data, "ndim", 1) > 1:
             data = data.squeeze()
 
         self.data = pd.Series(data, name=name, index=index, dtype=dtype, copy=copy)

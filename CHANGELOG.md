@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- A `Block` or `Vector` with a single element could not be built from a
+  Series: `Block(pd.Series([0.1], index=..., name="bias"))` raised "All levels
+  in the row index of Block must be named", because the one element was
+  squeezed to a scalar and its index was lost. A state component with one entry
+  (one bias for one site, one region) now builds, from a Series or from a
+  one-row, one-column DataFrame.
+  ([#38](https://github.com/jmineau/fips/issues/38))
+
 ## [0.1.0b9] - 2026-10-09
 
 ### Added
