@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>fips.problems.flux.visualization.FluxPlotter.fluxes &#8212; fips 0.1.0b9.dev9+g92883a3b2 documentation</title>
+    <title>fips.problems.flux.visualization.FluxPlotter.fluxes &#8212; fips 0.1.0b9.dev11+g66b7f51be documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=92f9e8d6"></script>
+    <script src="../../_static/documentation_options.js?v=6f909948"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -125,8 +125,8 @@
       
     
     
-    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.1.0b9.dev9+g92883a3b2 documentation - Home"/>
-    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.1.0b9.dev9+g92883a3b2 documentation - Home"/>
+    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.1.0b9.dev11+g66b7f51be documentation - Home"/>
+    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.1.0b9.dev11+g66b7f51be documentation - Home"/>
   
   
 </a></div>
@@ -948,13 +948,13 @@
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>time</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.14)"><em>int</em></a><em>, or </em><em>pd.Timestamp</em><em>, </em><em>default 'mean'</em>) – Time to plot: ‘mean’, ‘std’, time index, or timestamp.</p></li>
+<li><p><strong>time</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><em>int</em></a><em>, or </em><em>pd.Timestamp</em><em>, </em><em>default 'mean'</em>) – Time to plot: ‘mean’, ‘std’, time index, or timestamp.</p></li>
 <li><p><strong>truth</strong> (<em>pd.Series</em><em>, </em><em>optional</em>) – Truth fluxes for comparison.</p></li>
-<li><p><strong>x_dim</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em>, </em><em>default 'lon'</em>) – Name of the x-coordinate dimension.</p></li>
-<li><p><strong>y_dim</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em>, </em><em>default 'lat'</em>) – Name of the y-coordinate dimension.</p></li>
-<li><p><strong>time_dim</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em>, </em><em>default 'time'</em>) – Name of the time dimension.</p></li>
-<li><p><strong>sites</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.14)"><em>bool</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.14)"><em>dict</em></a><em>, </em><em>optional</em>) – Site locations to overlay: dict mapping site IDs to (lat, lon).</p></li>
-<li><p><strong>sites_kwargs</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.14)"><em>dict</em></a><em>, </em><em>optional</em>) – Additional plotting kwargs for site markers.</p></li>
+<li><p><strong>x_dim</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a><em>, </em><em>default 'lon'</em>) – Name of the x-coordinate dimension.</p></li>
+<li><p><strong>y_dim</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a><em>, </em><em>default 'lat'</em>) – Name of the y-coordinate dimension.</p></li>
+<li><p><strong>time_dim</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a><em>, </em><em>default 'time'</em>) – Name of the time dimension.</p></li>
+<li><p><strong>sites</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><em>bool</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><em>dict</em></a><em>, </em><em>optional</em>) – Site locations to overlay: dict mapping site IDs to (lat, lon).</p></li>
+<li><p><strong>sites_kwargs</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><em>dict</em></a><em>, </em><em>optional</em>) – Additional plotting kwargs for site markers.</p></li>
 <li><p><strong>**kwargs</strong> – Additional arguments passed to xarray plotting.</p></li>
 </ul>
 </dd>

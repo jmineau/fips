@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>User Guide &#8212; fips 0.1.0b9.dev9+g92883a3b2 documentation</title>
+    <title>User Guide &#8212; fips 0.1.0b9.dev11+g66b7f51be documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="_static/documentation_options.js?v=92f9e8d6"></script>
+    <script src="_static/documentation_options.js?v=6f909948"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -129,8 +129,8 @@
       
     
     
-    <img src="_static/logo.png" class="logo__image only-light" alt="fips 0.1.0b9.dev9+g92883a3b2 documentation - Home"/>
-    <img src="_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.1.0b9.dev9+g92883a3b2 documentation - Home"/>
+    <img src="_static/logo.png" class="logo__image only-light" alt="fips 0.1.0b9.dev11+g66b7f51be documentation - Home"/>
+    <img src="_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.1.0b9.dev11+g66b7f51be documentation - Home"/>
   
   
 </a></div>
@@ -569,7 +569,7 @@ application:</p>
 <span class="n">inversion</span> <span class="o">=</span> <span class="n">FluxProblem</span><span class="p">(</span>
     <span class="n">obs</span><span class="o">=</span><span class="n">concentrations</span><span class="p">,</span>        <span class="c1"># pd.Series  — measured concentrations</span>
     <span class="n">prior</span><span class="o">=</span><span class="n">prior_fluxes</span><span class="p">,</span>        <span class="c1"># pd.Series  — prior flux inventory</span>
-    <span class="n">forward_operator</span><span class="o">=</span><span class="n">jacobian</span><span class="p">,</span> <span class="c1"># pd.DataFrame — STILT Jacobian</span>
+    <span class="n">forward_operator</span><span class="o">=</span><span class="n">jacobian</span><span class="p">,</span> <span class="c1"># pd.DataFrame — transport Jacobian</span>
     <span class="n">modeldata_mismatch</span><span class="o">=</span><span class="n">S_z</span><span class="p">,</span>    <span class="c1"># concentration error covariance</span>
     <span class="n">prior_error</span><span class="o">=</span><span class="n">S_0</span><span class="p">,</span>           <span class="c1"># flux error covariance</span>
 <span class="p">)</span>
@@ -588,6 +588,22 @@ application:</p>
 <span class="n">inversion</span><span class="o">.</span><span class="n">plot</span><span class="o">.</span><span class="n">concentrations</span><span class="p">()</span>
 </pre></div>
 </div>
+<p>For a STILT Jacobian, <a class="reference external" href="https://jmineau.github.io/PYSTILT">PYSTILT</a> sums the
+footprints onto your flux grid and time bins. Wrap its matrix in a
+<a class="reference internal" href="reference/api/fips.MatrixBlock.html#fips.MatrixBlock" title="fips.MatrixBlock"><code class="xref py py-class docutils literal notranslate"><span class="pre">MatrixBlock</span></code></a>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">stilt</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fips</span><span class="w"> </span><span class="kn">import</span> <span class="n">MatrixBlock</span>
+
+<span class="n">project</span> <span class="o">=</span> <span class="n">stilt</span><span class="o">.</span><span class="n">Project</span><span class="p">(</span><span class="s2">&quot;my_project&quot;</span><span class="p">)</span>
+<span class="n">sims</span> <span class="o">=</span> <span class="n">project</span><span class="o">.</span><span class="n">simulations</span>
+<span class="n">H</span> <span class="o">=</span> <span class="n">project</span><span class="o">.</span><span class="n">jacobian</span><span class="p">(</span><span class="n">sims</span><span class="p">[</span><span class="n">sims</span><span class="o">.</span><span class="n">variant</span> <span class="o">==</span> <span class="s2">&quot;hrrr&quot;</span><span class="p">],</span> <span class="n">grid</span><span class="p">,</span> <span class="n">time_bins</span><span class="p">)</span>
+<span class="n">jacobian</span> <span class="o">=</span> <span class="n">MatrixBlock</span><span class="p">(</span>
+    <span class="n">H</span><span class="o">.</span><span class="n">to_frame</span><span class="p">(</span><span class="n">sparse</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span> <span class="n">row_block</span><span class="o">=</span><span class="s2">&quot;concentration&quot;</span><span class="p">,</span> <span class="n">col_block</span><span class="o">=</span><span class="s2">&quot;flux&quot;</span><span class="p">,</span> <span class="n">sparse</span><span class="o">=</span><span class="kc">True</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>Its rows are receptor ids and its columns <code class="docutils literal notranslate"><span class="pre">(time,</span> <span class="pre">lon,</span> <span class="pre">lat)</span></code>, so label the
+observations and the prior to match.</p>
 <p>Background subtraction is supported via the <code class="docutils literal notranslate"><span class="pre">constant</span></code> argument to
 <a class="reference internal" href="reference/api/fips.InverseProblem.html#fips.InverseProblem" title="fips.InverseProblem"><code class="xref py py-class docutils literal notranslate"><span class="pre">InverseProblem</span></code></a>:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">inversion</span> <span class="o">=</span> <span class="n">FluxProblem</span><span class="p">(</span>

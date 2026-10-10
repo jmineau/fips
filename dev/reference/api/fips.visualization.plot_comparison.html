@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>fips.visualization.plot_comparison &#8212; fips 0.1.0b9.dev9+g92883a3b2 documentation</title>
+    <title>fips.visualization.plot_comparison &#8212; fips 0.1.0b9.dev11+g66b7f51be documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=92f9e8d6"></script>
+    <script src="../../_static/documentation_options.js?v=6f909948"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -126,8 +126,8 @@
       
     
     
-    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.1.0b9.dev9+g92883a3b2 documentation - Home"/>
-    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.1.0b9.dev9+g92883a3b2 documentation - Home"/>
+    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.1.0b9.dev11+g66b7f51be documentation - Home"/>
+    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.1.0b9.dev11+g66b7f51be documentation - Home"/>
   
   
 </a></div>
@@ -949,7 +949,7 @@ with optional error bars/bands and truth values for comparison.</p>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>*series</strong> (<em>pd.Series</em><em> or </em><a class="reference internal" href="fips.Vector.html#fips.Vector" title="fips.Vector"><em>Vector</em></a><em> or </em><a class="reference internal" href="fips.Block.html#fips.Block" title="fips.Block"><em>Block</em></a>) – Variable number of series to compare.</p></li>
-<li><p><strong>x</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.14)"><em>int</em></a><em>, </em><em>optional</em>) – Name or level of the index to use for x-axis. Required if series have MultiIndex.</p></li>
+<li><p><strong>x</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><em>int</em></a><em>, </em><em>optional</em>) – Name or level of the index to use for x-axis. Required if series have MultiIndex.</p></li>
 <li><p><strong>truth</strong> (<em>pd.Series</em><em> or </em><a class="reference internal" href="fips.Vector.html#fips.Vector" title="fips.Vector"><em>Vector</em></a><em> or </em><a class="reference internal" href="fips.Block.html#fips.Block" title="fips.Block"><em>Block</em></a><em>, </em><em>optional</em>) – True values to plot as reference.</p></li>
 <li><p><strong>errors</strong> (<em>Sequence</em><em> of </em><em>pd.DataFrame</em><em> or </em><a class="reference internal" href="fips.CovarianceMatrix.html#fips.CovarianceMatrix" title="fips.CovarianceMatrix"><em>CovarianceMatrix</em></a><em> or </em><a class="reference internal" href="fips.Matrix.html#fips.Matrix" title="fips.Matrix"><em>Matrix</em></a><em> or </em><em>pd.Series</em><em> or </em><em>None</em><em>, </em><em>optional</em>) – Error estimates for each series. Must match length of series.
 If CovarianceMatrix or Matrix, extracts diagonal as standard deviations.</p></li>

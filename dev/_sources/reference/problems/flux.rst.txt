@@ -81,28 +81,3 @@ Attributes
 
    FluxPlotter.fluxes
    FluxPlotter.concentrations
-
-
-Transport Backends
-==================
-
-STILT
-~~~~~
-
-.. currentmodule:: fips.problems.flux.transport.stilt
-
-.. warning::
-   The STILT transport backend is **experimental** and not production-ready.
-
-   This module depends on the ``stilt`` package, which is:
-
-   * Not available on PyPI
-   * Only available on GitHub at https://github.com/jmineau/stilt
-   * Subject to rapid changes and breaking updates
-   * Not guaranteed to be stable or backwards-compatible
-
-   Use this module at your own risk. The API may change without notice.
-
-The STILT transport backend provides the ``JacobianBuilder`` class for
-constructing forward operators from STILT atmospheric transport simulations.
-See the source code for implementation details.

@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>fips.Matrix &#8212; fips 0.1.0b9.dev9+g92883a3b2 documentation</title>
+    <title>fips.Matrix &#8212; fips 0.1.0b9.dev11+g66b7f51be documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../../_static/documentation_options.js?v=92f9e8d6"></script>
+    <script src="../../_static/documentation_options.js?v=6f909948"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -126,8 +126,8 @@
       
     
     
-    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.1.0b9.dev9+g92883a3b2 documentation - Home"/>
-    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.1.0b9.dev9+g92883a3b2 documentation - Home"/>
+    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.1.0b9.dev11+g66b7f51be documentation - Home"/>
+    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.1.0b9.dev11+g66b7f51be documentation - Home"/>
   
   
 </a></div>
@@ -948,12 +948,12 @@ such as forward operators and covariance matrices.</p>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>data</strong> (<em>np.ndarray</em><em> or </em><em>pd.DataFrame</em><em> or </em><a class="reference internal" href="#fips.Matrix" title="fips.Matrix"><em>Matrix</em></a><em> or </em><em>scalar</em>) – 2D data representing the matrix.</p></li>
-<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em>, </em><em>optional</em>) – Name for the Matrix.</p></li>
+<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a><em>, </em><em>optional</em>) – Name for the Matrix.</p></li>
 <li><p><strong>index</strong> (<em>pd.MultiIndex</em>) – Index for the rows of the DataFrame.</p></li>
 <li><p><strong>columns</strong> (<em>pd.MultiIndex</em><em>, </em><em>optional</em>) – Index for the columns of the DataFrame. If None, uses the same as <cite>index</cite>.</p></li>
 <li><p><strong>dtype</strong> (<em>data type</em><em>, </em><em>optional</em>) – Data type to force.</p></li>
-<li><p><strong>copy</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.14)"><em>bool</em></a><em>, </em><em>optional</em>) – Whether to copy the data.</p></li>
-<li><p><strong>sparse</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.14)"><em>bool</em></a><em>, </em><em>default False</em>) – If True, store the assembled matrix in pandas sparse format.
+<li><p><strong>copy</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><em>bool</em></a><em>, </em><em>optional</em>) – Whether to copy the data.</p></li>
+<li><p><strong>sparse</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><em>bool</em></a><em>, </em><em>default False</em>) – If True, store the assembled matrix in pandas sparse format.
 Sparsification is applied after block assembly; use threshold
 zeroing in your builder before passing data here.</p></li>
 </ul>
