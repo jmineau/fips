@@ -154,6 +154,35 @@ def test_structure1d():
     pd.testing.assert_series_equal(struct.to_series(), s)
 
 
+def test_structure1d_one_element():
+    """Test that one element keeps its index (it must not squeeze to a scalar)."""
+    s = pd.Series([0.1], name="bias", index=pd.Index(["site_A"], name="site_id"))
+
+    # One-element Series
+    pd.testing.assert_series_equal(Structure1D(s).to_series(), s)
+
+    # One-row, one-column DataFrame
+    pd.testing.assert_series_equal(Structure1D(s.to_frame()).to_series(), s)
+
+
+def test_structure1d_from_2d():
+    """Test that 2D input with a single column reduces to 1D."""
+    idx = pd.Index([1, 2], name="a")
+    s = pd.Series([1.0, 2.0], name="test", index=idx)
+
+    # One-column DataFrame: the column, named by its label
+    pd.testing.assert_series_equal(Structure1D(s.to_frame()).to_series(), s)
+
+    # (n, 1) array
+    struct = Structure1D(np.array([[1.0], [2.0]]), name="test", index=idx)
+    pd.testing.assert_series_equal(struct.to_series(), s)
+
+    # More than one row and column cannot be 1D
+    df = pd.DataFrame([[1.0, 2.0], [3.0, 4.0]], index=idx)
+    with pytest.raises(ValueError, match="1-dimensional"):
+        Structure1D(df, name="test")
+
+
 def test_structure2d():
     """Test Structure2D initialization and conversion to DataFrame."""
     df = pd.DataFrame(
