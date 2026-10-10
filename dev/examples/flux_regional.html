@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Regional Flux Inversion &#8212; fips 0.1.0b10.dev1+geb9e26b4e documentation</title>
+    <title>Regional Flux Inversion &#8212; fips 0.1.0b10.dev3+ga550bf12d documentation</title>
   
   
   
@@ -30,8 +30,9 @@
 <link href="../_static/styles/pydata-sphinx-theme.css?digest=64cc4de3f052d77215f0" rel="stylesheet" />
 
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../_static/plot_directive.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="../_static/nbsphinx-code-cells.css?v=2aa19091" />
     <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=4b8357b6" />
   
   <!-- So that users can add custom icons -->
@@ -40,14 +41,11 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0" />
 
-    <script src="../_static/documentation_options.js?v=7dd7f2bc"></script>
+    <script src="../_static/documentation_options.js?v=a9f3cee4"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../_static/copybutton.js?v=f281be69"></script>
-    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
-    <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
-    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'examples/flux_regional';</script>
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.22.0';
@@ -59,8 +57,8 @@
     <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="2D Gravity Inversion" href="gravity_2d.html" />
-    <link rel="prev" title="Examples" href="index.html" />
+    <link rel="next" title="API Reference" href="../reference/index.html" />
+    <link rel="prev" title="2D Gravity Inversion" href="gravity_2d.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="0.1" />
@@ -135,8 +133,8 @@
       
     
     
-    <img src="../_static/logo.png" class="logo__image only-light" alt="fips 0.1.0b10.dev1+geb9e26b4e documentation - Home"/>
-    <img src="../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.1.0b10.dev1+geb9e26b4e documentation - Home"/>
+    <img src="../_static/logo.png" class="logo__image only-light" alt="fips 0.1.0b10.dev3+ga550bf12d documentation - Home"/>
+    <img src="../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.1.0b10.dev3+ga550bf12d documentation - Home"/>
   
   
 </a></div>
@@ -426,8 +424,8 @@
      aria-label="Section Navigation">
   <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
   <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
-<li class="toctree-l1 current active"><a aria-current="page" class="current reference internal" href="#">Regional Flux Inversion</a></li>
 <li class="toctree-l1"><a class="reference internal" href="gravity_2d.html">2D Gravity Inversion</a></li>
+<li class="toctree-l1 current active"><a aria-current="page" class="current reference internal" href="#">Regional Flux Inversion</a></li>
 </ul>
 </div>
 </nav></div>
@@ -488,21 +486,19 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="Regional-Flux-Inversion">
-<h1>Regional Flux Inversion<a class="headerlink" href="#Regional-Flux-Inversion" title="Link to this heading">#</a></h1>
-<section id="Bayesian-Inversion-for-Regional-CH₄-Emissions">
-<h2>Bayesian Inversion for Regional CH₄ Emissions<a class="headerlink" href="#Bayesian-Inversion-for-Regional-CH₄-Emissions" title="Link to this heading">#</a></h2>
+  <section class="tex2jax_ignore mathjax_ignore" id="regional-flux-inversion">
+<h1>Regional Flux Inversion<a class="headerlink" href="#regional-flux-inversion" title="Link to this heading">#</a></h1>
+<section id="bayesian-inversion-for-regional-ch4-emissions">
+<h2>Bayesian Inversion for Regional CH₄ Emissions<a class="headerlink" href="#bayesian-inversion-for-regional-ch4-emissions" title="Link to this heading">#</a></h2>
 <p>This notebook demonstrates solving a regional atmospheric inverse problem using Bayesian estimation.</p>
-<section id="Problem-Setup">
-<h3>Problem Setup<a class="headerlink" href="#Problem-Setup" title="Link to this heading">#</a></h3>
-<div class="line-block">
-<div class="line"><strong>State (x):</strong> Regional CH₄ flux anomalies on a spatial grid [µmol/m²/s]</div>
-<div class="line"><strong>Observations (z):</strong> CH₄ concentration enhancements at observation sites [ppm]</div>
-<div class="line"><strong>Forward model:</strong> z = H &#64; x (atmospheric transport from fluxes to concentrations)</div>
-</div>
+<section id="problem-setup">
+<h3>Problem Setup<a class="headerlink" href="#problem-setup" title="Link to this heading">#</a></h3>
+<p><strong>State (x):</strong> Regional CH₄ flux anomalies on a spatial grid [µmol/m²/s]<br />
+<strong>Observations (z):</strong> CH₄ concentration enhancements at observation sites [ppm]<br />
+<strong>Forward model:</strong> z = H &#64; x (atmospheric transport from fluxes to concentrations)</p>
 </section>
-<section id="Approach">
-<h3>Approach<a class="headerlink" href="#Approach" title="Link to this heading">#</a></h3>
+<section id="approach">
+<h3>Approach<a class="headerlink" href="#approach" title="Link to this heading">#</a></h3>
 <ul class="simple">
 <li><p><strong>Synthetic Jacobian:</strong> Distance-based Gaussian sensitivity (flux → concentration)</p></li>
 <li><p><strong>Synthetic Truth:</strong> Gaussian emission hotspots within domain</p></li>
@@ -511,13 +507,11 @@
 </ul>
 </section>
 </section>
-<section id="1.-Imports">
-<h2>1. Imports<a class="headerlink" href="#1.-Imports" title="Link to this heading">#</a></h2>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+<section id="imports">
+<h2>1. Imports<a class="headerlink" href="#imports" title="Link to this heading">#</a></h2>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
 
@@ -529,14 +523,13 @@
 </pre></div>
 </div>
 </div>
-</section>
-<section id="2.-Configuration">
-<h2>2. Configuration<a class="headerlink" href="#2.-Configuration" title="Link to this heading">#</a></h2>
-<div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
-</pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># ==============================================================================</span>
+</section>
+<section id="configuration">
+<h2>2. Configuration<a class="headerlink" href="#configuration" title="Link to this heading">#</a></h2>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># ==============================================================================</span>
 <span class="c1"># RANDOM SEED</span>
 <span class="c1"># ==============================================================================</span>
 
@@ -599,27 +592,23 @@
 </pre></div>
 </div>
 </div>
-<div class="nboutput nblast docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-Configuration:
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Configuration:
   Domain: [-112.0, -111.5] × [40.5, 41.0] (spacing 0.05°)
   Time: 2024-01-01 00:00:00 to 2025-01-01 00:00:00
   Observation sites: 3
   Hotspots: 2 @ 1.0 µmol/m²/s
   Prior: 0.05 ± 0.025 µmol/m²/s
-</pre></div></div>
-</div>
-</section>
-<section id="3.-Helper-Functions">
-<h2>3. Helper Functions<a class="headerlink" href="#3.-Helper-Functions" title="Link to this heading">#</a></h2>
-<div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">build_grid</span><span class="p">(</span><span class="n">xmin</span><span class="p">,</span> <span class="n">xmax</span><span class="p">,</span> <span class="n">ymin</span><span class="p">,</span> <span class="n">ymax</span><span class="p">,</span> <span class="n">dx</span><span class="p">,</span> <span class="n">dy</span><span class="p">):</span>
+</div>
+</div>
+</section>
+<section id="helper-functions">
+<h2>3. Helper Functions<a class="headerlink" href="#helper-functions" title="Link to this heading">#</a></h2>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">build_grid</span><span class="p">(</span><span class="n">xmin</span><span class="p">,</span> <span class="n">xmax</span><span class="p">,</span> <span class="n">ymin</span><span class="p">,</span> <span class="n">ymax</span><span class="p">,</span> <span class="n">dx</span><span class="p">,</span> <span class="n">dy</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Build spatial grid.</span>
 
@@ -754,22 +743,18 @@ Configuration:
 </pre></div>
 </div>
 </div>
-<div class="nboutput nblast docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-Helper functions loaded.
-</pre></div></div>
-</div>
-</section>
-<section id="4.-Build-Domain-and-Observation-Network">
-<h2>4. Build Domain and Observation Network<a class="headerlink" href="#4.-Build-Domain-and-Observation-Network" title="Link to this heading">#</a></h2>
-<div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Helper functions loaded.
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Build grid</span>
+</div>
+</div>
+</section>
+<section id="build-domain-and-observation-network">
+<h2>4. Build Domain and Observation Network<a class="headerlink" href="#build-domain-and-observation-network" title="Link to this heading">#</a></h2>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Build grid</span>
 <span class="n">lons</span><span class="p">,</span> <span class="n">lats</span> <span class="o">=</span> <span class="n">build_grid</span><span class="p">(</span><span class="n">XMIN</span><span class="p">,</span> <span class="n">XMAX</span><span class="p">,</span> <span class="n">YMIN</span><span class="p">,</span> <span class="n">YMAX</span><span class="p">,</span> <span class="n">DX</span><span class="p">,</span> <span class="n">DY</span><span class="p">)</span>
 <span class="n">X_grid</span><span class="p">,</span> <span class="n">Y_grid</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="n">lons</span><span class="p">,</span> <span class="n">lats</span><span class="p">,</span> <span class="n">indexing</span><span class="o">=</span><span class="s2">&quot;ij&quot;</span><span class="p">)</span>
 
@@ -799,12 +784,8 @@ Helper functions loaded.
 </pre></div>
 </div>
 </div>
-<div class="nboutput nblast docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-Spatial grid: 10 × 10 = 100 cells
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Spatial grid: 10 × 10 = 100 cells
 Observation sites: 3
   Site 0: (-111.813, 40.799)
   Site 1: (-111.525, 40.578)
@@ -812,16 +793,16 @@ Observation sites: 3
 Hotspots: 2
   Hotspot 0: (-111.942, 40.567)
   Hotspot 1: (-111.695, 40.620)
-</pre></div></div>
-</div>
-</section>
-<section id="5.-Build-Time-Grids">
-<h2>5. Build Time Grids<a class="headerlink" href="#5.-Build-Time-Grids" title="Link to this heading">#</a></h2>
-<div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># State time bins (fluxes)</span>
+</div>
+</div>
+</section>
+<section id="build-time-grids">
+<h2>5. Build Time Grids<a class="headerlink" href="#build-time-grids" title="Link to this heading">#</a></h2>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># State time bins (fluxes)</span>
 <span class="n">state_times</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">date_range</span><span class="p">(</span>
     <span class="n">start</span><span class="o">=</span><span class="n">T_START</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="n">T_STOP</span><span class="p">,</span> <span class="n">freq</span><span class="o">=</span><span class="n">STATE_FREQ</span><span class="p">,</span> <span class="n">inclusive</span><span class="o">=</span><span class="s2">&quot;left&quot;</span>
 <span class="p">)</span>
@@ -840,12 +821,8 @@ Hotspots: 2
 </pre></div>
 </div>
 </div>
-<div class="nboutput nblast docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-State time bins: 12
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>State time bins: 12
   2024-01-01 00:00:00
   2024-02-01 00:00:00
   2024-03-01 00:00:00
@@ -861,16 +838,16 @@ State time bins: 12
 
 Observation times: 366
   2024-01-01 00:00:00 to 2024-12-31 00:00:00
-</pre></div></div>
-</div>
-</section>
-<section id="6.-Build-Jacobian">
-<h2>6. Build Jacobian<a class="headerlink" href="#6.-Build-Jacobian" title="Link to this heading">#</a></h2>
-<div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Building Jacobian...&quot;</span><span class="p">)</span>
+</div>
+</div>
+</section>
+<section id="build-jacobian">
+<h2>6. Build Jacobian<a class="headerlink" href="#build-jacobian" title="Link to this heading">#</a></h2>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Building Jacobian...&quot;</span><span class="p">)</span>
 <span class="n">H</span> <span class="o">=</span> <span class="n">build_jacobian</span><span class="p">(</span><span class="n">obs_lons</span><span class="p">,</span> <span class="n">obs_lats</span><span class="p">,</span> <span class="n">lons</span><span class="p">,</span> <span class="n">lats</span><span class="p">,</span> <span class="n">INFLUENCE_RADIUS</span><span class="p">)</span>
 
 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Jacobian shape: </span><span class="si">{</span><span class="n">H</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
@@ -879,25 +856,21 @@ Observation times: 366
 </pre></div>
 </div>
 </div>
-<div class="nboutput nblast docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-Building Jacobian...
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Building Jacobian...
 Jacobian shape: (3, 100)
   Range: [0.1350, 0.9999]
   Mean sensitivity: 0.6698
-</pre></div></div>
-</div>
-</section>
-<section id="7.-Generate-Synthetic-Truth-and-Observations">
-<h2>7. Generate Synthetic Truth and Observations<a class="headerlink" href="#7.-Generate-Synthetic-Truth-and-Observations" title="Link to this heading">#</a></h2>
-<div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Build truth field with seasonal cycle</span>
+</div>
+</div>
+</section>
+<section id="generate-synthetic-truth-and-observations">
+<h2>7. Generate Synthetic Truth and Observations<a class="headerlink" href="#generate-synthetic-truth-and-observations" title="Link to this heading">#</a></h2>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Build truth field with seasonal cycle</span>
 <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Building truth field with seasonal cycle...&quot;</span><span class="p">)</span>
 <span class="n">truth_2d</span> <span class="o">=</span> <span class="n">build_truth_field</span><span class="p">(</span><span class="n">lons</span><span class="p">,</span> <span class="n">lats</span><span class="p">,</span> <span class="n">hotspots</span><span class="p">,</span> <span class="n">HOTSPOT_AMPLITUDE</span><span class="p">,</span> <span class="n">HOTSPOT_WIDTH</span><span class="p">)</span>
 
@@ -931,25 +904,21 @@ Jacobian shape: (3, 100)
 </pre></div>
 </div>
 </div>
-<div class="nboutput nblast docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-Building truth field with seasonal cycle...
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Building truth field with seasonal cycle...
 Truth field: mean=0.3525, max=1.5691
   Seasonal range: 0.0001 to 1.5691
 Prior field: 0.0500 ± 0.0250
-</pre></div></div>
-</div>
-</section>
-<section id="8.-Generate-Synthetic-Observations">
-<h2>8. Generate Synthetic Observations<a class="headerlink" href="#8.-Generate-Synthetic-Observations" title="Link to this heading">#</a></h2>
-<div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Generating synthetic observations...&quot;</span><span class="p">)</span>
+</div>
+</div>
+</section>
+<section id="generate-synthetic-observations">
+<h2>8. Generate Synthetic Observations<a class="headerlink" href="#generate-synthetic-observations" title="Link to this heading">#</a></h2>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Generating synthetic observations...&quot;</span><span class="p">)</span>
 
 <span class="c1"># For each observation time, compute concentrations from time-varying fluxes</span>
 <span class="n">syn_obs_data</span> <span class="o">=</span> <span class="p">[]</span>
@@ -984,25 +953,21 @@ Prior field: 0.0500 ± 0.0250
 </pre></div>
 </div>
 </div>
-<div class="nboutput nblast docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-Generating synthetic observations...
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Generating synthetic observations...
 Observations: 1098
   Range: [11.480887, 42.115867]
   Mean: 26.427648
-</pre></div></div>
-</div>
-</section>
-<section id="9.-Setup-Inverse-Problem">
-<h2>9. Setup Inverse Problem<a class="headerlink" href="#9.-Setup-Inverse-Problem" title="Link to this heading">#</a></h2>
-<div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Setting up flux inversion problem...&quot;</span><span class="p">)</span>
+</div>
+</div>
+</section>
+<section id="setup-inverse-problem">
+<h2>9. Setup Inverse Problem<a class="headerlink" href="#setup-inverse-problem" title="Link to this heading">#</a></h2>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Setting up flux inversion problem...&quot;</span><span class="p">)</span>
 
 <span class="c1"># Prior covariance (diagonal)</span>
 <span class="n">prior_std</span> <span class="o">=</span> <span class="n">PRIOR_MEAN</span> <span class="o">*</span> <span class="n">PRIOR_STD_FRACTION</span>
@@ -1061,78 +1026,69 @@ Observations: 1098
 </pre></div>
 </div>
 </div>
-<div class="nboutput nblast docutils container">
-<div class="prompt empty docutils container">
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Setting up flux inversion problem...
+</pre></div>
 </div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-Setting up flux inversion problem...
-Flux inversion problem configured.
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Flux inversion problem configured.
   State dimension: 1200
   Observation dimension: 1098
   Jacobian shape: (1098, 1200)
-</pre></div></div>
-</div>
-</section>
-<section id="10.-Solve">
-<h2>10. Solve<a class="headerlink" href="#10.-Solve" title="Link to this heading">#</a></h2>
-<div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Solving...&quot;</span><span class="p">)</span>
+</div>
+</div>
+</section>
+<section id="solve">
+<h2>10. Solve<a class="headerlink" href="#solve" title="Link to this heading">#</a></h2>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Solving...&quot;</span><span class="p">)</span>
 <span class="n">problem</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">estimator</span><span class="o">=</span><span class="s2">&quot;bayesian&quot;</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;✓ Solution complete&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
-<div class="nboutput nblast docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-Solving...
-✓ Solution complete
-</pre></div></div>
-</div>
-<div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Solving...
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">problem</span><span class="o">.</span><span class="n">obs</span>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>✓ Solution complete
 </pre></div>
 </div>
 </div>
-<div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">problem</span><span class="o">.</span><span class="n">obs</span>
 </pre></div>
 </div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-Vector(name=&#39;None&#39;, shape=(1098,))
-block          site_idx  time
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Vector(name=&#39;None&#39;, shape=(1098,))
+block          site_idx  time      
 concentration  0         2024-01-01    19.783718
                1         2024-01-01    17.022029
                2         2024-01-01    20.813514
                0         2024-01-02    14.939326
                1         2024-01-02    12.854288
-                                         ...
+                                         ...    
                          2024-12-30    22.693028
                2         2024-12-30    27.748752
                0         2024-12-31    26.374392
                1         2024-12-31    22.694512
                2         2024-12-31    27.747134
 Name: None, Length: 1098, dtype: float64
-</pre></div></div>
-</div>
-</section>
-<section id="11.-Diagnostics">
-<h2>11. Diagnostics<a class="headerlink" href="#11.-Diagnostics" title="Link to this heading">#</a></h2>
-<div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Extract results</span>
+</div>
+</div>
+</section>
+<section id="diagnostics">
+<h2>11. Diagnostics<a class="headerlink" href="#diagnostics" title="Link to this heading">#</a></h2>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Extract results</span>
 <span class="n">x_post</span> <span class="o">=</span> <span class="n">problem</span><span class="o">.</span><span class="n">posterior</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">values</span>
 <span class="n">z_obs_vals</span> <span class="o">=</span> <span class="n">problem</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">values</span>
 <span class="n">z_post</span> <span class="o">=</span> <span class="n">problem</span><span class="o">.</span><span class="n">posterior_obs</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">values</span>
@@ -1167,12 +1123,8 @@ Name: None, Length: 1098, dtype: float64
 </pre></div>
 </div>
 </div>
-<div class="nboutput nblast docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-POSTERIOR STATE (FLUX)
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>POSTERIOR STATE (FLUX)
   Mean: 0.3492 µmol/m²/s
   Std:  0.3724 µmol/m²/s
   Range: [-0.2208, 1.4783]
@@ -1188,103 +1140,62 @@ UNCERTAINTY REDUCTION
 
 INFORMATION CONTENT
   DOFS: 36.0
-  Reduced χ²: 400.136
-</pre></div></div>
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>  Reduced χ²: 400.136
+</pre></div>
+</div>
+</div>
 </div>
 </section>
-<section id="12.-Visualization">
-<h2>12. Visualization<a class="headerlink" href="#12.-Visualization" title="Link to this heading">#</a></h2>
-<div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
+<section id="visualization">
+<h2>12. Visualization<a class="headerlink" href="#visualization" title="Link to this heading">#</a></h2>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">problem</span><span class="o">.</span><span class="n">plot</span><span class="o">.</span><span class="n">fluxes</span><span class="p">(</span><span class="n">truth</span><span class="o">=</span><span class="n">truth_series</span><span class="p">,</span> <span class="n">sites</span><span class="o">=</span><span class="n">location_mapper</span><span class="p">)</span>
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">problem</span><span class="o">.</span><span class="n">plot</span><span class="o">.</span><span class="n">fluxes</span><span class="p">(</span><span class="n">truth</span><span class="o">=</span><span class="n">truth_series</span><span class="p">,</span> <span class="n">sites</span><span class="o">=</span><span class="n">location_mapper</span><span class="p">)</span>
-</pre></div>
 </div>
-</div>
-<div class="nboutput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
-</pre></div>
-</div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-(&lt;Figure size 640x480 with 6 Axes&gt;,
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>(&lt;Figure size 640x480 with 6 Axes&gt;,
  array([&lt;Axes: title={&#39;center&#39;: &#39;Truth&#39;}&gt;,
         &lt;Axes: title={&#39;center&#39;: &#39;Prior&#39;}&gt;,
         &lt;Axes: title={&#39;center&#39;: &#39;Posterior&#39;}&gt;,
         &lt;Axes: title={&#39;center&#39;: &#39;Residual&#39;}&gt;], dtype=object))
-</pre></div></div>
-</div>
-<div class="nboutput nblast docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<img alt="../_images/examples_flux_regional_25_1.png" src="../_images/examples_flux_regional_25_1.png" />
-</div>
-</div>
-<div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">problem</span><span class="o">.</span><span class="n">plot</span><span class="o">.</span><span class="n">concentrations</span><span class="p">(</span><span class="n">location_dim</span><span class="o">=</span><span class="s2">&quot;site_idx&quot;</span><span class="p">)</span>
+<img alt="../_images/7abc931aef040f3fbec112a00882a358a6d81a72ba1b6e606a4eeb5b97ee7600.png" src="../_images/7abc931aef040f3fbec112a00882a358a6d81a72ba1b6e606a4eeb5b97ee7600.png" />
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">problem</span><span class="o">.</span><span class="n">plot</span><span class="o">.</span><span class="n">concentrations</span><span class="p">(</span><span class="n">location_dim</span><span class="o">=</span><span class="s2">&quot;site_idx&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
-<div class="nboutput docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<img alt="../_images/examples_flux_regional_26_0.png" src="../_images/examples_flux_regional_26_0.png" />
-</div>
-</div>
-<div class="nboutput docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<img alt="../_images/examples_flux_regional_26_1.png" src="../_images/examples_flux_regional_26_1.png" />
-</div>
-</div>
-<div class="nboutput docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<img alt="../_images/examples_flux_regional_26_2.png" src="../_images/examples_flux_regional_26_2.png" />
-</div>
-</div>
-<div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
-</pre></div>
-</div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-array([&lt;Axes: title={&#39;center&#39;: &#39;Concentrations at site: 0&#39;}, xlabel=&#39;Time&#39;, ylabel=&#39;Concentration&#39;&gt;,
+<div class="cell_output docutils container">
+<img alt="../_images/03e06f6b7aa7068fd5324fab4fc963d035857ae588a036ae2750b899672cd69b.png" src="../_images/03e06f6b7aa7068fd5324fab4fc963d035857ae588a036ae2750b899672cd69b.png" />
+<img alt="../_images/e0145d8042c97a07fedd3b11bc40f4b50c950e07d923912ede3bf7e6035537d0.png" src="../_images/e0145d8042c97a07fedd3b11bc40f4b50c950e07d923912ede3bf7e6035537d0.png" />
+<img alt="../_images/60cc0a234d6f3c2921619599e559a8bc621379b67bb6b16a8946bd724efd34f9.png" src="../_images/60cc0a234d6f3c2921619599e559a8bc621379b67bb6b16a8946bd724efd34f9.png" />
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>array([&lt;Axes: title={&#39;center&#39;: &#39;Concentrations at site: 0&#39;}, xlabel=&#39;Time&#39;, ylabel=&#39;Concentration&#39;&gt;,
        &lt;Axes: title={&#39;center&#39;: &#39;Concentrations at site: 1&#39;}, xlabel=&#39;Time&#39;, ylabel=&#39;Concentration&#39;&gt;,
        &lt;Axes: title={&#39;center&#39;: &#39;Concentrations at site: 2&#39;}, xlabel=&#39;Time&#39;, ylabel=&#39;Concentration&#39;&gt;],
       dtype=object)
-</pre></div></div>
-</div>
-<div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">problem</span><span class="o">.</span><span class="n">posterior</span><span class="p">[</span><span class="s2">&quot;flux&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">to_xarray</span><span class="p">()</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="s2">&quot;lon&quot;</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="s2">&quot;lat&quot;</span><span class="p">,</span> <span class="n">col</span><span class="o">=</span><span class="s2">&quot;time&quot;</span><span class="p">,</span> <span class="n">col_wrap</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
-<div class="nboutput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">problem</span><span class="o">.</span><span class="n">posterior</span><span class="p">[</span><span class="s2">&quot;flux&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">to_xarray</span><span class="p">()</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="s2">&quot;lon&quot;</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="s2">&quot;lat&quot;</span><span class="p">,</span> <span class="n">col</span><span class="o">=</span><span class="s2">&quot;time&quot;</span><span class="p">,</span> <span class="n">col_wrap</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
 </pre></div>
 </div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-&lt;xarray.plot.facetgrid.FacetGrid at 0x1471f84cd090&gt;
-</pre></div></div>
 </div>
-<div class="nboutput nblast docutils container">
-<div class="prompt empty docutils container">
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>&lt;xarray.plot.facetgrid.FacetGrid at 0x7fe8d7e4d2b0&gt;
+</pre></div>
 </div>
-<div class="output_area docutils container">
-<img alt="../_images/examples_flux_regional_27_1.png" src="../_images/examples_flux_regional_27_1.png" />
+<img alt="../_images/e6e00fc39284d2753820ae92216b2f1559f3a32b6425085e58e9d184a9066842.png" src="../_images/e6e00fc39284d2753820ae92216b2f1559f3a32b6425085e58e9d184a9066842.png" />
 </div>
 </div>
 </section>
@@ -1301,20 +1212,20 @@ array([&lt;Axes: title={&#39;center&#39;: &#39;Concentrations at site: 0&#39;}, 
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="index.html"
+       href="gravity_2d.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">Examples</p>
+        <p class="prev-next-title">2D Gravity Inversion</p>
       </div>
     </a>
     <a class="right-next"
-       href="gravity_2d.html"
+       href="../reference/index.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">2D Gravity Inversion</p>
+        <p class="prev-next-title">API Reference</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -1337,23 +1248,23 @@ array([&lt;Axes: title={&#39;center&#39;: &#39;Concentrations at site: 0&#39;}, 
   </div>
   <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Bayesian-Inversion-for-Regional-CH₄-Emissions">Bayesian Inversion for Regional CH₄ Emissions</a><ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#Problem-Setup">Problem Setup</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#Approach">Approach</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#bayesian-inversion-for-regional-ch4-emissions">Bayesian Inversion for Regional CH₄ Emissions</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#problem-setup">Problem Setup</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#approach">Approach</a></li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#1.-Imports">1. Imports</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#2.-Configuration">2. Configuration</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#3.-Helper-Functions">3. Helper Functions</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#4.-Build-Domain-and-Observation-Network">4. Build Domain and Observation Network</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#5.-Build-Time-Grids">5. Build Time Grids</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#6.-Build-Jacobian">6. Build Jacobian</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#7.-Generate-Synthetic-Truth-and-Observations">7. Generate Synthetic Truth and Observations</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#8.-Generate-Synthetic-Observations">8. Generate Synthetic Observations</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#9.-Setup-Inverse-Problem">9. Setup Inverse Problem</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#10.-Solve">10. Solve</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#11.-Diagnostics">11. Diagnostics</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#12.-Visualization">12. Visualization</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#imports">1. Imports</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#configuration">2. Configuration</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#helper-functions">3. Helper Functions</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#build-domain-and-observation-network">4. Build Domain and Observation Network</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#build-time-grids">5. Build Time Grids</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#build-jacobian">6. Build Jacobian</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#generate-synthetic-truth-and-observations">7. Generate Synthetic Truth and Observations</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#generate-synthetic-observations">8. Generate Synthetic Observations</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#setup-inverse-problem">9. Setup Inverse Problem</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#solve">10. Solve</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#diagnostics">11. Diagnostics</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#visualization">12. Visualization</a></li>
 </ul>
   </nav></div>
 
