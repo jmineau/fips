@@ -204,13 +204,6 @@
       "severity": "error"
     },
     {
-      "column": 32,
-      "path": "src/fips/problems/flux/visualization.py",
-      "name": "bad-argument-type",
-      "concise_description": "Argument `Patch` is not assignable to parameter `object` with type `Line2D` in function `list.append`",
-      "severity": "error"
-    },
-    {
       "column": 26,
       "path": "src/fips/vector.py",
       "name": "bad-argument-type",
