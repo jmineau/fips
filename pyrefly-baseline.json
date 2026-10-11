@@ -92,13 +92,6 @@
       "severity": "error"
     },
     {
-      "column": 2,
-      "path": "src/fips/estimators.py",
-      "name": "missing-attribute",
-      "concise_description": "Object of class `dict` has no attribute `register`",
-      "severity": "error"
-    },
-    {
       "column": 56,
       "path": "src/fips/indexes.py",
       "name": "bad-argument-type",
