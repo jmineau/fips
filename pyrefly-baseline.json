@@ -25,13 +25,6 @@
       "column": 40,
       "path": "src/fips/base.py",
       "name": "bad-argument-type",
-      "concise_description": "Argument `int` is not assignable to parameter `axis` with type `Literal['columns', 'index', 0, 1]` in function `pandas.core.generic.NDFrame.xs`",
-      "severity": "error"
-    },
-    {
-      "column": 40,
-      "path": "src/fips/base.py",
-      "name": "bad-argument-type",
       "concise_description": "Argument `int` is not assignable to parameter `axis` with type `Literal['index', 0]` in function `pandas.core.series.Series.xs`",
       "severity": "error"
     },
@@ -50,20 +43,6 @@
       "severity": "error"
     },
     {
-      "column": 46,
-      "path": "src/fips/base.py",
-      "name": "bad-argument-type",
-      "concise_description": "Argument `int` is not assignable to parameter `axis` with type `Literal['columns', 'index', 0, 1]` in function `pandas.core.frame.DataFrame.set_axis`",
-      "severity": "error"
-    },
-    {
-      "column": 46,
-      "path": "src/fips/base.py",
-      "name": "bad-argument-type",
-      "concise_description": "Argument `int` is not assignable to parameter `axis` with type `Literal['columns', 'index', 0, 1]` in function `pandas.core.series.Series.set_axis`",
-      "severity": "error"
-    },
-    {
       "column": 40,
       "path": "src/fips/base.py",
       "name": "bad-argument-type",
@@ -71,31 +50,10 @@
       "severity": "error"
     },
     {
-      "column": 73,
-      "path": "src/fips/base.py",
-      "name": "bad-argument-type",
-      "concise_description": "Argument `int` is not assignable to parameter `axis` with type `Literal['columns', 'index', 0, 1]` in function `pandas.core.frame.DataFrame.reorder_levels`",
-      "severity": "error"
-    },
-    {
       "column": 46,
       "path": "src/fips/base.py",
       "name": "unexpected-keyword",
       "concise_description": "Unexpected keyword argument `columns` in function `pandas.core.series.Series.reindex`",
-      "severity": "error"
-    },
-    {
-      "column": 48,
-      "path": "src/fips/base.py",
-      "name": "bad-argument-type",
-      "concise_description": "Argument `int` is not assignable to parameter `axis` with type `Literal['columns', 'index', 0, 1]` in function `pandas.core.frame.DataFrame.set_axis`",
-      "severity": "error"
-    },
-    {
-      "column": 48,
-      "path": "src/fips/base.py",
-      "name": "bad-argument-type",
-      "concise_description": "Argument `int` is not assignable to parameter `axis` with type `Literal['columns', 'index', 0, 1]` in function `pandas.core.series.Series.set_axis`",
       "severity": "error"
     },
     {
@@ -180,13 +138,6 @@
       "path": "src/fips/indexes.py",
       "name": "bad-argument-type",
       "concise_description": "Argument `ndarray[tuple[int]]` is not assignable to parameter `object` with type `Index` in function `list.append`",
-      "severity": "error"
-    },
-    {
-      "column": 48,
-      "path": "src/fips/indexes.py",
-      "name": "bad-argument-type",
-      "concise_description": "Argument `int` is not assignable to parameter `axis` with type `Literal['columns', 'index', 0, 1]` in function `pandas.core.frame.DataFrame.set_axis`",
       "severity": "error"
     },
     {
