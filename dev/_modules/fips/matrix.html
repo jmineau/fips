@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>fips.matrix &#8212; fips 0.1.0b10.dev15+gf194d10e1 documentation</title>
+    <title>fips.matrix &#8212; fips 0.1.0b10.dev16+ge06060753 documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0" />
 
-    <script src="../../_static/documentation_options.js?v=9e1546f7"></script>
+    <script src="../../_static/documentation_options.js?v=d2b04e80"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -130,8 +130,8 @@
       
     
     
-    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.1.0b10.dev15+gf194d10e1 documentation - Home"/>
-    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.1.0b10.dev15+gf194d10e1 documentation - Home"/>
+    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.1.0b10.dev16+ge06060753 documentation - Home"/>
+    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.1.0b10.dev16+ge06060753 documentation - Home"/>
   
   
 </a></div>
@@ -648,12 +648,15 @@
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    data : np.ndarray or pd.DataFrame or Matrix or scalar</span>
-<span class="sd">        2D data representing the matrix.</span>
+<span class="sd">    data : np.ndarray or list or pd.Series or pd.DataFrame or Matrix or scalar</span>
+<span class="sd">        Data representing the matrix. A 1D array, list, or Series supplies</span>
+<span class="sd">        the diagonal values. Arrays and lists require an explicit index;</span>
+<span class="sd">        a Series supplies its own index for both axes.</span>
 <span class="sd">    name : str, optional</span>
 <span class="sd">        Name for the Matrix.</span>
 <span class="sd">    index : pd.MultiIndex</span>
-<span class="sd">        Index for the rows of the DataFrame.</span>
+<span class="sd">        Index for the rows of the DataFrame. Required for 1D arrays and lists,</span>
+<span class="sd">        and used for both axes in that case.</span>
 <span class="sd">    columns : pd.MultiIndex, optional</span>
 <span class="sd">        Index for the columns of the DataFrame. If None, uses the same as `index`.</span>
 <span class="sd">    dtype : data type, optional</span>
@@ -664,6 +667,11 @@
 <span class="sd">        If True, store the assembled matrix in pandas sparse format.</span>
 <span class="sd">        Sparsification is applied after block assembly; use threshold</span>
 <span class="sd">        zeroing in your builder before passing data here.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        If a 1D array or list is supplied without an index.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">data</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>  <span class="c1"># type: ignore[override]</span>
@@ -734,7 +742,9 @@
 
         <span class="c1"># 1D array - treat as diagonal matrix</span>
         <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="nb">list</span><span class="p">))</span> <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">ndim</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
-            <span class="n">index</span> <span class="o">=</span> <span class="n">columns</span> <span class="o">=</span> <span class="n">index</span> <span class="ow">or</span> <span class="n">pd</span><span class="o">.</span><span class="n">RangeIndex</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">))</span>
+            <span class="k">if</span> <span class="n">index</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;1D data requires an index.&quot;</span><span class="p">)</span>
+            <span class="n">columns</span> <span class="o">=</span> <span class="n">index</span>
             <span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
 
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
