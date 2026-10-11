@@ -104,7 +104,7 @@ class Block(SingleBlockMixin, Structure1D):
             df = self.data.to_frame()
             df.columns.rename("block", inplace=True)
             s = df.stack()
-            s.index = s.index.reorder_levels(["block"] + dims)
+            s = s.reorder_levels(["block"] + dims)
         else:
             s = self.data.copy()
         return s
