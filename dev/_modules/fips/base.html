@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>fips.base &#8212; fips 0.1.0b10.dev5+g106398ed2 documentation</title>
+    <title>fips.base &#8212; fips 0.1.0b10.dev6+gf1f2e7cf1 documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0" />
 
-    <script src="../../_static/documentation_options.js?v=2f0cf6ab"></script>
+    <script src="../../_static/documentation_options.js?v=bf9b7b6e"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -130,8 +130,8 @@
       
     
     
-    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.1.0b10.dev5+g106398ed2 documentation - Home"/>
-    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.1.0b10.dev5+g106398ed2 documentation - Home"/>
+    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.1.0b10.dev6+gf1f2e7cf1 documentation - Home"/>
+    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.1.0b10.dev6+gf1f2e7cf1 documentation - Home"/>
   
   
 </a></div>
@@ -845,6 +845,7 @@
 <span class="sd">        1D data for the structure.</span>
 <span class="sd">    name : str, optional</span>
 <span class="sd">        Name for the structure. If None, uses data.name if available.</span>
+<span class="sd">        Non-None names are converted to strings during construction.</span>
 <span class="sd">    index : pd.Index, optional</span>
 <span class="sd">        Index for the data. If None, uses data.index if available.</span>
 <span class="sd">    dtype : data type, optional</span>
@@ -877,6 +878,8 @@
             <span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">squeeze</span><span class="p">()</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">index</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="n">copy</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_validate</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_sanitize</span><span class="p">()</span>
@@ -890,8 +893,9 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">name</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;The name of the underlying Series.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The stored Series name, a string or None if the Series is unnamed.&quot;&quot;&quot;</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">name</span>
+        <span class="k">return</span> <span class="kc">None</span> <span class="k">if</span> <span class="n">name</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">str</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
 
 <div class="viewcode-block" id="Structure1D.to_series">
 <a class="viewcode-back" href="../../reference/api/fips.base.Structure1D.to_series.html#fips.base.Structure1D.to_series">[docs]</a>

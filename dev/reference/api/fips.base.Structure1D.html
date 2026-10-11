@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>fips.base.Structure1D &#8212; fips 0.1.0b10.dev5+g106398ed2 documentation</title>
+    <title>fips.base.Structure1D &#8212; fips 0.1.0b10.dev6+gf1f2e7cf1 documentation</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0" />
 
-    <script src="../../_static/documentation_options.js?v=2f0cf6ab"></script>
+    <script src="../../_static/documentation_options.js?v=bf9b7b6e"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -133,8 +133,8 @@
       
     
     
-    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.1.0b10.dev5+g106398ed2 documentation - Home"/>
-    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.1.0b10.dev5+g106398ed2 documentation - Home"/>
+    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.1.0b10.dev6+gf1f2e7cf1 documentation - Home"/>
+    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.1.0b10.dev6+gf1f2e7cf1 documentation - Home"/>
   
   
 </a></div>
@@ -962,7 +962,8 @@
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>data</strong> (<em>array-like</em>) – 1D data for the structure.</p></li>
-<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a><em>, </em><em>optional</em>) – Name for the structure. If None, uses data.name if available.</p></li>
+<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a><em>, </em><em>optional</em>) – Name for the structure. If None, uses data.name if available.
+Non-None names are converted to strings during construction.</p></li>
 <li><p><strong>index</strong> (<em>pd.Index</em><em>, </em><em>optional</em>) – Index for the data. If None, uses data.index if available.</p></li>
 <li><p><strong>dtype</strong> (<em>data type</em><em>, </em><em>optional</em>) – Data type to force.</p></li>
 <li><p><strong>copy</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><em>bool</em></a><em>, </em><em>optional</em>) – Whether to copy the data.</p></li>
@@ -978,7 +979,7 @@
 <td><p>The underlying data, which must be numeric and non-NaN.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="fips.base.Structure1D.name.html#fips.base.Structure1D.name" title="fips.base.Structure1D.name"><code class="xref py py-obj docutils literal notranslate"><span class="pre">name</span></code></a></p></td>
-<td><p>The name of the underlying Series.</p></td>
+<td><p>The stored Series name, a string or None if the Series is unnamed.</p></td>
 </tr>
 </tbody>
 </table>
