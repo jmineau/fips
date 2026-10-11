@@ -11,7 +11,7 @@ import pickle
 import warnings
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import Any, Literal, Self, TypeAlias, cast
+from typing import Any, Literal, Self, TypeAlias
 
 import numpy.typing as npt
 import pandas as pd
@@ -402,7 +402,8 @@ class Structure1D(Structure):
     @property
     def name(self) -> str | None:
         """The stored Series name, a string or None if the Series is unnamed."""
-        return cast(str | None, self.data.name)
+        name = self.data.name
+        return None if name is None else str(name)
 
     def to_series(self) -> pd.Series:
         """Get the underlying Series data."""
