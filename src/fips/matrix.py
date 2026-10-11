@@ -13,7 +13,13 @@ from typing import Any, Self, TypeAlias
 import numpy as np
 import pandas as pd
 
-from fips.base import ArrayLike, MultiBlockMixin, SingleBlockMixin, Structure2D
+from fips.base import (
+    ArrayLike,
+    MultiBlockMixin,
+    SingleBlockMixin,
+    Structure2D,
+    xselect,
+)
 from fips.indexes import assign_block, outer_align_levels
 
 logger = logging.getLogger(__name__)
@@ -291,10 +297,26 @@ class Matrix(MultiBlockMixin, Structure2D):
         return f"<{self.__class__.__name__} : shape={self.shape}>"
 
     def __getitem__(self, block: tuple[str, str]) -> pd.DataFrame:
-        """Get the submatrix DataFrame for the given (row_block, col_block) tuple."""
+        """
+        Get the submatrix DataFrame for the given (row_block, col_block) tuple.
+
+        Rows and columns both lose the 'block' level and any level that is NaN
+        throughout the block (a level only other blocks have), so the submatrix
+        has the levels its block was built with.
+
+        Parameters
+        ----------
+        block : tuple of str
+            The row block and column block names.
+
+        Returns
+        -------
+        pd.DataFrame
+            The submatrix, with the levels the block was built with.
+        """
         row_block, col_block = block
         df = self.xs(row_block, level="block", axis=0)
-        return df.xs(col_block, level="block", axis=1)
+        return xselect(df, col_block, level="block", axis=1)
 
     @property
     def blocks(self) -> _MatrixBlockAccessor:  # type: ignore[override]
