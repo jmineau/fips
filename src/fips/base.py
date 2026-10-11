@@ -11,7 +11,7 @@ import pickle
 import warnings
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import Any, Literal, Self, TypeAlias
+from typing import Any, Literal, Self, TypeAlias, overload
 
 import numpy.typing as npt
 import pandas as pd
@@ -22,6 +22,20 @@ from fips.indexes import overlaps, resolve_axes, round_index, to_numeric
 logger = logging.getLogger(__name__)
 
 ArrayLike: TypeAlias = npt.ArrayLike | pd.Series | pd.DataFrame
+
+
+# docstr-coverage: excused `@overload stub`
+@overload
+def xselect(
+    s_or_df: pd.Series, key, axis=0, level=None, drop_level=True
+) -> pd.Series: ...
+
+
+# docstr-coverage: excused `@overload stub`
+@overload
+def xselect(
+    s_or_df: pd.DataFrame, key, axis=0, level=None, drop_level=True
+) -> pd.DataFrame | pd.Series: ...
 
 
 def xselect(
@@ -47,6 +61,8 @@ def xselect(
     -------
     pd.DataFrame or pd.Series
         The cross-section of the data corresponding to the key(s), with any NaN-only index levels removed.
+        A Series gives a Series; a DataFrame gives a DataFrame, or a Series
+        when the key selects a single row.
     """
     for ax in resolve_axes(axis):
         # Call the underlying xs method
