@@ -11,7 +11,7 @@ import pickle
 import warnings
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import Any, Literal, Self, TypeAlias
+from typing import Any, Literal, Self, TypeAlias, cast
 
 import numpy.typing as npt
 import pandas as pd
@@ -353,6 +353,7 @@ class Structure1D(Structure):
         1D data for the structure.
     name : str, optional
         Name for the structure. If None, uses data.name if available.
+        Non-None names are converted to strings during construction.
     index : pd.Index, optional
         Index for the data. If None, uses data.index if available.
     dtype : data type, optional
@@ -385,6 +386,8 @@ class Structure1D(Structure):
             data = data.squeeze()
 
         self.data = pd.Series(data, name=name, index=index, dtype=dtype, copy=copy)
+        if self.data.name is not None:
+            self.data.name = str(self.data.name)
 
         self._validate()
         self._sanitize()
@@ -398,8 +401,8 @@ class Structure1D(Structure):
 
     @property
     def name(self) -> str | None:
-        """The Series name as a string, or None if the Series is unnamed."""
-        return None if self.data.name is None else str(self.data.name)
+        """The stored Series name, a string or None if the Series is unnamed."""
+        return cast(str | None, self.data.name)
 
     def to_series(self) -> pd.Series:
         """Get the underlying Series data."""

@@ -154,6 +154,21 @@ def test_structure1d():
     pd.testing.assert_series_equal(struct.to_series(), s)
 
 
+@pytest.mark.parametrize("container", ["series", "dataframe"])
+def test_structure1d_normalizes_inherited_name(container):
+    """A numeric input name becomes a string without renaming the input."""
+    series = pd.Series([1, 2], name=0, index=pd.Index([1, 2], name="a"))
+    data = series if container == "series" else series.to_frame()
+
+    struct = Structure1D(data)
+
+    assert struct.name == "0"
+    assert struct.data.name == "0"
+    assert series.name == 0
+    if container == "dataframe":
+        assert data.columns.tolist() == [0]
+
+
 def test_structure1d_one_element():
     """Test that one element keeps its index (it must not squeeze to a scalar)."""
     s = pd.Series([0.1], name="bias", index=pd.Index(["site_A"], name="site_id"))
