@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>fips.estimators &#8212; fips 0.1.0b10.dev18+gd2b27d549 documentation</title>
+    <title>fips.estimators &#8212; fips 0.1.0b10.dev25+g1b58d5cf4 documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0" />
 
-    <script src="../../_static/documentation_options.js?v=760542fa"></script>
+    <script src="../../_static/documentation_options.js?v=6d3b61e3"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -130,8 +130,8 @@
       
     
     
-    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.1.0b10.dev18+gd2b27d549 documentation - Home"/>
-    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.1.0b10.dev18+gd2b27d549 documentation - Home"/>
+    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.1.0b10.dev25+g1b58d5cf4 documentation - Home"/>
+    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.1.0b10.dev25+g1b58d5cf4 documentation - Home"/>
   
   
 </a></div>
@@ -515,7 +515,12 @@
         <span class="k">return</span> <span class="n">solve</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="n">assume_a</span><span class="o">=</span><span class="s2">&quot;sym&quot;</span><span class="p">)</span>
 
 
-<span class="k">class</span><span class="w"> </span><span class="nc">EstimatorRegistry</span><span class="p">(</span><span class="nb">dict</span><span class="p">):</span>
+<span class="c1"># An alias, because pyrefly reads ``type[...]`` written inside a base class&#39;s</span>
+<span class="c1"># arguments as ``type[Any]``, so a lookup would lose its type.</span>
+<span class="n">_EstimatorClass</span> <span class="o">=</span> <span class="nb">type</span><span class="p">[</span><span class="s2">&quot;Estimator&quot;</span><span class="p">]</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">EstimatorRegistry</span><span class="p">(</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">_EstimatorClass</span><span class="p">]):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Registry for estimator classes.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -543,7 +548,7 @@
         <span class="k">return</span> <span class="n">decorator</span>
 
 
-<span class="n">ESTIMATOR_REGISTRY</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">type</span><span class="p">[</span><span class="s2">&quot;Estimator&quot;</span><span class="p">]]</span> <span class="o">=</span> <span class="n">EstimatorRegistry</span><span class="p">()</span>
+<span class="n">ESTIMATOR_REGISTRY</span> <span class="o">=</span> <span class="n">EstimatorRegistry</span><span class="p">()</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">available_estimators</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
