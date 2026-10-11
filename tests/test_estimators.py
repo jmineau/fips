@@ -6,7 +6,13 @@ import numpy as np
 import pytest
 from scipy.linalg import LinAlgError, solve
 
-from fips.estimators import BayesianSolver, Estimator, _solve_psd
+from fips.estimators import (
+    ESTIMATOR_REGISTRY,
+    BayesianSolver,
+    Estimator,
+    EstimatorRegistry,
+    _solve_psd,
+)
 
 
 class ConcreteEstimator(Estimator):
@@ -452,6 +458,25 @@ class TestLeverage:
         S_z = np.eye(3)
         estimator = ConcreteEstimator(z, x_0, H, S_0, S_z)
         assert callable(estimator.leverage)
+
+
+class TestEstimatorRegistry:
+    """Tests for the estimator registry."""
+
+    def test_register_files_the_class_and_returns_it(self):
+        """``register`` stores a class under a name and gives the class back."""
+        registry = EstimatorRegistry()
+
+        @registry.register("concrete")
+        class Registered(ConcreteEstimator):
+            """An estimator for the registry."""
+
+        assert list(registry) == ["concrete"]
+        assert registry["concrete"] is Registered
+
+    def test_bayesian_solver_is_registered(self):
+        """The built-in solver is looked up by its name."""
+        assert ESTIMATOR_REGISTRY["bayesian"] is BayesianSolver
 
 
 class TestAvailableEstimators:
