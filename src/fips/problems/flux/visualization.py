@@ -139,17 +139,14 @@ class FluxPlotter:
         # Create figure and axes
         fig, axes = plt.subplots(ncols=ncols, sharey=True, subplot_kw=subplot_kw)
 
-        ax_truth = None
-        ax_res = None
+        # The truth panel, when there is one, comes first; the residual panel,
+        # when there is one, comes last.
         if truth is None:
             ax_prior = axes[0]
             ax_post = axes[1]
         else:
-            ax_truth = axes[0]
             ax_prior = axes[1]
             ax_post = axes[2]
-        if time != "std":
-            ax_res = axes[-1]
 
         # Add background tiles
         if tiler is not None:
@@ -205,6 +202,7 @@ class FluxPlotter:
         )
 
         if truth is not None:
+            ax_truth = axes[0]
             truth.plot(
                 ax=ax_truth,
                 x=x_dim,
@@ -262,6 +260,7 @@ class FluxPlotter:
 
         # Plot residual
         if time != "std":
+            ax_res = axes[-1]
             if truth is not None:
                 base = truth
                 label = "Posterior - Truth"
