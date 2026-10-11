@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- `Matrix` and `CovarianceMatrix` accept 1D diagonal values with a pandas
+  index and preserve it on both axes. A 1D array or list without an index
+  now raises an explicit error instead of creating an invalid unnamed index.
+  ([#45](https://github.com/jmineau/fips/issues/45))
 - An unnamed `Vector` keeps its missing name when copied, reindexed, or its
   index is rounded, instead of acquiring the string name `"None"`.
   Non-string names are converted to strings during construction so these
