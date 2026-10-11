@@ -156,7 +156,7 @@ def overlaps(
     return True
 
 
-def resolve_axes(axis: int | str | Literal["both"]) -> tuple[int, ...]:
+def resolve_axes(axis: int | str | Literal["both"]) -> tuple[Literal[0, 1], ...]:
     """Standardize axis input into a tuple of integer axes."""
     if axis == "both":
         return (0, 1)

@@ -212,7 +212,7 @@ class Structure(Pickleable, ABC):
         """
 
         def prepare_data_for_target(
-            data: pd.DataFrame | pd.Series, target: pd.Index, axis: int
+            data: pd.DataFrame | pd.Series, target: pd.Index, axis: Literal[0, 1]
         ) -> pd.DataFrame | pd.Series:
             """Make ``data`` comparable to ``target`` along ``axis``."""
             current = data.axes[axis]
