@@ -52,7 +52,12 @@ def _solve_psd(A: np.ndarray, B: np.ndarray) -> np.ndarray:
         return solve(A, B, assume_a="sym")
 
 
-class EstimatorRegistry(dict):
+# An alias, because pyrefly reads ``type[...]`` written inside a base class's
+# arguments as ``type[Any]``, so a lookup would lose its type.
+_EstimatorClass = type["Estimator"]
+
+
+class EstimatorRegistry(dict[str, _EstimatorClass]):
     """
     Registry for estimator classes.
     """
@@ -80,7 +85,7 @@ class EstimatorRegistry(dict):
         return decorator
 
 
-ESTIMATOR_REGISTRY: dict[str, type["Estimator"]] = EstimatorRegistry()
+ESTIMATOR_REGISTRY = EstimatorRegistry()
 
 
 def available_estimators() -> list[str]:

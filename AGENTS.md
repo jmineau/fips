@@ -359,6 +359,12 @@ covariance). See README "Multi-block" example.
   its file, kind and column: remove that one by hand. To see every error with
   its line, the listed ones included, run
   `uv run pyrefly check --baseline-error-level error --output-format min-text`.
+- **pyrefly (1.3.2) reads `type[X]` written inside a base class's arguments as
+  `type[Any]`**: after `class R(dict[str, type[E]])` a lookup in `R()` is
+  `type[Any]`, though `typing.Type[E]` or an alias of `type[E]` gives
+  `type[E]`. `EstimatorRegistry` names its value type through an alias
+  (`_EstimatorClass`) for this reason; do the same where a subclass of a
+  container holds classes.
 - `convolve(state, H)` returns a `Vector`, not a numpy array. Don't expect
   raw arrays out of public APIs.
 - `reduced_chi2` lives on the *estimator*, not the problem
