@@ -106,11 +106,8 @@ class Block(SingleBlockMixin, Structure1D):
             The underlying Series data, optionally with a 'block' level added to the index.
         """
         if add_block_level:
-            dims = self.index.names
-            df = self.data.to_frame()
-            df.columns.rename("block", inplace=True)
-            s = df.stack()
-            s = s.reorder_levels(["block"] + dims)
+            # The block name moves from the Series name to the first index level.
+            s = pd.concat({self.name: self.data}, names=["block"]).rename(None)
         else:
             s = self.data.copy()
         return s

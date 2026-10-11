@@ -84,6 +84,26 @@ class TestBlock:
         assert block.name == "bias"
         pd.testing.assert_series_equal(block.data, data)
 
+    @pytest.mark.parametrize(
+        "index",
+        [
+            pd.Index(["a", "b", "c"], name="site"),
+            pd.MultiIndex.from_product([["x"], [1, 2, 3]], names=["dim1", "dim2"]),
+        ],
+        ids=["flat", "multi"],
+    )
+    def test_block_to_series_add_block_level(self, index):
+        """The block name becomes the first index level and the Series has no name."""
+        data = pd.Series([1.0, 2.0, 3.0], index=index, name="flux")
+        s = Block(data).to_series(add_block_level=True)
+
+        expected_index = pd.MultiIndex.from_arrays(
+            [["flux"] * 3] + [index.get_level_values(n) for n in index.names],
+            names=["block", *index.names],
+        )
+        expected = pd.Series([1.0, 2.0, 3.0], index=expected_index)
+        pd.testing.assert_series_equal(s, expected)
+
 
 class TestVector:
     """Tests for Vector class."""
