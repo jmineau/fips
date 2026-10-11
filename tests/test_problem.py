@@ -122,6 +122,39 @@ class TestInverseProblemCreation:
         assert hasattr(problem, "prior")
         assert hasattr(problem, "obs")
 
+    @pytest.mark.parametrize("kind", ["none", "scalar", "series"])
+    def test_constant_is_a_vector_or_none(
+        self,
+        simple_prior,
+        simple_obs,
+        simple_forward_operator,
+        simple_prior_error,
+        simple_modeldata_mismatch,
+        kind,
+    ):
+        """The constant is stored as a Vector, whatever it was given as, or None."""
+        constant = {
+            "none": None,
+            "scalar": 2.5,
+            "series": simple_obs * 2,
+        }[kind]
+
+        problem = InverseProblem(
+            prior=simple_prior,
+            obs=simple_obs,
+            forward_operator=simple_forward_operator,
+            prior_error=simple_prior_error,
+            modeldata_mismatch=simple_modeldata_mismatch,
+            constant=constant,
+        )
+
+        if kind == "none":
+            assert problem.constant is None
+        else:
+            assert isinstance(problem.constant, Vector)
+            expected = [2.5] * 4 if kind == "scalar" else [3.0, 5.0, 7.0, 9.0]
+            np.testing.assert_allclose(problem.constant.values, expected)
+
 
 class TestInverseProblemProperties:
     """Tests for InverseProblem property accessors."""
