@@ -8,20 +8,6 @@
       "severity": "error"
     },
     {
-      "column": 36,
-      "path": "src/fips/aggregators.py",
-      "name": "missing-attribute",
-      "concise_description": "Object of class `NoneType` has no attribute `values`",
-      "severity": "error"
-    },
-    {
-      "column": 69,
-      "path": "src/fips/aggregators.py",
-      "name": "missing-attribute",
-      "concise_description": "Object of class `NoneType` has no attribute `name`",
-      "severity": "error"
-    },
-    {
       "column": 40,
       "path": "src/fips/base.py",
       "name": "bad-argument-type",

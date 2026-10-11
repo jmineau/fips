@@ -365,11 +365,10 @@ class ObsAggregator:
                 else new_df
             )
 
-        # c_agg = W @ c  (scalars are invariant to aggregation)
-        if constant is None:
-            c_agg = None
-        elif np.isscalar(constant):
-            c_agg = constant  # scalars pass through unchanged
+        # c_agg = W @ c. There is no c_df when there is no constant or it is a
+        # scalar, which aggregation leaves unchanged.
+        if c_df is None:
+            c_agg = constant
         else:
             c_vals = pd.Series(W @ c_df.values, index=agg_idx, name=c_df.name)
             c_agg = repack(constant, c_vals)
