@@ -323,13 +323,6 @@
       "severity": "error"
     },
     {
-      "column": 23,
-      "path": "src/fips/vector.py",
-      "name": "missing-attribute",
-      "concise_description": "Object of class `Index` has no attribute `reorder_levels`",
-      "severity": "error"
-    },
-    {
       "column": 16,
       "path": "src/fips/vector.py",
       "name": "bad-return",
