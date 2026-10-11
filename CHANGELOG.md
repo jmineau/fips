@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Selecting a block out of a `Matrix` with `matrix[row, col]` or
+  `matrix.blocks[row, col]` (and so `InverseProblem.get_block` and the
+  `FluxProblem` properties such as `jacobian`) kept the column levels that are
+  NaN throughout the block, the levels only the other blocks have, while the
+  rows were already cleaned. The columns are now cleaned too, so the block
+  comes back with the levels it was built with.
+  ([#46](https://github.com/jmineau/fips/issues/46))
 - `Matrix` and `CovarianceMatrix` accept 1D diagonal values with a pandas
   index and preserve it on both axes. A 1D array or list without an index
   now raises an explicit error instead of creating an invalid unnamed index.

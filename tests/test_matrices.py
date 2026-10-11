@@ -173,6 +173,97 @@ class TestMatrix:
         pd.testing.assert_frame_equal(block.data, flux.data)
 
 
+class TestMatrixSelection:
+    """Selecting a block back out of a Matrix gives it the levels it went in with."""
+
+    # Rows and columns that differ in their levels, so that assembling the
+    # Matrix fills the missing levels with NaN.
+    ROWS = {
+        "o1": pd.MultiIndex.from_product([[0, 1], ["x"]], names=["t", "site"]),
+        "o2": pd.Index([10, 11], name="k"),
+    }
+    COLUMNS = {
+        "s1": pd.MultiIndex.from_product([[0.5, 1.5], [7]], names=["lat", "lon"]),
+        "s2": pd.Index(["p", "q"], name="param"),
+    }
+
+    def _blocks(self):
+        """The four (row, column) blocks, each filled with its own value."""
+        return {
+            (row, col): MatrixBlock(
+                np.full((2, 2), 1.0 + 2 * i + j),
+                row_block=row,
+                col_block=col,
+                index=self.ROWS[row],
+                columns=self.COLUMNS[col],
+            )
+            for i, row in enumerate(self.ROWS)
+            for j, col in enumerate(self.COLUMNS)
+        }
+
+    @pytest.mark.parametrize("Klass", [Matrix, ForwardOperator])
+    @pytest.mark.parametrize("row", ["o1", "o2"])
+    @pytest.mark.parametrize("col", ["s1", "s2"])
+    def test_block_keeps_its_own_levels(self, Klass, row, col):
+        """Rows and columns lose the levels that are NaN-only for the block."""
+        block = self._blocks()[row, col]
+        matrix = Klass(list(self._blocks().values()))
+        # block, then every level of the other blocks, NaN-filled
+        assert matrix.index.nlevels == matrix.columns.nlevels == 4
+
+        for frame in (matrix[row, col], matrix.blocks[row, col].data):
+            assert frame.index.names == block.index.names
+            assert frame.columns.names == block.columns.names
+            assert frame.index.to_list() == block.index.to_list()
+            assert frame.columns.to_list() == block.columns.to_list()
+            assert (frame.to_numpy() == block.to_numpy()).all()
+
+        taken = matrix.blocks[row, col]
+        assert (taken.row_block, taken.col_block) == (row, col)
+
+    def test_levels_shared_by_every_block_are_kept(self):
+        """With no NaN-only level to drop, the selection is the block as it went in."""
+        rows = pd.MultiIndex.from_product([[0, 1], ["x"]], names=["t", "site"])
+        columns = pd.MultiIndex.from_product([[0.5, 1.5], [7.5]], names=["lat", "lon"])
+        blocks = [
+            MatrixBlock(
+                np.full((2, 2), float(value)),
+                row_block="obs",
+                col_block=col,
+                index=rows,
+                columns=columns,
+            )
+            for value, col in enumerate(["flux", "bias"], start=1)
+        ]
+        matrix = Matrix(blocks)
+
+        for block in blocks:
+            selected = matrix["obs", block.col_block]
+            pd.testing.assert_frame_equal(selected, block.data)
+            pd.testing.assert_frame_equal(
+                matrix.blocks["obs", block.col_block].data, block.data
+            )
+
+    def test_covariance_matrix_block_keeps_its_own_levels(self):
+        """CovarianceMatrix selects through the same code, on rows and columns."""
+        flux_idx = pd.MultiIndex.from_product([[0.5, 1.5], [7]], names=["lat", "lon"])
+        bias_idx = pd.Index(["a", "b"], name="site")
+        cov = CovarianceMatrix(
+            [
+                MatrixBlock(np.eye(2), "flux", "flux", index=flux_idx),
+                MatrixBlock(np.eye(2) * 2, "bias", "bias", index=bias_idx),
+            ]
+        )
+
+        flux = cov["flux", "flux"]
+        assert flux.index.names == ["lat", "lon"]
+        assert flux.columns.names == ["lat", "lon"]
+        bias = cov.blocks["bias", "bias"].data
+        assert bias.index.names == ["site"]
+        assert bias.columns.names == ["site"]
+        assert (bias.to_numpy() == np.eye(2) * 2).all()
+
+
 class TestCovarianceMatrix:
     """Tests for CovarianceMatrix class."""
 

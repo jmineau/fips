@@ -114,6 +114,12 @@ From `fips.__init__`:
   keep `None` through copy, reindex, and index rounding.
 - **MultiIndex preservation.** The whole design hinges on labels surviving.
   Do not silently `.values` or `.to_numpy()` away from Series/DataFrame.
+- **NaN-only levels.** Assembling blocks whose indexes have different levels
+  fills the missing levels with NaN (`outer_align_levels`). Anything that
+  selects a block back out must use `xselect` (or `Structure.xs`, which calls
+  it) on every axis, never plain `DataFrame.xs`, or the block comes back with
+  the other blocks' levels (#46 was `Matrix.__getitem__` doing this for the
+  columns).
 - **Block alignment.** `MatrixBlock`s must declare correct `row_block`/
   `col_block` names; `InverseProblem` cross-checks against the obs/state
   block names. Stale names → silent misalignment.
