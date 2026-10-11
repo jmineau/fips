@@ -13,7 +13,13 @@ from typing import Any, TypeAlias
 import pandas as pd
 import xarray as xr
 
-from fips.base import ArrayLike, MultiBlockMixin, SingleBlockMixin, Structure1D
+from fips.base import (
+    ArrayLike,
+    MultiBlockMixin,
+    SingleBlockMixin,
+    Structure1D,
+    xselect,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -227,7 +233,7 @@ class Vector(MultiBlockMixin, Structure1D):
 
     def __getitem__(self, block) -> pd.Series:
         """Get block by name."""
-        return self.xs(block, level="block")
+        return xselect(self.data, block, level="block")
 
     @property
     def blocks(self) -> _BlockAccessor:  # type: ignore[override]

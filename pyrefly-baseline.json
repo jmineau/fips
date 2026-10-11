@@ -337,13 +337,6 @@
       "severity": "error"
     },
     {
-      "column": 16,
-      "path": "src/fips/vector.py",
-      "name": "bad-return",
-      "concise_description": "Returned type `DataFrame | Series` is not assignable to declared return type `Series`",
-      "severity": "error"
-    },
-    {
       "column": 19,
       "path": "src/fips/visualization.py",
       "name": "no-matching-overload",
