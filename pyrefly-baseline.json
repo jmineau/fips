@@ -204,13 +204,6 @@
       "severity": "error"
     },
     {
-      "column": 51,
-      "path": "src/fips/problems/flux/problem.py",
-      "name": "bad-index",
-      "concise_description": "Cannot index into `float`",
-      "severity": "error"
-    },
-    {
       "column": 43,
       "path": "src/fips/problems/flux/visualization.py",
       "name": "unbound-name",

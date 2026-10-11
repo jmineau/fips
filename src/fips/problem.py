@@ -56,7 +56,7 @@ class InverseProblem(Pickleable):
     """Covariance matrix representing prior error."""
     modeldata_mismatch: CovarianceMatrix
     """Covariance matrix representing model-data mismatch (observation error)."""
-    constant: Vector | float | None
+    constant: Vector | None
     """Optional constant term added to the forward model (e.g., background or bias)."""
 
     def __init__(
