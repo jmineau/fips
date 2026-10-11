@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- A `Structure1D` (`Vector`, `Block`) built from 2-D data that cannot be reduced
+  to 1-D, such as a 2 x 2 DataFrame, raises a `ValueError` naming the class and
+  the shape on every pandas version. On pandas 2 it raised "The truth value of
+  a DataFrame is ambiguous".
+  ([#51](https://github.com/jmineau/fips/issues/51))
 - Selecting a block out of a `Matrix` with `matrix[row, col]` or
   `matrix.blocks[row, col]` (and so `InverseProblem.get_block` and the
   `FluxProblem` properties such as `jacobian`) kept the column levels that are
