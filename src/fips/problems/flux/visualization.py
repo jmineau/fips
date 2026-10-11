@@ -6,6 +6,8 @@ import numpy as np
 import pandas as pd
 
 if TYPE_CHECKING:
+    from matplotlib.artist import Artist
+
     from fips.problems.flux.problem import FluxProblem
 
 
@@ -431,7 +433,7 @@ class FluxPlotter:
                 ax.axvspan(gap_begin, gap_start, color="grey", alpha=0.15)
 
             # Build legend from smoothed lines only
-            handles = [
+            handles: list[Artist] = [
                 plt.Line2D([], [], color=c, linewidth=1.5, label=label)
                 for c, label in zip(colors, df.columns, strict=False)
             ]
