@@ -109,6 +109,9 @@ From `fips.__init__`:
 
 ## Invariants to respect
 
+- **1D names.** `Structure1D` converts non-None Series names to strings during
+  construction. Its `name` property returns the stored name; unnamed vectors
+  keep `None` through copy, reindex, and index rounding.
 - **MultiIndex preservation.** The whole design hinges on labels surviving.
   Do not silently `.values` or `.to_numpy()` away from Series/DataFrame.
 - **Block alignment.** `MatrixBlock`s must declare correct `row_block`/
