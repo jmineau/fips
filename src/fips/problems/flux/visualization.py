@@ -117,7 +117,7 @@ class FluxPlotter:
         tiler = kwargs.pop("tiler", None)
         subplot_kw = kwargs.pop("subplot_kw", {})
         if tiler is not None:
-            ccrs = _require_cartopy()
+            _require_cartopy()  # fail with the install hint before the figure exists
             subplot_kw["projection"] = tiler.crs
 
         ncols = 3
@@ -150,6 +150,7 @@ class FluxPlotter:
 
         # Add background tiles
         if tiler is not None:
+            ccrs = _require_cartopy()
             tiler_zoom = kwargs.pop("tiler_zoom", 10)
             # Expand extent by half a cell so edge cells aren't clipped
             dx = (

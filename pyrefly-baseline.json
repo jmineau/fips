@@ -204,13 +204,6 @@
       "severity": "error"
     },
     {
-      "column": 43,
-      "path": "src/fips/problems/flux/visualization.py",
-      "name": "unbound-name",
-      "concise_description": "`ccrs` may be uninitialized",
-      "severity": "error"
-    },
-    {
       "column": 32,
       "path": "src/fips/problems/flux/visualization.py",
       "name": "bad-argument-type",
