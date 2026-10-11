@@ -198,7 +198,7 @@ class FluxPlotter:
         ax1 = axes[0]
         cbar_ax1_width = ax_post.get_position().x1 - ax1.get_position().x0
         cbar_ax1 = fig.add_axes(
-            [ax1.get_position().x0, ax1.get_position().y0 - 0.1, cbar_ax1_width, 0.05]
+            (ax1.get_position().x0, ax1.get_position().y0 - 0.1, cbar_ax1_width, 0.05)
         )
 
         if truth is not None:
@@ -273,12 +273,12 @@ class FluxPlotter:
 
             residual_cmap = kwargs.pop("residual_cmap", "PiYG")
             cbar_ax2 = fig.add_axes(
-                [
+                (
                     ax_res.get_position().x0,
                     ax_res.get_position().y0 - 0.1,
                     ax_res.get_position().width,
                     0.05,
-                ]
+                )
             )
             (posterior - base).plot(
                 ax=ax_res,
