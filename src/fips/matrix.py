@@ -177,12 +177,15 @@ class Matrix(MultiBlockMixin, Structure2D):
 
     Parameters
     ----------
-    data : np.ndarray or pd.DataFrame or Matrix or scalar
-        2D data representing the matrix.
+    data : np.ndarray or list or pd.Series or pd.DataFrame or Matrix or scalar
+        Data representing the matrix. A 1D array, list, or Series supplies
+        the diagonal values. Arrays and lists require an explicit index;
+        a Series supplies its own index for both axes.
     name : str, optional
         Name for the Matrix.
     index : pd.MultiIndex
-        Index for the rows of the DataFrame.
+        Index for the rows of the DataFrame. Required for 1D arrays and lists,
+        and used for both axes in that case.
     columns : pd.MultiIndex, optional
         Index for the columns of the DataFrame. If None, uses the same as `index`.
     dtype : data type, optional
@@ -193,6 +196,11 @@ class Matrix(MultiBlockMixin, Structure2D):
         If True, store the assembled matrix in pandas sparse format.
         Sparsification is applied after block assembly; use threshold
         zeroing in your builder before passing data here.
+
+    Raises
+    ------
+    ValueError
+        If a 1D array or list is supplied without an index.
     """
 
     data: pd.DataFrame  # type: ignore[override]
@@ -263,7 +271,9 @@ class Matrix(MultiBlockMixin, Structure2D):
 
         # 1D array - treat as diagonal matrix
         elif isinstance(data, (np.ndarray, list)) and np.ndim(data) == 1:
-            index = columns = index or pd.RangeIndex(len(data))
+            if index is None:
+                raise ValueError("1D data requires an index.")
+            columns = index
             data = np.diag(data)
 
         super().__init__(

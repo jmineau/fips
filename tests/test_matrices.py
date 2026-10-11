@@ -2,6 +2,7 @@
 
 import numpy as np
 import pandas as pd
+import pytest
 
 from fips.covariance import CovarianceMatrix
 from fips.matrix import Matrix, MatrixBlock
@@ -10,6 +11,32 @@ from fips.operators import ForwardOperator
 
 class TestMatrix:
     """Tests for base Matrix class."""
+
+    @pytest.mark.parametrize("matrix_type", [Matrix, CovarianceMatrix])
+    @pytest.mark.parametrize("container", [list, np.array])
+    @pytest.mark.parametrize("sparse", [False, True])
+    def test_diagonal_values_use_supplied_index(self, matrix_type, container, sparse):
+        """Diagonal inputs preserve their labels in dense and sparse matrices."""
+        values = container([1.0, 2.0, 3.0])
+        index = pd.MultiIndex.from_tuples(
+            [("state", "c"), ("state", "a"), ("state", "b")],
+            names=["block", "site"],
+        )
+
+        matrix = matrix_type(values, index=index, sparse=sparse)
+
+        pd.testing.assert_index_equal(matrix.index, index)
+        pd.testing.assert_index_equal(matrix.columns, index)
+        actual = matrix.values.toarray() if sparse else matrix.values
+        np.testing.assert_array_equal(actual, np.diag(values))
+        assert isinstance(matrix, matrix_type)
+
+    @pytest.mark.parametrize("matrix_type", [Matrix, CovarianceMatrix])
+    @pytest.mark.parametrize("container", [list, np.array])
+    def test_diagonal_values_require_an_index(self, matrix_type, container):
+        """Unlabeled diagonal values explain the required row index."""
+        with pytest.raises(ValueError, match="1D data requires an index"):
+            matrix_type(container([1.0, 2.0, 3.0]))
 
     def test_matrix_creation(self):
         """Test basic Matrix creation from MatrixBlock."""

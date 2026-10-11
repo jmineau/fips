@@ -141,20 +141,6 @@
       "severity": "error"
     },
     {
-      "column": 31,
-      "path": "src/fips/matrix.py",
-      "name": "not-callable",
-      "concise_description": "Expected `__bool__` to be a callable, got `(() -> Literal[False]) | EllipsisType`",
-      "severity": "error"
-    },
-    {
-      "column": 31,
-      "path": "src/fips/matrix.py",
-      "name": "not-callable",
-      "concise_description": "Expected `__bool__` to be a callable, got `EllipsisType`",
-      "severity": "error"
-    },
-    {
       "column": 27,
       "path": "src/fips/matrix.py",
       "name": "no-matching-overload",
