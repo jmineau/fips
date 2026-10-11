@@ -194,8 +194,12 @@ def test_structure1d_from_2d():
 
     # More than one row and column cannot be 1D
     df = pd.DataFrame([[1.0, 2.0], [3.0, 4.0]], index=idx)
-    with pytest.raises(ValueError, match="1-dimensional"):
+    with pytest.raises(
+        ValueError, match=r"Structure1D needs 1-dimensional data, got shape \(2, 2\)"
+    ):
         Structure1D(df, name="test")
+    with pytest.raises(ValueError, match=r"got shape \(2, 2\)"):
+        Structure1D(df.to_numpy(), name="test")
 
 
 def test_structure2d():

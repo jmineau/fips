@@ -13,6 +13,7 @@ from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Any, Literal, Self, TypeAlias, overload
 
+import numpy as np
 import numpy.typing as npt
 import pandas as pd
 
@@ -400,6 +401,11 @@ class Structure1D(Structure):
             data = data.iloc[:, 0]
         elif getattr(data, "ndim", 1) > 1:
             data = data.squeeze()
+            if getattr(data, "ndim", 0) > 1:
+                raise ValueError(
+                    f"{type(self).__name__} needs 1-dimensional data, "
+                    f"got shape {np.shape(data)}"
+                )
 
         self.data = pd.Series(data, name=name, index=index, dtype=dtype, copy=copy)
         if self.data.name is not None:
