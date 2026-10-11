@@ -61,7 +61,9 @@ def assign_block(index: pd.Index, block: str) -> pd.Index:
     pd.Index
         A new index with the 'block' level assigned to the specified block name.
     """
-    arrays = [index.get_level_values(i) for i in range(index.nlevels)]
+    arrays: list[pd.Index | np.ndarray] = [
+        index.get_level_values(i) for i in range(index.nlevels)
+    ]
     names = list(index.names)
 
     if "block" in names:
@@ -113,7 +115,7 @@ def outer_align_levels(
         # Align DataFrames to Schema
         for i, df in enumerate(working_dfs):
             idx = df.axes[ax]
-            arrays = []
+            arrays: list[pd.Index | np.ndarray] = []
 
             for name in schema_names:
                 if name in idx.names:
