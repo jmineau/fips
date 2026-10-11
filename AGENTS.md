@@ -182,7 +182,9 @@ The tooling comes from
 - **Types**: pyrefly on `src/`, checked against `pyrefly-baseline.json`: the
   errors that predate the switch from pyright. New errors fail the check; prune
   fixed ones with `uv run pyrefly check --prune-baseline`. `py.typed` is
-  shipped — keep new public API fully typed.
+  shipped — keep new public API fully typed. Fix a listed error where the type
+  comes from (a correct annotation, a narrower return type), not with
+  `typing.cast`, an ignore comment or `Any`; #43 tracks emptying the baseline.
 - **Docstrings**: numpy convention, format docstring code blocks
   (`docstring-code-format = true`).
 - **Docs**: `docs/reference/` groups the API by topic, as pandas does. Each
@@ -340,6 +342,13 @@ covariance). See README "Multi-block" example.
 
 ## Gotchas
 
+- **The pyrefly baseline matches an error by file, kind and column**, not by
+  line or message (seen with pyrefly 1.3.2). A new error is therefore hidden
+  when a listed one has the same kind at the same column of that file, and
+  `--prune-baseline` keeps a fixed entry for as long as another error shares
+  its file, kind and column: remove that one by hand. To see every error with
+  its line, the listed ones included, run
+  `uv run pyrefly check --baseline-error-level error --output-format min-text`.
 - `convolve(state, H)` returns a `Vector`, not a numpy array. Don't expect
   raw arrays out of public APIs.
 - `reduced_chi2` lives on the *estimator*, not the problem
