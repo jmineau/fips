@@ -119,6 +119,32 @@ class TestMatrix:
         assert isinstance(matrix.index, pd.MultiIndex)
         assert "block" in matrix.index.names
 
+    def test_matrix_blocks_accessor(self):
+        """Test that matrix.blocks[row, col] wraps the frame matrix[row, col] returns."""
+        rows = pd.Index(["a", "b"], name="x")
+        flux = MatrixBlock(
+            np.arange(6.0).reshape(2, 3),
+            row_block="obs",
+            col_block="flux",
+            index=rows,
+            columns=pd.Index([1, 2, 3], name="y"),
+        )
+        bias = MatrixBlock(
+            np.eye(2),
+            row_block="obs",
+            col_block="bias",
+            index=rows,
+            columns=pd.Index([10, 11], name="y"),
+        )
+        matrix = Matrix([flux, bias])
+
+        block = matrix.blocks["obs", "flux"]
+
+        assert isinstance(block, MatrixBlock)
+        assert (block.row_block, block.col_block) == ("obs", "flux")
+        pd.testing.assert_frame_equal(block.data, matrix["obs", "flux"])
+        pd.testing.assert_frame_equal(block.data, flux.data)
+
 
 class TestCovarianceMatrix:
     """Tests for CovarianceMatrix class."""

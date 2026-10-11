@@ -141,13 +141,6 @@
       "severity": "error"
     },
     {
-      "column": 51,
-      "path": "src/fips/matrix.py",
-      "name": "bad-argument-type",
-      "concise_description": "Argument `Literal[1]` is not assignable to parameter `axis` with type `Literal['index', 0]` in function `pandas.core.series.Series.xs`",
-      "severity": "error"
-    },
-    {
       "column": 20,
       "path": "src/fips/matrix.py",
       "name": "bad-assignment",

@@ -164,9 +164,7 @@ class _MatrixBlockAccessor:
 
     def __getitem__(self, key: tuple[str, str]) -> MatrixBlock:
         row_block, col_block = key
-        df = self._matrix.xs(row_block, level="block", axis=0)
-        df = df.xs(col_block, level="block", axis=1)
-        return MatrixBlock(df, row_block=row_block, col_block=col_block)
+        return MatrixBlock(self._matrix[key], row_block=row_block, col_block=col_block)
 
 
 class Matrix(MultiBlockMixin, Structure2D):
