@@ -348,10 +348,13 @@ covariance). See README "Multi-block" example.
 
 ## Gotchas
 
-- A 1D array or list passed to `Matrix` or `CovarianceMatrix` requires an
-  explicit index with the named `block` level. The index labels both axes;
-  a Series supplies its own index. Check an optional pandas index with
-  `is None`, since evaluating its truth value raises an error.
+- A scalar (or 0-d array), 1D array or list passed to `Matrix` or
+  `CovarianceMatrix` builds a diagonal and requires an explicit index with the
+  named `block` level. The index labels both axes (`columns` is not used); a
+  Series supplies its own index. A scalar means a 1D input with that value on
+  every entry (#50); a constant rectangular matrix is `np.full((n, m), value)`.
+  Check an optional pandas index with `is None`, since evaluating its truth
+  value raises an error.
 - **The pyrefly baseline matches an error by file, kind and column**, not by
   line or message (seen with pyrefly 1.3.2). A new error is therefore hidden
   when a listed one has the same kind at the same column of that file, and

@@ -185,15 +185,18 @@ class Matrix(MultiBlockMixin, Structure2D):
     ----------
     data : np.ndarray or list or pd.Series or pd.DataFrame or Matrix or scalar
         Data representing the matrix. A 1D array, list, or Series supplies
-        the diagonal values. Arrays and lists require an explicit index;
-        a Series supplies its own index for both axes.
+        the diagonal values, and a scalar (or 0-d array) puts that value on
+        every diagonal entry, with zeros elsewhere. Scalars, arrays and lists
+        require an explicit index; a Series supplies its own index for both
+        axes.
     name : str, optional
         Name for the Matrix.
     index : pd.MultiIndex
-        Index for the rows of the DataFrame. Required for 1D arrays and lists,
-        and used for both axes in that case.
+        Index for the rows of the DataFrame. Required for scalars, 1D arrays
+        and lists, and used for both axes in those cases.
     columns : pd.MultiIndex, optional
         Index for the columns of the DataFrame. If None, uses the same as `index`.
+        Not used for a scalar, 1D array or list, which label both axes with `index`.
     dtype : data type, optional
         Data type to force.
     copy : bool, optional
@@ -206,7 +209,7 @@ class Matrix(MultiBlockMixin, Structure2D):
     Raises
     ------
     ValueError
-        If a 1D array or list is supplied without an index.
+        If a scalar, 1D array or list is supplied without an index.
     """
 
     data: pd.DataFrame  # type: ignore[override]
@@ -242,6 +245,13 @@ class Matrix(MultiBlockMixin, Structure2D):
             # Allow dict mapping (row, col) -> data as a shorthand alternative
             blocks = [MatrixBlock(v, r, c) for (r, c), v in data.items()]
 
+        # A scalar or 0-d array is a 1D input with that value on every entry; the
+        # 1D branch below makes the diagonal
+        if np.isscalar(data) or (isinstance(data, np.ndarray) and data.ndim == 0):
+            if index is None:
+                raise ValueError("Scalar data requires an index.")
+            data = np.full(len(index), data)
+
         if blocks:
             seen_blocks = set()
             dfs: list[pd.DataFrame] = []
@@ -262,12 +272,6 @@ class Matrix(MultiBlockMixin, Structure2D):
             # combine_first performs an outer join, preserving all indices and filling missing values with NaN
             data = reduce(lambda left, right: left.combine_first(right), aligned_dfs)
             data = data.fillna(0.0)
-
-        # Accept scalar - create matrix with repeated value
-        elif np.isscalar(data):
-            n = len(index) if index is not None else 1
-            m = len(columns) if columns is not None else n
-            data = np.full((n, m), data)
 
         # Accept series - create diagonal matrix
         elif isinstance(data, pd.Series):

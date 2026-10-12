@@ -7,8 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **A scalar passed to `Matrix` or `CovarianceMatrix` builds a diagonal**
+  (breaking): `Matrix(5.0, index=idx)` returned a full matrix with 5.0 in every
+  entry, which for a `CovarianceMatrix` has rank 1 and is not what "a
+  covariance of 5" means. It now returns the square matrix with 5.0 on the
+  diagonal and zeros elsewhere, the same as `Matrix([5.0, 5.0, 5.0], index=idx)`
+  does for a 1D input. As for a 1D input, `columns` is not used, so a scalar no
+  longer builds a rectangular matrix. For the old result, build the full array
+  yourself: `Matrix(np.full((n, m), 5.0), index=rows, columns=cols)`.
+  ([#50](https://github.com/jmineau/fips/issues/50))
+
 ### Fixed
 
+- A scalar passed to `Matrix` or `CovarianceMatrix` without an index raises
+  "Scalar data requires an index.", as a 1D array does, in place of "All
+  levels in the row index of Matrix must be named." A 0-d array
+  (`np.array(5.0)`) is treated as a scalar; it raised pandas' "Must pass 2-d
+  input".
+  ([#50](https://github.com/jmineau/fips/issues/50))
 - A `Structure1D` (`Vector`, `Block`) built from 2-D data that cannot be reduced
   to 1-D, such as a 2 x 2 DataFrame, raises a `ValueError` naming the class and
   the shape on every pandas version. On pandas 2 it raised "The truth value of

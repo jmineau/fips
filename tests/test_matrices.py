@@ -8,6 +8,9 @@ from fips.covariance import CovarianceMatrix
 from fips.matrix import Matrix, MatrixBlock
 from fips.operators import ForwardOperator
 
+# A scalar in each form a caller might pass: Python float and int, a NumPy scalar, a 0-d array
+SCALARS = [5.0, 5, np.float64(5.0), np.array(5.0)]
+
 
 class TestMatrix:
     """Tests for base Matrix class."""
@@ -37,6 +40,60 @@ class TestMatrix:
         """Unlabeled diagonal values explain the required row index."""
         with pytest.raises(ValueError, match="1D data requires an index"):
             matrix_type(container([1.0, 2.0, 3.0]))
+
+    @pytest.mark.parametrize("matrix_type", [Matrix, CovarianceMatrix])
+    @pytest.mark.parametrize("scalar", SCALARS, ids=lambda s: type(s).__name__)
+    @pytest.mark.parametrize("sparse", [False, True])
+    def test_scalar_builds_a_diagonal(self, matrix_type, scalar, sparse):
+        """A scalar or 0-d array puts its value on the diagonal and zeros elsewhere."""
+        index = pd.MultiIndex.from_tuples(
+            [("state", "c"), ("state", "a"), ("state", "b")],
+            names=["block", "site"],
+        )
+
+        matrix = matrix_type(scalar, index=index, sparse=sparse)
+
+        pd.testing.assert_index_equal(matrix.index, index)
+        pd.testing.assert_index_equal(matrix.columns, index)
+        actual = matrix.values.toarray() if sparse else matrix.values
+        np.testing.assert_array_equal(actual, 5.0 * np.eye(3))
+        assert isinstance(matrix, matrix_type)
+
+    @pytest.mark.parametrize("matrix_type", [Matrix, CovarianceMatrix])
+    @pytest.mark.parametrize("size", [1, 3])
+    def test_scalar_matches_1d_input_of_the_same_value(self, matrix_type, size):
+        """A scalar builds what a 1D input of that value on every entry builds."""
+        index = pd.MultiIndex.from_product(
+            [["state"], range(size)], names=["block", "i"]
+        )
+
+        from_scalar = matrix_type(5.0, index=index)
+        from_list = matrix_type([5.0] * size, index=index)
+
+        pd.testing.assert_frame_equal(from_scalar.data, from_list.data)
+
+    def test_scalar_labels_both_axes_with_index(self):
+        """Columns are not used for a scalar, as for a 1D input: the matrix is square."""
+        index = pd.MultiIndex.from_product([["state"], [0, 1, 2]], names=["block", "i"])
+        columns = pd.MultiIndex.from_product([["state"], [0, 1]], names=["block", "i"])
+
+        matrix = Matrix(5.0, index=index, columns=columns)
+
+        assert matrix.shape == (3, 3)
+        pd.testing.assert_index_equal(matrix.columns, index)
+
+    @pytest.mark.parametrize("matrix_type", [Matrix, CovarianceMatrix])
+    @pytest.mark.parametrize("scalar", SCALARS, ids=lambda s: type(s).__name__)
+    def test_scalar_requires_an_index(self, matrix_type, scalar):
+        """An unlabeled scalar explains the required row index, as a 1D input does."""
+        with pytest.raises(ValueError, match="Scalar data requires an index"):
+            matrix_type(scalar)
+
+    def test_nan_scalar_is_rejected(self):
+        """A NaN scalar raises the NaN error rather than building a matrix."""
+        index = pd.MultiIndex.from_product([["state"], [0, 1]], names=["block", "i"])
+        with pytest.raises(ValueError, match="NaN"):
+            Matrix(np.nan, index=index)
 
     def test_matrix_creation(self):
         """Test basic Matrix creation from MatrixBlock."""
