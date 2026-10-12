@@ -183,27 +183,6 @@
       "severity": "error"
     },
     {
-      "column": 42,
-      "path": "src/fips/problems/flux/pipeline.py",
-      "name": "bad-argument-type",
-      "concise_description": "Argument `Index` is not assignable to parameter `index` with type `DatetimeIndex | Series | TimedeltaIndex` in function `pandas.tseries.frequencies.infer_freq`",
-      "severity": "error"
-    },
-    {
-      "column": 23,
-      "path": "src/fips/problems/flux/pipeline.py",
-      "name": "missing-attribute",
-      "concise_description": "Object of class `Index` has no attribute `year`",
-      "severity": "error"
-    },
-    {
-      "column": 33,
-      "path": "src/fips/problems/flux/pipeline.py",
-      "name": "missing-attribute",
-      "concise_description": "Object of class `Index` has no attribute `day_of_year`",
-      "severity": "error"
-    },
-    {
       "column": 26,
       "path": "src/fips/vector.py",
       "name": "bad-argument-type",

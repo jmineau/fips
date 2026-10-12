@@ -18,6 +18,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   longer builds a rectangular matrix. For the old result, build the full array
   yourself: `Matrix(np.full((n, m), 5.0), index=rows, columns=cols)`.
   ([#50](https://github.com/jmineau/fips/issues/50))
+- `FluxInversionPipeline.filter_state_space` raises a `TypeError` that says what
+  is wrong when it has to infer the frequency of flux times that are not
+  datetimes (the config has no `flux_freq`). Before, `pd.infer_freq` ran on
+  whatever the `time` level was: integers raised pandas's own `TypeError`,
+  strings and mixed time zones a `ValueError`, and timedeltas were accepted and
+  dropped every observation, since no interval of timedeltas holds an
+  observation time. `FluxInversionPipeline.summarize` raises the same kind of
+  `TypeError` where it raised `AttributeError: 'Index' object has no attribute
+  'year'`: the flux has more than two timesteps and its `time` level is not
+  datetimes. A `time` level of timestamps stored as objects is not affected; a
+  `Vector` already reads it as datetimes.
+  ([#43](https://github.com/jmineau/fips/issues/43))
 
 ### Fixed
 

@@ -46,6 +46,15 @@ class FluxInversionPipeline(InversionPipeline[FluxProblem], ABC):
         -------
         tuple[Vector, Vector]
             Filtered observation and prior vectors.
+
+        Raises
+        ------
+        TypeError
+            If the frequency of the flux times has to be inferred (``flux_freq``
+            is not set in the config) and the ``time`` level of ``prior`` is not
+            datetimes.
+        ValueError
+            If the frequency cannot be inferred from the flux times.
         """
         try:
             min_obs_per_interval = self.config.min_obs_per_interval
@@ -70,6 +79,12 @@ class FluxInversionPipeline(InversionPipeline[FluxProblem], ABC):
 
             if not isinstance(times, pd.IntervalIndex):  # Assume regular intervals
                 if freq == "infer":
+                    if not isinstance(times, pd.DatetimeIndex):
+                        raise TypeError(
+                            "Cannot infer the frequency of the inventory time index: "
+                            f"the 'time' level has dtype {times.dtype}, not datetime. "
+                            "Convert it to datetimes or specify freq."
+                        )
                     freq = pd.infer_freq(times)
                     if freq is None:
                         raise ValueError(
@@ -120,7 +135,15 @@ class FluxInversionPipeline(InversionPipeline[FluxProblem], ABC):
         return inversion
 
     def summarize(self) -> None:
-        """Print a comprehensive statistical summary of the inversion results."""
+        """
+        Print a comprehensive statistical summary of the inversion results.
+
+        Raises
+        ------
+        TypeError
+            If the posterior flux has more than two timesteps and its ``time``
+            level is not datetimes, since the trend is a rate per year.
+        """
         from scipy import stats
 
         problem = self.problem
@@ -176,6 +199,11 @@ class FluxInversionPipeline(InversionPipeline[FluxProblem], ABC):
         trend_str = None
         if len(post_by_time) > 2:
             t = post_by_time.index
+            if not isinstance(t, pd.DatetimeIndex):
+                raise TypeError(
+                    "Cannot compute the flux trend: the 'time' level of the "
+                    f"flux has dtype {t.dtype}, not datetime."
+                )
             t_years = t.year + (t.day_of_year - 1) / 365.25
             slope, intercept, r_value, p_value, std_err = stats.linregress(
                 t_years, post_by_time.values
