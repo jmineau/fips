@@ -1,6 +1,7 @@
 """Test suite for fips.problems.flux.pipeline module."""
 
 import re
+from datetime import UTC, timedelta, timezone
 from types import SimpleNamespace
 
 import numpy as np
@@ -120,6 +121,33 @@ class TestFilterStateSpace:
         with pytest.raises(ValueError, match="Could not infer frequency"):
             pipeline.filter_state_space(obs, prior)
 
+    @pytest.mark.parametrize(
+        "times",
+        [
+            pytest.param(pd.Index([1, 2, 3]), id="integers"),
+            pytest.param(pd.Index(["a", "b", "c"]), id="strings"),
+            pytest.param(pd.timedelta_range("1D", periods=3), id="timedeltas"),
+            pytest.param(
+                pd.Index(
+                    [
+                        pd.Timestamp("2023-01-01", tz=timezone(timedelta(hours=-7))),
+                        pd.Timestamp("2023-01-02", tz=timezone(timedelta(hours=-7))),
+                        pd.Timestamp("2023-01-03", tz=UTC),
+                    ],
+                    dtype=object,
+                ),
+                id="mixed-time-zones",
+            ),
+        ],
+    )
+    def test_an_inferred_frequency_needs_datetimes(self, times):
+        """The frequency of a ``time`` level that is not datetimes is not inferred."""
+        obs, prior = _vectors(times)
+        pipeline = _Pipeline(SimpleNamespace(min_obs_per_interval=2))
+
+        with pytest.raises(TypeError, match="Cannot infer the frequency.*not datetime"):
+            pipeline.filter_state_space(obs, prior)
+
 
 def _solved_problem(times):
     """A solved flux problem: ``times`` x 2 cells of flux, one site of daily data."""
@@ -207,3 +235,22 @@ class TestSummarize:
 
         assert "MEAN FLUX BY TIMESTEP:" in out
         assert "POSTERIOR FLUX TREND:" not in out
+
+    @pytest.mark.parametrize(
+        "times",
+        [
+            pytest.param(range(4), id="integers"),
+            pytest.param(
+                pd.interval_range(pd.Timestamp("2023-01-01"), periods=4, freq="MS"),
+                id="intervals",
+            ),
+        ],
+    )
+    def test_a_trend_needs_datetimes(self, times, capsys):
+        """The trend is a rate per year, so it needs the times as datetimes."""
+        pipeline = _Pipeline(SimpleNamespace())
+
+        with pytest.raises(
+            TypeError, match="Cannot compute the flux trend.*not datetime"
+        ):
+            _summary(pipeline, _solved_problem(pd.Index(times)), capsys)
