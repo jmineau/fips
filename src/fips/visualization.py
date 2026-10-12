@@ -29,6 +29,11 @@ def _require_matplotlib():
         ) from exc
 
 
+def _unwrap(x: pd.Series | pd.DataFrame | Vector | Block) -> pd.Series | pd.DataFrame:
+    """Return the pandas object inside a ``Block`` or ``Vector``; anything else as is."""
+    return x.data if isinstance(x, (Block, Vector)) else x
+
+
 def plot_error_norm(
     prior: ArrayLike | Vector | Block,
     posterior: ArrayLike | Vector | Block,
@@ -136,7 +141,7 @@ def plot_comparison(
     plt = _require_matplotlib()
 
     # Unpack data
-    df = pd.concat([getattr(s, "data", s) for s in series], axis=1)
+    df = pd.concat([_unwrap(s) for s in series], axis=1)
 
     # Extract standard deviations for error bounds
     err_list = []
@@ -153,7 +158,7 @@ def plot_comparison(
             elif isinstance(err, Matrix):
                 e = pd.Series(np.sqrt(np.diag(err.values)), index=err.index, name=name)
             else:
-                e = getattr(err, "data", err)
+                e = _unwrap(err)
 
             e.name = name
             err_list.append(e)
@@ -167,7 +172,7 @@ def plot_comparison(
         x_vals = df.index.get_level_values(x)
     else:
         x_vals = df.index
-        x = x or df.index.name or "index"
+        x = x or str(df.index.name or "index")
 
     # Auto-detect plot kind
     if kind is None:
@@ -203,7 +208,7 @@ def plot_comparison(
             )
 
     if truth is not None:
-        t_data = getattr(truth, "data", truth)
+        t_data = _unwrap(truth)
         if kind == "line":
             ax.plot(x_vals, t_data, label="truth", color="black", linestyle="--")
         else:

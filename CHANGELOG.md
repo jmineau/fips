@@ -39,6 +39,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   (`np.array(5.0)`) is treated as a scalar; it raised pandas' "Must pass 2-d
   input".
   ([#50](https://github.com/jmineau/fips/issues/50))
+- `plot_comparison` unpacks only a `Block` or a `Vector`. It took the `data`
+  attribute of anything that had one, and pandas makes an index label or a
+  column called `data` an attribute. A Series whose index had the label `data`
+  raised `TypeError` as a series, `ValueError` as the truth and `AttributeError`
+  as an error; an error DataFrame with a column `data` plotted that column
+  instead of the one named like its series.
+  ([#43](https://github.com/jmineau/fips/issues/43))
 - A `Structure1D` (`Vector`, `Block`) built from 2-D data that cannot be reduced
   to 1-D, such as a 2 x 2 DataFrame, raises a `ValueError` naming the class and
   the shape on every pandas version. On pandas 2 it raised "The truth value of
