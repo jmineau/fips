@@ -361,7 +361,11 @@ covariance). See README "Multi-block" example.
   `--prune-baseline` keeps a fixed entry for as long as another error shares
   its file, kind and column: remove that one by hand. To see every error with
   its line, the listed ones included, run
-  `uv run pyrefly check --baseline-error-level error --output-format min-text`.
+  `uv run pyrefly check --baseline-error-level error --output-format min-text`;
+  add `--min-severity warn` for the warnings, which `pyrefly check` does not
+  show. pyrefly types `DataFrame.columns` as `Index[str]`, so it calls the
+  `str(col)` in `plot_comparison` an unnecessary conversion, but a column label
+  is an integer when a Series has no name: keep the `str()`.
 - **pyrefly (1.3.2) reads `type[X]` written inside a base class's arguments as
   `type[Any]`**: after `class R(dict[str, type[E]])` a lookup in `R()` is
   `type[Any]`, though `typing.Type[E]` or an alias of `type[E]` gives

@@ -316,6 +316,51 @@ class TestPlotComparison:
         lengths = [seg[1, 1] - seg[0, 1] for seg in whiskers.get_segments()]
         np.testing.assert_allclose(lengths, 2 * err.values)
 
+    def test_a_series_labeled_data_is_plotted_as_a_series(self):
+        """A Series whose index has the label ``data`` is not unpacked as ``s.data``."""
+        labels = ["data", "b", "c"]
+        a = self._series("a", [1.0, 2.0, 3.0], labels=labels)
+
+        _, ax = plot_comparison(a)
+
+        assert [bar.get_height() for bar in ax.patches] == [1.0, 2.0, 3.0]
+
+    def test_a_truth_labeled_data_is_plotted_as_a_series(self):
+        """The truth is not unpacked as ``truth.data`` when its index has that label."""
+        a = self._series("a", [1.0, 2.0, 3.0], labels=["u", "v", "w"])
+        truth = self._series("t", [1.1, 2.1, 3.1], labels=["data", "b", "c"])
+
+        _, ax = plot_comparison(a, truth=truth)
+
+        (crosses,) = ax.collections
+        np.testing.assert_array_equal(crosses.get_offsets()[:, 1], truth.values)
+
+    def test_errors_labeled_data_are_plotted_as_a_series(self):
+        """An error Series is not unpacked as ``err.data`` when its index has that label."""
+        a = self._series("a", [1.0, 2.0, 3.0], labels=["u", "v", "w"])
+        err = self._series("a", [0.5, 0.25, 0.125], labels=["data", "b", "c"])
+
+        _, ax = plot_comparison(a, errors=[err])
+
+        (whiskers,) = ax.containers[0].lines[2]
+        lengths = [seg[1, 1] - seg[0, 1] for seg in whiskers.get_segments()]
+        np.testing.assert_allclose(lengths, 2 * err.values)
+
+    def test_errors_in_a_column_data_are_not_replaced_by_it(self):
+        """The error is the column named like its series, not a column named ``data``."""
+        labels = ["u", "v", "w"]
+        a = self._series("a", [1.0, 2.0, 3.0], labels=labels)
+        errors = pd.DataFrame(
+            {"data": [9.0, 9.0, 9.0], "a": [0.5, 0.25, 0.125]},
+            index=pd.Index(labels, name="x"),
+        )
+
+        _, ax = plot_comparison(a, errors=[errors])
+
+        (whiskers,) = ax.containers[0].lines[2]
+        lengths = [seg[1, 1] - seg[0, 1] for seg in whiskers.get_segments()]
+        np.testing.assert_allclose(lengths, 2 * errors["a"].values)
+
 
 class TestComputeCredibleInterval:
     """Tests for compute_credible_interval function."""
