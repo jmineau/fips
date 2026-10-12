@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
+from fips.vector import Block, Vector
 from fips.visualization import (
     compute_credible_interval,
     plot_comparison,
@@ -178,6 +179,142 @@ class TestPlotComparison:
         fig, ax = plot_comparison(arr1, arr2)
 
         assert fig is not None
+
+    @pytest.fixture(autouse=True)
+    def _close_figures(self):
+        """Close every figure after a test."""
+        plt = pytest.importorskip("matplotlib.pyplot")
+        yield
+        plt.close("all")
+
+    @staticmethod
+    def _lines(ax):
+        """The y data of each line on ``ax``, by label."""
+        return {line.get_label(): np.asarray(line.get_ydata()) for line in ax.lines}
+
+    @staticmethod
+    def _series(name, values, labels=(0.0, 1.0, 2.0)):
+        """A named Series over a float index called ``x``."""
+        return pd.Series(values, index=pd.Index(labels, name="x"), name=name)
+
+    def test_blocks_are_plotted_by_their_data(self):
+        """A Block is plotted as the Series it holds, next to a Series."""
+        a = self._series("a", [1.0, 2.0, 3.0])
+        b = self._series("b", [1.5, 2.5, 3.5])
+
+        _, ax = plot_comparison(Block(a), b)
+
+        lines = self._lines(ax)
+        assert list(lines) == ["a", "b"]
+        np.testing.assert_array_equal(lines["a"], a.values)
+        np.testing.assert_array_equal(lines["b"], b.values)
+
+    def test_vectors_are_plotted_by_their_data(self):
+        """A Vector is plotted as the Series it holds, over the level named by ``x``."""
+        a = self._series("a", [1.0, 2.0, 3.0])
+
+        _, ax = plot_comparison(Vector(Block(a)), x="x")
+
+        np.testing.assert_array_equal(next(iter(self._lines(ax).values())), a.values)
+
+    def test_unnamed_series_are_labeled_by_position(self):
+        """Series with no name get the integer labels ``concat`` gives their columns."""
+        idx = pd.Index([0.0, 1.0, 2.0], name="x")
+        a = pd.Series([1.0, 2.0, 3.0], index=idx)
+        b = pd.Series([1.5, 2.5, 3.5], index=idx)
+
+        _, ax = plot_comparison(a, b)
+
+        assert list(self._lines(ax)) == ["0", "1"]
+
+    @pytest.mark.parametrize(
+        ("name", "x", "label"),
+        [
+            pytest.param("time", None, "time", id="index-name"),
+            pytest.param(None, None, "index", id="unnamed"),
+            pytest.param(5, None, "5", id="integer-name"),
+            pytest.param("time", "other", "other", id="given"),
+        ],
+    )
+    def test_x_label(self, name, x, label):
+        """The x label is ``x`` if given, else the name of the index, else "index"."""
+        idx = pd.Index([0.0, 1.0, 2.0], name=name)
+        a = pd.Series([1.0, 2.0, 3.0], index=idx, name="a")
+
+        _, ax = plot_comparison(a, x=x)
+
+        assert ax.get_xlabel() == label
+
+    def test_x_label_of_a_multiindex_is_its_level(self):
+        """With a MultiIndex, ``x`` names the level to plot against, and the label."""
+        a = self._series("a", [1.0, 2.0, 3.0])
+
+        _, ax = plot_comparison(Vector(Block(a)), x="x")
+
+        assert ax.get_xlabel() == "x"
+
+    def test_truth_is_drawn_as_a_line(self):
+        """The truth of a line plot is a dashed black line."""
+        a = self._series("a", [1.0, 2.0, 3.0])
+        truth = self._series("t", [1.1, 2.1, 3.1])
+
+        _, ax = plot_comparison(a, truth=Block(truth))
+
+        line = ax.lines[-1]
+        assert line.get_label() == "truth"
+        np.testing.assert_array_equal(line.get_ydata(), truth.values)
+        assert line.get_color() == "black"
+        assert line.get_linestyle() == "--"
+
+    def test_truth_is_drawn_as_crosses_on_bars(self):
+        """The truth of a bar plot is a cross above each bar."""
+        a = self._series("a", [1.0, 2.0, 3.0], labels=["u", "v", "w"])
+        truth = self._series("t", [1.1, 2.1, 3.1], labels=["u", "v", "w"])
+
+        _, ax = plot_comparison(a, truth=truth)
+
+        (crosses,) = ax.collections
+        assert crosses.get_label() == "truth"
+        np.testing.assert_array_equal(crosses.get_offsets()[:, 1], truth.values)
+
+    @pytest.mark.parametrize(
+        "wrap",
+        [
+            pytest.param(lambda e: e, id="series"),
+            pytest.param(Block, id="block"),
+            pytest.param(lambda e: e.to_frame(), id="dataframe"),
+        ],
+    )
+    def test_errors_are_a_band_around_a_line(self, wrap):
+        """An error given for a line plot shades the series plus and minus it."""
+        a = self._series("a", [1.0, 2.0, 3.0])
+        err = self._series("a", [0.5, 0.5, 0.5])
+
+        _, ax = plot_comparison(a, errors=[wrap(err)])
+
+        (band,) = ax.collections
+        y = band.get_paths()[0].vertices[:, 1]
+        assert y.min() == pytest.approx(0.5)
+        assert y.max() == pytest.approx(3.5)
+
+    @pytest.mark.parametrize(
+        "wrap",
+        [
+            pytest.param(lambda e: e, id="series"),
+            pytest.param(Block, id="block"),
+            pytest.param(lambda e: e.to_frame(), id="dataframe"),
+        ],
+    )
+    def test_errors_are_bars_on_a_bar_plot(self, wrap):
+        """An error given for a bar plot is the length of the whisker on each bar."""
+        a = self._series("a", [1.0, 2.0, 3.0], labels=["u", "v", "w"])
+        err = self._series("a", [0.5, 0.25, 0.125], labels=["u", "v", "w"])
+
+        _, ax = plot_comparison(a, errors=[wrap(err)])
+
+        (whiskers,) = ax.containers[0].lines[2]
+        lengths = [seg[1, 1] - seg[0, 1] for seg in whiskers.get_segments()]
+        np.testing.assert_allclose(lengths, 2 * err.values)
 
 
 class TestComputeCredibleInterval:
