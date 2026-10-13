@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>fips.Matrix &#8212; fips 0.1.0b10.dev26+gd41a7efcd documentation</title>
+    <title>fips.Matrix &#8212; fips 0.1.0b10.dev28+gb073088db documentation</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0" />
 
-    <script src="../../_static/documentation_options.js?v=a90f39e0"></script>
+    <script src="../../_static/documentation_options.js?v=2588e599"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -133,8 +133,8 @@
       
     
     
-    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.1.0b10.dev26+gd41a7efcd documentation - Home"/>
-    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.1.0b10.dev26+gd41a7efcd documentation - Home"/>
+    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.1.0b10.dev28+gb073088db documentation - Home"/>
+    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.1.0b10.dev28+gb073088db documentation - Home"/>
   
   
 </a></div>
@@ -965,12 +965,15 @@ such as forward operators and covariance matrices.</p>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>data</strong> (<em>np.ndarray</em><em> or </em><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.15)"><em>list</em></a><em> or </em><em>pd.Series</em><em> or </em><em>pd.DataFrame</em><em> or </em><a class="reference internal" href="#fips.Matrix" title="fips.Matrix"><em>Matrix</em></a><em> or </em><em>scalar</em>) – Data representing the matrix. A 1D array, list, or Series supplies
-the diagonal values. Arrays and lists require an explicit index;
-a Series supplies its own index for both axes.</p></li>
+the diagonal values, and a scalar (or 0-d array) puts that value on
+every diagonal entry, with zeros elsewhere. Scalars, arrays and lists
+require an explicit index; a Series supplies its own index for both
+axes.</p></li>
 <li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a><em>, </em><em>optional</em>) – Name for the Matrix.</p></li>
-<li><p><strong>index</strong> (<em>pd.MultiIndex</em>) – Index for the rows of the DataFrame. Required for 1D arrays and lists,
-and used for both axes in that case.</p></li>
-<li><p><strong>columns</strong> (<em>pd.MultiIndex</em><em>, </em><em>optional</em>) – Index for the columns of the DataFrame. If None, uses the same as <cite>index</cite>.</p></li>
+<li><p><strong>index</strong> (<em>pd.MultiIndex</em>) – Index for the rows of the DataFrame. Required for scalars, 1D arrays
+and lists, and used for both axes in those cases.</p></li>
+<li><p><strong>columns</strong> (<em>pd.MultiIndex</em><em>, </em><em>optional</em>) – Index for the columns of the DataFrame. If None, uses the same as <cite>index</cite>.
+Not used for a scalar, 1D array or list, which label both axes with <cite>index</cite>.</p></li>
 <li><p><strong>dtype</strong> (<em>data type</em><em>, </em><em>optional</em>) – Data type to force.</p></li>
 <li><p><strong>copy</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><em>bool</em></a><em>, </em><em>optional</em>) – Whether to copy the data.</p></li>
 <li><p><strong>sparse</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><em>bool</em></a><em>, </em><em>default False</em>) – If True, store the assembled matrix in pandas sparse format.
@@ -979,7 +982,7 @@ zeroing in your builder before passing data here.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/builtins/exceptions.html#ValueError" title="(in Python v3.15)"><strong>ValueError</strong></a> – If a 1D array or list is supplied without an index.</p>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/builtins/exceptions.html#ValueError" title="(in Python v3.15)"><strong>ValueError</strong></a> – If a scalar, 1D array or list is supplied without an index.</p>
 </dd>
 </dl>
 </dd></dl>

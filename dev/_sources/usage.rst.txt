@@ -46,23 +46,30 @@ automatically.
 Constructing Covariance Matrices
 ---------------------------------
 
-:class:`~fips.CovarianceMatrix` accepts a diagonal :class:`pandas.Series`, a full
-:class:`pandas.DataFrame`, or a list of :class:`~fips.MatrixBlock` objects:
+:class:`~fips.CovarianceMatrix` accepts a scalar, a 1D array, a list or a
+:class:`pandas.Series` for a diagonal, a full :class:`pandas.DataFrame`, or a list
+of :class:`~fips.MatrixBlock` objects. The index needs a ``"block"`` level. A
+scalar, array or list takes the ``index`` argument and puts its values on the
+diagonal; a scalar puts the same value on every entry, so
+``CovarianceMatrix(0.25, index=idx)`` is
+``CovarianceMatrix([0.25, 0.25, 0.25], index=idx)``:
 
-.. code-block:: python
+.. ipython:: python
 
    import pandas as pd, numpy as np
    from fips import CovarianceMatrix
 
-   idx = pd.Index(["a", "b", "c"], name="id")
+   idx = pd.MultiIndex.from_product([["obs"], ["a", "b", "c"]], names=["block", "id"])
 
-   # Diagonal — independent errors
-   S = CovarianceMatrix(pd.Series([0.5, 0.5, 1.0], index=idx))
+   # Diagonal: independent errors with the same variance
+   CovarianceMatrix(0.25, index=idx).values
+
+   # Diagonal: a variance for each element
+   CovarianceMatrix(pd.Series([0.5, 0.5, 1.0], index=idx)).values
 
    # Full dense matrix
-   S = CovarianceMatrix(
-       pd.DataFrame(np.eye(3) * 0.25, index=idx, columns=idx)
-   )
+   S = CovarianceMatrix(pd.DataFrame(np.eye(3) * 0.25, index=idx, columns=idx))
+   S.shape
 
 
 Sparse Forward Operators

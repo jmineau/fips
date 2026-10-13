@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>User Guide &#8212; fips 0.1.0b10.dev26+gd41a7efcd documentation</title>
+    <title>User Guide &#8212; fips 0.1.0b10.dev28+gb073088db documentation</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0" />
 
-    <script src="_static/documentation_options.js?v=a90f39e0"></script>
+    <script src="_static/documentation_options.js?v=2588e599"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -135,8 +135,8 @@
       
     
     
-    <img src="_static/logo.png" class="logo__image only-light" alt="fips 0.1.0b10.dev26+gd41a7efcd documentation - Home"/>
-    <img src="_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.1.0b10.dev26+gd41a7efcd documentation - Home"/>
+    <img src="_static/logo.png" class="logo__image only-light" alt="fips 0.1.0b10.dev28+gb073088db documentation - Home"/>
+    <img src="_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.1.0b10.dev28+gb073088db documentation - Home"/>
   
   
 </a></div>
@@ -525,20 +525,38 @@ everywhere — <em>fips</em> will promote them to <a class="reference internal" 
 </section>
 <section id="constructing-covariance-matrices">
 <h2><a class="toc-backref" href="#id2" role="doc-backlink">Constructing Covariance Matrices</a><a class="headerlink" href="#constructing-covariance-matrices" title="Link to this heading">#</a></h2>
-<p><a class="reference internal" href="reference/api/fips.CovarianceMatrix.html#fips.CovarianceMatrix" title="fips.CovarianceMatrix"><code class="xref py py-class docutils literal notranslate"><span class="pre">CovarianceMatrix</span></code></a> accepts a diagonal <a class="reference external" href="https://pandas.pydata.org/docs/reference/api/pandas.Series.html#pandas.Series" title="(in pandas v3.0.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">pandas.Series</span></code></a>, a full
-<a class="reference external" href="https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v3.0.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">pandas.DataFrame</span></code></a>, or a list of <a class="reference internal" href="reference/api/fips.MatrixBlock.html#fips.MatrixBlock" title="fips.MatrixBlock"><code class="xref py py-class docutils literal notranslate"><span class="pre">MatrixBlock</span></code></a> objects:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span><span class="o">,</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">fips</span><span class="w"> </span><span class="kn">import</span> <span class="n">CovarianceMatrix</span>
+<p><a class="reference internal" href="reference/api/fips.CovarianceMatrix.html#fips.CovarianceMatrix" title="fips.CovarianceMatrix"><code class="xref py py-class docutils literal notranslate"><span class="pre">CovarianceMatrix</span></code></a> accepts a scalar, a 1D array, a list or a
+<a class="reference external" href="https://pandas.pydata.org/docs/reference/api/pandas.Series.html#pandas.Series" title="(in pandas v3.0.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">pandas.Series</span></code></a> for a diagonal, a full <a class="reference external" href="https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v3.0.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">pandas.DataFrame</span></code></a>, or a list
+of <a class="reference internal" href="reference/api/fips.MatrixBlock.html#fips.MatrixBlock" title="fips.MatrixBlock"><code class="xref py py-class docutils literal notranslate"><span class="pre">MatrixBlock</span></code></a> objects. The index needs a <code class="docutils literal notranslate"><span class="pre">&quot;block&quot;</span></code> level. A
+scalar, array or list takes the <code class="docutils literal notranslate"><span class="pre">index</span></code> argument and puts its values on the
+diagonal; a scalar puts the same value on every entry, so
+<code class="docutils literal notranslate"><span class="pre">CovarianceMatrix(0.25,</span> <span class="pre">index=idx)</span></code> is
+<code class="docutils literal notranslate"><span class="pre">CovarianceMatrix([0.25,</span> <span class="pre">0.25,</span> <span class="pre">0.25],</span> <span class="pre">index=idx)</span></code>:</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [1]: </span><span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span><span class="o">,</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 
-<span class="n">idx</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">([</span><span class="s2">&quot;a&quot;</span><span class="p">,</span> <span class="s2">&quot;b&quot;</span><span class="p">,</span> <span class="s2">&quot;c&quot;</span><span class="p">],</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;id&quot;</span><span class="p">)</span>
+<span class="gp">In [2]: </span><span class="kn">from</span><span class="w"> </span><span class="nn">fips</span><span class="w"> </span><span class="kn">import</span> <span class="n">CovarianceMatrix</span>
 
-<span class="c1"># Diagonal — independent errors</span>
-<span class="n">S</span> <span class="o">=</span> <span class="n">CovarianceMatrix</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">([</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">],</span> <span class="n">index</span><span class="o">=</span><span class="n">idx</span><span class="p">))</span>
+<span class="gp">In [3]: </span><span class="n">idx</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">MultiIndex</span><span class="o">.</span><span class="n">from_product</span><span class="p">([[</span><span class="s2">&quot;obs&quot;</span><span class="p">],</span> <span class="p">[</span><span class="s2">&quot;a&quot;</span><span class="p">,</span> <span class="s2">&quot;b&quot;</span><span class="p">,</span> <span class="s2">&quot;c&quot;</span><span class="p">]],</span> <span class="n">names</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;block&quot;</span><span class="p">,</span> <span class="s2">&quot;id&quot;</span><span class="p">])</span>
 
-<span class="c1"># Full dense matrix</span>
-<span class="n">S</span> <span class="o">=</span> <span class="n">CovarianceMatrix</span><span class="p">(</span>
-    <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span> <span class="o">*</span> <span class="mf">0.25</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">idx</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="n">idx</span><span class="p">)</span>
-<span class="p">)</span>
+<span class="go"># Diagonal: independent errors with the same variance</span>
+<span class="gp">In [4]: </span><span class="n">CovarianceMatrix</span><span class="p">(</span><span class="mf">0.25</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">idx</span><span class="p">)</span><span class="o">.</span><span class="n">values</span>
+<span class="gh">Out[4]: </span>
+<span class="go">array([[0.25, 0.  , 0.  ],</span>
+<span class="go">       [0.  , 0.25, 0.  ],</span>
+<span class="go">       [0.  , 0.  , 0.25]])</span>
+
+<span class="go"># Diagonal: a variance for each element</span>
+<span class="gp">In [5]: </span><span class="n">CovarianceMatrix</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">([</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">],</span> <span class="n">index</span><span class="o">=</span><span class="n">idx</span><span class="p">))</span><span class="o">.</span><span class="n">values</span>
+<span class="gh">Out[5]: </span>
+<span class="go">array([[0.5, 0. , 0. ],</span>
+<span class="go">       [0. , 0.5, 0. ],</span>
+<span class="go">       [0. , 0. , 1. ]])</span>
+
+<span class="go"># Full dense matrix</span>
+<span class="gp">In [6]: </span><span class="n">S</span> <span class="o">=</span> <span class="n">CovarianceMatrix</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span> <span class="o">*</span> <span class="mf">0.25</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">idx</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="n">idx</span><span class="p">))</span>
+
+<span class="gp">In [7]: </span><span class="n">S</span><span class="o">.</span><span class="n">shape</span>
+<span class="gh">Out[7]: </span><span class="go">(3, 3)</span>
 </pre></div>
 </div>
 </section>
