@@ -25,6 +25,29 @@ logger = logging.getLogger(__name__)
 ArrayLike: TypeAlias = npt.ArrayLike | pd.Series | pd.DataFrame
 
 
+def is_diagonal_input(data: object) -> bool:
+    """
+    Return True if `data` is a scalar or a 1D array, list or Series.
+
+    A 2D structure built from such data is a diagonal: the values go on the
+    diagonal and zeros elsewhere.
+
+    Parameters
+    ----------
+    data : object
+        The data given to a 2D structure.
+
+    Returns
+    -------
+    bool
+        True for a scalar (a 0-d array included) and for a 1D array, list or
+        Series; False for anything else, a DataFrame or 2D array among them.
+    """
+    if isinstance(data, (pd.Series, np.ndarray, list)):
+        return np.ndim(data) <= 1
+    return bool(np.isscalar(data))
+
+
 # docstr-coverage: excused `@overload stub`
 @overload
 def xselect(
@@ -442,18 +465,24 @@ class Structure1D(Structure):
 
 class Structure2D(Structure):
     """
-    Base class for 2D structures (Matrix).
+    Base class for 2D structures (MatrixBlock, Matrix).
 
     Parameters
     ----------
-    data : np.ndarray
-        2D data.
+    data : np.ndarray or pd.DataFrame or list or pd.Series or scalar
+        2D data. A 1D array, list, or Series supplies the diagonal values, and
+        a scalar (or 0-d array) puts that value on every diagonal entry, with
+        zeros elsewhere. Scalars, arrays and lists require an explicit index;
+        a Series supplies its own index for both axes.
     name : str, optional
         Name for the Structure.
     index : pd.Index
-        Index for the rows of the DataFrame.
+        Index for the rows of the DataFrame. Required for scalars, 1D arrays
+        and lists, and used for both axes in those cases.
     columns : pd.Index, optional
         Index for the columns of the DataFrame. If None, uses the same as `index`.
+        Cannot be given with a scalar, 1D array, list or Series: a diagonal is
+        square and labels both axes with `index`.
     dtype : data type, optional
         Data type to force.
     copy : bool, optional
@@ -462,6 +491,12 @@ class Structure2D(Structure):
         If True, store the data in pandas sparse format (fill_value=0.0).
         The caller is responsible for zeroing out near-zero values before
         setting sparse=True (e.g. via a threshold in the builder).
+
+    Raises
+    ------
+    ValueError
+        If a scalar, 1D array or list is supplied without an index, or if
+        `columns` is given with a scalar, 1D array, list or Series.
     """
 
     name: str | None
@@ -482,6 +517,23 @@ class Structure2D(Structure):
         """
         Initialize a 2D structure with the given data, index, and columns. Validates and sanitizes the data.
         """
+        if is_diagonal_input(data):
+            if columns is not None:
+                raise ValueError(
+                    f"A scalar or 1D input to {type(self).__name__} is a diagonal, labeled by "
+                    "`index` on both axes, so `columns` cannot be given. For a "
+                    "rectangular block of one value, pass np.full(shape, value)."
+                )
+            if isinstance(data, pd.Series):
+                index = data.index
+            elif index is None:
+                raise ValueError(
+                    ("Scalar" if np.ndim(data) == 0 else "1D")
+                    + " data requires an index."
+                )
+            values = np.full(len(index), data) if np.ndim(data) == 0 else data
+            data = np.diag(np.asarray(values))
+
         self.name = name
 
         # Detect if the input data is already a sparse DataFrame so we can

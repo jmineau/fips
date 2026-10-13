@@ -18,6 +18,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   longer builds a rectangular matrix. For the old result, build the full array
   yourself: `Matrix(np.full((n, m), 5.0), index=rows, columns=cols)`.
   ([#50](https://github.com/jmineau/fips/issues/50))
+- **A scalar passed to `MatrixBlock` builds a diagonal** (breaking), as it does
+  for `Matrix`: `MatrixBlock(5.0, "r", "c", index=idx)` returned a block with
+  5.0 in every entry, and now returns the square block with 5.0 on the diagonal
+  and zeros elsewhere. A 1D array, list or Series does the same (each raised an
+  error before): the values go on the diagonal, and a Series supplies its own
+  index. A diagonal labels both axes with `index`, so a scalar or 1D input given
+  with `columns` raises a `ValueError` instead of building a rectangular block.
+  For a rectangular block of one value, pass the array:
+  `MatrixBlock(np.full((n, m), 5.0), "r", "c", index=rows, columns=cols)`.
+  ([#59](https://github.com/jmineau/fips/issues/59))
 - `FluxInversionPipeline.filter_state_space` raises a `TypeError` that says what
   is wrong when it has to infer the frequency of flux times that are not
   datetimes (the config has no `flux_freq`). Before, `pd.infer_freq` ran on

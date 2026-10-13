@@ -554,6 +554,135 @@ class TestMatrixBlock:
         assert new_block.col_block == "obs"
         assert new_block.name == "test_block"
 
+    @pytest.mark.parametrize("scalar", SCALARS, ids=lambda s: type(s).__name__)
+    @pytest.mark.parametrize("sparse", [False, True])
+    def test_scalar_builds_a_diagonal(self, scalar, sparse):
+        """A scalar or 0-d array puts its value on the diagonal and zeros elsewhere."""
+        index = pd.Index(["c", "a", "b"], name="site")
+
+        block = MatrixBlock(
+            scalar, row_block="state", col_block="state", index=index, sparse=sparse
+        )
+
+        pd.testing.assert_index_equal(block.index, index)
+        pd.testing.assert_index_equal(block.columns, index)
+        actual = block.values.toarray() if sparse else block.values
+        np.testing.assert_array_equal(actual, 5.0 * np.eye(3))
+        assert (block.row_block, block.col_block) == ("state", "state")
+        assert block.name == "state_state"
+
+    @pytest.mark.parametrize("container", [list, np.array])
+    @pytest.mark.parametrize("sparse", [False, True])
+    def test_diagonal_values_use_supplied_index(self, container, sparse):
+        """A 1D array or list is the diagonal and keeps its labels on both axes."""
+        values = container([1.0, 2.0, 3.0])
+        index = pd.Index(["c", "a", "b"], name="site")
+
+        block = MatrixBlock(
+            values, row_block="state", col_block="state", index=index, sparse=sparse
+        )
+
+        pd.testing.assert_index_equal(block.index, index)
+        pd.testing.assert_index_equal(block.columns, index)
+        actual = block.values.toarray() if sparse else block.values
+        np.testing.assert_array_equal(actual, np.diag([1.0, 2.0, 3.0]))
+
+    def test_series_is_the_diagonal_with_its_own_index(self):
+        """A Series supplies the diagonal values and its index labels both axes."""
+        series = pd.Series(
+            [1.0, 2.0, 3.0], index=pd.Index(["c", "a", "b"], name="site"), name="var"
+        )
+
+        block = MatrixBlock(series, row_block="state", col_block="state")
+
+        pd.testing.assert_index_equal(block.index, series.index)
+        pd.testing.assert_index_equal(block.columns, series.index)
+        np.testing.assert_array_equal(block.values, np.diag([1.0, 2.0, 3.0]))
+        assert block.name == "state_state"
+
+    @pytest.mark.parametrize("size", [1, 3])
+    def test_scalar_matches_1d_input_of_the_same_value(self, size):
+        """A scalar builds what a 1D input of that value on every entry builds."""
+        index = pd.RangeIndex(size, name="i")
+
+        from_scalar = MatrixBlock(5.0, row_block="r", col_block="c", index=index)
+        from_list = MatrixBlock([5.0] * size, row_block="r", col_block="c", index=index)
+
+        pd.testing.assert_frame_equal(from_scalar.data, from_list.data)
+
+    def test_diagonal_block_assembles_into_a_matrix(self):
+        """A diagonal block in a Matrix is the diagonal of that block's rows and columns."""
+        index = pd.Index(["a", "b"], name="site")
+
+        block = MatrixBlock(2.0, row_block="state", col_block="state", index=index)
+        matrix = Matrix([block])
+
+        np.testing.assert_array_equal(matrix.values, 2.0 * np.eye(2))
+        np.testing.assert_array_equal(
+            matrix.blocks["state", "state"].values, 2.0 * np.eye(2)
+        )
+
+    @pytest.mark.parametrize("scalar", SCALARS, ids=lambda s: type(s).__name__)
+    def test_scalar_requires_an_index(self, scalar):
+        """An unlabeled scalar explains the required row index, as a Matrix does."""
+        with pytest.raises(ValueError, match="Scalar data requires an index"):
+            MatrixBlock(scalar, row_block="r", col_block="c")
+
+    @pytest.mark.parametrize("container", [list, np.array])
+    def test_diagonal_values_require_an_index(self, container):
+        """Unlabeled diagonal values explain the required row index, as a Matrix does."""
+        with pytest.raises(ValueError, match="1D data requires an index"):
+            MatrixBlock(container([1.0, 2.0, 3.0]), row_block="r", col_block="c")
+
+    @pytest.mark.parametrize(
+        "data",
+        [
+            5.0,
+            np.array(5.0),
+            [1.0, 2.0, 3.0],
+            np.array([1.0, 2.0, 3.0]),
+            pd.Series([1.0, 2.0, 3.0], index=pd.Index(["a", "b", "c"], name="site")),
+        ],
+        ids=["float", "0-d", "list", "array", "series"],
+    )
+    def test_columns_cannot_be_given_with_a_diagonal(self, data):
+        """A diagonal is square: a scalar or 1D input with columns raises, naming the fix."""
+        index = pd.Index(["a", "b", "c"], name="site")
+        columns = pd.Index(["u", "v"], name="other")
+
+        with pytest.raises(ValueError, match=r"`columns` cannot be given.*np\.full"):
+            MatrixBlock(
+                data, row_block="r", col_block="c", index=index, columns=columns
+            )
+
+    def test_rectangular_block_of_one_value_from_an_array(self):
+        """The way to a rectangular block of one value is a 2D array."""
+        index = pd.Index(["a", "b", "c"], name="site")
+        columns = pd.Index(["u", "v"], name="other")
+
+        block = MatrixBlock(
+            np.full((3, 2), 5.0),
+            row_block="r",
+            col_block="c",
+            index=index,
+            columns=columns,
+        )
+
+        assert block.shape == (3, 2)
+        pd.testing.assert_index_equal(block.columns, columns)
+        np.testing.assert_array_equal(block.values, np.full((3, 2), 5.0))
+
+    @pytest.mark.parametrize("container", [list, np.array])
+    def test_matrix_does_not_use_columns_for_diagonal_values(self, container):
+        """A Matrix ignores `columns` for a 1D input, as for a scalar."""
+        index = pd.MultiIndex.from_product([["state"], [0, 1, 2]], names=["block", "i"])
+        columns = pd.MultiIndex.from_product([["state"], [0, 1]], names=["block", "i"])
+
+        matrix = Matrix(container([1.0, 2.0, 3.0]), index=index, columns=columns)
+
+        assert matrix.shape == (3, 3)
+        pd.testing.assert_index_equal(matrix.columns, index)
+
 
 class TestMatrixOperations:
     """Tests for Matrix utility operations."""

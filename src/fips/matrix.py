@@ -18,6 +18,7 @@ from fips.base import (
     MultiBlockMixin,
     SingleBlockMixin,
     Structure2D,
+    is_diagonal_input,
     xselect,
 )
 from fips.indexes import assign_block, outer_align_levels
@@ -45,8 +46,12 @@ class MatrixBlock(SingleBlockMixin, Structure2D):
 
     Parameters
     ----------
-    data : np.ndarray or pd.DataFrame or MatrixBlock or scalar
-        2D data representing the block. If MatrixBlock, creates a copy.
+    data : np.ndarray or pd.DataFrame or MatrixBlock or list or pd.Series or scalar
+        2D data representing the block. If MatrixBlock, creates a copy. A 1D
+        array, list, or Series supplies the diagonal values of a square block,
+        and a scalar (or 0-d array) puts that value on every diagonal entry,
+        with zeros elsewhere. Scalars, arrays and lists require an explicit
+        index; a Series supplies its own index for both axes.
     row_block : str, optional
         Name of the row block (e.g., "state", "obs"). Required if data is not a MatrixBlock.
     col_block : str, optional
@@ -57,6 +62,9 @@ class MatrixBlock(SingleBlockMixin, Structure2D):
         Index for the rows of the DataFrame.
     columns : pd.Index, optional
         Index for the columns of the DataFrame. If None, uses the same as `index`.
+        Cannot be given with a scalar, 1D array, list or Series: those build a
+        diagonal, which labels both axes with `index`. For a rectangular block
+        of one value, pass ``np.full(shape, value)``.
     dtype : data type, optional
         Data type to force.
     copy : bool, optional
@@ -65,6 +73,12 @@ class MatrixBlock(SingleBlockMixin, Structure2D):
         If True, store the block in pandas sparse format.
         Sparsification is applied after initialization.
         Use threshold zeroing in your builder before passing data here for best results.
+
+    Raises
+    ------
+    ValueError
+        If a scalar, 1D array or list is supplied without an index, or if
+        `columns` is given with a scalar, 1D array, list or Series.
     """
 
     data: pd.DataFrame  # type: ignore[override]
@@ -245,13 +259,6 @@ class Matrix(MultiBlockMixin, Structure2D):
             # Allow dict mapping (row, col) -> data as a shorthand alternative
             blocks = [MatrixBlock(v, r, c) for (r, c), v in data.items()]
 
-        # A scalar or 0-d array is a 1D input with that value on every entry; the
-        # 1D branch below makes the diagonal
-        if np.isscalar(data) or (isinstance(data, np.ndarray) and data.ndim == 0):
-            if index is None:
-                raise ValueError("Scalar data requires an index.")
-            data = np.full(len(index), data)
-
         if blocks:
             seen_blocks = set()
             dfs: list[pd.DataFrame] = []
@@ -273,18 +280,15 @@ class Matrix(MultiBlockMixin, Structure2D):
             data = reduce(lambda left, right: left.combine_first(right), aligned_dfs)
             data = data.fillna(0.0)
 
-        # Accept series - create diagonal matrix
+        # Accept series - a diagonal that supplies its name
         elif isinstance(data, pd.Series):
             name = name or data.name
-            index = columns = data.index
-            data = np.diag(data.to_numpy())
+            columns = None
 
-        # 1D array - treat as diagonal matrix
-        elif isinstance(data, (np.ndarray, list)) and np.ndim(data) == 1:
-            if index is None:
-                raise ValueError("1D data requires an index.")
-            columns = index
-            data = np.diag(data)
+        # A scalar or 1D array or list is a diagonal. Structure2D builds it and
+        # labels both axes with `index`, so a Matrix does not use `columns`
+        elif is_diagonal_input(data):
+            columns = None
 
         super().__init__(
             data,
