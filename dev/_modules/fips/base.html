@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>fips.base &#8212; fips 0.1.0b10.dev35+g30d079126 documentation</title>
+    <title>fips.base &#8212; fips 0.1.0b10.dev37+g39d5c5e84 documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0" />
 
-    <script src="../../_static/documentation_options.js?v=c3e73b55"></script>
+    <script src="../../_static/documentation_options.js?v=c1d8d8d9"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -130,8 +130,8 @@
       
     
     
-    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.1.0b10.dev35+g30d079126 documentation - Home"/>
-    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.1.0b10.dev35+g30d079126 documentation - Home"/>
+    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.1.0b10.dev37+g39d5c5e84 documentation - Home"/>
+    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.1.0b10.dev37+g39d5c5e84 documentation - Home"/>
   
   
 </a></div>
@@ -1008,10 +1008,6 @@
 
     <span class="k">if</span> <span class="n">sparse</span><span class="p">:</span>
         <span class="n">diagonal</span> <span class="o">=</span> <span class="n">diagonal</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">diagonal</span><span class="p">)</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
-            <span class="c1"># normalize_fill_value reads a stored NaN as an implicit zero (#63),</span>
-            <span class="c1"># so a NaN would become a zero on the diagonal instead of an error</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Data contains NaN values.&quot;</span><span class="p">)</span>
         <span class="c1"># Store the nonzero entries only: a zero on the diagonal is implicit</span>
         <span class="n">stored</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">flatnonzero</span><span class="p">(</span><span class="n">diagonal</span><span class="p">)</span>
         <span class="n">shape</span> <span class="o">=</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">diagonal</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">diagonal</span><span class="p">))</span>
