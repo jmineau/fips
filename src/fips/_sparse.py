@@ -20,6 +20,12 @@ is refused by fips as containing NaN.
 
 :func:`normalize_fill_value` re-bases such a frame onto ``fill_value=0.0``.
 Sparsity is preserved -- only the fill changes, nothing is densified.
+
+Filling with zero would also turn a NaN that is *stored* in the matrix into a
+zero. A stored NaN is data (a missing variance, say), and on the dense path
+``_validate`` refuses it. The two kinds of NaN can be told apart before the
+fill: a stored entry is in the column's ``sp_values``, an implicit one is not.
+So :func:`normalize_fill_value` raises on a stored NaN instead of filling it.
 """
 
 from __future__ import annotations
@@ -37,6 +43,14 @@ def is_sparse_frame(data: pd.DataFrame) -> bool:
     )
 
 
+def _stores_nan(column: pd.Series) -> bool:
+    """Return True if a sparse column stores a NaN (its implicit entries aside)."""
+    values = column.array
+    return isinstance(values, pd.arrays.SparseArray) and bool(
+        pd.isna(values.sp_values).any()
+    )
+
+
 def normalize_fill_value(data: pd.DataFrame) -> pd.DataFrame:
     """
     Re-base a sparse DataFrame onto ``fill_value=0.0``.
@@ -51,13 +65,23 @@ def normalize_fill_value(data: pd.DataFrame) -> pd.DataFrame:
     -------
     pandas.DataFrame
         A sparse frame whose implicit entries are ``0.0``. Density is
-        unchanged; the values are the same numbers, with NaN read as zero.
+        unchanged; the stored values are the same numbers, and the implicit
+        entries, NaN before, are zeros.
+
+    Raises
+    ------
+    ValueError
+        If a column stores a NaN. Filling would make it a zero, where the
+        dense path refuses it.
 
     Notes
     -----
     Works on the values rather than on the dtype: assigning a new
     ``SparseDtype`` would keep the NaNs as stored entries, whereas filling
     them folds them back into the implicit zeros.
+
+    The check for stored NaN reads each column's stored values only, so it
+    never densifies; it runs only when a fill is needed.
     """
     if not is_sparse_frame(data):
         return data
@@ -65,6 +89,9 @@ def normalize_fill_value(data: pd.DataFrame) -> pd.DataFrame:
         dt.fill_value == 0.0 for dt in data.dtypes if isinstance(dt, pd.SparseDtype)
     ):
         return data
+    # fillna would also fill a NaN stored in the matrix, which is data
+    if any(_stores_nan(column) for _, column in data.items()):
+        raise ValueError("Data contains NaN values.")
     return data.fillna(0.0)
 
 
@@ -91,6 +118,13 @@ def frame_from_spmatrix(
     -------
     pandas.DataFrame
         A sparse frame with ``fill_value=0.0`` and the density of `matrix`.
+
+    Raises
+    ------
+    ValueError
+        If `matrix` stores a NaN and pandas built the frame with
+        ``fill_value=NaN`` (pandas 3). On pandas 2 the NaN stays in the frame,
+        and a structure built from it refuses it.
     """
     return normalize_fill_value(
         pd.DataFrame.sparse.from_spmatrix(matrix, index=index, columns=columns)
