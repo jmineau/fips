@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>User Guide &#8212; fips 0.1.0b10.dev31+g71773da05 documentation</title>
+    <title>User Guide &#8212; fips 0.1.0b10.dev35+g30d079126 documentation</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0" />
 
-    <script src="_static/documentation_options.js?v=ff79da87"></script>
+    <script src="_static/documentation_options.js?v=c3e73b55"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -135,8 +135,8 @@
       
     
     
-    <img src="_static/logo.png" class="logo__image only-light" alt="fips 0.1.0b10.dev31+g71773da05 documentation - Home"/>
-    <img src="_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.1.0b10.dev31+g71773da05 documentation - Home"/>
+    <img src="_static/logo.png" class="logo__image only-light" alt="fips 0.1.0b10.dev35+g30d079126 documentation - Home"/>
+    <img src="_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.1.0b10.dev35+g30d079126 documentation - Home"/>
   
   
 </a></div>
@@ -525,13 +525,14 @@ everywhere — <em>fips</em> will promote them to <a class="reference internal" 
 </section>
 <section id="constructing-covariance-matrices">
 <h2><a class="toc-backref" href="#id2" role="doc-backlink">Constructing Covariance Matrices</a><a class="headerlink" href="#constructing-covariance-matrices" title="Link to this heading">#</a></h2>
-<p><a class="reference internal" href="reference/api/fips.CovarianceMatrix.html#fips.CovarianceMatrix" title="fips.CovarianceMatrix"><code class="xref py py-class docutils literal notranslate"><span class="pre">CovarianceMatrix</span></code></a> accepts a scalar, a 1D array, a list or a
-<a class="reference external" href="https://pandas.pydata.org/docs/reference/api/pandas.Series.html#pandas.Series" title="(in pandas v3.0.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">pandas.Series</span></code></a> for a diagonal, a full <a class="reference external" href="https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v3.0.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">pandas.DataFrame</span></code></a>, or a list
-of <a class="reference internal" href="reference/api/fips.MatrixBlock.html#fips.MatrixBlock" title="fips.MatrixBlock"><code class="xref py py-class docutils literal notranslate"><span class="pre">MatrixBlock</span></code></a> objects. The index needs a <code class="docutils literal notranslate"><span class="pre">&quot;block&quot;</span></code> level. A
-scalar, array or list takes the <code class="docutils literal notranslate"><span class="pre">index</span></code> argument and puts its values on the
-diagonal; a scalar puts the same value on every entry, so
-<code class="docutils literal notranslate"><span class="pre">CovarianceMatrix(0.25,</span> <span class="pre">index=idx)</span></code> is
-<code class="docutils literal notranslate"><span class="pre">CovarianceMatrix([0.25,</span> <span class="pre">0.25,</span> <span class="pre">0.25],</span> <span class="pre">index=idx)</span></code>:</p>
+<p><a class="reference internal" href="reference/api/fips.CovarianceMatrix.html#fips.CovarianceMatrix" title="fips.CovarianceMatrix"><code class="xref py py-class docutils literal notranslate"><span class="pre">CovarianceMatrix</span></code></a> takes a full <a class="reference external" href="https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v3.0.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">pandas.DataFrame</span></code></a> (or a 2D
+array with an <code class="docutils literal notranslate"><span class="pre">index</span></code>), or a list of <a class="reference internal" href="reference/api/fips.MatrixBlock.html#fips.MatrixBlock" title="fips.MatrixBlock"><code class="xref py py-class docutils literal notranslate"><span class="pre">MatrixBlock</span></code></a> objects. The
+index needs a <code class="docutils literal notranslate"><span class="pre">&quot;block&quot;</span></code> level.</p>
+<p>A diagonal covariance (independent errors) has its own constructor,
+<a class="reference internal" href="reference/api/fips.CovarianceMatrix.diagonal.html#fips.CovarianceMatrix.diagonal" title="fips.CovarianceMatrix.diagonal"><code class="xref py py-meth docutils literal notranslate"><span class="pre">diagonal()</span></code></a>. It takes the variances and the index
+that labels both axes: a scalar is the same variance for every element, and a
+1D array or list gives one for each. A <a class="reference external" href="https://pandas.pydata.org/docs/reference/api/pandas.Series.html#pandas.Series" title="(in pandas v3.0.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">pandas.Series</span></code></a> or a
+<a class="reference internal" href="reference/api/fips.Vector.html#fips.Vector" title="fips.Vector"><code class="xref py py-class docutils literal notranslate"><span class="pre">Vector</span></code></a> brings its own index.</p>
 <div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [1]: </span><span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span><span class="o">,</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 
 <span class="gp">In [2]: </span><span class="kn">from</span><span class="w"> </span><span class="nn">fips</span><span class="w"> </span><span class="kn">import</span> <span class="n">CovarianceMatrix</span>
@@ -539,14 +540,14 @@ diagonal; a scalar puts the same value on every entry, so
 <span class="gp">In [3]: </span><span class="n">idx</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">MultiIndex</span><span class="o">.</span><span class="n">from_product</span><span class="p">([[</span><span class="s2">&quot;obs&quot;</span><span class="p">],</span> <span class="p">[</span><span class="s2">&quot;a&quot;</span><span class="p">,</span> <span class="s2">&quot;b&quot;</span><span class="p">,</span> <span class="s2">&quot;c&quot;</span><span class="p">]],</span> <span class="n">names</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;block&quot;</span><span class="p">,</span> <span class="s2">&quot;id&quot;</span><span class="p">])</span>
 
 <span class="go"># Diagonal: independent errors with the same variance</span>
-<span class="gp">In [4]: </span><span class="n">CovarianceMatrix</span><span class="p">(</span><span class="mf">0.25</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">idx</span><span class="p">)</span><span class="o">.</span><span class="n">values</span>
+<span class="gp">In [4]: </span><span class="n">CovarianceMatrix</span><span class="o">.</span><span class="n">diagonal</span><span class="p">(</span><span class="mf">0.25</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">idx</span><span class="p">)</span><span class="o">.</span><span class="n">values</span>
 <span class="gh">Out[4]: </span>
 <span class="go">array([[0.25, 0.  , 0.  ],</span>
 <span class="go">       [0.  , 0.25, 0.  ],</span>
 <span class="go">       [0.  , 0.  , 0.25]])</span>
 
 <span class="go"># Diagonal: a variance for each element</span>
-<span class="gp">In [5]: </span><span class="n">CovarianceMatrix</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">([</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">],</span> <span class="n">index</span><span class="o">=</span><span class="n">idx</span><span class="p">))</span><span class="o">.</span><span class="n">values</span>
+<span class="gp">In [5]: </span><span class="n">CovarianceMatrix</span><span class="o">.</span><span class="n">diagonal</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">([</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">],</span> <span class="n">index</span><span class="o">=</span><span class="n">idx</span><span class="p">))</span><span class="o">.</span><span class="n">values</span>
 <span class="gh">Out[5]: </span>
 <span class="go">array([[0.5, 0. , 0. ],</span>
 <span class="go">       [0. , 0.5, 0. ],</span>
@@ -559,6 +560,19 @@ diagonal; a scalar puts the same value on every entry, so
 <span class="gh">Out[7]: </span><span class="go">(3, 3)</span>
 </pre></div>
 </div>
+<p>With <code class="docutils literal notranslate"><span class="pre">sparse=True</span></code> the diagonal is stored sparse and the dense matrix is never
+formed, which matters once the index is long:</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [8]: </span><span class="n">CovarianceMatrix</span><span class="o">.</span><span class="n">diagonal</span><span class="p">(</span><span class="mf">0.25</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">idx</span><span class="p">,</span> <span class="n">sparse</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">is_sparse</span>
+<span class="gh">Out[8]: </span><span class="go">True</span>
+</pre></div>
+</div>
+<p><a class="reference internal" href="reference/api/fips.Matrix.html#fips.Matrix" title="fips.Matrix"><code class="xref py py-class docutils literal notranslate"><span class="pre">Matrix</span></code></a>, <a class="reference internal" href="reference/api/fips.ForwardOperator.html#fips.ForwardOperator" title="fips.ForwardOperator"><code class="xref py py-class docutils literal notranslate"><span class="pre">ForwardOperator</span></code></a> and
+<a class="reference internal" href="reference/api/fips.MatrixBlock.html#fips.MatrixBlock" title="fips.MatrixBlock"><code class="xref py py-class docutils literal notranslate"><span class="pre">MatrixBlock</span></code></a> have the same <code class="docutils literal notranslate"><span class="pre">diagonal</span></code> constructor; a block also
+takes its <code class="docutils literal notranslate"><span class="pre">row_block</span></code> and <code class="docutils literal notranslate"><span class="pre">col_block</span></code>. The constructors themselves take 2D
+data only: a scalar or 1D input raises an error that points to <code class="docutils literal notranslate"><span class="pre">diagonal</span></code>.</p>
+<p>An <a class="reference internal" href="reference/api/fips.InverseProblem.html#fips.InverseProblem" title="fips.InverseProblem"><code class="xref py py-class docutils literal notranslate"><span class="pre">InverseProblem</span></code></a> holds the indexes already, so its
+<code class="docutils literal notranslate"><span class="pre">prior_error</span></code> and <code class="docutils literal notranslate"><span class="pre">modeldata_mismatch</span></code> can be given as a scalar variance, or
+as a Series or Vector of variances with a <code class="docutils literal notranslate"><span class="pre">&quot;block&quot;</span></code> level.</p>
 </section>
 <section id="sparse-forward-operators">
 <h2><a class="toc-backref" href="#id3" role="doc-backlink">Sparse Forward Operators</a><a class="headerlink" href="#sparse-forward-operators" title="Link to this heading">#</a></h2>

@@ -28,6 +28,7 @@
 .. autosummary::
    :toctree:
 
+   ~Structure2D.diagonal
    ~Structure2D.to_dense
    ~Structure2D.to_frame
    ~Structure2D.to_sparse

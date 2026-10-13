@@ -36,7 +36,7 @@ From :class:`~.Matrix`: :py:obj:`~.Matrix.blocks`, :py:obj:`~.Matrix.data`, :py:
 
 
 
-From :class:`~.Structure2D`: :py:obj:`~.Structure2D.columns`, :py:obj:`~.Structure2D.is_sparse`, :py:obj:`~.Structure2D.name`, :py:obj:`~.Structure2D.to_dense`, :py:obj:`~.Structure2D.to_frame`, :py:obj:`~.Structure2D.to_sparse`, :py:obj:`~.Structure2D.values`
+From :class:`~.Structure2D`: :py:obj:`~.Structure2D.columns`, :py:obj:`~.Structure2D.diagonal`, :py:obj:`~.Structure2D.is_sparse`, :py:obj:`~.Structure2D.name`, :py:obj:`~.Structure2D.to_dense`, :py:obj:`~.Structure2D.to_frame`, :py:obj:`~.Structure2D.to_sparse`, :py:obj:`~.Structure2D.values`
 
 
 

@@ -17,6 +17,7 @@ Constructor
    :toctree: api/
 
    ForwardOperator
+   ForwardOperator.diagonal
 
 Attributes and underlying data
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

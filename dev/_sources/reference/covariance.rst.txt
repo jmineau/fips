@@ -16,6 +16,7 @@ Constructor
    :toctree: api/
 
    CovarianceMatrix
+   CovarianceMatrix.diagonal
 
 Attributes and underlying data
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

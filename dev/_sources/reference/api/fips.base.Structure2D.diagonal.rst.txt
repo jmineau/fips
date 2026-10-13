@@ -1,0 +1,6 @@
+fips.base.Structure2D.diagonal
+==============================
+
+.. currentmodule:: fips.base
+
+.. automethod:: Structure2D.diagonal

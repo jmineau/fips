@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Regional Flux Inversion &#8212; fips 0.1.0b10.dev31+g71773da05 documentation</title>
+    <title>Regional Flux Inversion &#8212; fips 0.1.0b10.dev35+g30d079126 documentation</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0" />
 
-    <script src="../_static/documentation_options.js?v=ff79da87"></script>
+    <script src="../_static/documentation_options.js?v=c3e73b55"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -133,8 +133,8 @@
       
     
     
-    <img src="../_static/logo.png" class="logo__image only-light" alt="fips 0.1.0b10.dev31+g71773da05 documentation - Home"/>
-    <img src="../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.1.0b10.dev31+g71773da05 documentation - Home"/>
+    <img src="../_static/logo.png" class="logo__image only-light" alt="fips 0.1.0b10.dev35+g30d079126 documentation - Home"/>
+    <img src="../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.1.0b10.dev35+g30d079126 documentation - Home"/>
   
   
 </a></div>
@@ -969,20 +969,12 @@ Observations: 1098
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Setting up flux inversion problem...&quot;</span><span class="p">)</span>
 
-<span class="c1"># Prior covariance (diagonal)</span>
+<span class="c1"># Prior and observation errors are independent, with one variance each, so both</span>
+<span class="c1"># covariances are diagonal. A scalar variance is enough: the problem builds the</span>
+<span class="c1"># diagonal covariance over its own state and observation index.</span>
 <span class="n">prior_std</span> <span class="o">=</span> <span class="n">PRIOR_MEAN</span> <span class="o">*</span> <span class="n">PRIOR_STD_FRACTION</span>
-<span class="n">S_0</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
-    <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">((</span><span class="n">prior_std</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">prior_series</span><span class="p">))),</span>
-    <span class="n">index</span><span class="o">=</span><span class="n">state_index</span><span class="p">,</span>
-    <span class="n">columns</span><span class="o">=</span><span class="n">state_index</span><span class="p">,</span>
-<span class="p">)</span>
-
-<span class="c1"># Observation covariance (diagonal)</span>
-<span class="n">S_z</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
-    <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">((</span><span class="n">OBS_NOISE_STD</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">syn_obs</span><span class="p">))),</span>
-    <span class="n">index</span><span class="o">=</span><span class="n">obs_index</span><span class="p">,</span>
-    <span class="n">columns</span><span class="o">=</span><span class="n">obs_index</span><span class="p">,</span>
-<span class="p">)</span>
+<span class="n">S_0</span> <span class="o">=</span> <span class="n">prior_std</span><span class="o">**</span><span class="mi">2</span>
+<span class="n">S_z</span> <span class="o">=</span> <span class="n">OBS_NOISE_STD</span><span class="o">**</span><span class="mi">2</span>
 
 <span class="c1"># Forward operator: map state (lon, lat, time_state) to obs (site, time_obs)</span>
 <span class="c1"># The state_index is organized as: (lon[0], lat[0], t[0]), (lon[0], lat[0], t[1]), ...,</span>
@@ -1190,7 +1182,7 @@ INFORMATION CONTENT
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>&lt;xarray.plot.facetgrid.FacetGrid at 0x7f7a5c61d160&gt;
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>&lt;xarray.plot.facetgrid.FacetGrid at 0x7f95a2b25010&gt;
 </pre></div>
 </div>
 <img alt="../_images/e6e00fc39284d2753820ae92216b2f1559f3a32b6425085e58e9d184a9066842.png" src="../_images/e6e00fc39284d2753820ae92216b2f1559f3a32b6425085e58e9d184a9066842.png" />

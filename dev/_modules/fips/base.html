@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>fips.base &#8212; fips 0.1.0b10.dev31+g71773da05 documentation</title>
+    <title>fips.base &#8212; fips 0.1.0b10.dev35+g30d079126 documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0" />
 
-    <script src="../../_static/documentation_options.js?v=ff79da87"></script>
+    <script src="../../_static/documentation_options.js?v=c3e73b55"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -130,8 +130,8 @@
       
     
     
-    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.1.0b10.dev31+g71773da05 documentation - Home"/>
-    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.1.0b10.dev31+g71773da05 documentation - Home"/>
+    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.1.0b10.dev35+g30d079126 documentation - Home"/>
+    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.1.0b10.dev35+g30d079126 documentation - Home"/>
   
   
 </a></div>
@@ -479,8 +479,9 @@
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy.typing</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">npt</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">scipy.sparse</span><span class="w"> </span><span class="kn">import</span> <span class="n">csr_matrix</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">fips._sparse</span><span class="w"> </span><span class="kn">import</span> <span class="n">normalize_fill_value</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fips._sparse</span><span class="w"> </span><span class="kn">import</span> <span class="n">frame_from_spmatrix</span><span class="p">,</span> <span class="n">normalize_fill_value</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">fips.indexes</span><span class="w"> </span><span class="kn">import</span> <span class="n">overlaps</span><span class="p">,</span> <span class="n">resolve_axes</span><span class="p">,</span> <span class="n">round_index</span><span class="p">,</span> <span class="n">to_numeric</span>
 
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
@@ -936,16 +937,99 @@
 
 
 
+<span class="k">def</span><span class="w"> </span><span class="nf">_is_scalar_or_1d</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="nb">object</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return True if `data` is a scalar or 1D: not something a 2D structure holds.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span> <span class="n">Structure1D</span><span class="p">)):</span>
+        <span class="k">return</span> <span class="kc">True</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)):</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">ndim</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">2</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">isscalar</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">diagonal_frame</span><span class="p">(</span>
+    <span class="n">values</span><span class="p">:</span> <span class="s2">&quot;npt.ArrayLike | pd.Series | Structure1D&quot;</span><span class="p">,</span>
+    <span class="n">index</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Index</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">sparse</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Build the square DataFrame with `values` on its diagonal and zeros elsewhere.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    values : scalar, 1D array-like, pd.Series, Block or Vector</span>
+<span class="sd">        The diagonal. A scalar puts the same value on every diagonal entry.</span>
+<span class="sd">    index : pd.Index, optional</span>
+<span class="sd">        Labels for both axes. Required for a scalar, an array or a list. A</span>
+<span class="sd">        Series, Block or Vector supplies its own index; if `index` is given</span>
+<span class="sd">        too, the two must be equal.</span>
+<span class="sd">    sparse : bool, default False</span>
+<span class="sd">        If True, build a pandas sparse DataFrame (fill_value=0.0) without</span>
+<span class="sd">        forming the dense matrix.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    pd.DataFrame</span>
+<span class="sd">        The diagonal matrix, labeled by the same index on rows and columns.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        If a scalar, an array or a list comes without an index, if `values`</span>
+<span class="sd">        has more than one dimension or a length other than the index&#39;s, or if</span>
+<span class="sd">        a Series, Block or Vector has an index that differs from `index`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">Structure1D</span><span class="p">):</span>
+        <span class="n">values</span> <span class="o">=</span> <span class="n">values</span><span class="o">.</span><span class="n">data</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">index</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">values</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">equals</span><span class="p">(</span><span class="n">index</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;The diagonal values carry their own index, which differs from &quot;</span>
+                <span class="s2">&quot;`index`. Reindex the values first, or leave `index` out.&quot;</span>
+            <span class="p">)</span>
+        <span class="n">index</span> <span class="o">=</span> <span class="n">values</span><span class="o">.</span><span class="n">index</span>
+        <span class="n">diagonal</span> <span class="o">=</span> <span class="n">values</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">index</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;A diagonal from a scalar, an array or a list requires an index.&quot;</span>
+            <span class="p">)</span>
+        <span class="n">diagonal</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">values</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">diagonal</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">diagonal</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">index</span><span class="p">),</span> <span class="n">diagonal</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">diagonal</span><span class="o">.</span><span class="n">ndim</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Diagonal values must be a scalar or 1D, got shape </span><span class="si">{</span><span class="n">diagonal</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">.&quot;</span>
+            <span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">diagonal</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">index</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Got </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">diagonal</span><span class="p">)</span><span class="si">}</span><span class="s2"> diagonal values for an index of length </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">index</span><span class="p">)</span><span class="si">}</span><span class="s2">.&quot;</span>
+            <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">sparse</span><span class="p">:</span>
+        <span class="n">diagonal</span> <span class="o">=</span> <span class="n">diagonal</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">diagonal</span><span class="p">)</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+            <span class="c1"># normalize_fill_value reads a stored NaN as an implicit zero (#63),</span>
+            <span class="c1"># so a NaN would become a zero on the diagonal instead of an error</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Data contains NaN values.&quot;</span><span class="p">)</span>
+        <span class="c1"># Store the nonzero entries only: a zero on the diagonal is implicit</span>
+        <span class="n">stored</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">flatnonzero</span><span class="p">(</span><span class="n">diagonal</span><span class="p">)</span>
+        <span class="n">shape</span> <span class="o">=</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">diagonal</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">diagonal</span><span class="p">))</span>
+        <span class="n">matrix</span> <span class="o">=</span> <span class="n">csr_matrix</span><span class="p">((</span><span class="n">diagonal</span><span class="p">[</span><span class="n">stored</span><span class="p">],</span> <span class="p">(</span><span class="n">stored</span><span class="p">,</span> <span class="n">stored</span><span class="p">)),</span> <span class="n">shape</span><span class="o">=</span><span class="n">shape</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">frame_from_spmatrix</span><span class="p">(</span><span class="n">matrix</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">index</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="n">index</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">diagonal</span><span class="p">),</span> <span class="n">index</span><span class="o">=</span><span class="n">index</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="n">index</span><span class="p">)</span>
+
+
 <div class="viewcode-block" id="Structure2D">
 <a class="viewcode-back" href="../../reference/api/fips.base.Structure2D.html#fips.base.Structure2D">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">Structure2D</span><span class="p">(</span><span class="n">Structure</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Base class for 2D structures (Matrix).</span>
+<span class="sd">    Base class for 2D structures (MatrixBlock, Matrix).</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    data : np.ndarray</span>
-<span class="sd">        2D data.</span>
+<span class="sd">    data : np.ndarray or pd.DataFrame</span>
+<span class="sd">        2D data. For a diagonal, use :meth:`diagonal`.</span>
 <span class="sd">    name : str, optional</span>
 <span class="sd">        Name for the Structure.</span>
 <span class="sd">    index : pd.Index</span>
@@ -960,6 +1044,16 @@
 <span class="sd">        If True, store the data in pandas sparse format (fill_value=0.0).</span>
 <span class="sd">        The caller is responsible for zeroing out near-zero values before</span>
 <span class="sd">        setting sparse=True (e.g. via a threshold in the builder).</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        If `data` is a scalar or 1D (an array, a list, a Series, a Block or a</span>
+<span class="sd">        Vector).</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    Structure2D.diagonal : Build a diagonal from a scalar or 1D values.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span>
@@ -980,6 +1074,16 @@
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Initialize a 2D structure with the given data, index, and columns. Validates and sanitizes the data.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">_is_scalar_or_1d</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+            <span class="n">klass</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span>
+            <span class="n">labeled</span> <span class="o">=</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span> <span class="n">Structure1D</span><span class="p">))</span>
+            <span class="n">what</span> <span class="o">=</span> <span class="s2">&quot;a scalar&quot;</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">labeled</span> <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">ndim</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span> <span class="k">else</span> <span class="s2">&quot;1D data&quot;</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">klass</span><span class="si">}</span><span class="s2"> takes 2D data, got </span><span class="si">{</span><span class="n">what</span><span class="si">}</span><span class="s2">. For a diagonal, use &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">klass</span><span class="si">}</span><span class="s2">.diagonal(values, index=...). For a matrix of one &quot;</span>
+                <span class="s2">&quot;value, pass np.full(shape, value).&quot;</span>
+            <span class="p">)</span>
+
         <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
 
         <span class="c1"># Detect if the input data is already a sparse DataFrame so we can</span>
@@ -1010,6 +1114,86 @@
         <span class="c1"># Sparsify after sanitize (index may have been modified by _sanitize)</span>
         <span class="k">if</span> <span class="p">(</span><span class="n">sparse</span> <span class="ow">or</span> <span class="n">_input_is_sparse</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_sparse</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_sparsify</span><span class="p">()</span>
+
+<div class="viewcode-block" id="Structure2D.diagonal">
+<a class="viewcode-back" href="../../reference/api/fips.base.Structure2D.diagonal.html#fips.base.Structure2D.diagonal">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">diagonal</span><span class="p">(</span>
+        <span class="bp">cls</span><span class="p">,</span>
+        <span class="n">values</span><span class="p">:</span> <span class="s2">&quot;npt.ArrayLike | pd.Series | Structure1D&quot;</span><span class="p">,</span>
+        <span class="n">index</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Index</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">sparse</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Self</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Build a diagonal: `values` on the diagonal and zeros elsewhere.</span>
+
+<span class="sd">        The result is square, and the same index labels its rows and columns.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        values : scalar, 1D array-like, pd.Series, Block or Vector</span>
+<span class="sd">            The diagonal. A scalar puts the same value on every diagonal entry.</span>
+<span class="sd">        index : pd.Index, optional</span>
+<span class="sd">            Labels for both axes. Required for a scalar, an array or a list. A</span>
+<span class="sd">            Series, Block or Vector supplies its own index.</span>
+<span class="sd">        sparse : bool, default False</span>
+<span class="sd">            If True, store the result in pandas sparse format. The dense matrix</span>
+<span class="sd">            is never formed, so this is the way to build a large diagonal.</span>
+<span class="sd">        **kwargs</span>
+<span class="sd">            Passed to the class constructor: `name`, and for a</span>
+<span class="sd">            :class:`~fips.MatrixBlock` its `row_block` and `col_block`.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Self</span>
+<span class="sd">            The diagonal structure, of the class the method was called on.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            If a scalar, an array or a list comes without an index, if `values`</span>
+<span class="sd">            has more than one dimension or a length other than the index&#39;s, or</span>
+<span class="sd">            if a Series, Block or Vector is given with a different `index`.</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        --------</span>
+<span class="sd">        fips.CovarianceMatrix.variances : The diagonal of a covariance matrix.</span>
+<span class="sd">        fips.covariance.DiagonalError : A diagonal error component, aligned to an index by its levels.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; import pandas as pd</span>
+<span class="sd">        &gt;&gt;&gt; from fips import CovarianceMatrix, MatrixBlock</span>
+<span class="sd">        &gt;&gt;&gt; idx = pd.MultiIndex.from_product(</span>
+<span class="sd">        ...     [[&quot;obs&quot;], [&quot;a&quot;, &quot;b&quot;, &quot;c&quot;]], names=[&quot;block&quot;, &quot;site&quot;]</span>
+<span class="sd">        ... )</span>
+
+<span class="sd">        The same variance for every element, or one for each:</span>
+
+<span class="sd">        &gt;&gt;&gt; CovarianceMatrix.diagonal(0.25, index=idx).values</span>
+<span class="sd">        array([[0.25, 0.  , 0.  ],</span>
+<span class="sd">               [0.  , 0.25, 0.  ],</span>
+<span class="sd">               [0.  , 0.  , 0.25]])</span>
+<span class="sd">        &gt;&gt;&gt; S = CovarianceMatrix.diagonal([0.5, 0.5, 1.0], index=idx)</span>
+
+<span class="sd">        A Series or a Vector brings its own index, so the variances of a</span>
+<span class="sd">        covariance matrix give back its diagonal part:</span>
+
+<span class="sd">        &gt;&gt;&gt; CovarianceMatrix.diagonal(S.variances).data.equals(S.data)</span>
+<span class="sd">        True</span>
+
+<span class="sd">        A block names its row and column block, as in its constructor:</span>
+
+<span class="sd">        &gt;&gt;&gt; sites = pd.Index([&quot;a&quot;, &quot;b&quot;, &quot;c&quot;], name=&quot;site&quot;)</span>
+<span class="sd">        &gt;&gt;&gt; MatrixBlock.diagonal(</span>
+<span class="sd">        ...     0.25, index=sites, row_block=&quot;obs&quot;, col_block=&quot;obs&quot;</span>
+<span class="sd">        ... ).shape</span>
+<span class="sd">        (3, 3)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">diagonal_frame</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">index</span><span class="p">,</span> <span class="n">sparse</span><span class="o">=</span><span class="n">sparse</span><span class="p">),</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_sparsify</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>

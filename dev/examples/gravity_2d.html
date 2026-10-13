@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>2D Gravity Inversion &#8212; fips 0.1.0b10.dev31+g71773da05 documentation</title>
+    <title>2D Gravity Inversion &#8212; fips 0.1.0b10.dev35+g30d079126 documentation</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0" />
 
-    <script src="../_static/documentation_options.js?v=ff79da87"></script>
+    <script src="../_static/documentation_options.js?v=c3e73b55"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -135,8 +135,8 @@
       
     
     
-    <img src="../_static/logo.png" class="logo__image only-light" alt="fips 0.1.0b10.dev31+g71773da05 documentation - Home"/>
-    <img src="../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.1.0b10.dev31+g71773da05 documentation - Home"/>
+    <img src="../_static/logo.png" class="logo__image only-light" alt="fips 0.1.0b10.dev35+g30d079126 documentation - Home"/>
+    <img src="../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.1.0b10.dev35+g30d079126 documentation - Home"/>
   
   
 </a></div>
@@ -755,17 +755,11 @@ $<span class="math notranslate nohighlight">\(\hat{S} = S_0 - (HS_0)^T(HS_0H^T +
 
 <span class="c1"># Prior error covariance (independent prisms)</span>
 <span class="n">sigma_x</span> <span class="o">=</span> <span class="mf">0.5</span>  <span class="c1"># Prior uncertainty [g/cm³]</span>
-<span class="n">S_0</span> <span class="o">=</span> <span class="n">CovarianceMatrix</span><span class="p">(</span>
-    <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
-        <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">sigma_x</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">n_state</span><span class="p">)),</span> <span class="n">index</span><span class="o">=</span><span class="n">x_0</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="n">x_0</span><span class="o">.</span><span class="n">index</span>
-    <span class="p">)</span>
-<span class="p">)</span>
+<span class="n">S_0</span> <span class="o">=</span> <span class="n">CovarianceMatrix</span><span class="o">.</span><span class="n">diagonal</span><span class="p">(</span><span class="n">sigma_x</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">x_0</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
 
-<span class="c1"># Observation error covariance</span>
+<span class="c1"># Observation error covariance (independent observations)</span>
 <span class="n">sigma_z</span> <span class="o">=</span> <span class="mf">0.05</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">z_obs</span><span class="p">)</span>  <span class="c1"># 5% of max signal</span>
-<span class="n">S_z</span> <span class="o">=</span> <span class="n">CovarianceMatrix</span><span class="p">(</span>
-    <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">sigma_z</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">n_obs</span><span class="p">)),</span> <span class="n">index</span><span class="o">=</span><span class="n">z</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="n">z</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
-<span class="p">)</span>
+<span class="n">S_z</span> <span class="o">=</span> <span class="n">CovarianceMatrix</span><span class="o">.</span><span class="n">diagonal</span><span class="p">(</span><span class="n">sigma_z</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">z</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
 
 <span class="c1"># Forward operator</span>
 <span class="n">H_mat</span> <span class="o">=</span> <span class="n">ForwardOperator</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">H</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">z</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="n">x_0</span><span class="o">.</span><span class="n">index</span><span class="p">))</span>

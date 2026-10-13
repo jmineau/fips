@@ -62,6 +62,7 @@ Constructor
    :toctree: api/
 
    MatrixBlock
+   MatrixBlock.diagonal
 
 Attributes and underlying data
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
