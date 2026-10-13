@@ -12,7 +12,7 @@ import numpy as np
 import pandas as pd
 from scipy.sparse import csr_matrix
 
-from fips._sparse import frame_from_spmatrix
+from fips._sparse import check_fill_value, frame_from_spmatrix
 from fips.matrix import Matrix, MatrixBlock
 from fips.vector import Block, Vector
 
@@ -307,6 +307,13 @@ class ObsAggregator:
         -------
         tuple
             Aggregated (obs, forward_operator, modeldata_mismatch, constant) in the same types as the inputs.
+
+        Raises
+        ------
+        ValueError
+            If `forward_operator` is a sparse DataFrame with a `fill_value`
+            other than 0.0 or NaN: its implicit entries are not zeros, which is
+            how the aggregation reads them.
         """
 
         # Unwrap fips types to the underlying pandas object for arithmetic.
@@ -316,6 +323,9 @@ class ObsAggregator:
 
         z_df = unwrap(obs)
         H_df = unwrap(forward_operator)
+        # A bare sparse frame skips the structures' constructors, and to_coo()
+        # below reads its implicit entries as zeros whatever its fill is.
+        check_fill_value(H_df)
         S_z_df = unwrap(modeldata_mismatch)
 
         # Ensure matrices are aligned to obs.index before aggregation

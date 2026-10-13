@@ -58,6 +58,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **A sparse frame whose `fill_value` is neither 0.0 nor NaN raises a
+  `ValueError`** when it is given to `Matrix`, `CovarianceMatrix`,
+  `ForwardOperator`, `MatrixBlock`, or `ObsAggregator.apply` as the forward
+  operator. It was accepted, and fips reads the implicit entries of a sparse
+  matrix as zeros: on pandas 3, `Matrix.values` (which the solve reads) and the
+  aggregation of a bare sparse operator took the implicit entries of a frame
+  filled with 1.0 as 0.0, though `to_numpy()` gave the cells, and a frame that
+  mixed dense columns with a sparse column of such a fill had the cells that
+  fill stood for changed to 0.0 on both pandas 2 and 3. On pandas 2, `.values`
+  raised a pandas error. **If you pass a sparse frame with another fill, build
+  it with `fill_value=0.0` or hand over a dense frame** (`sparse=True` stores it
+  sparse); `astype(pd.SparseDtype(float, fill_value=0.0))` does not convert it,
+  it keeps the stored entries and turns the implicit ones into zeros. Frames
+  filled with 0.0, and with NaN (read as 0.0), are accepted as before.
+  ([#67](https://github.com/jmineau/fips/issues/67))
 - `FluxInversionPipeline.summarize` leaves out the flux trend when the `time`
   level of the flux is not datetimes, where it raised `AttributeError: 'Index'
   object has no attribute 'year'`. The trend is a rate per year, so it needs

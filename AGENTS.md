@@ -143,7 +143,14 @@ From `fips.__init__`:
   would keep the NaNs as stored entries. Before it fills, it raises on a NaN
   *stored* in the matrix (one in a column's `sp_values`, not an implicit
   entry): that NaN is data, and filling would make it a zero where the dense
-  path raises (`TestStoredNaN` in `tests/test_sparse.py`). It fills each
+  path raises (`TestStoredNaN` in `tests/test_sparse.py`). It also raises,
+  first, on any sparse column whose `fill_value` is neither 0.0 nor NaN, in a
+  frame that mixes sparse and dense columns too: the implicit entries are zeros
+  by contract, `to_coo()` reads them as zeros on pandas 3 whatever the fill is,
+  and `astype(SparseDtype(float, fill_value=0.0))` would keep the stored entries
+  and zero the implicit ones, so fips does not convert such a frame for the
+  caller (`TestNonzeroFill`). `ObsAggregator.apply` runs a bare operator frame
+  through it too, since a bare frame skips the constructors. It fills each
   column's array, not the frame: pandas 3's `DataFrame.fillna` returns a column
   that stores every row as it is, `fill_value=NaN` included, since it holds no
   NaN, and a frame that mixes fills warns (`TestFullColumn`). The fill is pinned
