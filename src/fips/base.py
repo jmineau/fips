@@ -513,8 +513,8 @@ def diagonal_frame(
     if sparse:
         diagonal = diagonal.astype(float)
         if np.isnan(diagonal).any():
-            # normalize_fill_value reads a stored NaN as an implicit zero, so a
-            # NaN would become a zero on the diagonal instead of an error
+            # normalize_fill_value reads a stored NaN as an implicit zero (#63),
+            # so a NaN would become a zero on the diagonal instead of an error
             raise ValueError("Data contains NaN values.")
         # Store the nonzero entries only: a zero on the diagonal is implicit
         stored = np.flatnonzero(diagonal)
