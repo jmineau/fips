@@ -557,7 +557,8 @@ class Structure2D(Structure):
     ------
     ValueError
         If `data` is a scalar or 1D (an array, a list, a Series, a Block or a
-        Vector).
+        Vector), or a sparse DataFrame with a `fill_value` other than 0.0 or
+        NaN: its implicit entries are not zeros, which is how fips reads them.
 
     See Also
     --------

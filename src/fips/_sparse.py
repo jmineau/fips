@@ -26,6 +26,14 @@ zero. A stored NaN is data (a missing variance, say), and on the dense path
 ``_validate`` refuses it. The two kinds of NaN can be told apart before the
 fill: a stored entry is in the column's ``sp_values``, an implicit one is not.
 So :func:`normalize_fill_value` raises on a stored NaN instead of filling it.
+
+Any other fill (``1.0``, say) cannot be re-based: its implicit entries are not
+zeros, and every consumer in fips reads them as zeros (``to_coo()`` on pandas 3
+ignores the fill and returns the stored entries only). Changing the dtype to
+``fill_value=0.0`` would turn those entries into zeros too. So
+:func:`check_fill_value`, which :func:`normalize_fill_value` calls first, raises
+on such a fill, and the caller builds the frame with a zero fill or hands over a
+dense frame.
 """
 
 from __future__ import annotations
@@ -33,7 +41,12 @@ from __future__ import annotations
 import pandas as pd
 from scipy.sparse import spmatrix
 
-__all__ = ["frame_from_spmatrix", "is_sparse_frame", "normalize_fill_value"]
+__all__ = [
+    "check_fill_value",
+    "frame_from_spmatrix",
+    "is_sparse_frame",
+    "normalize_fill_value",
+]
 
 
 def is_sparse_frame(data: pd.DataFrame) -> bool:
@@ -49,6 +62,47 @@ def _stores_nan(column: pd.Series) -> bool:
     return isinstance(values, pd.arrays.SparseArray) and bool(
         pd.isna(values.sp_values).any()
     )
+
+
+def check_fill_value(data: pd.DataFrame) -> None:
+    """
+    Raise if a sparse column of ``data`` has a fill that is neither 0.0 nor NaN.
+
+    Parameters
+    ----------
+    data : pandas.DataFrame
+        Any DataFrame. Dense columns have no fill to check, so a frame with no
+        sparse column never raises.
+
+    Raises
+    ------
+    ValueError
+        If a sparse column has a ``fill_value`` other than 0.0 or NaN: its
+        implicit entries are not zeros, and fips reads them as zeros. This
+        holds for a frame that mixes sparse and dense columns too.
+
+    Notes
+    -----
+    :func:`normalize_fill_value` calls this first, so every sparse frame that
+    enters a structure is checked. Call it directly where a bare frame skips
+    the structures and no re-based frame is needed, as in
+    ``ObsAggregator.apply``.
+    """
+    fills = [dt.fill_value for dt in data.dtypes if isinstance(dt, pd.SparseDtype)]
+    nonzero = [fill for fill in fills if not (pd.isna(fill) or fill == 0.0)]
+    if nonzero:
+        found = ", ".join(sorted({str(fill) for fill in nonzero}))
+        raise ValueError(
+            "A sparse frame must have fill_value 0.0 (or NaN, which fips reads as "
+            f"0.0), but fill_value {found} was found in {len(nonzero)} of "
+            f"{len(fills)} sparse columns. fips reads the implicit entries of a "
+            "sparse matrix as zeros, as a covariance or a Jacobian has no other "
+            "kind, so it cannot take a frame whose implicit entries are not "
+            "zeros. Build the frame with fill_value=0.0, or pass a dense frame "
+            "(sparse=True stores it sparse). Do not convert it with "
+            "astype(pd.SparseDtype(float, fill_value=0.0)): that keeps the stored "
+            "entries and turns the implicit ones into zeros."
+        )
 
 
 def normalize_fill_value(data: pd.DataFrame) -> pd.DataFrame:
@@ -71,6 +125,9 @@ def normalize_fill_value(data: pd.DataFrame) -> pd.DataFrame:
     Raises
     ------
     ValueError
+        If a sparse column has a ``fill_value`` that is neither 0.0 nor NaN
+        (see :func:`check_fill_value`).
+    ValueError
         If a column stores a NaN. Filling would make it a zero, where the
         dense path refuses it.
 
@@ -86,6 +143,7 @@ def normalize_fill_value(data: pd.DataFrame) -> pd.DataFrame:
     The check for stored NaN reads each column's stored values only, so it
     never densifies; it runs only when a fill is needed.
     """
+    check_fill_value(data)
     if not is_sparse_frame(data):
         return data
     if all(

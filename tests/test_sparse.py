@@ -5,6 +5,8 @@ Sparse storage is available in Structure2D, Matrix, ForwardOperator,
 CovarianceBuilder, and InverseProblem.
 """
 
+import pickle
+
 import numpy as np
 import pandas as pd
 import pytest
@@ -12,6 +14,7 @@ import pytest
 from fips.covariance import (
     BlockDecayError,
     CovarianceBuilder,
+    CovarianceMatrix,
     DiagonalError,
 )
 from fips.matrix import Matrix, MatrixBlock
@@ -663,3 +666,253 @@ class TestFullColumn:
             H_agg.sparse.to_dense().to_numpy(), np.full((2, 2), 0.5)
         )
         assert ForwardOperator(H_agg).is_sparse
+
+
+# ---------------------------------------------------------------------------
+# A fill that is neither 0.0 nor NaN is refused: its implicit entries are not zeros
+# ---------------------------------------------------------------------------
+
+_CELLS = np.array([[1.0, 5.0], [1.0, 1.0]])
+_SITE_PAIR = pd.Index(["a", "b"], name="site")
+
+
+def _filled_frame(fills, index=_PAIR, columns=_PAIR) -> pd.DataFrame:
+    """
+    Build `_CELLS` as a frame whose column j is sparse with fill ``fills[j]``.
+
+    A fill of None leaves the column dense. A column stores the entries that
+    differ from its fill, so with a fill of 1.0 only the 5.0 is stored and the
+    other cells are implicit.
+    """
+    columns_data = {
+        j: _CELLS[:, j]
+        if fill is None
+        else pd.arrays.SparseArray(_CELLS[:, j], fill_value=fill)
+        for j, fill in enumerate(fills)
+    }
+    frame = pd.DataFrame(columns_data, index=index)
+    frame.columns = columns
+    return frame
+
+
+def _cells(matrix) -> np.ndarray:
+    """Return the numbers a structure holds, read through `values`."""
+    values = matrix.values
+    return values.toarray() if hasattr(values, "toarray") else np.asarray(values)  # pyright: ignore[reportAttributeAccessIssue]
+
+
+class TestNonzeroFill:
+    """A sparse frame filled with anything but 0.0 (or NaN) raises."""
+
+    def test_normalize_says_what_why_and_what_to_do(self):
+        """The message names the fill found, the contract, and the two ways out."""
+        from fips._sparse import normalize_fill_value
+
+        with pytest.raises(ValueError) as error:
+            normalize_fill_value(_filled_frame((1.0, 1.0)))
+        message = str(error.value)
+        assert "fill_value 1.0 was found in 2 of 2 sparse columns" in message
+        assert "implicit entries" in message
+        assert "as zeros" in message
+        assert "fill_value=0.0" in message
+        assert "dense frame" in message
+        assert "astype" in message  # the conversion that looks right and is not
+
+    def test_normalize_counts_only_the_offending_columns(self):
+        """Columns with mixed fills: only the nonzero one is counted and named."""
+        from fips._sparse import normalize_fill_value
+
+        with pytest.raises(ValueError) as error:
+            normalize_fill_value(_filled_frame((0.0, 2.5)))
+        message = str(error.value)
+        assert "fill_value 2.5 was found in 1 of 2 sparse columns" in message
+        assert "fill_value 0.0 was" not in message
+
+    def test_normalize_names_every_fill_found(self):
+        """Two different nonzero fills are both reported."""
+        from fips._sparse import normalize_fill_value
+
+        with pytest.raises(
+            ValueError, match=r"fill_value 1\.0, 2\.5 was found in 2 of"
+        ):
+            normalize_fill_value(_filled_frame((1.0, 2.5)))
+
+    @pytest.mark.parametrize(
+        "fills",
+        [
+            (1.0, 1.0),
+            (0.0, 1.0),
+            (1.0, 0.0),
+            (np.nan, 1.0),
+            (1.0, np.nan),
+            (-3.0, -3.0),
+        ],
+        ids=[
+            "all-one",
+            "zero-then-one",
+            "one-then-zero",
+            "nan-then-one",
+            "one-then-nan",
+            "negative",
+        ],
+    )
+    @pytest.mark.parametrize(
+        "build",
+        [
+            lambda frame: Matrix(frame),
+            lambda frame: CovarianceMatrix(frame),
+            lambda frame: ForwardOperator(frame),
+            lambda frame: Matrix(frame, sparse=True),
+        ],
+        ids=["Matrix", "CovarianceMatrix", "ForwardOperator", "Matrix-sparse"],
+    )
+    def test_structures_refuse_the_frame(self, build, fills):
+        """Every 2D structure, whether every column has the fill or only one."""
+        with pytest.raises(ValueError, match="implicit entries"):
+            build(_filled_frame(fills))
+
+    @pytest.mark.parametrize("fills", [(1.0, 1.0), (0.0, 1.0)])
+    def test_matrix_block_refuses_the_frame(self, fills):
+        """A block, built directly or handed to a Matrix as a block or in a dict."""
+        frame = _filled_frame(fills, index=_SITE_PAIR, columns=_SITE_PAIR)
+        with pytest.raises(ValueError, match="implicit entries"):
+            MatrixBlock(frame, row_block="state", col_block="state")
+        with pytest.raises(ValueError, match="implicit entries"):
+            Matrix({("state", "state"): frame})
+
+    def test_a_frame_that_mixes_sparse_and_dense_columns_is_refused(self):
+        """It was accepted before, and the cell the fill stood for became 0.0."""
+        frame = _filled_frame((None, 1.0))
+        assert [str(dt) for dt in frame.dtypes] == ["float64", "Sparse[float64, 1.0]"]
+        with pytest.raises(ValueError, match="fill_value 1.0 was found in 1 of 1"):
+            Matrix(frame)
+        with pytest.raises(ValueError, match="fill_value 1.0 was found in 1 of 1"):
+            Matrix(frame, sparse=True)
+
+    @pytest.mark.parametrize(
+        "fills",
+        [(0.0, 0.0), (0, 0), (np.nan, np.nan), (np.nan, 0.0), (0.0, np.nan)],
+        ids=["zero", "int-zero", "nan", "nan-then-zero", "zero-then-nan"],
+    )
+    def test_zero_and_nan_fills_are_accepted(self, fills):
+        """0.0 as it is, NaN re-based to 0.0: same cells, one fill."""
+        frame = _filled_frame(fills)
+        matrix = Matrix(frame)
+        assert matrix.is_sparse
+        assert [dt.fill_value for dt in matrix.data.dtypes] == [0.0, 0.0]
+        np.testing.assert_array_equal(matrix.to_numpy(), _CELLS)
+        np.testing.assert_array_equal(_cells(matrix), _CELLS)
+
+    def test_implicit_nan_entries_become_zeros(self):
+        """The NaN fill still means "no entry" and reads as zero, next to a zero fill."""
+        from fips._sparse import normalize_fill_value
+
+        frame = _nan_filled_frame(stored_nan=False)
+        frame["z"] = pd.arrays.SparseArray([0.0, 7.0, 0.0], fill_value=0.0)
+        out = normalize_fill_value(frame)
+        assert [dt.fill_value for dt in out.dtypes] == [0.0, 0.0, 0.0]
+        np.testing.assert_array_equal(
+            out.sparse.to_dense().to_numpy(),
+            [[1.0, 4.0, 0.0], [2.0, 5.0, 7.0], [0.0, 0.0, 0.0]],
+        )
+
+    def test_dense_frames_are_not_affected(self):
+        """A dense frame has no fill to check."""
+        from fips._sparse import check_fill_value, normalize_fill_value
+
+        frame = pd.DataFrame(_CELLS)
+        assert check_fill_value(frame) is None
+        assert normalize_fill_value(frame) is frame
+
+    def test_check_fill_value_alone(self):
+        """The check on its own: silent for 0.0 and NaN, and it re-bases nothing."""
+        from fips._sparse import check_fill_value
+
+        for fills in [(0.0, 0.0), (np.nan, np.nan), (np.nan, 0.0)]:
+            frame = _filled_frame(fills)
+            dtypes = list(frame.dtypes)
+            assert check_fill_value(frame) is None
+            assert list(frame.dtypes) == dtypes
+        with pytest.raises(ValueError, match="fill_value 1.0 was found in 1 of 2"):
+            check_fill_value(_filled_frame((0.0, 1.0)))
+
+    # -- the routes a sparse frame reaches fips by ---------------------------
+
+    def test_obs_aggregator_refuses_a_bare_operator(self):
+        """A bare frame skips the constructors: the aggregation read its fill as zero."""
+        from fips.aggregators import ObsAggregator
+
+        obs, H, S_z = _aggregator_inputs(stored_nan=False)
+        # 0.5 fills the entries that are 0.5, which to_coo() would read as 0.0
+        H_half = pd.DataFrame(
+            {
+                j: pd.arrays.SparseArray(H.sparse.to_dense().iloc[:, j], fill_value=0.5)
+                for j in range(H.shape[1])
+            },
+            index=H.index,
+        )
+        H_half.columns = H.columns
+        with pytest.raises(ValueError, match="fill_value 0.5 was found in 2 of 2"):
+            ObsAggregator(by=_daily).apply(obs, H_half, S_z)
+        with pytest.raises(ValueError, match="fill_value 0.5 was found in 2 of 2"):
+            ObsAggregator(by=_daily).apply(obs, ForwardOperator(H_half), S_z)
+
+    def test_obs_aggregator_takes_a_zero_filled_operator(self):
+        """The same operator filled with 0.0 aggregates as before."""
+        from fips.aggregators import ObsAggregator
+
+        obs, H, S_z = _aggregator_inputs(stored_nan=False)
+        H_agg = ObsAggregator(by=_daily).apply(obs, H, S_z)[1]
+        np.testing.assert_allclose(
+            H_agg.sparse.to_dense().to_numpy(), [[0.5, 0.0], [0.0, 0.5]]
+        )
+
+    @pytest.mark.parametrize(
+        "make",
+        [
+            lambda: Matrix.diagonal([1.0, 2.0], index=_PAIR, sparse=True),
+            lambda: CovarianceMatrix.diagonal(0.5, index=_PAIR, sparse=True),
+            lambda: CovarianceMatrix(
+                CovarianceBuilder([DiagonalError("e", 2.0)]).build(_PAIR, sparse=True)
+            ),
+            lambda: Matrix(
+                pd.DataFrame(_CELLS, index=_PAIR, columns=_PAIR)
+            ).to_sparse(),
+            lambda: Matrix(
+                pd.DataFrame(_CELLS, index=_PAIR, columns=_PAIR), sparse=True
+            ),
+        ],
+        ids=[
+            "diagonal",
+            "CovarianceMatrix.diagonal",
+            "builder",
+            "to_sparse",
+            "sparse=True",
+        ],
+    )
+    def test_the_sparse_builders_make_zero_filled_frames(self, make):
+        """The routes that build a sparse frame cannot hand in another fill."""
+        matrix = make()
+        assert matrix.is_sparse
+        assert [dt.fill_value for dt in matrix.data.dtypes] == [0.0, 0.0]
+        np.testing.assert_array_equal(_cells(matrix), matrix.to_numpy())
+
+    def test_methods_of_a_valid_structure_keep_the_zero_fill(self):
+        """copy, reindex (with a fill of its own), round_index, scale and pickling."""
+        matrix = Matrix(pd.DataFrame(_CELLS, index=_PAIR, columns=_PAIR), sparse=True)
+        bigger = pd.MultiIndex.from_product(
+            [["state"], ["a", "b", "c"]], names=["block", "site"]
+        )
+        reindexed = matrix.reindex(bigger, columns=bigger, fill_value=1.0)
+        expected = matrix.to_dense().reindex(bigger, columns=bigger, fill_value=1.0)
+        np.testing.assert_array_equal(reindexed.to_numpy(), expected.to_numpy())
+        for result in (
+            matrix.copy(),
+            reindexed,
+            matrix.round_index(1, axis="both"),
+            matrix.scale(2.0),
+            pickle.loads(pickle.dumps(matrix)),
+        ):
+            assert result.is_sparse
+            assert {dt.fill_value for dt in result.data.dtypes} == {0.0}
+            np.testing.assert_array_equal(_cells(result), result.to_numpy())
