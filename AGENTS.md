@@ -143,7 +143,10 @@ From `fips.__init__`:
   would keep the NaNs as stored entries. Before it fills, it raises on a NaN
   *stored* in the matrix (one in a column's `sp_values`, not an implicit
   entry): that NaN is data, and filling would make it a zero where the dense
-  path raises (`TestStoredNaN` in `tests/test_sparse.py`). The fill is pinned
+  path raises (`TestStoredNaN` in `tests/test_sparse.py`). It fills each
+  column's array, not the frame: pandas 3's `DataFrame.fillna` returns a column
+  that stores every row as it is, `fill_value=NaN` included, since it holds no
+  NaN, and a frame that mixes fills warns (`TestFullColumn`). The fill is pinned
   by `TestSparseFillValue` there — do not drop it as redundant when pandas
   fixes the regression; drop it when the minimum pandas has the fix.
 - **Sparse paths.** `CovarianceMatrix` and large operators may be sparse.

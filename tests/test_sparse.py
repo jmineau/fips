@@ -10,6 +10,7 @@ import pandas as pd
 import pytest
 
 from fips.covariance import (
+    BlockDecayError,
     CovarianceBuilder,
     DiagonalError,
 )
@@ -563,3 +564,102 @@ class TestStoredNaN:
         np.testing.assert_allclose(dense, [[0.5, 0.0], [0.0, 0.5]])
         np.testing.assert_allclose(dense, H_dense.to_numpy())
         assert ForwardOperator(H_sparse).is_sparse
+
+
+# ---------------------------------------------------------------------------
+# A column that stores every row has no implicit entry to fill
+# ---------------------------------------------------------------------------
+
+_PAIR = pd.MultiIndex.from_product([["state"], ["a", "b"]], names=["block", "site"])
+
+
+def _full_column_frame() -> pd.DataFrame:
+    """
+    Build a sparse frame with ``fill_value=NaN`` whose first column stores every row.
+
+    pandas 3's ``from_spmatrix`` builds this from ``[[1, 0], [3, 4]]``; pandas 2's
+    fills with 0.0, so the columns are built directly. Column "a" has no implicit
+    entry, so it holds no NaN; column "b" has one, in row 0.
+    """
+    frame = pd.DataFrame(
+        {
+            "a": pd.arrays.SparseArray([1.0, 3.0], fill_value=np.nan),
+            "b": pd.arrays.SparseArray([np.nan, 4.0], fill_value=np.nan),
+        },
+        index=_PAIR,
+    )
+    frame.columns = _PAIR
+    return frame
+
+
+class TestFullColumn:
+    """A column that stores every row is re-based like the others: one fill, no warning."""
+
+    def test_normalize_rebases_the_column(self):
+        """No column keeps a NaN fill, and no cell changes."""
+        from fips._sparse import normalize_fill_value
+
+        frame = _full_column_frame()
+        out = normalize_fill_value(frame)
+        assert [dt.fill_value for dt in out.dtypes] == [0.0, 0.0]
+        np.testing.assert_array_equal(
+            out.sparse.to_dense().to_numpy(), [[1.0, 0.0], [3.0, 4.0]]
+        )
+        assert out.sparse.density == pytest.approx(frame.sparse.density)
+        pd.testing.assert_index_equal(out.index, frame.index)
+        pd.testing.assert_index_equal(out.columns, frame.columns)
+
+    def test_normalize_leaves_the_input_alone(self):
+        """The frame handed in keeps its NaN fills."""
+        from fips._sparse import normalize_fill_value
+
+        frame = _full_column_frame()
+        normalize_fill_value(frame)
+        assert all(np.isnan(dt.fill_value) for dt in frame.dtypes)
+
+    def test_structure_takes_the_frame(self):
+        """A mix of fills would warn when the structure checks the data for NaN."""
+        matrix = Matrix(_full_column_frame())
+        assert [dt.fill_value for dt in matrix.data.dtypes] == [0.0, 0.0]
+        np.testing.assert_array_equal(matrix.values.toarray(), [[1.0, 0.0], [3.0, 4.0]])
+
+    def test_frame_from_spmatrix(self):
+        """The helper every sparse build goes through."""
+        sp = pytest.importorskip("scipy.sparse")
+        from fips._sparse import frame_from_spmatrix
+
+        frame = frame_from_spmatrix(
+            sp.csr_matrix(np.array([[1.0, 0.0], [3.0, 4.0]])), _PAIR, _PAIR
+        )
+        assert [dt.fill_value for dt in frame.dtypes] == [0.0, 0.0]
+        np.testing.assert_array_equal(
+            frame.sparse.to_dense().to_numpy(), [[1.0, 0.0], [3.0, 4.0]]
+        )
+
+    def test_covariance_builder_sparse(self):
+        """A covariance whose columns hold no zero, built sparse."""
+        builder = CovarianceBuilder(
+            [
+                BlockDecayError(
+                    "e", 2.0, ["block"], lambda group: np.full((len(group),) * 2, 0.5)
+                )
+            ]
+        )
+        built = builder.build(_PAIR, sparse=True)
+        assert [dt.fill_value for dt in built.dtypes] == [0.0, 0.0]
+        np.testing.assert_allclose(built.sparse.to_dense().to_numpy(), np.ones((2, 2)))
+
+    def test_obs_aggregator_sparse_operator(self):
+        """An aggregated operator whose columns hold no zero."""
+        from fips.aggregators import ObsAggregator
+
+        obs, H, S_z = _aggregator_inputs(stored_nan=False)
+        H = pd.DataFrame(
+            np.full(H.shape, 0.5), index=H.index, columns=H.columns
+        ).astype(pd.SparseDtype(float, fill_value=0.0))
+        H_agg = ObsAggregator(by=_daily).apply(obs, H, S_z)[1]
+        assert [dt.fill_value for dt in H_agg.dtypes] == [0.0, 0.0]
+        np.testing.assert_allclose(
+            H_agg.sparse.to_dense().to_numpy(), np.full((2, 2), 0.5)
+        )
+        assert ForwardOperator(H_agg).is_sparse

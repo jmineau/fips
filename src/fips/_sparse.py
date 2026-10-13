@@ -78,7 +78,10 @@ def normalize_fill_value(data: pd.DataFrame) -> pd.DataFrame:
     -----
     Works on the values rather than on the dtype: assigning a new
     ``SparseDtype`` would keep the NaNs as stored entries, whereas filling
-    them folds them back into the implicit zeros.
+    them folds them back into the implicit zeros. Every column is filled, one
+    by one: a column that stores every row has no NaN to fill, and
+    ``DataFrame.fillna`` would leave its ``fill_value`` as NaN, so the frame
+    would mix fills (and warn when pandas combines the columns).
 
     The check for stored NaN reads each column's stored values only, so it
     never densifies; it runs only when a fill is needed.
@@ -89,10 +92,20 @@ def normalize_fill_value(data: pd.DataFrame) -> pd.DataFrame:
         dt.fill_value == 0.0 for dt in data.dtypes if isinstance(dt, pd.SparseDtype)
     ):
         return data
-    # fillna would also fill a NaN stored in the matrix, which is data
+    # filling would also fill a NaN stored in the matrix, which is data
     if any(_stores_nan(column) for _, column in data.items()):
         raise ValueError("Data contains NaN values.")
-    return data.fillna(0.0)
+    # Fill each column's array, not the frame: on pandas 3 DataFrame.fillna
+    # returns a column that holds no NaN as it is, fill_value included, and a
+    # column that stores every row holds none. It has no implicit entry, so
+    # its new fill changes no cell.
+    filled = pd.DataFrame(
+        {i: column.array.fillna(0.0) for i, (_, column) in enumerate(data.items())},
+        index=data.index,
+        copy=False,
+    )
+    filled.columns = data.columns
+    return filled
 
 
 def frame_from_spmatrix(
