@@ -118,8 +118,7 @@ From `fips.__init__`:
   fills the missing levels with NaN (`outer_align_levels`). Anything that
   selects a block back out must use `xselect` (or `Structure.xs`, which calls
   it) on every axis, never plain `DataFrame.xs`, or the block comes back with
-  the other blocks' levels (#46 was `Matrix.__getitem__` doing this for the
-  columns).
+  the other blocks' levels.
 - **Block alignment.** `MatrixBlock`s must declare correct `row_block`/
   `col_block` names; `InverseProblem` cross-checks against the obs/state
   block names. Stale names → silent misalignment.
@@ -195,7 +194,7 @@ The tooling comes from
   fixed ones with `uv run pyrefly check --prune-baseline`. `py.typed` is
   shipped — keep new public API fully typed. Fix a listed error where the type
   comes from (a correct annotation, a narrower return type), not with
-  `typing.cast`, an ignore comment or `Any`; #43 tracks emptying the baseline.
+  `typing.cast`, an ignore comment or `Any`. The aim is an empty baseline.
 - **Docstrings**: numpy convention, format docstring code blocks
   (`docstring-code-format = true`).
 - **Docs**: `docs/reference/` groups the API by topic, as pandas does. Each
@@ -297,7 +296,7 @@ when one breaks.
 
 Decided 2026-10-05 after surveying the inverse-problem libraries in other
 fields (pyemu, pyOptimalEstimation, CoFI, CUQIpy, hippylib, pylops, MNE, CIF,
-IMI, FLEXINVERT, LUMIA; see issues #21–#30). None of them provides a labeled
+IMI, FLEXINVERT, LUMIA). None of them provides a labeled
 linear-Gaussian solve with posterior covariance at flux scale, and the ones
 that come close use dense `inv`. So:
 
@@ -305,20 +304,21 @@ that come close use dense `inv`. So:
   `scipy.linalg` (Cholesky, triangular solves, `eigh`); the value of fips is
   the labeled/block layer around it, and routing arrays through an external
   solver is exactly where labels get lost. Do not add a dependency to replace
-  `BayesianSolver`; improve it in place (#22).
+  `BayesianSolver`; improve it in place.
 - **Delegate factorizations and operator plumbing to scipy.** `scipy.linalg`
   for dense factorizations, `scipy.sparse` for storage,
   `scipy.sparse.linalg.LinearOperator` as the matvec abstraction when
-  covariances or H become factored/matrix-free (#6), and
+  covariances or H become factored/matrix-free, and
   `scipy.sparse.linalg.eigsh`/`lobpcg` for low-rank posteriors before porting
   any randomized eigensolver.
 - **Optional, not required:** `pylops` (ready-made `Kronecker`/`BlockDiag`/
-  `VStack` operators — decide at #6 whether to write the few we need instead),
+  `VStack` operators — decide when covariances become factored whether to
+  write the few we need instead),
   `GSTools` (covariance models, only if `kernels.py` outgrows exponential
   decay). If adopted, they go in an extra, never in `[project]` dependencies.
-- **Never write a sampler.** If MCMC lands (#18), use PyMC or CUQIpy for
+- **Never write a sampler.** If MCMC lands, use PyMC or CUQIpy for
   sampling and ArviZ for diagnostics, as `openghg_inversions` does. Same for a
-  bounded/variational optimiser (#15, #19): `scipy.optimize`, not custom code.
+  bounded/variational optimizer: `scipy.optimize`, not custom code.
 - **The reference libraries are test oracles, not dependencies.** Their
   closed-form identities (pyOE's χ² eigenvalue forms, hippylib's `d/(1+d)`
   posterior, pyemu's Schur posterior, the Yadav & Michalak supplement code) are
