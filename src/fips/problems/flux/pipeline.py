@@ -6,6 +6,7 @@ base `InversionPipeline` to handle the specific requirements of flux
 inversion problems, such as a forward operator from transport footprints.
 """
 
+import logging
 from abc import ABC
 
 import numpy as np
@@ -15,6 +16,8 @@ from fips.filters import select_intervals_with_min_obs
 from fips.pipeline import InversionPipeline
 from fips.problems.flux.problem import FluxProblem
 from fips.vector import Vector
+
+logger = logging.getLogger(__name__)
 
 
 class FluxInversionPipeline(InversionPipeline[FluxProblem], ABC):
@@ -138,11 +141,10 @@ class FluxInversionPipeline(InversionPipeline[FluxProblem], ABC):
         """
         Print a comprehensive statistical summary of the inversion results.
 
-        Raises
-        ------
-        TypeError
-            If the posterior flux has more than two timesteps and its ``time``
-            level is not datetimes, since the trend is a rate per year.
+        The report ends with the trend of the mean posterior flux when the flux
+        has more than two timesteps. The trend is a rate per year, so it is left
+        out when the ``time`` level of the flux is not datetimes; the rest of the
+        report is the same, and the skip is logged at ``INFO`` level.
         """
         from scipy import stats
 
@@ -199,20 +201,21 @@ class FluxInversionPipeline(InversionPipeline[FluxProblem], ABC):
         trend_str = None
         if len(post_by_time) > 2:
             t = post_by_time.index
-            if not isinstance(t, pd.DatetimeIndex):
-                raise TypeError(
-                    "Cannot compute the flux trend: the 'time' level of the "
-                    f"flux has dtype {t.dtype}, not datetime."
+            if isinstance(t, pd.DatetimeIndex):
+                t_years = t.year + (t.day_of_year - 1) / 365.25
+                slope, intercept, r_value, p_value, std_err = stats.linregress(
+                    t_years, post_by_time.values
                 )
-            t_years = t.year + (t.day_of_year - 1) / 365.25
-            slope, intercept, r_value, p_value, std_err = stats.linregress(
-                t_years, post_by_time.values
-            )
-            trend_str = (
-                f"  Slope:   {slope:+.4f} /yr\n"
-                f"  R^2:     {r_value**2:.3f}\n"
-                f"  p-value: {p_value:.3g}"
-            )
+                trend_str = (
+                    f"  Slope:   {slope:+.4f} /yr\n"
+                    f"  R^2:     {r_value**2:.3f}\n"
+                    f"  p-value: {p_value:.3g}"
+                )
+            else:
+                logger.info(
+                    "Skipping the flux trend: the 'time' level of the flux has "
+                    f"dtype {t.dtype}, not datetime, and the trend is a rate per year."
+                )
 
         # --- Print Report ---
         print("==================================================")
