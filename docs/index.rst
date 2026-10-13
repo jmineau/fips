@@ -35,5 +35,4 @@ fips |release|
 ----
 
 * `Contributing Guide <https://github.com/jmineau/fips/blob/main/CONTRIBUTING.md>`_
-* :ref:`modindex`
 * :ref:`search`
