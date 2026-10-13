@@ -339,8 +339,8 @@ class FluxPlotter:
         self,
         location=None,
         location_dim="obs_location",
-        rolling_window="30d",
-        gap_threshold="7d",
+        rolling_window="30D",
+        gap_threshold="7D",
         show_raw=True,
         **kwargs,
     ):
@@ -353,9 +353,9 @@ class FluxPlotter:
             Observation location(s) to plot. If None, plots all locations.
         location_dim : str, default 'obs_location'
             Name of the location dimension in the data.
-        rolling_window : str or int, default '30d'
+        rolling_window : str or int, default '30D'
             Rolling window for smoothed lines. Passed to ``DataFrame.rolling``.
-        gap_threshold : str, default '7d'
+        gap_threshold : str, default '7D'
             Minimum gap duration to highlight as missing data.
         show_raw : bool, default True
             Whether to show raw data points behind the smoothed lines.
