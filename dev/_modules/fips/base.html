@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>fips.base &#8212; fips 0.1.0b10.dev37+g39d5c5e84 documentation</title>
+    <title>fips.base &#8212; fips 0.1.0b10.dev39+gd05ba9867 documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0" />
 
-    <script src="../../_static/documentation_options.js?v=c1d8d8d9"></script>
+    <script src="../../_static/documentation_options.js?v=ee4a2a7a"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -130,8 +130,8 @@
       
     
     
-    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.1.0b10.dev37+g39d5c5e84 documentation - Home"/>
-    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.1.0b10.dev37+g39d5c5e84 documentation - Home"/>
+    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.1.0b10.dev39+gd05ba9867 documentation - Home"/>
+    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.1.0b10.dev39+gd05ba9867 documentation - Home"/>
   
   
 </a></div>
@@ -673,6 +673,16 @@
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the values as a numpy array.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
 
+    <span class="k">def</span><span class="w"> </span><span class="nf">_with_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span> <span class="o">|</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Self</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return a new instance of this class that holds `data`.</span>
+
+<span class="sd">        The new instance keeps this one&#39;s name. A subclass whose constructor</span>
+<span class="sd">        takes more than `data` and `name` overrides this to pass those too, so</span>
+<span class="sd">        that every method that rebuilds the structure keeps them.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)(</span><span class="n">data</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>  <span class="c1"># type: ignore[call-arg]</span>
+
 <div class="viewcode-block" id="Structure.reindex">
 <a class="viewcode-back" href="../../reference/api/fips.base.Structure.reindex.html#fips.base.Structure.reindex">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">reindex</span><span class="p">(</span>
@@ -755,7 +765,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">data</span>
             <span class="k">return</span> <span class="bp">self</span>
 
-        <span class="k">return</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)(</span><span class="n">data</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>  <span class="c1"># type: ignore[call-arg]  # create new instance</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_with_data</span><span class="p">(</span><span class="n">data</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="Structure.round_index">
@@ -793,7 +803,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">data</span>
             <span class="k">return</span> <span class="bp">self</span>
 
-        <span class="k">return</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)(</span><span class="n">data</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>  <span class="c1"># type: ignore[call-arg]</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_with_data</span><span class="p">(</span><span class="n">data</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="Structure.copy">
@@ -812,7 +822,7 @@
 <span class="sd">        Structure</span>
 <span class="sd">            Copy of the structure instance.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">deep</span><span class="o">=</span><span class="n">deep</span><span class="p">),</span> <span class="n">name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>  <span class="c1"># type: ignore[call-arg]</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_with_data</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">deep</span><span class="o">=</span><span class="n">deep</span><span class="p">))</span></div>
 
 
 <div class="viewcode-block" id="Structure.xs">
@@ -1084,7 +1094,7 @@
 
         <span class="c1"># Detect if the input data is already a sparse DataFrame so we can</span>
         <span class="c1"># preserve sparsity when constructing from an existing sparse structure</span>
-        <span class="c1"># (e.g. inside reindex() which calls type(self)(data, name=self.name)).</span>
+        <span class="c1"># (e.g. inside reindex(), which builds the new instance with _with_data()).</span>
         <span class="n">_input_is_sparse</span> <span class="o">=</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">any</span><span class="p">(</span>
             <span class="nb">isinstance</span><span class="p">(</span><span class="n">dt</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">SparseDtype</span><span class="p">)</span> <span class="k">for</span> <span class="n">dt</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">dtypes</span>
         <span class="p">)</span>
@@ -1230,7 +1240,7 @@
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return a copy with dense internal storage.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_sparse</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span>
-        <span class="k">return</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">sparse</span><span class="o">.</span><span class="n">to_dense</span><span class="p">(),</span> <span class="n">name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_with_data</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">sparse</span><span class="o">.</span><span class="n">to_dense</span><span class="p">())</span></div>
 
 
 <div class="viewcode-block" id="Structure2D.to_sparse">
