@@ -61,6 +61,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- `plot_comparison` accepts `None` as the error of a series when another series
+  has one: `plot_comparison(a, b, errors=[None, err])` raised `KeyError` (and
+  `errors=[None]` or all `None` raised `ValueError`). A series with no error is
+  plotted without a band or error bars, and the others keep theirs. The error
+  you pass is no longer renamed after its series, which also made
+  `errors=[err, err]` (one error for two series) raise `KeyError`, and an
+  unnamed series is matched with its own error by position.
+  ([#57](https://github.com/jmineau/fips/issues/57))
 - `FluxPlotter.concentrations` no longer warns on pandas 3 when called with its
   default windows. `rolling_window` and `gap_threshold` defaulted to `"30d"` and
   `"7d"`, and pandas 3 deprecates the lowercase `d` alias (`Pandas4Warning`);
