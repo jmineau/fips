@@ -16,7 +16,7 @@ import pandas as pd
 from joblib import Parallel, delayed
 from scipy.sparse import csr_matrix
 
-from fips._sparse import normalize_fill_value
+from fips._sparse import frame_from_spmatrix
 from fips.matrix import Matrix
 from fips.vector import Vector
 
@@ -163,12 +163,7 @@ class CovarianceBuilder:
         )
 
         if sparse:
-            # from_spmatrix fills with NaN on pandas 3; see fips._sparse
-            return normalize_fill_value(
-                pd.DataFrame.sparse.from_spmatrix(
-                    csr_matrix(S), index=index, columns=index
-                )
-            )
+            return frame_from_spmatrix(csr_matrix(S), index=index, columns=index)
         return pd.DataFrame(S, index=index, columns=index)
 
     def __add__(self, other):

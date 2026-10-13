@@ -25,8 +25,9 @@ Sparsity is preserved -- only the fill changes, nothing is densified.
 from __future__ import annotations
 
 import pandas as pd
+from scipy.sparse import spmatrix
 
-__all__ = ["is_sparse_frame", "normalize_fill_value"]
+__all__ = ["frame_from_spmatrix", "is_sparse_frame", "normalize_fill_value"]
 
 
 def is_sparse_frame(data: pd.DataFrame) -> bool:
@@ -65,3 +66,32 @@ def normalize_fill_value(data: pd.DataFrame) -> pd.DataFrame:
     ):
         return data
     return data.fillna(0.0)
+
+
+def frame_from_spmatrix(
+    matrix: spmatrix, index: pd.Index, columns: pd.Index
+) -> pd.DataFrame:
+    """
+    Build a sparse DataFrame whose implicit entries are ``0.0`` from a scipy matrix.
+
+    This is ``pandas.DataFrame.sparse.from_spmatrix`` followed by
+    :func:`normalize_fill_value`, which pandas 3 makes necessary. Build every
+    sparse frame from a scipy matrix here, so none skips the second step.
+
+    Parameters
+    ----------
+    matrix : scipy.sparse.spmatrix
+        The matrix to wrap. Its unstored entries are zeros.
+    index : pandas.Index
+        Row labels.
+    columns : pandas.Index
+        Column labels.
+
+    Returns
+    -------
+    pandas.DataFrame
+        A sparse frame with ``fill_value=0.0`` and the density of `matrix`.
+    """
+    return normalize_fill_value(
+        pd.DataFrame.sparse.from_spmatrix(matrix, index=index, columns=columns)
+    )

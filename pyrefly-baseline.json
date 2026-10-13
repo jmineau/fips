@@ -1,8 +1,8 @@
 {
   "errors": [
     {
-      "column": 17,
-      "path": "src/fips/aggregators.py",
+      "column": 9,
+      "path": "src/fips/_sparse.py",
       "name": "missing-attribute",
       "concise_description": "Object of class `EllipsisType` has no attribute `from_spmatrix`",
       "severity": "error"
@@ -82,13 +82,6 @@
       "path": "src/fips/covariance.py",
       "name": "bad-argument-type",
       "concise_description": "Argument `list[Hashable | None]` is not assignable to parameter `on` with type `list[str] | str | None` in function `pandas.core.frame.DataFrame.join`",
-      "severity": "error"
-    },
-    {
-      "column": 17,
-      "path": "src/fips/covariance.py",
-      "name": "missing-attribute",
-      "concise_description": "Object of class `EllipsisType` has no attribute `from_spmatrix`",
       "severity": "error"
     },
     {

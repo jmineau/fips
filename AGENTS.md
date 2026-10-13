@@ -128,9 +128,11 @@ From `fips.__init__`:
   `.sparse.to_coo()` and `_validate` rejects NaN. pandas 3's
   `DataFrame.sparse.from_spmatrix` builds float frames with `fill_value=NaN`
   (pandas-dev/pandas#59212), so **every** sparse frame entering fips goes
-  through `fips._sparse.normalize_fill_value` first — the two `from_spmatrix`
-  call sites (`CovarianceBuilder.build(sparse=True)`,
-  `ObsAggregator._build_operator`) and `Structure2D.__init__`, which is what
+  through `fips._sparse.normalize_fill_value` first. Build a sparse frame from
+  a scipy matrix with `fips._sparse.frame_from_spmatrix`, which does both
+  steps and is the only `from_spmatrix` call in the package
+  (`CovarianceBuilder.build(sparse=True)` and `ObsAggregator._build_operator`
+  use it); `Structure2D.__init__` normalizes too, which is what
   lets a user hand in a pandas-native sparse frame instead of being told it
   "contains NaN". It fills rather than re-typing: assigning a new SparseDtype
   would keep the NaNs as stored entries. Pinned by `TestSparseFillValue` in
