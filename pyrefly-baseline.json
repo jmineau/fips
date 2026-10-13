@@ -71,7 +71,7 @@
       "severity": "error"
     },
     {
-      "column": 27,
+      "column": 32,
       "path": "src/fips/base.py",
       "name": "missing-attribute",
       "concise_description": "Object of class `EllipsisType` has no attribute `to_dense`",

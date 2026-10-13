@@ -199,6 +199,16 @@ class Structure(Pickleable, ABC):
         """Return the values as a numpy array."""
         return self.to_numpy()
 
+    def _with_data(self, data: pd.Series | pd.DataFrame) -> Self:
+        """
+        Return a new instance of this class that holds `data`.
+
+        The new instance keeps this one's name. A subclass whose constructor
+        takes more than `data` and `name` overrides this to pass those too, so
+        that every method that rebuilds the structure keeps them.
+        """
+        return type(self)(data, name=self.name)  # type: ignore[call-arg]
+
     def reindex(
         self,
         index: pd.Index,
@@ -279,7 +289,7 @@ class Structure(Pickleable, ABC):
             self.data = data
             return self
 
-        return type(self)(data, name=self.name)  # type: ignore[call-arg]  # create new instance
+        return self._with_data(data)
 
     def round_index(
         self, decimals: int, axis: int | Literal["both"] = 0, inplace: bool = False
@@ -314,7 +324,7 @@ class Structure(Pickleable, ABC):
             self.data = data
             return self
 
-        return type(self)(data, name=self.name)  # type: ignore[call-arg]
+        return self._with_data(data)
 
     def copy(self, deep: bool = True) -> Self:
         """
@@ -330,7 +340,7 @@ class Structure(Pickleable, ABC):
         Structure
             Copy of the structure instance.
         """
-        return type(self)(self.data.copy(deep=deep), name=self.name)  # type: ignore[call-arg]
+        return self._with_data(self.data.copy(deep=deep))
 
     def xs(self, key, axis=0, level=None, drop_level=True):
         """
@@ -586,7 +596,7 @@ class Structure2D(Structure):
 
         # Detect if the input data is already a sparse DataFrame so we can
         # preserve sparsity when constructing from an existing sparse structure
-        # (e.g. inside reindex() which calls type(self)(data, name=self.name)).
+        # (e.g. inside reindex(), which builds the new instance with _with_data()).
         _input_is_sparse = isinstance(data, pd.DataFrame) and any(
             isinstance(dt, pd.SparseDtype) for dt in data.dtypes
         )
@@ -724,7 +734,7 @@ class Structure2D(Structure):
         """Return a copy with dense internal storage."""
         if not self.is_sparse:
             return self
-        return type(self)(self.data.sparse.to_dense(), name=self.name)
+        return self._with_data(self.data.sparse.to_dense())
 
     def to_sparse(self, threshold: float | None = None) -> "Structure2D":
         """

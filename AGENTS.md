@@ -119,6 +119,12 @@ From `fips.__init__`:
   selects a block back out must use `xselect` (or `Structure.xs`, which calls
   it) on every axis, never plain `DataFrame.xs`, or the block comes back with
   the other blocks' levels.
+- **A new instance of a structure is made with `Structure._with_data`.**
+  `reindex`, `round_index`, `copy` and `to_dense` build their result with it,
+  never with `type(self)(data, name=...)`. A subclass whose constructor takes
+  more than `data` and `name` overrides it to pass the rest on
+  (`MatrixBlock`: `row_block`, `col_block`); a field that is not passed on is
+  lost by every one of those methods.
 - **Block alignment.** `MatrixBlock`s must declare correct `row_block`/
   `col_block` names; `InverseProblem` cross-checks against the obs/state
   block names. Stale names → silent misalignment.
