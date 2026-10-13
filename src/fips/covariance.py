@@ -17,6 +17,7 @@ from joblib import Parallel, delayed
 from scipy.sparse import csr_matrix
 
 from fips._sparse import frame_from_spmatrix
+from fips.base import diagonal_frame
 from fips.matrix import Matrix
 from fips.vector import Vector
 
@@ -194,9 +195,7 @@ class DiagonalError(ErrorComponent):
     def build(self, index: pd.MultiIndex, **kwargs) -> pd.DataFrame:
         """Build diagonal covariance matrix."""
         variances = self._align_variances(index)
-        cov_matrix = np.diag(variances)
-        df = pd.DataFrame(cov_matrix, index=index, columns=index)
-        return df
+        return diagonal_frame(variances.to_numpy(), index)
 
     def __repr__(self) -> str:
         """Return string representation."""

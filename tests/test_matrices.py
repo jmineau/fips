@@ -7,93 +7,316 @@ import pytest
 from fips.covariance import CovarianceMatrix
 from fips.matrix import Matrix, MatrixBlock
 from fips.operators import ForwardOperator
+from fips.vector import Block, Vector
 
 # A scalar in each form a caller might pass: Python float and int, a NumPy scalar, a 0-d array
 SCALARS = [5.0, 5, np.float64(5.0), np.array(5.0)]
 
+MATRIX_TYPES = [Matrix, CovarianceMatrix, ForwardOperator]
 
-class TestMatrix:
-    """Tests for base Matrix class."""
 
-    @pytest.mark.parametrize("matrix_type", [Matrix, CovarianceMatrix])
-    @pytest.mark.parametrize("container", [list, np.array])
-    @pytest.mark.parametrize("sparse", [False, True])
-    def test_diagonal_values_use_supplied_index(self, matrix_type, container, sparse):
-        """Diagonal inputs preserve their labels in dense and sparse matrices."""
-        values = container([1.0, 2.0, 3.0])
-        index = pd.MultiIndex.from_tuples(
-            [("state", "c"), ("state", "a"), ("state", "b")],
-            names=["block", "site"],
-        )
+@pytest.fixture
+def index():
+    """A block-level index whose labels are not in sorted order."""
+    return pd.MultiIndex.from_tuples(
+        [("state", "c"), ("state", "a"), ("state", "b")],
+        names=["block", "site"],
+    )
 
-        matrix = matrix_type(values, index=index, sparse=sparse)
 
-        pd.testing.assert_index_equal(matrix.index, index)
-        pd.testing.assert_index_equal(matrix.columns, index)
-        actual = matrix.values.toarray() if sparse else matrix.values
-        np.testing.assert_array_equal(actual, np.diag(values))
-        assert isinstance(matrix, matrix_type)
+@pytest.fixture
+def sites():
+    """The same labels without a block level, as a MatrixBlock takes them."""
+    return pd.Index(["c", "a", "b"], name="site")
 
-    @pytest.mark.parametrize("matrix_type", [Matrix, CovarianceMatrix])
-    @pytest.mark.parametrize("container", [list, np.array])
-    def test_diagonal_values_require_an_index(self, matrix_type, container):
-        """Unlabeled diagonal values explain the required row index."""
-        with pytest.raises(ValueError, match="1D data requires an index"):
-            matrix_type(container([1.0, 2.0, 3.0]))
 
-    @pytest.mark.parametrize("matrix_type", [Matrix, CovarianceMatrix])
+def dense(structure):
+    """The values of a 2D structure as a dense array."""
+    return structure.values.toarray() if structure.is_sparse else structure.values
+
+
+class TestDiagonal:
+    """Tests for the `diagonal` constructor of the 2D structures."""
+
+    @pytest.mark.parametrize("matrix_type", MATRIX_TYPES)
     @pytest.mark.parametrize("scalar", SCALARS, ids=lambda s: type(s).__name__)
     @pytest.mark.parametrize("sparse", [False, True])
-    def test_scalar_builds_a_diagonal(self, matrix_type, scalar, sparse):
+    def test_scalar(self, matrix_type, scalar, sparse, index):
         """A scalar or 0-d array puts its value on the diagonal and zeros elsewhere."""
-        index = pd.MultiIndex.from_tuples(
-            [("state", "c"), ("state", "a"), ("state", "b")],
-            names=["block", "site"],
-        )
+        matrix = matrix_type.diagonal(scalar, index=index, sparse=sparse)
 
-        matrix = matrix_type(scalar, index=index, sparse=sparse)
+        assert isinstance(matrix, matrix_type)
+        assert matrix.is_sparse is sparse
+        pd.testing.assert_index_equal(matrix.index, index)
+        pd.testing.assert_index_equal(matrix.columns, index)
+        np.testing.assert_array_equal(dense(matrix), 5.0 * np.eye(3))
+
+    @pytest.mark.parametrize("matrix_type", MATRIX_TYPES)
+    @pytest.mark.parametrize("container", [list, tuple, np.array])
+    @pytest.mark.parametrize("sparse", [False, True])
+    def test_values_use_supplied_index(self, matrix_type, container, sparse, index):
+        """A 1D array, list or tuple is the diagonal and keeps its labels on both axes."""
+        values = container([1.0, 2.0, 3.0])
+
+        matrix = matrix_type.diagonal(values, index=index, sparse=sparse)
+
+        assert isinstance(matrix, matrix_type)
+        assert matrix.is_sparse is sparse
+        pd.testing.assert_index_equal(matrix.index, index)
+        pd.testing.assert_index_equal(matrix.columns, index)
+        np.testing.assert_array_equal(dense(matrix), np.diag([1.0, 2.0, 3.0]))
+
+    @pytest.mark.parametrize("wrap", [lambda s: s, Vector], ids=["series", "vector"])
+    @pytest.mark.parametrize("sparse", [False, True])
+    def test_labeled_values_supply_their_index(self, wrap, sparse, index):
+        """A Series or a Vector is the diagonal, labeled by its own index."""
+        series = pd.Series([1.0, 2.0, 3.0], index=index, name="variance")
+
+        matrix = CovarianceMatrix.diagonal(wrap(series), sparse=sparse)
 
         pd.testing.assert_index_equal(matrix.index, index)
         pd.testing.assert_index_equal(matrix.columns, index)
-        actual = matrix.values.toarray() if sparse else matrix.values
-        np.testing.assert_array_equal(actual, 5.0 * np.eye(3))
-        assert isinstance(matrix, matrix_type)
+        np.testing.assert_array_equal(dense(matrix), np.diag([1.0, 2.0, 3.0]))
 
-    @pytest.mark.parametrize("matrix_type", [Matrix, CovarianceMatrix])
+    def test_labeled_values_accept_their_own_index(self, index):
+        """Passing the index a Series already has changes nothing."""
+        series = pd.Series([1.0, 2.0, 3.0], index=index)
+
+        with_index = Matrix.diagonal(series, index=index)
+
+        pd.testing.assert_frame_equal(with_index.data, Matrix.diagonal(series).data)
+
+    def test_labeled_values_refuse_another_index(self, index):
+        """A Series is not silently relabeled or reordered by a different index."""
+        series = pd.Series([1.0, 2.0, 3.0], index=index)
+
+        with pytest.raises(ValueError, match="carry their own index"):
+            Matrix.diagonal(series, index=index[::-1])
+
     @pytest.mark.parametrize("size", [1, 3])
-    def test_scalar_matches_1d_input_of_the_same_value(self, matrix_type, size):
-        """A scalar builds what a 1D input of that value on every entry builds."""
+    def test_scalar_matches_values_of_the_same_number(self, size):
+        """A scalar builds what 1D values of that number on every entry build."""
         index = pd.MultiIndex.from_product(
             [["state"], range(size)], names=["block", "i"]
         )
 
-        from_scalar = matrix_type(5.0, index=index)
-        from_list = matrix_type([5.0] * size, index=index)
+        from_scalar = Matrix.diagonal(5.0, index=index)
+        from_list = Matrix.diagonal([5.0] * size, index=index)
 
         pd.testing.assert_frame_equal(from_scalar.data, from_list.data)
 
-    def test_scalar_labels_both_axes_with_index(self):
-        """Columns are not used for a scalar, as for a 1D input: the matrix is square."""
-        index = pd.MultiIndex.from_product([["state"], [0, 1, 2]], names=["block", "i"])
-        columns = pd.MultiIndex.from_product([["state"], [0, 1]], names=["block", "i"])
+    @pytest.mark.parametrize("values", [5.0, [0.0, 2.0, 3.0]], ids=["scalar", "list"])
+    def test_sparse_equals_dense(self, values, index):
+        """The sparse diagonal holds the numbers of the dense one, zeros included."""
+        sparse = CovarianceMatrix.diagonal(values, index=index, sparse=True)
+        dense_ = CovarianceMatrix.diagonal(values, index=index)
 
-        matrix = Matrix(5.0, index=index, columns=columns)
+        assert sparse.is_sparse and not dense_.is_sparse
+        np.testing.assert_array_equal(sparse.values.toarray(), dense_.values)
+        pd.testing.assert_frame_equal(sparse.to_dense().data, dense_.data.astype(float))
 
-        assert matrix.shape == (3, 3)
-        pd.testing.assert_index_equal(matrix.columns, index)
+    def test_sparse_stores_only_the_diagonal(self):
+        """A sparse diagonal stores n values, not n squared."""
+        n = 500
+        index = pd.MultiIndex.from_product([["state"], range(n)], names=["block", "i"])
 
-    @pytest.mark.parametrize("matrix_type", [Matrix, CovarianceMatrix])
+        matrix = CovarianceMatrix.diagonal(2.0, index=index, sparse=True)
+
+        assert matrix.values.nnz == n
+        assert matrix.data.sparse.density == pytest.approx(1 / n)
+
+    def test_variances_give_back_the_diagonal(self, index):
+        """`diagonal` is the inverse of `CovarianceMatrix.variances`."""
+        cov = CovarianceMatrix.diagonal([1.0, 2.0, 3.0], index=index)
+
+        again = CovarianceMatrix.diagonal(cov.variances)
+
+        pd.testing.assert_frame_equal(again.data, cov.data)
+
+    def test_name_goes_to_the_constructor(self, index):
+        """Keyword arguments other than `index` and `sparse` reach the constructor."""
+        matrix = Matrix.diagonal(5.0, index=index, name="prior_error")
+
+        assert matrix.name == "prior_error"
+
     @pytest.mark.parametrize("scalar", SCALARS, ids=lambda s: type(s).__name__)
-    def test_scalar_requires_an_index(self, matrix_type, scalar):
-        """An unlabeled scalar explains the required row index, as a 1D input does."""
-        with pytest.raises(ValueError, match="Scalar data requires an index"):
-            matrix_type(scalar)
+    def test_scalar_requires_an_index(self, scalar):
+        """An unlabeled scalar says that it needs an index."""
+        with pytest.raises(ValueError, match="requires an index"):
+            Matrix.diagonal(scalar)
 
-    def test_nan_scalar_is_rejected(self):
-        """A NaN scalar raises the NaN error rather than building a matrix."""
-        index = pd.MultiIndex.from_product([["state"], [0, 1]], names=["block", "i"])
+    @pytest.mark.parametrize("container", [list, tuple, np.array])
+    def test_values_require_an_index(self, container):
+        """Unlabeled 1D values say that they need an index."""
+        with pytest.raises(ValueError, match="requires an index"):
+            Matrix.diagonal(container([1.0, 2.0, 3.0]))
+
+    def test_values_must_match_the_index_length(self, index):
+        """Too few or too many values raise, naming both lengths."""
+        with pytest.raises(ValueError, match="2 diagonal values.*length 3"):
+            Matrix.diagonal([1.0, 2.0], index=index)
+
+    def test_2d_values_are_refused(self, index):
+        """A 2D array is a matrix, not a diagonal."""
+        with pytest.raises(ValueError, match="scalar or 1D"):
+            Matrix.diagonal(np.eye(3), index=index)
+
+    @pytest.mark.parametrize("sparse", [False, True])
+    def test_nan_is_rejected(self, sparse, index):
+        """A NaN value raises the NaN error rather than building a matrix."""
         with pytest.raises(ValueError, match="NaN"):
-            Matrix(np.nan, index=index)
+            Matrix.diagonal([1.0, np.nan, 3.0], index=index, sparse=sparse)
+
+    def test_matrix_needs_a_block_level(self, sites):
+        """A Matrix diagonal is validated like any Matrix."""
+        with pytest.raises(ValueError, match="'block' level"):
+            Matrix.diagonal(5.0, index=sites)
+
+    @pytest.mark.parametrize("scalar", SCALARS, ids=lambda s: type(s).__name__)
+    @pytest.mark.parametrize("sparse", [False, True])
+    def test_block_from_scalar(self, scalar, sparse, sites):
+        """A MatrixBlock diagonal takes the block names its constructor takes."""
+        block = MatrixBlock.diagonal(
+            scalar, index=sites, row_block="state", col_block="state", sparse=sparse
+        )
+
+        assert isinstance(block, MatrixBlock)
+        assert (block.row_block, block.col_block) == ("state", "state")
+        assert block.name == "state_state"
+        pd.testing.assert_index_equal(block.index, sites)
+        pd.testing.assert_index_equal(block.columns, sites)
+        np.testing.assert_array_equal(dense(block), 5.0 * np.eye(3))
+
+    @pytest.mark.parametrize(
+        "wrap", [lambda s: s, lambda s: Block(s)], ids=["series", "block"]
+    )
+    def test_block_from_labeled_values(self, wrap, sites):
+        """A Series or a Block is the diagonal of a block, labeled by its own index."""
+        series = pd.Series([1.0, 2.0, 3.0], index=sites, name="var")
+
+        block = MatrixBlock.diagonal(wrap(series), row_block="state", col_block="state")
+
+        pd.testing.assert_index_equal(block.index, sites)
+        pd.testing.assert_index_equal(block.columns, sites)
+        np.testing.assert_array_equal(block.values, np.diag([1.0, 2.0, 3.0]))
+        assert block.name == "state_state"
+
+    def test_block_needs_its_block_names(self, sites):
+        """A MatrixBlock diagonal without block names fails as its constructor does."""
+        with pytest.raises(ValueError, match="row_block and col_block"):
+            MatrixBlock.diagonal(5.0, index=sites)
+
+    def test_diagonal_block_assembles_into_a_matrix(self):
+        """A diagonal block in a Matrix is the diagonal of that block's rows and columns."""
+        flux = pd.Index(["a", "b"], name="site")
+        bias = pd.Index(["x"], name="instrument")
+
+        matrix = CovarianceMatrix(
+            [
+                MatrixBlock(np.full((2, 2), 0.5), "flux", "flux", index=flux),
+                MatrixBlock.diagonal(
+                    2.0, index=bias, row_block="bias", col_block="bias"
+                ),
+            ]
+        )
+
+        np.testing.assert_array_equal(
+            matrix.blocks["bias", "bias"].values, 2.0 * np.eye(1)
+        )
+        np.testing.assert_array_equal(
+            matrix.blocks["flux", "flux"].values, np.full((2, 2), 0.5)
+        )
+        np.testing.assert_array_equal(
+            matrix["flux", "bias"].to_numpy(), np.zeros((2, 1))
+        )
+
+
+class TestConstructorsTake2DData:
+    """A scalar or 1D input to a 2D structure raises and names `diagonal`."""
+
+    @pytest.mark.parametrize("matrix_type", MATRIX_TYPES)
+    @pytest.mark.parametrize("scalar", SCALARS, ids=lambda s: type(s).__name__)
+    def test_matrix_refuses_a_scalar(self, matrix_type, scalar, index):
+        """A scalar is not a matrix: the error names the class and both ways out."""
+        name = matrix_type.__name__
+        with pytest.raises(
+            ValueError,
+            match=rf"{name} takes 2D data, got a scalar.*{name}\.diagonal.*np\.full",
+        ):
+            matrix_type(scalar, index=index)
+
+    @pytest.mark.parametrize("matrix_type", MATRIX_TYPES)
+    @pytest.mark.parametrize("container", [list, tuple, np.array])
+    def test_matrix_refuses_1d_values(self, matrix_type, container, index):
+        """A 1D array, list or tuple is not a matrix."""
+        name = matrix_type.__name__
+        with pytest.raises(
+            ValueError, match=rf"{name} takes 2D data, got 1D data.*{name}\.diagonal"
+        ):
+            matrix_type(container([1.0, 2.0, 3.0]), index=index)
+
+    @pytest.mark.parametrize("wrap", [lambda s: s, Vector], ids=["series", "vector"])
+    def test_matrix_refuses_labeled_values(self, wrap, index):
+        """A Series or a Vector is 1D data, with or without an index argument."""
+        series = pd.Series([1.0, 2.0, 3.0], index=index)
+
+        with pytest.raises(ValueError, match="takes 2D data, got 1D data"):
+            CovarianceMatrix(wrap(series))
+
+    @pytest.mark.parametrize(
+        "data",
+        [
+            5.0,
+            np.array(5.0),
+            [1.0, 2.0, 3.0],
+            np.array([1.0, 2.0, 3.0]),
+            pd.Series([1.0, 2.0, 3.0], index=pd.Index(["c", "a", "b"], name="site")),
+        ],
+        ids=["float", "0-d", "list", "array", "series"],
+    )
+    @pytest.mark.parametrize("with_columns", [False, True])
+    def test_block_refuses_scalar_and_1d(self, data, with_columns, sites):
+        """A MatrixBlock refuses them too, whether or not `columns` is given."""
+        columns = pd.Index(["u", "v"], name="other") if with_columns else None
+
+        with pytest.raises(
+            ValueError, match=r"MatrixBlock takes 2D data.*MatrixBlock\.diagonal"
+        ):
+            MatrixBlock(data, "r", "c", index=sites, columns=columns)
+
+    def test_dict_values_are_2d_too(self, sites):
+        """The dict shorthand builds blocks, so a scalar value is refused there as well."""
+        with pytest.raises(ValueError, match="MatrixBlock takes 2D data, got a scalar"):
+            Matrix({("state", "state"): 5.0})
+
+    def test_matrix_of_one_value_from_an_array(self, index):
+        """The way to a matrix of one value is a 2D array."""
+        matrix = Matrix(np.full((3, 3), 5.0), index=index)
+
+        np.testing.assert_array_equal(matrix.values, np.full((3, 3), 5.0))
+
+    def test_rectangular_block_of_one_value_from_an_array(self, sites):
+        """A rectangular block of one value is a 2D array with its own columns."""
+        columns = pd.Index(["u", "v"], name="other")
+
+        block = MatrixBlock(
+            np.zeros((3, 2)), "obs", "state", index=sites, columns=columns
+        )
+
+        assert block.shape == (3, 2)
+        pd.testing.assert_index_equal(block.columns, columns)
+
+    def test_one_by_one_array_is_2d(self):
+        """A 1-by-1 array is 2D data, not a scalar."""
+        index = pd.MultiIndex.from_product([["state"], [0]], names=["block", "i"])
+
+        matrix = Matrix(np.array([[5.0]]), index=index)
+
+        assert matrix.shape == (1, 1)
+
+
+class TestMatrix:
+    """Tests for base Matrix class."""
 
     def test_matrix_creation(self):
         """Test basic Matrix creation from MatrixBlock."""

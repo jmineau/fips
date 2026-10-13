@@ -131,11 +131,14 @@ From `fips.__init__`:
   through `fips._sparse.normalize_fill_value` first. Build a sparse frame from
   a scipy matrix with `fips._sparse.frame_from_spmatrix`, which does both
   steps and is the only `from_spmatrix` call in the package
-  (`CovarianceBuilder.build(sparse=True)` and `ObsAggregator._build_operator`
-  use it); `Structure2D.__init__` normalizes too, which is what
+  (`CovarianceBuilder.build(sparse=True)`, `ObsAggregator._build_operator` and
+  `diagonal_frame` use it); `Structure2D.__init__` normalizes too, which is what
   lets a user hand in a pandas-native sparse frame instead of being told it
   "contains NaN". It fills rather than re-typing: assigning a new SparseDtype
-  would keep the NaNs as stored entries. Pinned by `TestSparseFillValue` in
+  would keep the NaNs as stored entries. The cost: a NaN that is *stored* in
+  the scipy matrix is read as a zero too and never reaches `_validate`, so
+  code that builds a sparse frame from values a caller gave checks them for
+  NaN first, as `diagonal_frame` does. Pinned by `TestSparseFillValue` in
   `tests/test_sparse.py` — do not drop it as redundant when pandas fixes the
   regression; drop it when the minimum pandas has the fix.
 - **Sparse paths.** `CovarianceMatrix` and large operators may be sparse.
@@ -350,12 +353,17 @@ covariance). See README "Multi-block" example.
 
 ## Gotchas
 
-- A scalar (or 0-d array), 1D array or list passed to `Matrix` or
-  `CovarianceMatrix` builds a diagonal and requires an explicit index with the
-  named `block` level. The index labels both axes (`columns` is not used); a
-  Series supplies its own index. A scalar means a 1D input with that value on
-  every entry (#50); a constant rectangular matrix is `np.full((n, m), value)`.
-  Check an optional pandas index with `is None`, since evaluating its truth
+- **The 2D structures take 2D data only.** A scalar, a 1D array or list, a
+  Series, a `Block` or a `Vector` passed to `Matrix`, `CovarianceMatrix`,
+  `ForwardOperator` or `MatrixBlock` raises a `ValueError` that names
+  `diagonal`. A diagonal is built by the classmethod `Structure2D.diagonal(values,
+  index=...)`, which every one of them inherits (#61): the index labels both
+  axes, a Series or `Vector` supplies its own, and `sparse=True` never forms the
+  dense matrix. Do not add a branch on the shape of `data` to a constructor;
+  `fips.base.diagonal_frame` is the one place a diagonal is built
+  (`DiagonalError.build` uses it too). A matrix of one value is
+  `np.full((n, m), value)`.
+- Check an optional pandas index with `is None`, since evaluating its truth
   value raises an error.
 - **The pyrefly baseline matches an error by file, kind and column**, not by
   line or message (seen with pyrefly 1.3.2). A new error is therefore hidden
