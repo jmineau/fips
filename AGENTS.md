@@ -109,9 +109,13 @@ From `fips.__init__`:
 
 ## Invariants to respect
 
-- **1D names.** `Structure1D` converts non-None Series names to strings during
-  construction. Its `name` property returns the stored name; unnamed vectors
-  keep `None` through copy, reindex, and index rounding.
+- **Names.** `Structure1D` and `Structure2D` convert a name that is not `None`
+  to a string during construction, so a name is one spelling everywhere and
+  `name` returns what is stored; an unnamed structure keeps `None` through
+  copy, reindex, and index rounding.
+  `Matrix.scale` keeps the name, as those do. A sum of two matrices keeps it
+  when both have the same name and is `None` otherwise (pandas' rule for a sum
+  of two Series).
 - **MultiIndex preservation.** The whole design hinges on labels surviving.
   Do not silently `.values` or `.to_numpy()` away from Series/DataFrame.
 - **NaN-only levels.** Assembling blocks whose indexes have different levels

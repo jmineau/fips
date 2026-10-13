@@ -55,6 +55,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   observation time. A `time` level of timestamps stored as objects is not
   affected; a `Vector` already reads it as datetimes.
   ([#43](https://github.com/jmineau/fips/issues/43))
+- **`Matrix.scale` keeps the matrix's name, and a sum of two matrices keeps it
+  when both have the same one.** The result of `scale` (on `Matrix`,
+  `CovarianceMatrix` and `ForwardOperator`) and of `a + b` always had no name
+  (`name` was `None`). A scaled matrix now has the name of the original, and
+  `a + b` is named like `a` and `b` when their names are equal and has no name
+  when they differ or either has none, as the sum of two pandas Series does. A
+  sum with a scalar still has no name. The values, the index and the storage are
+  as before.
+  ([#72](https://github.com/jmineau/fips/issues/72))
+- **`Matrix`, `CovarianceMatrix`, `ForwardOperator` and `MatrixBlock` turn a
+  name that is not `None` into a string when they are built**, as `Block` and
+  `Vector` do. `Matrix(data, name=5).name` is `"5"` where it was `5`, and a
+  tuple or a float is its `str`. `None` stays `None`. Compare `matrix.name` with
+  the string if you passed a number. `ObsAggregator.apply` names its result like
+  its input, so it returns the string name too, and two `MatrixBlock`s named `1`
+  and `"1"` are now duplicates when they are assembled into a `Matrix`, as two
+  such `Block`s already were in a `Vector`.
+  ([#72](https://github.com/jmineau/fips/issues/72))
 
 ### Fixed
 

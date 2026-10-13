@@ -539,7 +539,8 @@ class Structure2D(Structure):
     data : np.ndarray or pd.DataFrame
         2D data. For a diagonal, use :meth:`diagonal`.
     name : str, optional
-        Name for the Structure.
+        Name for the Structure. A name that is not None is converted to a string
+        during construction, as :class:`Structure1D` does.
     index : pd.Index
         Index for the rows of the DataFrame.
     columns : pd.Index, optional
@@ -566,7 +567,7 @@ class Structure2D(Structure):
     """
 
     name: str | None
-    """Name of the structure, used for error messages and block naming."""
+    """Name of the structure, used for error messages and block naming: a string, or None when it has none."""
     data: pd.DataFrame  # type: ignore[override]
     """The underlying data, which must be numeric and non-NaN. Can be stored in sparse format."""
 
@@ -593,7 +594,7 @@ class Structure2D(Structure):
                 "value, pass np.full(shape, value)."
             )
 
-        self.name = name
+        self.name = None if name is None else str(name)
 
         # Detect if the input data is already a sparse DataFrame so we can
         # preserve sparsity when constructing from an existing sparse structure

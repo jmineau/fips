@@ -242,6 +242,22 @@ class TestObsAggregator:
         assert isinstance(new_H, ForwardOperator)
         assert isinstance(new_Sz, CovarianceMatrix)
 
+    def test_apply_names_its_results_like_its_inputs(self, obs_idx, state_idx):
+        """Each aggregated structure has the name of the one it came from, as a string."""
+        obs = Vector(pd.Series([1.0, 2.0, 3.0, 4.0], index=obs_idx), name="obs")
+        H = ForwardOperator(
+            pd.DataFrame(np.ones((4, 3)), index=obs_idx, columns=state_idx), name=5
+        )
+        S_z = CovarianceMatrix.diagonal(2.0, index=obs_idx, name="S_z")
+        S_unnamed = CovarianceMatrix.diagonal(2.0, index=obs_idx)
+        agg = ObsAggregator(by=daily_groupby, func="mean")
+
+        new_obs, new_H, new_Sz, _ = agg.apply(obs, H, S_z)
+        _, _, new_S_unnamed, _ = agg.apply(obs, H, S_unnamed)
+
+        assert (new_obs.name, new_H.name, new_Sz.name) == ("obs", "5", "S_z")
+        assert new_S_unnamed.name is None
+
     def test_Sz_diagonal_mean(self, obs_vec, fwd_op, cov_Sz):
         """Diagonal S_z=2I mean-aggregated with 2 obs/group → S_z_agg = I (=2/2)."""
         agg = ObsAggregator(by=daily_groupby, func="mean")

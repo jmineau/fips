@@ -1,5 +1,7 @@
 """Test suite for fips matrix types (structures, covariance, operators)."""
 
+import pickle
+
 import numpy as np
 import pandas as pd
 import pytest
@@ -620,6 +622,192 @@ class TestCovarianceMatrixAddition:
         result = cov1 + cov2
 
         assert isinstance(result.index, pd.MultiIndex)
+
+
+class TestMatrixName:
+    """The name of a 2D structure: a string or None, and what `scale` and a sum make of it."""
+
+    @staticmethod
+    def make(matrix_type, name, index, sparse=False, scale=1.0):
+        """A 3 x 3 diagonal matrix of ``matrix_type``, named ``name`` (not passed when "unset")."""
+        kwargs = {} if name == "unset" else {"name": name}
+        return matrix_type.diagonal(scale, index=index, sparse=sparse, **kwargs)
+
+    @pytest.mark.parametrize("matrix_type", MATRIX_TYPES)
+    @pytest.mark.parametrize("sparse", [False, True])
+    def test_scale_keeps_the_name(self, matrix_type, sparse, index):
+        """A scaled matrix has the name of the original, which keeps it too."""
+        matrix = self.make(matrix_type, "prior_error", index, sparse, scale=2.0)
+
+        scaled = matrix.scale(3.0)
+
+        assert isinstance(scaled, matrix_type)
+        assert scaled.name == "prior_error"
+        assert matrix.name == "prior_error"
+        assert scaled.is_sparse is sparse
+        np.testing.assert_array_equal(dense(scaled), 6.0 * np.eye(3))
+
+    @pytest.mark.parametrize("matrix_type", MATRIX_TYPES)
+    @pytest.mark.parametrize("sparse", [False, True])
+    def test_scale_of_an_unnamed_matrix_is_unnamed(self, matrix_type, sparse, index):
+        """Scaling does not give a matrix without a name the string "None"."""
+        matrix = self.make(matrix_type, "unset", index, sparse)
+
+        assert matrix.scale(3.0).name is None
+
+    @pytest.mark.parametrize("matrix_type", MATRIX_TYPES)
+    def test_sum_with_the_same_name_keeps_it(self, matrix_type, index):
+        """Two matrices with one name add up to a matrix with that name."""
+        a = self.make(matrix_type, "S", index, scale=1.0)
+        b = self.make(matrix_type, "S", index, scale=2.0)
+
+        total = a + b
+
+        assert isinstance(total, matrix_type)
+        assert total.name == "S"
+        np.testing.assert_array_equal(dense(total), 3.0 * np.eye(3))
+        assert (a.name, b.name) == ("S", "S")
+
+    @pytest.mark.parametrize("matrix_type", MATRIX_TYPES)
+    @pytest.mark.parametrize(
+        ("left", "right"),
+        [("S_a", "S_b"), ("S", "unset"), ("unset", "S"), (None, "S"), ("S", None)],
+        ids=["different", "right_unnamed", "left_unnamed", "left_none", "right_none"],
+    )
+    def test_sum_with_different_names_is_unnamed(self, matrix_type, left, right, index):
+        """Names that differ, or a name on one side only, leave the sum unnamed."""
+        a = self.make(matrix_type, left, index)
+        b = self.make(matrix_type, right, index)
+
+        total = a + b
+
+        assert total.name is None
+        np.testing.assert_array_equal(dense(total), 2.0 * np.eye(3))
+
+    @pytest.mark.parametrize("matrix_type", MATRIX_TYPES)
+    def test_sum_of_unnamed_matrices_is_unnamed(self, matrix_type, index):
+        """Two unnamed matrices have an unnamed sum, not the name "None"."""
+        a = self.make(matrix_type, "unset", index)
+
+        assert (a + a).name is None
+
+    @pytest.mark.parametrize(("sparse_a", "sparse_b"), [(True, False), (True, True)])
+    def test_sum_keeps_the_name_of_sparse_matrices(self, sparse_a, sparse_b, index):
+        """A sparse operand is added dense, and the name rule is the same."""
+        a = self.make(CovarianceMatrix, "S", index, sparse_a)
+        b = self.make(CovarianceMatrix, "S", index, sparse_b)
+        c = self.make(CovarianceMatrix, "T", index, sparse_b)
+
+        assert (a + b).name == "S"
+        assert (a + c).name is None
+
+    def test_sum_compares_names_as_strings(self, index):
+        """Names are strings from construction, so 5 and "5" are one name."""
+        a = self.make(Matrix, 5, index)
+        b = self.make(Matrix, "5", index)
+
+        assert (a + b).name == "5"
+
+    @pytest.mark.parametrize("matrix_type", MATRIX_TYPES)
+    @pytest.mark.parametrize(
+        ("name", "expected"),
+        [
+            ("x", "x"),
+            (5, "5"),
+            (0, "0"),
+            (2020, "2020"),
+            (1.5, "1.5"),
+            ((1, 2), "(1, 2)"),
+            (None, None),
+            ("unset", None),
+        ],
+        ids=["str", "int", "zero", "year", "float", "tuple", "None", "unset"],
+    )
+    def test_name_is_a_string_or_none(self, matrix_type, name, expected, index):
+        """A name that is not None becomes a string at construction, as in a Block."""
+        matrix = self.make(matrix_type, name, index)
+
+        assert matrix.name == expected
+        assert type(matrix.name) is type(expected)
+
+    @pytest.mark.parametrize(
+        ("name", "expected"),
+        [("x", "x"), (5, "5"), (2020, "2020"), ((1, 2), "(1, 2)"), (None, "r_c")],
+        ids=["str", "int", "year", "tuple", "None"],
+    )
+    def test_block_name_is_a_string(self, name, expected, sites):
+        """A MatrixBlock's name becomes a string too, and None is its default name."""
+        block = MatrixBlock(np.eye(3), "r", "c", name=name, index=sites)
+
+        assert block.name == expected
+        assert type(block.name) is str
+
+    def test_block_given_a_block_keeps_its_string_name(self, sites):
+        """A block built from a block has the name the first block has."""
+        block = MatrixBlock(np.eye(3), "r", "c", name=5, index=sites)
+
+        assert MatrixBlock(block).name == "5"
+
+    def test_blocks_named_alike_after_conversion_are_duplicates(self, sites):
+        """Blocks named 1 and "1" have one name, so they cannot be assembled together."""
+        frame = pd.DataFrame(np.eye(3), index=sites, columns=sites)
+        one = MatrixBlock(frame, "a", "b", name=1)
+        other = MatrixBlock(frame, "c", "d", name="1")
+
+        with pytest.raises(ValueError, match="Duplicate block name '1'"):
+            Matrix([one, other])
+
+    def test_given_name_is_not_changed_on_the_input(self, index):
+        """Converting the name does not touch the object it came from."""
+        name = (1, 2)
+
+        Matrix(np.eye(3), name=name, index=index)
+
+        assert name == (1, 2)
+
+    @pytest.mark.parametrize("name", ["S", 5, None])
+    @pytest.mark.parametrize("sparse", [False, True])
+    @pytest.mark.parametrize(
+        "rebuild",
+        [
+            lambda m: m.copy(),
+            lambda m: m.copy(deep=False),
+            lambda m: m.reindex(m.index, columns=m.columns, fill_value=0.0),
+            lambda m: m.round_index(1, axis="both"),
+            lambda m: m.to_dense(),
+            lambda m: m.to_sparse(),
+            lambda m: m.scale(2.0),
+            lambda m: m + m,
+            lambda m: pickle.loads(pickle.dumps(m)),
+        ],
+        ids=[
+            "copy",
+            "shallow_copy",
+            "reindex",
+            "round_index",
+            "to_dense",
+            "to_sparse",
+            "scale",
+            "sum_with_itself",
+            "pickle",
+        ],
+    )
+    def test_name_survives_rebuilding(self, name, sparse, rebuild, index):
+        """Every way of making a matrix from a matrix keeps its string name, or its lack of one."""
+        matrix = self.make(CovarianceMatrix, name, index, sparse)
+        expected = None if name is None else str(name)
+
+        result = rebuild(matrix)
+
+        assert isinstance(result, CovarianceMatrix)
+        assert result.name == expected
+        assert type(result.name) is type(expected)
+
+    def test_force_symmetry_keeps_the_name(self, index):
+        """A covariance made symmetric is the same covariance, with its name."""
+        cov = self.make(CovarianceMatrix, 5, index)
+
+        assert cov.force_symmetry().name == "5"
 
 
 class TestForwardOperator:
