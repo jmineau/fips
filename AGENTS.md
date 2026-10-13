@@ -135,11 +135,7 @@ From `fips.__init__`:
   `diagonal_frame` use it); `Structure2D.__init__` normalizes too, which is what
   lets a user hand in a pandas-native sparse frame instead of being told it
   "contains NaN". It fills rather than re-typing: assigning a new SparseDtype
-  would keep the NaNs as stored entries. The cost (#63, a bug): a NaN that is
-  *stored* in the matrix is filled too and never reaches `_validate`, so a NaN
-  becomes a zero on the sparse path where the dense path raises. Until #63 is
-  fixed in `normalize_fill_value`, `diagonal_frame` checks its values for NaN
-  itself; remove that check with the fix. Pinned by `TestSparseFillValue` in
+  would keep the NaNs as stored entries. Pinned by `TestSparseFillValue` in
   `tests/test_sparse.py` — do not drop it as redundant when pandas fixes the
   regression; drop it when the minimum pandas has the fix.
 - **Sparse paths.** `CovarianceMatrix` and large operators may be sparse.
@@ -358,7 +354,7 @@ covariance). See README "Multi-block" example.
   Series, a `Block` or a `Vector` passed to `Matrix`, `CovarianceMatrix`,
   `ForwardOperator` or `MatrixBlock` raises a `ValueError` that names
   `diagonal`. A diagonal is built by the classmethod `Structure2D.diagonal(values,
-  index=...)`, which every one of them inherits (#61): the index labels both
+  index=...)`, which every one of them inherits: the index labels both
   axes, a Series or `Vector` supplies its own, and `sparse=True` never forms the
   dense matrix. Do not add a branch on the shape of `data` to a constructor;
   `fips.base.diagonal_frame` is the one place a diagonal is built
