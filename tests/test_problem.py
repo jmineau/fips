@@ -81,6 +81,93 @@ class TestInverseProblemCreation:
         assert isinstance(problem.prior, Vector)
         assert isinstance(problem.obs, Vector)
 
+    @pytest.mark.parametrize("scalar", [0.5, 2, np.float32(0.5)])
+    def test_scalar_covariances_are_diagonals(
+        self, scalar, simple_prior, simple_obs, simple_forward_operator
+    ):
+        """A scalar covariance is that variance for every element, labeled by the vector."""
+        problem = InverseProblem(
+            prior=simple_prior,
+            obs=simple_obs,
+            forward_operator=simple_forward_operator,
+            prior_error=scalar,
+            modeldata_mismatch=scalar,
+        )
+
+        assert isinstance(problem.prior_error, CovarianceMatrix)
+        pd.testing.assert_index_equal(problem.prior_error.index, problem.prior.index)
+        pd.testing.assert_index_equal(
+            problem.modeldata_mismatch.index, problem.obs.index
+        )
+        np.testing.assert_allclose(problem.prior_error.values, scalar * np.eye(3))
+        np.testing.assert_allclose(
+            problem.modeldata_mismatch.values, scalar * np.eye(4)
+        )
+
+    def test_scalar_covariances_solve_like_the_matrices(
+        self, simple_prior, simple_obs, simple_forward_operator
+    ):
+        """A problem given scalars has the posterior of one given the diagonal matrices."""
+        state = simple_prior.index
+        obs = simple_obs.index
+        common = {
+            "prior": simple_prior,
+            "obs": simple_obs,
+            "forward_operator": simple_forward_operator,
+        }
+
+        from_scalars = InverseProblem(
+            **common, prior_error=0.5, modeldata_mismatch=0.25
+        ).solve("bayesian")
+        from_matrices = InverseProblem(
+            **common,
+            prior_error=pd.DataFrame(0.5 * np.eye(3), index=state, columns=state),
+            modeldata_mismatch=pd.DataFrame(0.25 * np.eye(4), index=obs, columns=obs),
+        ).solve("bayesian")
+
+        pd.testing.assert_series_equal(
+            from_scalars.posterior.data, from_matrices.posterior.data
+        )
+
+    @pytest.mark.parametrize("wrap", [lambda s: s, Vector], ids=["series", "vector"])
+    def test_labeled_variances_are_diagonals(
+        self, wrap, simple_prior, simple_obs, simple_forward_operator
+    ):
+        """A Series or a Vector with a block level is the diagonal, matched by label."""
+        prior = Vector(simple_prior)
+        obs = Vector(simple_obs)
+        # Given in another order than the vectors: the labels decide, not the position
+        prior_var = pd.Series([3.0, 2.0, 1.0], index=prior.index[::-1], name="var")
+        obs_var = pd.Series([4.0, 3.0, 2.0, 1.0], index=obs.index[::-1], name="var")
+
+        problem = InverseProblem(
+            prior=simple_prior,
+            obs=simple_obs,
+            forward_operator=simple_forward_operator,
+            prior_error=wrap(prior_var),
+            modeldata_mismatch=wrap(obs_var),
+        )
+
+        np.testing.assert_array_equal(
+            problem.prior_error.values, np.diag([1.0, 2.0, 3.0])
+        )
+        np.testing.assert_array_equal(
+            problem.modeldata_mismatch.values, np.diag([1.0, 2.0, 3.0, 4.0])
+        )
+
+    def test_1d_array_covariance_is_refused(
+        self, simple_prior, simple_obs, simple_forward_operator
+    ):
+        """An unlabeled 1D array is not matched to the state by position."""
+        with pytest.raises(ValueError, match="takes 2D data, got 1D data"):
+            InverseProblem(
+                prior=simple_prior,
+                obs=simple_obs,
+                forward_operator=simple_forward_operator,
+                prior_error=np.array([1.0, 2.0, 3.0]),
+                modeldata_mismatch=0.5,
+            )
+
     def test_inverse_problem_stores_matrices(
         self,
         simple_prior,

@@ -16,8 +16,9 @@ from typing import Any, Literal, Self, TypeAlias, overload
 import numpy as np
 import numpy.typing as npt
 import pandas as pd
+from scipy.sparse import csr_matrix
 
-from fips._sparse import normalize_fill_value
+from fips._sparse import frame_from_spmatrix, normalize_fill_value
 from fips.indexes import overlaps, resolve_axes, round_index, to_numeric
 
 logger = logging.getLogger(__name__)
@@ -440,14 +441,97 @@ class Structure1D(Structure):
         self.data = state["data"]
 
 
-class Structure2D(Structure):
+def _is_scalar_or_1d(data: object) -> bool:
+    """Return True if `data` is a scalar or 1D: not something a 2D structure holds."""
+    if isinstance(data, (pd.Series, Structure1D)):
+        return True
+    if isinstance(data, (np.ndarray, list, tuple)):
+        return np.ndim(data) < 2
+    return np.isscalar(data)
+
+
+def diagonal_frame(
+    values: "npt.ArrayLike | pd.Series | Structure1D",
+    index: pd.Index | None = None,
+    sparse: bool = False,
+) -> pd.DataFrame:
     """
-    Base class for 2D structures (Matrix).
+    Build the square DataFrame with `values` on its diagonal and zeros elsewhere.
 
     Parameters
     ----------
-    data : np.ndarray
-        2D data.
+    values : scalar, 1D array-like, pd.Series, Block or Vector
+        The diagonal. A scalar puts the same value on every diagonal entry.
+    index : pd.Index, optional
+        Labels for both axes. Required for a scalar, an array or a list. A
+        Series, Block or Vector supplies its own index; if `index` is given
+        too, the two must be equal.
+    sparse : bool, default False
+        If True, build a pandas sparse DataFrame (fill_value=0.0) without
+        forming the dense matrix.
+
+    Returns
+    -------
+    pd.DataFrame
+        The diagonal matrix, labeled by the same index on rows and columns.
+
+    Raises
+    ------
+    ValueError
+        If a scalar, an array or a list comes without an index, if `values`
+        has more than one dimension or a length other than the index's, or if
+        a Series, Block or Vector has an index that differs from `index`.
+    """
+    if isinstance(values, Structure1D):
+        values = values.data
+
+    if isinstance(values, pd.Series):
+        if index is not None and not values.index.equals(index):
+            raise ValueError(
+                "The diagonal values carry their own index, which differs from "
+                "`index`. Reindex the values first, or leave `index` out."
+            )
+        index = values.index
+        diagonal = values.to_numpy()
+    else:
+        if index is None:
+            raise ValueError(
+                "A diagonal from a scalar, an array or a list requires an index."
+            )
+        diagonal = np.asarray(values)
+        if diagonal.ndim == 0:
+            diagonal = np.full(len(index), diagonal)
+        elif diagonal.ndim > 1:
+            raise ValueError(
+                f"Diagonal values must be a scalar or 1D, got shape {diagonal.shape}."
+            )
+        elif len(diagonal) != len(index):
+            raise ValueError(
+                f"Got {len(diagonal)} diagonal values for an index of length {len(index)}."
+            )
+
+    if sparse:
+        diagonal = diagonal.astype(float)
+        if np.isnan(diagonal).any():
+            # normalize_fill_value reads a stored NaN as an implicit zero, so a
+            # NaN would become a zero on the diagonal instead of an error
+            raise ValueError("Data contains NaN values.")
+        # Store the nonzero entries only: a zero on the diagonal is implicit
+        stored = np.flatnonzero(diagonal)
+        shape = (len(diagonal), len(diagonal))
+        matrix = csr_matrix((diagonal[stored], (stored, stored)), shape=shape)
+        return frame_from_spmatrix(matrix, index=index, columns=index)
+    return pd.DataFrame(np.diag(diagonal), index=index, columns=index)
+
+
+class Structure2D(Structure):
+    """
+    Base class for 2D structures (MatrixBlock, Matrix).
+
+    Parameters
+    ----------
+    data : np.ndarray or pd.DataFrame
+        2D data. For a diagonal, use :meth:`diagonal`.
     name : str, optional
         Name for the Structure.
     index : pd.Index
@@ -462,6 +546,16 @@ class Structure2D(Structure):
         If True, store the data in pandas sparse format (fill_value=0.0).
         The caller is responsible for zeroing out near-zero values before
         setting sparse=True (e.g. via a threshold in the builder).
+
+    Raises
+    ------
+    ValueError
+        If `data` is a scalar or 1D (an array, a list, a Series, a Block or a
+        Vector).
+
+    See Also
+    --------
+    Structure2D.diagonal : Build a diagonal from a scalar or 1D values.
     """
 
     name: str | None
@@ -482,6 +576,16 @@ class Structure2D(Structure):
         """
         Initialize a 2D structure with the given data, index, and columns. Validates and sanitizes the data.
         """
+        if _is_scalar_or_1d(data):
+            klass = type(self).__name__
+            labeled = isinstance(data, (pd.Series, Structure1D))
+            what = "a scalar" if not labeled and np.ndim(data) == 0 else "1D data"
+            raise ValueError(
+                f"{klass} takes 2D data, got {what}. For a diagonal, use "
+                f"{klass}.diagonal(values, index=...). For a matrix of one "
+                "value, pass np.full(shape, value)."
+            )
+
         self.name = name
 
         # Detect if the input data is already a sparse DataFrame so we can
@@ -512,6 +616,83 @@ class Structure2D(Structure):
         # Sparsify after sanitize (index may have been modified by _sanitize)
         if (sparse or _input_is_sparse) and not self.is_sparse:
             self._sparsify()
+
+    @classmethod
+    def diagonal(
+        cls,
+        values: "npt.ArrayLike | pd.Series | Structure1D",
+        index: pd.Index | None = None,
+        *,
+        sparse: bool = False,
+        **kwargs: Any,
+    ) -> Self:
+        """
+        Build a diagonal: `values` on the diagonal and zeros elsewhere.
+
+        The result is square, and the same index labels its rows and columns.
+
+        Parameters
+        ----------
+        values : scalar, 1D array-like, pd.Series, Block or Vector
+            The diagonal. A scalar puts the same value on every diagonal entry.
+        index : pd.Index, optional
+            Labels for both axes. Required for a scalar, an array or a list. A
+            Series, Block or Vector supplies its own index.
+        sparse : bool, default False
+            If True, store the result in pandas sparse format. The dense matrix
+            is never formed, so this is the way to build a large diagonal.
+        **kwargs
+            Passed to the class constructor: `name`, and for a
+            :class:`~fips.MatrixBlock` its `row_block` and `col_block`.
+
+        Returns
+        -------
+        Self
+            The diagonal structure, of the class the method was called on.
+
+        Raises
+        ------
+        ValueError
+            If a scalar, an array or a list comes without an index, if `values`
+            has more than one dimension or a length other than the index's, or
+            if a Series, Block or Vector is given with a different `index`.
+
+        See Also
+        --------
+        fips.CovarianceMatrix.variances : The diagonal of a covariance matrix.
+        fips.covariance.DiagonalError : A diagonal error component, aligned to an index by its levels.
+
+        Examples
+        --------
+        >>> import pandas as pd
+        >>> from fips import CovarianceMatrix, MatrixBlock
+        >>> idx = pd.MultiIndex.from_product(
+        ...     [["obs"], ["a", "b", "c"]], names=["block", "site"]
+        ... )
+
+        The same variance for every element, or one for each:
+
+        >>> CovarianceMatrix.diagonal(0.25, index=idx).values
+        array([[0.25, 0.  , 0.  ],
+               [0.  , 0.25, 0.  ],
+               [0.  , 0.  , 0.25]])
+        >>> S = CovarianceMatrix.diagonal([0.5, 0.5, 1.0], index=idx)
+
+        A Series or a Vector brings its own index, so the variances of a
+        covariance matrix give back its diagonal part:
+
+        >>> CovarianceMatrix.diagonal(S.variances).data.equals(S.data)
+        True
+
+        A block names its row and column block, as in its constructor:
+
+        >>> sites = pd.Index(["a", "b", "c"], name="site")
+        >>> MatrixBlock.diagonal(
+        ...     0.25, index=sites, row_block="obs", col_block="obs"
+        ... ).shape
+        (3, 3)
+        """
+        return cls(diagonal_frame(values, index, sparse=sparse), **kwargs)
 
     def _sparsify(self) -> None:
         """

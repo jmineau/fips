@@ -46,13 +46,15 @@ automatically.
 Constructing Covariance Matrices
 ---------------------------------
 
-:class:`~fips.CovarianceMatrix` accepts a scalar, a 1D array, a list or a
-:class:`pandas.Series` for a diagonal, a full :class:`pandas.DataFrame`, or a list
-of :class:`~fips.MatrixBlock` objects. The index needs a ``"block"`` level. A
-scalar, array or list takes the ``index`` argument and puts its values on the
-diagonal; a scalar puts the same value on every entry, so
-``CovarianceMatrix(0.25, index=idx)`` is
-``CovarianceMatrix([0.25, 0.25, 0.25], index=idx)``:
+:class:`~fips.CovarianceMatrix` takes a full :class:`pandas.DataFrame` (or a 2D
+array with an ``index``), or a list of :class:`~fips.MatrixBlock` objects. The
+index needs a ``"block"`` level.
+
+A diagonal covariance (independent errors) has its own constructor,
+:meth:`~fips.CovarianceMatrix.diagonal`. It takes the variances and the index
+that labels both axes: a scalar is the same variance for every element, and a
+1D array or list gives one for each. A :class:`pandas.Series` or a
+:class:`~fips.Vector` brings its own index.
 
 .. ipython:: python
 
@@ -62,14 +64,30 @@ diagonal; a scalar puts the same value on every entry, so
    idx = pd.MultiIndex.from_product([["obs"], ["a", "b", "c"]], names=["block", "id"])
 
    # Diagonal: independent errors with the same variance
-   CovarianceMatrix(0.25, index=idx).values
+   CovarianceMatrix.diagonal(0.25, index=idx).values
 
    # Diagonal: a variance for each element
-   CovarianceMatrix(pd.Series([0.5, 0.5, 1.0], index=idx)).values
+   CovarianceMatrix.diagonal(pd.Series([0.5, 0.5, 1.0], index=idx)).values
 
    # Full dense matrix
    S = CovarianceMatrix(pd.DataFrame(np.eye(3) * 0.25, index=idx, columns=idx))
    S.shape
+
+With ``sparse=True`` the diagonal is stored sparse and the dense matrix is never
+formed, which matters once the index is long:
+
+.. ipython:: python
+
+   CovarianceMatrix.diagonal(0.25, index=idx, sparse=True).is_sparse
+
+:class:`~fips.Matrix`, :class:`~fips.ForwardOperator` and
+:class:`~fips.MatrixBlock` have the same ``diagonal`` constructor; a block also
+takes its ``row_block`` and ``col_block``. The constructors themselves take 2D
+data only: a scalar or 1D input raises an error that points to ``diagonal``.
+
+An :class:`~fips.InverseProblem` holds the indexes already, so its
+``prior_error`` and ``modeldata_mismatch`` can be given as a scalar variance, or
+as a Series or Vector of variances with a ``"block"`` level.
 
 
 Sparse Forward Operators

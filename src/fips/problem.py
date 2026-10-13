@@ -9,9 +9,10 @@ for state estimation.
 import logging
 from typing import Self
 
+import numpy as np
 import pandas as pd
 
-from fips.base import Pickleable
+from fips.base import Pickleable, Structure1D
 from fips.covariance import CovarianceMatrix
 from fips.estimators import ESTIMATOR_REGISTRY, Estimator
 from fips.matrix import Matrix, MatrixBlock, MatrixLike
@@ -36,10 +37,14 @@ class InverseProblem(Pickleable):
         Prior state vector.
     forward_operator : MatrixLike
         Forward operator mapping state space to observation space.
-    modeldata_mismatch : MatrixLike
+    modeldata_mismatch : MatrixLike or Vector or float
         Covariance matrix representing model-data mismatch (observation error).
-    prior_error : MatrixLike
-        Covariance matrix representing prior error.
+        A scalar is one variance for every observation, and a Series or Vector
+        (with a ``block`` level) gives a variance for each: both build a
+        diagonal covariance.
+    prior_error : MatrixLike or Vector or float
+        Covariance matrix representing prior error. A scalar, a Series or a
+        Vector builds a diagonal covariance, as for `modeldata_mismatch`.
     constant : VectorLike or float, optional
         Optional constant term added to the forward model (e.g., background or bias).
     round_index : int, optional
@@ -64,8 +69,8 @@ class InverseProblem(Pickleable):
         obs: VectorLike,
         prior: VectorLike,
         forward_operator: MatrixLike,
-        modeldata_mismatch: MatrixLike,
-        prior_error: MatrixLike,
+        modeldata_mismatch: "MatrixLike | Vector",
+        prior_error: "MatrixLike | Vector",
         constant: "VectorLike | float | None" = None,
         round_index: int | None = 6,
     ):
@@ -110,16 +115,19 @@ class InverseProblem(Pickleable):
                 forward_operator, target_index=obs.index, target_columns=prior.index
             )
         )
-        prior_error = CovarianceMatrix(
-            promote_2d(
-                prior_error, target_index=prior.index, target_columns=prior.index
+
+        def covariance(data, target_index: pd.MultiIndex) -> CovarianceMatrix:
+            """Build a covariance; a scalar, Series or Vector is its diagonal."""
+            if isinstance(data, (pd.Series, Structure1D)):
+                return CovarianceMatrix.diagonal(data)
+            if isinstance(data, (int, float, np.number)):
+                return CovarianceMatrix.diagonal(data, index=target_index)
+            return CovarianceMatrix(
+                promote_2d(data, target_index=target_index, target_columns=target_index)
             )
-        )
-        modeldata_mismatch = CovarianceMatrix(
-            promote_2d(
-                modeldata_mismatch, target_index=obs.index, target_columns=obs.index
-            )
-        )
+
+        prior_error = covariance(prior_error, prior.index)
+        modeldata_mismatch = covariance(modeldata_mismatch, obs.index)
 
         if constant is not None:
             constant_index = obs.index if isinstance(constant, (int, float)) else None

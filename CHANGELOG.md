@@ -7,17 +7,45 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **`diagonal`, a constructor for diagonal matrices**, on `Matrix`,
+  `CovarianceMatrix`, `ForwardOperator` and `MatrixBlock`:
+  `CovarianceMatrix.diagonal(0.25, index=idx)` is the matrix with 0.25 on the
+  diagonal and zeros elsewhere, labeled by `idx` on both axes. The values are a
+  scalar, a 1D array or list (one value per element), or a `Series`, `Block`
+  or `Vector`, which brings its own index, so
+  `CovarianceMatrix.diagonal(S.variances)` is the diagonal part of `S`. With
+  `sparse=True` the dense matrix is never formed. A `MatrixBlock` also takes
+  its block names: `MatrixBlock.diagonal(0.01, index=idx, row_block="bias",
+  col_block="bias")`.
+  ([#61](https://github.com/jmineau/fips/issues/61))
+- `InverseProblem` (and so `FluxProblem`) accepts a scalar for `prior_error`
+  and `modeldata_mismatch`: one variance for every element of the state or of
+  the observations. A `Series` or a `Vector` of variances with a `block` level
+  gives one for each, as a `Series` did before.
+  ([#61](https://github.com/jmineau/fips/issues/61))
+
 ### Changed
 
-- **A scalar passed to `Matrix` or `CovarianceMatrix` builds a diagonal**
-  (breaking): `Matrix(5.0, index=idx)` returned a full matrix with 5.0 in every
-  entry, which for a `CovarianceMatrix` has rank 1 and is not what "a
-  covariance of 5" means. It now returns the square matrix with 5.0 on the
-  diagonal and zeros elsewhere, the same as `Matrix([5.0, 5.0, 5.0], index=idx)`
-  does for a 1D input. As for a 1D input, `columns` is not used, so a scalar no
-  longer builds a rectangular matrix. For the old result, build the full array
-  yourself: `Matrix(np.full((n, m), 5.0), index=rows, columns=cols)`.
-  ([#50](https://github.com/jmineau/fips/issues/50))
+- **`Matrix`, `CovarianceMatrix`, `ForwardOperator` and `MatrixBlock` take 2D
+  data only** (breaking). A scalar or 1D input now raises a `ValueError` that
+  names the replacement, where the constructor used to decide from the shape of
+  `data` what to build:
+  - `CovarianceMatrix(series)` built a diagonal from a Series. Use
+    `CovarianceMatrix.diagonal(series)`, with `name=` if the matrix should
+    have one: it no longer takes the Series' name.
+  - `Matrix(5.0, index=idx)` and `MatrixBlock(5.0, "r", "c", index=idx)` filled
+    every entry with 5.0, which for a `CovarianceMatrix` has rank 1 and is not
+    what "a covariance of 5" means. Use `.diagonal(5.0, index=idx)` for the
+    diagonal, or pass the array, `np.full((n, m), 5.0)`, for a matrix of one
+    value.
+  - A 1D array or list raised already, from pandas or for its unnamed index;
+    it raises the same `ValueError` now.
+
+  ([#61](https://github.com/jmineau/fips/issues/61),
+  [#50](https://github.com/jmineau/fips/issues/50),
+  [#45](https://github.com/jmineau/fips/issues/45))
 - `FluxInversionPipeline.filter_state_space` raises a `TypeError` that says what
   is wrong when it has to infer the frequency of flux times that are not
   datetimes (the config has no `flux_freq`). Before, `pd.infer_freq` ran on
@@ -33,12 +61,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- A scalar passed to `Matrix` or `CovarianceMatrix` without an index raises
-  "Scalar data requires an index.", as a 1D array does, in place of "All
-  levels in the row index of Matrix must be named." A 0-d array
-  (`np.array(5.0)`) is treated as a scalar; it raised pandas' "Must pass 2-d
-  input".
-  ([#50](https://github.com/jmineau/fips/issues/50))
 - `plot_comparison` unpacks only a `Block` or a `Vector`. It took the `data`
   attribute of anything that had one, and pandas makes an index label or a
   column called `data` an attribute. A Series whose index had the label `data`
@@ -58,10 +80,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   rows were already cleaned. The columns are now cleaned too, so the block
   comes back with the levels it was built with.
   ([#46](https://github.com/jmineau/fips/issues/46))
-- `Matrix` and `CovarianceMatrix` accept 1D diagonal values with a pandas
-  index and preserve it on both axes. A 1D array or list without an index
-  now raises an explicit error instead of creating an invalid unnamed index.
-  ([#45](https://github.com/jmineau/fips/issues/45))
 - An unnamed `Vector` keeps its missing name when copied, reindexed, or its
   index is rounded, instead of acquiring the string name `"None"`.
   Non-string names are converted to strings during construction so these

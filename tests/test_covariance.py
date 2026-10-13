@@ -156,6 +156,17 @@ class TestDiagonalError:
             np.diag(result.values), [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]
         )
 
+    def test_diagonal_error_labels_both_axes_with_the_index(self):
+        """The built frame is the dense diagonal on the index it was asked for."""
+        idx = pd.MultiIndex.from_tuples(
+            [("b1", "c"), ("b1", "a"), ("b1", "b")], names=["block", "x"]
+        )
+
+        result = DiagonalError("test_error", 5.0).build(idx)
+
+        expected = pd.DataFrame(5.0 * np.eye(3), index=idx, columns=idx)
+        pd.testing.assert_frame_equal(result, expected)
+
     def test_diagonal_error_name(self):
         """Test DiagonalError name attribute."""
         component = DiagonalError("my_error", 1.0)

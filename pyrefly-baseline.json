@@ -113,27 +113,6 @@
       "severity": "error"
     },
     {
-      "column": 20,
-      "path": "src/fips/matrix.py",
-      "name": "bad-assignment",
-      "concise_description": "`Hashable | str | None` is not assignable to variable `name` with type `str | None`",
-      "severity": "error"
-    },
-    {
-      "column": 63,
-      "path": "src/fips/matrix.py",
-      "name": "bad-argument-type",
-      "concise_description": "Argument `list[DataFrame | MatrixBlock] | list[_NestedSequence[bytes | complex | str] | bytes | complex | str] | list[_NestedSequence[_SupportsArray[dtype]] | _SupportsArray[dtype]] | ndarray | ndarray[Any]` is not assignable to parameter `a` with type `Buffer | _NestedSequence[bytes | complex | str] | _NestedSequence[_SupportsArray[dtype]] | _SupportsArray[dtype] | bytes | complex | str` in function `numpy._core.fromnumeric.ndim`",
-      "severity": "error"
-    },
-    {
-      "column": 27,
-      "path": "src/fips/matrix.py",
-      "name": "no-matching-overload",
-      "concise_description": "No matching overload found for function `numpy.lib._twodim_base_impl.diag` called with arguments: (list[DataFrame | MatrixBlock] | list[_NestedSequence[bytes | complex | str] | bytes | complex | str] | list[_NestedSequence[_SupportsArray[dtype]] | _SupportsArray[dtype]] | ndarray | ndarray[Any])",
-      "severity": "error"
-    },
-    {
       "column": 13,
       "path": "src/fips/matrix.py",
       "name": "bad-argument-type",

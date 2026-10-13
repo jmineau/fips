@@ -45,8 +45,9 @@ class MatrixBlock(SingleBlockMixin, Structure2D):
 
     Parameters
     ----------
-    data : np.ndarray or pd.DataFrame or MatrixBlock or scalar
-        2D data representing the block. If MatrixBlock, creates a copy.
+    data : np.ndarray or pd.DataFrame or MatrixBlock
+        2D data representing the block. If MatrixBlock, creates a copy. For a
+        diagonal, use :meth:`diagonal`.
     row_block : str, optional
         Name of the row block (e.g., "state", "obs"). Required if data is not a MatrixBlock.
     col_block : str, optional
@@ -65,6 +66,16 @@ class MatrixBlock(SingleBlockMixin, Structure2D):
         If True, store the block in pandas sparse format.
         Sparsification is applied after initialization.
         Use threshold zeroing in your builder before passing data here for best results.
+
+    Raises
+    ------
+    ValueError
+        If `data` is a scalar or 1D (an array, a list, a Series, a Block or a
+        Vector).
+
+    See Also
+    --------
+    MatrixBlock.diagonal : Build a diagonal block from a scalar or 1D values.
     """
 
     data: pd.DataFrame  # type: ignore[override]
@@ -183,20 +194,17 @@ class Matrix(MultiBlockMixin, Structure2D):
 
     Parameters
     ----------
-    data : np.ndarray or list or pd.Series or pd.DataFrame or Matrix or scalar
-        Data representing the matrix. A 1D array, list, or Series supplies
-        the diagonal values, and a scalar (or 0-d array) puts that value on
-        every diagonal entry, with zeros elsewhere. Scalars, arrays and lists
-        require an explicit index; a Series supplies its own index for both
-        axes.
+    data : np.ndarray or pd.DataFrame or Matrix or MatrixBlock or sequence or dict
+        2D data representing the matrix, or the blocks to assemble it from: a
+        MatrixBlock, a sequence of MatrixBlocks or DataFrames, or a dict that
+        maps ``(row_block, col_block)`` to 2D data. If Matrix, creates a copy.
+        For a diagonal, use :meth:`diagonal`.
     name : str, optional
         Name for the Matrix.
     index : pd.MultiIndex
-        Index for the rows of the DataFrame. Required for scalars, 1D arrays
-        and lists, and used for both axes in those cases.
+        Index for the rows of the DataFrame.
     columns : pd.MultiIndex, optional
         Index for the columns of the DataFrame. If None, uses the same as `index`.
-        Not used for a scalar, 1D array or list, which label both axes with `index`.
     dtype : data type, optional
         Data type to force.
     copy : bool, optional
@@ -209,7 +217,12 @@ class Matrix(MultiBlockMixin, Structure2D):
     Raises
     ------
     ValueError
-        If a scalar, 1D array or list is supplied without an index.
+        If `data` is a scalar or 1D (an array, a list, a Series, a Block or a
+        Vector).
+
+    See Also
+    --------
+    Matrix.diagonal : Build a diagonal from a scalar or 1D values.
     """
 
     data: pd.DataFrame  # type: ignore[override]
@@ -245,13 +258,6 @@ class Matrix(MultiBlockMixin, Structure2D):
             # Allow dict mapping (row, col) -> data as a shorthand alternative
             blocks = [MatrixBlock(v, r, c) for (r, c), v in data.items()]
 
-        # A scalar or 0-d array is a 1D input with that value on every entry; the
-        # 1D branch below makes the diagonal
-        if np.isscalar(data) or (isinstance(data, np.ndarray) and data.ndim == 0):
-            if index is None:
-                raise ValueError("Scalar data requires an index.")
-            data = np.full(len(index), data)
-
         if blocks:
             seen_blocks = set()
             dfs: list[pd.DataFrame] = []
@@ -272,19 +278,6 @@ class Matrix(MultiBlockMixin, Structure2D):
             # combine_first performs an outer join, preserving all indices and filling missing values with NaN
             data = reduce(lambda left, right: left.combine_first(right), aligned_dfs)
             data = data.fillna(0.0)
-
-        # Accept series - create diagonal matrix
-        elif isinstance(data, pd.Series):
-            name = name or data.name
-            index = columns = data.index
-            data = np.diag(data.to_numpy())
-
-        # 1D array - treat as diagonal matrix
-        elif isinstance(data, (np.ndarray, list)) and np.ndim(data) == 1:
-            if index is None:
-                raise ValueError("1D data requires an index.")
-            columns = index
-            data = np.diag(data)
 
         super().__init__(
             data,
