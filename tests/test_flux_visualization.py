@@ -136,12 +136,20 @@ class TestFluxes:
 
 
 class TestConcentrations:
-    """
-    Tests for FluxPlotter.concentrations.
+    """Tests for FluxPlotter.concentrations."""
 
-    The windows are written with a capital ``D``: pandas 3 deprecates ``"30d"`` and
-    ``"7d"``, the defaults of ``rolling_window`` and ``gap_threshold``.
-    """
+    def test_defaults(self, solved_problem):
+        """
+        The default windows raise no warning.
+
+        pandas 3 deprecates the lowercase alias, ``"30d"``, and the suite turns
+        warnings into errors.
+        """
+        axes = solved_problem.plot.concentrations()
+
+        assert axes.shape == (2,)
+        # SITE2's 11-day gap is longer than the default 7-day threshold
+        assert [len(ax.patches) for ax in axes] == [0, 1]
 
     def test_legend_and_gap(self, solved_problem):
         """Each site gets a figure; a site with a data gap adds a "no data" entry."""

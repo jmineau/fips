@@ -61,6 +61,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- `FluxPlotter.concentrations` no longer warns on pandas 3 when called with its
+  default windows. `rolling_window` and `gap_threshold` defaulted to `"30d"` and
+  `"7d"`, and pandas 3 deprecates the lowercase `d` alias (`Pandas4Warning`);
+  they default to `"30D"` and `"7D"`. A call that passes `"30d"` itself still
+  warns: write `"30D"`.
+  ([#55](https://github.com/jmineau/fips/issues/55))
 - On pandas 3, a column of a sparse frame that stores every row kept
   `fill_value=NaN`, where every other column filled with 0.0, so a frame such
   as `DataFrame.sparse.from_spmatrix(csr_matrix([[1.0, 0.0], [3.0, 4.0]]))`
