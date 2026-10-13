@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>fips.problems.flux.pipeline &#8212; fips 0.1.0b10.dev28+gb073088db documentation</title>
+    <title>fips.problems.flux.pipeline &#8212; fips 0.1.0b10.dev31+g71773da05 documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="../../../../_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0" />
 <link rel="preload" as="script" href="../../../../_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0" />
 
-    <script src="../../../../_static/documentation_options.js?v=2588e599"></script>
+    <script src="../../../../_static/documentation_options.js?v=ff79da87"></script>
     <script src="../../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -130,8 +130,8 @@
       
     
     
-    <img src="../../../../_static/logo.png" class="logo__image only-light" alt="fips 0.1.0b10.dev28+gb073088db documentation - Home"/>
-    <img src="../../../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.1.0b10.dev28+gb073088db documentation - Home"/>
+    <img src="../../../../_static/logo.png" class="logo__image only-light" alt="fips 0.1.0b10.dev31+g71773da05 documentation - Home"/>
+    <img src="../../../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.1.0b10.dev31+g71773da05 documentation - Home"/>
   
   
 </a></div>
@@ -513,6 +513,15 @@
 <span class="sd">        -------</span>
 <span class="sd">        tuple[Vector, Vector]</span>
 <span class="sd">            Filtered observation and prior vectors.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        TypeError</span>
+<span class="sd">            If the frequency of the flux times has to be inferred (``flux_freq``</span>
+<span class="sd">            is not set in the config) and the ``time`` level of ``prior`` is not</span>
+<span class="sd">            datetimes.</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            If the frequency cannot be inferred from the flux times.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="n">min_obs_per_interval</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">min_obs_per_interval</span>
@@ -537,6 +546,12 @@
 
             <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">times</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">IntervalIndex</span><span class="p">):</span>  <span class="c1"># Assume regular intervals</span>
                 <span class="k">if</span> <span class="n">freq</span> <span class="o">==</span> <span class="s2">&quot;infer&quot;</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">times</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DatetimeIndex</span><span class="p">):</span>
+                        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                            <span class="s2">&quot;Cannot infer the frequency of the inventory time index: &quot;</span>
+                            <span class="sa">f</span><span class="s2">&quot;the &#39;time&#39; level has dtype </span><span class="si">{</span><span class="n">times</span><span class="o">.</span><span class="n">dtype</span><span class="si">}</span><span class="s2">, not datetime. &quot;</span>
+                            <span class="s2">&quot;Convert it to datetimes or specify freq.&quot;</span>
+                        <span class="p">)</span>
                     <span class="n">freq</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">infer_freq</span><span class="p">(</span><span class="n">times</span><span class="p">)</span>
                     <span class="k">if</span> <span class="n">freq</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
@@ -593,7 +608,15 @@
 <div class="viewcode-block" id="FluxInversionPipeline.summarize">
 <a class="viewcode-back" href="../../../../reference/api/fips.problems.flux.pipeline.FluxInversionPipeline.summarize.html#fips.problems.flux.pipeline.FluxInversionPipeline.summarize">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">summarize</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Print a comprehensive statistical summary of the inversion results.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Print a comprehensive statistical summary of the inversion results.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        TypeError</span>
+<span class="sd">            If the posterior flux has more than two timesteps and its ``time``</span>
+<span class="sd">            level is not datetimes, since the trend is a rate per year.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="kn">from</span><span class="w"> </span><span class="nn">scipy</span><span class="w"> </span><span class="kn">import</span> <span class="n">stats</span>
 
         <span class="n">problem</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">problem</span>
@@ -649,6 +672,11 @@
         <span class="n">trend_str</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">post_by_time</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>
             <span class="n">t</span> <span class="o">=</span> <span class="n">post_by_time</span><span class="o">.</span><span class="n">index</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DatetimeIndex</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                    <span class="s2">&quot;Cannot compute the flux trend: the &#39;time&#39; level of the &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;flux has dtype </span><span class="si">{</span><span class="n">t</span><span class="o">.</span><span class="n">dtype</span><span class="si">}</span><span class="s2">, not datetime.&quot;</span>
+                <span class="p">)</span>
             <span class="n">t_years</span> <span class="o">=</span> <span class="n">t</span><span class="o">.</span><span class="n">year</span> <span class="o">+</span> <span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">day_of_year</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="mf">365.25</span>
             <span class="n">slope</span><span class="p">,</span> <span class="n">intercept</span><span class="p">,</span> <span class="n">r_value</span><span class="p">,</span> <span class="n">p_value</span><span class="p">,</span> <span class="n">std_err</span> <span class="o">=</span> <span class="n">stats</span><span class="o">.</span><span class="n">linregress</span><span class="p">(</span>
                 <span class="n">t_years</span><span class="p">,</span> <span class="n">post_by_time</span><span class="o">.</span><span class="n">values</span>
