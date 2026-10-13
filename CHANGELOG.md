@@ -61,6 +61,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- `MatrixBlock.reindex`, `round_index` and `copy` raised "MatrixBlock must have
+  both row_block and col_block defined", as did `to_sparse` (it copies) and
+  `to_dense` of a sparse block: the new block was built without its block names.
+  They return a block with the same `row_block`, `col_block` and name, and
+  `reindex(..., inplace=True)` and the `Matrix` classes were not affected.
+  Present in 0.1.0b9.
+  ([#65](https://github.com/jmineau/fips/issues/65))
 - On pandas 3, a NaN stored in a sparse matrix was read as a zero, where the
   dense path raises "Data contains NaN values.". A NaN variance given to
   `CovarianceBuilder.build(sparse=True)`, a NaN in a sparse forward operator

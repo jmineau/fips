@@ -120,6 +120,15 @@ class MatrixBlock(SingleBlockMixin, Structure2D):
             sparse=sparse,
         )
 
+    def _with_data(self, data: pd.Series | pd.DataFrame) -> Self:
+        """Return a new block that holds `data` and keeps this one's name and block names."""
+        return type(self)(
+            data,
+            row_block=self.row_block,
+            col_block=self.col_block,
+            name=self.name,
+        )
+
     def _validate(self):
         """Raise unless both row and column block names are set."""
         super()._validate()

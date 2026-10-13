@@ -745,6 +745,66 @@ class TestMatrixBlock:
         assert "state" in df.index.get_level_values(0)
         assert "obs" in df.columns.get_level_values(0)
 
+    @pytest.fixture(params=[False, True], ids=["dense", "sparse"])
+    def block(self, request):
+        """A rectangular block with a name of its own, dense and sparse."""
+        data = pd.DataFrame(
+            [[1.0, 2.0, 0.0], [0.0, 4.0, 5.0]],
+            index=pd.Index([0.11, 0.26], name="obs_id"),
+            columns=pd.Index(["s0", "s1", "s2"], name="state_id"),
+        )
+        return MatrixBlock(
+            data, row_block="obs", col_block="state", name="H", sparse=request.param
+        )
+
+    @pytest.mark.parametrize(
+        "rebuild",
+        [
+            lambda block: block.reindex(block.index, fill_value=0.0),
+            lambda block: block.round_index(1),
+            lambda block: block.copy(),
+            lambda block: block.copy(deep=False),
+            lambda block: block.to_dense(),
+            lambda block: block.to_sparse(),
+        ],
+        ids=["reindex", "round_index", "copy", "shallow_copy", "to_dense", "to_sparse"],
+    )
+    def test_rebuilt_block_keeps_its_names(self, block, rebuild):
+        """A new block made from this one has its block names and its name."""
+        result = rebuild(block)
+        assert isinstance(result, MatrixBlock)
+        assert (result.row_block, result.col_block, result.name) == (
+            "obs",
+            "state",
+            "H",
+        )
+
+    def test_reindex_block(self, block):
+        """New rows are filled, and storage stays as it was."""
+        new_rows = pd.Index([0.11, 0.26, 0.5], name="obs_id")
+        result = block.reindex(new_rows, fill_value=0.0)
+        assert result.is_sparse == block.is_sparse
+        pd.testing.assert_index_equal(result.index, new_rows)
+        np.testing.assert_array_equal(
+            dense(result), [[1.0, 2.0, 0.0], [0.0, 4.0, 5.0], [0.0, 0.0, 0.0]]
+        )
+        np.testing.assert_array_equal(dense(block), [[1.0, 2.0, 0.0], [0.0, 4.0, 5.0]])
+
+    def test_reindex_block_columns(self, block):
+        """Rows and columns are both reindexed."""
+        new_cols = pd.Index(["s2", "s0", "s3"], name="state_id")
+        result = block.reindex(block.index, columns=new_cols, fill_value=0.0)
+        assert (result.row_block, result.col_block) == ("obs", "state")
+        np.testing.assert_array_equal(dense(result), [[0.0, 1.0, 0.0], [5.0, 0.0, 0.0]])
+
+    def test_round_index_block(self, block):
+        """The rounded labels are on the new block only."""
+        result = block.round_index(1)
+        pd.testing.assert_index_equal(result.index, pd.Index([0.1, 0.3], name="obs_id"))
+        pd.testing.assert_index_equal(
+            block.index, pd.Index([0.11, 0.26], name="obs_id")
+        )
+
     def test_matrix_block_pickle_support(self):
         """Test MatrixBlock pickle serialization."""
         data = pd.DataFrame(
