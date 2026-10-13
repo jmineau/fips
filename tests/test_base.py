@@ -1,5 +1,7 @@
 """Tests for base classes and core utilities."""
 
+import pickle
+
 import numpy as np
 import pandas as pd
 import pytest
@@ -220,6 +222,37 @@ def test_structure2d():
         np.array([[1, 2], [3, 4]]), index=pd.Index([1, 2], name="a")
     )
     pd.testing.assert_index_equal(struct_sym.columns, pd.Index([1, 2], name="a"))
+
+
+@pytest.mark.parametrize(
+    ("name", "expected"),
+    [("test", "test"), (0, "0"), (5, "5"), ((1, 2), "(1, 2)"), (None, None)],
+    ids=["str", "zero", "int", "tuple", "None"],
+)
+def test_structure2d_name_is_a_string_or_none(name, expected):
+    """A name that is not None becomes a string, and None stays None, as in Structure1D."""
+    df = pd.DataFrame([[1.0, 2.0], [3.0, 4.0]], index=pd.Index([1, 2], name="a"))
+    df.columns.name = "b"
+    series = pd.Series([1.0, 2.0], index=pd.Index([1, 2], name="a"))
+
+    struct_2d = Structure2D(df, name=name)
+    struct_1d = Structure1D(series, name=name)
+
+    assert struct_2d.name == expected
+    assert type(struct_2d.name) is type(expected)
+    assert struct_2d.name == struct_1d.name
+
+
+def test_structure2d_name_is_kept_by_copy_and_pickle():
+    """The stored name is the string, so a copy and an unpickled copy have the same one."""
+    df = pd.DataFrame([[1.0, 2.0], [3.0, 4.0]], index=pd.Index([1, 2], name="a"))
+    df.columns.name = "b"
+
+    for name, expected in [(5, "5"), (None, None)]:
+        struct = Structure2D(df, name=name)
+        for result in (struct.copy(), pickle.loads(pickle.dumps(struct))):
+            assert result.name == expected
+            assert type(result.name) is type(expected)
 
 
 class DummySingleBlock(SingleBlockMixin, DummyStructure):

@@ -54,6 +54,7 @@ class MatrixBlock(SingleBlockMixin, Structure2D):
         Name of the column block (e.g., "state", "obs"). Required if data is not a MatrixBlock.
     name : str, optional
         Name for the block. If None, defaults to "{row_block}_{col_block}".
+        A name that is not a string is converted to one.
     index : pd.Index, optional
         Index for the rows of the DataFrame.
     columns : pd.Index, optional
@@ -210,7 +211,7 @@ class Matrix(MultiBlockMixin, Structure2D):
         maps ``(row_block, col_block)`` to 2D data. If Matrix, creates a copy.
         For a diagonal, use :meth:`diagonal`.
     name : str, optional
-        Name for the Matrix.
+        Name for the Matrix. A name that is not None is converted to a string.
     index : pd.MultiIndex
         Index for the rows of the DataFrame.
     columns : pd.MultiIndex, optional
@@ -343,7 +344,9 @@ class Matrix(MultiBlockMixin, Structure2D):
         Returns
         -------
         Matrix
-            Sum of the two Matrix instances.
+            Sum of the two Matrix instances. It has the name of the two when
+            they have the same one, and no name otherwise (``name`` is None), as
+            the sum of two pandas Series does. A sum with a scalar has no name.
         """
         Klass = type(self)
         if isinstance(other, Klass):
@@ -357,6 +360,7 @@ class Matrix(MultiBlockMixin, Structure2D):
             b = other.data.sparse.to_dense() if other.is_sparse else other.data
             return Klass(
                 a.values + b.values,
+                name=self.name if self.name == other.name else None,
                 index=self.index,
                 columns=self.columns,
             )
@@ -378,14 +382,13 @@ class Matrix(MultiBlockMixin, Structure2D):
         Returns
         -------
         Matrix
-            New Matrix instance scaled by the factor.
+            New Matrix instance scaled by the factor. It keeps this matrix's
+            name (None when the matrix has none).
         """
         if not np.isscalar(factor):
             raise TypeError("Factor must be a scalar (float or int).")
         # Multiply via pandas so SparseDtype is preserved naturally
-        scaled_data = self.data * factor
-        result = type(self)(scaled_data, index=self.index, columns=self.columns)
-        return result
+        return self._with_data(self.data * factor)
 
     def to_xarray(self):
         """Convert to xarray (not implemented for base Matrix class)."""
