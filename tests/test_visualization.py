@@ -12,6 +12,11 @@ from fips.visualization import (
 )
 
 
+def _unwrapped_name(x):
+    """The name of the Series ``x`` is or holds."""
+    return x.data.name if isinstance(x, Block) else x.name
+
+
 class TestPlotErrorNorm:
     """Tests for plot_error_norm function."""
 
@@ -360,6 +365,100 @@ class TestPlotComparison:
         (whiskers,) = ax.containers[0].lines[2]
         lengths = [seg[1, 1] - seg[0, 1] for seg in whiskers.get_segments()]
         np.testing.assert_allclose(lengths, 2 * errors["a"].values)
+
+    @staticmethod
+    def _band(ax):
+        """The lowest and highest y of the one shaded band on ``ax``."""
+        (band,) = ax.collections
+        y = band.get_paths()[0].vertices[:, 1]
+        return y.min(), y.max()
+
+    @pytest.mark.parametrize("position", [0, 1])
+    def test_a_series_with_no_error_has_no_band(self, position):
+        """A None error leaves its series bare; the other series keeps its band."""
+        values = [[1.0, 2.0, 3.0], [11.0, 12.0, 13.0]]
+        a, b = (self._series(n, v) for n, v in zip("ab", values, strict=True))
+        err = self._series("sigma", [0.5, 0.25, 0.125])
+        errors = [err if i == position else None for i in range(2)]
+
+        _, ax = plot_comparison(a, b, errors=errors)
+
+        low, high = self._band(ax)
+        assert low == pytest.approx((np.array(values[position]) - err.values).min())
+        assert high == pytest.approx((np.array(values[position]) + err.values).max())
+        assert list(self._lines(ax)) == ["a", "b"]
+
+    def test_a_bar_with_no_error_has_no_whiskers(self):
+        """On a bar plot, only the series that has an error gets whiskers."""
+        labels = ["u", "v", "w"]
+        a = self._series("a", [1.0, 2.0, 3.0], labels=labels)
+        b = self._series("b", [1.5, 2.5, 3.5], labels=labels)
+        err = self._series("sigma", [0.5, 0.25, 0.125], labels=labels)
+
+        _, ax = plot_comparison(a, b, errors=[None, err])
+
+        (whiskers,) = ax.collections
+        segments = whiskers.get_segments()
+        lengths = [seg[1, 1] - seg[0, 1] for seg in segments]
+        np.testing.assert_allclose(lengths, 2 * err.values)
+        # the second series' bars sit 0.2 to the right of the first's
+        np.testing.assert_allclose([seg[0, 0] for seg in segments], [0.2, 1.2, 2.2])
+
+    def test_unnamed_series_keep_their_own_errors(self):
+        """Without names the series are told apart by position, errors included."""
+        idx = pd.Index([0.0, 1.0, 2.0], name="x")
+        a = pd.Series([1.0, 2.0, 3.0], index=idx)
+        b = pd.Series([11.0, 12.0, 13.0], index=idx)
+        err = pd.Series([0.5, 0.5, 0.5], index=idx)
+
+        _, ax = plot_comparison(a, b, errors=[None, err])
+
+        assert self._band(ax) == pytest.approx((10.5, 13.5))
+
+    @pytest.mark.parametrize("errors", [[None], [None, None], None])
+    def test_no_errors_no_bands(self, errors):
+        """None for every series is the same as no errors."""
+        a = self._series("a", [1.0, 2.0, 3.0])
+        b = self._series("b", [1.5, 2.5, 3.5])
+
+        _, ax = plot_comparison(a, b, errors=errors)
+
+        assert len(ax.collections) == 0
+        assert list(self._lines(ax)) == ["a", "b"]
+
+    def test_one_error_for_two_series(self):
+        """The same error object can serve two series: each gets its own band."""
+        a = self._series("a", [1.0, 2.0, 3.0])
+        b = self._series("b", [11.0, 12.0, 13.0])
+        err = self._series("sigma", [0.5, 0.5, 0.5])
+
+        _, ax = plot_comparison(a, b, errors=[err, err])
+
+        lows = [band.get_paths()[0].vertices[:, 1].min() for band in ax.collections]
+        assert lows == pytest.approx([0.5, 10.5])
+
+    @pytest.mark.parametrize(
+        "wrap",
+        [pytest.param(lambda e: e, id="series"), pytest.param(Block, id="block")],
+    )
+    def test_errors_keep_their_name(self, wrap):
+        """The error is renamed for plotting, but the one the caller passed is not."""
+        a = self._series("a", [1.0, 2.0, 3.0])
+        err = wrap(self._series("sigma", [0.5, 0.5, 0.5]))
+        before = _unwrapped_name(err)
+
+        plot_comparison(a, errors=[err])
+
+        assert _unwrapped_name(err) == before == "sigma"
+
+    def test_errors_frame_gains_no_name(self):
+        """A DataFrame of errors is read for its columns and left as it was."""
+        a = self._series("a", [1.0, 2.0, 3.0])
+        errors = self._series("a", [0.5, 0.5, 0.5]).to_frame()
+
+        plot_comparison(a, errors=[errors])
+
+        assert not hasattr(errors, "name")
 
 
 class TestComputeCredibleInterval:

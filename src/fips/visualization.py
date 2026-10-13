@@ -128,6 +128,8 @@ def plot_comparison(
     errors : Sequence of pd.DataFrame or CovarianceMatrix or Matrix or pd.Series or None, optional
         Error estimates for each series. Must match length of series.
         If CovarianceMatrix or Matrix, extracts diagonal as standard deviations.
+        Use None for a series with no error: it is plotted without a band or
+        error bars.
     kind : {'line', 'bar'}, optional
         Plot type. If None, auto-detects based on x-axis data type.
 
@@ -143,15 +145,16 @@ def plot_comparison(
     # Unpack data
     df = pd.concat([_unwrap(s) for s in series], axis=1)
 
-    # Extract standard deviations for error bounds
+    # Extract standard deviations for error bounds: one column per series that has
+    # one, labeled like the series' column in ``df`` (a series without an error is
+    # left out, and so has no column)
     err_list = []
     if errors:
-        for i, (s, err) in enumerate(zip(series, errors, strict=False)):
+        for i, err in enumerate(errors[: len(series)]):
             if err is None:
-                err_list.append(None)
                 continue
 
-            name = getattr(s, "name", df.columns[i])
+            name = df.columns[i]
 
             if isinstance(err, CovarianceMatrix):
                 e = pd.Series(np.sqrt(err.variances.values), index=err.index, name=name)
@@ -159,8 +162,9 @@ def plot_comparison(
                 e = pd.Series(np.sqrt(np.diag(err.values)), index=err.index, name=name)
             else:
                 e = _unwrap(err)
+                if isinstance(e, pd.Series):
+                    e = e.rename(name)  # a copy: the caller's Series keeps its name
 
-            e.name = name
             err_list.append(e)
 
     err_df = pd.concat(err_list, axis=1) if err_list else None
@@ -190,7 +194,7 @@ def plot_comparison(
 
     for i, col in enumerate(df.columns):
         y = df[col]
-        e = err_df[col] if err_df is not None else None
+        e = err_df[col] if err_df is not None and col in err_df else None
 
         if kind == "line":
             ax.plot(x_vals, y, label=str(col), color=colors[i])
