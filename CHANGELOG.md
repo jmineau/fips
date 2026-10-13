@@ -61,6 +61,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- On pandas 3, a column of a sparse frame that stores every row kept
+  `fill_value=NaN`, where every other column filled with 0.0, so a frame such
+  as `DataFrame.sparse.from_spmatrix(csr_matrix([[1.0, 0.0], [3.0, 4.0]]))`
+  handed to `Matrix` had mixed fills and warned ("Concatenating sparse arrays
+  with multiple fill values"). The same happened to a covariance from
+  `CovarianceBuilder.build(sparse=True)` or an operator from `ObsAggregator`
+  with a column that has no zero. Every column now fills with 0.0. No cell
+  changes: a column that stores every row has no implicit entry. pandas 2 was
+  not affected.
+  ([#64](https://github.com/jmineau/fips/issues/64))
 - `MatrixBlock.reindex`, `round_index` and `copy` raised "MatrixBlock must have
   both row_block and col_block defined", as did `to_sparse` (it copies) and
   `to_dense` of a sparse block: the new block was built without its block names.
