@@ -1,5 +1,6 @@
 """Test suite for fips.problems.flux.pipeline module."""
 
+import logging
 import re
 from datetime import UTC, timedelta, timezone
 from types import SimpleNamespace
@@ -240,17 +241,46 @@ class TestSummarize:
         "times",
         [
             pytest.param(range(4), id="integers"),
+            pytest.param(list("abcd"), id="strings"),
+            pytest.param(pd.timedelta_range("1D", periods=4), id="timedeltas"),
             pytest.param(
                 pd.interval_range(pd.Timestamp("2023-01-01"), periods=4, freq="MS"),
                 id="intervals",
             ),
         ],
     )
-    def test_a_trend_needs_datetimes(self, times, capsys):
-        """The trend is a rate per year, so it needs the times as datetimes."""
+    def test_a_trend_needs_datetimes(self, times, capsys, caplog):
+        """The trend is a rate per year: without datetimes it is left out, and logged."""
         pipeline = _Pipeline(SimpleNamespace())
+        dated = _summary(
+            pipeline,
+            _solved_problem(pd.date_range("2023-01-01", periods=4, freq="MS")),
+            capsys,
+        )
+        problem = _solved_problem(pd.Index(times))
+        caplog.clear()
 
-        with pytest.raises(
-            TypeError, match="Cannot compute the flux trend.*not datetime"
-        ):
-            _summary(pipeline, _solved_problem(pd.Index(times)), capsys)
+        with caplog.at_level(logging.INFO, logger="fips.problems.flux.pipeline"):
+            out = _summary(pipeline, problem, capsys)
+
+        assert "MEAN FLUX BY TIMESTEP:" in out
+        assert "POSTERIOR FLUX TREND:" not in out
+        # the report above the timesteps does not depend on the times
+        head = out.split("MEAN FLUX BY TIMESTEP:")[0]
+        assert head == dated.split("MEAN FLUX BY TIMESTEP:")[0]
+        assert "FLUX INVERSION SUMMARY REPORT" in head
+        (record,) = caplog.records
+        assert record.levelno == logging.INFO
+        assert "Skipping the flux trend" in record.getMessage()
+
+    def test_nothing_is_logged_when_the_trend_is_computed(self, capsys, caplog):
+        """Nothing is skipped, so nothing is logged, when the times are datetimes."""
+        times = pd.date_range("2023-01-01", periods=4, freq="MS")
+        problem = _solved_problem(times)
+        caplog.clear()
+
+        with caplog.at_level(logging.INFO, logger="fips.problems.flux.pipeline"):
+            out = _summary(_Pipeline(SimpleNamespace()), problem, capsys)
+
+        assert "POSTERIOR FLUX TREND:" in out
+        assert caplog.records == []

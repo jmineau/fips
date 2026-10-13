@@ -52,15 +52,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   whatever the `time` level was: integers raised pandas's own `TypeError`,
   strings and mixed time zones a `ValueError`, and timedeltas were accepted and
   dropped every observation, since no interval of timedeltas holds an
-  observation time. `FluxInversionPipeline.summarize` raises the same kind of
-  `TypeError` where it raised `AttributeError: 'Index' object has no attribute
-  'year'`: the flux has more than two timesteps and its `time` level is not
-  datetimes. A `time` level of timestamps stored as objects is not affected; a
-  `Vector` already reads it as datetimes.
+  observation time. A `time` level of timestamps stored as objects is not
+  affected; a `Vector` already reads it as datetimes.
   ([#43](https://github.com/jmineau/fips/issues/43))
 
 ### Fixed
 
+- `FluxInversionPipeline.summarize` leaves out the flux trend when the `time`
+  level of the flux is not datetimes, where it raised `AttributeError: 'Index'
+  object has no attribute 'year'`. The trend is a rate per year, so it needs
+  datetimes, and only a flux with more than two timesteps has one: a pipeline
+  whose flux times are integer steps, or intervals, failed at the end of `run`,
+  after the solve. The rest of the report is unchanged, and the skip is logged
+  at `INFO` level.
 - `plot_comparison` accepts `None` as the error of a series when another series
   has one: `plot_comparison(a, b, errors=[None, err])` raised `KeyError` (and
   `errors=[None]` or all `None` raised `ValueError`). A series with no error is
