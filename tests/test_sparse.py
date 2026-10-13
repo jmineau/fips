@@ -430,3 +430,136 @@ class TestSparseFillValue:
             builder.build(idx, sparse=True).sparse.to_dense().to_numpy(),
             builder.build(idx, sparse=False).to_numpy(),
         )
+
+
+# ---------------------------------------------------------------------------
+# A NaN stored in a sparse matrix is data, not an implicit zero
+# ---------------------------------------------------------------------------
+
+_SITES = pd.MultiIndex.from_product(
+    [["state"], ["a", "b", "c"]], names=["block", "site"]
+)
+
+
+def _nan_filled_frame(stored_nan: bool) -> pd.DataFrame:
+    """
+    Build a sparse frame with ``fill_value=NaN`` that stores rows 0 and 1.
+
+    pandas 3's ``from_spmatrix`` builds frames like this; pandas 2's fills
+    with 0.0, so the columns are built on a sparse index directly. Column "x"
+    stores a NaN in row 1 when `stored_nan` is set; row 2 is implicit.
+    """
+    stored = pd.arrays.SparseArray([1.0, 2.0, 0.0], fill_value=0.0).sp_index
+    x = [1.0, np.nan] if stored_nan else [1.0, 2.0]
+    return pd.DataFrame(
+        {
+            "x": pd.arrays.SparseArray(x, sparse_index=stored, fill_value=np.nan),
+            "y": pd.arrays.SparseArray(
+                [4.0, 5.0], sparse_index=stored, fill_value=np.nan
+            ),
+        }
+    )
+
+
+def _aggregator_inputs(stored_nan: bool):
+    """Return obs, a sparse forward operator and a covariance, as bare frames."""
+    from fips.indexes import assign_block
+
+    times = pd.DatetimeIndex(
+        [
+            "2023-01-01 00:00",
+            "2023-01-01 12:00",
+            "2023-01-02 00:00",
+            "2023-01-02 12:00",
+        ],
+        name="obs_time",
+    )
+    obs_idx = assign_block(times, "obs")
+    state_idx = assign_block(pd.Index(["s0", "s1"], name="state_id"), "state")
+    # s0 is seen on the first day only and s1 on the second: W @ H is diagonal
+    H = np.array([[0.5, 0.0], [0.5, 0.0], [0.0, 0.5], [0.0, 0.5]])
+    if stored_nan:
+        H[1, 0] = np.nan
+    H_df = pd.DataFrame(H, index=obs_idx, columns=state_idx).astype(
+        pd.SparseDtype(float, fill_value=0.0)
+    )
+    obs = pd.Series([1.0, 2.0, 3.0, 4.0], index=obs_idx, name="obs")
+    S_z = pd.DataFrame(np.eye(4) * 2.0, index=obs_idx, columns=obs_idx)
+    return obs, H_df, S_z
+
+
+def _daily(idx):
+    """Group obs_time to daily frequency."""
+    return idx.get_level_values("obs_time").floor("D")
+
+
+class TestStoredNaN:
+    """A NaN stored in a sparse matrix is refused, as on the dense path."""
+
+    def test_normalize_raises_on_stored_nan(self):
+        """Filling would read the stored NaN as a zero."""
+        from fips._sparse import normalize_fill_value
+
+        with pytest.raises(ValueError, match="Data contains NaN values."):
+            normalize_fill_value(_nan_filled_frame(stored_nan=True))
+
+    def test_normalize_fills_implicit_entries_only(self):
+        """Without a stored NaN the implicit entries become zeros, nothing else."""
+        from fips._sparse import normalize_fill_value
+
+        frame = _nan_filled_frame(stored_nan=False)
+        out = normalize_fill_value(frame)
+        assert all(dt.fill_value == 0.0 for dt in out.dtypes)
+        np.testing.assert_array_equal(
+            out.sparse.to_dense().to_numpy(), [[1.0, 4.0], [2.0, 5.0], [0.0, 0.0]]
+        )
+        assert out.sparse.density == pytest.approx(frame.sparse.density)
+
+    def test_covariance_builder_sparse(self):
+        """A NaN variance is refused on the sparse build, as on the dense one."""
+        from fips.covariance import CovarianceMatrix
+
+        builder = CovarianceBuilder([DiagonalError("e", np.nan)])
+        with pytest.raises(ValueError, match="Data contains NaN values."):
+            CovarianceMatrix(builder.build(_SITES))
+        with pytest.raises(ValueError, match="Data contains NaN values."):
+            CovarianceMatrix(builder.build(_SITES, sparse=True))
+
+    def test_pandas_native_sparse_frame(self):
+        """A frame built with from_spmatrix from a matrix that stores a NaN."""
+        sp = pytest.importorskip("scipy.sparse")
+        dense = np.diag([1.0, np.nan, 3.0])
+        frame = pd.DataFrame.sparse.from_spmatrix(
+            sp.csr_matrix(dense), index=_SITES, columns=_SITES
+        )
+        with pytest.raises(ValueError, match="Data contains NaN values."):
+            Matrix(pd.DataFrame(dense, index=_SITES, columns=_SITES))
+        with pytest.raises(ValueError, match="Data contains NaN values."):
+            Matrix(frame)
+
+    @pytest.mark.parametrize("sparse", [False, True])
+    def test_diagonal(self, sparse):
+        """A NaN on a diagonal is refused, sparse or dense."""
+        with pytest.raises(ValueError, match="Data contains NaN values."):
+            Matrix.diagonal([1.0, np.nan, 3.0], index=_SITES, sparse=sparse)
+
+    def test_obs_aggregator_sparse_operator(self):
+        """A NaN in a sparse forward operator does not come out of W @ H as a zero."""
+        from fips.aggregators import ObsAggregator
+
+        obs, H, S_z = _aggregator_inputs(stored_nan=True)
+        with pytest.raises(ValueError, match="Data contains NaN values."):
+            ForwardOperator(ObsAggregator(by=_daily).apply(obs, H, S_z)[1])
+
+    def test_obs_aggregator_sparse_operator_without_nan(self):
+        """The sparse aggregated operator holds the dense one's numbers."""
+        from fips.aggregators import ObsAggregator
+
+        obs, H, S_z = _aggregator_inputs(stored_nan=False)
+        agg = ObsAggregator(by=_daily)
+        H_sparse = agg.apply(obs, H, S_z)[1]
+        H_dense = agg.apply(obs, H.sparse.to_dense(), S_z)[1]
+        dense = H_sparse.sparse.to_dense().to_numpy()
+        np.testing.assert_allclose(dense, [[0.5, 0.0], [0.0, 0.5]])
+        np.testing.assert_allclose(dense, H_dense.to_numpy())
+        assert ForwardOperator(H_sparse).is_sparse

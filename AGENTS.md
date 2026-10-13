@@ -131,13 +131,16 @@ From `fips.__init__`:
   through `fips._sparse.normalize_fill_value` first. Build a sparse frame from
   a scipy matrix with `fips._sparse.frame_from_spmatrix`, which does both
   steps and is the only `from_spmatrix` call in the package
-  (`CovarianceBuilder.build(sparse=True)`, `ObsAggregator._build_operator` and
+  (`CovarianceBuilder.build(sparse=True)`, `ObsAggregator.apply` and
   `diagonal_frame` use it); `Structure2D.__init__` normalizes too, which is what
   lets a user hand in a pandas-native sparse frame instead of being told it
   "contains NaN". It fills rather than re-typing: assigning a new SparseDtype
-  would keep the NaNs as stored entries. Pinned by `TestSparseFillValue` in
-  `tests/test_sparse.py` — do not drop it as redundant when pandas fixes the
-  regression; drop it when the minimum pandas has the fix.
+  would keep the NaNs as stored entries. Before it fills, it raises on a NaN
+  *stored* in the matrix (one in a column's `sp_values`, not an implicit
+  entry): that NaN is data, and filling would make it a zero where the dense
+  path raises (`TestStoredNaN` in `tests/test_sparse.py`). The fill is pinned
+  by `TestSparseFillValue` there — do not drop it as redundant when pandas
+  fixes the regression; drop it when the minimum pandas has the fix.
 - **Sparse paths.** `CovarianceMatrix` and large operators may be sparse.
   Don't densify in helpers without a sparse fallback — flux-scale problems
   are GB-class.

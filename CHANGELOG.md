@@ -61,6 +61,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- On pandas 3, a NaN stored in a sparse matrix was read as a zero, where the
+  dense path raises "Data contains NaN values.". A NaN variance given to
+  `CovarianceBuilder.build(sparse=True)`, a NaN in a sparse forward operator
+  aggregated by `ObsAggregator`, and a sparse frame built with
+  `DataFrame.sparse.from_spmatrix` from a matrix that stores a NaN and handed
+  to `Matrix` or another 2D structure all came out as zeros, so an inversion
+  could run with an element that has no uncertainty. They now raise the same
+  `ValueError` as the dense path. The implicit entries of a sparse frame are
+  still zeros. Since 0.1.0b8; pandas 2 was not affected.
+  ([#63](https://github.com/jmineau/fips/issues/63))
 - `plot_comparison` unpacks only a `Block` or a `Vector`. It took the `data`
   attribute of anything that had one, and pandas makes an index label or a
   column called `data` an attribute. A Series whose index had the label `data`
