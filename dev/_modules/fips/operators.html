@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>fips.operators &#8212; fips 0.1.0b10.dev45+g6b4eacb44 documentation</title>
+    <title>fips.operators &#8212; fips 0.1.0b10.dev46+g35672849a documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0" />
 
-    <script src="../../_static/documentation_options.js?v=877b613a"></script>
+    <script src="../../_static/documentation_options.js?v=a98df980"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -130,8 +130,8 @@
       
     
     
-    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.1.0b10.dev45+g6b4eacb44 documentation - Home"/>
-    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.1.0b10.dev45+g6b4eacb44 documentation - Home"/>
+    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.1.0b10.dev46+g35672849a documentation - Home"/>
+    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.1.0b10.dev46+g35672849a documentation - Home"/>
   
   
 </a></div>
@@ -524,6 +524,8 @@
         <span class="n">x_vals</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">values</span>
         <span class="k">if</span> <span class="n">op</span><span class="o">.</span><span class="n">is_sparse</span><span class="p">:</span>
             <span class="c1"># Use scipy CSR for efficient sparse matrix-vector multiply</span>
+            <span class="c1"># pandas-stubs do not type DataFrame.sparse</span>
+            <span class="c1"># pyrefly: ignore[missing-attribute]</span>
             <span class="n">y_values</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">sparse</span><span class="o">.</span><span class="n">to_coo</span><span class="p">()</span><span class="o">.</span><span class="n">tocsr</span><span class="p">()</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">x_vals</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">y_values</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">values</span> <span class="o">@</span> <span class="n">x_vals</span>

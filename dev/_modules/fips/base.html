@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>fips.base &#8212; fips 0.1.0b10.dev45+g6b4eacb44 documentation</title>
+    <title>fips.base &#8212; fips 0.1.0b10.dev46+g35672849a documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0" />
 
-    <script src="../../_static/documentation_options.js?v=877b613a"></script>
+    <script src="../../_static/documentation_options.js?v=a98df980"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -130,8 +130,8 @@
       
     
     
-    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.1.0b10.dev45+g6b4eacb44 documentation - Home"/>
-    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.1.0b10.dev45+g6b4eacb44 documentation - Home"/>
+    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.1.0b10.dev46+g35672849a documentation - Home"/>
+    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.1.0b10.dev46+g35672849a documentation - Home"/>
   
   
 </a></div>
@@ -536,6 +536,10 @@
         <span class="c1"># Drop index levels that are all nan</span>
         <span class="n">idx</span> <span class="o">=</span> <span class="n">s_or_df</span><span class="o">.</span><span class="n">axes</span><span class="p">[</span><span class="n">ax</span><span class="p">]</span>
         <span class="n">idx</span> <span class="o">=</span> <span class="n">idx</span><span class="o">.</span><span class="n">droplevel</span><span class="p">(</span>
+            <span class="c1"># pandas-stubs type Index.isna() as Index[bool], which has no all()</span>
+            <span class="c1"># (pandas returns an ndarray), and take only int | str as a level,</span>
+            <span class="c1"># though a level name is any Hashable</span>
+            <span class="c1"># pyrefly: ignore[missing-attribute, bad-argument-type]</span>
             <span class="p">[</span><span class="n">level</span> <span class="k">for</span> <span class="n">level</span> <span class="ow">in</span> <span class="n">idx</span><span class="o">.</span><span class="n">names</span> <span class="k">if</span> <span class="n">idx</span><span class="o">.</span><span class="n">get_level_values</span><span class="p">(</span><span class="n">level</span><span class="p">)</span><span class="o">.</span><span class="n">isna</span><span class="p">()</span><span class="o">.</span><span class="n">all</span><span class="p">()]</span>
         <span class="p">)</span>
 
@@ -644,6 +648,8 @@
             <span class="p">)</span>
 
         <span class="c1"># Check for NaN values</span>
+        <span class="c1"># pandas-stubs allow only axis=0 on Series.any(); pandas takes None</span>
+        <span class="c1"># pyrefly: ignore[bad-argument-type]</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">isnull</span><span class="p">()</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Data contains NaN values.&quot;</span><span class="p">)</span>
 
@@ -1221,6 +1227,8 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">values</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return values as numpy array or sparse matrix.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_sparse</span><span class="p">:</span>
+            <span class="c1"># pandas-stubs do not type DataFrame.sparse</span>
+            <span class="c1"># pyrefly: ignore[missing-attribute]</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">sparse</span><span class="o">.</span><span class="n">to_coo</span><span class="p">()</span><span class="o">.</span><span class="n">tocsr</span><span class="p">()</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
 
@@ -1242,6 +1250,8 @@
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return a copy with dense internal storage.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_sparse</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span>
+        <span class="c1"># pandas-stubs do not type DataFrame.sparse</span>
+        <span class="c1"># pyrefly: ignore[missing-attribute]</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_with_data</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">sparse</span><span class="o">.</span><span class="n">to_dense</span><span class="p">())</span></div>
 
 
