@@ -123,8 +123,56 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   are a read-only float array. Labels are kept as given, and duplicate, missing
   or unnamed labels raise a `ValueError` that names them.
   ([#82](https://github.com/jmineau/fips/issues/82))
+- **`Operator`, a matrix with a `Space` on each axis.**
+  `Operator(data, rows, cols)` holds the matrix in its cheapest form (a dense
+  array, a SciPy sparse matrix, a diagonal, Kronecker factors) and the labels
+  beside it. `Operator.from_frame(frame)` reads a DataFrame (an axis with a
+  `block` level gives the blocks; one without is one block, named by
+  `row_block` or `col_block`; pandas-sparse columns are read as a sparse
+  matrix), `Operator.from_blocks({(row_block, col_block): matrix})` assembles
+  one from its blocks (a pair left out is zero; sparse if every block is), and
+  `to_frame()` gives the dense DataFrame back. `op["co2", "flux"]` is one
+  block, labeled as it was given; `op @ other` and `op @ field` are products
+  and `+`, `-` sums, each after an exact join of the labels they meet on (any
+  order; a missing or extra label raises and is named); `T`, `align`,
+  `round_labels`, `dense()`, and a scalar `*` or `/` that keeps the form.
+  ([#82](https://github.com/jmineau/fips/issues/82))
+- **`Covariance`, an `Operator` from a space to itself**, with
+  `Covariance.diagonal(variances, space)` (kept as the diagonal),
+  `Covariance.block_diag(*covariances)` (each part keeps its form: a Kronecker
+  flux block and a diagonal bias block are never formed together), and
+  `variances`, `solve`, `logdet`, `quadratic_form` (of the inverse) and `sqrt`
+  (a factor `L` with `L L^T = S`), each done the way the form makes cheap.
+  ([#82](https://github.com/jmineau/fips/issues/82))
+- **`fips.linalg.BlockDiagonalOperator`**, and `logdet()` and `sqrt()` on every
+  form of `fips.linalg` (a Kronecker covariance that holds its whole product
+  gives its log-determinant from the factors).
+  ([#82](https://github.com/jmineau/fips/issues/82))
 
 ### Changed
+
+- **`InverseProblem`, `Posterior`, `ObsAggregator` and the flux problem take
+  and give operators.** `InverseProblem` takes the forward operator as an
+  `Operator` or a DataFrame and each covariance as a `Covariance`, an
+  `Operator`, a DataFrame, a scalar, a Series or Vector of variances, or a form
+  of `fips.linalg`; it puts the obs and the prior in their `Space` order (each
+  block's rows together) and holds `forward_operator` as an `Operator` and
+  `prior_error` and `modeldata_mismatch` as `Covariance`s. Labels missing within
+  a known block are still zeros, with a "Partial overlap" warning; a block
+  name that matches no block still raises. `Posterior.covariance`,
+  `prior_obs_covariance` and `desroziers` are `Covariance`s, `kalman_gain` and
+  `averaging_kernel()` `Operator`s, and `cov(W)` and `averaging_kernel(W)` take
+  the aggregation as an `Operator`. `ObsAggregator.apply` gives an `Operator`
+  (or `Covariance`) for one, and a dense DataFrame for a DataFrame.
+  `FluxProblem.jacobian` and the other matrix accessors give the block as an
+  `Operator`. ([#82](https://github.com/jmineau/fips/issues/82))
+- **Phase 1's unlabeled operators moved to `fips.linalg`**, and `Operator` now
+  names the labeled class: `fips.operator.Operator` is
+  `fips.linalg.LinearOperator`, `as_operator` is `as_linear_operator`, and
+  `DenseOperator`, `SparseOperator`, `DiagonalOperator` and `dottest` are in
+  `fips.linalg`; `KroneckerOperator` is in `fips.kronecker`. The forms no longer
+  have `to_frame` (an `Operator` has). `fips.convolve` is in `fips.operator`.
+  ([#82](https://github.com/jmineau/fips/issues/82))
 
 - **Labels are kept as given.** A structure no longer converts its labels to
   numbers: site codes `"001"`, `"010"` stay strings, where they became `1`,
@@ -255,6 +303,45 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `fips.indexes.to_numeric`, which converted labels to numbers when a
   structure was built. ([#77](https://github.com/jmineau/fips/issues/77))
+
+- **`Matrix`, `MatrixBlock`, `CovarianceMatrix` and `ForwardOperator`**, with
+  the modules `fips.matrix`, `fips.operators` and `fips._sparse`,
+  `fips.base.Structure2D`, `diagonal_frame` and `xselect`, and
+  `fips.indexes.assign_block`, `outer_align_levels` and `resolve_axes`: a
+  matrix is an `Operator`, a sparse one a SciPy matrix, and a `Space` pads and
+  strips the levels of its blocks. `CovarianceBuilder.build` no longer takes
+  `sparse` (it returns a dense DataFrame). Old pickles of the removed classes do
+  not load. ([#82](https://github.com/jmineau/fips/issues/82))
+
+  **Migration**, each removed name and what replaces it:
+
+  | Removed | Use |
+  |---|---|
+  | `Matrix(frame)`, `ForwardOperator(frame)` | `Operator.from_frame(frame)` |
+  | `Matrix([MatrixBlock(df, "obs", "flux"), ...])` | `Operator.from_blocks({("obs", "flux"): df, ...})` |
+  | `CovarianceMatrix(frame)` | `Covariance.from_frame(frame)` |
+  | `CovarianceMatrix.diagonal(v, index=idx)` | `Covariance.diagonal(v, Space.from_index(idx))` |
+  | `CovarianceMatrix.diagonal(..., sparse=True)` | `Covariance.diagonal(...)` (always kept as the diagonal) |
+  | `CovarianceMatrix([block_a, block_b])` (independent blocks) | `Covariance.block_diag(cov_a, cov_b)` |
+  | `CovarianceMatrix.from_operator(op, index)` | `Covariance(op, Space.from_index(index))` |
+  | `Matrix.from_operator(op, index, columns)` | `Operator(op, rows, cols)` |
+  | `m.data`, `m.to_frame()` | `op.to_frame()` (dense) |
+  | `m.values`, `m.to_numpy()`, `m.to_dense()` | `op.dense()` |
+  | `m.operator` | `op.data` |
+  | `m.index`, `m.columns` | `op.rows.index`, `op.cols.index` (`op.rows`, `op.cols` are the spaces) |
+  | `m["obs", "flux"]` (a DataFrame), `m.blocks["obs", "flux"]` | `op["obs", "flux"]` (an `Operator`; `.to_frame()` for a DataFrame) |
+  | `m.reindex(index, columns)` | `op.align(rows, cols)` (same labels, any order) |
+  | `m.round_index(d, axis="both")` | `op.round_labels(d)` |
+  | `m.scale(c)`, `m + n` | `op * c`, `op + other` |
+  | `m.xs(...)`, `xselect(...)` | `op[r, c]`, `Space.select` |
+  | `m.is_sparse`, `m.to_sparse()` | `isinstance(op.data, SparseOperator)`; `Operator(scipy.sparse.csr_matrix(...), rows, cols)` |
+  | `S.variances` (a `Vector`) | `S.variances` (a `Field`) |
+  | `S.force_symmetry()` | `(S + S.T) * 0.5` |
+  | `H.convolve(x)` | `fips.convolve(x, H)`, or `H @ field` |
+  | `m.to_file(path)`, `Matrix.from_file(path)` | `pickle` |
+  | `fips.operator.Operator`, `as_operator` | `fips.linalg.LinearOperator`, `as_linear_operator` |
+  | `fips.covariance.KroneckerOperator` | `fips.kronecker.KroneckerOperator` |
+  | `assign_block`, `outer_align_levels` | `Space({name: index}).index`, `Space` |
 
 - `Estimator._output_meta`, the private table `InverseProblem` read to label
   the estimator's outputs: `Posterior` labels them itself.

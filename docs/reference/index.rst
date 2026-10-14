@@ -7,11 +7,11 @@ This reference provides detailed documentation for all public classes, functions
    :maxdepth: 2
 
    space
+   operator
+   covariance
+   linalg
    blocks
    multiblocks
-   operators
-   covariance
-   operator
    inverse
    posterior
    estimators

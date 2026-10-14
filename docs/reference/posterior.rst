@@ -83,6 +83,8 @@ Inputs
    Posterior.estimator
    Posterior.state_index
    Posterior.obs_index
+   Posterior.state_space
+   Posterior.obs_space
 
 Serialization
 ~~~~~~~~~~~~~

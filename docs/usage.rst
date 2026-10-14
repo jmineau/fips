@@ -9,32 +9,34 @@ User Guide
 Data Model
 ----------
 
-*fips* uses a two-level hierarchy for all inputs:
+*fips* keeps labels beside the numbers, never inside them:
 
 .. list-table::
    :header-rows: 1
-   :widths: 20 20 60
+   :widths: 25 75
 
-   * - 1-D class
-     - 2-D class
+   * - Class
      - Role
-   * - :class:`~fips.Block`
-     - :class:`~fips.MatrixBlock`
-     - Single named component — the fundamental unit
-   * - :class:`~fips.Vector`
-     - :class:`~fips.Matrix`
-     - Multi-block composite used directly by :class:`~fips.InverseProblem`
-   * - —
-     - :class:`~fips.CovarianceMatrix`
-     - Semantic subclass of :class:`~fips.Matrix` for error covariances
-   * - —
-     - :class:`~fips.ForwardOperator`
-     - Semantic subclass of :class:`~fips.Matrix` for the Jacobian / :math:`H`
+   * - :class:`~fips.Space`
+     - The labels of a state, of the observations, or of one axis of a
+       matrix: named blocks, each labeled by its own pandas index, together
+       one :class:`pandas.MultiIndex` with a ``"block"`` level first
+   * - :class:`~fips.Field`
+     - Values on a space: a prior, the observations, an estimate
+   * - :class:`~fips.Operator`
+     - A matrix from one space (its columns) to another (its rows), kept in
+       its cheapest form: the forward operator :math:`H`, an aggregation
+   * - :class:`~fips.Covariance`
+     - A symmetric operator from a space to itself: :math:`S_0`, :math:`S_z`
+   * - :class:`~fips.Block`, :class:`~fips.Vector`
+     - The 1-D inputs of :class:`~fips.InverseProblem` (deprecated in favor of
+       :class:`~fips.Field`, which they are built with)
 
-A :class:`~fips.Vector` concatenates :class:`~fips.Block` objects along a
-hierarchical index that adds a ``"block"`` level identifying each component.
-The same pattern applies in 2-D.  Index alignment across components is handled
-automatically: :class:`~fips.InverseProblem` places each matrix on the
+Blocks may have different index levels: a level one block has and another
+lacks is missing (NaN) on the other's rows, and :class:`~fips.Space` is the
+one place that pads and strips those levels, so a block comes back with the
+labels (and dtypes) it was given. Index alignment across components is
+handled automatically: :class:`~fips.InverseProblem` places each matrix on the
 observation and state labels, and fills the labels a matrix lacks within a
 block with zeros (with a warning). A block name that matches no block of the
 state or the observations raises a :class:`ValueError`, and so does a label
@@ -46,60 +48,69 @@ them to numbers, and rounds float labels only when ``round_index`` is passed
 .. tip::
 
    Plain :class:`pandas.Series` and :class:`pandas.DataFrame` are accepted
-   everywhere — *fips* will promote them to :class:`~fips.Block` /
-   :class:`~fips.MatrixBlock` automatically.
+   by :class:`~fips.InverseProblem`: a DataFrame is read by
+   :meth:`Operator.from_frame <fips.Operator.from_frame>`, and an axis without
+   a ``"block"`` level takes the one block of the space it is placed on.
 
 
-Constructing Covariance Matrices
----------------------------------
+Building Operators and Covariances
+----------------------------------
 
-:class:`~fips.CovarianceMatrix` takes a full :class:`pandas.DataFrame` (or a 2D
-array with an ``index``), or a list of :class:`~fips.MatrixBlock` objects. The
-index needs a ``"block"`` level.
-
-A diagonal covariance (independent errors) has its own constructor,
-:meth:`~fips.CovarianceMatrix.diagonal`. It takes the variances and the index
-that labels both axes: a scalar is the same variance for every element, and a
-1D array or list gives one for each. A :class:`pandas.Series` or a
-:class:`~fips.Vector` brings its own index.
+An :class:`~fips.Operator` is built from its matrix and the two spaces, from
+a labeled :class:`pandas.DataFrame` (:meth:`~fips.Operator.from_frame`), or
+from its blocks (:meth:`~fips.Operator.from_blocks`), one per pair of a row
+block and a column block; a pair left out is zero. ``op.to_frame()`` gives the
+DataFrame back, and ``op["co2", "flux"]`` one block.
 
 .. ipython:: python
 
    import pandas as pd, numpy as np
-   from fips import CovarianceMatrix
+   import fips
 
-   idx = pd.MultiIndex.from_product([["obs"], ["a", "b", "c"]], names=["block", "id"])
+   obs = pd.Index(["o1", "o2", "o3"], name="obs_id")
+   cells = pd.Index(["a", "b"], name="cell")
+   H = fips.Operator.from_blocks(
+       {
+           ("co2", "flux"): pd.DataFrame(np.ones((3, 2)), index=obs, columns=cells),
+           ("co2", "bias"): pd.DataFrame(1.0, index=obs, columns=pd.Index(["A"], name="site")),
+       }
+   )
+   H.cols
+   H.to_frame()
 
-   # Diagonal: independent errors with the same variance
-   CovarianceMatrix.diagonal(0.25, index=idx).values
-
-   # Diagonal: a variance for each element
-   CovarianceMatrix.diagonal(pd.Series([0.5, 0.5, 1.0], index=idx)).values
-
-   # Full dense matrix
-   S = CovarianceMatrix(pd.DataFrame(np.eye(3) * 0.25, index=idx, columns=idx))
-   S.shape
-
-With ``sparse=True`` the diagonal is stored sparse and the dense matrix is never
-formed, which matters once the index is long:
+A diagonal covariance (independent errors) has its own constructor,
+:meth:`~fips.Covariance.diagonal`. It takes the variances and the space that
+labels both axes: a scalar is the same variance for every element, and a 1D
+array or list gives one for each. A :class:`~fips.Field` brings its own space.
+The covariance is kept as its diagonal, so it costs one number per element:
 
 .. ipython:: python
 
-   CovarianceMatrix.diagonal(0.25, index=idx, sparse=True).is_sparse
+   space = fips.Space({"obs": pd.Index(["a", "b", "c"], name="id")})
 
-:class:`~fips.Matrix`, :class:`~fips.ForwardOperator` and
-:class:`~fips.MatrixBlock` have the same ``diagonal`` constructor; a block also
-takes its ``row_block`` and ``col_block``. The constructors themselves take 2D
-data only: a scalar or 1D input raises an error that points to ``diagonal``.
+   # Diagonal: independent errors with the same variance
+   fips.Covariance.diagonal(0.25, space).dense()
+
+   # Diagonal: a variance for each element
+   S = fips.Covariance.diagonal([0.5, 0.5, 1.0], space)
+   S.data
+
+   # Full dense matrix
+   fips.Covariance(np.eye(3) * 0.25, space).shape
+
+Independent covariances go side by side with
+:meth:`~fips.Covariance.block_diag`, each keeping its form. A covariance also
+gives its :attr:`~fips.Covariance.variances`, :meth:`~fips.Covariance.solve`,
+:meth:`~fips.Covariance.logdet`, :meth:`~fips.Covariance.quadratic_form` (of
+its inverse) and :meth:`~fips.Covariance.sqrt`.
 
 A covariance that is a product of correlations along the levels (time, and
 space), as :class:`~fips.covariance.KroneckerError` builds, can be kept as its
 factors: :meth:`~fips.covariance.KroneckerError.operator` gives a
-:class:`~fips.covariance.KroneckerOperator`, which never forms the
-:math:`n \times n` matrix, and :meth:`~fips.CovarianceMatrix.from_operator`
-labels it. The rows can be any subset of the product, in any order. The solve
-computes :math:`H S_0` and :math:`H S_0 H^T` from the factors, and ``data`` or
-``values`` still give the matrix, formed the first time one is read:
+:class:`~fips.kronecker.KroneckerOperator`, which never forms the
+:math:`n \times n` matrix, and :class:`~fips.Covariance` labels it. The rows can
+be any subset of the product, in any order. The solve computes :math:`H S_0`
+and :math:`H S_0 H^T` from the factors, and ``dense()`` gives the matrix:
 
 .. ipython:: python
 
@@ -116,24 +127,25 @@ computes :math:`H S_0` and :math:`H S_0 H^T` from the factors, and ``data`` or
        0.25,
        [("time", GridTimeDecay("14D")), (["lat", "lon"], GridSpatialDecay("lat", "lon", 10.0))],
    )
-   S_0 = CovarianceMatrix.from_operator(error.operator(state), state)
-   [C.shape for C in S_0.operator.factors]
-   np.allclose(S_0.values, error.build(state).values)
+   S_0 = fips.Covariance(error.operator(state), fips.Space.from_index(state))
+   [C.shape for C in S_0.data.factors]
+   np.allclose(S_0.dense(), error.build(state).to_numpy())
 
-An :class:`~fips.InverseProblem` holds the indexes already, so its
-``prior_error`` and ``modeldata_mismatch`` can be given as a scalar variance, or
-as a Series or Vector of variances with a ``"block"`` level, or as an operator
-(such as ``error.operator(state)``), which it labels with the prior's or the
-observations' index.
+An :class:`~fips.InverseProblem` holds the spaces already, so its
+``prior_error`` and ``modeldata_mismatch`` can be given as a scalar variance,
+as a Series or Vector of variances, or as a form of :mod:`fips.linalg` (such
+as ``error.operator(state)``), which it labels with the prior's or the
+observations' labels.
 
 
 Sparse Matrices
 ---------------
 
 For large transport Jacobians (e.g. from STILT) with many structural zeros,
-sparse storage gives significant memory and speed savings.  Pass
-``sparse=True`` to :class:`~fips.MatrixBlock` at construction time, or convert
-an existing operator:
+sparse storage gives significant memory and speed savings. An operator built
+from a :mod:`scipy.sparse` matrix keeps it, never forming the dense one; so
+does one read from a DataFrame with pandas-sparse columns, whose entries a
+column does not store are zeros.
 
 .. note::
 
@@ -142,27 +154,24 @@ an existing operator:
 
 .. code-block:: python
 
-   from fips import MatrixBlock
+   import scipy.sparse as sp
+   from fips import Operator, Space
 
-   # Sparse at construction (recommended for large Jacobians)
-   H_block = MatrixBlock(df, row_block="obs", col_block="flux", sparse=True)
-
-   # Or convert an existing operator in-place
-   H_sparse = problem.forward_operator.to_sparse(threshold=1e-10)
+   H = Operator(sp.csr_matrix(values), rows=obs_space, cols=state_space)
 
 The same holds for the covariances: the forward operator, the prior error and
-the model-data mismatch can each be dense or sparse, in any combination. The
-solve computes with each matrix's ``operator``
-(:attr:`~fips.base.Structure2D.operator`), which holds a sparse matrix as a
-:mod:`scipy.sparse` matrix, never as the dense one, and a sparse matrix whose
-entries are all on its diagonal as that diagonal alone
-(:mod:`fips.operator`):
+the model-data mismatch can each be dense or sparse, in any combination. Each
+operator's ``data`` is its form (:mod:`fips.linalg`): a sparse matrix as a
+:class:`~fips.linalg.SparseOperator`, and a sparse matrix whose entries are
+all on its diagonal as that diagonal alone:
 
 .. ipython:: python
 
-   S = CovarianceMatrix.diagonal([0.5, 1.0, 2.0], index=idx, sparse=True)
-   S.operator
-   S.operator.solve(np.ones(3))
+   import scipy.sparse as sp
+
+   S = fips.Covariance(sp.diags([0.5, 1.0, 2.0]), space)
+   S.data
+   S.data.solve(np.ones(3))
 
 A product keeps the cheapest exact form: a diagonal times a sparse matrix is
 sparse, and anything times a dense matrix is dense. :math:`H S_0 H^T` stays
@@ -191,7 +200,7 @@ covariance (``post.covariance``) and averaging kernel
    import numpy as np
    import pandas as pd
    import fips
-   from fips import ForwardOperator, InverseProblem, Matrix
+   from fips import InverseProblem
    from fips.covariance import KroneckerError
    from fips.kernels import GridSpatialDecay, GridTimeDecay
 
@@ -218,9 +227,9 @@ covariance (``post.covariance``) and averaging kernel
    post = fips.solve(problem)
    post.variances.to_series().head()
 
-An aggregation turns the state into a few totals or means: a :class:`~fips.Matrix`
-with one row per aggregate and the state index as its columns (``1`` for a
-sum, ``1/count`` for a mean). ``post.cov(W)`` is the posterior covariance of
+An aggregation turns the state into a few totals or means: an
+:class:`~fips.Operator` with one row per aggregate and the state's labels as
+its columns (``1`` for a sum, ``1/count`` for a mean). ``post.cov(W)`` is the posterior covariance of
 the aggregates, :math:`W \hat{S} W^T`, and ``post.averaging_kernel(W)`` their
 averaging kernel, :math:`W A W^*` with :math:`W^*` the pseudo-inverse of
 :math:`W`; neither forms the :math:`n \times n` matrices. Here, the total
@@ -229,15 +238,15 @@ flux of each week:
 .. ipython:: python
 
    weeks = pd.MultiIndex.from_product([["total"], times], names=["block", "week"])
-   W = Matrix(
+   W = fips.Operator.from_frame(
        pd.DataFrame(
            (state.get_level_values("time").to_numpy() == times.to_numpy()[:, None]).astype(float),
            index=weeks,
            columns=state,
        )
    )
-   post.cov(W).data.round(4)
-   post.averaging_kernel(W).to_numpy().diagonal().round(3)
+   post.cov(W).to_frame().round(4)
+   post.averaging_kernel(W).dense().diagonal().round(3)
 
 The factors do not depend on the regularization factor ``gamma``, so
 ``post.with_gamma(0.5)`` is the posterior of ``fips.solve(problem, gamma=0.5)``
@@ -279,7 +288,7 @@ application:
    inversion.concentrations        # observed concentrations
    inversion.prior_fluxes          # prior flux pd.Series
    inversion.posterior_fluxes      # posterior flux pd.Series
-   inversion.posterior_flux_error  # posterior flux error pd.DataFrame
+   inversion.posterior_flux_error  # posterior flux error, a Covariance
    inversion.prior_concentrations  # H @ prior
    inversion.posterior_concentrations  # H @ posterior
 
@@ -288,19 +297,21 @@ application:
    inversion.plot.concentrations()
 
 For a STILT Jacobian, `PYSTILT <https://jmineau.github.io/PYSTILT>`_ sums the
-footprints onto your flux grid and time bins. Wrap its matrix in a
-:class:`~fips.MatrixBlock`:
+footprints onto your flux grid and time bins, as a sparse matrix with its
+labels. Put a space on each axis; the matrix stays sparse:
 
 .. code-block:: python
 
    import stilt
-   from fips import MatrixBlock
+   from fips import Operator, Space
 
    project = stilt.Project("my_project")
    sims = project.simulations
    H = project.jacobian(sims[sims.variant == "hrrr"], grid, time_bins)
-   jacobian = MatrixBlock(
-       H.to_frame(sparse=True), row_block="concentration", col_block="flux", sparse=True
+   jacobian = Operator(
+       H.data,
+       rows=Space({"concentration": H.receptors.rename("receptor")}),
+       cols=Space({"flux": H.columns}),
    )
 
 Its rows are receptor ids and its columns ``(time, lon, lat)``, so label the
@@ -358,9 +369,8 @@ workflow.  Subclass it, implement the abstract hooks, then call
 
 .. code-block:: python
 
+   from fips import Covariance, Operator
    from fips.pipeline import InversionPipeline
-   from fips.covariance import CovarianceMatrix
-   from fips.operators import ForwardOperator
    from fips.vector import Vector
 
    class MyPipeline(InversionPipeline):
@@ -382,14 +392,14 @@ workflow.  Subclass it, implement the abstract hooks, then call
            """Load prior from inventory / model output."""
            ...
 
-       def get_forward_operator(self, obs, prior) -> ForwardOperator:
+       def get_forward_operator(self, obs, prior) -> Operator:
            """Build or load the Jacobian."""
            ...
 
-       def get_prior_error(self, prior) -> CovarianceMatrix:
+       def get_prior_error(self, prior) -> Covariance:
            ...
 
-       def get_modeldata_mismatch(self, obs) -> CovarianceMatrix:
+       def get_modeldata_mismatch(self, obs) -> Covariance:
            ...
 
    solved = MyPipeline(config).run()
