@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>fips.InverseProblem &#8212; fips 0.1.0b10.dev49+g1995fceba documentation</title>
+    <title>fips.InverseProblem &#8212; fips 0.1.0b10.dev50+gcd1701038 documentation</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0" />
 
-    <script src="../../_static/documentation_options.js?v=2ee9f2ab"></script>
+    <script src="../../_static/documentation_options.js?v=26a5e785"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -133,8 +133,8 @@
       
     
     
-    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.1.0b10.dev49+g1995fceba documentation - Home"/>
-    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.1.0b10.dev49+g1995fceba documentation - Home"/>
+    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.1.0b10.dev50+gcd1701038 documentation - Home"/>
+    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.1.0b10.dev50+gcd1701038 documentation - Home"/>
   
   
 </a></div>
@@ -978,8 +978,17 @@ diagonal covariance.</p></li>
 <li><p><strong>prior_error</strong> (<em>MatrixLike</em><em> or </em><a class="reference internal" href="fips.Vector.html#fips.Vector" title="fips.Vector"><em>Vector</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><em>float</em></a>) – Covariance matrix representing prior error. A scalar, a Series or a
 Vector builds a diagonal covariance, as for <cite>modeldata_mismatch</cite>.</p></li>
 <li><p><strong>constant</strong> (<em>VectorLike</em><em> or </em><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><em>float</em></a><em>, </em><em>optional</em>) – Optional constant term added to the forward model (e.g., background or bias).</p></li>
-<li><p><strong>round_index</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><em>int</em></a><em>, </em><em>optional</em>) – Number of decimal places to round to. If None, no rounding is performed.</p></li>
+<li><p><strong>round_index</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><em>int</em></a><em>, </em><em>optional</em>) – Number of decimal places to round float labels to. If None, no
+rounding is performed. Labels that rounding makes equal raise a
+ValueError rather than being merged.</p></li>
 </ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/builtins/exceptions.html#ValueError" title="(in Python v3.15)"><strong>ValueError</strong></a> – If the state or observation index has duplicate labels, before or
+    after rounding, or if a block name of <cite>forward_operator</cite>,
+    <cite>prior_error</cite> or <cite>modeldata_mismatch</cite> (a MatrixBlock’s <cite>row_block</cite> or
+    <cite>col_block</cite>) matches no block of the space it is placed on. Labels
+    missing within a known block are filled with zeros, with a warning.</p>
 </dd>
 </dl>
 </dd></dl>

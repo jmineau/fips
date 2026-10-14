@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>fips.problem &#8212; fips 0.1.0b10.dev49+g1995fceba documentation</title>
+    <title>fips.problem &#8212; fips 0.1.0b10.dev50+gcd1701038 documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0" />
 
-    <script src="../../_static/documentation_options.js?v=2ee9f2ab"></script>
+    <script src="../../_static/documentation_options.js?v=26a5e785"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -130,8 +130,8 @@
       
     
     
-    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.1.0b10.dev49+g1995fceba documentation - Home"/>
-    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.1.0b10.dev49+g1995fceba documentation - Home"/>
+    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.1.0b10.dev50+gcd1701038 documentation - Home"/>
+    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.1.0b10.dev50+gcd1701038 documentation - Home"/>
   
   
 </a></div>
@@ -484,6 +484,93 @@
 
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
+<span class="n">_SHOWN</span> <span class="o">=</span> <span class="mi">5</span>  <span class="c1"># how many labels an error message lists</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_plain</span><span class="p">(</span><span class="n">label</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return ``label`` with NumPy scalars as Python ones, so it prints as typed.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">label</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">_plain</span><span class="p">(</span><span class="n">part</span><span class="p">)</span> <span class="k">for</span> <span class="n">part</span> <span class="ow">in</span> <span class="n">label</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">label</span><span class="o">.</span><span class="n">item</span><span class="p">()</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">label</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">generic</span><span class="p">)</span> <span class="k">else</span> <span class="n">label</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_listed</span><span class="p">(</span><span class="n">labels</span><span class="p">:</span> <span class="nb">list</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the first few of ``labels`` as text, saying how many were left out.&quot;&quot;&quot;</span>
+    <span class="n">text</span> <span class="o">=</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="n">_plain</span><span class="p">(</span><span class="n">label</span><span class="p">))</span> <span class="k">for</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">labels</span><span class="p">[:</span><span class="n">_SHOWN</span><span class="p">])</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">labels</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">_SHOWN</span><span class="p">:</span>
+        <span class="n">text</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot; and </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">labels</span><span class="p">)</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">_SHOWN</span><span class="si">}</span><span class="s2"> more&quot;</span>
+    <span class="k">return</span> <span class="n">text</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_check_unique_labels</span><span class="p">(</span>
+    <span class="n">index</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">,</span>
+    <span class="n">space</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">unrounded</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Index</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">decimals</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Raise a ValueError naming the duplicate labels of ``index``.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    index : pd.Index</span>
+<span class="sd">        The state or observation index.</span>
+<span class="sd">    space : str</span>
+<span class="sd">        What the index labels (&quot;state&quot; or &quot;observation&quot;), for the message.</span>
+<span class="sd">    unrounded : pd.Index, optional</span>
+<span class="sd">        ``index`` before ``round_index`` rounded it. When given, the message</span>
+<span class="sd">        names the distinct labels that rounding merged.</span>
+<span class="sd">    decimals : int, optional</span>
+<span class="sd">        The ``round_index`` that was used, for the message.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># The first position of each label that appears more than once</span>
+    <span class="n">firsts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">flatnonzero</span><span class="p">(</span>
+        <span class="n">index</span><span class="o">.</span><span class="n">duplicated</span><span class="p">(</span><span class="n">keep</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span> <span class="o">&amp;</span> <span class="o">~</span><span class="n">index</span><span class="o">.</span><span class="n">duplicated</span><span class="p">(</span><span class="n">keep</span><span class="o">=</span><span class="s2">&quot;first&quot;</span><span class="p">)</span>
+    <span class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">firsts</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span>
+    <span class="k">if</span> <span class="n">unrounded</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;The </span><span class="si">{</span><span class="n">space</span><span class="si">}</span><span class="s2"> index has duplicate labels: &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">_listed</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">index</span><span class="p">[</span><span class="n">firsts</span><span class="p">]))</span><span class="si">}</span><span class="s2">. Each label must be unique.&quot;</span>
+        <span class="p">)</span>
+    <span class="n">merged</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">first</span> <span class="ow">in</span> <span class="n">firsts</span><span class="p">[:</span><span class="n">_SHOWN</span><span class="p">]:</span>
+        <span class="n">label</span> <span class="o">=</span> <span class="n">index</span><span class="p">[[</span><span class="n">first</span><span class="p">]]</span>
+        <span class="n">sources</span> <span class="o">=</span> <span class="n">unrounded</span><span class="p">[</span><span class="n">index</span><span class="o">.</span><span class="n">get_indexer_for</span><span class="p">(</span><span class="n">label</span><span class="p">)]</span>
+        <span class="n">merged</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">_listed</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">sources</span><span class="p">))</span><span class="si">}</span><span class="s2"> become </span><span class="si">{</span><span class="n">_listed</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">label</span><span class="p">))</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">more</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;; </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">firsts</span><span class="p">)</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">_SHOWN</span><span class="si">}</span><span class="s2"> more labels&quot;</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">firsts</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">_SHOWN</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span>
+    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+        <span class="sa">f</span><span class="s2">&quot;round_index=</span><span class="si">{</span><span class="n">decimals</span><span class="si">}</span><span class="s2"> merges distinct labels of the </span><span class="si">{</span><span class="n">space</span><span class="si">}</span><span class="s2"> index: &quot;</span>
+        <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="s1">&#39;; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">merged</span><span class="p">)</span><span class="si">}{</span><span class="n">more</span><span class="si">}</span><span class="s2">. Pass round_index=None, or more decimals, &quot;</span>
+        <span class="s2">&quot;to keep them apart.&quot;</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_check_block_names</span><span class="p">(</span>
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">matrix</span><span class="p">:</span> <span class="n">Matrix</span><span class="p">,</span> <span class="n">rows</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">,</span> <span class="n">columns</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Index</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Raise a ValueError if a block of ``matrix`` matches no block of its space.</span>
+
+<span class="sd">    ``rows`` and ``columns`` are the indexes ``matrix`` is placed on. A block</span>
+<span class="sd">    they have that ``matrix`` lacks is fine (it is filled with zeros), as are</span>
+<span class="sd">    labels missing within a block; a block name they do not have is a typo or</span>
+<span class="sd">    a stale name, and reindexing would silently drop that block&#39;s values.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">axis</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">argument</span> <span class="ow">in</span> <span class="p">(</span>
+        <span class="p">(</span><span class="s2">&quot;row&quot;</span><span class="p">,</span> <span class="n">matrix</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">rows</span><span class="p">,</span> <span class="s2">&quot;row_block&quot;</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">&quot;column&quot;</span><span class="p">,</span> <span class="n">matrix</span><span class="o">.</span><span class="n">columns</span><span class="p">,</span> <span class="n">columns</span><span class="p">,</span> <span class="s2">&quot;col_block&quot;</span><span class="p">),</span>
+    <span class="p">):</span>
+        <span class="n">known</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">target</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="s2">&quot;block&quot;</span><span class="p">))</span>
+        <span class="n">unknown</span> <span class="o">=</span> <span class="p">[</span><span class="n">b</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">labels</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="s2">&quot;block&quot;</span><span class="p">)</span> <span class="k">if</span> <span class="n">b</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">known</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">unknown</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> has </span><span class="si">{</span><span class="n">axis</span><span class="si">}</span><span class="s2"> blocks that match no block of the space &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;it is placed on: </span><span class="si">{</span><span class="n">_listed</span><span class="p">(</span><span class="n">unknown</span><span class="p">)</span><span class="si">}</span><span class="s2">. The known blocks are &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">_listed</span><span class="p">(</span><span class="n">known</span><span class="p">)</span><span class="si">}</span><span class="s2">. Check the </span><span class="si">{</span><span class="n">argument</span><span class="si">}</span><span class="s2"> of each MatrixBlock.&quot;</span>
+            <span class="p">)</span>
+
 
 <div class="viewcode-block" id="InverseProblem">
 <a class="viewcode-back" href="../../reference/api/fips.InverseProblem.html#fips.InverseProblem">[docs]</a>
@@ -513,7 +600,18 @@
 <span class="sd">    constant : VectorLike or float, optional</span>
 <span class="sd">        Optional constant term added to the forward model (e.g., background or bias).</span>
 <span class="sd">    round_index : int, optional</span>
-<span class="sd">        Number of decimal places to round to. If None, no rounding is performed.</span>
+<span class="sd">        Number of decimal places to round float labels to. If None, no</span>
+<span class="sd">        rounding is performed. Labels that rounding makes equal raise a</span>
+<span class="sd">        ValueError rather than being merged.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        If the state or observation index has duplicate labels, before or</span>
+<span class="sd">        after rounding, or if a block name of `forward_operator`,</span>
+<span class="sd">        `prior_error` or `modeldata_mismatch` (a MatrixBlock&#39;s `row_block` or</span>
+<span class="sd">        `col_block`) matches no block of the space it is placed on. Labels</span>
+<span class="sd">        missing within a known block are filled with zeros, with a warning.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">obs</span><span class="p">:</span> <span class="n">Vector</span>
@@ -598,10 +696,16 @@
             <span class="n">constant_index</span> <span class="o">=</span> <span class="n">obs</span><span class="o">.</span><span class="n">index</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">constant</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">))</span> <span class="k">else</span> <span class="kc">None</span>
             <span class="n">constant</span> <span class="o">=</span> <span class="n">Vector</span><span class="p">(</span><span class="n">constant</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">constant_index</span><span class="p">)</span>
 
+        <span class="n">_check_unique_labels</span><span class="p">(</span><span class="n">obs</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="s2">&quot;observation&quot;</span><span class="p">)</span>
+        <span class="n">_check_unique_labels</span><span class="p">(</span><span class="n">prior</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="s2">&quot;state&quot;</span><span class="p">)</span>
+
         <span class="c1"># Round to specified precision if provided</span>
         <span class="k">if</span> <span class="n">round_index</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">unrounded_obs</span><span class="p">,</span> <span class="n">unrounded_prior</span> <span class="o">=</span> <span class="n">obs</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">prior</span><span class="o">.</span><span class="n">index</span>
             <span class="n">obs</span> <span class="o">=</span> <span class="n">obs</span><span class="o">.</span><span class="n">round_index</span><span class="p">(</span><span class="n">round_index</span><span class="p">)</span>
             <span class="n">prior</span> <span class="o">=</span> <span class="n">prior</span><span class="o">.</span><span class="n">round_index</span><span class="p">(</span><span class="n">round_index</span><span class="p">)</span>
+            <span class="n">_check_unique_labels</span><span class="p">(</span><span class="n">obs</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="s2">&quot;observation&quot;</span><span class="p">,</span> <span class="n">unrounded_obs</span><span class="p">,</span> <span class="n">round_index</span><span class="p">)</span>
+            <span class="n">_check_unique_labels</span><span class="p">(</span><span class="n">prior</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="s2">&quot;state&quot;</span><span class="p">,</span> <span class="n">unrounded_prior</span><span class="p">,</span> <span class="n">round_index</span><span class="p">)</span>
             <span class="n">forward_operator</span> <span class="o">=</span> <span class="n">forward_operator</span><span class="o">.</span><span class="n">round_index</span><span class="p">(</span><span class="n">round_index</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="s2">&quot;both&quot;</span><span class="p">)</span>
             <span class="n">modeldata_mismatch</span> <span class="o">=</span> <span class="n">modeldata_mismatch</span><span class="o">.</span><span class="n">round_index</span><span class="p">(</span>
                 <span class="n">round_index</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="s2">&quot;both&quot;</span>
@@ -609,6 +713,13 @@
             <span class="n">prior_error</span> <span class="o">=</span> <span class="n">prior_error</span><span class="o">.</span><span class="n">round_index</span><span class="p">(</span><span class="n">round_index</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="s2">&quot;both&quot;</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">constant</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="n">constant</span> <span class="o">=</span> <span class="n">constant</span><span class="o">.</span><span class="n">round_index</span><span class="p">(</span><span class="n">round_index</span><span class="p">)</span>
+
+        <span class="c1"># A block name that matches no block would be dropped by the reindex</span>
+        <span class="n">_check_block_names</span><span class="p">(</span><span class="s2">&quot;forward_operator&quot;</span><span class="p">,</span> <span class="n">forward_operator</span><span class="p">,</span> <span class="n">obs</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">prior</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+        <span class="n">_check_block_names</span><span class="p">(</span>
+            <span class="s2">&quot;modeldata_mismatch&quot;</span><span class="p">,</span> <span class="n">modeldata_mismatch</span><span class="p">,</span> <span class="n">obs</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">obs</span><span class="o">.</span><span class="n">index</span>
+        <span class="p">)</span>
+        <span class="n">_check_block_names</span><span class="p">(</span><span class="s2">&quot;prior_error&quot;</span><span class="p">,</span> <span class="n">prior_error</span><span class="p">,</span> <span class="n">prior</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">prior</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
 
         <span class="c1"># Reindex matrices to obs and prior (state) indices</span>
         <span class="k">def</span><span class="w"> </span><span class="nf">reindex</span><span class="p">(</span><span class="n">matrix</span><span class="p">,</span> <span class="n">row_idx</span><span class="p">,</span> <span class="n">col_idx</span><span class="p">):</span>

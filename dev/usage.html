@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>User Guide &#8212; fips 0.1.0b10.dev49+g1995fceba documentation</title>
+    <title>User Guide &#8212; fips 0.1.0b10.dev50+gcd1701038 documentation</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0" />
 
-    <script src="_static/documentation_options.js?v=2ee9f2ab"></script>
+    <script src="_static/documentation_options.js?v=26a5e785"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -135,8 +135,8 @@
       
     
     
-    <img src="_static/logo.png" class="logo__image only-light" alt="fips 0.1.0b10.dev49+g1995fceba documentation - Home"/>
-    <img src="_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.1.0b10.dev49+g1995fceba documentation - Home"/>
+    <img src="_static/logo.png" class="logo__image only-light" alt="fips 0.1.0b10.dev50+gcd1701038 documentation - Home"/>
+    <img src="_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.1.0b10.dev50+gcd1701038 documentation - Home"/>
   
   
 </a></div>
@@ -515,7 +515,12 @@
 <p>A <a class="reference internal" href="reference/api/fips.Vector.html#fips.Vector" title="fips.Vector"><code class="xref py py-class docutils literal notranslate"><span class="pre">Vector</span></code></a> concatenates <a class="reference internal" href="reference/api/fips.Block.html#fips.Block" title="fips.Block"><code class="xref py py-class docutils literal notranslate"><span class="pre">Block</span></code></a> objects along a
 hierarchical index that adds a <code class="docutils literal notranslate"><span class="pre">&quot;block&quot;</span></code> level identifying each component.
 The same pattern applies in 2-D.  Index alignment across components is handled
-automatically.</p>
+automatically: <a class="reference internal" href="reference/api/fips.InverseProblem.html#fips.InverseProblem" title="fips.InverseProblem"><code class="xref py py-class docutils literal notranslate"><span class="pre">InverseProblem</span></code></a> places each matrix on the
+observation and state labels, and fills the labels a matrix lacks within a
+block with zeros (with a warning). A block name that matches no block of the
+state or the observations raises a <a class="reference external" href="https://docs.python.org/3/builtins/exceptions.html#ValueError" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ValueError</span></code></a>, and so does a label
+that appears twice in the state or the observations, including two labels
+that <code class="docutils literal notranslate"><span class="pre">round_index</span></code> rounds to the same value.</p>
 <div class="admonition tip">
 <p class="admonition-title">Tip</p>
 <p>Plain <a class="reference external" href="https://pandas.pydata.org/docs/reference/api/pandas.Series.html#pandas.Series" title="(in pandas v3.0.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">pandas.Series</span></code></a> and <a class="reference external" href="https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v3.0.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">pandas.DataFrame</span></code></a> are accepted
