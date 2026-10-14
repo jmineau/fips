@@ -1,80 +1,61 @@
-===================
-Covariance Matrices
-===================
+===========
+Covariances
+===========
 
 .. currentmodule:: fips
 
-Covariance matrices are used in FIPS to represent uncertainty in the data provided to the inverse problem.
+A :class:`Covariance` is a symmetric :class:`Operator` from a :class:`Space`
+to itself: the prior error or the model-data mismatch of an inverse problem.
+It keeps its matrix in the cheapest form (a diagonal covariance is its
+variances, a Kronecker one its factors, independent blocks each their own
+form) and adds what a covariance needs: its variances, solves, the
+log-determinant, the quadratic form of its inverse and a square root.
 
+.. ipython:: python
 
-CovarianceMatrix
-================
+   import pandas as pd
+   import fips
+
+   flux = fips.Space({"flux": pd.Index(["a", "b"], name="cell")})
+   bias = fips.Space({"bias": pd.Index(["north"], name="site")})
+   S_0 = fips.Covariance.block_diag(
+       fips.Covariance.diagonal(4.0, flux),
+       fips.Covariance.diagonal(1.0, bias),
+       name="prior_cov",
+   )
+   S_0
+   S_0.variances.to_series()
+   S_0.logdet()
+
+Covariance
+==========
 
 Constructor
 ~~~~~~~~~~~
 .. autosummary::
    :toctree: api/
 
-   CovarianceMatrix
-   CovarianceMatrix.diagonal
-   CovarianceMatrix.from_operator
+   Covariance
+   Covariance.diagonal
+   Covariance.block_diag
 
-Attributes and underlying data
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-.. autosummary::
-   :toctree: api/
-
-   CovarianceMatrix.name
-   CovarianceMatrix.data
-   CovarianceMatrix.index
-   CovarianceMatrix.columns
-   CovarianceMatrix.shape
-   CovarianceMatrix.values
-   CovarianceMatrix.operator
-   CovarianceMatrix.variances
-   CovarianceMatrix.blocks
-
-Conversion
+Attributes
 ~~~~~~~~~~
 .. autosummary::
    :toctree: api/
 
-   CovarianceMatrix.copy
-   CovarianceMatrix.to_frame
-   CovarianceMatrix.to_numpy
+   Covariance.space
+   Covariance.variances
 
-Reindexing / selection / label manipulation
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-.. autosummary::
-   :toctree: api/
-
-   CovarianceMatrix.xs
-   CovarianceMatrix.reindex
-   CovarianceMatrix.round_index
-
-Serialization
-~~~~~~~~~~~~~
-.. autosummary::
-   :toctree: api/
-
-   CovarianceMatrix.from_file
-   CovarianceMatrix.to_file
-
-Sparse support
+Linear algebra
 ~~~~~~~~~~~~~~
 .. autosummary::
    :toctree: api/
 
-   CovarianceMatrix.is_sparse
-   CovarianceMatrix.to_sparse
-   CovarianceMatrix.to_dense
-
-Computations
-~~~~~~~~~~~~
-.. autosummary::
-   :toctree: api/
-
-   CovarianceMatrix.force_symmetry
+   Covariance.solve
+   Covariance.logdet
+   Covariance.quadratic_form
+   Covariance.sqrt
 
 
 .. currentmodule:: fips.covariance
@@ -103,38 +84,6 @@ Binary operations
    :toctree: api/
 
     ErrorComponent.__add__
-
-
-Kronecker factors
-=================
-
-A Kronecker covariance kept as its marginal correlations, so that the
-``n x n`` matrix is never formed. :meth:`KroneckerError.operator` builds one on
-an index, and :meth:`fips.CovarianceMatrix.from_operator` labels it.
-
-.. autosummary::
-   :toctree: api/
-
-   KroneckerOperator
-   KroneckerError.operator
-
-Linear algebra
-~~~~~~~~~~~~~~
-.. autosummary::
-   :toctree: api/
-
-   KroneckerOperator.solve
-   KroneckerOperator.dense
-   KroneckerOperator.diagonal
-
-Stored data
-~~~~~~~~~~~
-.. autosummary::
-   :toctree: api/
-
-   KroneckerOperator.factors
-   KroneckerOperator.positions
-   KroneckerOperator.std
 
 
 CovarianceBuilder

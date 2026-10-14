@@ -21,17 +21,19 @@ forward (Jacobian) operator, :math:`S_0` the prior-error covariance, and
    used throughout FIPS. Different fields use different conventions — this reference
    helps clarify the terminology.
 
-The three building blocks are:
+The building blocks are:
 
 - :class:`~fips.Block` / :class:`~fips.Vector` — labelled 1-D state and observation vectors
-- :class:`~fips.MatrixBlock` / :class:`~fips.Matrix` — labelled 2-D operators and covariances
+- :class:`~fips.Operator` / :class:`~fips.Covariance` — labelled matrices: a
+  :class:`~fips.Space` of labels on each axis, the numbers kept in their
+  cheapest form (dense, sparse, diagonal, Kronecker factors)
 - :class:`~fips.InverseProblem` — wires everything together and runs the estimator
 
 .. note::
 
    Plain :class:`pandas.Series` and :class:`pandas.DataFrame` objects are accepted
-   everywhere. *fips* promotes them to :class:`~fips.Block` / :class:`~fips.MatrixBlock`
-   automatically, so you can start with data you already have.
+   by :class:`~fips.InverseProblem`: it reads their labels, so you can start with
+   data you already have.
 
 
 Minimal Example
@@ -75,30 +77,31 @@ Minimal Example
    )
    problem.solve("bayesian")
 
-   print(problem.posterior)       # posterior state as a labelled Vector
-   print(problem.posterior_error) # posterior error covariance as a labelled Matrix
+   print(problem.posterior)                   # posterior state as a labelled Vector
+   print(problem.posterior_error.to_frame())  # posterior error covariance, labelled
 
 
 Inspecting the Solution
 -----------------------
 
 After calling :meth:`~fips.InverseProblem.solve`, results are available as
-labelled *fips* objects that behave like pandas Series / DataFrames:
+labelled *fips* objects: vectors that hold a pandas Series, and operators
+whose ``to_frame()`` is a DataFrame:
 
 .. ipython:: python
 
    # Posterior state and uncertainty
    x_hat = problem.posterior        # Vector  (index = state_idx)
-   S_hat = problem.posterior_error  # CovarianceMatrix
+   S_hat = problem.posterior_error  # Covariance (state × state)
 
    # Modelled observations for prior and posterior
    y_0   = problem.prior_obs        # Vector  (index = obs_idx)
    y_hat = problem.posterior_obs    # Vector  (index = obs_idx)
-   S_y0  = problem.prior_obs_error  # CovarianceMatrix: H S_0 H^T, the prior's error on y_0
+   S_y0  = problem.prior_obs_error  # Covariance: H S_0 H^T, the prior's error on y_0
 
    # Kalman gain and averaging kernel
-   K = problem.kalman_gain          # Matrix  (obs × state)
-   A = problem.averaging_kernel     # Matrix  (state × state)
+   K = problem.kalman_gain          # Operator  (state × obs)
+   A = problem.averaging_kernel     # Operator  (state × state)
 
    # Scalar diagnostics from the estimator
    est = problem.estimator
@@ -122,17 +125,16 @@ The same results come as one object from :func:`fips.solve`, which returns a
    print(f"DOFS: {post.dofs:.2f}, reduced χ²: {post.reduced_chi2:.3f}")
 
 
-Working with Blocks and MatrixBlocks
--------------------------------------
+Working with Blocks
+-------------------
 
-Use :class:`~fips.Block` and :class:`~fips.MatrixBlock` explicitly when your
-state space is composed of **named components** — for example, fluxes and a
-per-site bias correction:
+Use named blocks when your state space is composed of **named components** —
+for example, fluxes and a per-site bias correction:
 
 .. ipython:: python
 
    import pandas as pd
-   from fips import Block, Vector, MatrixBlock, ForwardOperator
+   from fips import Block, Covariance, Operator, Space, Vector
 
    # --- Two state components ---
    flux_idx = pd.Index(["cell_0", "cell_1"], name="cell_id")
@@ -144,28 +146,32 @@ per-site bias correction:
    prior = Vector([flux_block, bias_block], name="prior")
    print(prior)
 
-Each forward-operator sub-block names the observation block it maps to and the
-state block it maps from:
+The forward operator is built from its blocks, each named by the observation
+block it maps to and the state block it maps from:
 
 .. ipython:: python
 
-   # --- Matching forward-operator sub-blocks ---
-   H_flux = MatrixBlock(
-       pd.DataFrame([[1.0, 0.5], [0.5, 1.0]], index=obs_idx, columns=flux_idx),
-       row_block="obs",
-       col_block="flux",
+   H = Operator.from_blocks(
+       {
+           ("obs", "flux"): pd.DataFrame(
+               [[1.0, 0.5], [0.5, 1.0]], index=obs_idx, columns=flux_idx
+           ),
+           ("obs", "bias"): pd.DataFrame([[1.0], [1.0]], index=obs_idx, columns=bias_idx),
+       }
    )
-   H_bias = MatrixBlock(
-       pd.DataFrame([[1.0], [1.0]], index=obs_idx, columns=bias_idx),
-       row_block="obs",
-       col_block="bias",
-   )
-   H = ForwardOperator([H_flux, H_bias])
    print(H.to_frame())
 
-The covariances follow the same pattern (one :class:`~fips.MatrixBlock` per
-component, combined in a :class:`~fips.CovarianceMatrix`). Then pass everything
-to :class:`~fips.InverseProblem` as before.
+The covariances follow the same pattern; independent components go side by
+side with :meth:`~fips.Covariance.block_diag`, each in its own form. Then pass
+everything to :class:`~fips.InverseProblem` as before:
+
+.. ipython:: python
+
+   S_0 = Covariance.block_diag(
+       Covariance.diagonal(1.0, Space({"flux": flux_idx})),
+       Covariance.diagonal(0.01, Space({"bias": bias_idx})),
+   )
+   S_0.variances.to_series()
 
 
 What's Next
