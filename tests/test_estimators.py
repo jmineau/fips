@@ -449,15 +449,64 @@ class TestEstimatorStatistics:
 class TestLeverage:
     """Tests for Estimator.leverage() method."""
 
+    @staticmethod
+    def _problem(seed=0, m=6, n=4):
+        rng = np.random.default_rng(seed)
+        H = rng.normal(size=(m, n))
+        B = rng.normal(size=(n, n))
+        C = rng.normal(size=(m, m))
+        S_0 = B @ B.T + np.eye(n)
+        S_z = C @ C.T + np.eye(m)  # correlated errors
+        z = rng.normal(size=m)
+        x_0 = rng.normal(size=n)
+        x = rng.normal(size=n)
+        return z, x_0, H, S_0, S_z, x
+
+    @staticmethod
+    def _closed_form(H, S_0, S_z, x, c=0.0):
+        """The formula, written out with numpy.linalg and no fips code."""
+        A = H @ S_0 @ H.T + S_z
+        Hx = (H @ x + c)[:, None]
+        return (
+            Hx @ np.linalg.inv(Hx.T @ np.linalg.solve(A, Hx)) @ Hx.T @ np.linalg.inv(A)
+        )
+
     def test_leverage_callable(self):
         """Leverage is a callable method."""
-        z = np.array([1.0, 2.0, 3.0])
-        x_0 = np.array([1.0, 2.0])
-        H = np.array([[1.0, 0.5], [0.5, 1.0], [1.0, 1.0]])
-        S_0 = np.eye(2)
-        S_z = np.eye(3)
+        z, x_0, H, S_0, S_z, _ = self._problem()
         estimator = ConcreteEstimator(z, x_0, H, S_0, S_z)
         assert callable(estimator.leverage)
+
+    def test_leverage_of_a_state_vector_matches_the_formula(self):
+        """A one-dimensional state vector gives the n_z by n_z matrix of the formula."""
+        z, x_0, H, S_0, S_z, x = self._problem()
+        L = ConcreteEstimator(z, x_0, H, S_0, S_z).leverage(x)
+        assert L.shape == (6, 6)
+        np.testing.assert_allclose(L, self._closed_form(H, S_0, S_z, x), rtol=1e-10)
+
+    def test_leverage_is_a_projection_with_unit_trace(self):
+        """L is idempotent, has trace 1 and leaves Hx unchanged."""
+        z, x_0, H, S_0, S_z, x = self._problem(seed=3)
+        L = ConcreteEstimator(z, x_0, H, S_0, S_z).leverage(x)
+        np.testing.assert_allclose(L @ L, L, atol=1e-10)
+        assert np.trace(L) == pytest.approx(1.0, abs=1e-10)
+        np.testing.assert_allclose(L @ (H @ x), H @ x, atol=1e-10)
+
+    def test_leverage_uses_forward_with_the_constant(self):
+        """Hx is forward(x), so a constant c enters it."""
+        z, x_0, H, S_0, S_z, x = self._problem(seed=5)
+        L = ConcreteEstimator(z, x_0, H, S_0, S_z, c=2.5).leverage(x)
+        np.testing.assert_allclose(
+            L, self._closed_form(H, S_0, S_z, x, c=2.5), rtol=1e-10
+        )
+
+    def test_leverage_of_the_solver_uses_the_scaled_mismatch(self):
+        """With gamma, the metric uses S_z / gamma, as the solve does."""
+        z, x_0, H, S_0, S_z, x = self._problem(seed=7)
+        L = BayesianSolver(z, x_0, H, S_0, S_z, gamma=2.0).leverage(x)
+        np.testing.assert_allclose(
+            L, self._closed_form(H, S_0, S_z / 2.0, x), rtol=1e-10
+        )
 
 
 class TestEstimatorRegistry:

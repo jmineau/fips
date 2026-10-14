@@ -117,6 +117,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **`Estimator.leverage` works for a state vector.** It raised
+  `ValueError: Expected at least ndim=2` on every one-dimensional state, which is
+  the only kind there is: the product `(Hx)^T (H S_0 H^T + S_z)^{-1} Hx` of a
+  vector is a scalar, and `scipy.linalg.inv` refuses one. `Hx` is now one column,
+  so the result is the `n_z` by `n_z` projection the docstring describes (idempotent,
+  trace 1), and the tests pin it to the formula written out in numpy.
+  ([#81](https://github.com/jmineau/fips/issues/81))
 - **`InverseProblem` refuses duplicate state or observation labels**, given
   twice in the input or made equal by `round_index` (6 decimals by default),
   with a `ValueError` that names them; for rounding it names the labels that
