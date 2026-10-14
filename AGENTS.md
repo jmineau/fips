@@ -40,7 +40,9 @@ src/fips/
   vector.py          Block, Vector — 1D labeled containers (state, obs)
   matrix.py          MatrixBlock, Matrix — 2D labeled containers
   covariance.py      CovarianceMatrix — Matrix subclass; kernel-driven build,
-                     sparse (csr_matrix) + joblib-parallel construction
+                     sparse (csr_matrix) + joblib-parallel construction;
+                     KroneckerOperator (a Kronecker covariance kept as its
+                     factors) and KroneckerError.operator
   operators.py       ForwardOperator (Matrix subclass), convolve(state, H)
   operator.py        Operator (scipy LinearOperator) and its forms: Dense-,
                      Sparse-, DiagonalOperator; as_operator, dottest. What
@@ -109,6 +111,8 @@ From `fips.__init__`:
    or composed from `kernels.py` (exponential decay, time decay, etc.).
    Use sparse storage when blocks are large: `H`, `S_0` and `S_z` may each be
    dense or sparse, and the solve keeps each in its form (see "Sparse paths").
+   A Kronecker prior error stays as its factors:
+   `CovarianceMatrix.from_operator(KroneckerError(...).operator(index), index)`.
 4. **Hand everything to `InverseProblem`.** It validates index alignment;
    `fips.solve(problem)` picks an estimator from `ESTIMATOR_REGISTRY` and
    returns a `Posterior` (estimate, covariance, diagnostics such as
@@ -185,6 +189,16 @@ From `fips.__init__`:
   `_S_0_op`, `_S_z_op`, `_S_z_orig_op`) and computes only with those; its
   public `H`, `S_0` and `S_z` give an array (read-only) or a CSR matrix, as
   before operators, so never compute with them inside the estimator.
+- **A structure built on an operator** (`Structure2D.from_operator`) holds the
+  operator and its labels, and no DataFrame (`_data` is None) until something
+  reads `data`; from then on it holds the frame, and the operator is gone.
+  Anything that only needs labels must read `index`, `columns`, `shape` or
+  `len()`, never `data.index`: `_validate`, `_sanitize` (through
+  `_set_labels`), `reindex` to labels it has, `round_index`, `copy`, `scale` and
+  pickling keep the operator, and `tests/test_kronecker.py` fails if any of them
+  forms a `KroneckerOperator`'s matrix. A `KroneckerOperator`'s `dense()` is the
+  same number for number as `KroneckerError.build` (the position mapping in
+  `_kronecker_marginals`).
 - **`Pickleable` contract.** Anything user-facing should round-trip through
   pickle. New stateful classes should inherit from `Pickleable` (in `base.py`)
   or document why not.
@@ -356,11 +370,11 @@ that come close use dense `inv`. So:
   covariances or H become factored/matrix-free, and
   `scipy.sparse.linalg.eigsh`/`lobpcg` for low-rank posteriors before porting
   any randomized eigensolver.
-- **Optional, not required:** `pylops` (ready-made `Kronecker`/`BlockDiag`/
-  `VStack` operators — decide when covariances become factored whether to
-  write the few we need instead),
-  `GSTools` (covariance models, only if `kernels.py` outgrows exponential
-  decay). If adopted, they go in an extra, never in `[project]` dependencies.
+- **pylops is read, not installed or copied** (LGPL; decided 2026-10-14): fips
+  writes the few operators it needs on `LinearOperator`, as `KroneckerOperator`.
+- **Optional, not required:** `GSTools` (covariance models, only if
+  `kernels.py` outgrows exponential decay). If adopted, it goes in an extra,
+  never in `[project]` dependencies.
 - **Never write a sampler.** If MCMC lands, use PyMC or CUQIpy for
   sampling and ArviZ for diagnostics, as `openghg_inversions` does. Same for a
   bounded/variational optimizer: `scipy.optimize`, not custom code.
@@ -431,8 +445,9 @@ covariance). See README "Multi-block" example.
   is an integer when a Series has no name: keep the `str()`.
 - **SciPy is not annotated**: pyrefly takes the private class a `LinearOperator`
   default returns as the type an override must return, and a sparse `shape` as
-  possibly `None`. `operator.py` marks those four lines with an ignore and the
-  reason; a new form that overrides only `_transpose` needs none.
+  possibly `None`, and finds no `__getitem__` on a sparse array. `operator.py`
+  marks those five lines with an ignore and the reason; a new form that
+  overrides only `_transpose` needs none.
 - **pyrefly (1.3.2) reads `type[X]` written inside a base class's arguments as
   `type[Any]`**: after `class R(dict[str, type[E]])` a lookup in `R()` is
   `type[Any]`, though `typing.Type[E]` or an alias of `type[E]` gives

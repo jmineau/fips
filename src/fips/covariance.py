@@ -7,18 +7,24 @@ Bayesian estimation.
 """
 
 import logging
+import math
 from abc import ABC, abstractmethod
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
+from functools import cached_property
+from typing import Any
 
 import numpy as np
+import numpy.typing as npt
 import pandas as pd
 from joblib import Parallel, delayed
+from numpy.linalg import LinAlgError
 from scipy import sparse
 from scipy.sparse import csr_matrix
 
 from fips._sparse import frame_from_spmatrix
 from fips.base import diagonal_frame
 from fips.matrix import Matrix
+from fips.operator import DenseOperator, Operator, _as_array, _solve_psd
 from fips.vector import Vector
 
 logger = logging.getLogger(__name__)
@@ -40,7 +46,7 @@ class CovarianceMatrix(Matrix):
         Read from the stored entries of a sparse covariance, without forming
         the dense matrix.
         """
-        return Vector(self.operator.diagonal(), index=self.data.index, name="variance")
+        return Vector(self.operator.diagonal(), index=self.index, name="variance")
 
     def force_symmetry(self, keep: str = "lower") -> "CovarianceMatrix":
         """
@@ -83,6 +89,403 @@ class CovarianceMatrix(Matrix):
             sym_mat = upper + upper.T - np.diag(np.diag(upper))
 
         return type(self)(sym_mat, index=self.index, name=self.name)
+
+
+_CHUNK = 2**24
+"""
+How many entries of the product grid a :class:`KroneckerOperator` product holds at once.
+
+A product with many columns (``H @ S_0`` has one per observation) runs over
+blocks of columns, so its work arrays stay near 128 MB (float64) whatever the
+number of columns.
+"""
+
+
+class KroneckerOperator(Operator):
+    r"""
+    A covariance kept as the Kronecker product of its marginal correlations.
+
+    .. math::
+
+        S = D \, P \, (C_1 \otimes C_2 \otimes \dots \otimes C_K) \, P^T D
+
+    Each factor :math:`C_k` is the correlation matrix of one marginal (the
+    times, or the grid cells), :math:`P` picks the rows of the full product
+    that the operator has, in its order (any subset of the product, in any
+    order), and :math:`D` is the diagonal of standard deviations. Entry
+    ``(i, j)`` is ``std[i] * std[j] * prod_k C_k[pos_k[i], pos_k[j]]``.
+
+    The ``n x n`` matrix is never formed unless :meth:`dense` is called. A
+    product with ``p`` columns costs ``N * (N_1 + ... + N_K)`` per column,
+    where ``N_k`` is the size of factor k and ``N`` their product, and holds
+    work arrays of about ``N`` entries per column. That is less than the dense
+    matrix as long as the rows fill most of the product.
+
+    :meth:`~fips.covariance.KroneckerError.operator` builds one from marginal
+    kernels and an index, and :meth:`~fips.CovarianceMatrix.from_operator`
+    puts it behind labels.
+
+    Parameters
+    ----------
+    factors : sequence of 2D array-like
+        The marginal correlation matrices :math:`C_k`, square, symmetric and
+        positive-definite (positive-definite only for :meth:`solve`).
+    std : float or 1D array-like, default 1.0
+        The standard deviation of each row; a scalar is the same for every row.
+    positions : sequence of 1D array-like of int, optional
+        For each factor, the position of each row in that factor (``pos_k``).
+        If not given, the rows are the full product in order, the first
+        factor varying slowest, as ``np.kron`` lays it out.
+
+    Raises
+    ------
+    ValueError
+        If there is no factor, a factor is not square or not finite, the
+        positions do not match the factors (one array per factor, all the same
+        length, each within its factor), two rows have the same positions, or
+        a standard deviation is negative or not finite.
+
+    See Also
+    --------
+    KroneckerError.operator : The operator of a Kronecker error component on an index.
+    fips.CovarianceMatrix.from_operator : A labeled covariance that holds an operator.
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> from fips.covariance import KroneckerOperator
+    >>> C_time = np.array([[1.0, 0.5], [0.5, 1.0]])
+    >>> C_space = np.array([[1.0, 0.2, 0.0], [0.2, 1.0, 0.2], [0.0, 0.2, 1.0]])
+    >>> S = KroneckerOperator([C_time, C_space], std=2.0)
+    >>> S.shape
+    (6, 6)
+    >>> np.allclose(S.dense(), 4.0 * np.kron(C_time, C_space))
+    True
+    >>> x = np.arange(6.0)
+    >>> np.allclose(S.solve(S @ x), x)
+    True
+    """
+
+    factors: tuple[np.ndarray, ...]
+    """The marginal correlation matrices, one per marginal."""
+    positions: tuple[np.ndarray, ...]
+    """For each factor, the position of each row in it (``pos_k``)."""
+    std: np.ndarray
+    """The standard deviation of each row."""
+
+    def __init__(
+        self,
+        factors: Sequence[npt.ArrayLike],
+        std: npt.ArrayLike = 1.0,
+        positions: Sequence[npt.ArrayLike] | None = None,
+    ):
+        mats = tuple(np.asarray(C, dtype=float) for C in factors)
+        if not mats:
+            raise ValueError("A KroneckerOperator needs at least one factor.")
+        for C in mats:
+            if C.ndim != 2 or C.shape[0] != C.shape[1]:
+                raise ValueError(f"Each factor must be square; got shape {C.shape}.")
+            if not np.isfinite(C).all():
+                raise ValueError("The factors must be finite.")
+        sizes = tuple(len(C) for C in mats)
+        size = math.prod(sizes)
+
+        if positions is None:
+            pos = tuple(np.unravel_index(np.arange(size), sizes))
+        else:
+            pos = tuple(np.asarray(p) for p in positions)
+            if len(pos) != len(mats):
+                raise ValueError(
+                    f"Got {len(pos)} arrays of positions for {len(mats)} factors."
+                )
+            if any(p.ndim != 1 or len(p) != len(pos[0]) for p in pos):
+                raise ValueError("The positions must be 1D arrays of one length.")
+            if any(not np.issubdtype(p.dtype, np.integer) for p in pos):
+                raise ValueError("The positions must be integers.")
+            for p, n_k in zip(pos, sizes, strict=True):
+                if len(p) and (p.min() < 0 or p.max() >= n_k):
+                    raise ValueError(
+                        f"A position is outside its factor, which has {n_k} rows."
+                    )
+        rows = np.ravel_multi_index(pos, sizes)
+        if len(np.unique(rows)) != len(rows):
+            raise ValueError(
+                "Two rows have the same position in every factor; they would be "
+                "perfectly correlated."
+            )
+
+        n = len(rows)
+        std = np.asarray(std, dtype=float)
+        if std.ndim == 0:
+            std = np.full(n, float(std))
+        if std.shape != (n,):
+            raise ValueError(f"std must be a scalar or have {n} entries.")
+        if not np.isfinite(std).all() or (std < 0).any():
+            raise ValueError("The standard deviations must be finite and not negative.")
+
+        self.factors = mats
+        self.positions = tuple(p.astype(np.intp, copy=False) for p in pos)
+        self.std = std
+        self._sizes = sizes
+        # The rows' places in the product grid, or None when they are the
+        # whole grid in order (no scatter or gather needed)
+        self._rows = None if np.array_equal(rows, np.arange(size)) else rows
+        super().__init__((n, n))
+
+    @property
+    def _size(self) -> int:
+        """The number of entries of the full product, ``N``."""
+        return math.prod(self._sizes)
+
+    def _scatter(self, Y: np.ndarray) -> np.ndarray:
+        """Put the rows of `Y` at their places in the product grid, zeros elsewhere."""
+        if self._rows is None:
+            return np.ascontiguousarray(Y)
+        Z = np.zeros((self._size, Y.shape[1]))
+        Z[self._rows] = Y
+        return Z
+
+    def _gather(self, Z: np.ndarray) -> np.ndarray:
+        """Take the operator's rows out of the product grid `Z`."""
+        return Z if self._rows is None else Z[self._rows]
+
+    def _through(self, Z: np.ndarray, matrices) -> np.ndarray:
+        """
+        Return ``(M_1 kron ... kron M_K) Z`` for `Z` on the product grid.
+
+        Each matrix is applied along its own axis of the grid, never their
+        Kronecker product.
+        """
+        q = Z.shape[1]
+        for k, M in enumerate(matrices):
+            outer = math.prod(self._sizes[:k])
+            Z = np.matmul(M, Z.reshape(outer, self._sizes[k], -1))
+        return Z.reshape(-1, q)
+
+    def _by_columns(self, X, func) -> np.ndarray:
+        """Return `func` applied to `X` (an array or a SciPy sparse matrix), a block of columns at a time."""
+        if sparse.issparse(X):
+            X = sparse.csc_array(X)
+        out = np.empty((self.shape[0], X.shape[1]))
+        step = max(1, _CHUNK // self._size)
+        for j in range(0, X.shape[1], step):
+            block = X[:, j : j + step]
+            block = block.toarray() if sparse.issparse(block) else np.asarray(block)
+            out[:, j : j + step] = func(block.astype(float, copy=False))
+        return out
+
+    def _matmat(self, X):
+        """Return ``self @ X`` through the factors."""
+        s = self.std[:, None]
+
+        def apply(Y):
+            """Return ``S Y`` for a block of columns."""
+            return s * self._gather(self._through(self._scatter(s * Y), self.factors))
+
+        return self._by_columns(X, apply)
+
+    def _transpose(self):
+        """Return the transpose: the same rows, each factor transposed."""
+        return KroneckerOperator(
+            [C.T for C in self.factors], self.std, positions=self.positions
+        )
+
+    def _elementwise(self, func):
+        """Return the operator times a scalar; a positive scalar keeps the factors."""
+        scale = float(func(1.0))
+        if scale > 0:
+            return KroneckerOperator(
+                self.factors, self.std * np.sqrt(scale), positions=self.positions
+            )
+        return DenseOperator(func(self.dense()))
+
+    def _select(self, rows, cols):
+        """Return the entries at `rows` and `cols`; the same rows and columns keep the factors."""
+        if np.array_equal(rows, cols):
+            return KroneckerOperator(
+                self.factors,
+                self.std[rows],
+                positions=[p[rows] for p in self.positions],
+            )
+        return super()._select(rows, cols)
+
+    def dense(self) -> np.ndarray:
+        """
+        Return the operator as a dense NumPy array.
+
+        Entry ``(i, j)`` is ``std[i] * std[j] * prod_k C_k[pos_k[i], pos_k[j]]``,
+        computed as :meth:`KroneckerError.build` computes it, so the two give the
+        same numbers. This forms the ``n x n`` matrix.
+
+        Returns
+        -------
+        np.ndarray
+            The full matrix.
+        """
+        C, p = self.factors[0], self.positions[0]
+        corr = C.take(p, axis=0).take(p, axis=1)
+        for C, p in zip(self.factors[1:], self.positions[1:], strict=True):
+            corr *= C.take(p, axis=0).take(p, axis=1)
+        corr *= self.std[:, None]
+        corr *= self.std[None, :]
+        return corr
+
+    def diagonal(self) -> np.ndarray:
+        """
+        Return the main diagonal, ``std**2 * prod_k diag(C_k)[pos_k]``.
+
+        Returns
+        -------
+        np.ndarray
+            The variances, without forming the matrix.
+        """
+        d = np.diagonal(self.factors[0])[self.positions[0]].copy()
+        for C, p in zip(self.factors[1:], self.positions[1:], strict=True):
+            d *= np.diagonal(C)[p]
+        d *= self.std
+        d *= self.std
+        return d
+
+    @cached_property
+    def _inverses(self) -> tuple[np.ndarray, ...]:
+        """The inverse of each factor, each factored once (Cholesky, or ``LDL^T`` with a warning)."""
+        return tuple(_solve_psd(C, np.eye(len(C))) for C in self.factors)
+
+    @cached_property
+    def _complement(self) -> tuple[np.ndarray, np.ndarray]:
+        """
+        The product grid's missing entries, and the inverse's columns at them.
+
+        For rows that are a strict subset of the product: ``W = G[:, missing]``,
+        where ``G`` is the inverse of the full product's correlation.
+        """
+        kept = np.arange(self._size) if self._rows is None else self._rows
+        missing = np.setdiff1d(np.arange(self._size), kept)
+        E = np.zeros((self._size, len(missing)))
+        E[missing, np.arange(len(missing))] = 1.0
+        return missing, self._through(E, self._inverses)
+
+    def solve(self, B) -> np.ndarray:
+        r"""
+        Solve ``self @ X = B`` through the factors.
+
+        Each factor is factored once (Cholesky, or a symmetric ``LDL^T``
+        with a logged warning when roundoff has tipped it off
+        positive-definite) and the factorization is kept. When the rows are
+        the whole product, in any order, the inverse is
+        :math:`D^{-1} P (C_1^{-1} \otimes \dots \otimes C_K^{-1}) P^T D^{-1}`.
+
+        When the rows are a strict subset of the product, with ``d`` entries
+        of the product missing, the inverse of the kept rows' correlation is
+        the Schur complement :math:`G_{kk} - G_{kd} G_{dd}^{-1} G_{dk}` of
+        the full product's inverse :math:`G`: exact, at the cost of ``d``
+        products with the factors' inverses and one ``d x d`` solve. When
+        that would hold more than the dense matrix (``N d > n^2``), the
+        dense matrix is solved instead.
+
+        Parameters
+        ----------
+        B : array-like, SciPy sparse matrix or Operator
+            The right-hand side: a vector, or a matrix with as many rows as the
+            operator.
+
+        Returns
+        -------
+        np.ndarray
+            ``X``, dense, with the shape of `B`.
+
+        Raises
+        ------
+        numpy.linalg.LinAlgError
+            If a standard deviation is zero: the operator is singular.
+        """
+        if not np.all(self.std):
+            raise LinAlgError(
+                "A standard deviation is zero, so the operator is singular."
+            )
+        B = _as_array(B)
+        n = self.shape[0]
+        if self._size * (self._size - n) > n * n:
+            logger.info(
+                "Solving the %d x %d Kronecker covariance densely: its rows fill "
+                "too little of the product for the factored solve.",
+                n,
+                n,
+            )
+            return _solve_psd(self.dense(), B)
+
+        inv_s = 1.0 / self.std[:, None]
+
+        def apply(Y):
+            """Return ``S^-1 Y`` for a block of columns."""
+            Z = self._through(self._scatter(inv_s * Y), self._inverses)
+            X = self._gather(Z)
+            if n < self._size:  # a strict subset: the Schur complement
+                missing, W = self._complement
+                X = X - W[self._rows] @ _solve_psd(W[missing], Z[missing])
+            return inv_s * X
+
+        if B.ndim == 1:
+            return self._by_columns(B[:, None], apply)[:, 0]
+        return self._by_columns(B, apply)
+
+    def __getstate__(self) -> dict[str, Any]:
+        """Return the state for pickling, without the cached inverses."""
+        state = self.__dict__.copy()
+        state.pop("_inverses", None)
+        state.pop("_complement", None)
+        return state
+
+
+def _kronecker_marginals(
+    index: pd.MultiIndex, marginal_kernels: list[tuple[str | list[str], Callable]]
+) -> tuple[list[np.ndarray], list[np.ndarray]]:
+    """
+    Return each marginal's correlation matrix and each row's position in it.
+
+    For each kernel, the unique coordinates of its levels are numbered in order
+    of first appearance in `index`; the kernel gets them as a DataFrame (the
+    rows of their first appearance) and returns their correlation matrix, and
+    each row of the index gets the number of its coordinates. This is the
+    position mapping `KroneckerError.build` uses (it calls this), so that
+    ``KroneckerOperator(factors, std, positions).dense()`` is that ``build``.
+
+    Raises
+    ------
+    ValueError
+        If no marginal kernels are given, if two rows of the index have the
+        same coordinates on every kernel's levels, or if a kernel does not
+        return a square matrix with one row per unique coordinate.
+    """
+    if not marginal_kernels:
+        raise ValueError("KroneckerError needs at least one marginal kernel.")
+    coords = index.to_frame(index=False)
+    dims_list = [
+        [dims] if isinstance(dims, str) else list(dims) for dims, _ in marginal_kernels
+    ]
+    kernel_dims = list(dict.fromkeys(d for dims in dims_list for d in dims))
+    n_repeated = int(coords.duplicated(subset=kernel_dims).sum())
+    if n_repeated:
+        raise ValueError(
+            f"KroneckerError needs each row of the index to have its own "
+            f"combination of the kernels' coordinates {kernel_dims}, but "
+            f"{n_repeated} rows repeat one. Rows that differ only on another "
+            f"level would be perfectly correlated."
+        )
+    factors, positions = [], []
+    for dims, (_, kernel_func) in zip(dims_list, marginal_kernels, strict=True):
+        pos = coords.groupby(dims, sort=False, dropna=False).ngroup().to_numpy()
+        first = np.unique(pos, return_index=True)[1]
+        C = np.asarray(kernel_func(coords[dims].iloc[first]), dtype=float)
+        if C.shape != (len(first), len(first)):
+            raise ValueError(
+                f"The kernel for {dims} returned a matrix of shape {C.shape} "
+                f"for {len(first)} unique coordinates; expected "
+                f"({len(first)}, {len(first)})."
+            )
+        factors.append(C)
+        positions.append(pos)
+    return factors, positions
 
 
 class ErrorComponent(ABC):
@@ -350,50 +753,14 @@ class KroneckerError(ErrorComponent):
             same coordinates on every kernel's levels, or if a kernel does not
             return a square matrix with one row per unique coordinate.
         """
-        if not self.marginal_kernels:
-            raise ValueError("KroneckerError needs at least one marginal kernel.")
-
+        factors, positions = _kronecker_marginals(index, self.marginal_kernels)
         variances = self._align_variances(index)
-        coords = index.to_frame(index=False)
-
-        dims_list = [
-            [dims] if isinstance(dims, str) else list(dims)
-            for dims, _ in self.marginal_kernels
-        ]
-        kernel_dims = list(dict.fromkeys(d for dims in dims_list for d in dims))
-        n_repeated = int(coords.duplicated(subset=kernel_dims).sum())
-        if n_repeated:
-            raise ValueError(
-                f"KroneckerError needs each row of the index to have its own "
-                f"combination of the kernels' coordinates {kernel_dims}, but "
-                f"{n_repeated} rows repeat one. Rows that differ only on another "
-                f"level would be perfectly correlated."
-            )
-
-        # Each marginal is its correlation matrix C over the unique coordinates
-        # of its levels, and pos, the position of each row's coordinates among
-        # them (numbered in order of first appearance).
-        marginals = []
-        for dims, (_, kernel_func) in zip(
-            dims_list, self.marginal_kernels, strict=True
-        ):
-            pos = coords.groupby(dims, sort=False, dropna=False).ngroup().to_numpy()
-            first = np.unique(pos, return_index=True)[1]
-            C = np.asarray(kernel_func(coords[dims].iloc[first]), dtype=float)
-            if C.shape != (len(first), len(first)):
-                raise ValueError(
-                    f"The kernel for {dims} returned a matrix of shape {C.shape} "
-                    f"for {len(first)} unique coordinates; expected "
-                    f"({len(first)}, {len(first)})."
-                )
-            marginals.append((C, pos))
 
         # corr[i, j] = prod_k C_k[pos_k[i], pos_k[j]], for any row order and any
         # subset of the product. On the full product in the kernels' order it
-        # equals reduce(np.kron, [C_1, C_2, ...]).
-        C, pos = marginals[0]
-        corr_matrix = C.take(pos, axis=0).take(pos, axis=1)
-        for C, pos in marginals[1:]:
+        # equals the Kronecker product of the C_k.
+        corr_matrix = factors[0].take(positions[0], axis=0).take(positions[0], axis=1)
+        for C, pos in zip(factors[1:], positions[1:], strict=True):
             corr_matrix *= C.take(pos, axis=0).take(pos, axis=1)
 
         # Scale by variances
@@ -402,6 +769,73 @@ class KroneckerError(ErrorComponent):
         corr_matrix *= std_dev[None, :]
 
         return pd.DataFrame(corr_matrix, index=index, columns=index)
+
+    def operator(self, index: pd.MultiIndex) -> KroneckerOperator:
+        """
+        Return the covariance on `index` as Kronecker factors, without forming it.
+
+        The rows can be in any order and any subset of the product of the
+        marginal coordinates. Entry ``(i, j)`` is ``std[i] * std[j] *
+        C_1[i, j] * C_2[i, j] * ...``, where ``C_k[i, j]`` is the correlation the
+        k-th kernel gives between the coordinates of rows i and j. On an index
+        that is the product of the marginal coordinates in the kernels' order,
+        its :meth:`~KroneckerOperator.dense` is :meth:`build`, number for
+        number.
+
+        Parameters
+        ----------
+        index : pd.MultiIndex
+            The index of the covariance. It must contain the levels named in
+            ``marginal_kernels``.
+
+        Returns
+        -------
+        KroneckerOperator
+            The factors (each kernel's matrix over the unique coordinates of
+            its levels, in order of first appearance in `index`), each row's
+            position in them, and the standard deviations.
+
+        Raises
+        ------
+        ValueError
+            If no marginal kernels were given, if two rows of the index have the
+            same coordinates on every kernel's levels, or if a kernel does not
+            return a square matrix with one row per unique coordinate.
+
+        See Also
+        --------
+        fips.CovarianceMatrix.from_operator : Label it, to use as a prior error.
+
+        Examples
+        --------
+        >>> import pandas as pd
+        >>> from fips import CovarianceMatrix
+        >>> from fips.covariance import KroneckerError
+        >>> from fips.kernels import GridSpatialDecay, GridTimeDecay
+        >>> index = pd.MultiIndex.from_product(
+        ...     [
+        ...         ["flux"],
+        ...         pd.date_range("2024-01-01", periods=3),
+        ...         [40.0, 40.5],
+        ...         [-112.0],
+        ...     ],
+        ...     names=["block", "time", "lat", "lon"],
+        ... )
+        >>> error = KroneckerError(
+        ...     "prior_error",
+        ...     0.25,
+        ...     [
+        ...         ("time", GridTimeDecay("2D")),
+        ...         (["lat", "lon"], GridSpatialDecay("lat", "lon", 50.0)),
+        ...     ],
+        ... )
+        >>> S_0 = CovarianceMatrix.from_operator(error.operator(index), index)
+        >>> S_0.operator
+        <6x6 KroneckerOperator with dtype=float64>
+        """
+        factors, positions = _kronecker_marginals(index, self.marginal_kernels)
+        std = np.sqrt(self._align_variances(index).to_numpy())
+        return KroneckerOperator(factors, std=std, positions=positions)
 
     def __repr__(self) -> str:
         """Return string representation."""

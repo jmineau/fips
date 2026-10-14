@@ -16,6 +16,7 @@ from fips.base import Pickleable, Structure1D
 from fips.covariance import CovarianceMatrix
 from fips.estimators import ESTIMATOR_REGISTRY, Estimator
 from fips.matrix import Matrix, MatrixBlock, MatrixLike
+from fips.operator import Operator
 from fips.operators import ForwardOperator
 from fips.posterior import Posterior
 from fips.vector import Vector, VectorLike
@@ -125,14 +126,20 @@ class InverseProblem(Pickleable):
         Prior state vector.
     forward_operator : MatrixLike
         Forward operator mapping state space to observation space.
-    modeldata_mismatch : MatrixLike or Vector or float
+    modeldata_mismatch : MatrixLike or Vector or float or Operator
         Covariance matrix representing model-data mismatch (observation error).
         A scalar is one variance for every observation, and a Series or Vector
         (with a ``block`` level) gives a variance for each: both build a
         diagonal covariance.
-    prior_error : MatrixLike or Vector or float
+    prior_error : MatrixLike or Vector or float or Operator
         Covariance matrix representing prior error. A scalar, a Series or a
-        Vector builds a diagonal covariance, as for `modeldata_mismatch`.
+        Vector builds a diagonal covariance, as for `modeldata_mismatch`. An
+        :class:`~fips.operator.Operator` (such as the
+        :class:`~fips.covariance.KroneckerOperator` of
+        :meth:`KroneckerError.operator(prior_index)
+        <fips.covariance.KroneckerError.operator>`) is labeled by the prior's
+        index, in its order, without forming the matrix; so is one for
+        `modeldata_mismatch`, by the observations' index.
     constant : VectorLike or float, optional
         Optional constant term added to the forward model (e.g., background or bias).
     round_index : int, optional
@@ -168,8 +175,8 @@ class InverseProblem(Pickleable):
         obs: VectorLike,
         prior: VectorLike,
         forward_operator: MatrixLike,
-        modeldata_mismatch: "MatrixLike | Vector",
-        prior_error: "MatrixLike | Vector",
+        modeldata_mismatch: "MatrixLike | Vector | Operator",
+        prior_error: "MatrixLike | Vector | Operator",
         constant: "VectorLike | float | None" = None,
         round_index: int | None = 6,
     ):
@@ -217,6 +224,8 @@ class InverseProblem(Pickleable):
 
         def covariance(data, target_index: pd.MultiIndex) -> CovarianceMatrix:
             """Build a covariance; a scalar, Series or Vector is its diagonal."""
+            if isinstance(data, Operator):
+                return CovarianceMatrix.from_operator(data, target_index)
             if isinstance(data, (pd.Series, Structure1D)):
                 return CovarianceMatrix.diagonal(data)
             if isinstance(data, (int, float, np.number)):

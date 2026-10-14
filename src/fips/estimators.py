@@ -16,8 +16,10 @@ from scipy.linalg import inv
 
 from fips.operator import (
     DenseOperator,
+    DiagonalOperator,
     Operator,
     OperatorLike,
+    SparseOperator,
     _solve_psd,
     as_operator,
 )
@@ -28,7 +30,8 @@ logger = logging.getLogger(__name__)
 # with the public attribute that gives each as before (an array, or a CSR
 # matrix for a sparse input). A pickle stores each under its public name as
 # the array (or SciPy sparse matrix) it holds, so it reads on a fips that has
-# no operators, and one written by such a fips reads here.
+# no operators, and one written by such a fips reads here. A Kronecker
+# covariance is stored as itself: its array is the n x n it never forms.
 _OPERATOR_NAMES = {
     "H": "_H_op",
     "S_0": "_S_0_op",
@@ -40,10 +43,11 @@ _CACHED_OPERATORS = ("_HS_0", "_HS_0H")
 
 
 def _raw(op: Operator):
-    """Return the array or SciPy sparse matrix an operator holds."""
-    if isinstance(op, Operator):
-        csr = op._csr()
-        return op.dense() if csr is None else csr
+    """Return the array or SciPy sparse matrix an operator holds; a form of its own (Kronecker) stays itself."""
+    if isinstance(op, DenseOperator):
+        return op.array
+    if isinstance(op, (SparseOperator, DiagonalOperator)):
+        return op._csr()
     return op
 
 
