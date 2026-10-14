@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>fips.operator.DenseOperator.trace &#8212; fips 0.1.0b10.dev54+gdffbfd9d2 documentation</title>
+    <title>fips.operator.DenseOperator.trace &#8212; fips 0.1.0b10.dev56+g13ff038e6 documentation</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0" />
 
-    <script src="../../_static/documentation_options.js?v=8b0f7eef"></script>
+    <script src="../../_static/documentation_options.js?v=00ee829f"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -133,8 +133,8 @@
       
     
     
-    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.1.0b10.dev54+gdffbfd9d2 documentation - Home"/>
-    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.1.0b10.dev54+gdffbfd9d2 documentation - Home"/>
+    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.1.0b10.dev56+g13ff038e6 documentation - Home"/>
+    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.1.0b10.dev56+g13ff038e6 documentation - Home"/>
   
   
 </a></div>
@@ -449,6 +449,7 @@
 </ul>
 </details></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.MatrixBlock.diagonal.html">fips.MatrixBlock.diagonal</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fips.MatrixBlock.from_operator.html">fips.MatrixBlock.from_operator</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.MatrixBlock.name.html">fips.MatrixBlock.name</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.MatrixBlock.data.html">fips.MatrixBlock.data</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.MatrixBlock.row_block.html">fips.MatrixBlock.row_block</a></li>
@@ -502,6 +503,7 @@
 </ul>
 </details></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.Matrix.diagonal.html">fips.Matrix.diagonal</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fips.Matrix.from_operator.html">fips.Matrix.from_operator</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.Matrix.name.html">fips.Matrix.name</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.Matrix.data.html">fips.Matrix.data</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.Matrix.index.html">fips.Matrix.index</a></li>
@@ -533,6 +535,7 @@
 </ul>
 </details></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.ForwardOperator.diagonal.html">fips.ForwardOperator.diagonal</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fips.ForwardOperator.from_operator.html">fips.ForwardOperator.from_operator</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.ForwardOperator.name.html">fips.ForwardOperator.name</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.ForwardOperator.data.html">fips.ForwardOperator.data</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.ForwardOperator.index.html">fips.ForwardOperator.index</a></li>
@@ -565,6 +568,7 @@
 </ul>
 </details></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.CovarianceMatrix.diagonal.html">fips.CovarianceMatrix.diagonal</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fips.CovarianceMatrix.from_operator.html">fips.CovarianceMatrix.from_operator</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.CovarianceMatrix.name.html">fips.CovarianceMatrix.name</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.CovarianceMatrix.data.html">fips.CovarianceMatrix.data</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.CovarianceMatrix.index.html">fips.CovarianceMatrix.index</a></li>
@@ -605,10 +609,27 @@
 <li class="toctree-l2 has-children"><a class="reference internal" href="fips.covariance.KroneckerError.html">fips.covariance.KroneckerError</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l3"><a class="reference internal" href="fips.covariance.KroneckerError.marginal_kernels.html">fips.covariance.KroneckerError.marginal_kernels</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.covariance.KroneckerError.build.html">fips.covariance.KroneckerError.build</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fips.covariance.KroneckerError.operator.html">fips.covariance.KroneckerError.operator</a></li>
 </ul>
 </details></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.covariance.ErrorComponent.build.html">fips.covariance.ErrorComponent.build</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.covariance.ErrorComponent.__add__.html">fips.covariance.ErrorComponent.__add__</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="fips.covariance.KroneckerOperator.html">fips.covariance.KroneckerOperator</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="fips.covariance.KroneckerOperator.factors.html">fips.covariance.KroneckerOperator.factors</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fips.covariance.KroneckerOperator.positions.html">fips.covariance.KroneckerOperator.positions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fips.covariance.KroneckerOperator.std.html">fips.covariance.KroneckerOperator.std</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fips.covariance.KroneckerOperator.dense.html">fips.covariance.KroneckerOperator.dense</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fips.covariance.KroneckerOperator.diagonal.html">fips.covariance.KroneckerOperator.diagonal</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fips.covariance.KroneckerOperator.solve.html">fips.covariance.KroneckerOperator.solve</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2"><a class="reference internal" href="fips.covariance.KroneckerError.operator.html">fips.covariance.KroneckerError.operator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fips.covariance.KroneckerOperator.solve.html">fips.covariance.KroneckerOperator.solve</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fips.covariance.KroneckerOperator.dense.html">fips.covariance.KroneckerOperator.dense</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fips.covariance.KroneckerOperator.diagonal.html">fips.covariance.KroneckerOperator.diagonal</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fips.covariance.KroneckerOperator.factors.html">fips.covariance.KroneckerOperator.factors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fips.covariance.KroneckerOperator.positions.html">fips.covariance.KroneckerOperator.positions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fips.covariance.KroneckerOperator.std.html">fips.covariance.KroneckerOperator.std</a></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="fips.covariance.CovarianceBuilder.html">fips.covariance.CovarianceBuilder</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l3"><a class="reference internal" href="fips.covariance.CovarianceBuilder.components.html">fips.covariance.CovarianceBuilder.components</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.covariance.CovarianceBuilder.build.html">fips.covariance.CovarianceBuilder.build</a></li>
@@ -877,11 +898,17 @@
 <li class="toctree-l2 has-children"><a class="reference internal" href="fips.base.Structure2D.html">fips.base.Structure2D</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l3"><a class="reference internal" href="fips.base.Structure2D.columns.html">fips.base.Structure2D.columns</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.base.Structure2D.data.html">fips.base.Structure2D.data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fips.base.Structure2D.index.html">fips.base.Structure2D.index</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.base.Structure2D.is_sparse.html">fips.base.Structure2D.is_sparse</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.base.Structure2D.name.html">fips.base.Structure2D.name</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.base.Structure2D.operator.html">fips.base.Structure2D.operator</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fips.base.Structure2D.shape.html">fips.base.Structure2D.shape</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.base.Structure2D.values.html">fips.base.Structure2D.values</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fips.base.Structure2D.copy.html">fips.base.Structure2D.copy</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.base.Structure2D.diagonal.html">fips.base.Structure2D.diagonal</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fips.base.Structure2D.from_operator.html">fips.base.Structure2D.from_operator</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fips.base.Structure2D.reindex.html">fips.base.Structure2D.reindex</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fips.base.Structure2D.round_index.html">fips.base.Structure2D.round_index</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.base.Structure2D.to_dense.html">fips.base.Structure2D.to_dense</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.base.Structure2D.to_frame.html">fips.base.Structure2D.to_frame</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.base.Structure2D.to_sparse.html">fips.base.Structure2D.to_sparse</a></li>

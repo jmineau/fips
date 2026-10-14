@@ -1,0 +1,41 @@
+﻿fips.covariance.KroneckerOperator
+=================================
+
+.. currentmodule:: fips.covariance
+
+.. autoclass:: KroneckerOperator
+   :no-members:
+   :show-inheritance:
+
+
+
+
+.. rubric:: Attributes
+
+.. autosummary::
+   :toctree:
+
+   ~KroneckerOperator.factors
+   ~KroneckerOperator.positions
+   ~KroneckerOperator.std
+
+
+
+.. rubric:: Methods
+
+.. autosummary::
+   :toctree:
+
+   ~KroneckerOperator.dense
+   ~KroneckerOperator.diagonal
+   ~KroneckerOperator.solve
+
+
+
+
+.. rubric:: Inherited
+
+
+From :class:`~.Operator`: :py:obj:`~.Operator.dot`, :py:obj:`~.Operator.to_frame`, :py:obj:`~.Operator.trace`
+
+

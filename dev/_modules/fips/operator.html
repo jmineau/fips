@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>fips.operator &#8212; fips 0.1.0b10.dev54+gdffbfd9d2 documentation</title>
+    <title>fips.operator &#8212; fips 0.1.0b10.dev56+g13ff038e6 documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0" />
 
-    <script src="../../_static/documentation_options.js?v=8b0f7eef"></script>
+    <script src="../../_static/documentation_options.js?v=00ee829f"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -130,8 +130,8 @@
       
     
     
-    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.1.0b10.dev54+gdffbfd9d2 documentation - Home"/>
-    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.1.0b10.dev54+gdffbfd9d2 documentation - Home"/>
+    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.1.0b10.dev56+g13ff038e6 documentation - Home"/>
+    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.1.0b10.dev56+g13ff038e6 documentation - Home"/>
   
   
 </a></div>
@@ -468,15 +468,19 @@
 <span class="sd">its labels in a pandas DataFrame. Its :attr:`~fips.base.Structure2D.operator`</span>
 <span class="sd">gives the same matrix as an :class:`Operator`, which the estimators compute</span>
 <span class="sd">with: a :class:`DenseOperator` (a NumPy array), a :class:`SparseOperator` (a</span>
-<span class="sd">SciPy sparse matrix) or a :class:`DiagonalOperator` (the diagonal only).</span>
+<span class="sd">SciPy sparse matrix) or a :class:`DiagonalOperator` (the diagonal only). A</span>
+<span class="sd">covariance kept as Kronecker factors is a</span>
+<span class="sd">:class:`~fips.covariance.KroneckerOperator`, and a structure holds one through</span>
+<span class="sd">:meth:`~fips.base.Structure2D.from_operator`.</span>
 
 <span class="sd">Each is a :class:`scipy.sparse.linalg.LinearOperator`, so ``matvec``,</span>
 <span class="sd">``rmatvec``, ``matmat`` and ``.T`` work as in SciPy. On top of that:</span>
 
 <span class="sd">- ``A @ B`` of two operators keeps the cheapest form that is exact: diagonal</span>
 <span class="sd">  times diagonal is diagonal; sparse or diagonal times sparse is sparse; a</span>
-<span class="sd">  product with a dense side is dense. ``A @ x`` with an array is an array, as</span>
-<span class="sd">  in SciPy.</span>
+<span class="sd">  product with a dense side is dense; a Kronecker operator times a sparse one</span>
+<span class="sd">  (``H @ S_0``) is computed through the factors and is dense. ``A @ x`` with an</span>
+<span class="sd">  array is an array, as in SciPy.</span>
 <span class="sd">- ``A + B`` and ``A - B`` follow the same rule (an array counts as dense), and</span>
 <span class="sd">  a scalar ``*`` or ``/`` keeps the form.</span>
 <span class="sd">- :meth:`~Operator.dense`, :meth:`~Operator.diagonal`, :meth:`~Operator.trace`,</span>
@@ -577,7 +581,10 @@
 <span class="sd">    :class:`DiagonalOperator`: build one of those, or let :func:`as_operator`</span>
 <span class="sd">    choose. A new form subclasses this one and implements ``_matmat`` and</span>
 <span class="sd">    ``_transpose``. Every other method has a default that is right for any</span>
-<span class="sd">    form, which the subclass overrides where its form has a cheaper way.</span>
+<span class="sd">    form, which the subclass overrides where its form has a cheaper way. A</span>
+<span class="sd">    form that is neither dense nor sparse (a</span>
+<span class="sd">    :class:`~fips.covariance.KroneckerOperator`) also gets a SciPy sparse</span>
+<span class="sd">    matrix in ``_matmat``, from a product with a :class:`SparseOperator`.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -618,8 +625,21 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_transpose</span><span class="p">()</span><span class="o">.</span><span class="n">matmat</span><span class="p">(</span><span class="n">X</span><span class="o">.</span><span class="n">T</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_elementwise</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">func</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;Operator&quot;</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the operator with `func` (which maps 0 to 0) applied to its entries.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the operator with `func` applied to its entries.</span>
+
+<span class="sd">        `func` multiplies by a scalar (``a * c``, ``a / c`` or ``-a``), so it</span>
+<span class="sd">        maps 0 to 0 and a form can apply it to what it stores.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">DenseOperator</span><span class="p">(</span><span class="n">func</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dense</span><span class="p">()))</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_select</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rows</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">cols</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;Operator&quot;</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the operator&#39;s entries at `rows` and `cols` (integer positions), in that order.&quot;&quot;&quot;</span>
+        <span class="n">csr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_csr</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">csr</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">DenseOperator</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dense</span><span class="p">()[</span><span class="n">np</span><span class="o">.</span><span class="n">ix_</span><span class="p">(</span><span class="n">rows</span><span class="p">,</span> <span class="n">cols</span><span class="p">)])</span>
+        <span class="c1"># SciPy is not annotated, so pyrefly finds no __getitem__ on a sparse array</span>
+        <span class="k">return</span> <span class="n">_from_sparse</span><span class="p">(</span><span class="n">csr</span><span class="p">[</span><span class="n">rows</span><span class="p">][:,</span> <span class="n">cols</span><span class="p">])</span>  <span class="c1"># pyrefly: ignore[bad-index]</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_csr</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;sp.csr_array | None&quot;</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the operator as a CSR array, or None if its form is dense.&quot;&quot;&quot;</span>
@@ -1088,7 +1108,16 @@
         <span class="k">return</span> <span class="n">DenseOperator</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">matmat</span><span class="p">(</span><span class="n">b</span><span class="o">.</span><span class="n">array</span><span class="p">))</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">DenseOperator</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">DenseOperator</span><span class="p">(</span><span class="n">b</span><span class="o">.</span><span class="n">_rmatmul_array</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">array</span><span class="p">))</span>
-    <span class="k">return</span> <span class="n">DenseOperator</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">matmat</span><span class="p">(</span><span class="n">b</span><span class="o">.</span><span class="n">dense</span><span class="p">()))</span>  <span class="c1"># forms with no rule of their own</span>
+    <span class="c1"># Left: a form of its own (a Kronecker covariance) on at least one side. A</span>
+    <span class="c1"># sparse matrix (a Jacobian) goes through that form&#39;s own product, never</span>
+    <span class="c1"># its dense matrix; anything else gives a product as big as the dense one.</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">SparseOperator</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">DenseOperator</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">_matmat</span><span class="p">(</span><span class="n">b</span><span class="o">.</span><span class="n">matrix</span><span class="p">))</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">SparseOperator</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">DenseOperator</span><span class="p">(</span><span class="n">b</span><span class="o">.</span><span class="n">_transpose</span><span class="p">()</span><span class="o">.</span><span class="n">_matmat</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">matrix</span><span class="o">.</span><span class="n">T</span><span class="p">)</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">b_csr</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>  <span class="c1"># a diagonal right side scales the columns</span>
+        <span class="k">return</span> <span class="n">DenseOperator</span><span class="p">(</span><span class="n">b</span><span class="o">.</span><span class="n">_rmatmul_array</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">dense</span><span class="p">()))</span>
+    <span class="k">return</span> <span class="n">DenseOperator</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">matmat</span><span class="p">(</span><span class="n">b</span><span class="o">.</span><span class="n">dense</span><span class="p">()))</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_sum</span><span class="p">(</span><span class="n">a</span><span class="p">:</span> <span class="n">Operator</span><span class="p">,</span> <span class="n">b</span><span class="p">:</span> <span class="n">Operator</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Operator</span><span class="p">:</span>

@@ -18,6 +18,7 @@ Constructor
 
    ForwardOperator
    ForwardOperator.diagonal
+   ForwardOperator.from_operator
 
 Attributes and underlying data
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

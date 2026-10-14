@@ -17,9 +17,11 @@
 
    ~Structure2D.columns
    ~Structure2D.data
+   ~Structure2D.index
    ~Structure2D.is_sparse
    ~Structure2D.name
    ~Structure2D.operator
+   ~Structure2D.shape
    ~Structure2D.values
 
 
@@ -29,7 +31,11 @@
 .. autosummary::
    :toctree:
 
+   ~Structure2D.copy
    ~Structure2D.diagonal
+   ~Structure2D.from_operator
+   ~Structure2D.reindex
+   ~Structure2D.round_index
    ~Structure2D.to_dense
    ~Structure2D.to_frame
    ~Structure2D.to_sparse
@@ -40,7 +46,7 @@
 .. rubric:: Inherited
 
 
-From :class:`~.Structure`: :py:obj:`~.Structure.copy`, :py:obj:`~.Structure.index`, :py:obj:`~.Structure.reindex`, :py:obj:`~.Structure.round_index`, :py:obj:`~.Structure.shape`, :py:obj:`~.Structure.to_numpy`, :py:obj:`~.Structure.xs`
+From :class:`~.Structure`: :py:obj:`~.Structure.to_numpy`, :py:obj:`~.Structure.xs`
 
 
 

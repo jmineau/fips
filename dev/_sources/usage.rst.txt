@@ -90,9 +90,39 @@ formed, which matters once the index is long:
 takes its ``row_block`` and ``col_block``. The constructors themselves take 2D
 data only: a scalar or 1D input raises an error that points to ``diagonal``.
 
+A covariance that is a product of correlations along the levels (time, and
+space), as :class:`~fips.covariance.KroneckerError` builds, can be kept as its
+factors: :meth:`~fips.covariance.KroneckerError.operator` gives a
+:class:`~fips.covariance.KroneckerOperator`, which never forms the
+:math:`n \times n` matrix, and :meth:`~fips.CovarianceMatrix.from_operator`
+labels it. The rows can be any subset of the product, in any order. The solve
+computes :math:`H S_0` and :math:`H S_0 H^T` from the factors, and ``data`` or
+``values`` still give the matrix, formed the first time one is read:
+
+.. ipython:: python
+
+   from fips.covariance import KroneckerError
+   from fips.kernels import GridSpatialDecay, GridTimeDecay
+
+   times = pd.date_range("2024-01-01", periods=4, freq="7D")
+   state = pd.MultiIndex.from_product(
+       [["flux"], times, [40.5, 40.6], [-112.0, -111.9]],
+       names=["block", "time", "lat", "lon"],
+   )
+   error = KroneckerError(
+       "prior_error",
+       0.25,
+       [("time", GridTimeDecay("14D")), (["lat", "lon"], GridSpatialDecay("lat", "lon", 10.0))],
+   )
+   S_0 = CovarianceMatrix.from_operator(error.operator(state), state)
+   [C.shape for C in S_0.operator.factors]
+   np.allclose(S_0.values, error.build(state).values)
+
 An :class:`~fips.InverseProblem` holds the indexes already, so its
 ``prior_error`` and ``modeldata_mismatch`` can be given as a scalar variance, or
-as a Series or Vector of variances with a ``"block"`` level.
+as a Series or Vector of variances with a ``"block"`` level, or as an operator
+(such as ``error.operator(state)``), which it labels with the prior's or the
+observations' index.
 
 
 Sparse Matrices
@@ -137,8 +167,10 @@ sparse, and anything times a dense matrix is dense. :math:`H S_0 H^T` stays
 sparse while it is mostly zeros, and is dense once more than a quarter of its
 entries are filled, since a dense solve is then faster. Solves divide by a
 diagonal, factor a sparse matrix with a sparse LU, and a dense one with
-Cholesky. The outputs are dense whatever the inputs: the posterior covariance
-is a dense :math:`n \times n` matrix, and the gain :math:`n \times m`.
+Cholesky. A Kronecker prior error multiplies :math:`H` through its factors, and
+solves through each factor's Cholesky factorization. The outputs are dense
+whatever the inputs: the posterior covariance is a dense :math:`n \times n`
+matrix (formed from the dense :math:`S_0`), and the gain :math:`n \times m`.
 
 
 .. _flux-inversion:

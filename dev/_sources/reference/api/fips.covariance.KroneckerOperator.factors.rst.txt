@@ -1,0 +1,6 @@
+fips.covariance.KroneckerOperator.factors
+=========================================
+
+.. currentmodule:: fips.covariance
+
+.. autoattribute:: KroneckerOperator.factors

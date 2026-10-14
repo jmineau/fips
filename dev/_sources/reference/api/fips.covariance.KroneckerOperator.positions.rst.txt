@@ -1,0 +1,6 @@
+fips.covariance.KroneckerOperator.positions
+===========================================
+
+.. currentmodule:: fips.covariance
+
+.. autoattribute:: KroneckerOperator.positions

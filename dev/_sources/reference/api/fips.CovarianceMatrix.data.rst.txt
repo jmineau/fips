@@ -3,4 +3,4 @@
 
 .. currentmodule:: fips
 
-.. autoattribute:: CovarianceMatrix.data
+.. autoproperty:: CovarianceMatrix.data

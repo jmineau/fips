@@ -1,0 +1,6 @@
+﻿fips.MatrixBlock.from\_operator
+===============================
+
+.. currentmodule:: fips
+
+.. automethod:: MatrixBlock.from_operator

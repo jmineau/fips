@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>User Guide &#8212; fips 0.1.0b10.dev54+gdffbfd9d2 documentation</title>
+    <title>User Guide &#8212; fips 0.1.0b10.dev56+g13ff038e6 documentation</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0" />
 
-    <script src="_static/documentation_options.js?v=8b0f7eef"></script>
+    <script src="_static/documentation_options.js?v=00ee829f"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -135,8 +135,8 @@
       
     
     
-    <img src="_static/logo.png" class="logo__image only-light" alt="fips 0.1.0b10.dev54+gdffbfd9d2 documentation - Home"/>
-    <img src="_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.1.0b10.dev54+gdffbfd9d2 documentation - Home"/>
+    <img src="_static/logo.png" class="logo__image only-light" alt="fips 0.1.0b10.dev56+g13ff038e6 documentation - Home"/>
+    <img src="_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.1.0b10.dev56+g13ff038e6 documentation - Home"/>
   
   
 </a></div>
@@ -575,9 +575,47 @@ formed, which matters once the index is long:</p>
 <a class="reference internal" href="reference/api/fips.MatrixBlock.html#fips.MatrixBlock" title="fips.MatrixBlock"><code class="xref py py-class docutils literal notranslate"><span class="pre">MatrixBlock</span></code></a> have the same <code class="docutils literal notranslate"><span class="pre">diagonal</span></code> constructor; a block also
 takes its <code class="docutils literal notranslate"><span class="pre">row_block</span></code> and <code class="docutils literal notranslate"><span class="pre">col_block</span></code>. The constructors themselves take 2D
 data only: a scalar or 1D input raises an error that points to <code class="docutils literal notranslate"><span class="pre">diagonal</span></code>.</p>
+<p>A covariance that is a product of correlations along the levels (time, and
+space), as <a class="reference internal" href="reference/api/fips.covariance.KroneckerError.html#fips.covariance.KroneckerError" title="fips.covariance.KroneckerError"><code class="xref py py-class docutils literal notranslate"><span class="pre">KroneckerError</span></code></a> builds, can be kept as its
+factors: <a class="reference internal" href="reference/api/fips.covariance.KroneckerError.operator.html#fips.covariance.KroneckerError.operator" title="fips.covariance.KroneckerError.operator"><code class="xref py py-meth docutils literal notranslate"><span class="pre">operator()</span></code></a> gives a
+<a class="reference internal" href="reference/api/fips.covariance.KroneckerOperator.html#fips.covariance.KroneckerOperator" title="fips.covariance.KroneckerOperator"><code class="xref py py-class docutils literal notranslate"><span class="pre">KroneckerOperator</span></code></a>, which never forms the
+<span class="math notranslate nohighlight">\(n \times n\)</span> matrix, and <a class="reference internal" href="reference/api/fips.CovarianceMatrix.from_operator.html#fips.CovarianceMatrix.from_operator" title="fips.CovarianceMatrix.from_operator"><code class="xref py py-meth docutils literal notranslate"><span class="pre">from_operator()</span></code></a>
+labels it. The rows can be any subset of the product, in any order. The solve
+computes <span class="math notranslate nohighlight">\(H S_0\)</span> and <span class="math notranslate nohighlight">\(H S_0 H^T\)</span> from the factors, and <code class="docutils literal notranslate"><span class="pre">data</span></code> or
+<code class="docutils literal notranslate"><span class="pre">values</span></code> still give the matrix, formed the first time one is read:</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [9]: </span><span class="kn">from</span><span class="w"> </span><span class="nn">fips.covariance</span><span class="w"> </span><span class="kn">import</span> <span class="n">KroneckerError</span>
+
+<span class="gp">In [10]: </span><span class="kn">from</span><span class="w"> </span><span class="nn">fips.kernels</span><span class="w"> </span><span class="kn">import</span> <span class="n">GridSpatialDecay</span><span class="p">,</span> <span class="n">GridTimeDecay</span>
+
+<span class="gp">In [11]: </span><span class="n">times</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">date_range</span><span class="p">(</span><span class="s2">&quot;2024-01-01&quot;</span><span class="p">,</span> <span class="n">periods</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">freq</span><span class="o">=</span><span class="s2">&quot;7D&quot;</span><span class="p">)</span>
+
+<span class="gp">In [12]: </span><span class="n">state</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">MultiIndex</span><span class="o">.</span><span class="n">from_product</span><span class="p">(</span>
+<span class="gp">   ....: </span>    <span class="p">[[</span><span class="s2">&quot;flux&quot;</span><span class="p">],</span> <span class="n">times</span><span class="p">,</span> <span class="p">[</span><span class="mf">40.5</span><span class="p">,</span> <span class="mf">40.6</span><span class="p">],</span> <span class="p">[</span><span class="o">-</span><span class="mf">112.0</span><span class="p">,</span> <span class="o">-</span><span class="mf">111.9</span><span class="p">]],</span>
+<span class="gp">   ....: </span>    <span class="n">names</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;block&quot;</span><span class="p">,</span> <span class="s2">&quot;time&quot;</span><span class="p">,</span> <span class="s2">&quot;lat&quot;</span><span class="p">,</span> <span class="s2">&quot;lon&quot;</span><span class="p">],</span>
+<span class="gp">   ....: </span><span class="p">)</span>
+<span class="gp">   ....: </span>
+
+<span class="gp">In [13]: </span><span class="n">error</span> <span class="o">=</span> <span class="n">KroneckerError</span><span class="p">(</span>
+<span class="gp">   ....: </span>    <span class="s2">&quot;prior_error&quot;</span><span class="p">,</span>
+<span class="gp">   ....: </span>    <span class="mf">0.25</span><span class="p">,</span>
+<span class="gp">   ....: </span>    <span class="p">[(</span><span class="s2">&quot;time&quot;</span><span class="p">,</span> <span class="n">GridTimeDecay</span><span class="p">(</span><span class="s2">&quot;14D&quot;</span><span class="p">)),</span> <span class="p">([</span><span class="s2">&quot;lat&quot;</span><span class="p">,</span> <span class="s2">&quot;lon&quot;</span><span class="p">],</span> <span class="n">GridSpatialDecay</span><span class="p">(</span><span class="s2">&quot;lat&quot;</span><span class="p">,</span> <span class="s2">&quot;lon&quot;</span><span class="p">,</span> <span class="mf">10.0</span><span class="p">))],</span>
+<span class="gp">   ....: </span><span class="p">)</span>
+<span class="gp">   ....: </span>
+
+<span class="gp">In [14]: </span><span class="n">S_0</span> <span class="o">=</span> <span class="n">CovarianceMatrix</span><span class="o">.</span><span class="n">from_operator</span><span class="p">(</span><span class="n">error</span><span class="o">.</span><span class="n">operator</span><span class="p">(</span><span class="n">state</span><span class="p">),</span> <span class="n">state</span><span class="p">)</span>
+
+<span class="gp">In [15]: </span><span class="p">[</span><span class="n">C</span><span class="o">.</span><span class="n">shape</span> <span class="k">for</span> <span class="n">C</span> <span class="ow">in</span> <span class="n">S_0</span><span class="o">.</span><span class="n">operator</span><span class="o">.</span><span class="n">factors</span><span class="p">]</span>
+<span class="gh">Out[15]: </span><span class="go">[(4, 4), (4, 4)]</span>
+
+<span class="gp">In [16]: </span><span class="n">np</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="n">S_0</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="n">error</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">state</span><span class="p">)</span><span class="o">.</span><span class="n">values</span><span class="p">)</span>
+<span class="gh">Out[16]: </span><span class="go">True</span>
+</pre></div>
+</div>
 <p>An <a class="reference internal" href="reference/api/fips.InverseProblem.html#fips.InverseProblem" title="fips.InverseProblem"><code class="xref py py-class docutils literal notranslate"><span class="pre">InverseProblem</span></code></a> holds the indexes already, so its
 <code class="docutils literal notranslate"><span class="pre">prior_error</span></code> and <code class="docutils literal notranslate"><span class="pre">modeldata_mismatch</span></code> can be given as a scalar variance, or
-as a Series or Vector of variances with a <code class="docutils literal notranslate"><span class="pre">&quot;block&quot;</span></code> level.</p>
+as a Series or Vector of variances with a <code class="docutils literal notranslate"><span class="pre">&quot;block&quot;</span></code> level, or as an operator
+(such as <code class="docutils literal notranslate"><span class="pre">error.operator(state)</span></code>), which it labels with the prior’s or the
+observations’ index.</p>
 </section>
 <section id="sparse-matrices">
 <h2><a class="toc-backref" href="#id3" role="doc-backlink">Sparse Matrices</a><a class="headerlink" href="#sparse-matrices" title="Link to this heading">#</a></h2>
@@ -606,13 +644,13 @@ solve computes with each matrix’s <code class="docutils literal notranslate"><
 <a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/sparse.html#module-scipy.sparse" title="(in SciPy v1.18.0)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">scipy.sparse</span></code></a> matrix, never as the dense one, and a sparse matrix whose
 entries are all on its diagonal as that diagonal alone
 (<a class="reference internal" href="reference/operator.html#module-fips.operator" title="fips.operator"><code class="xref py py-mod docutils literal notranslate"><span class="pre">fips.operator</span></code></a>):</p>
-<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [9]: </span><span class="n">S</span> <span class="o">=</span> <span class="n">CovarianceMatrix</span><span class="o">.</span><span class="n">diagonal</span><span class="p">([</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">],</span> <span class="n">index</span><span class="o">=</span><span class="n">idx</span><span class="p">,</span> <span class="n">sparse</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [17]: </span><span class="n">S</span> <span class="o">=</span> <span class="n">CovarianceMatrix</span><span class="o">.</span><span class="n">diagonal</span><span class="p">([</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">],</span> <span class="n">index</span><span class="o">=</span><span class="n">idx</span><span class="p">,</span> <span class="n">sparse</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
-<span class="gp">In [10]: </span><span class="n">S</span><span class="o">.</span><span class="n">operator</span>
-<span class="gh">Out[10]: </span><span class="go">&lt;3x3 DiagonalOperator with dtype=float64&gt;</span>
+<span class="gp">In [18]: </span><span class="n">S</span><span class="o">.</span><span class="n">operator</span>
+<span class="gh">Out[18]: </span><span class="go">&lt;3x3 DiagonalOperator with dtype=float64&gt;</span>
 
-<span class="gp">In [11]: </span><span class="n">S</span><span class="o">.</span><span class="n">operator</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="mi">3</span><span class="p">))</span>
-<span class="gh">Out[11]: </span><span class="go">array([2. , 1. , 0.5])</span>
+<span class="gp">In [19]: </span><span class="n">S</span><span class="o">.</span><span class="n">operator</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="mi">3</span><span class="p">))</span>
+<span class="gh">Out[19]: </span><span class="go">array([2. , 1. , 0.5])</span>
 </pre></div>
 </div>
 <p>A product keeps the cheapest exact form: a diagonal times a sparse matrix is
@@ -620,8 +658,10 @@ sparse, and anything times a dense matrix is dense. <span class="math notranslat
 sparse while it is mostly zeros, and is dense once more than a quarter of its
 entries are filled, since a dense solve is then faster. Solves divide by a
 diagonal, factor a sparse matrix with a sparse LU, and a dense one with
-Cholesky. The outputs are dense whatever the inputs: the posterior covariance
-is a dense <span class="math notranslate nohighlight">\(n \times n\)</span> matrix, and the gain <span class="math notranslate nohighlight">\(n \times m\)</span>.</p>
+Cholesky. A Kronecker prior error multiplies <span class="math notranslate nohighlight">\(H\)</span> through its factors, and
+solves through each factor’s Cholesky factorization. The outputs are dense
+whatever the inputs: the posterior covariance is a dense <span class="math notranslate nohighlight">\(n \times n\)</span>
+matrix (formed from the dense <span class="math notranslate nohighlight">\(S_0\)</span>), and the gain <span class="math notranslate nohighlight">\(n \times m\)</span>.</p>
 </section>
 <section id="domain-specific-problem-flux-inversion">
 <span id="flux-inversion"></span><h2><a class="toc-backref" href="#id4" role="doc-backlink">Domain-Specific Problem: Flux Inversion</a><a class="headerlink" href="#domain-specific-problem-flux-inversion" title="Link to this heading">#</a></h2>

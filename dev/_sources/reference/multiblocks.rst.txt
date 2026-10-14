@@ -65,6 +65,7 @@ Constructor
 
    Matrix
    Matrix.diagonal
+   Matrix.from_operator
 
 Attributes and underlying data
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>fips.matrix &#8212; fips 0.1.0b10.dev54+gdffbfd9d2 documentation</title>
+    <title>fips.matrix &#8212; fips 0.1.0b10.dev56+g13ff038e6 documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0" />
 
-    <script src="../../_static/documentation_options.js?v=8b0f7eef"></script>
+    <script src="../../_static/documentation_options.js?v=00ee829f"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -130,8 +130,8 @@
       
     
     
-    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.1.0b10.dev54+gdffbfd9d2 documentation - Home"/>
-    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.1.0b10.dev54+gdffbfd9d2 documentation - Home"/>
+    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.1.0b10.dev56+g13ff038e6 documentation - Home"/>
+    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.1.0b10.dev56+g13ff038e6 documentation - Home"/>
   
   
 </a></div>
@@ -481,13 +481,14 @@
     <span class="n">MultiBlockMixin</span><span class="p">,</span>
     <span class="n">SingleBlockMixin</span><span class="p">,</span>
     <span class="n">Structure2D</span><span class="p">,</span>
+    <span class="n">_OperatorData</span><span class="p">,</span>
     <span class="n">xselect</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">fips.indexes</span><span class="w"> </span><span class="kn">import</span> <span class="n">assign_block</span><span class="p">,</span> <span class="n">outer_align_levels</span>
 
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
-<span class="n">MatrixBlockLike</span><span class="p">:</span> <span class="n">TypeAlias</span> <span class="o">=</span> <span class="s2">&quot;ArrayLike | MatrixBlock&quot;</span>
+<span class="n">MatrixBlockLike</span><span class="p">:</span> <span class="n">TypeAlias</span> <span class="o">=</span> <span class="s2">&quot;ArrayLike | MatrixBlock | _OperatorData&quot;</span>
 <span class="n">MatrixLike</span><span class="p">:</span> <span class="n">TypeAlias</span> <span class="o">=</span> <span class="p">(</span>
     <span class="s2">&quot;MatrixBlockLike | dict | Sequence[pd.DataFrame | MatrixBlock] | Matrix&quot;</span>
 <span class="p">)</span>
@@ -568,10 +569,14 @@
             <span class="n">row_block</span> <span class="o">=</span> <span class="n">row_block</span> <span class="ow">or</span> <span class="n">data</span><span class="o">.</span><span class="n">row_block</span>
             <span class="n">col_block</span> <span class="o">=</span> <span class="n">col_block</span> <span class="ow">or</span> <span class="n">data</span><span class="o">.</span><span class="n">col_block</span>
             <span class="n">name</span> <span class="o">=</span> <span class="n">name</span> <span class="ow">or</span> <span class="n">data</span><span class="o">.</span><span class="n">name</span>
-            <span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">data</span>
-            <span class="n">index</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">index</span>
-            <span class="n">columns</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">columns</span>
-            <span class="n">copy</span> <span class="o">=</span> <span class="kc">True</span>  <span class="c1"># Always copy when passed a MatrixBlock</span>
+            <span class="n">held</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">_operator_data</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">held</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>  <span class="c1"># built on an operator: keep it, not a frame</span>
+                <span class="n">data</span> <span class="o">=</span> <span class="n">held</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">data</span>
+                <span class="n">index</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">index</span>
+                <span class="n">columns</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">columns</span>
+                <span class="n">copy</span> <span class="o">=</span> <span class="kc">True</span>  <span class="c1"># Always copy when passed a MatrixBlock</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">row_block</span> <span class="o">=</span> <span class="n">row_block</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">col_block</span> <span class="o">=</span> <span class="n">col_block</span>
@@ -587,7 +592,7 @@
             <span class="n">sparse</span><span class="o">=</span><span class="n">sparse</span><span class="p">,</span>
         <span class="p">)</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_with_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span> <span class="o">|</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Self</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_with_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="s2">&quot;pd.Series | pd.DataFrame | _OperatorData&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Self</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return a new block that holds `data` and keeps this one&#39;s name and block names.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)(</span>
             <span class="n">data</span><span class="p">,</span>
@@ -606,10 +611,13 @@
             <span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return string representation.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return string representation; a block built on an operator shows the operator, not its frame.&quot;&quot;&quot;</span>
         <span class="n">header</span> <span class="o">=</span> <span class="p">(</span>
             <span class="sa">f</span><span class="s2">&quot;MatrixBlock(row_block=&#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">row_block</span><span class="si">}</span><span class="s2">&#39;, col_block=&#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">col_block</span><span class="si">}</span><span class="s2">&#39;)</span><span class="se">\n</span><span class="s2">&quot;</span>
         <span class="p">)</span>
+        <span class="n">held</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_operator_data</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">held</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>  <span class="c1"># do not form the DataFrame to print it</span>
+            <span class="k">return</span> <span class="n">header</span> <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;&lt;</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">held</span><span class="o">.</span><span class="n">operator</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2"> : shape=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">&gt;&quot;</span>
         <span class="k">return</span> <span class="n">header</span> <span class="o">+</span> <span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
 
 <div class="viewcode-block" id="MatrixBlock.to_frame">
@@ -638,16 +646,14 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">__getstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Explicit pickle support: return state as dict.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="p">{</span>
-            <span class="s2">&quot;data&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">,</span>
-            <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+            <span class="o">**</span><span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__getstate__</span><span class="p">(),</span>
             <span class="s2">&quot;row_block&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">row_block</span><span class="p">,</span>
             <span class="s2">&quot;col_block&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">col_block</span><span class="p">,</span>
         <span class="p">}</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">__setstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Explicit pickle support: restore state from dict.&quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">state</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">state</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__setstate__</span><span class="p">(</span><span class="n">state</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">row_block</span> <span class="o">=</span> <span class="n">state</span><span class="p">[</span><span class="s2">&quot;row_block&quot;</span><span class="p">]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">col_block</span> <span class="o">=</span> <span class="n">state</span><span class="p">[</span><span class="s2">&quot;col_block&quot;</span><span class="p">]</span></div>
 
@@ -723,12 +729,16 @@
     <span class="p">):</span>
         <span class="n">blocks</span> <span class="o">=</span> <span class="kc">None</span>
 
-        <span class="c1"># Accept Matrix - extract DataFrame</span>
+        <span class="c1"># Accept Matrix - extract DataFrame, or the operator it is built on</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">Matrix</span><span class="p">):</span>
-            <span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">data</span>
-            <span class="n">index</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">index</span>
-            <span class="n">columns</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">columns</span>
-            <span class="n">copy</span> <span class="o">=</span> <span class="kc">True</span>  <span class="c1"># Always copy when passed a Matrix</span>
+            <span class="n">held</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">_operator_data</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">held</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">data</span> <span class="o">=</span> <span class="n">held</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">data</span>
+                <span class="n">index</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">index</span>
+                <span class="n">columns</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">columns</span>
+                <span class="n">copy</span> <span class="o">=</span> <span class="kc">True</span>  <span class="c1"># Always copy when passed a Matrix</span>
 
         <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">MatrixBlock</span><span class="p">):</span>
             <span class="n">blocks</span> <span class="o">=</span> <span class="p">[</span><span class="n">data</span><span class="p">]</span>
@@ -865,6 +875,11 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isscalar</span><span class="p">(</span><span class="n">factor</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Factor must be a scalar (float or int).&quot;</span><span class="p">)</span>
+        <span class="n">held</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_operator_data</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">held</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>  <span class="c1"># built on an operator: scale the operator</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_with_data</span><span class="p">(</span>
+                <span class="n">_OperatorData</span><span class="p">(</span><span class="n">held</span><span class="o">.</span><span class="n">operator</span> <span class="o">*</span> <span class="n">factor</span><span class="p">,</span> <span class="n">held</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">held</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
+            <span class="p">)</span>
         <span class="c1"># Multiply via pandas so SparseDtype is preserved naturally</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_with_data</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">*</span> <span class="n">factor</span><span class="p">)</span></div>
 

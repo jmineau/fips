@@ -3,4 +3,4 @@
 
 .. currentmodule:: fips
 
-.. autoattribute:: ForwardOperator.data
+.. autoproperty:: ForwardOperator.data

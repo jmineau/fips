@@ -1,0 +1,6 @@
+fips.covariance.KroneckerError.operator
+=======================================
+
+.. currentmodule:: fips.covariance
+
+.. automethod:: KroneckerError.operator

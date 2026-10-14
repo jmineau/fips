@@ -25,6 +25,7 @@
    :toctree:
 
    ~KroneckerError.build
+   ~KroneckerError.operator
 
 
 

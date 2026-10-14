@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>fips.estimators &#8212; fips 0.1.0b10.dev54+gdffbfd9d2 documentation</title>
+    <title>fips.estimators &#8212; fips 0.1.0b10.dev56+g13ff038e6 documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0" />
 
-    <script src="../../_static/documentation_options.js?v=8b0f7eef"></script>
+    <script src="../../_static/documentation_options.js?v=00ee829f"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -130,8 +130,8 @@
       
     
     
-    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.1.0b10.dev54+gdffbfd9d2 documentation - Home"/>
-    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.1.0b10.dev54+gdffbfd9d2 documentation - Home"/>
+    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.1.0b10.dev56+g13ff038e6 documentation - Home"/>
+    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.1.0b10.dev56+g13ff038e6 documentation - Home"/>
   
   
 </a></div>
@@ -479,8 +479,10 @@
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">fips.operator</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">DenseOperator</span><span class="p">,</span>
+    <span class="n">DiagonalOperator</span><span class="p">,</span>
     <span class="n">Operator</span><span class="p">,</span>
     <span class="n">OperatorLike</span><span class="p">,</span>
+    <span class="n">SparseOperator</span><span class="p">,</span>
     <span class="n">_solve_psd</span><span class="p">,</span>
     <span class="n">as_operator</span><span class="p">,</span>
 <span class="p">)</span>
@@ -491,7 +493,8 @@
 <span class="c1"># with the public attribute that gives each as before (an array, or a CSR</span>
 <span class="c1"># matrix for a sparse input). A pickle stores each under its public name as</span>
 <span class="c1"># the array (or SciPy sparse matrix) it holds, so it reads on a fips that has</span>
-<span class="c1"># no operators, and one written by such a fips reads here.</span>
+<span class="c1"># no operators, and one written by such a fips reads here. A Kronecker</span>
+<span class="c1"># covariance is stored as itself: its array is the n x n it never forms.</span>
 <span class="n">_OPERATOR_NAMES</span> <span class="o">=</span> <span class="p">{</span>
     <span class="s2">&quot;H&quot;</span><span class="p">:</span> <span class="s2">&quot;_H_op&quot;</span><span class="p">,</span>
     <span class="s2">&quot;S_0&quot;</span><span class="p">:</span> <span class="s2">&quot;_S_0_op&quot;</span><span class="p">,</span>
@@ -503,10 +506,11 @@
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_raw</span><span class="p">(</span><span class="n">op</span><span class="p">:</span> <span class="n">Operator</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the array or SciPy sparse matrix an operator holds.&quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">op</span><span class="p">,</span> <span class="n">Operator</span><span class="p">):</span>
-        <span class="n">csr</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">_csr</span><span class="p">()</span>
-        <span class="k">return</span> <span class="n">op</span><span class="o">.</span><span class="n">dense</span><span class="p">()</span> <span class="k">if</span> <span class="n">csr</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">csr</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the array or SciPy sparse matrix an operator holds; a form of its own (Kronecker) stays itself.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">op</span><span class="p">,</span> <span class="n">DenseOperator</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">op</span><span class="o">.</span><span class="n">array</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">op</span><span class="p">,</span> <span class="p">(</span><span class="n">SparseOperator</span><span class="p">,</span> <span class="n">DiagonalOperator</span><span class="p">)):</span>
+        <span class="k">return</span> <span class="n">op</span><span class="o">.</span><span class="n">_csr</span><span class="p">()</span>
     <span class="k">return</span> <span class="n">op</span>
 
 

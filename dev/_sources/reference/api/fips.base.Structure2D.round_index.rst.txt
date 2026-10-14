@@ -1,0 +1,6 @@
+fips.base.Structure2D.round\_index
+==================================
+
+.. currentmodule:: fips.base
+
+.. automethod:: Structure2D.round_index

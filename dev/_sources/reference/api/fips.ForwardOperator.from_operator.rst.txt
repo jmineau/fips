@@ -1,0 +1,6 @@
+﻿fips.ForwardOperator.from\_operator
+===================================
+
+.. currentmodule:: fips
+
+.. automethod:: ForwardOperator.from_operator
