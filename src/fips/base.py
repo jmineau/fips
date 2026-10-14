@@ -562,8 +562,8 @@ def diagonal_frame(
     return pd.DataFrame(np.diag(diagonal), index=index, columns=index)
 
 
-_FRAME_LOG_SIZE = 5000
-"""Forming the DataFrame of an operator-backed structure longer than this is logged at INFO."""
+_FRAME_WARN_SIZE = 5000
+"""Forming the DataFrame of an operator-backed structure longer than this warns."""
 
 
 @dataclass(frozen=True)
@@ -794,9 +794,9 @@ class Structure2D(Structure):
         structure's; :meth:`reindex`, :meth:`round_index` and :meth:`copy` work
         on the labels and keep the operator. The DataFrame is formed the first
         time something reads :attr:`data` (or :attr:`values`, :meth:`xs`,
-        ``S["block", "block"]``), with a message at INFO for more than 5,000
-        rows or columns; from then on the structure holds that DataFrame, as
-        one built from it does.
+        ``S["block", "block"]``), with a :class:`UserWarning` for more than
+        5,000 rows or columns; from then on the structure holds that
+        DataFrame, as one built from it does.
 
         Parameters
         ----------
@@ -819,9 +819,11 @@ class Structure2D(Structure):
         Raises
         ------
         ValueError
-            If the operator's shape does not match the labels, or a label level
-            is unnamed (or, for a :class:`~fips.Matrix`, there is no ``block``
-            level).
+            If the operator's shape does not match the labels, it stores a NaN
+            (checked for a dense, sparse or diagonal operator, as the
+            DataFrame path checks; a Kronecker operator checks its factors when
+            it is built), or a label level is unnamed (or, for a
+            :class:`~fips.Matrix`, there is no ``block`` level).
 
         See Also
         --------
@@ -867,14 +869,13 @@ class Structure2D(Structure):
         if self._data is None:
             assert self._op is not None
             index, columns = self._labels
-            if max(len(index), len(columns)) > _FRAME_LOG_SIZE:
-                logger.info(
-                    "Forming the %d x %d DataFrame of %s %r from its %s.",
-                    len(index),
-                    len(columns),
-                    type(self).__name__,
-                    self.name,
-                    type(self._op).__name__,
+            if max(len(index), len(columns)) > _FRAME_WARN_SIZE:
+                warnings.warn(
+                    f"Forming the {len(index)} x {len(columns)} DataFrame of "
+                    f"{type(self).__name__} {self.name!r} from its "
+                    f"{type(self._op).__name__}.",
+                    UserWarning,
+                    stacklevel=2,
                 )
             self._data = self._op.to_frame(index, columns)
             self._op = None
@@ -921,6 +922,8 @@ class Structure2D(Structure):
             raise ValueError(f"All levels in the row index of {klass} must be named.")
         if None in self.columns.names:
             raise ValueError(f"All levels in the columns of {klass} must be named.")
+        if np.isnan(_stored_values(self._op)).any():
+            raise ValueError("Data contains NaN values.")
 
     def _sanitize(self):
         """Coerce index and column labels to numeric where possible."""
@@ -974,9 +977,9 @@ class Structure2D(Structure):
                 inplace=inplace,
                 **kwargs,
             )
-        if verify_overlap:
-            _verify_overlap(index, self.index)
-            _verify_overlap(columns, self.columns)
+        if verify_overlap:  # against the labels with their levels in the target's order
+            _verify_overlap(index, _in_order_of(self.index, index))
+            _verify_overlap(columns, _in_order_of(self.columns, columns))
         same = np.array_equal(rows, np.arange(self.shape[0])) and np.array_equal(
             cols, np.arange(self.shape[1])
         )
@@ -1175,6 +1178,29 @@ class Structure2D(Structure):
             self.data = state["data"]
 
 
+def _stored_values(op: Operator) -> np.ndarray:
+    """
+    Return the values an operator stores: a dense one's array, a sparse one's entries, a diagonal.
+
+    Empty for another form (a Kronecker operator checks its factors and
+    standard deviations when it is built).
+    """
+    if isinstance(op, DenseOperator):
+        return op.array
+    if isinstance(op, SparseOperator):
+        return op.matrix.data
+    if isinstance(op, DiagonalOperator):
+        return op.values
+    return np.empty(0)
+
+
+def _in_order_of(current: pd.Index, target: pd.Index) -> pd.Index:
+    """Return `current` with its levels in `target`'s order."""
+    if current.names != target.names and isinstance(current, pd.MultiIndex):
+        return current.reorder_levels(list(target.names))
+    return current
+
+
 def _label_positions(current: pd.Index, target: pd.Index) -> np.ndarray | None:
     """
     Return where each label of `target` is in `current`, or None if one is not there.
@@ -1184,8 +1210,7 @@ def _label_positions(current: pd.Index, target: pd.Index) -> np.ndarray | None:
     as pandas does.
     """
     _check_reindex_levels(current, target)
-    if current.names != target.names and isinstance(current, pd.MultiIndex):
-        current = current.reorder_levels(list(target.names))
+    current = _in_order_of(current, target)
     if not current.is_unique or not target.is_unique:
         return None
     positions = current.get_indexer(target)
