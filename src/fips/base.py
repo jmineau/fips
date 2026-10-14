@@ -73,6 +73,10 @@ def xselect(
         # Drop index levels that are all nan
         idx = s_or_df.axes[ax]
         idx = idx.droplevel(
+            # pandas-stubs type Index.isna() as Index[bool], which has no all()
+            # (pandas returns an ndarray), and take only int | str as a level,
+            # though a level name is any Hashable
+            # pyrefly: ignore[missing-attribute, bad-argument-type]
             [level for level in idx.names if idx.get_level_values(level).isna().all()]
         )
 
@@ -170,6 +174,8 @@ class Structure(Pickleable, ABC):
             )
 
         # Check for NaN values
+        # pandas-stubs allow only axis=0 on Series.any(); pandas takes None
+        # pyrefly: ignore[bad-argument-type]
         if self.data.isnull().any(axis=None):
             raise ValueError("Data contains NaN values.")
 
@@ -720,6 +726,8 @@ class Structure2D(Structure):
     def values(self) -> npt.NDArray:
         """Return values as numpy array or sparse matrix."""
         if self.is_sparse:
+            # pandas-stubs do not type DataFrame.sparse
+            # pyrefly: ignore[missing-attribute]
             return self.data.sparse.to_coo().tocsr()
         return self.data.to_numpy()
 
@@ -736,6 +744,8 @@ class Structure2D(Structure):
         """Return a copy with dense internal storage."""
         if not self.is_sparse:
             return self
+        # pandas-stubs do not type DataFrame.sparse
+        # pyrefly: ignore[missing-attribute]
         return self._with_data(self.data.sparse.to_dense())
 
     def to_sparse(self, threshold: float | None = None) -> "Structure2D":

@@ -214,7 +214,10 @@ The tooling comes from
   fixed ones with `uv run pyrefly check --prune-baseline`. `py.typed` is
   shipped — keep new public API fully typed. Fix a listed error where the type
   comes from (a correct annotation, a narrower return type), not with
-  `typing.cast`, an ignore comment or `Any`. The aim is an empty baseline.
+  `typing.cast` or `Any`. Where pandas-stubs are wrong or too narrow (pandas
+  takes the call, as with `DataFrame.sparse`, which they leave untyped), put
+  `# pyrefly: ignore[<code>]` on the line above the error, after a comment saying
+  why, and keep it off the baseline. The aim is an empty baseline.
 - **Docstrings**: numpy convention, format docstring code blocks
   (`docstring-code-format = true`).
 - **Docs**: `docs/reference/` groups the API by topic, as pandas does. Each

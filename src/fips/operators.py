@@ -57,6 +57,8 @@ class ForwardOperator(Matrix):
         x_vals = state.values
         if op.is_sparse:
             # Use scipy CSR for efficient sparse matrix-vector multiply
+            # pandas-stubs do not type DataFrame.sparse
+            # pyrefly: ignore[missing-attribute]
             y_values = op.data.sparse.to_coo().tocsr().dot(x_vals)
         else:
             y_values = op.data.values @ x_vals

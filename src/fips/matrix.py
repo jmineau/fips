@@ -356,7 +356,10 @@ class Matrix(MultiBlockMixin, Structure2D):
                 raise ValueError("Indices and columns must match for addition.")
             # Densify both sides before adding; sparsity is not preserved through
             # arbitrary addition (fill positions become non-zero).
+            # pandas-stubs do not type DataFrame.sparse
+            # pyrefly: ignore[missing-attribute]
             a = self.data.sparse.to_dense() if self.is_sparse else self.data
+            # pyrefly: ignore[missing-attribute]
             b = other.data.sparse.to_dense() if other.is_sparse else other.data
             return Klass(
                 a.values + b.values,
@@ -365,6 +368,8 @@ class Matrix(MultiBlockMixin, Structure2D):
                 columns=self.columns,
             )
         elif np.isscalar(other):
+            # pandas-stubs do not type DataFrame.sparse
+            # pyrefly: ignore[missing-attribute]
             a = self.data.sparse.to_dense() if self.is_sparse else self.data
             return Klass(a.values + other, index=self.index, columns=self.columns)
         else:

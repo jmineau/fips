@@ -198,5 +198,7 @@ def frame_from_spmatrix(
         and a structure built from it refuses it.
     """
     return normalize_fill_value(
+        # pandas-stubs do not type DataFrame.sparse
+        # pyrefly: ignore[missing-attribute]
         pd.DataFrame.sparse.from_spmatrix(matrix, index=index, columns=columns)
     )

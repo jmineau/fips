@@ -1,38 +1,10 @@
 {
   "errors": [
     {
-      "column": 9,
-      "path": "src/fips/_sparse.py",
-      "name": "missing-attribute",
-      "concise_description": "Object of class `EllipsisType` has no attribute `from_spmatrix`",
-      "severity": "error"
-    },
-    {
       "column": 40,
       "path": "src/fips/base.py",
       "name": "bad-argument-type",
       "concise_description": "Argument `int` is not assignable to parameter `axis` with type `Literal['index', 0]` in function `pandas.core.series.Series.xs`",
-      "severity": "error"
-    },
-    {
-      "column": 46,
-      "path": "src/fips/base.py",
-      "name": "missing-attribute",
-      "concise_description": "Object of class `Index` has no attribute `all`",
-      "severity": "error"
-    },
-    {
-      "column": 67,
-      "path": "src/fips/base.py",
-      "name": "bad-argument-type",
-      "concise_description": "Argument `Hashable | Unknown | None` is not assignable to parameter `level` with type `int | str` in function `pandas.core.indexes.base.Index.get_level_values`",
-      "severity": "error"
-    },
-    {
-      "column": 40,
-      "path": "src/fips/base.py",
-      "name": "bad-argument-type",
-      "concise_description": "Argument `None` is not assignable to parameter `axis` with type `Literal['index', 0]` in function `pandas.core.series.Series.any`",
       "severity": "error"
     },
     {
@@ -71,34 +43,6 @@
       "severity": "error"
     },
     {
-      "column": 32,
-      "path": "src/fips/base.py",
-      "name": "missing-attribute",
-      "concise_description": "Object of class `EllipsisType` has no attribute `to_dense`",
-      "severity": "error"
-    },
-    {
-      "column": 52,
-      "path": "src/fips/covariance.py",
-      "name": "bad-argument-type",
-      "concise_description": "Argument `list[Hashable | None]` is not assignable to parameter `on` with type `list[str] | str | None` in function `pandas.core.frame.DataFrame.join`",
-      "severity": "error"
-    },
-    {
-      "column": 56,
-      "path": "src/fips/indexes.py",
-      "name": "bad-argument-type",
-      "concise_description": "Argument `Hashable | None` is not assignable to parameter `level` with type `int | str` in function `pandas.core.indexes.base.Index.get_level_values`",
-      "severity": "error"
-    },
-    {
-      "column": 38,
-      "path": "src/fips/indexes.py",
-      "name": "no-matching-overload",
-      "concise_description": "No matching overload found for function `pandas.core.tools.numeric.to_numeric` called with arguments: (Index, errors=Literal['raise'])",
-      "severity": "error"
-    },
-    {
       "column": 26,
       "path": "src/fips/matrix.py",
       "name": "bad-assignment",
@@ -124,34 +68,6 @@
       "path": "src/fips/matrix.py",
       "name": "bad-return",
       "concise_description": "Returned type `DataFrame | Series` is not assignable to declared return type `DataFrame`",
-      "severity": "error"
-    },
-    {
-      "column": 17,
-      "path": "src/fips/matrix.py",
-      "name": "missing-attribute",
-      "concise_description": "Object of class `EllipsisType` has no attribute `to_dense`",
-      "severity": "error"
-    },
-    {
-      "column": 17,
-      "path": "src/fips/matrix.py",
-      "name": "missing-attribute",
-      "concise_description": "Object of class `EllipsisType` has no attribute `to_dense`",
-      "severity": "error"
-    },
-    {
-      "column": 17,
-      "path": "src/fips/matrix.py",
-      "name": "missing-attribute",
-      "concise_description": "Object of class `EllipsisType` has no attribute `to_dense`",
-      "severity": "error"
-    },
-    {
-      "column": 24,
-      "path": "src/fips/operators.py",
-      "name": "missing-attribute",
-      "concise_description": "Object of class `EllipsisType` has no attribute `to_coo`",
       "severity": "error"
     },
     {
