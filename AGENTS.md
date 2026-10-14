@@ -129,9 +129,13 @@ From `fips.__init__`:
   more than `data` and `name` overrides it to pass the rest on
   (`MatrixBlock`: `row_block`, `col_block`); a field that is not passed on is
   lost by every one of those methods.
-- **Block alignment.** `MatrixBlock`s must declare correct `row_block`/
-  `col_block` names; `InverseProblem` cross-checks against the obs/state
-  block names. Stale names → silent misalignment.
+- **Block alignment.** `InverseProblem.__init__` reindexes `H`, `S_0` and
+  `S_z` onto the obs and state indexes with zero fill: labels missing within a
+  known block are zeros with a "Partial overlap" warning (a STILT Jacobian covers
+  only the cells a footprint touched, so this must stay). Before that it
+  raises on a matrix block name that matches no block of the space
+  (`_check_block_names`) and on duplicate obs or state labels, before and
+  after `round_index` (`_check_unique_labels`).
 - **Sparse fill_value is always 0.0.** The implicit entries of a covariance or
   a Jacobian are zeros, not missing data: `Structure2D.values` calls
   `.sparse.to_coo()` and `_validate` rejects NaN. pandas 3's

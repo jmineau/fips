@@ -21,6 +21,93 @@ from fips.vector import Vector, VectorLike
 
 logger = logging.getLogger(__name__)
 
+_SHOWN = 5  # how many labels an error message lists
+
+
+def _plain(label):
+    """Return ``label`` with NumPy scalars as Python ones, so it prints as typed."""
+    if isinstance(label, tuple):
+        return tuple(_plain(part) for part in label)
+    return label.item() if isinstance(label, np.generic) else label
+
+
+def _listed(labels: list) -> str:
+    """Return the first few of ``labels`` as text, saying how many were left out."""
+    text = ", ".join(repr(_plain(label)) for label in labels[:_SHOWN])
+    if len(labels) > _SHOWN:
+        text += f" and {len(labels) - _SHOWN} more"
+    return text
+
+
+def _check_unique_labels(
+    index: pd.Index,
+    space: str,
+    unrounded: pd.Index | None = None,
+    decimals: int | None = None,
+) -> None:
+    """
+    Raise a ValueError naming the duplicate labels of ``index``.
+
+    Parameters
+    ----------
+    index : pd.Index
+        The state or observation index.
+    space : str
+        What the index labels ("state" or "observation"), for the message.
+    unrounded : pd.Index, optional
+        ``index`` before ``round_index`` rounded it. When given, the message
+        names the distinct labels that rounding merged.
+    decimals : int, optional
+        The ``round_index`` that was used, for the message.
+    """
+    # The first position of each label that appears more than once
+    firsts = np.flatnonzero(
+        index.duplicated(keep=False) & ~index.duplicated(keep="first")
+    )
+    if len(firsts) == 0:
+        return
+    if unrounded is None:
+        raise ValueError(
+            f"The {space} index has duplicate labels: "
+            f"{_listed(list(index[firsts]))}. Each label must be unique."
+        )
+    merged = []
+    for first in firsts[:_SHOWN]:
+        label = index[[first]]
+        sources = unrounded[index.get_indexer_for(label)]
+        merged.append(f"{_listed(list(sources))} become {_listed(list(label))}")
+    more = f"; {len(firsts) - _SHOWN} more labels" if len(firsts) > _SHOWN else ""
+    raise ValueError(
+        f"round_index={decimals} merges distinct labels of the {space} index: "
+        f"{'; '.join(merged)}{more}. Pass round_index=None, or more decimals, "
+        "to keep them apart."
+    )
+
+
+def _check_block_names(
+    name: str, matrix: Matrix, rows: pd.Index, columns: pd.Index
+) -> None:
+    """
+    Raise a ValueError if a block of ``matrix`` matches no block of its space.
+
+    ``rows`` and ``columns`` are the indexes ``matrix`` is placed on. A block
+    they have that ``matrix`` lacks is fine (it is filled with zeros), as are
+    labels missing within a block; a block name they do not have is a typo or
+    a stale name, and reindexing would silently drop that block's values.
+    """
+    for axis, labels, target, argument in (
+        ("row", matrix.index, rows, "row_block"),
+        ("column", matrix.columns, columns, "col_block"),
+    ):
+        known = list(target.unique(level="block"))
+        unknown = [b for b in labels.unique(level="block") if b not in known]
+        if unknown:
+            raise ValueError(
+                f"{name} has {axis} blocks that match no block of the space "
+                f"it is placed on: {_listed(unknown)}. The known blocks are "
+                f"{_listed(known)}. Check the {argument} of each MatrixBlock."
+            )
+
 
 class InverseProblem(Pickleable):
     """
@@ -48,7 +135,18 @@ class InverseProblem(Pickleable):
     constant : VectorLike or float, optional
         Optional constant term added to the forward model (e.g., background or bias).
     round_index : int, optional
-        Number of decimal places to round to. If None, no rounding is performed.
+        Number of decimal places to round float labels to. If None, no
+        rounding is performed. Labels that rounding makes equal raise a
+        ValueError rather than being merged.
+
+    Raises
+    ------
+    ValueError
+        If the state or observation index has duplicate labels, before or
+        after rounding, or if a block name of `forward_operator`,
+        `prior_error` or `modeldata_mismatch` (a MatrixBlock's `row_block` or
+        `col_block`) matches no block of the space it is placed on. Labels
+        missing within a known block are filled with zeros, with a warning.
     """
 
     obs: Vector
@@ -133,10 +231,16 @@ class InverseProblem(Pickleable):
             constant_index = obs.index if isinstance(constant, (int, float)) else None
             constant = Vector(constant, index=constant_index)
 
+        _check_unique_labels(obs.index, "observation")
+        _check_unique_labels(prior.index, "state")
+
         # Round to specified precision if provided
         if round_index is not None:
+            unrounded_obs, unrounded_prior = obs.index, prior.index
             obs = obs.round_index(round_index)
             prior = prior.round_index(round_index)
+            _check_unique_labels(obs.index, "observation", unrounded_obs, round_index)
+            _check_unique_labels(prior.index, "state", unrounded_prior, round_index)
             forward_operator = forward_operator.round_index(round_index, axis="both")
             modeldata_mismatch = modeldata_mismatch.round_index(
                 round_index, axis="both"
@@ -144,6 +248,13 @@ class InverseProblem(Pickleable):
             prior_error = prior_error.round_index(round_index, axis="both")
             if constant is not None:
                 constant = constant.round_index(round_index)
+
+        # A block name that matches no block would be dropped by the reindex
+        _check_block_names("forward_operator", forward_operator, obs.index, prior.index)
+        _check_block_names(
+            "modeldata_mismatch", modeldata_mismatch, obs.index, obs.index
+        )
+        _check_block_names("prior_error", prior_error, prior.index, prior.index)
 
         # Reindex matrices to obs and prior (state) indices
         def reindex(matrix, row_idx, col_idx):
