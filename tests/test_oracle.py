@@ -21,21 +21,22 @@ from dataclasses import dataclass
 import numpy as np
 import pandas as pd
 import pytest
+import scipy.sparse as sp
 
 from fips import (
     Block,
-    CovarianceMatrix,
-    ForwardOperator,
+    Covariance,
     InverseProblem,
-    Matrix,
-    MatrixBlock,
+    Operator,
+    Space,
     Vector,
     available_estimators,
     convolve,
 )
 from fips.aggregators import ObsAggregator
-from fips.covariance import KroneckerOperator
 from fips.estimators import ESTIMATOR_REGISTRY
+from fips.kronecker import KroneckerOperator
+from fips.linalg import DiagonalOperator, SparseOperator
 
 ESTIMATORS = available_estimators()
 
@@ -211,19 +212,24 @@ class Case:
         args.update(inputs)
         return InverseProblem(**args)
 
-    def sparse_inputs(self) -> dict[str, Matrix]:
+    @property
+    def state_space(self) -> Space:
+        """The state's labels, in the order of the arrays."""
+        return Space.from_index(self.state_index)
+
+    @property
+    def obs_space(self) -> Space:
+        """The observations' labels, in the order of the arrays."""
+        return Space.from_index(self.obs_index)
+
+    def sparse_inputs(self) -> dict[str, Operator]:
         """Return ``H``, ``S_0`` and ``S_z`` stored sparse, as inputs of :meth:`problem`."""
-        s, o = self.state_index, self.obs_index
+        s, o = self.state_space, self.obs_space
+        # SparseOperator itself: a 1 x 1 sparse matrix would read as a diagonal
         return {
-            "forward_operator": ForwardOperator(
-                pd.DataFrame(self.H, index=o, columns=s), sparse=True
-            ),
-            "prior_error": CovarianceMatrix(
-                pd.DataFrame(self.S_0, index=s, columns=s), sparse=True
-            ),
-            "modeldata_mismatch": CovarianceMatrix(
-                pd.DataFrame(self.S_z, index=o, columns=o), sparse=True
-            ),
+            "forward_operator": Operator(SparseOperator(sp.csr_array(self.H)), o, s),
+            "prior_error": Covariance(SparseOperator(sp.csr_array(self.S_0)), s),
+            "modeldata_mismatch": Covariance(SparseOperator(sp.csr_array(self.S_z)), o),
         }
 
 
@@ -240,16 +246,15 @@ def vector_on(v: Vector, index: pd.Index, what: str) -> np.ndarray:
     return v.values
 
 
-def matrix_on(M: Matrix, index: pd.Index, columns: pd.Index, what: str) -> np.ndarray:
+def matrix_on(M: Operator, index: pd.Index, columns: pd.Index, what: str) -> np.ndarray:
     """Return the values of `M` after checking its labels on both axes, in order."""
-    assert isinstance(M, Matrix), what
-    assert M.index.equals(index), f"{what}: wrong row index"
-    assert M.columns.equals(columns), f"{what}: wrong column index"
-    assert list(M.index.names) == list(index.names), f"{what}: wrong row level names"
-    assert list(M.columns.names) == list(columns.names), (
-        f"{what}: wrong column level names"
-    )
-    return M.to_dense().values
+    assert isinstance(M, Operator), what
+    rows, cols = M.rows.index, M.cols.index
+    assert rows.equals(index), f"{what}: wrong row index"
+    assert cols.equals(columns), f"{what}: wrong column index"
+    assert list(rows.names) == list(index.names), f"{what}: wrong row level names"
+    assert list(cols.names) == list(columns.names), f"{what}: wrong column level names"
+    return M.dense()
 
 
 def check_posterior(
@@ -380,14 +385,14 @@ def _diagonal_inputs(case: Case, form: str, v_0: np.ndarray, v_z: np.ndarray):
     if form == "scalar":
         return float(v_0[0]), float(v_z[0])
     if form == "diagonal":
-        return (
-            CovarianceMatrix.diagonal(v_0, index=s),
-            CovarianceMatrix.diagonal(v_z, index=o),
-        )
+        S_0 = Covariance.diagonal(v_0, case.state_space)
+        S_z = Covariance.diagonal(v_z, case.obs_space)
+        assert isinstance(S_0.data, DiagonalOperator)
+        return S_0, S_z
     if form == "sparse":
         return (
-            CovarianceMatrix.diagonal(v_0, index=s, sparse=True),
-            CovarianceMatrix.diagonal(v_z, index=o, sparse=True),
+            Covariance(SparseOperator(sp.diags_array(v_0)), case.state_space),
+            Covariance(SparseOperator(sp.diags_array(v_z)), case.obs_space),
         )
     raise ValueError(form)
 
@@ -449,9 +454,9 @@ def test_kronecker_prior_error(estimator, rows):
         op = KroneckerOperator(
             factors, std=std, positions=np.unravel_index(chosen, sizes)
         )
-        problem = case.problem(
-            prior_error=CovarianceMatrix.from_operator(op, case.state_index)
-        ).solve(estimator)
+        problem = case.problem(prior_error=Covariance(op, case.state_space)).solve(
+            estimator
+        )
         assert isinstance(problem.estimator._S_0_op, KroneckerOperator)
         check_posterior(
             problem, expected, case.state_index, case.obs_index, f"seed {seed}"
@@ -465,11 +470,8 @@ def test_sparse_forward_operator(estimator):
         case = Case.random(seed, 7, 10)
         case.H[np.abs(case.H) < 0.8] = 0.0  # make it sparse
         expected = closed_form(case.z, case.x_0, case.H, case.S_0, case.S_z, case.c)
-        H = ForwardOperator(
-            pd.DataFrame(case.H, index=case.obs_index, columns=case.state_index),
-            sparse=True,
-        )
-        assert H.is_sparse
+        H = Operator(sp.csr_array(case.H), case.obs_space, case.state_space)
+        assert isinstance(H.data, SparseOperator)
         problem = case.problem(forward_operator=H).solve(estimator)
         check_posterior(
             problem, expected, case.state_index, case.obs_index, f"seed {seed}"
@@ -542,7 +544,7 @@ class MultiBlockCase:
         return self._slices(self.obs)
 
     def problem(self) -> InverseProblem:
-        """Build the problem from Blocks and MatrixBlocks."""
+        """Build the problem from Blocks and operators assembled from their blocks."""
         ss, os_ = self.state_slices, self.obs_slices
 
         def vector(values, blocks, slices):
@@ -554,16 +556,14 @@ class MultiBlockCase:
             )
 
         def blocks_2d(values, rows, cols, rs, cs, skip=()):
-            return [
-                MatrixBlock(
-                    pd.DataFrame(values[rs[r], cs[c]], index=ri, columns=ci),
-                    row_block=r,
-                    col_block=c,
-                )
-                for r, ri in rows.items()
-                for c, ci in cols.items()
-                if (r, c) not in skip
-            ]
+            return Operator.from_blocks(
+                {
+                    (r, c): pd.DataFrame(values[rs[r], cs[c]], index=ri, columns=ci)
+                    for r, ri in rows.items()
+                    for c, ci in cols.items()
+                    if (r, c) not in skip
+                }
+            )
 
         return InverseProblem(
             obs=vector(self.z, self.obs, os_),
@@ -584,14 +584,13 @@ def _block_values(structure, key, index, columns=None) -> np.ndarray:
         assert series.index.equals(index), f"{key}: wrong index"
         assert list(series.index.names) == list(index.names), f"{key}: level names"
         return series.to_numpy()
-    frame = structure[key]
-    assert frame.index.equals(index), f"{key}: wrong row index"
-    assert frame.columns.equals(columns), f"{key}: wrong column index"
-    assert list(frame.index.names) == list(index.names), f"{key}: row level names"
-    assert list(frame.columns.names) == list(columns.names), (
-        f"{key}: column level names"
-    )
-    return frame.to_numpy()
+    op = structure[key]
+    rows, cols = op.rows.select(key[0]), op.cols.select(key[1])
+    assert rows.equals(index), f"{key}: wrong row index"
+    assert cols.equals(columns), f"{key}: wrong column index"
+    assert list(rows.names) == list(index.names), f"{key}: row level names"
+    assert list(cols.names) == list(columns.names), f"{key}: column level names"
+    return op.dense()
 
 
 @pytest.mark.parametrize("estimator", ESTIMATORS)
@@ -648,7 +647,7 @@ def _shuffled(obj, rng: np.random.Generator):
 
 def _aligned(structure, index, columns=None) -> np.ndarray:
     """Return a structure's values in the order of `index` (and `columns`), by label."""
-    data = structure.data
+    data = structure.to_frame() if isinstance(structure, Operator) else structure.data
     assert data.index.sort_values().equals(index.sort_values()), "row labels differ"
     if columns is None:
         return data.reindex(index).to_numpy()
@@ -670,9 +669,9 @@ def test_permutation(estimator, seed):
     shuffled = InverseProblem(
         obs=_shuffled(ref.obs.data, rng),
         prior=_shuffled(ref.prior.data, rng),
-        forward_operator=_shuffled(ref.forward_operator.data, rng),
-        prior_error=_shuffled(ref.prior_error.data, rng),
-        modeldata_mismatch=_shuffled(ref.modeldata_mismatch.data, rng),
+        forward_operator=_shuffled(ref.forward_operator.to_frame(), rng),
+        prior_error=_shuffled(ref.prior_error.to_frame(), rng),
+        modeldata_mismatch=_shuffled(ref.modeldata_mismatch.to_frame(), rng),
         constant=_shuffled(ref.constant.data, rng),
     ).solve(estimator)
 
@@ -690,7 +689,7 @@ def test_permutation(estimator, seed):
     for name, rows, cols, key in pairs:
         assert_close(
             _aligned(getattr(shuffled, name), rows, cols),
-            getattr(ref, name).to_dense().values
+            getattr(ref, name).dense()
             if cols is not None
             else getattr(ref, name).values,
             sc[key],
@@ -768,53 +767,54 @@ def _labeled_map(frame: pd.DataFrame, rng: np.random.Generator):
 
 
 def _matrix_structure(kind: str, sparse: bool, rng: np.random.Generator):
-    """Return a two-block structure of class `kind`, dense or sparse."""
+    """Return a two-block operator of class `kind`, dense or sparse."""
     flux = pd.MultiIndex.from_product([[0, 1, 2], [0, 1]], names=["x", "y"])
     bias = pd.Index(["north", "south"], name="site")
     co2 = pd.Index([f"a{k}" for k in range(5)], name="obs_id")
     ch4 = pd.Index(["north", "south"], name="site")
 
-    def block(rows, cols, r, c):
+    def block(rows, cols):
         values = rng.standard_normal((len(rows), len(cols)))
         values[np.abs(values) < 0.7] = 0.0
-        frame = pd.DataFrame(values, index=rows, columns=cols)
-        return MatrixBlock(frame, row_block=r, col_block=c)
+        if sparse:
+            return sp.csr_array(values)
+        return values
 
-    if kind == "CovarianceMatrix":
-        blocks = [
-            block(flux, flux, "flux", "flux"),
-            block(flux, bias, "flux", "bias"),
-            block(bias, bias, "bias", "bias"),
-        ]
-    else:
-        blocks = [
-            block(co2, flux, "co2", "flux"),
-            block(co2, bias, "co2", "bias"),
-            block(ch4, flux, "ch4", "flux"),
-        ]
-    cls = {
-        "Matrix": Matrix,
-        "ForwardOperator": ForwardOperator,
-        "CovarianceMatrix": CovarianceMatrix,
-    }[kind]
-    return cls(blocks, sparse=sparse)
+    if kind == "Covariance":
+        blocks = {
+            ("flux", "flux"): block(flux, flux),
+            ("flux", "bias"): block(flux, bias),
+            ("bias", "bias"): block(bias, bias),
+        }
+        space = Space({"flux": flux, "bias": bias})
+        return Covariance.from_blocks(blocks, rows=space, cols=space)
+    blocks = {
+        ("co2", "flux"): block(co2, flux),
+        ("co2", "bias"): block(co2, bias),
+        ("ch4", "flux"): block(ch4, flux),
+    }
+    return Operator.from_blocks(
+        blocks,
+        rows=Space({"co2": co2, "ch4": ch4}),
+        cols=Space({"flux": flux, "bias": bias}),
+    )
 
 
 @pytest.mark.parametrize("sparse", [False, True], ids=["dense", "sparse"])
-@pytest.mark.parametrize("kind", ["Matrix", "ForwardOperator", "CovarianceMatrix"])
+@pytest.mark.parametrize("kind", ["Operator", "Covariance"])
 def test_dot_test_structures(kind, sparse):
-    """``convolve`` with a structure and with its transpose are adjoint, by label."""
+    """``convolve`` with an operator and with its transpose are adjoint, by label."""
     rng = np.random.default_rng(1)
     M = _matrix_structure(kind, sparse, rng)
-    assert M.is_sparse == sparse
+    assert isinstance(M.data, SparseOperator) == sparse
+    assert isinstance(M, Covariance) == (kind == "Covariance")
     frame = M.to_frame()
     m, n = frame.shape
     dot_test(_labeled_map(frame, rng), _labeled_map(frame.T, rng), n, m, rng)
-    # And the map is the matrix the structure holds
+    # And the map is the matrix the operator holds, and its transpose's
     x = rng.standard_normal(n)
-    np.testing.assert_allclose(
-        _labeled_map(frame, rng)(x), M.to_dense().values @ x, rtol=1e-12
-    )
+    np.testing.assert_allclose(_labeled_map(frame, rng)(x), M.dense() @ x, rtol=1e-12)
+    dot_test(lambda v: M.data @ v, lambda v: M.T.data @ v, n, m, rng)
 
 
 def _obs_index(blocks: list[str], seed: int) -> pd.MultiIndex:
@@ -849,10 +849,13 @@ def test_dot_test_obs_aggregator(aggregator, blocks, sparse):
     obs_index = _obs_index(blocks, seed=3)
     m = len(obs_index)
     # Each input in its own order, so W is right only if apply aligns them
-    identity = Matrix(
-        _shuffled(pd.DataFrame(np.eye(m), index=obs_index, columns=obs_index), rng),
-        sparse=sparse,
+    identity = Operator.from_frame(
+        _shuffled(pd.DataFrame(np.eye(m), index=obs_index, columns=obs_index), rng)
     )
+    if sparse:
+        identity = Operator(
+            sp.csr_array(identity.dense()), identity.rows, identity.cols
+        )
     S_z = random_spd(rng, m)
     S_z_frame = pd.DataFrame(S_z, index=obs_index, columns=obs_index)
     _, W, S_z_agg, _ = aggregator.apply(
@@ -860,7 +863,8 @@ def test_dot_test_obs_aggregator(aggregator, blocks, sparse):
         forward_operator=identity,
         modeldata_mismatch=_shuffled(S_z_frame, rng),
     )
-    W_frame = W.to_dense().to_frame()
+    assert isinstance(W, Operator)
+    W_frame = W.to_frame()
     agg_index = W_frame.index
     k = len(agg_index)
     assert k < m
