@@ -47,7 +47,10 @@ src/fips/
   operator.py        Operator (scipy LinearOperator) and its forms: Dense-,
                      Sparse-, DiagonalOperator; as_operator, dottest. What
                      the estimators compute with (Structure2D.operator)
-  estimators.py      Estimator ABC, ESTIMATOR_REGISTRY, available_estimators()
+  estimators.py      Estimator ABC, ESTIMATOR_REGISTRY, available_estimators();
+                     BayesianSolver, which factors through _whitened.py
+  _whitened.py       Whitened — the factorization BayesianSolver keeps: the
+                     estimate, variances, gain, DOFS, chi-squared for any gamma
   problem.py         InverseProblem — top-level orchestrator that combines
                      obs, prior, H, S_0, S_z; solve(problem) fits an
                      Estimator and returns a Posterior
@@ -461,18 +464,28 @@ covariance). See README "Multi-block" example.
 - `InverseProblem` pickles its estimator under `_estimator`, not the
   `Posterior`, and rebuilds the posterior on load, so a pickle reads the same
   with or without `posterior.py`. A `Posterior` pickles the estimator and the
-  two indexes only; its labeled outputs are rebuilt when asked for.
-- Covariance solves go through `Operator.solve`, whose dense form is
+  two indexes only; its labeled outputs are rebuilt when asked for. A
+  `BayesianSolver` pickles its factorization as a dict of arrays and drops
+  `S_hat`, `A`, `K` and `H S_0`, which the factors give again.
+- **`BayesianSolver` never factors `H S_0 H^T + S_z`.** It whitens with the
+  Cholesky factor of `S_z` alone (or the square root of its diagonal), so `S_z`
+  must be positive-definite (it raises otherwise), and eigendecomposes the
+  `m x m` matrix `L^-1 H S_0 H^T L^-T`, which is positive semidefinite: roundoff
+  can only leave eigenvalues slightly below zero, which are clipped (a clip
+  beyond roundoff is logged). A smooth temporal prior that makes `S_0` near-low-rank
+  (what used to tip the sum off positive-definite and block sub-yearly
+  inversions) therefore cannot stop the solve. Everything is derived from the
+  factors (`fips/_whitened.py`'s docstring has the formulas); nothing `n x n`
+  is formed unless `S_hat` or `A` is read, and `tests/test_whitened.py` fails if
+  `fips.solve` with the variances, DOFS or chi-squared allocates one. With `m > n`
+  the state-space form would be cheaper; it does not exist, and a large such
+  solve logs a warning.
+- Other covariance solves (`cost`, `KroneckerOperator.solve`, the base
+  `Estimator`'s gain) go through `Operator.solve`, whose dense form is
   `_solve_psd(A, B)` (in `operator.py`), **not**
-  `scipy.linalg.solve(..., assume_a="pos")` directly. `A = H S_0 H^T + S_z` is
-  PD in exact arithmetic, but when it is ill-conditioned (wide eigenvalue
-  spread, `H S_0 H^T` large relative to `S_z`) roundoff can tip it numerically
-  off-PD, making bare Cholesky raise `LinAlgError: singular matrix`. The module
-  is pure linear algebra and knows nothing about the problem domain — the
-  conditioning comes entirely from the caller's `H`/`S_0`/`S_z` (downstream this
-  surfaced as a near-low-rank `S_0` from a smooth temporal prior, which blocked
-  sub-yearly flux inversions). `_solve_psd` keeps the fast Cholesky path and
-  falls back to a symmetric `LDL^T` solve (`assume_a="sym"`) with a warning. Use
-  it for any new covariance-like Cholesky solve here. A sparse operator solves
-  with SuperLU (`splu`): SciPy has no sparse Cholesky, and an LU needs no
-  positive-definiteness, so the same roundoff does not stop it.
+  `scipy.linalg.solve(..., assume_a="pos")` directly: it keeps the fast
+  Cholesky path and falls back, with a warning, to a symmetric `LDL^T` solve when
+  roundoff has tipped a matrix that is PD in exact arithmetic off-PD. Use it for
+  any new covariance-like Cholesky solve here. A sparse operator solves with
+  SuperLU (`splu`): SciPy has no sparse Cholesky, and an LU needs no
+  positive-definiteness.

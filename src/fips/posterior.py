@@ -12,11 +12,12 @@ from typing import Any
 
 import numpy as np
 import pandas as pd
+import scipy.sparse as sp
 
 from fips.base import Pickleable
 from fips.covariance import CovarianceMatrix
 from fips.estimators import Estimator
-from fips.matrix import Matrix
+from fips.matrix import Matrix, MatrixLike
 from fips.vector import Vector
 
 logger = logging.getLogger(__name__)
@@ -170,14 +171,112 @@ class Posterior(Pickleable):
         r"""
         The posterior error variances, the diagonal of :math:`\hat{S}`.
 
-        Taken from the dense :attr:`covariance`.
+        The estimator's :attr:`~fips.Estimator.S_hat_diagonal`: for the
+        Bayesian solve, computed from its factorization without forming the
+        ``n x n`` :attr:`covariance`.
 
         See Also
         --------
         covariance : The full posterior error covariance.
+        cov : The covariance of aggregates of the state.
         """
-        return self._state_vector(
-            np.diag(np.asarray(self.estimator.S_hat)).copy(), "posterior_variance"
+        return self._state_vector(self.estimator.S_hat_diagonal, "posterior_variance")
+
+    def _aggregation(
+        self, W: MatrixLike
+    ) -> tuple[np.ndarray | sp.csr_matrix, pd.Index]:
+        """
+        Return an aggregation's values with its columns in state order, and its row labels.
+
+        Raises
+        ------
+        ValueError
+            If the columns are not exactly the state index (a label missing,
+            extra or repeated).
+        """
+        W = W if isinstance(W, Matrix) else Matrix(W)
+        cols = W.columns
+        if cols.has_duplicates:
+            raise ValueError("The aggregation's columns repeat a state label.")
+        missing = self.state_index.difference(cols, sort=False)
+        extra = cols.difference(self.state_index, sort=False)
+        if len(missing) or len(extra):
+            raise ValueError(
+                "The aggregation's columns must be the state index. "
+                f"{len(missing)} state labels are not among them "
+                f"(first: {list(missing[:3])}), and {len(extra)} of its labels "
+                f"are not in the state (first: {list(extra[:3])})."
+            )
+        values = W.values
+        return values[:, cols.get_indexer(self.state_index)], W.index
+
+    def cov(self, W: "MatrixLike | None" = None) -> CovarianceMatrix:
+        r"""
+        Return the posterior error covariance, of the state or of aggregates of it.
+
+        Parameters
+        ----------
+        W : Matrix or DataFrame, optional
+            An aggregation, ``k x n``: one row per aggregate (a region, a
+            month, a total), one column per state element, with the state
+            index as its columns (in any order) and a ``block`` level on both
+            axes, as a :class:`~fips.Matrix` takes it. Row ``i`` holds the
+            weight of each state element in aggregate ``i``: ones for a sum,
+            ``1/count`` for a mean. It may be sparse.
+
+        Returns
+        -------
+        CovarianceMatrix
+            Without `W`, :attr:`covariance` (dense, ``n x n``). With `W`,
+            :math:`W \hat{S} W^T` on the aggregation's row labels, ``k x k``,
+            computed without the ``n x n`` covariance for the Bayesian solve.
+
+        Raises
+        ------
+        ValueError
+            If the columns of `W` are not exactly the state index: a state label
+            missing, a label that is not in the state, or one repeated.
+
+        See Also
+        --------
+        variances : The diagonal of the full covariance.
+        averaging_kernel : The averaging kernel, of the state or of aggregates.
+
+        Examples
+        --------
+        >>> import numpy as np
+        >>> import pandas as pd
+        >>> import fips
+        >>> state = pd.Index(["a", "b", "c"], name="cell")
+        >>> obs = pd.Index(["o1", "o2"], name="obs_id")
+        >>> problem = fips.InverseProblem(
+        ...     obs=pd.Series([1.0, 2.0], index=obs, name="obs"),
+        ...     prior=pd.Series(0.0, index=state, name="prior"),
+        ...     forward_operator=pd.DataFrame(
+        ...         [[1.0, 1.0, 0.0], [0.0, 1.0, 1.0]], index=obs, columns=state
+        ...     ),
+        ...     prior_error=1.0,
+        ...     modeldata_mismatch=0.1,
+        ... )
+        >>> post = fips.solve(problem)
+        >>> total = fips.MatrixBlock(
+        ...     pd.DataFrame(
+        ...         1.0, index=pd.Index(["total"], name="region"), columns=state
+        ...     ),
+        ...     row_block="region",
+        ...     col_block="prior",
+        ... )
+        >>> post.cov(total).values.round(3)
+        array([[0.722]])
+        """
+        if W is None:
+            return self.covariance
+        values, index = self._aggregation(W)
+        return CovarianceMatrix(
+            self.estimator.aggregate_S_hat(values),
+            index=index,
+            columns=index,
+            name="posterior_error",
         )
 
     @cached_property
@@ -235,20 +334,113 @@ class Posterior(Pickleable):
         )
 
     @cached_property
-    def averaging_kernel(self) -> Matrix:
-        r"""
-        The averaging kernel :math:`A = K H`, state by state.
-
-        See Also
-        --------
-        dofs : Its trace.
-        """
+    def _averaging_kernel(self) -> Matrix:
+        """The full averaging kernel, built once."""
         return Matrix(
             np.asarray(self.estimator.A),
             index=self.state_index,
             columns=self.state_index,
             name="averaging_kernel",
         )
+
+    def averaging_kernel(self, W: "MatrixLike | None" = None) -> Matrix:
+        r"""
+        Return the averaging kernel, of the state or of aggregates of it.
+
+        Without `W`, :math:`A = K H`, state by state (dense, ``n x n``; the same
+        object each time). With an aggregation :math:`W`, :math:`W A W^*`,
+        where :math:`W^* = W^T (W W^T)^{-1}` is the pseudo-inverse of
+        :math:`W`: it spreads a change of the aggregates back over the state
+        elements (for a sum, evenly over the elements summed), so :math:`W A
+        W^*` is how the aggregated estimate responds to the aggregated truth.
+        This is the form IMI uses; :math:`W A W^T` is not an averaging kernel.
+        For the Bayesian solve it is computed without the ``n x n`` kernel.
+
+        Parameters
+        ----------
+        W : Matrix or DataFrame, optional
+            An aggregation, as :meth:`cov` takes it. Its rows must be linearly
+            independent.
+
+        Returns
+        -------
+        Matrix
+            ``n x n`` on the state index, or ``k x k`` on the aggregation's row
+            labels.
+
+        Raises
+        ------
+        ValueError
+            If the columns of `W` are not exactly the state index, or its rows
+            are linearly dependent.
+
+        See Also
+        --------
+        dofs : The trace of the full averaging kernel.
+        cov : The posterior covariance, of the state or of aggregates.
+        """
+        if W is None:
+            return self._averaging_kernel
+        values, index = self._aggregation(W)
+        return Matrix(
+            self.estimator.aggregate_A(values),
+            index=index,
+            columns=index,
+            name="averaging_kernel",
+        )
+
+    def with_gamma(self, gamma: float) -> "Posterior":
+        r"""
+        Return the posterior of the same problem with another regularization factor.
+
+        The Bayesian solve keeps its factorization, which does not depend on
+        gamma, so the new posterior costs :math:`O(m n)` instead of a new
+        solve: a sweep over gamma factors once. The problem is unchanged.
+
+        Parameters
+        ----------
+        gamma : float
+            The regularization factor, as ``fips.solve(problem, gamma=...)``
+            takes it.
+
+        Returns
+        -------
+        Posterior
+            The posterior ``fips.solve(problem, gamma=gamma)`` would give, its
+            estimate computed.
+
+        Raises
+        ------
+        TypeError
+            If the estimator has no regularization factor to change.
+
+        Examples
+        --------
+        >>> import pandas as pd
+        >>> import fips
+        >>> state = pd.Index(["a", "b"], name="cell")
+        >>> obs = pd.Index(["o1", "o2", "o3"], name="obs_id")
+        >>> problem = fips.InverseProblem(
+        ...     obs=pd.Series([1.0, 2.0, 3.0], index=obs, name="obs"),
+        ...     prior=pd.Series([0.0, 0.0], index=state, name="prior"),
+        ...     forward_operator=pd.DataFrame(
+        ...         [[1.0, 0.0], [0.0, 1.0], [1.0, 1.0]], index=obs, columns=state
+        ...     ),
+        ...     prior_error=1.0,
+        ...     modeldata_mismatch=0.1,
+        ... )
+        >>> post = fips.solve(problem)
+        >>> [round(post.with_gamma(g).dofs, 3) for g in (0.1, 1.0, 10.0)]
+        [0.886, 1.877, 1.986]
+        """
+        with_gamma = getattr(self.estimator, "with_gamma", None)
+        if with_gamma is None:
+            raise TypeError(
+                f"{type(self.estimator).__name__} has no regularization factor to change."
+            )
+        post = type(self)(with_gamma(gamma), self.state_index, self.obs_index)
+        _ = post.estimate
+        return post
 
     @cached_property
     def desroziers(self) -> CovarianceMatrix:
@@ -268,7 +460,7 @@ class Posterior(Pickleable):
     @property
     def dofs(self) -> float:
         """
-        Degrees of freedom for signal, the trace of :attr:`averaging_kernel`.
+        Degrees of freedom for signal, the trace of :meth:`averaging_kernel`.
 
         The estimator's :attr:`~fips.Estimator.DOFS`.
         """

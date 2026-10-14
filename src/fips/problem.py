@@ -472,8 +472,8 @@ class InverseProblem(Pickleable):
 
     @property
     def averaging_kernel(self) -> Matrix:
-        """Averaging kernel matrix, A (:attr:`~fips.Posterior.averaging_kernel`)."""
-        return self.result.averaging_kernel
+        """Averaging kernel matrix, A (:meth:`~fips.Posterior.averaging_kernel`)."""
+        return self.result.averaging_kernel()
 
     @property
     def desroziers(self) -> CovarianceMatrix:

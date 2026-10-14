@@ -517,6 +517,8 @@ def test_every_combination_matches_dense(cov_shape, sparse):
         _close(value, getattr(ref.estimator, name), name)
     for name in POSTERIOR_OUTPUTS:
         value, expected = getattr(post, name), getattr(ref, name)
+        if callable(value):  # averaging_kernel, with no aggregation
+            value, expected = value(), expected()
         if hasattr(value, "to_dense"):  # a labeled structure
             assert value.index.equals(expected.index), name
             value, expected = value.to_dense().values, expected.to_dense().values

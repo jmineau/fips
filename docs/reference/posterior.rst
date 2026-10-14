@@ -37,6 +37,7 @@ State estimate
    Posterior.mean
    Posterior.covariance
    Posterior.variances
+   Posterior.cov
 
 Observation space
 ~~~~~~~~~~~~~~~~~
@@ -66,6 +67,13 @@ Diagnostics
    Posterior.r2
    Posterior.rmse
    Posterior.uncertainty_reduction
+
+Regularization
+~~~~~~~~~~~~~~
+.. autosummary::
+   :toctree: api/
+
+   Posterior.with_gamma
 
 Inputs
 ~~~~~~

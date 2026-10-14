@@ -177,6 +177,12 @@ def _assert_same(result, expected):
         pd.testing.assert_frame_equal(result.data, expected.data, check_exact=True)
 
 
+def _output(post, attr):
+    """Return an output of `post`; ``averaging_kernel`` is a method, called with no aggregation."""
+    value = getattr(post, attr)
+    return value() if callable(value) else value
+
+
 class TestOutputs:
     """Each output has the values, labels, type and name the problem gave."""
 
@@ -189,7 +195,7 @@ class TestOutputs:
         self, problem, post, attr, prop, est_attr, row, col, cls, name
     ):
         expected = _expected(problem, post.estimator, est_attr, row, col, cls, name)
-        _assert_same(getattr(post, attr), expected)
+        _assert_same(_output(post, attr), expected)
 
     @pytest.mark.parametrize(
         ("attr", "prop", "est_attr", "row", "col", "cls", "name"),
@@ -201,7 +207,7 @@ class TestOutputs:
     ):
         problem.solve("bayesian")
         result = getattr(problem, prop)
-        assert result is getattr(problem.result, attr)
+        assert result is _output(problem.result, attr)
         expected = _expected(problem, problem.estimator, est_attr, row, col, cls, name)
         _assert_same(result, expected)
 
@@ -215,10 +221,11 @@ class TestOutputs:
         assert post.mean is post.estimate
 
     def test_variances_are_the_diagonal_of_the_covariance(self, problem, post):
+        # Computed without the covariance, so equal to roundoff, not bit for bit
         assert isinstance(post.variances, Vector)
         assert post.variances.index.equals(problem.state_index)
-        np.testing.assert_array_equal(
-            post.variances.values, np.diag(post.covariance.to_numpy())
+        np.testing.assert_allclose(
+            post.variances.values, np.diag(post.covariance.to_numpy()), rtol=1e-12
         )
 
     @pytest.mark.parametrize(("attr", "est_attr"), SCALARS)
@@ -242,7 +249,7 @@ class TestCaching:
 
     @pytest.mark.parametrize("attr", [*OUTPUT_IDS, "mean", "variances"])
     def test_same_object_twice(self, post, attr):
-        assert getattr(post, attr) is getattr(post, attr)
+        assert _output(post, attr) is _output(post, attr)
 
     def test_problem_property_same_object_twice(self, problem):
         problem.solve("bayesian")
@@ -323,16 +330,16 @@ class TestPickle:
 
     def test_posterior_round_trip(self, post):
         for attr in OUTPUT_IDS:
-            getattr(post, attr)
+            _output(post, attr)
         loaded = pickle.loads(pickle.dumps(post))
         assert isinstance(loaded, Posterior)
         for attr in OUTPUT_IDS:
-            _assert_same(getattr(loaded, attr), getattr(post, attr))
+            _assert_same(_output(loaded, attr), _output(post, attr))
         assert loaded.dofs == post.dofs
 
     def test_labeled_outputs_are_not_pickled(self, post):
         for attr in OUTPUT_IDS:
-            getattr(post, attr)
+            _output(post, attr)
         assert set(post.__getstate__()) == {"estimator", "state_index", "obs_index"}
         loaded = pickle.loads(pickle.dumps(post))
         assert not set(OUTPUT_IDS) & set(vars(loaded))

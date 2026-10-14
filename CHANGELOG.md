@@ -92,8 +92,52 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   14.9 GB from the dense `build`, with the same estimate.
   ([#6](https://github.com/jmineau/fips/issues/6))
 
+- **The posterior of aggregates, and a gamma sweep without a new solve.**
+  `Posterior.cov(W)` is the posterior covariance of aggregates of the state,
+  `W S_hat W^T`, and `Posterior.averaging_kernel(W)` their averaging kernel,
+  `W A W*` with `W* = W^T (W W^T)^-1` the pseudo-inverse of `W` (the form IMI
+  uses; `W A W^T` is not an averaging kernel). `W` is a `Matrix` (or what
+  `Matrix` takes) with one row per aggregate and the state index as its
+  columns, in any order, dense or sparse; the result is labeled by its rows. A
+  column label that is not in the state, a state label that is missing and a
+  repeated label raise. Without `W`, `cov()` is `covariance` and
+  `averaging_kernel()` the full kernel. `Posterior.with_gamma(gamma)` is the
+  posterior `fips.solve(problem, gamma=gamma)` gives, from the factorization
+  the solve kept. The estimator side: `BayesianSolver.with_gamma`, and
+  `Estimator.S_hat_diagonal`, `aggregate_S_hat(W)` and `aggregate_A(W)` (from
+  `S_hat` and `A` for any estimator, from the factors for `BayesianSolver`).
+  ([#23](https://github.com/jmineau/fips/issues/23),
+  [#22](https://github.com/jmineau/fips/issues/22))
+
 ### Changed
 
+- **`BayesianSolver` solves by whitening and keeps its factorization.** It
+  whitens with the Cholesky factor `L` of the model-data mismatch (or the square
+  root of its diagonal), eigendecomposes the `m x m` matrix
+  `L^-1 H S_0 H^T L^-T` once, and derives the estimate, the gain, the posterior
+  variances, `DOFS` (the sum of `lambda / (lambda + 1)`) and `reduced_chi2` (from
+  the whitened innovation, with no solve against `S_0`) from the factors.
+  Nothing `n x n` is formed unless `S_hat` or `A` (`posterior_error`,
+  `averaging_kernel`) is read; `variances`, `U_red` and `uncertainty_reduction`
+  no longer read `S_hat`. The outputs agree with the closed form and with the
+  previous solve to 1e-10, and the paper-1 reference run to 6e-14. A sum
+  `H S_0 H^T + S_z` that roundoff has tipped off positive-definite no longer
+  matters. The model-data mismatch must itself be positive-definite: one that is
+  not raises `LinAlgError`. With more observations than state elements the
+  state-space form would be cheaper; it is not built, and a solve with
+  `m > n` and `m >= 1000` logs a warning. A pickled `BayesianSolver` keeps the
+  factors and drops `S_hat`, `A`, `K` and `H S_0`. On an slv-like problem with
+  a Kronecker `S_0` (n = 18,720, m = 2,858) the solve with the variances, DOFS
+  and chi-squared took 6.7 s at a 1.6 GB peak (20.8 s and 9.2 GB before), and
+  each further gamma 0.11 s (23.7 s and 15.3 GB before); at a year of daily
+  fluxes (n = 32,850, m = 14,600) 228 s and 20.4 GB (291 s and 36.7 GB), and
+  1.6 s per gamma (291 s and 63 GB).
+  ([#22](https://github.com/jmineau/fips/issues/22),
+  [#23](https://github.com/jmineau/fips/issues/23))
+- `Posterior.averaging_kernel` is a method, `averaging_kernel(W=None)`; without
+  an aggregation it is the full kernel, the same object each time.
+  `InverseProblem.averaging_kernel` is unchanged.
+  ([#23](https://github.com/jmineau/fips/issues/23))
 - **The estimator computes with operators.** `fips.solve` hands it each
   matrix's `operator` instead of `.values`, and the estimator keeps them as
   operators under private names. `Estimator.H`, `S_0` and `S_z` give what they
