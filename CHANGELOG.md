@@ -96,6 +96,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **`InverseProblem` refuses duplicate state or observation labels**, given
+  twice in the input or made equal by `round_index` (6 decimals by default),
+  with a `ValueError` that names them; for rounding it names the labels that
+  merged. Two labels that differed past the sixth decimal used to become one,
+  the problem kept both rows under it, and the posterior had fewer entries than
+  the state. ([#78](https://github.com/jmineau/fips/issues/78))
+- **A block name of the forward operator, the prior error or the model-data
+  mismatch that matches no block of the state or the observations raises a
+  `ValueError`** naming the unknown block and the known ones, on either axis.
+  In a problem with several blocks, a misspelled `row_block` or `col_block` was
+  filled with zeros with only a "Partial overlap" warning, so the block it was
+  meant for was dropped. Labels missing *within* a known block (a state cell no
+  footprint touched) are still filled with zeros, with the same warning as
+  before. ([#80](https://github.com/jmineau/fips/issues/80))
 - **`KroneckerError.build` gives the right covariance for any row order of
   its index.** It laid the Kronecker product of the marginal correlations over
   the rows as if they were the product of the marginal coordinates in the

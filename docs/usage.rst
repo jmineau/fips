@@ -34,7 +34,12 @@ Data Model
 A :class:`~fips.Vector` concatenates :class:`~fips.Block` objects along a
 hierarchical index that adds a ``"block"`` level identifying each component.
 The same pattern applies in 2-D.  Index alignment across components is handled
-automatically.
+automatically: :class:`~fips.InverseProblem` places each matrix on the
+observation and state labels, and fills the labels a matrix lacks within a
+block with zeros (with a warning). A block name that matches no block of the
+state or the observations raises a :class:`ValueError`, and so does a label
+that appears twice in the state or the observations, including two labels
+that ``round_index`` rounds to the same value.
 
 .. tip::
 

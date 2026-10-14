@@ -7,6 +7,7 @@ import pandas as pd
 import pytest
 
 from fips.covariance import CovarianceMatrix
+from fips.matrix import MatrixBlock
 from fips.operators import ForwardOperator
 from fips.problem import InverseProblem
 from fips.vector import Block, Vector
@@ -735,3 +736,216 @@ class TestInverseProblemSolve:
         np.testing.assert_allclose(S_y0.to_numpy(), expected)
         np.testing.assert_allclose(S_y0.to_numpy(), S_y0.to_numpy().T)
         assert (np.diag(S_y0.to_numpy()) >= 0).all()
+
+
+class TestInverseProblemLabelChecks:
+    """Duplicate labels (#78) and unknown block names (#80) raise."""
+
+    @staticmethod
+    def _rounding_problem(round_index=6):
+        """Build the problem of #78: two depths that differ past the 6th decimal."""
+        state = pd.Index([10.1234567, 10.1234568, 20.0], name="depth_m")
+        prior = pd.Series([1.0, 2.0, 3.0], index=state, name="density")
+        obs_idx = pd.Index([0, 1], name="obs_id")
+        obs = pd.Series([1.0, 2.0], index=obs_idx, name="gravity")
+        H = pd.DataFrame(
+            [[1.0, 0.0, 0.0], [0.0, 1.0, 1.0]], index=obs_idx, columns=state
+        )
+        return InverseProblem(
+            obs=obs,
+            prior=prior,
+            forward_operator=H,
+            prior_error=1.0,
+            modeldata_mismatch=1.0,
+            round_index=round_index,
+        )
+
+    def test_issue_78_labels_merged_by_rounding_raise(self):
+        """The reproduction of #78 raises and names the labels that merged."""
+        with pytest.raises(ValueError) as excinfo:
+            self._rounding_problem()
+        message = str(excinfo.value)
+        assert "round_index=6" in message
+        assert "state index" in message
+        assert "10.1234567" in message
+        assert "10.1234568" in message
+        assert "10.123457" in message
+
+    def test_without_rounding_the_labels_stay_distinct(self):
+        """With round_index=None the three labels of #78 are kept."""
+        problem = self._rounding_problem(round_index=None)
+        assert problem.n_state == 3
+        assert not problem.state_index.has_duplicates
+
+    def test_obs_labels_merged_by_rounding_raise(self):
+        """Rounding that merges two observation labels raises too."""
+        state = pd.Index(["a", "b"], name="id")
+        obs_idx = pd.Index([0.5, 0.50000001], name="time")
+        prior = pd.Series([1.0, 2.0], index=state, name="state")
+        obs = pd.Series([1.0, 2.0], index=obs_idx, name="obs")
+        H = pd.DataFrame(np.eye(2), index=obs_idx, columns=state)
+        with pytest.raises(
+            ValueError, match=r"round_index=6 merges .* observation index.*0\.5"
+        ):
+            InverseProblem(
+                obs=obs,
+                prior=prior,
+                forward_operator=H,
+                prior_error=1.0,
+                modeldata_mismatch=1.0,
+            )
+
+    @pytest.mark.parametrize("round_index", [None, 6])
+    @pytest.mark.parametrize("space", ["state", "observation"])
+    def test_duplicate_input_labels_raise(self, space, round_index):
+        """A label given twice raises, with or without rounding."""
+        unique = pd.Index(["a", "b", "c"], name="id")
+        repeated = pd.Index(["a", "b", "b"], name="id")
+        state = repeated if space == "state" else unique
+        obs_idx = repeated if space == "observation" else unique
+        prior = pd.Series([1.0, 2.0, 3.0], index=state, name="state")
+        obs = pd.Series([1.0, 2.0, 3.0], index=obs_idx, name="obs")
+        H = pd.DataFrame(np.eye(3), index=obs_idx, columns=state)
+        with pytest.raises(
+            ValueError, match=rf"The {space} index has duplicate labels: \('\w+', 'b'\)"
+        ):
+            InverseProblem(
+                obs=obs,
+                prior=prior,
+                forward_operator=H,
+                prior_error=1.0,
+                modeldata_mismatch=1.0,
+                round_index=round_index,
+            )
+
+    @staticmethod
+    def _blocks_problem(typo=None, cells=(1, 2)):
+        """
+        Build a problem with two state blocks and two obs blocks.
+
+        ``typo`` is ``(argument, axis, block)``: in that argument's matrix,
+        the block named ``block`` gets an ``x`` appended on ``axis`` ("row"
+        or "column"). ``cells`` are the flux cells the Jacobian covers.
+        """
+        flux = pd.Index([1, 2], name="cell")
+        bias = pd.Index(["A"], name="site")
+        obs_a = pd.Index([0, 1], name="obs_id")
+        obs_b = pd.Index([2], name="obs_id")
+        prior = Vector(
+            [
+                Block(pd.Series([1.0, 2.0], index=flux, name="flux")),
+                Block(pd.Series([0.0], index=bias, name="bias")),
+            ]
+        )
+        obs = Vector(
+            [
+                Block(pd.Series([5.0, 6.0], index=obs_a, name="a")),
+                Block(pd.Series([7.0], index=obs_b, name="b")),
+            ]
+        )
+        covered = pd.Index(list(cells), name="cell")
+        H = {
+            ("a", "flux"): pd.DataFrame(1.0, index=obs_a, columns=covered),
+            ("b", "flux"): pd.DataFrame(1.0, index=obs_b, columns=covered),
+            ("a", "bias"): pd.DataFrame(1.0, index=obs_a, columns=bias),
+            ("b", "bias"): pd.DataFrame(1.0, index=obs_b, columns=bias),
+        }
+        S_0 = {
+            ("flux", "flux"): pd.DataFrame(np.eye(2), index=flux, columns=flux),
+            ("bias", "bias"): pd.DataFrame([[1.0]], index=bias, columns=bias),
+        }
+        S_z = {
+            ("a", "a"): pd.DataFrame(np.eye(2), index=obs_a, columns=obs_a),
+            ("b", "b"): pd.DataFrame([[1.0]], index=obs_b, columns=obs_b),
+        }
+        matrices = {
+            "forward_operator": H,
+            "prior_error": S_0,
+            "modeldata_mismatch": S_z,
+        }
+        if typo is not None:
+            argument, axis, block = typo
+            blocks = matrices[argument]
+            for row, col in list(blocks):
+                new_row = row + "x" if axis == "row" and row == block else row
+                new_col = col + "x" if axis == "column" and col == block else col
+                blocks[new_row, new_col] = blocks.pop((row, col))
+        return InverseProblem(obs=obs, prior=prior, **matrices)
+
+    def test_issue_80_unknown_col_block_raises(self):
+        """The reproduction of #80 raises and names the unknown and known blocks."""
+        cells = pd.Index([1, 2], name="cell")
+        sites = pd.Index(["A"], name="site")
+        oidx = pd.Index([0], name="obs_id")
+        prior = Vector(
+            [
+                Block(pd.Series([1.0, 2.0], index=cells, name="flux")),
+                Block(pd.Series([0.0], index=sites, name="bias")),
+            ]
+        )
+        obs = pd.Series([5.0], index=oidx, name="conc")
+        H = [
+            MatrixBlock(
+                pd.DataFrame([[1.0, 1.0]], index=oidx, columns=cells),
+                row_block="conc",
+                col_block="fluxx",
+            ),
+            MatrixBlock(
+                pd.DataFrame([[1.0]], index=oidx, columns=sites),
+                row_block="conc",
+                col_block="bias",
+            ),
+        ]
+        with pytest.raises(ValueError) as excinfo:
+            InverseProblem(
+                obs=obs,
+                prior=prior,
+                forward_operator=H,
+                prior_error=1.0,
+                modeldata_mismatch=1.0,
+            )
+        message = str(excinfo.value)
+        assert "forward_operator has column blocks" in message
+        assert "'fluxx'" in message
+        assert "The known blocks are 'flux', 'bias'" in message
+        assert "col_block" in message
+
+    @pytest.mark.parametrize(
+        ("argument", "axis", "block", "known"),
+        [
+            ("forward_operator", "row", "a", "'a', 'b'"),
+            ("forward_operator", "column", "flux", "'flux', 'bias'"),
+            ("prior_error", "row", "bias", "'flux', 'bias'"),
+            ("prior_error", "column", "flux", "'flux', 'bias'"),
+            ("modeldata_mismatch", "row", "b", "'a', 'b'"),
+            ("modeldata_mismatch", "column", "a", "'a', 'b'"),
+        ],
+    )
+    def test_unknown_block_name_raises(self, argument, axis, block, known):
+        """A misspelled row_block or col_block raises for H, S_0 and S_z."""
+        argument_name = "row_block" if axis == "row" else "col_block"
+        with pytest.raises(ValueError) as excinfo:
+            self._blocks_problem(typo=(argument, axis, block))
+        message = str(excinfo.value)
+        assert f"{argument} has {axis} blocks" in message
+        assert f"'{block}x'" in message
+        assert f"The known blocks are {known}" in message
+        assert argument_name in message
+
+    def test_known_blocks_build_without_warning(self):
+        """A problem whose blocks all match builds silently, as before."""
+        with warnings.catch_warnings():
+            warnings.simplefilter("error")
+            problem = self._blocks_problem()
+        assert problem.forward_operator.shape == (3, 3)
+        assert problem.forward_operator.values.tolist() == [[1.0] * 3] * 3
+
+    def test_labels_missing_within_a_known_block_are_zero_filled(self):
+        """A Jacobian that covers only some cells of a block is still filled with zeros."""
+        with pytest.warns(UserWarning, match="Partial overlap"):
+            problem = self._blocks_problem(cells=(2,))
+        H = problem.forward_operator
+        assert H.shape == (3, 3)
+        assert H["a", "flux"].to_numpy().tolist() == [[0.0, 1.0], [0.0, 1.0]]
+        assert H["b", "flux"].to_numpy().tolist() == [[0.0, 1.0]]
+        assert H["a", "bias"].to_numpy().tolist() == [[1.0], [1.0]]
