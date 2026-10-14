@@ -73,6 +73,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   and `"1"` are now duplicates when they are assembled into a `Matrix`, as two
   such `Block`s already were in a `Vector`.
   ([#72](https://github.com/jmineau/fips/issues/72))
+- **`InversionPipeline.get_inputs` and `run` log their progress instead of
+  printing it.** The line each step prints as it starts ("Loading
+  observations..."), its elapsed time and the total are now `INFO` records of the
+  `fips.pipeline` logger, with the same text. **With no logging configured they
+  no longer appear**, in a terminal or in a batch job's output, because Python
+  shows only warnings by default. Call `logging.basicConfig(level=logging.INFO)`
+  to see them again, and read them from the log, not from standard output, if
+  you captured it. `FluxInversionPipeline.summarize` still prints its report, and
+  so does a subclass that prints in its own `run`.
+  ([#8](https://github.com/jmineau/fips/issues/8))
 
 ### Fixed
 

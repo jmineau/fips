@@ -10,6 +10,7 @@ to handle the specifics of data loading and covariance construction, while provi
 implementation for the overall workflow.
 """
 
+import logging
 import time
 from abc import ABC, abstractmethod
 from typing import Any, Generic, TypeVar
@@ -19,6 +20,8 @@ from fips.estimators import Estimator
 from fips.operators import ForwardOperator
 from fips.problem import InverseProblem
 from fips.vector import Vector
+
+logger = logging.getLogger(__name__)
 
 _Problem = TypeVar("_Problem", bound=InverseProblem)
 
@@ -42,6 +45,13 @@ class InversionPipeline(ABC, Generic[_Problem]):
         The specific InverseProblem class that defines the mathematical formulation of the problem.
     estimator : type[Estimator] | str
         The estimator to use for solving the inverse problem, either as a class or a string identifier.
+
+    Notes
+    -----
+    ``get_inputs`` and ``run`` log each step, with its elapsed time, at ``INFO`` level
+    through the ``fips.pipeline`` logger, and print nothing. Python shows only warnings
+    until logging is configured, so call ``logging.basicConfig(level=logging.INFO)``
+    to see the steps.
     """
 
     config: Any
@@ -117,60 +127,62 @@ class InversionPipeline(ABC, Generic[_Problem]):
         step_start = time.perf_counter()
         # Obs and prior are the core inputs that define the obs and state space.
         # They are used to build the forward operator and covariance matrices.
-        print("Loading observations...")
+        logger.info("Loading observations...")
         obs = self.get_obs()
-        print(f"Observations loaded in {time.perf_counter() - step_start:.2f}s")
+        logger.info(f"Observations loaded in {time.perf_counter() - step_start:.2f}s")
 
         step_start = time.perf_counter()
-        print("Loading prior...")
+        logger.info("Loading prior...")
         prior = self.get_prior()
-        print(f"Prior loaded in {time.perf_counter() - step_start:.2f}s")
+        logger.info(f"Prior loaded in {time.perf_counter() - step_start:.2f}s")
 
         # Optional constants to be removed from the observations
         step_start = time.perf_counter()
-        print("Loading constant term (if any)...")
+        logger.info("Loading constant term (if any)...")
         constant = self.get_constant(obs=obs)
-        print(f"Constant term loaded in {time.perf_counter() - step_start:.2f}s")
+        logger.info(f"Constant term loaded in {time.perf_counter() - step_start:.2f}s")
 
         # Optional filtering step to align state space (e.g. trim to observed subset)
         step_start = time.perf_counter()
-        print("Optionally, filtering state space...")
+        logger.info("Optionally, filtering state space...")
         obs, prior = self.filter_state_space(obs=obs, prior=prior)
-        print(
+        logger.info(
             "Optionally, state space filtered in "
             f"{time.perf_counter() - step_start:.2f}s"
         )
 
         # Build the forward operator and covariance matrices based on the obs and prior
         step_start = time.perf_counter()
-        print("Building forward operator...")
+        logger.info("Building forward operator...")
         forward_operator = self.get_forward_operator(obs=obs, prior=prior)
-        print(f"Forward operator built in {time.perf_counter() - step_start:.2f}s")
+        logger.info(
+            f"Forward operator built in {time.perf_counter() - step_start:.2f}s"
+        )
 
         step_start = time.perf_counter()
-        print("Building prior error covariance...")
+        logger.info("Building prior error covariance...")
         prior_error = self.get_prior_error(prior=prior)
-        print(
+        logger.info(
             f"Prior error covariance built in {time.perf_counter() - step_start:.2f}s"
         )
 
         step_start = time.perf_counter()
-        print("Building model-data mismatch covariance...")
+        logger.info("Building model-data mismatch covariance...")
         mdm = self.get_modeldata_mismatch(obs=obs)
-        print(
+        logger.info(
             f"Model-data mismatch covariance built in {time.perf_counter() - step_start:.2f}s"
         )
 
         # Optional obs-space aggregation (e.g. hourly → daily)
         step_start = time.perf_counter()
-        print("Optionally, aggregating observation space (if needed)...")
+        logger.info("Optionally, aggregating observation space (if needed)...")
         obs, forward_operator, mdm, constant = self.aggregate_obs_space(
             obs=obs,
             forward_operator=forward_operator,
             modeldata_mismatch=mdm,
             constant=constant,
         )
-        print(
+        logger.info(
             "Optionally, observation space aggregated in "
             f"{time.perf_counter() - step_start:.2f}s"
         )
@@ -203,23 +215,23 @@ class InversionPipeline(ABC, Generic[_Problem]):
             estimator_kwargs = {}
 
         total_start = time.perf_counter()
-        print("Getting problem inputs...")
+        logger.info("Getting problem inputs...")
         inputs = self.get_inputs()
-        print(f"Inputs prepared in {time.perf_counter() - total_start:.2f}s")
+        logger.info(f"Inputs prepared in {time.perf_counter() - total_start:.2f}s")
 
         step_start = time.perf_counter()
-        print("Initializing solver...")
+        logger.info("Initializing solver...")
         self.problem = self._InverseProblem(
             **inputs,
             **kwargs,
         )
-        print(f"Solver initialized in {time.perf_counter() - step_start:.2f}s")
+        logger.info(f"Solver initialized in {time.perf_counter() - step_start:.2f}s")
 
         step_start = time.perf_counter()
-        print("Solving...")
+        logger.info("Solving...")
         self.problem.solve(estimator=self.estimator, **estimator_kwargs)
-        print(f"Solve completed in {time.perf_counter() - step_start:.2f}s")
+        logger.info(f"Solve completed in {time.perf_counter() - step_start:.2f}s")
 
-        print(f"Total pipeline time: {time.perf_counter() - total_start:.2f}s")
+        logger.info(f"Total pipeline time: {time.perf_counter() - total_start:.2f}s")
 
         return self.problem
