@@ -14,13 +14,13 @@ import pandas as pd
 
 from fips import indexes
 from fips.base import Pickleable, Structure1D
-from fips.covariance import CovarianceMatrix
+from fips.covariance import Covariance
 from fips.estimators import ESTIMATOR_REGISTRY, Estimator
-from fips.matrix import Matrix, MatrixBlock, MatrixLike
-from fips.operator import Operator
-from fips.operators import ForwardOperator
+from fips.field import Field
+from fips.linalg import LinearOperator
+from fips.operator import Operator, _check_overlap
 from fips.posterior import Posterior
-from fips.space import _SHOWN, _first_duplicates, _listed
+from fips.space import _SHOWN, Space, _first_duplicates, _listed, _positions
 from fips.vector import Vector, VectorLike
 
 logger = logging.getLogger(__name__)
@@ -59,29 +59,35 @@ def _check_rounded_labels(
     )
 
 
-def _check_block_names(
-    name: str, matrix: Matrix, rows: pd.Index, columns: pd.Index
-) -> None:
+def _place(op: Operator, rows: Space, cols: Space, what: str) -> Operator:
     """
-    Raise a ValueError if a block of ``matrix`` matches no block of its space.
+    Return `op` on `rows` and `cols`, zero where it has no entry for a label.
 
-    ``rows`` and ``columns`` are the indexes ``matrix`` is placed on. A block
-    they have that ``matrix`` lacks is fine (it is filled with zeros), as are
-    labels missing within a block; a block name they do not have is a typo or
-    a stale name, and reindexing would silently drop that block's values.
+    A block of `op` that `rows` or `cols` does not have is a typo or a stale
+    name, and placing would silently drop its values, so it raises. Labels
+    missing within a known block are filled with zeros, with a warning; labels
+    `op` has that the spaces do not are dropped.
     """
-    for axis, labels, target, argument in (
-        ("row", matrix.index, rows, "row_block"),
-        ("column", matrix.columns, columns, "col_block"),
-    ):
-        known = list(target.unique(level="block"))
-        unknown = [b for b in labels.unique(level="block") if b not in known]
+    for axis, mine, target in (("row", op.rows, rows), ("column", op.cols, cols)):
+        unknown = [b for b in mine.names if b not in target]
         if unknown:
             raise ValueError(
-                f"{name} has {axis} blocks that match no block of the space "
+                f"{what} has {axis} blocks that match no block of the space "
                 f"it is placed on: {_listed(unknown)}. The known blocks are "
-                f"{_listed(known)}. Check the {argument} of each MatrixBlock."
+                f"{_listed(target.names)}."
             )
+    r, c = _positions(rows, op.rows), _positions(cols, op.cols)
+    _check_overlap(r, rows, what)
+    _check_overlap(c, cols, what)
+    same = np.array_equal(r, np.arange(len(r))) and np.array_equal(c, np.arange(len(c)))
+    data = op.data if same else op.data._select(r, c)
+    return op._like(data, rows, cols)
+
+
+def _in_space_order(vector: Vector) -> Vector:
+    """Return `vector` with each block's rows together, in the order its Space has them."""
+    field = Field.from_series(vector.data)
+    return Vector(field.to_series(), name=vector.name)
 
 
 class InverseProblem(Pickleable):
@@ -97,22 +103,24 @@ class InverseProblem(Pickleable):
         Observation vector.
     prior : VectorLike
         Prior state vector.
-    forward_operator : MatrixLike
-        Forward operator mapping state space to observation space.
-    modeldata_mismatch : MatrixLike or Vector or float or Operator
-        Covariance matrix representing model-data mismatch (observation error).
-        A scalar is one variance for every observation, and a Series or Vector
-        (with a ``block`` level) gives a variance for each: both build a
-        diagonal covariance.
-    prior_error : MatrixLike or Vector or float or Operator
-        Covariance matrix representing prior error. A scalar, a Series or a
-        Vector builds a diagonal covariance, as for `modeldata_mismatch`. An
-        :class:`~fips.operator.Operator` (such as the
-        :class:`~fips.covariance.KroneckerOperator` of
-        :meth:`KroneckerError.operator(prior_index)
-        <fips.covariance.KroneckerError.operator>`) is labeled by the prior's
-        index, in its order, without forming the matrix; so is one for
-        `modeldata_mismatch`, by the observations' index.
+    forward_operator : Operator or pd.DataFrame
+        Forward operator mapping state space to observation space. A
+        DataFrame is read by :meth:`Operator.from_frame
+        <fips.Operator.from_frame>`; an axis without a ``block`` level takes
+        the one block of the observations (rows) or the state (columns).
+    modeldata_mismatch : Covariance, Operator, pd.DataFrame, Vector, float or LinearOperator
+        Covariance matrix representing model-data mismatch (observation
+        error). A scalar is one variance for every observation, and a Series
+        or Vector (with a ``block`` level) gives a variance for each: both
+        build a diagonal covariance. A form of :mod:`fips.linalg` (such as
+        the :class:`~fips.kronecker.KroneckerOperator` of
+        :meth:`KroneckerError.operator(index)
+        <fips.covariance.KroneckerError.operator>`) is labeled by the
+        observations, in their order, without forming the matrix.
+    prior_error : Covariance, Operator, pd.DataFrame, Vector, float or LinearOperator
+        Covariance matrix representing prior error, given in any of the ways
+        `modeldata_mismatch` is; a form of :mod:`fips.linalg` is labeled by
+        the prior, in its order.
     constant : VectorLike or float, optional
         Optional constant term added to the forward model (e.g., background or bias).
     round_index : int, optional
@@ -125,21 +133,27 @@ class InverseProblem(Pickleable):
     ------
     ValueError
         If the state or observation index has duplicate labels, before or
-        after rounding, or if a block name of `forward_operator`,
-        `prior_error` or `modeldata_mismatch` (a MatrixBlock's `row_block` or
-        `col_block`) matches no block of the space it is placed on. Labels
-        missing within a known block are filled with zeros, with a warning.
+        after rounding, or if a block of `forward_operator`, `prior_error` or
+        `modeldata_mismatch` matches no block of the space it is placed on.
+        Labels missing within a known block are filled with zeros, with a
+        warning.
+
+    Notes
+    -----
+    The observations and the prior are put in the order of their
+    :class:`~fips.Space`: each block's rows together, the blocks in the order
+    they first appear. Every matrix is put on those spaces.
     """
 
     obs: Vector
     """Observation vector."""
     prior: Vector
     """Prior state vector."""
-    forward_operator: ForwardOperator
+    forward_operator: Operator
     """Forward operator mapping state space to observation space."""
-    prior_error: CovarianceMatrix
+    prior_error: Covariance
     """Covariance matrix representing prior error."""
-    modeldata_mismatch: CovarianceMatrix
+    modeldata_mismatch: Covariance
     """Covariance matrix representing model-data mismatch (observation error)."""
     constant: Vector | None
     """Optional constant term added to the forward model (e.g., background or bias)."""
@@ -148,122 +162,120 @@ class InverseProblem(Pickleable):
         self,
         obs: VectorLike,
         prior: VectorLike,
-        forward_operator: MatrixLike,
-        modeldata_mismatch: "MatrixLike | Vector | Operator",
-        prior_error: "MatrixLike | Vector | Operator",
+        forward_operator: "Operator | pd.DataFrame",
+        modeldata_mismatch: "Operator | pd.DataFrame | Vector | float | LinearOperator",
+        prior_error: "Operator | pd.DataFrame | Vector | float | LinearOperator",
         constant: "VectorLike | float | None" = None,
         round_index: int | None = None,
     ):
-        obs = Vector(obs)
-        prior = Vector(prior)
-
-        def promote_2d(
-            data, target_index: pd.MultiIndex, target_columns: pd.MultiIndex
-        ):
-            """Promote 2D DataFrame to MatrixBlock, using block levels from target index/columns if needed."""
-            if isinstance(data, pd.DataFrame):
-                has_row = "block" in data.axes[0].names
-                has_col = "block" in data.axes[1].names
-
-                if not has_row:
-                    row_blks = target_index.get_level_values("block").unique()
-                    if len(row_blks) > 1:
-                        raise ValueError(
-                            "Data has no row 'block' level but target index has multiple blocks."
-                        )
-                    row_block = str(row_blks[0]) if len(row_blks) == 1 else None
-                else:
-                    row_block = None
-
-                if not has_col:
-                    col_blks = target_columns.get_level_values("block").unique()
-                    if len(col_blks) > 1:
-                        raise ValueError(
-                            "Data has no col 'block' level but target columns has multiple blocks."
-                        )
-                    col_block = str(col_blks[0]) if len(col_blks) == 1 else None
-                else:
-                    col_block = None
-
-                if not has_row or not has_col:
-                    # Wrap naked DataFrame in a MatrixBlock
-                    return MatrixBlock(data, row_block=row_block, col_block=col_block)
-            return data
-
-        forward_operator = ForwardOperator(
-            promote_2d(
-                forward_operator, target_index=obs.index, target_columns=prior.index
-            )
-        )
-
-        def covariance(data, target_index: pd.MultiIndex) -> CovarianceMatrix:
-            """Build a covariance; a scalar, Series or Vector is its diagonal."""
-            if isinstance(data, Operator):
-                return CovarianceMatrix.from_operator(data, target_index)
-            if isinstance(data, (pd.Series, Structure1D)):
-                return CovarianceMatrix.diagonal(data)
-            if isinstance(data, (int, float, np.number)):
-                return CovarianceMatrix.diagonal(data, index=target_index)
-            return CovarianceMatrix(
-                promote_2d(data, target_index=target_index, target_columns=target_index)
-            )
-
-        prior_error = covariance(prior_error, prior.index)
-        modeldata_mismatch = covariance(modeldata_mismatch, obs.index)
-
-        if constant is not None:
-            constant_index = obs.index if isinstance(constant, (int, float)) else None
-            constant = Vector(constant, index=constant_index)
+        obs = _in_space_order(Vector(obs))
+        prior = _in_space_order(Vector(prior))
 
         # Duplicate labels raised when obs and prior became vectors. Rounding is
         # opt-in; the rounded labels are checked before the vectors are rebuilt
         # on them, so that labels rounding merges are named as such.
         if round_index is not None:
-            unrounded_obs, unrounded_prior = obs.index, prior.index
             _check_rounded_labels(
                 indexes.round_index(obs.index, decimals=round_index),
-                unrounded_obs,
+                obs.index,
                 "observation",
                 round_index,
             )
             _check_rounded_labels(
                 indexes.round_index(prior.index, decimals=round_index),
-                unrounded_prior,
+                prior.index,
                 "state",
                 round_index,
             )
             obs = obs.round_index(round_index)
             prior = prior.round_index(round_index)
-            forward_operator = forward_operator.round_index(round_index, axis="both")
-            modeldata_mismatch = modeldata_mismatch.round_index(
-                round_index, axis="both"
+        obs_space = Space.from_index(obs.index)
+        state_space = Space.from_index(prior.index)
+
+        def operator(data, rows: Space, cols: Space, what: str) -> Operator:
+            """Return `data` as an operator; a frame's axis without blocks takes the space's one block."""
+            if isinstance(data, Operator):
+                return data
+            if isinstance(data, pd.DataFrame):
+                blocks = []
+                for labels, space, axis in (
+                    (data.index, rows, "rows"),
+                    (data.columns, cols, "columns"),
+                ):
+                    if "block" in labels.names:
+                        blocks.append(None)
+                    elif len(space.names) == 1:
+                        blocks.append(space.names[0])
+                    else:
+                        raise ValueError(
+                            f"The {axis} of {what} have no 'block' level, but the "
+                            f"space they are placed on has blocks {_listed(space.names)}."
+                        )
+                return Operator.from_frame(
+                    data, row_block=blocks[0], col_block=blocks[1]
+                )
+            more = ""
+            if rows is cols:  # a covariance
+                more = (
+                    "; a covariance may also be a scalar, a Series or Vector of "
+                    "variances, or a fips.linalg form"
+                )
+            raise TypeError(
+                f"{what} must be an Operator or a DataFrame{more}, got "
+                f"{type(data).__name__}."
             )
-            prior_error = prior_error.round_index(round_index, axis="both")
-            if constant is not None:
-                constant = constant.round_index(round_index)
 
-        # A block name that matches no block would be dropped by the reindex
-        _check_block_names("forward_operator", forward_operator, obs.index, prior.index)
-        _check_block_names(
-            "modeldata_mismatch", modeldata_mismatch, obs.index, obs.index
+        def covariance(data, space: Space, what: str) -> Operator:
+            """Return `data` as a covariance; a scalar, Series or Vector is its diagonal."""
+            if isinstance(data, LinearOperator):
+                return Covariance(data, space)
+            if isinstance(data, (pd.Series, Structure1D)):
+                series = data.data if isinstance(data, Structure1D) else data
+                if "block" in series.index.names:
+                    field = Field.from_series(series)
+                elif len(space.names) == 1:
+                    field = Field.from_series(series, block=space.names[0])
+                else:
+                    raise ValueError(
+                        f"The variances of {what} have no 'block' level, but the "
+                        f"space they are placed on has blocks {_listed(space.names)}."
+                    )
+                return Covariance.diagonal(field)
+            if isinstance(data, (int, float, np.number)):
+                return Covariance.diagonal(float(data), space)
+            return operator(data, space, space, what)
+
+        forward_operator = operator(
+            forward_operator, obs_space, state_space, "forward_operator"
         )
-        _check_block_names("prior_error", prior_error, prior.index, prior.index)
+        prior_error = covariance(prior_error, state_space, "prior_error")
+        modeldata_mismatch = covariance(
+            modeldata_mismatch, obs_space, "modeldata_mismatch"
+        )
+        if round_index is not None:
+            forward_operator = forward_operator.round_labels(round_index)
+            prior_error = prior_error.round_labels(round_index)
+            modeldata_mismatch = modeldata_mismatch.round_labels(round_index)
 
-        # Reindex matrices to obs and prior (state) indices
-        def reindex(matrix, row_idx, col_idx):
-            """Reindex ``matrix`` onto the given labels, filling gaps with zeros."""
-            return matrix.reindex(
-                index=row_idx, columns=col_idx, fill_value=0.0, verify_overlap=True
+        forward_operator = _place(
+            forward_operator, obs_space, state_space, "forward_operator"
+        )
+        prior_error = _place(prior_error, state_space, state_space, "prior_error")
+        modeldata_mismatch = _place(
+            modeldata_mismatch, obs_space, obs_space, "modeldata_mismatch"
+        )
+        if not isinstance(prior_error, Covariance):
+            prior_error = Covariance(prior_error.data, state_space, prior_error.name)
+        if not isinstance(modeldata_mismatch, Covariance):
+            modeldata_mismatch = Covariance(
+                modeldata_mismatch.data, obs_space, modeldata_mismatch.name
             )
 
-        forward_operator = reindex(
-            forward_operator, row_idx=obs.index, col_idx=prior.index
-        )
-        modeldata_mismatch = reindex(
-            modeldata_mismatch, row_idx=obs.index, col_idx=obs.index
-        )
-        prior_error = reindex(prior_error, row_idx=prior.index, col_idx=prior.index)
         if constant is not None:
+            constant_index = obs.index if isinstance(constant, (int, float)) else None
+            constant = Vector(constant, index=constant_index)
+            if round_index is not None:
+                constant = constant.round_index(round_index)
             constant = constant.reindex(
                 index=obs.index, fill_value=0.0, verify_overlap=True
             )
@@ -326,9 +338,9 @@ class InverseProblem(Pickleable):
 
     def get_block(
         self, component: str, block: str, crossblock: str | None = None
-    ) -> pd.DataFrame | pd.Series:
+    ) -> "Operator | pd.Series":
         """
-        Get block from a component (Vector or Matrix).
+        Get block from a component (Vector or Operator).
 
         Parameters
         ----------
@@ -341,19 +353,22 @@ class InverseProblem(Pickleable):
 
         Returns
         -------
-        pd.Series or pd.DataFrame
-            The requested block of data.
+        pd.Series or Operator
+            The requested block: a Series for a vector, an
+            :class:`~fips.Operator` (on the two blocks) for a matrix.
         """
         obj = getattr(self, component)
 
         if isinstance(obj, Vector):
             return obj[block]
-        elif isinstance(obj, Matrix):
+        elif isinstance(obj, Operator):
             if crossblock is None:
                 crossblock = block
             return obj[block, crossblock]
         else:
-            raise TypeError(f"Object '{component}' is neither a Vector nor a Matrix.")
+            raise TypeError(
+                f"Object '{component}' is neither a Vector nor an Operator."
+            )
 
     def solve(self, estimator: str | type[Estimator], **kwargs) -> Self:
         """
@@ -421,7 +436,7 @@ class InverseProblem(Pickleable):
         return self.result.estimate
 
     @property
-    def posterior_error(self) -> CovarianceMatrix:
+    def posterior_error(self) -> Covariance:
         """Posterior error covariance (:attr:`~fips.Posterior.covariance`)."""
         return self.result.covariance
 
@@ -436,7 +451,7 @@ class InverseProblem(Pickleable):
         return self.result.prior_modeled_obs
 
     @property
-    def prior_obs_error(self) -> CovarianceMatrix:
+    def prior_obs_error(self) -> Covariance:
         """
         Prior error covariance in observation space (H @ S_0 @ H.T).
 
@@ -449,17 +464,17 @@ class InverseProblem(Pickleable):
         return self.result.prior_obs_covariance
 
     @property
-    def kalman_gain(self) -> Matrix:
+    def kalman_gain(self) -> Operator:
         """Kalman gain matrix, K (:attr:`~fips.Posterior.kalman_gain`)."""
         return self.result.kalman_gain
 
     @property
-    def averaging_kernel(self) -> Matrix:
+    def averaging_kernel(self) -> Operator:
         """Averaging kernel matrix, A (:meth:`~fips.Posterior.averaging_kernel`)."""
         return self.result.averaging_kernel()
 
     @property
-    def desroziers(self) -> CovarianceMatrix:
+    def desroziers(self) -> Covariance:
         """Desroziers et al. (2005) diagnosed observation error covariance (:attr:`~fips.Posterior.desroziers`)."""
         return self.result.desroziers
 
@@ -535,9 +550,9 @@ def solve(
     fitted = estimator_cls(
         z=problem.obs.values,
         x_0=problem.prior.values,
-        H=problem.forward_operator.operator,
-        S_0=problem.prior_error.operator,
-        S_z=problem.modeldata_mismatch.operator,
+        H=problem.forward_operator.data,
+        S_0=problem.prior_error.data,
+        S_z=problem.modeldata_mismatch.data,
         c=getattr(problem.constant, "values", None),
         **options,
     )

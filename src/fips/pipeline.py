@@ -15,9 +15,9 @@ import time
 from abc import ABC, abstractmethod
 from typing import Any, Generic, TypeVar
 
-from fips.covariance import CovarianceMatrix
+from fips.covariance import Covariance
 from fips.estimators import Estimator
-from fips.operators import ForwardOperator
+from fips.operator import Operator
 from fips.problem import InverseProblem
 from fips.vector import Vector
 
@@ -88,17 +88,17 @@ class InversionPipeline(ABC, Generic[_Problem]):
         return obs, prior
 
     @abstractmethod
-    def get_forward_operator(self, obs: Vector, prior: Vector) -> ForwardOperator:
+    def get_forward_operator(self, obs: Vector, prior: Vector) -> Operator:
         """Get forward operator matrix."""
         pass
 
     @abstractmethod
-    def get_prior_error(self, prior: Vector) -> CovarianceMatrix:
+    def get_prior_error(self, prior: Vector) -> Covariance:
         """Get prior error covariance matrix."""
         pass
 
     @abstractmethod
-    def get_modeldata_mismatch(self, obs: Vector) -> CovarianceMatrix:
+    def get_modeldata_mismatch(self, obs: Vector) -> Covariance:
         """Get model-data mismatch covariance matrix."""
         pass
 
@@ -109,10 +109,10 @@ class InversionPipeline(ABC, Generic[_Problem]):
     def aggregate_obs_space(
         self,
         obs: Vector,
-        forward_operator: ForwardOperator,
-        modeldata_mismatch: CovarianceMatrix,
+        forward_operator: Operator,
+        modeldata_mismatch: Covariance,
         constant: Vector | None,
-    ) -> tuple[Vector, ForwardOperator, CovarianceMatrix, Vector | None]:
+    ) -> tuple[Vector, Operator, Covariance, Vector | None]:
         """
         Aggregate the observation space.
 

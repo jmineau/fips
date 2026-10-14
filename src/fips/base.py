@@ -1,9 +1,9 @@
 """
-Base classes and utilities for the FIPS framework.
+Base classes of the 1D structures, :class:`~fips.Block` and :class:`~fips.Vector`.
 
-This module provides foundational mixins and base classes used throughout the
-package, including serialization support, data structure abstractions, and
-common index manipulation utilities.
+This module provides the serialization mixin and the classes the two
+deprecated 1D structures are built on. The 2D structures are gone: a matrix
+is an :class:`~fips.Operator`.
 """
 
 import logging
@@ -11,88 +11,30 @@ import pickle
 import warnings
 from abc import ABC, abstractmethod
 from collections.abc import Callable
-from copy import deepcopy
-from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Literal, Self, TypeAlias, overload
+from typing import Any, Literal, Self, TypeAlias
 
 import numpy as np
 import numpy.typing as npt
 import pandas as pd
-from scipy.sparse import csr_matrix
 
-from fips._sparse import frame_from_spmatrix, normalize_fill_value
-from fips.indexes import overlaps, resolve_axes, round_index
-from fips.operator import (
-    DenseOperator,
-    DiagonalOperator,
-    Operator,
-    SparseOperator,
-    as_operator,
-)
+from fips.indexes import overlaps, round_index
 
 logger = logging.getLogger(__name__)
 
 ArrayLike: TypeAlias = npt.ArrayLike | pd.Series | pd.DataFrame
 
 
-# docstr-coverage: excused `@overload stub`
-@overload
-def xselect(
-    s_or_df: pd.Series, key, axis=0, level=None, drop_level=True
-) -> pd.Series: ...
-
-
-# docstr-coverage: excused `@overload stub`
-@overload
-def xselect(
-    s_or_df: pd.DataFrame, key, axis=0, level=None, drop_level=True
-) -> pd.DataFrame | pd.Series: ...
-
-
-def xselect(
-    s_or_df: pd.DataFrame | pd.Series, key, axis=0, level=None, drop_level=True
-) -> pd.DataFrame | pd.Series:
-    """
-    Select cross-sections and remove NaN-only index levels.
-
-    Parameters
-    ----------
-    s_or_df : pd.DataFrame or pd.Series
-        The input data to select from.
-    key : label or list of labels
-        The key(s) to select.
-    axis : {0, 1, 'index', 'columns', 'both'}, default 0
-        Axis to retrieve cross-section from.
-    level : int or str, optional
-        If the index is a MultiIndex, level(s) to select on.
-    drop_level : bool, default True
-        Whether to drop the level(s) from the resulting index.
-
-    Returns
-    -------
-    pd.DataFrame or pd.Series
-        The cross-section of the data corresponding to the key(s), with any NaN-only index levels removed.
-        A Series gives a Series; a DataFrame gives a DataFrame, or a Series
-        when the key selects a single row.
-    """
-    for ax in resolve_axes(axis):
-        # Call the underlying xs method
-        s_or_df = s_or_df.xs(key, axis=ax, level=level, drop_level=drop_level).copy()
-
-        # Drop index levels that are all nan
-        idx = s_or_df.axes[ax]
-        idx = idx.droplevel(
-            # pandas-stubs type Index.isna() as Index[bool], which has no all()
-            # (pandas returns an ndarray), and take only int | str as a level,
-            # though a level name is any Hashable
-            # pyrefly: ignore[missing-attribute, bad-argument-type]
-            [level for level in idx.names if idx.get_level_values(level).isna().all()]
-        )
-
-        # Reassign cleaned index/columns
-        s_or_df = s_or_df.set_axis(idx, axis=ax)
-    return s_or_df
+def _xselect(series: pd.Series, key, level=None, drop_level=True) -> pd.Series:
+    """Return the cross-section of `series` at `key`, without the index levels that are missing on every row."""
+    section = series.xs(key, level=level, drop_level=drop_level).copy()
+    index = section.index
+    empty = [
+        i
+        for i in range(index.nlevels)
+        if np.asarray(index.get_level_values(i).isna()).all()
+    ]
+    return section.set_axis(index.droplevel(empty)) if empty else section
 
 
 class Pickleable:
@@ -188,47 +130,29 @@ def _verify_overlap(target: pd.Index, current: pd.Index) -> None:
 
 class Structure(Pickleable, ABC):
     """
-    Abstract base class for structured data with pandas index and validation.
+    Abstract base class of the 1D structures: a pandas Series with named levels and no NaN.
     """
 
-    name: (
-        str | property | None
-    )  #: Name of the structure, used for error messages and block naming.
-    data: (
-        pd.Series | pd.DataFrame
-    )  #: The underlying data, which must be numeric and non-NaN. DataFrames can be sparse.
+    name: str | None
+    """Name of the structure, used for error messages and block naming."""
+    data: pd.Series
+    """The underlying data, which must be numeric and non-NaN."""
 
     def _validate(self):
-        """Raise when index (or column) levels are unnamed."""
-        # Ensure index levels are named
+        """Raise when an index level is unnamed or a value is NaN."""
         if None in self.index.names:
             raise ValueError(
-                f"All levels in the row index of {self.__class__.__name__} must be named."
+                f"All levels in the index of {self.__class__.__name__} must be named."
             )
-        if hasattr(self.data, "columns") and None in self.data.columns.names:
-            raise ValueError(
-                f"All levels in the columns of {self.__class__.__name__} must be named."
-            )
-
-        # Check for NaN values
-        # pandas-stubs allow only axis=0 on Series.any(); pandas takes None
-        # pyrefly: ignore[bad-argument-type]
-        if self.data.isnull().any(axis=None):
+        if self.data.isnull().any():
             raise ValueError("Data contains NaN values.")
 
     def _sanitize(self):
         """Normalize the data after validation; the labels are kept as given."""
 
-    def _set_labels(
-        self, index: pd.Index | None = None, columns: pd.Index | None = None
-    ) -> None:
-        """Replace the labels of the rows (`index`) or the columns, keeping the data."""
-        if index is not None:
-            self.data.index = index
-        if columns is not None:
-            if not isinstance(self.data, pd.DataFrame):
-                raise ValueError("A 1D structure has no columns.")
-            self.data.columns = columns
+    def _set_labels(self, index: pd.Index) -> None:
+        """Replace the labels, keeping the data."""
+        self.data.index = index
 
     @property
     def index(self) -> pd.Index:
@@ -249,13 +173,12 @@ class Structure(Pickleable, ABC):
         """Return the values as a numpy array."""
         return self.to_numpy()
 
-    def _with_data(self, data: "pd.Series | pd.DataFrame | _OperatorData") -> Self:
+    def _with_data(self, data: pd.Series) -> Self:
         """
         Return a new instance of this class that holds `data`.
 
-        The new instance keeps this one's name. A subclass whose constructor
-        takes more than `data` and `name` overrides this to pass those too, so
-        that every method that rebuilds the structure keeps them.
+        The new instance keeps this one's name, so that every method that
+        rebuilds the structure keeps it.
         """
         return type(self)(data, name=self.name)  # type: ignore[call-arg]
 
@@ -268,16 +191,17 @@ class Structure(Pickleable, ABC):
         **kwargs,
     ) -> Self:
         """
-        Return a new instance with data reindexed to the specified index and columns.
+        Return a new instance with data reindexed to the specified index.
 
         Parameters
         ----------
         index : pd.Index
-            New index for the rows.
-        columns : pd.Index, optional
-            New index for the columns (if DataFrame). If None, columns are not reindexed.
+            New index. Its levels must be the structure's, in any order.
+        columns : None
+            A 1D structure has no columns: anything but None raises.
         verify_overlap : bool, default False
-            If True, verify that the new index overlaps with the existing index and raise an error if not.
+            If True, raise if no label of `index` is in the structure, and warn
+            if some are not.
         inplace : bool, default False
             If True, modify the data in place and return self. Otherwise, return a new instance with the reindexed data.
         **kwargs
@@ -287,52 +211,40 @@ class Structure(Pickleable, ABC):
         -------
         Structure
             A new instance with the reindexed data, or self if inplace=True.
+
+        Raises
+        ------
+        ValueError
+            If `columns` is given, or the levels of `index` are not the
+            structure's.
         """
-
-        def prepare_data_for_target(
-            data: pd.DataFrame | pd.Series, target: pd.Index, axis: Literal[0, 1]
-        ) -> pd.DataFrame | pd.Series:
-            """Make ``data`` comparable to ``target`` along ``axis``."""
-            current = data.axes[axis]
-
-            _check_reindex_levels(current, target)
-            if current.names != target.names:  # Reorder levels to match target index
-                if isinstance(data, pd.Series):
-                    data = data.reorder_levels(list(target.names))
-                else:
-                    data = data.reorder_levels(list(target.names), axis=axis)
-                current = data.axes[axis]
-            if verify_overlap:
-                _verify_overlap(target, current)
-
-            return data
-
-        data = prepare_data_for_target(self.data, index, axis=0)
-
         if columns is not None:
-            data = prepare_data_for_target(data, columns, axis=1)
-            data = data.reindex(index=index, columns=columns, **kwargs)
-        else:
-            data = data.reindex(index=index, **kwargs)
+            raise ValueError(f"{type(self).__name__} is 1D: it has no columns.")
+        data = self.data
+        _check_reindex_levels(data.index, index)
+        if data.index.names != index.names:  # Reorder levels to match target index
+            data = data.reorder_levels(list(index.names))
+        if verify_overlap:
+            _verify_overlap(index, data.index)
+        data = data.reindex(index=index, **kwargs)
 
         if inplace:
             self.data = data
             return self
-
         return self._with_data(data)
 
     def round_index(
         self, decimals: int, axis: int | Literal["both"] = 0, inplace: bool = False
     ) -> Self:
         """
-        Round float indices on the specified axis to given decimals. Non-float indices are left unchanged.
+        Round float labels to given decimals. Non-float labels are left unchanged.
 
         Parameters
         ----------
         decimals : int
             Number of decimal places to round to.
-        axis : int or {'index', 'columns', 'both'}, default 0
-            Axis to round indices on. 0 or 'index' for row index, 1 or 'columns' for columns, 'both' for both axes.
+        axis : {0, 'index'}, default 0
+            A 1D structure has only its index: any other axis raises.
         inplace : bool, default False
             If True, round indices in place and return self. Otherwise, return a new instance with rounded indices.
 
@@ -341,19 +253,14 @@ class Structure(Pickleable, ABC):
         Structure
             A new instance with rounded indices, or self if inplace=True.
         """
+        if axis not in (0, "index"):
+            raise ValueError("Cannot round columns of a Series.")
         data = self.data if inplace else self.data.copy(deep=True)
-
-        for ax in resolve_axes(axis):
-            if ax == 1 and isinstance(data, pd.Series):
-                raise ValueError("Cannot round columns of a Series.")
-
-            new_idx = round_index(data.axes[ax], decimals=decimals)
-            data = data.set_axis(new_idx, axis=ax)
+        data = data.set_axis(round_index(data.index, decimals=decimals))
 
         if inplace:
             self.data = data
             return self
-
         return self._with_data(data)
 
     def copy(self, deep: bool = True) -> Self:
@@ -372,16 +279,16 @@ class Structure(Pickleable, ABC):
         """
         return self._with_data(self.data.copy(deep=deep))
 
-    def xs(self, key, axis=0, level=None, drop_level=True):
+    def xs(self, key, axis=0, level=None, drop_level=True) -> pd.Series:
         """
-        Cross-select data based on index/column values.
+        Cross-select data based on index values.
 
         Parameters
         ----------
         key : label or list of labels
             The key(s) to select.
-        axis : {0, 1, 'index', 'columns', 'both'}, default 0
-            Axis to retrieve cross-section from.
+        axis : {0, 'index'}, default 0
+            A 1D structure has only its index: any other axis raises.
         level : int or str, optional
             If the index is a MultiIndex, level(s) to select on.
         drop_level : bool, default True
@@ -389,12 +296,13 @@ class Structure(Pickleable, ABC):
 
         Returns
         -------
-        Series or DataFrame
-            The cross-section of the data corresponding to the key(s).
+        pd.Series
+            The cross-section, without the levels that are missing on every
+            one of its rows.
         """
-        return xselect(
-            self.data, key=key, axis=axis, level=level, drop_level=drop_level
-        )
+        if axis not in (0, "index"):
+            raise ValueError(f"{type(self).__name__} is 1D: it has no columns.")
+        return _xselect(self.data, key, level=level, drop_level=drop_level)
 
     def to_numpy(self) -> npt.NDArray:
         """Get the underlying data as a NumPy array."""
@@ -481,739 +389,10 @@ class Structure1D(Structure):
         self.data = state["data"]
 
 
-def _is_scalar_or_1d(data: object) -> bool:
-    """Return True if `data` is a scalar or 1D: not something a 2D structure holds."""
-    if isinstance(data, (pd.Series, Structure1D)):
-        return True
-    if isinstance(data, (np.ndarray, list, tuple)):
-        return np.ndim(data) < 2
-    return np.isscalar(data)
-
-
-def diagonal_frame(
-    values: "npt.ArrayLike | pd.Series | Structure1D",
-    index: pd.Index | None = None,
-    sparse: bool = False,
-) -> pd.DataFrame:
-    """
-    Build the square DataFrame with `values` on its diagonal and zeros elsewhere.
-
-    Parameters
-    ----------
-    values : scalar, 1D array-like, pd.Series, Block or Vector
-        The diagonal. A scalar puts the same value on every diagonal entry.
-    index : pd.Index, optional
-        Labels for both axes. Required for a scalar, an array or a list. A
-        Series, Block or Vector supplies its own index; if `index` is given
-        too, the two must be equal.
-    sparse : bool, default False
-        If True, build a pandas sparse DataFrame (fill_value=0.0) without
-        forming the dense matrix.
-
-    Returns
-    -------
-    pd.DataFrame
-        The diagonal matrix, labeled by the same index on rows and columns.
-
-    Raises
-    ------
-    ValueError
-        If a scalar, an array or a list comes without an index, if `values`
-        has more than one dimension or a length other than the index's, or if
-        a Series, Block or Vector has an index that differs from `index`.
-    """
-    if isinstance(values, Structure1D):
-        values = values.data
-
-    if isinstance(values, pd.Series):
-        if index is not None and not values.index.equals(index):
-            raise ValueError(
-                "The diagonal values carry their own index, which differs from "
-                "`index`. Reindex the values first, or leave `index` out."
-            )
-        index = values.index
-        diagonal = values.to_numpy()
-    else:
-        if index is None:
-            raise ValueError(
-                "A diagonal from a scalar, an array or a list requires an index."
-            )
-        diagonal = np.asarray(values)
-        if diagonal.ndim == 0:
-            diagonal = np.full(len(index), diagonal)
-        elif diagonal.ndim > 1:
-            raise ValueError(
-                f"Diagonal values must be a scalar or 1D, got shape {diagonal.shape}."
-            )
-        elif len(diagonal) != len(index):
-            raise ValueError(
-                f"Got {len(diagonal)} diagonal values for an index of length {len(index)}."
-            )
-
-    if sparse:
-        diagonal = diagonal.astype(float)
-        # Store the nonzero entries only: a zero on the diagonal is implicit
-        stored = np.flatnonzero(diagonal)
-        shape = (len(diagonal), len(diagonal))
-        matrix = csr_matrix((diagonal[stored], (stored, stored)), shape=shape)
-        return frame_from_spmatrix(matrix, index=index, columns=index)
-    return pd.DataFrame(np.diag(diagonal), index=index, columns=index)
-
-
-_FRAME_WARN_SIZE = 5000
-"""Forming the DataFrame of an operator-backed structure longer than this warns."""
-
-
-@dataclass(frozen=True)
-class _OperatorData:
-    """What a 2D structure built on an operator holds: the operator and its labels."""
-
-    operator: Operator
-    index: pd.Index
-    columns: pd.Index
-
-
-class Structure2D(Structure):
-    """
-    Base class for 2D structures (MatrixBlock, Matrix).
-
-    Parameters
-    ----------
-    data : np.ndarray or pd.DataFrame
-        2D data. For a diagonal, use :meth:`diagonal`.
-    name : str, optional
-        Name for the Structure. A name that is not None is converted to a string
-        during construction, as :class:`Structure1D` does.
-    index : pd.Index
-        Index for the rows of the DataFrame.
-    columns : pd.Index, optional
-        Index for the columns of the DataFrame. If None, uses the same as `index`.
-    dtype : data type, optional
-        Data type to force.
-    copy : bool, optional
-        Whether to copy the data.
-    sparse : bool, default False
-        If True, store the data in pandas sparse format (fill_value=0.0).
-        The caller is responsible for zeroing out near-zero values before
-        setting sparse=True (e.g. via a threshold in the builder).
-
-    Raises
-    ------
-    ValueError
-        If `data` is a scalar or 1D (an array, a list, a Series, a Block or a
-        Vector), or a sparse DataFrame with a `fill_value` other than 0.0 or
-        NaN: its implicit entries are not zeros, which is how fips reads them.
-
-    See Also
-    --------
-    Structure2D.diagonal : Build a diagonal from a scalar or 1D values.
-    """
-
-    name: str | None
-    """Name of the structure, used for error messages and block naming: a string, or None when it has none."""
-
-    _data: pd.DataFrame | None
-    _op: Operator | None
-    _labels: tuple[pd.Index, pd.Index]
-
-    def __init__(
-        self,
-        data: "ArrayLike | _OperatorData",
-        name: str | None = None,
-        index: pd.Index | None = None,
-        columns: pd.Index | None = None,
-        dtype=None,
-        copy=None,
-        sparse: bool = False,
-    ):
-        """
-        Initialize a 2D structure with the given data, index, and columns. Validates and sanitizes the data.
-        """
-        self.name = None if name is None else str(name)
-
-        if isinstance(data, _OperatorData):
-            # Built on an operator (from_operator, or a method that keeps the
-            # operator): the labels are checked now, the DataFrame is formed
-            # only when something reads `data`.
-            if sparse or dtype is not None:
-                raise ValueError(
-                    "A structure built on an operator takes the operator's form; "
-                    "`sparse` and `dtype` do not apply."
-                )
-            if data.operator.shape != (len(data.index), len(data.columns)):
-                raise ValueError(
-                    f"The operator's shape {data.operator.shape} does not match the "
-                    f"labels ({len(data.index)} rows, {len(data.columns)} columns)."
-                )
-            self._data = None
-            self._op = data.operator
-            self._labels = (data.index, data.columns)
-            self._validate()
-            self._sanitize()
-            return
-
-        if isinstance(data, Operator):
-            klass = type(self).__name__
-            raise TypeError(
-                f"{klass} takes an operator through "
-                f"{klass}.from_operator(operator, index=...)."
-            )
-
-        if _is_scalar_or_1d(data):
-            klass = type(self).__name__
-            labeled = isinstance(data, (pd.Series, Structure1D))
-            what = "a scalar" if not labeled and np.ndim(data) == 0 else "1D data"
-            raise ValueError(
-                f"{klass} takes 2D data, got {what}. For a diagonal, use "
-                f"{klass}.diagonal(values, index=...). For a matrix of one "
-                "value, pass np.full(shape, value)."
-            )
-
-        # Detect if the input data is already a sparse DataFrame so we can
-        # preserve sparsity when constructing from an existing sparse structure
-        # (e.g. inside reindex(), which builds the new instance with _with_data()).
-        _input_is_sparse = isinstance(data, pd.DataFrame) and any(
-            isinstance(dt, pd.SparseDtype) for dt in data.dtypes
-        )
-        if _input_is_sparse:
-            # pandas 3's from_spmatrix fills float frames with NaN, which
-            # _validate would reject. The implicit entries are zeros.
-            data = normalize_fill_value(data)
-
-        # If columns not provided, assume symmetric matrix with same index for rows and columns
-        if columns is None:
-            logger.debug(
-                "No columns provided, assuming symmetric matrix with same index for rows and columns."
-            )
-            columns = index
-
-        self.data = pd.DataFrame(
-            data, index=index, columns=columns, dtype=dtype, copy=copy
-        )
-
-        self._validate()
-        self._sanitize()
-
-        # Sparsify after sanitize (index may have been modified by _sanitize)
-        if (sparse or _input_is_sparse) and not self.is_sparse:
-            self._sparsify()
-
-    @classmethod
-    def diagonal(
-        cls,
-        values: "npt.ArrayLike | pd.Series | Structure1D",
-        index: pd.Index | None = None,
-        *,
-        sparse: bool = False,
-        **kwargs: Any,
-    ) -> Self:
-        """
-        Build a diagonal: `values` on the diagonal and zeros elsewhere.
-
-        The result is square, and the same index labels its rows and columns.
-
-        Parameters
-        ----------
-        values : scalar, 1D array-like, pd.Series, Block or Vector
-            The diagonal. A scalar puts the same value on every diagonal entry.
-        index : pd.Index, optional
-            Labels for both axes. Required for a scalar, an array or a list. A
-            Series, Block or Vector supplies its own index.
-        sparse : bool, default False
-            If True, store the result in pandas sparse format. The dense matrix
-            is never formed, so this is the way to build a large diagonal.
-        **kwargs
-            Passed to the class constructor: `name`, and for a
-            :class:`~fips.MatrixBlock` its `row_block` and `col_block`.
-
-        Returns
-        -------
-        Self
-            The diagonal structure, of the class the method was called on.
-
-        Raises
-        ------
-        ValueError
-            If a scalar, an array or a list comes without an index, if `values`
-            has more than one dimension or a length other than the index's, or
-            if a Series, Block or Vector is given with a different `index`.
-
-        See Also
-        --------
-        fips.CovarianceMatrix.variances : The diagonal of a covariance matrix.
-        fips.covariance.DiagonalError : A diagonal error component, aligned to an index by its levels.
-
-        Examples
-        --------
-        >>> import pandas as pd
-        >>> from fips import CovarianceMatrix, MatrixBlock
-        >>> idx = pd.MultiIndex.from_product(
-        ...     [["obs"], ["a", "b", "c"]], names=["block", "site"]
-        ... )
-
-        The same variance for every element, or one for each:
-
-        >>> CovarianceMatrix.diagonal(0.25, index=idx).values
-        array([[0.25, 0.  , 0.  ],
-               [0.  , 0.25, 0.  ],
-               [0.  , 0.  , 0.25]])
-        >>> S = CovarianceMatrix.diagonal([0.5, 0.5, 1.0], index=idx)
-
-        A Series or a Vector brings its own index, so the variances of a
-        covariance matrix give back its diagonal part:
-
-        >>> CovarianceMatrix.diagonal(S.variances).data.equals(S.data)
-        True
-
-        A block names its row and column block, as in its constructor:
-
-        >>> sites = pd.Index(["a", "b", "c"], name="site")
-        >>> MatrixBlock.diagonal(
-        ...     0.25, index=sites, row_block="obs", col_block="obs"
-        ... ).shape
-        (3, 3)
-        """
-        return cls(diagonal_frame(values, index, sparse=sparse), **kwargs)
-
-    @classmethod
-    def from_operator(
-        cls,
-        operator: "Operator",
-        index: pd.Index,
-        columns: pd.Index | None = None,
-        **kwargs: Any,
-    ) -> Self:
-        """
-        Build the structure on an operator, without forming its DataFrame.
-
-        The structure keeps the operator, and the solve computes with it
-        (:attr:`operator`), so a :class:`~fips.covariance.KroneckerOperator`
-        reaches the solve as its factors. Its labels are checked as any
-        structure's; :meth:`reindex`, :meth:`round_index` and :meth:`copy` work
-        on the labels and keep the operator. The DataFrame is formed the first
-        time something reads :attr:`data` (or :attr:`values`, :meth:`xs`,
-        ``S["block", "block"]``), with a :class:`UserWarning` for more than
-        5,000 rows or columns; from then on the structure holds that
-        DataFrame, as one built from it does.
-
-        Parameters
-        ----------
-        operator : Operator
-            The matrix, as a :class:`~fips.operator.Operator` (an array or a
-            SciPy sparse matrix is wrapped by :func:`~fips.operator.as_operator`).
-        index : pd.Index
-            Labels of the rows.
-        columns : pd.Index, optional
-            Labels of the columns; `index` if not given.
-        **kwargs
-            Passed to the class constructor: `name`, and for a
-            :class:`~fips.MatrixBlock` its `row_block` and `col_block`.
-
-        Returns
-        -------
-        Self
-            The structure, of the class the method was called on.
-
-        Raises
-        ------
-        ValueError
-            If the operator's shape does not match the labels, it stores a NaN
-            (checked for a dense, sparse or diagonal operator, as the
-            DataFrame path checks; a Kronecker operator checks its factors when
-            it is built), or a label level is unnamed (or, for a
-            :class:`~fips.Matrix`, there is no ``block`` level).
-
-        See Also
-        --------
-        fips.covariance.KroneckerError.operator : A Kronecker covariance as factors.
-        operator : The operator a structure computes with.
-
-        Examples
-        --------
-        >>> import numpy as np
-        >>> import pandas as pd
-        >>> from fips import CovarianceMatrix
-        >>> from fips.covariance import KroneckerOperator
-        >>> idx = pd.MultiIndex.from_product(
-        ...     [["flux"], [0, 1], ["a", "b", "c"]], names=["block", "time", "cell"]
-        ... )
-        >>> C_time = np.array([[1.0, 0.5], [0.5, 1.0]])
-        >>> S = CovarianceMatrix.from_operator(
-        ...     KroneckerOperator([C_time, np.eye(3)], std=0.5), index=idx
-        ... )
-        >>> S.shape, type(S.operator).__name__
-        ((6, 6), 'KroneckerOperator')
-        >>> S.variances.values
-        array([0.25, 0.25, 0.25, 0.25, 0.25, 0.25])
-        """
-        columns = index if columns is None else columns
-        return cls(_OperatorData(as_operator(operator), index, columns), **kwargs)
-
-    def _operator_data(self) -> _OperatorData | None:
-        """Return the operator and labels of an operator-backed structure, or None."""
-        if self._op is None:
-            return None
-        return _OperatorData(self._op, *self._labels)
-
-    # Narrows Structure.data to a DataFrame, as the attribute it replaces did
-    @property
-    def data(self) -> pd.DataFrame:  # type: ignore[override]
-        """
-        The underlying data, which must be numeric and non-NaN. Can be stored in sparse format.
-
-        A structure built on an operator (:meth:`from_operator`) forms it on
-        first access, and holds it from then on.
-        """
-        if self._data is None:
-            assert self._op is not None
-            index, columns = self._labels
-            if max(len(index), len(columns)) > _FRAME_WARN_SIZE:
-                warnings.warn(
-                    f"Forming the {len(index)} x {len(columns)} DataFrame of "
-                    f"{type(self).__name__} {self.name!r} from its "
-                    f"{type(self._op).__name__}.",
-                    UserWarning,
-                    stacklevel=2,
-                )
-            self._data = self._op.to_frame(index, columns)
-            self._op = None
-        return self._data
-
-    @data.setter
-    def data(self, value: pd.DataFrame) -> None:
-        """Set the DataFrame; the structure no longer holds an operator."""
-        self._data = value
-        self._op = None
-
-    @property
-    def index(self) -> pd.Index:
-        """Return the labels of the rows."""
-        return self._labels[0] if self._op is not None else self.data.index
-
-    @property
-    def shape(self) -> tuple[int, ...]:
-        """Return the shape ``(rows, columns)``."""
-        return (len(self.index), len(self.columns))
-
-    def __len__(self) -> int:
-        """Return the number of rows."""
-        return len(self.index)
-
-    def _set_labels(
-        self, index: pd.Index | None = None, columns: pd.Index | None = None
-    ) -> None:
-        """Replace the labels of the rows (`index`) or the columns, keeping the data."""
-        if self._op is None:
-            return super()._set_labels(index=index, columns=columns)
-        current_index, current_columns = self._labels
-        self._labels = (
-            current_index if index is None else index,
-            current_columns if columns is None else columns,
-        )
-
-    def _validate(self):
-        """Raise when index or column levels are unnamed, or the data has NaN."""
-        if self._op is None:
-            return super()._validate()
-        klass = self.__class__.__name__
-        if None in self.index.names:
-            raise ValueError(f"All levels in the row index of {klass} must be named.")
-        if None in self.columns.names:
-            raise ValueError(f"All levels in the columns of {klass} must be named.")
-        if np.isnan(_stored_values(self._op)).any():
-            raise ValueError("Data contains NaN values.")
-
-    def reindex(
-        self,
-        index: pd.Index,
-        columns: pd.Index | None = None,
-        verify_overlap: bool = False,
-        inplace: bool = False,
-        **kwargs,
-    ) -> Self:
-        """
-        Return a new instance with data reindexed to the specified index and columns.
-
-        A structure built on an operator keeps it when every target label is
-        one it has (the rows and columns are then picked out of the operator:
-        a :class:`~fips.covariance.KroneckerOperator` keeps its factors), and
-        forms its DataFrame otherwise.
-
-        Parameters
-        ----------
-        index : pd.Index
-            New index for the rows.
-        columns : pd.Index, optional
-            New index for the columns. If None, columns are not reindexed.
-        verify_overlap : bool, default False
-            If True, verify that the new index overlaps with the existing index and raise an error if not.
-        inplace : bool, default False
-            If True, modify the data in place and return self. Otherwise, return a new instance with the reindexed data.
-        **kwargs
-            Additional keyword arguments to pass to pandas reindex() method (e.g. fill_value, method, limit).
-
-        Returns
-        -------
-        Structure2D
-            A new instance with the reindexed data, or self if inplace=True.
-        """
-        op = self._op
-        rows = cols = None
-        if op is not None and columns is not None:
-            rows = _label_positions(self.index, index)
-            cols = _label_positions(self.columns, columns)
-        if op is None or columns is None or rows is None or cols is None:
-            return super().reindex(
-                index,
-                columns=columns,
-                verify_overlap=verify_overlap,
-                inplace=inplace,
-                **kwargs,
-            )
-        if verify_overlap:  # against the labels with their levels in the target's order
-            _verify_overlap(index, _in_order_of(self.index, index))
-            _verify_overlap(columns, _in_order_of(self.columns, columns))
-        same = np.array_equal(rows, np.arange(self.shape[0])) and np.array_equal(
-            cols, np.arange(self.shape[1])
-        )
-        if not same:
-            op = op._select(rows, cols)
-        if inplace:
-            self._op, self._labels = op, (index, columns)
-            return self
-        return self._with_data(_OperatorData(op, index, columns))
-
-    def round_index(
-        self, decimals: int, axis: int | Literal["both"] = 0, inplace: bool = False
-    ) -> Self:
-        """
-        Round float indices on the specified axis to given decimals. Non-float indices are left unchanged.
-
-        A structure built on an operator rounds its labels and keeps the operator.
-
-        Parameters
-        ----------
-        decimals : int
-            Number of decimal places to round to.
-        axis : int or {'index', 'columns', 'both'}, default 0
-            Axis to round indices on. 0 or 'index' for row index, 1 or 'columns' for columns, 'both' for both axes.
-        inplace : bool, default False
-            If True, round indices in place and return self. Otherwise, return a new instance with rounded indices.
-
-        Returns
-        -------
-        Structure2D
-            A new instance with rounded indices, or self if inplace=True.
-        """
-        if self._op is None:
-            return super().round_index(decimals, axis=axis, inplace=inplace)
-        labels = list(self._labels)
-        for ax in resolve_axes(axis):
-            labels[ax] = round_index(labels[ax], decimals=decimals)
-        if inplace:
-            self._labels = (labels[0], labels[1])
-            return self
-        return self._with_data(_OperatorData(self._op, labels[0], labels[1]))
-
-    def copy(self, deep: bool = True) -> Self:
-        """
-        Create a copy of the structure.
-
-        Parameters
-        ----------
-        deep : bool, default True
-            If True, perform a deep copy of the underlying data (of the
-            operator, for a structure built on one).
-
-        Returns
-        -------
-        Structure2D
-            Copy of the structure instance.
-        """
-        if self._op is None:
-            return super().copy(deep=deep)
-        op = deepcopy(self._op) if deep else self._op
-        return self._with_data(_OperatorData(op, *self._labels))
-
-    def _sparsify(self) -> None:
-        """
-        Convert self.data to pandas sparse format in-place.
-
-        The caller is responsible for ensuring near-zero floating-point noise
-        has already been zeroed out (via a threshold) before calling this.
-        """
-        self.data = self.data.astype(pd.SparseDtype(float, fill_value=0.0))
-
-    @property
-    def columns(self) -> pd.Index:
-        """Return the labels of the columns."""
-        return self._labels[1] if self._op is not None else self.data.columns
-
-    @property
-    def values(self) -> npt.NDArray:
-        """Return values as numpy array or sparse matrix."""
-        if self.is_sparse:
-            # pandas-stubs do not type DataFrame.sparse
-            # pyrefly: ignore[missing-attribute]
-            return self.data.sparse.to_coo().tocsr()
-        return self.data.to_numpy()
-
-    @property
-    def operator(self) -> Operator:
-        """
-        The data as a linear operator, for computing with.
-
-        A dense structure gives a :class:`~fips.operator.DenseOperator` on the
-        array the DataFrame holds (no copy for a float frame). A sparse one
-        gives a :class:`~fips.operator.SparseOperator` built from its stored
-        entries, never the dense matrix, or a
-        :class:`~fips.operator.DiagonalOperator` when every stored entry is on
-        the diagonal (as for :meth:`diagonal` with ``sparse=True``).
-
-        It is built on each access, so it always reads the current
-        :attr:`data`, after an in-place change too. A structure built on an
-        operator (:meth:`from_operator`) gives that operator, until its
-        DataFrame is formed.
-
-        See Also
-        --------
-        fips.operator.as_operator : The same for an array or a SciPy sparse matrix.
-
-        Examples
-        --------
-        >>> import pandas as pd
-        >>> from fips import CovarianceMatrix
-        >>> idx = pd.MultiIndex.from_product(
-        ...     [["obs"], ["a", "b", "c"]], names=["block", "site"]
-        ... )
-        >>> S = CovarianceMatrix.diagonal(0.25, index=idx, sparse=True)
-        >>> S.operator.solve([1.0, 2.0, 3.0])
-        array([ 4.,  8., 12.])
-        """
-        if self._op is not None:
-            return self._op
-        if self.is_sparse:
-            # pandas-stubs do not type DataFrame.sparse
-            # pyrefly: ignore[missing-attribute]
-            return as_operator(self.data.sparse.to_coo())
-        return DenseOperator(self.data.to_numpy())
-
-    @property
-    def is_sparse(self) -> bool:
-        """
-        True if the internal DataFrame uses pandas sparse storage.
-
-        For a structure built on an operator, whether its DataFrame will: True
-        for a sparse or diagonal operator.
-        """
-        if self._op is not None:
-            return isinstance(self._op, (SparseOperator, DiagonalOperator))
-        return all(isinstance(dt, pd.SparseDtype) for dt in self.data.dtypes)
-
-    def to_frame(self) -> pd.DataFrame:
-        """Get the underlying DataFrame data."""
-        return self.data
-
-    def to_dense(self) -> "Structure2D":
-        """Return a copy with dense internal storage."""
-        if not self.is_sparse:
-            return self
-        # pandas-stubs do not type DataFrame.sparse
-        # pyrefly: ignore[missing-attribute]
-        return self._with_data(self.data.sparse.to_dense())
-
-    def to_sparse(self, threshold: float | None = None) -> "Structure2D":
-        """
-        Return a copy with sparse internal storage.
-
-        Parameters
-        ----------
-        threshold : float | None, optional
-            If provided, values whose absolute value is strictly less than
-            this threshold are zeroed out before sparsification, avoiding
-            storage of floating-point noise as explicit non-zero entries.
-            Default is None (no zeroing applied).
-
-        Returns
-        -------
-        Structure2D
-            New instance backed by a sparse DataFrame.
-        """
-        if self.is_sparse:
-            return self
-        result = self.copy()
-        if threshold is not None:
-            result.data = result.data.where(result.data.abs() >= threshold, other=0.0)
-        result._sparsify()
-        return result
-
-    def __getstate__(self):
-        """Explicit pickle support: return state as dict (the operator and labels, if built on one)."""
-        if self._op is not None:
-            index, columns = self._labels
-            return {
-                "data": None,
-                "name": self.name,
-                "operator": self._op,
-                "index": index,
-                "columns": columns,
-            }
-        return {"data": self.data, "name": self.name}
-
-    def __setstate__(self, state):
-        """Explicit pickle support: restore state from dict."""
-        self.name = state["name"]
-        if state.get("operator") is not None:
-            self._data = None
-            self._op = state["operator"]
-            self._labels = (state["index"], state["columns"])
-        else:
-            self.data = state["data"]
-
-
-def _stored_values(op: Operator) -> np.ndarray:
-    """
-    Return the values an operator stores: a dense one's array, a sparse one's entries, a diagonal.
-
-    Empty for another form (a Kronecker operator checks its factors and
-    standard deviations when it is built).
-    """
-    if isinstance(op, DenseOperator):
-        return op.array
-    if isinstance(op, SparseOperator):
-        return op.matrix.data
-    if isinstance(op, DiagonalOperator):
-        return op.values
-    return np.empty(0)
-
-
-def _in_order_of(current: pd.Index, target: pd.Index) -> pd.Index:
-    """Return `current` with its levels in `target`'s order."""
-    if current.names != target.names and isinstance(current, pd.MultiIndex):
-        return current.reorder_levels(list(target.names))
-    return current
-
-
-def _label_positions(current: pd.Index, target: pd.Index) -> np.ndarray | None:
-    """
-    Return where each label of `target` is in `current`, or None if one is not there.
-
-    `current` has its levels put in `target`'s order first. None also when
-    either index repeats a label, which the DataFrame path handles (or refuses)
-    as pandas does.
-    """
-    _check_reindex_levels(current, target)
-    current = _in_order_of(current, target)
-    if not current.is_unique or not target.is_unique:
-        return None
-    positions = current.get_indexer(target)
-    return None if (positions < 0).any() else positions
-
-
 class SingleBlockMixin(ABC):
-    """Base class for low-level structures (Block, MatrixBlock) that wrap raw Series/DataFrames without block levels."""
+    """Base class for a structure of one block (Block) that wraps a Series without a block level."""
 
-    data: pd.DataFrame | pd.Series
+    data: pd.Series
     name: str | property
     index: pd.Index
 
@@ -1223,42 +402,29 @@ class SingleBlockMixin(ABC):
 
         # Check for name property
         if self.name is None:
-            raise ValueError(
-                "Low-level structures (Block, MatrixBlock) must have a name property."
-            )
-
-        # Check for absence of 'block' level in index and columns (the labels,
-        # so a structure built on an operator does not form its DataFrame)
+            raise ValueError("A Block must have a name.")
         if "block" in self.index.names:
             raise ValueError("Data should not have a 'block' level in the index.")
-        if isinstance(self, Structure2D) and "block" in self.columns.names:
-            raise ValueError(
-                "DataFrame should not have a 'block' level in the columns."
-            )
 
 
 class MultiBlockMixin(ABC):
-    """Base class for high-level structures (Vector, Matrix) that wrap Series/DataFrames with block levels."""
+    """Base class for a structure of several blocks (Vector) that wraps a Series with a block level."""
 
-    data: pd.DataFrame | pd.Series
+    data: pd.Series
     index: pd.MultiIndex
 
     @property
     @abstractmethod
     def blocks(self):
-        """Accessor for retrieving typed block instances (Block or MatrixBlock) by name."""
+        """Accessor for retrieving typed block instances (Block) by name."""
         ...
 
     def _validate(self):
         """Raise unless the data carries a 'block' index level."""
         super()._validate()  # type: ignore[attr-defined]
 
-        # Check for 'block' level in index for Series, columns for DataFrame
-        # (the labels, so a structure built on an operator keeps it)
         if "block" not in self.index.names:
             raise ValueError("Data must have a 'block' level in the index.")
-        if isinstance(self, Structure2D) and "block" not in self.columns.names:
-            raise ValueError("DataFrame must have a 'block' level in the columns.")
 
     def _sanitize(self):
         """Coerce values and move the 'block' level first in the index."""
@@ -1273,6 +439,4 @@ class MultiBlockMixin(ABC):
             return index
 
         set_labels: Callable[..., None] = self._set_labels  # type: ignore[attr-defined]
-        set_labels(index=block_as_first_level(self.index))
-        if isinstance(self, Structure2D):
-            set_labels(columns=block_as_first_level(self.columns))
+        set_labels(block_as_first_level(self.index))

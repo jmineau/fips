@@ -1,473 +1,395 @@
 """
-Covariance matrix structures and generation.
+Covariances, and the error components that build them.
 
-This module provides the `CovarianceMatrix` class and related utilities for
-representing, building, and manipulating error covariance matrices used in
-Bayesian estimation.
+A :class:`Covariance` is a symmetric :class:`~fips.Operator` from a space to
+itself, kept in its cheapest form, with the variances, solves,
+log-determinant, quadratic form and square root a covariance needs.
+
+The error components (:class:`DiagonalError`, :class:`BlockDecayError`,
+:class:`KroneckerError`, summed by :class:`CovarianceBuilder`) build a
+covariance's matrix from the labels of its rows, as a DataFrame that
+:meth:`Covariance.from_frame <fips.Operator.from_frame>` reads.
 """
 
 import logging
-import math
 from abc import ABC, abstractmethod
-from collections.abc import Callable, Sequence
-from functools import cached_property
-from typing import Any
+from collections.abc import Callable
+from typing import Self
 
 import numpy as np
 import numpy.typing as npt
 import pandas as pd
 from joblib import Parallel, delayed
-from numpy.linalg import LinAlgError
-from scipy import sparse
-from scipy.sparse import csr_matrix
 
-from fips._sparse import frame_from_spmatrix
-from fips.base import diagonal_frame
-from fips.matrix import Matrix
-from fips.operator import DenseOperator, Operator, _as_array, _solve_psd
-from fips.vector import Vector
+from fips.field import Field
+from fips.kronecker import KroneckerOperator
+from fips.linalg import (
+    BlockDiagonalOperator,
+    DiagonalOperator,
+    LinearOperator,
+    LinearOperatorLike,
+    as_linear_operator,
+)
+from fips.operator import Operator
+from fips.space import Space
 
 logger = logging.getLogger(__name__)
 
 
-class CovarianceMatrix(Matrix):
+def _joined(spaces: list[Space]) -> Space:
+    """Return the space of the blocks of `spaces`, one after the other."""
+    blocks: dict[str, pd.Index] = {}
+    for space in spaces:
+        for name in space.names:
+            if name in blocks:
+                raise ValueError(f"Two blocks are named {name!r}.")
+            blocks[name] = space.select(name)
+    return Space(blocks)
+
+
+class Covariance(Operator):
     """
-    Represents a symmetric Covariance Matrix.
+    A covariance: a symmetric operator from a :class:`~fips.Space` to itself.
 
-    Covariance matrices are used to represent error covariances in the inversion framework.
-    They can be constructed from variances and correlation matrices.
-    """
-
-    @property
-    def variances(self) -> Vector:
-        """
-        The variances (diagonal elements) of the covariance matrix.
-
-        Read from the stored entries of a sparse covariance, without forming
-        the dense matrix.
-        """
-        return Vector(self.operator.diagonal(), index=self.index, name="variance")
-
-    def force_symmetry(self, keep: str = "lower") -> "CovarianceMatrix":
-        """
-        Force the matrix to be perfectly symmetric by copying one triangle to the other.
-
-        Useful for eliminating floating-point asymmetry.
-
-        Parameters
-        ----------
-        keep : {'lower', 'upper'}, default 'lower'
-            Which triangle of the matrix to preserve and copy.
-
-        Returns
-        -------
-        CovarianceMatrix
-            A new, perfectly symmetric covariance matrix, sparse if this one is.
-        """
-        if keep not in ("lower", "upper"):
-            raise ValueError("keep must be 'lower' or 'upper'")
-
-        if self.is_sparse:
-            # The kept triangle, diagonal included, plus the transpose of the
-            # same triangle without its diagonal
-            mat = self.values
-            if keep == "lower":
-                sym = sparse.tril(mat) + sparse.tril(mat, k=-1).T
-            else:
-                sym = sparse.triu(mat) + sparse.triu(mat, k=1).T
-            frame = frame_from_spmatrix(sparse.csr_matrix(sym), self.index, self.index)
-            return type(self)(frame, name=self.name)
-
-        mat = self.values.copy()
-
-        if keep == "lower":
-            # Extract lower triangle and add its transpose (minus the diagonal so it doesn't double)
-            lower = np.tril(mat)
-            sym_mat = lower + lower.T - np.diag(np.diag(lower))
-        else:
-            upper = np.triu(mat)
-            sym_mat = upper + upper.T - np.diag(np.diag(upper))
-
-        return type(self)(sym_mat, index=self.index, name=self.name)
-
-
-_CHUNK = 2**24
-"""
-How many entries of the product grid a :class:`KroneckerOperator` product holds at once.
-
-A product with many columns (``H @ S_0`` has one per observation) runs over
-blocks of columns, so its work arrays stay near 128 MB (float64) whatever the
-number of columns.
-"""
-
-
-class KroneckerOperator(Operator):
-    r"""
-    A covariance kept as the Kronecker product of its marginal correlations.
-
-    .. math::
-
-        S = D \, P \, (C_1 \otimes C_2 \otimes \dots \otimes C_K) \, P^T D
-
-    Each factor :math:`C_k` is the correlation matrix of one marginal (the
-    times, or the grid cells), :math:`P` picks the rows of the full product
-    that the operator has, in its order (any subset of the product, in any
-    order), and :math:`D` is the diagonal of standard deviations. Entry
-    ``(i, j)`` is ``std[i] * std[j] * prod_k C_k[pos_k[i], pos_k[j]]``.
-
-    The ``n x n`` matrix is never formed unless :meth:`dense` is called. A
-    product with ``p`` columns costs ``N * (N_1 + ... + N_K)`` per column,
-    where ``N_k`` is the size of factor k and ``N`` their product, and holds
-    work arrays of about ``N`` entries per column. That is less than the dense
-    matrix as long as the rows fill most of the product.
-
-    :meth:`~fips.covariance.KroneckerError.operator` builds one from marginal
-    kernels and an index, and :meth:`~fips.CovarianceMatrix.from_operator`
-    puts it behind labels.
+    The matrix is kept in its cheapest form, as an :class:`Operator`'s is: a
+    diagonal covariance is its variances, a Kronecker one its factors, a
+    block diagonal one each block in its own form. On top of an operator's
+    methods it gives the :attr:`variances` and, for a positive-definite
+    covariance, :meth:`solve`, :meth:`logdet`, :meth:`quadratic_form` and
+    :meth:`sqrt`, each done the way its form makes cheap.
 
     Parameters
     ----------
-    factors : sequence of 2D array-like
-        The marginal correlation matrices :math:`C_k`, square, symmetric and
-        positive-definite (positive-definite only for :meth:`solve`).
-    std : float or 1D array-like, default 1.0
-        The standard deviation of each row; a scalar is the same for every row.
-    positions : sequence of 1D array-like of int, optional
-        For each factor, the position of each row in that factor (``pos_k``).
-        If not given, the rows are the full product in order, the first
-        factor varying slowest, as ``np.kron`` lays it out.
+    data : array-like, SciPy sparse matrix or LinearOperator
+        The matrix, square, rows and columns in the order of `space`.
+    space : Space
+        The labels of both axes.
+    name : str, optional
+        What the covariance is ("prior_cov", "obs_cov", ...).
 
     Raises
     ------
+    TypeError
+        If `data` is a pandas object or `space` is not a Space.
     ValueError
-        If there is no factor, a factor is not square or not finite, the
-        positions do not match the factors (one array per factor, all the same
-        length, each within its factor), two rows have the same positions, or
-        a standard deviation is negative or not finite.
+        If the matrix does not have one row and one column per label, or it
+        stores a NaN.
 
     See Also
     --------
-    KroneckerError.operator : The operator of a Kronecker error component on an index.
-    fips.CovarianceMatrix.from_operator : A labeled covariance that holds an operator.
+    Covariance.diagonal : A covariance from its variances.
+    Covariance.block_diag : Independent covariances side by side.
+    Operator.from_frame : A covariance from a labeled DataFrame.
 
     Examples
     --------
     >>> import numpy as np
-    >>> from fips.covariance import KroneckerOperator
-    >>> C_time = np.array([[1.0, 0.5], [0.5, 1.0]])
-    >>> C_space = np.array([[1.0, 0.2, 0.0], [0.2, 1.0, 0.2], [0.0, 0.2, 1.0]])
-    >>> S = KroneckerOperator([C_time, C_space], std=2.0)
-    >>> S.shape
-    (6, 6)
-    >>> np.allclose(S.dense(), 4.0 * np.kron(C_time, C_space))
-    True
-    >>> x = np.arange(6.0)
-    >>> np.allclose(S.solve(S @ x), x)
-    True
+    >>> import pandas as pd
+    >>> from fips import Covariance, Field, Space
+    >>> space = Space({"flux": pd.Index(["a", "b"], name="cell")})
+    >>> S = Covariance(np.array([[2.0, 1.0], [1.0, 2.0]]), space)
+    >>> S.variances.values
+    array([2., 2.])
+    >>> S.solve(Field([3.0, 3.0], space)).values
+    array([1., 1.])
     """
-
-    factors: tuple[np.ndarray, ...]
-    """The marginal correlation matrices, one per marginal."""
-    positions: tuple[np.ndarray, ...]
-    """For each factor, the position of each row in it (``pos_k``)."""
-    std: np.ndarray
-    """The standard deviation of each row."""
 
     def __init__(
         self,
-        factors: Sequence[npt.ArrayLike],
-        std: npt.ArrayLike = 1.0,
-        positions: Sequence[npt.ArrayLike] | None = None,
+        data: LinearOperatorLike,
+        space: Space,
+        name: str | None = None,
     ):
-        mats = tuple(np.asarray(C, dtype=float) for C in factors)
-        if not mats:
-            raise ValueError("A KroneckerOperator needs at least one factor.")
-        for C in mats:
-            if C.ndim != 2 or C.shape[0] != C.shape[1]:
-                raise ValueError(f"Each factor must be square; got shape {C.shape}.")
-            if not np.isfinite(C).all():
-                raise ValueError("The factors must be finite.")
-        sizes = tuple(len(C) for C in mats)
-        size = math.prod(sizes)
+        super().__init__(data, space, space, name=name)
 
-        if positions is None:
-            pos = tuple(np.unravel_index(np.arange(size), sizes))
-        else:
-            pos = tuple(np.asarray(p) for p in positions)
-            if len(pos) != len(mats):
+    @classmethod
+    def _build(
+        cls, data: LinearOperatorLike, rows: Space, cols: Space, name: str | None
+    ) -> Self:
+        """Return a covariance on `rows`, with its columns put in the order of the rows."""
+        if rows != cols:
+            try:
+                order = rows.align(cols)
+            except ValueError as err:
                 raise ValueError(
-                    f"Got {len(pos)} arrays of positions for {len(mats)} factors."
-                )
-            if any(p.ndim != 1 or len(p) != len(pos[0]) for p in pos):
-                raise ValueError("The positions must be 1D arrays of one length.")
-            if any(not np.issubdtype(p.dtype, np.integer) for p in pos):
-                raise ValueError("The positions must be integers.")
-            for p, n_k in zip(pos, sizes, strict=True):
-                if len(p) and (p.min() < 0 or p.max() >= n_k):
-                    raise ValueError(
-                        f"A position is outside its factor, which has {n_k} rows."
-                    )
-        rows = np.ravel_multi_index(pos, sizes)
-        if len(np.unique(rows)) != len(rows):
-            raise ValueError(
-                "Two rows have the same position in every factor; they would be "
-                "perfectly correlated."
-            )
+                    f"A covariance has the same labels on both axes. {err}"
+                ) from None
+            data = as_linear_operator(data)._select(np.arange(len(rows)), order)
+        return cls(data, rows, name=name)
 
-        n = len(rows)
-        std = np.asarray(std, dtype=float)
-        if std.ndim == 0:
-            std = np.full(n, float(std))
-        if std.shape != (n,):
-            raise ValueError(f"std must be a scalar or have {n} entries.")
-        if not np.isfinite(std).all() or (std < 0).any():
-            raise ValueError("The standard deviations must be finite and not negative.")
+    def _sum_like(
+        self, other: Operator, total: LinearOperator, name: str | None
+    ) -> Operator:
+        """Return the sum `total`: a covariance when `other` is one too."""
+        if isinstance(other, Covariance):
+            return Covariance(total, self._rows, name=name)
+        return super()._sum_like(other, total, name)
 
-        self.factors = mats
-        self.positions = tuple(p.astype(np.intp, copy=False) for p in pos)
-        self.std = std
-        self._sizes = sizes
-        # The rows' places in the product grid, or None when they are the
-        # whole grid in order (no scatter or gather needed)
-        self._rows = None if np.array_equal(rows, np.arange(size)) else rows
-        super().__init__((n, n))
+    def _like(self, data: LinearOperatorLike, rows: Space, cols: Space) -> Operator:
+        """Return a covariance when the two axes are one space, else an operator."""
+        if rows is cols or rows == cols:
+            return Covariance(data, rows, name=self._name)
+        return Operator(data, rows, cols, name=self._name)
 
-    @property
-    def _size(self) -> int:
-        """The number of entries of the full product, ``N``."""
-        return math.prod(self._sizes)
-
-    def _scatter(self, Y: np.ndarray) -> np.ndarray:
-        """Put the rows of `Y` at their places in the product grid, zeros elsewhere."""
-        if self._rows is None:
-            return np.ascontiguousarray(Y)
-        Z = np.zeros((self._size, Y.shape[1]))
-        Z[self._rows] = Y
-        return Z
-
-    def _gather(self, Z: np.ndarray) -> np.ndarray:
-        """Take the operator's rows out of the product grid `Z`."""
-        return Z if self._rows is None else Z[self._rows]
-
-    def _through(self, Z: np.ndarray, matrices) -> np.ndarray:
-        """
-        Return ``(M_1 kron ... kron M_K) Z`` for `Z` on the product grid.
-
-        Each matrix is applied along its own axis of the grid, never their
-        Kronecker product.
-        """
-        q = Z.shape[1]
-        for k, M in enumerate(matrices):
-            outer = math.prod(self._sizes[:k])
-            Z = np.matmul(M, Z.reshape(outer, self._sizes[k], -1))
-        return Z.reshape(-1, q)
-
-    def _by_columns(self, X, func) -> np.ndarray:
-        """Return `func` applied to `X` (an array or a SciPy sparse matrix), a block of columns at a time."""
-        if sparse.issparse(X):
-            X = sparse.csc_array(X)
-        out = np.empty((self.shape[0], X.shape[1]))
-        step = max(1, _CHUNK // self._size)
-        for j in range(0, X.shape[1], step):
-            block = X[:, j : j + step]
-            block = block.toarray() if sparse.issparse(block) else np.asarray(block)
-            out[:, j : j + step] = func(block.astype(float, copy=False))
-        return out
-
-    def _matmat(self, X):
-        """Return ``self @ X`` through the factors."""
-        s = self.std[:, None]
-
-        def apply(Y):
-            """Return ``S Y`` for a block of columns."""
-            return s * self._gather(self._through(self._scatter(s * Y), self.factors))
-
-        return self._by_columns(X, apply)
-
-    def _transpose(self):
-        """Return the transpose: the same rows, each factor transposed."""
-        return KroneckerOperator(
-            [C.T for C in self.factors], self.std, positions=self.positions
+    def __repr__(self) -> str:
+        """Return the name, shape and form, then the space."""
+        return (
+            f"Covariance(name={self._name!r}, shape={self.shape}, "
+            f"form={type(self._data).__name__})\n  space: {self._rows!r}"
         )
 
-    def _elementwise(self, func):
-        """Return the operator times a scalar; a positive scalar keeps the factors."""
-        scale = float(func(1.0))
-        if scale > 0:
-            return KroneckerOperator(
-                self.factors, self.std * np.sqrt(scale), positions=self.positions
-            )
-        return DenseOperator(func(self.dense()))
+    @property
+    def space(self) -> Space:
+        """The labels of both axes."""
+        return self._rows
 
-    def _select(self, rows, cols):
-        """Return the entries at `rows` and `cols`; the same rows and columns keep the factors."""
-        if np.array_equal(rows, cols):
-            return KroneckerOperator(
-                self.factors,
-                self.std[rows],
-                positions=[p[rows] for p in self.positions],
-            )
-        return super()._select(rows, cols)
-
-    def dense(self) -> np.ndarray:
+    @classmethod
+    def diagonal(
+        cls,
+        values: "float | npt.ArrayLike | Field",
+        space: Space | None = None,
+        name: str | None = None,
+    ) -> Self:
         """
-        Return the operator as a dense NumPy array.
+        Build a diagonal covariance from its variances.
 
-        Entry ``(i, j)`` is ``std[i] * std[j] * prod_k C_k[pos_k[i], pos_k[j]]``,
-        computed as :meth:`KroneckerError.build` computes it, so the two give the
-        same numbers. This forms the ``n x n`` matrix.
-
-        Returns
-        -------
-        np.ndarray
-            The full matrix.
-        """
-        C, p = self.factors[0], self.positions[0]
-        corr = C.take(p, axis=0).take(p, axis=1)
-        for C, p in zip(self.factors[1:], self.positions[1:], strict=True):
-            corr *= C.take(p, axis=0).take(p, axis=1)
-        corr *= self.std[:, None]
-        corr *= self.std[None, :]
-        return corr
-
-    def diagonal(self) -> np.ndarray:
-        """
-        Return the main diagonal, ``std**2 * prod_k diag(C_k)[pos_k]``.
-
-        Returns
-        -------
-        np.ndarray
-            The variances, without forming the matrix.
-        """
-        d = np.diagonal(self.factors[0])[self.positions[0]].copy()
-        for C, p in zip(self.factors[1:], self.positions[1:], strict=True):
-            d *= np.diagonal(C)[p]
-        d *= self.std
-        d *= self.std
-        return d
-
-    @cached_property
-    def _inverses(self) -> tuple[np.ndarray, ...]:
-        """The inverse of each factor, each factored once (Cholesky, or ``LDL^T`` with a warning)."""
-        return tuple(_solve_psd(C, np.eye(len(C))) for C in self.factors)
-
-    @cached_property
-    def _complement(self) -> tuple[np.ndarray, np.ndarray]:
-        """
-        The product grid's missing entries, and the inverse's columns at them.
-
-        For rows that are a strict subset of the product: ``W = G[:, missing]``,
-        where ``G`` is the inverse of the full product's correlation.
-        """
-        kept = np.arange(self._size) if self._rows is None else self._rows
-        missing = np.setdiff1d(np.arange(self._size), kept)
-        E = np.zeros((self._size, len(missing)))
-        E[missing, np.arange(len(missing))] = 1.0
-        return missing, self._through(E, self._inverses)
-
-    @cached_property
-    def _norm(self) -> float:
-        """An upper bound on the 2-norm of the rows' correlation: the product of the factors' 2-norms."""
-        return math.prod(float(np.linalg.norm(C, 2)) for C in self.factors)
-
-    def solve(self, B) -> np.ndarray:
-        r"""
-        Solve ``self @ X = B`` through the factors.
-
-        Each factor is factored once (Cholesky, or a symmetric ``LDL^T``
-        with a logged warning when roundoff has tipped it off
-        positive-definite) and the factorization is kept. When the rows are
-        the whole product, in any order, the inverse is
-        :math:`D^{-1} P (C_1^{-1} \otimes \dots \otimes C_K^{-1}) P^T D^{-1}`.
-
-        When the rows are a strict subset of the product, with ``d`` entries
-        of the product missing, the inverse of the kept rows' correlation is
-        the Schur complement :math:`G_{kk} - G_{kd} G_{dd}^{-1} G_{dk}` of
-        the full product's inverse :math:`G`, at the cost of ``d`` products
-        with the factors' inverses and one ``d x d`` solve. That is the
-        inverse in exact arithmetic, but in floating point it loses accuracy
-        when the factors are ill-conditioned (the complement subtracts large
-        terms of :math:`G`). So the solve checks its result: when the
-        backward error of any column, :math:`\|R y - c\| / (\|R\| \|y\| +
-        \|c\|)` for the rows' correlation :math:`R`, is larger than
-        ``n * eps`` (the bound a dense Cholesky solve meets), it logs a
-        warning and solves the dense matrix instead. When the complement
-        would hold more than the dense matrix (``N d > n^2``), the dense
-        matrix is solved from the start.
+        The covariance is kept as its diagonal, so it costs one number per
+        label whatever the size.
 
         Parameters
         ----------
-        B : array-like, SciPy sparse matrix or Operator
-            The right-hand side: a vector, or a matrix with as many rows as the
-            operator.
+        values : float, 1D array-like or Field
+            The variances. A scalar is the same for every label; a
+            :class:`~fips.Field` brings its own space.
+        space : Space, optional
+            The labels. Required for a scalar or an array; for a Field it
+            must be left out, or have exactly the field's labels (the
+            variances are put in its order).
+        name : str, optional
+            The covariance's name.
 
         Returns
         -------
-        np.ndarray
-            ``X``, dense, with the shape of `B`.
+        Covariance
+            The diagonal covariance.
+
+        Raises
+        ------
+        ValueError
+            If a scalar or an array comes without a space, or `values` is not
+            a scalar or 1D, or has a length other than the space's.
+
+        Examples
+        --------
+        >>> import pandas as pd
+        >>> from fips import Covariance, Space
+        >>> space = Space({"co2": pd.Index(["a", "b", "c"], name="site")})
+        >>> S = Covariance.diagonal(0.25, space)
+        >>> S.dense()
+        array([[0.25, 0.  , 0.  ],
+               [0.  , 0.25, 0.  ],
+               [0.  , 0.  , 0.25]])
+        >>> Covariance.diagonal(S.variances).variances.values
+        array([0.25, 0.25, 0.25])
+        """
+        if isinstance(values, Field):
+            field = values if space is None else values.align(space)
+            return cls(DiagonalOperator(field.values), field.space, name=name)
+        if space is None:
+            raise ValueError(
+                "A diagonal from a scalar or an array needs `space`, its labels."
+            )
+        diagonal = np.asarray(values, dtype=float)
+        if diagonal.ndim == 0:
+            diagonal = np.full(len(space), float(diagonal))
+        elif diagonal.ndim != 1:
+            raise ValueError(
+                f"The variances must be a scalar or 1D, got shape {diagonal.shape}."
+            )
+        elif len(diagonal) != len(space):
+            raise ValueError(
+                f"Got {len(diagonal)} variances for a space of {len(space)} labels."
+            )
+        return cls(DiagonalOperator(diagonal), space, name=name)
+
+    @classmethod
+    def block_diag(cls, *covariances: "Covariance", name: str | None = None) -> Self:
+        """
+        Put independent covariances side by side: each on its own blocks, zero between.
+
+        Each covariance keeps its form (a Kronecker block stays factors, a
+        diagonal one its variances), so the result costs what its parts do.
+
+        Parameters
+        ----------
+        *covariances : Covariance
+            The covariances, in order. Their blocks must have different names.
+        name : str, optional
+            The covariance's name.
+
+        Returns
+        -------
+        Covariance
+            The covariance on the blocks of every part, one after the other.
+
+        Raises
+        ------
+        ValueError
+            If no covariance is given, or two have a block of the same name.
+
+        Examples
+        --------
+        >>> import pandas as pd
+        >>> from fips import Covariance, Space
+        >>> flux = Covariance.diagonal(
+        ...     4.0, Space({"flux": pd.Index(["a", "b"], name="cell")})
+        ... )
+        >>> bias = Covariance.diagonal(
+        ...     1.0, Space({"bias": pd.Index(["A"], name="site")})
+        ... )
+        >>> S = Covariance.block_diag(flux, bias)
+        >>> S.space
+        Space(flux: 2 x ['cell'], bias: 1 x ['site'])
+        >>> S.variances.values
+        array([4., 4., 1.])
+        """
+        if not covariances:
+            raise ValueError("block_diag needs at least one covariance.")
+        for cov in covariances:
+            if not isinstance(cov, Covariance):
+                raise TypeError(
+                    f"block_diag takes Covariances, got {type(cov).__name__}."
+                )
+        space = _joined([cov.space for cov in covariances])
+        forms = [cov.data for cov in covariances]
+        if len(forms) == 1:
+            return cls(forms[0], space, name=name)
+        diagonals = [form for form in forms if isinstance(form, DiagonalOperator)]
+        if len(diagonals) == len(forms):
+            values = np.concatenate([form.values for form in diagonals])
+            return cls(DiagonalOperator(values), space, name=name)
+        return cls(BlockDiagonalOperator(forms), space, name=name)
+
+    @property
+    def variances(self) -> Field:
+        """
+        The variances: the diagonal, as a field on the covariance's space.
+
+        Read from the form without forming the matrix (from the variances of
+        a diagonal covariance, the factors of a Kronecker one).
+        """
+        return Field(self._data.diagonal(), self._rows, name="variance")
+
+    def solve(self, b: "Field | Operator") -> "Field | Operator":
+        r"""
+        Return :math:`S^{-1} b`, for a positive-definite covariance :math:`S`.
+
+        Parameters
+        ----------
+        b : Field or Operator
+            A field on the covariance's space, or an operator whose rows are
+            on it (both in any order).
+
+        Returns
+        -------
+        Field or Operator
+            The solution, on the covariance's space (and `b`'s columns).
+
+        Raises
+        ------
+        TypeError
+            If `b` is an array: it has no labels to check.
+        ValueError
+            If the labels of `b` do not match the covariance's.
+        numpy.linalg.LinAlgError
+            If the covariance is singular.
+
+        See Also
+        --------
+        fips.linalg.LinearOperator.solve : How each form solves.
+        """
+        if isinstance(b, Field):
+            return Field(self._data.solve(b.align(self._rows).values), self._rows)
+        if isinstance(b, Operator):
+            rhs = b._on(self._rows, b.cols)
+            return Operator(self._data.solve(rhs), self._rows, b.cols)
+        raise TypeError(
+            f"Covariance.solve takes a Field or an Operator, not {type(b).__name__}: "
+            "an array has no labels to check. Use cov.data.solve(b) to solve "
+            "by position."
+        )
+
+    def logdet(self) -> float:
+        """
+        Return the logarithm of the determinant.
+
+        Returns
+        -------
+        float
+            ``log(det(S))``, from the form's factors (see
+            :meth:`fips.linalg.LinearOperator.logdet`).
 
         Raises
         ------
         numpy.linalg.LinAlgError
-            If a standard deviation is zero: the operator is singular.
+            If the covariance is not positive-definite.
         """
-        if not np.all(self.std):
-            raise LinAlgError(
-                "A standard deviation is zero, so the operator is singular."
-            )
-        B = _as_array(B)
-        n = self.shape[0]
-        if self._size * (self._size - n) > n * n:
-            logger.info(
-                "Solving the %d x %d Kronecker covariance densely: its rows fill "
-                "too little of the product for the factored solve.",
-                n,
-                n,
-            )
-            return _solve_psd(self.dense(), B)
+        return self._data.logdet()
 
-        inv_s = 1.0 / self.std[:, None]
-        tol = n * np.finfo(float).eps
-        worst = 0.0  # the largest backward error of the Schur complement
+    def quadratic_form(self, x: Field) -> float:
+        r"""
+        Return :math:`x^T S^{-1} x`, the squared Mahalanobis length of `x`.
 
-        def apply(Y):
-            """Return ``S^-1 Y`` for a block of columns."""
-            nonlocal worst
-            c = inv_s * Y  # the right-hand side in the correlation's units
-            Z = self._through(self._scatter(c), self._inverses)
-            y = self._gather(Z)
-            if n < self._size:  # a strict subset: the Schur complement
-                missing, W = self._complement
-                y = y - W[self._rows] @ _solve_psd(W[missing], Z[missing])
-                Ry = self._gather(self._through(self._scatter(y), self.factors))
-                scale = self._norm * np.linalg.norm(y, axis=0) + np.linalg.norm(
-                    c, axis=0
-                )
-                error = np.linalg.norm(Ry - c, axis=0)
-                worst = max(worst, float(np.max(error / np.maximum(scale, 1e-300))))
-            return inv_s * y
+        Parameters
+        ----------
+        x : Field
+            A field on the covariance's space, in any order.
 
-        X = self._by_columns(B[:, None] if B.ndim == 1 else B, apply)
-        if worst > tol:
-            logger.warning(
-                "The factored solve of the %d x %d Kronecker covariance lost "
-                "accuracy (backward error %.1e, more than %.1e), likely from "
-                "ill-conditioned factors; solving the dense matrix instead.",
-                n,
-                n,
-                worst,
-                tol,
-            )
-            return _solve_psd(self.dense(), B)
-        return X[:, 0] if B.ndim == 1 else X
+        Returns
+        -------
+        float
+            The quadratic form of the inverse covariance.
 
-    def __getstate__(self) -> dict[str, Any]:
-        """Return the state for pickling, without the cached inverses."""
-        state = self.__dict__.copy()
-        state.pop("_inverses", None)
-        state.pop("_complement", None)
-        state.pop("_norm", None)
-        return state
+        Raises
+        ------
+        ValueError
+            If the labels of `x` do not match the covariance's.
+        numpy.linalg.LinAlgError
+            If the covariance is singular.
+
+        Examples
+        --------
+        >>> import pandas as pd
+        >>> from fips import Covariance, Field, Space
+        >>> space = Space({"co2": pd.Index(["a", "b"], name="site")})
+        >>> S = Covariance.diagonal([4.0, 1.0], space)
+        >>> S.quadratic_form(Field([2.0, 1.0], space))
+        2.0
+        """
+        values = x.align(self._rows).values
+        return float(values @ self._data.solve(values))
+
+    def sqrt(self) -> Operator:
+        r"""
+        Return a square root :math:`L`, with :math:`L L^T = S`.
+
+        A diagonal covariance gives the diagonal of standard deviations, a
+        block diagonal one the root of each block, any other form the lower
+        Cholesky factor of its dense matrix. :math:`L` maps independent unit
+        variables, one per label, to the covariance's space: ``L @ w`` with
+        ``w`` standard normal is a draw from :math:`N(0, S)`.
+
+        Returns
+        -------
+        Operator
+            :math:`L`, with the covariance's space on both axes.
+
+        Raises
+        ------
+        numpy.linalg.LinAlgError
+            If the covariance is not positive-definite.
+        """
+        return Operator(self._data.sqrt(), self._rows, self._rows, name=self._name)
 
 
 def _kronecker_marginals(
@@ -598,9 +520,7 @@ class CovarianceBuilder:
     def __init__(self, components: list[ErrorComponent]):
         self.components = components
 
-    def build(
-        self, index: pd.MultiIndex, sparse: bool = False, **kwargs
-    ) -> pd.DataFrame:
+    def build(self, index: pd.MultiIndex, **kwargs) -> pd.DataFrame:
         """
         Build and sum all error components into a single DataFrame.
 
@@ -608,9 +528,16 @@ class CovarianceBuilder:
         ----------
         index : pd.MultiIndex
             The state/observation index to build the covariance over.
-        sparse : bool, default False
-            If True, return a pandas sparse DataFrame.  Apply threshold zeroing
-            in each ErrorComponent.build() before using this option.
+        **kwargs
+            Passed to each component's ``build``.
+
+        Returns
+        -------
+        pd.DataFrame
+            The dense covariance, labeled by `index` on both axes. Label it
+            with :meth:`Covariance.from_frame <fips.Operator.from_frame>`; a
+            covariance that is mostly zeros is stored sparse by
+            ``Covariance(scipy.sparse.csr_matrix(frame.to_numpy()), space)``.
         """
         if not self.components:
             raise ValueError("No components provided to build.")
@@ -619,8 +546,6 @@ class CovarianceBuilder:
             [c.build(index, **kwargs).to_numpy(dtype=float) for c in self.components]
         )
 
-        if sparse:
-            return frame_from_spmatrix(csr_matrix(S), index=index, columns=index)
         return pd.DataFrame(S, index=index, columns=index)
 
     def __add__(self, other):
@@ -650,8 +575,8 @@ class DiagonalError(ErrorComponent):
 
     def build(self, index: pd.MultiIndex, **kwargs) -> pd.DataFrame:
         """Build diagonal covariance matrix."""
-        variances = self._align_variances(index)
-        return diagonal_frame(variances.to_numpy(), index)
+        variances = self._align_variances(index).to_numpy(dtype=float)
+        return pd.DataFrame(np.diag(variances), index=index, columns=index)
 
     def __repr__(self) -> str:
         """Return string representation."""
@@ -837,12 +762,12 @@ class KroneckerError(ErrorComponent):
 
         See Also
         --------
-        fips.CovarianceMatrix.from_operator : Label it, to use as a prior error.
+        fips.Covariance : Label it, to use as a prior error.
 
         Examples
         --------
         >>> import pandas as pd
-        >>> from fips import CovarianceMatrix
+        >>> from fips import Covariance, Space
         >>> from fips.covariance import KroneckerError
         >>> from fips.kernels import GridSpatialDecay, GridTimeDecay
         >>> index = pd.MultiIndex.from_product(
@@ -862,8 +787,8 @@ class KroneckerError(ErrorComponent):
         ...         (["lat", "lon"], GridSpatialDecay("lat", "lon", 50.0)),
         ...     ],
         ... )
-        >>> S_0 = CovarianceMatrix.from_operator(error.operator(index), index)
-        >>> S_0.operator
+        >>> S_0 = Covariance(error.operator(index), Space.from_index(index))
+        >>> S_0.data
         <6x6 KroneckerOperator with dtype=float64>
         """
         factors, positions = _kronecker_marginals(index, self.marginal_kernels)

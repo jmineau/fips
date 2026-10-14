@@ -87,6 +87,38 @@ def _checked_block(name: str, index: pd.Index) -> pd.Index:
     return index
 
 
+def _positions(space: "Space", other: "Space") -> np.ndarray:
+    """
+    Return where each label of `space` is in `other`, or -1 where `other` lacks it.
+
+    A lookup, not a join: `other` may lack a block or labels within one (-1
+    there) and may have labels `space` does not (they are not used). The
+    levels of a block must be the same in both, in any order.
+
+    Raises
+    ------
+    ValueError
+        If a block has other levels in `other` than in `space`.
+    """
+    out = np.full(len(space), -1, dtype=np.intp)
+    for name in space.names:
+        if name not in other:
+            continue
+        mine, theirs = space.select(name), other.select(name)
+        if set(mine.names) != set(theirs.names):
+            raise ValueError(
+                f"Block {name!r} has levels {list(mine.names)} on one side and "
+                f"{list(theirs.names)} on the other."
+            )
+        if isinstance(theirs, pd.MultiIndex) and theirs.names != mine.names:
+            theirs = theirs.reorder_levels(list(mine.names))
+        found = theirs.get_indexer(mine)
+        out[space.slice(name)] = np.where(
+            found >= 0, found + other.slice(name).start, -1
+        )
+    return out
+
+
 class Space:
     """
     An ordered set of named blocks, each labeled by its own pandas index.

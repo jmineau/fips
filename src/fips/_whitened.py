@@ -47,7 +47,7 @@ import numpy as np
 from numpy.linalg import LinAlgError
 from scipy.linalg import cholesky, eigh, solve_triangular
 
-from fips.operator import DiagonalOperator, Operator
+from fips.linalg import DiagonalOperator, LinearOperator
 
 logger = logging.getLogger(__name__)
 
@@ -86,7 +86,7 @@ class Whitened:
         cls,
         HQ: np.ndarray,
         HQH: np.ndarray,
-        S_z: Operator,
+        S_z: LinearOperator,
         d: np.ndarray,
         prior_variances: np.ndarray,
     ) -> "Whitened":
@@ -99,7 +99,7 @@ class Whitened:
             :math:`H Q`, dense, ``m x n``.
         HQH : np.ndarray
             :math:`H Q H^T`, dense, ``m x m``.
-        S_z : Operator
+        S_z : LinearOperator
             The model-data mismatch, before gamma divides it.
         d : np.ndarray
             The innovation :math:`z - H x_0 - c`.

@@ -20,6 +20,7 @@ from typing import Self
 import pandas as pd
 
 from fips.estimators import Estimator
+from fips.operator import Operator
 from fips.problem import InverseProblem
 from fips.problems.flux.visualization import FluxPlotter
 
@@ -84,17 +85,17 @@ class FluxProblem(InverseProblem):
         return self.prior["flux"]
 
     @property
-    def jacobian(self) -> pd.DataFrame:
+    def jacobian(self) -> Operator:
         """Forward operator (Jacobian) mapping state to observations."""
         return self.forward_operator["concentration", "flux"]
 
     @property
-    def prior_flux_error(self) -> pd.DataFrame:
+    def prior_flux_error(self) -> Operator:
         """Inventory error covariance matrix."""
         return self.prior_error["flux", "flux"]
 
     @property
-    def concentration_error(self) -> pd.DataFrame:
+    def concentration_error(self) -> Operator:
         """Model-data mismatch covariance matrix for observations."""
         return self.modeldata_mismatch["concentration", "concentration"]
 
@@ -109,7 +110,7 @@ class FluxProblem(InverseProblem):
         return self.posterior["flux"]
 
     @property
-    def posterior_flux_error(self) -> pd.DataFrame:
+    def posterior_flux_error(self) -> Operator:
         """Posterior flux error covariance matrix after inversion."""
         return self.posterior_error["flux", "flux"]
 
@@ -119,7 +120,7 @@ class FluxProblem(InverseProblem):
         return self.prior_obs["concentration"]
 
     @property
-    def prior_concentration_error(self) -> pd.DataFrame:
+    def prior_concentration_error(self) -> Operator:
         """Covariance of the prior modelled concentrations from the prior flux error."""
         return self.prior_obs_error["concentration", "concentration"]
 
