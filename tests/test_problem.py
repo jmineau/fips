@@ -793,7 +793,21 @@ class TestInverseProblemLabelChecks:
                 forward_operator=H,
                 prior_error=1.0,
                 modeldata_mismatch=1.0,
+                round_index=6,
             )
+
+    def test_labels_are_not_rounded_by_default(self):
+        """Without round_index the labels of #78 stay as given and distinct."""
+        problem = self._rounding_problem(round_index=None)
+        default = InverseProblem(
+            obs=problem.obs,
+            prior=problem.prior,
+            forward_operator=problem.forward_operator,
+            prior_error=1.0,
+            modeldata_mismatch=1.0,
+        )
+        assert default.state_index.equals(problem.state_index)
+        assert 10.1234567 in default.state_index.get_level_values("depth_m")
 
     @pytest.mark.parametrize("round_index", [None, 6])
     @pytest.mark.parametrize("space", ["state", "observation"])
@@ -806,8 +820,9 @@ class TestInverseProblemLabelChecks:
         prior = pd.Series([1.0, 2.0, 3.0], index=state, name="state")
         obs = pd.Series([1.0, 2.0, 3.0], index=obs_idx, name="obs")
         H = pd.DataFrame(np.eye(3), index=obs_idx, columns=state)
+        block = "state" if space == "state" else "obs"
         with pytest.raises(
-            ValueError, match=rf"The {space} index has duplicate labels: \('\w+', 'b'\)"
+            ValueError, match=rf"Block '{block}' has duplicate labels: 'b'"
         ):
             InverseProblem(
                 obs=obs,

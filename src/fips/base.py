@@ -22,7 +22,7 @@ import pandas as pd
 from scipy.sparse import csr_matrix
 
 from fips._sparse import frame_from_spmatrix, normalize_fill_value
-from fips.indexes import overlaps, resolve_axes, round_index, to_numeric
+from fips.indexes import overlaps, resolve_axes, round_index
 from fips.operator import (
     DenseOperator,
     DiagonalOperator,
@@ -217,9 +217,7 @@ class Structure(Pickleable, ABC):
             raise ValueError("Data contains NaN values.")
 
     def _sanitize(self):
-        """Coerce index labels to numeric where possible."""
-        # Force numeric indices where possible
-        self._set_labels(index=to_numeric(self.index))
+        """Normalize the data after validation; the labels are kept as given."""
 
     def _set_labels(
         self, index: pd.Index | None = None, columns: pd.Index | None = None
@@ -924,11 +922,6 @@ class Structure2D(Structure):
             raise ValueError(f"All levels in the columns of {klass} must be named.")
         if np.isnan(_stored_values(self._op)).any():
             raise ValueError("Data contains NaN values.")
-
-    def _sanitize(self):
-        """Coerce index and column labels to numeric where possible."""
-        super()._sanitize()
-        self._set_labels(columns=to_numeric(self.columns))
 
     def reindex(
         self,

@@ -7,6 +7,10 @@ Multi-Block Structures
 Vector
 ======
 
+.. deprecated:: 0.2.0b1
+   :class:`Vector` will be removed; build a :class:`Field` instead (see
+   :doc:`space`).
+
 Constructor
 ~~~~~~~~~~~
 .. autosummary::

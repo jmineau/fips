@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
+from fips import Field
 from fips.vector import Block, Vector
 
 
@@ -371,3 +372,74 @@ class TestToXarray:
         vector = Vector([b1, b2], name="state")
         result = vector.to_xarray()
         assert isinstance(result, (xr.DataArray, xr.Dataset))
+
+
+class TestLabelsThroughSpace:
+    """Block and Vector check and pad their labels through fips.Space."""
+
+    @staticmethod
+    def _ragged():
+        """A flux block on integer cells and a bias block on sites."""
+        flux = pd.Series([1.0, 2.0], index=pd.Index([1, 2], name="cell"), name="flux")
+        bias = pd.Series([0.5], index=pd.Index(["A"], name="site"), name="bias")
+        return Vector([flux, bias], name="prior")
+
+    def test_block_keeps_its_level_dtype(self):
+        """``v["flux"]`` gives the integer cells it was built with, not 1.0, 2.0 (R1-18)."""
+        vector = self._ragged()
+        pd.testing.assert_index_equal(
+            vector["flux"].index, pd.Index([1, 2], name="cell")
+        )
+        pd.testing.assert_index_equal(
+            vector.blocks["bias"].index, pd.Index(["A"], name="site")
+        )
+        assert vector["flux"].name == "prior"
+
+    def test_assembled_as_a_field(self):
+        vector = self._ragged()
+        field = Field.from_blocks(
+            {"flux": vector["flux"], "bias": vector["bias"]}, name="prior"
+        )
+        assert vector.index.equals(field.index)
+        np.testing.assert_array_equal(vector.values, field.values)
+
+    def test_unknown_block_raises_key_error(self):
+        with pytest.raises(KeyError, match="'flux', 'bias'"):
+            self._ragged()["fluxx"]
+
+    def test_labels_are_not_converted(self):
+        """Site codes stay strings (#77)."""
+        s = pd.Series(
+            [1.0, 2.0, 3.0],
+            index=pd.Index(["001", "002", "010"], name="site"),
+            name="obs",
+        )
+        assert list(Block(s).index) == ["001", "002", "010"]
+        assert list(Vector(s)["obs"].index) == ["001", "002", "010"]
+
+    def test_block_refuses_duplicate_labels(self):
+        s = pd.Series([1.0, 2.0], index=pd.Index(["a", "a"], name="site"), name="obs")
+        with pytest.raises(ValueError, match="Block 'obs' has duplicate labels: 'a'"):
+            Block(s)
+
+    def test_block_refuses_missing_labels(self):
+        s = pd.Series([1.0, 2.0], index=pd.Index([1.0, np.nan], name="cell"), name="x")
+        with pytest.raises(ValueError, match="missing \\(NaN\\) labels"):
+            Block(s)
+
+    def test_vector_from_a_series_refuses_duplicates(self):
+        index = pd.MultiIndex.from_tuples(
+            [("flux", 1), ("flux", 1)], names=["block", "cell"]
+        )
+        with pytest.raises(ValueError, match="Block 'flux' has duplicate labels"):
+            Vector(pd.Series([1.0, 2.0], index=index))
+
+    def test_vector_selects_a_non_contiguous_block(self):
+        """A Series whose blocks interleave keeps its order; a block comes back in its rows' order."""
+        index = pd.MultiIndex.from_tuples(
+            [("a", 1), ("b", 9), ("a", 2)], names=["block", "cell"]
+        )
+        vector = Vector(pd.Series([10.0, 90.0, 20.0], index=index), name="v")
+        assert vector.index.equals(index)
+        assert vector["a"].tolist() == [10.0, 20.0]
+        assert vector["a"].index.tolist() == [1, 2]

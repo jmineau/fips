@@ -31,13 +31,17 @@ PyPI name and import name are both `fips`. Source lives in `src/fips/`.
 
 ```
 src/fips/
-  __init__.py        public exports (re-exports Block, Vector, Matrix,
-                     MatrixBlock, CovarianceMatrix, ForwardOperator,
+  __init__.py        public exports (re-exports Space, Field, Block, Vector,
+                     Matrix, MatrixBlock, CovarianceMatrix, ForwardOperator,
                      Estimator, InverseProblem, Posterior, solve,
                      InversionPipeline, convolve)
+  space.py           Space — ordered named blocks, the padded MultiIndex,
+                     select, from_index, exact align, round_labels
+  field.py           Field — values on a Space (read-only float array)
   base.py            Pickleable, MultiBlockMixin, SingleBlockMixin,
                      Structure1D/2D — foundational mixins all blocks build on
-  vector.py          Block, Vector — 1D labeled containers (state, obs)
+  vector.py          Block, Vector — 1D labeled containers (state, obs);
+                     deprecated for Field, and built through Space and Field
   matrix.py          MatrixBlock, Matrix — 2D labeled containers
   covariance.py      CovarianceMatrix — Matrix subclass; kernel-driven build,
                      sparse (csr_matrix) + joblib-parallel construction;
@@ -91,7 +95,8 @@ From `fips.__init__`:
 
 | Symbol | What it is |
 |---|---|
-| `Block`, `Vector` | 1D labeled data (state vector, observations) |
+| `Space`, `Field` | the labels of a vector (named blocks), and values on them |
+| `Block`, `Vector` | 1D labeled data (state vector, observations); deprecated for `Field` |
 | `MatrixBlock`, `Matrix` | 2D labeled data (operators, covariances) |
 | `CovarianceMatrix` | Covariance with kernel-driven construction |
 | `ForwardOperator` | Matrix specialization for the Jacobian H |
@@ -135,11 +140,17 @@ From `fips.__init__`:
   of two Series).
 - **MultiIndex preservation.** The whole design hinges on labels surviving.
   Do not silently `.values` or `.to_numpy()` away from Series/DataFrame.
+- **Labels are kept as given.** Nothing converts labels to numbers or rounds
+  them unless the caller asks (`round_index=`, `Space.round_labels`); duplicate,
+  missing (NaN) and unnamed labels of a block raise.
 - **NaN-only levels.** Assembling blocks whose indexes have different levels
-  fills the missing levels with NaN (`outer_align_levels`). Anything that
-  selects a block back out must use `xselect` (or `Structure.xs`, which calls
-  it) on every axis, never plain `DataFrame.xs`, or the block comes back with
-  the other blocks' levels.
+  fills the missing levels with NaN. For 1D data `Space` does both directions:
+  `Space.index` pads (keeping each level's dtype, through the MultiIndex codes)
+  and `Space.from_index` / `Space.select` strip; `Vector` uses them. A 2D
+  structure still pads with `outer_align_levels`, and anything that selects a
+  block out of one must use `xselect` (or `Structure.xs`, which calls it) on
+  every axis, never plain `DataFrame.xs`, or the block comes back with the
+  other blocks' levels.
 - **A new instance of a structure is made with `Structure._with_data`.**
   `reindex`, `round_index`, `copy` and `to_dense` build their result with it,
   never with `type(self)(data, name=...)`. A subclass whose constructor takes

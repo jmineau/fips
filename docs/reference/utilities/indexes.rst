@@ -13,4 +13,3 @@ Index utilities
    overlaps
    resolve_axes
    round_index
-   to_numeric

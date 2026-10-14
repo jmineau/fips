@@ -105,10 +105,10 @@ def test_structure_validate_sanitize():
     with pytest.raises(ValueError, match="Data contains NaN values."):
         DummyStructure(pd.Series([1.0, np.nan], index=pd.Index([0, 1], name="idx")))
 
-    # Test sanitize (to_numeric)
+    # Labels are kept as given: strings of digits stay strings (#77)
     s = pd.Series([1, 2], index=pd.Index(["1", "2"], name="a"))
     struct = DummyStructure(s)
-    pd.testing.assert_index_equal(struct.index, pd.Index([1, 2], name="a"))
+    pd.testing.assert_index_equal(struct.index, pd.Index(["1", "2"], name="a"))
 
 
 def test_structure_properties():

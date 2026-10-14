@@ -1,0 +1,316 @@
+"""
+Fields: values on a space.
+
+A :class:`Field` is a vector of values, one for each label of a
+:class:`~fips.Space`: a prior state, the observations, an offset, a posterior
+estimate or its variances. The values are a NumPy array and the labels are
+the space's; a :class:`pandas.Series` is what :meth:`Field.to_series` gives.
+"""
+
+from collections.abc import Mapping
+
+import numpy as np
+import numpy.typing as npt
+import pandas as pd
+
+from fips.space import Space, _listed
+
+
+class Field:
+    """
+    Values on a :class:`~fips.Space`, one for each label.
+
+    A field is read-only: its values cannot be changed in place, and every
+    method returns a new field. Labels are kept as given: they are not
+    converted to numbers and not rounded unless :meth:`round_labels` is
+    called.
+
+    Parameters
+    ----------
+    values : array-like
+        One number for each label of `space`, in the space's order. A
+        :class:`pandas.Series` is refused here, since its own labels would be
+        ignored: use :meth:`from_series`.
+    space : Space
+        The labels.
+    name : str, optional
+        What the values are ("prior", "obs", ...). A name that is not a
+        string is converted to one.
+
+    Raises
+    ------
+    TypeError
+        If `values` is a pandas object.
+    ValueError
+        If `values` is not one-dimensional, its length differs from the
+        space's, or a value is NaN (the message names its labels).
+
+    See Also
+    --------
+    Field.from_series : A field from a Series, with or without a ``block`` level.
+    Field.from_blocks : A field from one Series for each block.
+
+    Examples
+    --------
+    >>> import pandas as pd
+    >>> from fips import Field
+    >>> prior = Field.from_blocks(
+    ...     {
+    ...         "flux": pd.Series([1.0, 2.0], index=pd.Index([1, 2], name="cell")),
+    ...         "bias": pd.Series([0.0], index=pd.Index(["A"], name="site")),
+    ...     },
+    ...     name="prior",
+    ... )
+    >>> prior.values
+    array([1., 2., 0.])
+    >>> prior["flux"].values
+    array([1., 2.])
+    >>> prior["flux"].space.select("flux")
+    Index([1, 2], dtype='int64', name='cell')
+    """
+
+    def __init__(self, values: npt.ArrayLike, space: Space, name: str | None = None):
+        if isinstance(values, (pd.Series, pd.DataFrame, pd.Index)):
+            raise TypeError(
+                "Field takes the values as an array, in the space's order. "
+                "Build a field from a Series with Field.from_series, which "
+                "reads its labels."
+            )
+        if not isinstance(space, Space):
+            raise TypeError(f"space must be a Space, got {type(space).__name__}.")
+        array = np.array(values, dtype=float)
+        if array.ndim != 1:
+            raise ValueError(f"A field's values are 1D, got shape {array.shape}.")
+        if len(array) != len(space):
+            raise ValueError(
+                f"Got {len(array)} values for a space of {len(space)} labels."
+            )
+        nan = np.isnan(array)
+        if nan.any():
+            raise ValueError(
+                f"The values are NaN at {int(nan.sum())} labels: "
+                f"{_listed(space.index[nan])}."
+            )
+        array.flags.writeable = False
+        self._values = array
+        self._space = space
+        self._name = None if name is None else str(name)
+
+    @classmethod
+    def from_series(cls, series: pd.Series, block: str | None = None) -> "Field":
+        """
+        Build a field from a Series, reading its labels.
+
+        Parameters
+        ----------
+        series : pd.Series
+            Numeric values. With a ``block`` level in its index, the field has
+            those blocks (see :meth:`Space.from_index`); without one, it has
+            one block, named by `block`. The Series' name is the field's.
+        block : str, optional
+            The name of the one block, for a Series without a ``block``
+            level.
+
+        Returns
+        -------
+        Field
+            The values on the Series' labels. With a ``block`` level, the rows
+            of each block are put together, in the order the blocks first
+            appear.
+
+        Raises
+        ------
+        ValueError
+            If a Series with a ``block`` level is given `block` too, one
+            without is given no `block`, or its labels cannot make a
+            :class:`Space`.
+
+        Examples
+        --------
+        >>> import pandas as pd
+        >>> from fips import Field
+        >>> obs = pd.Series(
+        ...     [410.2, 412.8], index=pd.Index(["A", "B"], name="site"), name="obs"
+        ... )
+        >>> Field.from_series(obs, block="co2").index
+        MultiIndex([('co2', 'A'),
+                    ('co2', 'B')],
+                   names=['block', 'site'])
+        """
+        index = series.index
+        if "block" in index.names:
+            if block is not None:
+                raise ValueError(
+                    "The Series has a 'block' level, which names its blocks; "
+                    "leave `block` out."
+                )
+            space = Space.from_index(index)
+            rank = pd.Index(space.names).get_indexer(
+                index.get_level_values("block").astype(str)
+            )
+            values = series.to_numpy(dtype=float)[np.argsort(rank, kind="stable")]
+        else:
+            if block is None:
+                raise ValueError(
+                    "A Series without a 'block' level needs `block`, the name "
+                    "of its one block."
+                )
+            space = Space({block: index})
+            values = series.to_numpy(dtype=float)
+        name = None if series.name is None else str(series.name)
+        return cls(values, space, name=name)
+
+    @classmethod
+    def from_blocks(
+        cls, blocks: Mapping[str, pd.Series], name: str | None = None
+    ) -> "Field":
+        """
+        Build a field from one Series for each block.
+
+        Parameters
+        ----------
+        blocks : mapping of str to pd.Series
+            Each block's name mapped to its values, labeled by the block's own
+            index (no ``block`` level), in the order the blocks should have.
+        name : str, optional
+            The field's name.
+
+        Returns
+        -------
+        Field
+            The values of every block, on the :class:`Space` of the blocks'
+            indexes.
+
+        Examples
+        --------
+        >>> import pandas as pd
+        >>> from fips import Field
+        >>> f = Field.from_blocks(
+        ...     {"flux": pd.Series([1.0, 2.0], index=pd.Index([1, 2], name="cell"))}
+        ... )
+        >>> f.space
+        Space(flux: 2 x ['cell'])
+        """
+        space = Space({key: series.index for key, series in blocks.items()})
+        values = np.concatenate(
+            [series.to_numpy(dtype=float) for series in blocks.values()]
+        )
+        return cls(values, space, name=name)
+
+    @property
+    def values(self) -> np.ndarray:
+        """The values, one for each label, in the space's order (read-only)."""
+        return self._values
+
+    @property
+    def space(self) -> Space:
+        """The labels of the values."""
+        return self._space
+
+    @property
+    def name(self) -> str | None:
+        """What the values are: a string, or None."""
+        return self._name
+
+    @property
+    def index(self) -> pd.MultiIndex:
+        """The labels as one MultiIndex with the ``block`` level first (:attr:`Space.index`)."""
+        return self._space.index
+
+    def __len__(self) -> int:
+        """Return the number of values."""
+        return len(self._values)
+
+    def __getitem__(self, block: str) -> "Field":
+        """
+        Return the field of one block.
+
+        Parameters
+        ----------
+        block : str
+            The block's name.
+
+        Returns
+        -------
+        Field
+            The block's values on a space of that one block, labeled as the
+            block was given.
+
+        Raises
+        ------
+        KeyError
+            If the field has no block of that name.
+        """
+        labels = self._space.select(block)
+        values = self._values[self._space.slice(block)]
+        return Field(values, Space({block: labels}), name=self._name)
+
+    def to_series(self) -> pd.Series:
+        """
+        Return the values as a Series, labeled by :attr:`index`.
+
+        The index has the ``block`` level first, and the Series holds a copy
+        of the values.
+        """
+        return pd.Series(np.array(self._values), index=self.index, name=self._name)
+
+    def align(self, space: Space) -> "Field":
+        """
+        Return the values on `space`, which must have exactly the same labels.
+
+        Parameters
+        ----------
+        space : Space
+            The labels to put the values on, in any order (see
+            :meth:`Space.align`).
+
+        Returns
+        -------
+        Field
+            The same values, reordered to `space`.
+
+        Raises
+        ------
+        ValueError
+            If `space` and the field's space do not have the same labels; the
+            message names those missing from either.
+        """
+        return Field(self._values[space.align(self._space)], space, name=self._name)
+
+    def round_labels(self, decimals: int) -> "Field":
+        """
+        Return the field with its float labels rounded (:meth:`Space.round_labels`).
+
+        Parameters
+        ----------
+        decimals : int
+            Number of decimal places.
+
+        Returns
+        -------
+        Field
+            The same values on the rounded labels.
+
+        Raises
+        ------
+        ValueError
+            If rounding makes two labels of a block equal.
+        """
+        return Field(self._values, self._space.round_labels(decimals), name=self._name)
+
+    def __repr__(self) -> str:
+        """Return the name and space, then the values as a Series."""
+        header = f"Field(name={self._name!r}, {self._space!r})\n"
+        return header + repr(self.to_series())
+
+    def __getstate__(self) -> dict:
+        """Pickle the values, the space and the name."""
+        return {"values": self._values, "space": self._space, "name": self._name}
+
+    def __setstate__(self, state: dict) -> None:
+        """Restore from :meth:`__getstate__`, read-only again."""
+        values = np.array(state["values"], dtype=float)
+        values.flags.writeable = False
+        self._values = values
+        self._space = state["space"]
+        self._name = state["name"]

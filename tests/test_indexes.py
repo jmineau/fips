@@ -11,7 +11,6 @@ from fips.indexes import (
     overlaps,
     resolve_axes,
     round_index,
-    to_numeric,
 )
 
 
@@ -122,30 +121,3 @@ def test_round_index():
     res_midx = round_index(midx, 1)
     expected = pd.MultiIndex.from_arrays([[1.1, 2.5], ["a", "b"]], names=["f", "s"])
     pd.testing.assert_index_equal(res_midx, expected)
-
-
-def test_to_numeric():
-    """Test converting string indices to numeric where possible."""
-    # String index that can be numeric
-    idx = pd.Index(["1", "2", "3"], name="a")
-    res = to_numeric(idx)
-    pd.testing.assert_index_equal(res, pd.Index([1, 2, 3], name="a"))
-
-    # String index that cannot be numeric
-    idx_str = pd.Index(["a", "b", "c"], name="a")
-    res_str = to_numeric(idx_str)
-    pd.testing.assert_index_equal(res_str, idx_str)
-
-    # MultiIndex
-    midx = pd.MultiIndex.from_arrays([["1", "2"], ["a", "b"]], names=["n", "s"])
-    res_midx = to_numeric(midx)
-    expected = pd.MultiIndex.from_arrays([[1, 2], ["a", "b"]], names=["n", "s"])
-    pd.testing.assert_index_equal(res_midx, expected)
-
-
-def test_to_numeric_datetime():
-    """Test that DataFrame indices remain as DatetimeIndex after conversion."""
-    # DatetimeIndex should remain DatetimeIndex
-    idx = pd.Index(pd.to_datetime(["2020-01-01", "2020-01-02"]), name="date")
-    res = to_numeric(idx)
-    pd.testing.assert_index_equal(res, idx)

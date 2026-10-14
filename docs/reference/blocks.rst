@@ -8,6 +8,10 @@ Block Structures
 Block
 =====
 
+.. deprecated:: 0.2.0b1
+   :class:`Block` will be removed; build a :class:`Field` instead (see
+   :doc:`space`).
+
 Constructor
 ~~~~~~~~~~~
 .. autosummary::
