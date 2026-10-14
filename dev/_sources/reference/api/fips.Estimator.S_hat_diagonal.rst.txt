@@ -1,0 +1,6 @@
+fips.Estimator.S\_hat\_diagonal
+===============================
+
+.. currentmodule:: fips
+
+.. autoproperty:: Estimator.S_hat_diagonal

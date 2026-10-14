@@ -15,7 +15,6 @@
 .. autosummary::
    :toctree:
 
-   ~Posterior.averaging_kernel
    ~Posterior.covariance
    ~Posterior.desroziers
    ~Posterior.dofs
@@ -35,6 +34,15 @@
    ~Posterior.variances
 
 
+
+.. rubric:: Methods
+
+.. autosummary::
+   :toctree:
+
+   ~Posterior.averaging_kernel
+   ~Posterior.cov
+   ~Posterior.with_gamma
 
 
 

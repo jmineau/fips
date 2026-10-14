@@ -54,6 +54,9 @@ Results
    Estimator.y_0
    Estimator.K
    Estimator.A
+   Estimator.S_hat_diagonal
+   Estimator.aggregate_S_hat
+   Estimator.aggregate_A
 
 Metrics
 ~~~~~~~
@@ -85,6 +88,7 @@ Methods
    :toctree: api/
 
    BayesianSolver.cost
+   BayesianSolver.with_gamma
 
 Results
 ~~~~~~~
@@ -93,3 +97,15 @@ Results
 
    BayesianSolver.x_hat
    BayesianSolver.S_hat
+   BayesianSolver.K
+   BayesianSolver.S_hat_diagonal
+   BayesianSolver.aggregate_S_hat
+   BayesianSolver.aggregate_A
+
+Metrics
+~~~~~~~
+.. autosummary::
+   :toctree: api/
+
+   BayesianSolver.DOFS
+   BayesianSolver.reduced_chi2

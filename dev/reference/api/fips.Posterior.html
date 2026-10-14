@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>fips.Posterior &#8212; fips 0.1.0b10.dev56+g13ff038e6 documentation</title>
+    <title>fips.Posterior &#8212; fips 0.1.0b10.dev57+g6f9d2299b documentation</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0" />
 
-    <script src="../../_static/documentation_options.js?v=00ee829f"></script>
+    <script src="../../_static/documentation_options.js?v=aad72aa2"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -59,7 +59,7 @@
     <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="fips.Posterior.averaging_kernel" href="fips.Posterior.averaging_kernel.html" />
+    <link rel="next" title="fips.Posterior.covariance" href="fips.Posterior.covariance.html" />
     <link rel="prev" title="fips.solve" href="fips.solve.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
@@ -135,8 +135,8 @@
       
     
     
-    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.1.0b10.dev56+g13ff038e6 documentation - Home"/>
-    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.1.0b10.dev56+g13ff038e6 documentation - Home"/>
+    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.1.0b10.dev57+g6f9d2299b documentation - Home"/>
+    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.1.0b10.dev57+g6f9d2299b documentation - Home"/>
   
   
 </a></div>
@@ -737,7 +737,6 @@
 <li class="toctree-l1 current active has-children"><a class="reference internal" href="../posterior.html">Posterior</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="fips.solve.html">fips.solve</a></li>
 <li class="toctree-l2 current active has-children"><a aria-current="page" class="current reference internal" href="#">fips.Posterior</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l3"><a class="reference internal" href="fips.Posterior.averaging_kernel.html">fips.Posterior.averaging_kernel</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.Posterior.covariance.html">fips.Posterior.covariance</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.Posterior.desroziers.html">fips.Posterior.desroziers</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.Posterior.dofs.html">fips.Posterior.dofs</a></li>
@@ -755,12 +754,16 @@
 <li class="toctree-l3"><a class="reference internal" href="fips.Posterior.state_index.html">fips.Posterior.state_index</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.Posterior.uncertainty_reduction.html">fips.Posterior.uncertainty_reduction</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.Posterior.variances.html">fips.Posterior.variances</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fips.Posterior.averaging_kernel.html">fips.Posterior.averaging_kernel</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fips.Posterior.cov.html">fips.Posterior.cov</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fips.Posterior.with_gamma.html">fips.Posterior.with_gamma</a></li>
 </ul>
 </details></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.Posterior.estimate.html">fips.Posterior.estimate</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.Posterior.mean.html">fips.Posterior.mean</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.Posterior.covariance.html">fips.Posterior.covariance</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.Posterior.variances.html">fips.Posterior.variances</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fips.Posterior.cov.html">fips.Posterior.cov</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.Posterior.modeled_obs.html">fips.Posterior.modeled_obs</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.Posterior.prior_modeled_obs.html">fips.Posterior.prior_modeled_obs</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.Posterior.prior_obs_covariance.html">fips.Posterior.prior_obs_covariance</a></li>
@@ -772,6 +775,7 @@
 <li class="toctree-l2"><a class="reference internal" href="fips.Posterior.r2.html">fips.Posterior.r2</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.Posterior.rmse.html">fips.Posterior.rmse</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.Posterior.uncertainty_reduction.html">fips.Posterior.uncertainty_reduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fips.Posterior.with_gamma.html">fips.Posterior.with_gamma</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.Posterior.estimator.html">fips.Posterior.estimator</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.Posterior.state_index.html">fips.Posterior.state_index</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.Posterior.obs_index.html">fips.Posterior.obs_index</a></li>
@@ -794,6 +798,7 @@
 <li class="toctree-l3"><a class="reference internal" href="fips.Estimator.RMSE.html">fips.Estimator.RMSE</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.Estimator.S_0.html">fips.Estimator.S_0</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.Estimator.S_hat.html">fips.Estimator.S_hat</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fips.Estimator.S_hat_diagonal.html">fips.Estimator.S_hat_diagonal</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.Estimator.S_y0.html">fips.Estimator.S_y0</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.Estimator.S_z.html">fips.Estimator.S_z</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.Estimator.U_red.html">fips.Estimator.U_red</a></li>
@@ -803,6 +808,8 @@
 <li class="toctree-l3"><a class="reference internal" href="fips.Estimator.y_0.html">fips.Estimator.y_0</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.Estimator.y_hat.html">fips.Estimator.y_hat</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.Estimator.z.html">fips.Estimator.z</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fips.Estimator.aggregate_A.html">fips.Estimator.aggregate_A</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fips.Estimator.aggregate_S_hat.html">fips.Estimator.aggregate_S_hat</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.Estimator.cost.html">fips.Estimator.cost</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.Estimator.forward.html">fips.Estimator.forward</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.Estimator.leverage.html">fips.Estimator.leverage</a></li>
@@ -827,21 +834,38 @@
 <li class="toctree-l2"><a class="reference internal" href="fips.Estimator.y_0.html">fips.Estimator.y_0</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.Estimator.K.html">fips.Estimator.K</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.Estimator.A.html">fips.Estimator.A</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fips.Estimator.S_hat_diagonal.html">fips.Estimator.S_hat_diagonal</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fips.Estimator.aggregate_S_hat.html">fips.Estimator.aggregate_S_hat</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fips.Estimator.aggregate_A.html">fips.Estimator.aggregate_A</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.Estimator.reduced_chi2.html">fips.Estimator.reduced_chi2</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.Estimator.R2.html">fips.Estimator.R2</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.Estimator.RMSE.html">fips.Estimator.RMSE</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.Estimator.uncertainty_reduction.html">fips.Estimator.uncertainty_reduction</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.Estimator.U_red.html">fips.Estimator.U_red</a></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="fips.estimators.BayesianSolver.html">fips.estimators.BayesianSolver</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="fips.estimators.BayesianSolver.DOFS.html">fips.estimators.BayesianSolver.DOFS</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.estimators.BayesianSolver.gamma.html">fips.estimators.BayesianSolver.gamma</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fips.estimators.BayesianSolver.K.html">fips.estimators.BayesianSolver.K</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fips.estimators.BayesianSolver.reduced_chi2.html">fips.estimators.BayesianSolver.reduced_chi2</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.estimators.BayesianSolver.S_hat.html">fips.estimators.BayesianSolver.S_hat</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fips.estimators.BayesianSolver.S_hat_diagonal.html">fips.estimators.BayesianSolver.S_hat_diagonal</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.estimators.BayesianSolver.x_hat.html">fips.estimators.BayesianSolver.x_hat</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fips.estimators.BayesianSolver.aggregate_A.html">fips.estimators.BayesianSolver.aggregate_A</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fips.estimators.BayesianSolver.aggregate_S_hat.html">fips.estimators.BayesianSolver.aggregate_S_hat</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.estimators.BayesianSolver.cost.html">fips.estimators.BayesianSolver.cost</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fips.estimators.BayesianSolver.with_gamma.html">fips.estimators.BayesianSolver.with_gamma</a></li>
 </ul>
 </details></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.estimators.BayesianSolver.cost.html">fips.estimators.BayesianSolver.cost</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fips.estimators.BayesianSolver.with_gamma.html">fips.estimators.BayesianSolver.with_gamma</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.estimators.BayesianSolver.x_hat.html">fips.estimators.BayesianSolver.x_hat</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.estimators.BayesianSolver.S_hat.html">fips.estimators.BayesianSolver.S_hat</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fips.estimators.BayesianSolver.K.html">fips.estimators.BayesianSolver.K</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fips.estimators.BayesianSolver.S_hat_diagonal.html">fips.estimators.BayesianSolver.S_hat_diagonal</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fips.estimators.BayesianSolver.aggregate_S_hat.html">fips.estimators.BayesianSolver.aggregate_S_hat</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fips.estimators.BayesianSolver.aggregate_A.html">fips.estimators.BayesianSolver.aggregate_A</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fips.estimators.BayesianSolver.DOFS.html">fips.estimators.BayesianSolver.DOFS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fips.estimators.BayesianSolver.reduced_chi2.html">fips.estimators.BayesianSolver.reduced_chi2</a></li>
 </ul>
 </details></li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="../pipeline.html">Pipeline</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
@@ -1139,59 +1163,71 @@ the next access shows the change.</p>
 <p class="rubric">Attributes</p>
 <div class="pst-scrollable-table-container"><table class="autosummary longtable table">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="fips.Posterior.averaging_kernel.html#fips.Posterior.averaging_kernel" title="fips.Posterior.averaging_kernel"><code class="xref py py-obj docutils literal notranslate"><span class="pre">averaging_kernel</span></code></a></p></td>
-<td><p>The averaging kernel <span class="math notranslate nohighlight">\(A = K H\)</span>, state by state.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="fips.Posterior.covariance.html#fips.Posterior.covariance" title="fips.Posterior.covariance"><code class="xref py py-obj docutils literal notranslate"><span class="pre">covariance</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="fips.Posterior.covariance.html#fips.Posterior.covariance" title="fips.Posterior.covariance"><code class="xref py py-obj docutils literal notranslate"><span class="pre">covariance</span></code></a></p></td>
 <td><p>The posterior error covariance, <span class="math notranslate nohighlight">\(\hat{S}\)</span>, on the state index.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="fips.Posterior.desroziers.html#fips.Posterior.desroziers" title="fips.Posterior.desroziers"><code class="xref py py-obj docutils literal notranslate"><span class="pre">desroziers</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="fips.Posterior.desroziers.html#fips.Posterior.desroziers" title="fips.Posterior.desroziers"><code class="xref py py-obj docutils literal notranslate"><span class="pre">desroziers</span></code></a></p></td>
 <td><p>The observation error covariance diagnosed by Desroziers et al. (2005).</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="fips.Posterior.dofs.html#fips.Posterior.dofs" title="fips.Posterior.dofs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">dofs</span></code></a></p></td>
-<td><p>Degrees of freedom for signal, the trace of <code class="xref py py-attr docutils literal notranslate"><span class="pre">averaging_kernel</span></code>.</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="fips.Posterior.dofs.html#fips.Posterior.dofs" title="fips.Posterior.dofs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">dofs</span></code></a></p></td>
+<td><p>Degrees of freedom for signal, the trace of <code class="xref py py-meth docutils literal notranslate"><span class="pre">averaging_kernel()</span></code>.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="fips.Posterior.estimate.html#fips.Posterior.estimate" title="fips.Posterior.estimate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">estimate</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="fips.Posterior.estimate.html#fips.Posterior.estimate" title="fips.Posterior.estimate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">estimate</span></code></a></p></td>
 <td><p>The posterior state estimate, <span class="math notranslate nohighlight">\(\hat{x}\)</span>, on the state index.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="fips.Posterior.estimator.html#fips.Posterior.estimator" title="fips.Posterior.estimator"><code class="xref py py-obj docutils literal notranslate"><span class="pre">estimator</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="fips.Posterior.estimator.html#fips.Posterior.estimator" title="fips.Posterior.estimator"><code class="xref py py-obj docutils literal notranslate"><span class="pre">estimator</span></code></a></p></td>
 <td><p>The fitted estimator, which holds the unlabeled arrays.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="fips.Posterior.kalman_gain.html#fips.Posterior.kalman_gain" title="fips.Posterior.kalman_gain"><code class="xref py py-obj docutils literal notranslate"><span class="pre">kalman_gain</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="fips.Posterior.kalman_gain.html#fips.Posterior.kalman_gain" title="fips.Posterior.kalman_gain"><code class="xref py py-obj docutils literal notranslate"><span class="pre">kalman_gain</span></code></a></p></td>
 <td><p>The gain <span class="math notranslate nohighlight">\(K\)</span>, state by observations.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="fips.Posterior.mean.html#fips.Posterior.mean" title="fips.Posterior.mean"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mean</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="fips.Posterior.mean.html#fips.Posterior.mean" title="fips.Posterior.mean"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mean</span></code></a></p></td>
 <td><p>The posterior mean, on the state index.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="fips.Posterior.modeled_obs.html#fips.Posterior.modeled_obs" title="fips.Posterior.modeled_obs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">modeled_obs</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="fips.Posterior.modeled_obs.html#fips.Posterior.modeled_obs" title="fips.Posterior.modeled_obs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">modeled_obs</span></code></a></p></td>
 <td><p>The observations the estimate models, <span class="math notranslate nohighlight">\(H \hat{x} + c\)</span>.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="fips.Posterior.obs_index.html#fips.Posterior.obs_index" title="fips.Posterior.obs_index"><code class="xref py py-obj docutils literal notranslate"><span class="pre">obs_index</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="fips.Posterior.obs_index.html#fips.Posterior.obs_index" title="fips.Posterior.obs_index"><code class="xref py py-obj docutils literal notranslate"><span class="pre">obs_index</span></code></a></p></td>
 <td><p>The observation index, which labels every observation axis.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="fips.Posterior.prior_modeled_obs.html#fips.Posterior.prior_modeled_obs" title="fips.Posterior.prior_modeled_obs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">prior_modeled_obs</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="fips.Posterior.prior_modeled_obs.html#fips.Posterior.prior_modeled_obs" title="fips.Posterior.prior_modeled_obs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">prior_modeled_obs</span></code></a></p></td>
 <td><p>The observations the prior models, <span class="math notranslate nohighlight">\(H x_0 + c\)</span>.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="fips.Posterior.prior_obs_covariance.html#fips.Posterior.prior_obs_covariance" title="fips.Posterior.prior_obs_covariance"><code class="xref py py-obj docutils literal notranslate"><span class="pre">prior_obs_covariance</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="fips.Posterior.prior_obs_covariance.html#fips.Posterior.prior_obs_covariance" title="fips.Posterior.prior_obs_covariance"><code class="xref py py-obj docutils literal notranslate"><span class="pre">prior_obs_covariance</span></code></a></p></td>
 <td><p>The prior error in observation space, <span class="math notranslate nohighlight">\(H S_0 H^T\)</span>.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="fips.Posterior.r2.html#fips.Posterior.r2" title="fips.Posterior.r2"><code class="xref py py-obj docutils literal notranslate"><span class="pre">r2</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="fips.Posterior.r2.html#fips.Posterior.r2" title="fips.Posterior.r2"><code class="xref py py-obj docutils literal notranslate"><span class="pre">r2</span></code></a></p></td>
 <td><p>The squared correlation of the observations and <code class="xref py py-attr docutils literal notranslate"><span class="pre">modeled_obs</span></code>.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="fips.Posterior.reduced_chi2.html#fips.Posterior.reduced_chi2" title="fips.Posterior.reduced_chi2"><code class="xref py py-obj docutils literal notranslate"><span class="pre">reduced_chi2</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="fips.Posterior.reduced_chi2.html#fips.Posterior.reduced_chi2" title="fips.Posterior.reduced_chi2"><code class="xref py py-obj docutils literal notranslate"><span class="pre">reduced_chi2</span></code></a></p></td>
 <td><p>The reduced chi-squared of the solution.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="fips.Posterior.rmse.html#fips.Posterior.rmse" title="fips.Posterior.rmse"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rmse</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="fips.Posterior.rmse.html#fips.Posterior.rmse" title="fips.Posterior.rmse"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rmse</span></code></a></p></td>
 <td><p>The root mean square of the observations minus <code class="xref py py-attr docutils literal notranslate"><span class="pre">modeled_obs</span></code>.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="fips.Posterior.state_index.html#fips.Posterior.state_index" title="fips.Posterior.state_index"><code class="xref py py-obj docutils literal notranslate"><span class="pre">state_index</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="fips.Posterior.state_index.html#fips.Posterior.state_index" title="fips.Posterior.state_index"><code class="xref py py-obj docutils literal notranslate"><span class="pre">state_index</span></code></a></p></td>
 <td><p>The state index, which labels every state axis.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="fips.Posterior.uncertainty_reduction.html#fips.Posterior.uncertainty_reduction" title="fips.Posterior.uncertainty_reduction"><code class="xref py py-obj docutils literal notranslate"><span class="pre">uncertainty_reduction</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="fips.Posterior.uncertainty_reduction.html#fips.Posterior.uncertainty_reduction" title="fips.Posterior.uncertainty_reduction"><code class="xref py py-obj docutils literal notranslate"><span class="pre">uncertainty_reduction</span></code></a></p></td>
 <td><p>One minus the ratio of the posterior to the prior total error.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="fips.Posterior.variances.html#fips.Posterior.variances" title="fips.Posterior.variances"><code class="xref py py-obj docutils literal notranslate"><span class="pre">variances</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="fips.Posterior.variances.html#fips.Posterior.variances" title="fips.Posterior.variances"><code class="xref py py-obj docutils literal notranslate"><span class="pre">variances</span></code></a></p></td>
 <td><p>The posterior error variances, the diagonal of <span class="math notranslate nohighlight">\(\hat{S}\)</span>.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p class="rubric">Methods</p>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="fips.Posterior.averaging_kernel.html#fips.Posterior.averaging_kernel" title="fips.Posterior.averaging_kernel"><code class="xref py py-obj docutils literal notranslate"><span class="pre">averaging_kernel</span></code></a>([W])</p></td>
+<td><p>Return the averaging kernel, of the state or of aggregates of it.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="fips.Posterior.cov.html#fips.Posterior.cov" title="fips.Posterior.cov"><code class="xref py py-obj docutils literal notranslate"><span class="pre">cov</span></code></a>([W])</p></td>
+<td><p>Return the posterior error covariance, of the state or of aggregates of it.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="fips.Posterior.with_gamma.html#fips.Posterior.with_gamma" title="fips.Posterior.with_gamma"><code class="xref py py-obj docutils literal notranslate"><span class="pre">with_gamma</span></code></a>(gamma)</p></td>
+<td><p>Return the posterior of the same problem with another regularization factor.</p></td>
 </tr>
 </tbody>
 </table>
@@ -1220,11 +1256,11 @@ the next access shows the change.</p>
       </div>
     </a>
     <a class="right-next"
-       href="fips.Posterior.averaging_kernel.html"
+       href="fips.Posterior.covariance.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">fips.Posterior.averaging_kernel</p>
+        <p class="prev-next-title">fips.Posterior.covariance</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>

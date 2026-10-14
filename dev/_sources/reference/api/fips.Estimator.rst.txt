@@ -28,6 +28,7 @@
    ~Estimator.RMSE
    ~Estimator.S_0
    ~Estimator.S_hat
+   ~Estimator.S_hat_diagonal
    ~Estimator.S_y0
    ~Estimator.S_z
    ~Estimator.U_red
@@ -45,6 +46,8 @@
 .. autosummary::
    :toctree:
 
+   ~Estimator.aggregate_A
+   ~Estimator.aggregate_S_hat
    ~Estimator.cost
    ~Estimator.forward
    ~Estimator.leverage

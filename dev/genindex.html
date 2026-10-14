@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Index &#8212; fips 0.1.0b10.dev56+g13ff038e6 documentation</title>
+    <title>Index &#8212; fips 0.1.0b10.dev57+g6f9d2299b documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0" />
 
-    <script src="_static/documentation_options.js?v=00ee829f"></script>
+    <script src="_static/documentation_options.js?v=aad72aa2"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -130,8 +130,8 @@
       
     
     
-    <img src="_static/logo.png" class="logo__image only-light" alt="fips 0.1.0b10.dev56+g13ff038e6 documentation - Home"/>
-    <img src="_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.1.0b10.dev56+g13ff038e6 documentation - Home"/>
+    <img src="_static/logo.png" class="logo__image only-light" alt="fips 0.1.0b10.dev57+g6f9d2299b documentation - Home"/>
+    <img src="_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.1.0b10.dev57+g6f9d2299b documentation - Home"/>
   
   
 </a></div>
@@ -459,6 +459,7 @@
  | <a href="#T"><strong>T</strong></a>
  | <a href="#U"><strong>U</strong></a>
  | <a href="#V"><strong>V</strong></a>
+ | <a href="#W"><strong>W</strong></a>
  | <a href="#X"><strong>X</strong></a>
  | <a href="#Y"><strong>Y</strong></a>
  | <a href="#Z"><strong>Z</strong></a>
@@ -493,16 +494,28 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="reference/api/fips.Estimator.A.html#fips.Estimator.A">A (fips.Estimator property)</a>
 </li>
+      <li><a href="reference/api/fips.Estimator.aggregate_A.html#fips.Estimator.aggregate_A">aggregate_A() (fips.Estimator method)</a>
+
+      <ul>
+        <li><a href="reference/api/fips.estimators.BayesianSolver.aggregate_A.html#fips.estimators.BayesianSolver.aggregate_A">(fips.estimators.BayesianSolver method)</a>
+</li>
+      </ul></li>
       <li><a href="reference/api/fips.InversionPipeline.aggregate_obs_space.html#fips.InversionPipeline.aggregate_obs_space">aggregate_obs_space() (fips.InversionPipeline method)</a>
 </li>
+      <li><a href="reference/api/fips.Estimator.aggregate_S_hat.html#fips.Estimator.aggregate_S_hat">aggregate_S_hat() (fips.Estimator method)</a>
+
+      <ul>
+        <li><a href="reference/api/fips.estimators.BayesianSolver.aggregate_S_hat.html#fips.estimators.BayesianSolver.aggregate_S_hat">(fips.estimators.BayesianSolver method)</a>
+</li>
+      </ul></li>
       <li><a href="reference/api/fips.aggregators.ObsAggregator.apply.html#fips.aggregators.ObsAggregator.apply">apply() (fips.aggregators.ObsAggregator method)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="reference/api/fips.indexes.apply_to_index.html#fips.indexes.apply_to_index">apply_to_index() (in module fips.indexes)</a>
 </li>
       <li><a href="reference/api/fips.operator.DenseOperator.array.html#fips.operator.DenseOperator.array">array (fips.operator.DenseOperator attribute)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="reference/api/fips.operator.as_operator.html#fips.operator.as_operator">as_operator() (in module fips.operator)</a>
 </li>
       <li><a href="reference/api/fips.indexes.assign_block.html#fips.indexes.assign_block">assign_block() (in module fips.indexes)</a>
@@ -510,11 +523,9 @@
       <li><a href="terminology.html#term-Averaging-Kernel"><strong>Averaging Kernel</strong></a>
 </li>
       <li><a href="reference/api/fips.InverseProblem.averaging_kernel.html#fips.InverseProblem.averaging_kernel">averaging_kernel (fips.InverseProblem property)</a>
-
-      <ul>
-        <li><a href="reference/api/fips.Posterior.averaging_kernel.html#fips.Posterior.averaging_kernel">(fips.Posterior property)</a>
 </li>
-      </ul></li>
+      <li><a href="reference/api/fips.Posterior.averaging_kernel.html#fips.Posterior.averaging_kernel">averaging_kernel() (fips.Posterior method)</a>
+</li>
   </ul></td>
 </tr></table>
 
@@ -631,6 +642,8 @@
         <li><a href="reference/api/fips.estimators.BayesianSolver.cost.html#fips.estimators.BayesianSolver.cost">(fips.estimators.BayesianSolver method)</a>
 </li>
       </ul></li>
+      <li><a href="reference/api/fips.Posterior.cov.html#fips.Posterior.cov">cov() (fips.Posterior method)</a>
+</li>
       <li><a href="reference/api/fips.Posterior.covariance.html#fips.Posterior.covariance">covariance (fips.Posterior property)</a>
 </li>
       <li><a href="terminology.html#term-Covariance-Matrix"><strong>Covariance Matrix</strong></a>
@@ -714,7 +727,11 @@
       <li><a href="reference/api/fips.operator.DiagonalOperator.html#fips.operator.DiagonalOperator">DiagonalOperator (class in fips.operator)</a>
 </li>
       <li><a href="reference/api/fips.Estimator.DOFS.html#fips.Estimator.DOFS">DOFS (fips.Estimator property)</a>
+
+      <ul>
+        <li><a href="reference/api/fips.estimators.BayesianSolver.DOFS.html#fips.estimators.BayesianSolver.DOFS">(fips.estimators.BayesianSolver property)</a>
 </li>
+      </ul></li>
       <li><a href="reference/api/fips.Posterior.dofs.html#fips.Posterior.dofs">dofs (fips.Posterior property)</a>
 </li>
       <li><a href="reference/api/fips.operator.Operator.dot.html#fips.operator.Operator.dot">dot() (fips.operator.Operator method)</a>
@@ -941,17 +958,21 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="reference/api/fips.Estimator.K.html#fips.Estimator.K">K (fips.Estimator property)</a>
+
+      <ul>
+        <li><a href="reference/api/fips.estimators.BayesianSolver.K.html#fips.estimators.BayesianSolver.K">(fips.estimators.BayesianSolver property)</a>
 </li>
+      </ul></li>
       <li><a href="terminology.html#term-Kalman-Gain"><strong>Kalman Gain</strong></a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="reference/api/fips.InverseProblem.kalman_gain.html#fips.InverseProblem.kalman_gain">kalman_gain (fips.InverseProblem property)</a>
 
       <ul>
         <li><a href="reference/api/fips.Posterior.kalman_gain.html#fips.Posterior.kalman_gain">(fips.Posterior property)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="reference/api/fips.covariance.KroneckerError.html#fips.covariance.KroneckerError">KroneckerError (class in fips.covariance)</a>
 </li>
       <li><a href="reference/api/fips.covariance.KroneckerOperator.html#fips.covariance.KroneckerOperator">KroneckerOperator (class in fips.covariance)</a>
@@ -1164,6 +1185,8 @@
       <li><a href="reference/api/fips.Estimator.reduced_chi2.html#fips.Estimator.reduced_chi2">reduced_chi2 (fips.Estimator property)</a>
 
       <ul>
+        <li><a href="reference/api/fips.estimators.BayesianSolver.reduced_chi2.html#fips.estimators.BayesianSolver.reduced_chi2">(fips.estimators.BayesianSolver property)</a>
+</li>
         <li><a href="reference/api/fips.Posterior.reduced_chi2.html#fips.Posterior.reduced_chi2">(fips.Posterior property)</a>
 </li>
       </ul></li>
@@ -1187,10 +1210,10 @@
       </ul></li>
       <li><a href="reference/api/fips.Estimator.residual.html#fips.Estimator.residual">residual() (fips.Estimator method)</a>
 </li>
-      <li><a href="reference/api/fips.indexes.resolve_axes.html#fips.indexes.resolve_axes">resolve_axes() (in module fips.indexes)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="reference/api/fips.indexes.resolve_axes.html#fips.indexes.resolve_axes">resolve_axes() (in module fips.indexes)</a>
+</li>
       <li><a href="reference/api/fips.InverseProblem.result.html#fips.InverseProblem.result">result (fips.InverseProblem property)</a>
 </li>
       <li><a href="reference/api/fips.Estimator.RMSE.html#fips.Estimator.RMSE">RMSE (fips.Estimator property)</a>
@@ -1239,6 +1262,12 @@
         <li><a href="reference/api/fips.estimators.BayesianSolver.S_hat.html#fips.estimators.BayesianSolver.S_hat">(fips.estimators.BayesianSolver property)</a>
 </li>
       </ul></li>
+      <li><a href="reference/api/fips.Estimator.S_hat_diagonal.html#fips.Estimator.S_hat_diagonal">S_hat_diagonal (fips.Estimator property)</a>
+
+      <ul>
+        <li><a href="reference/api/fips.estimators.BayesianSolver.S_hat_diagonal.html#fips.estimators.BayesianSolver.S_hat_diagonal">(fips.estimators.BayesianSolver property)</a>
+</li>
+      </ul></li>
       <li><a href="reference/api/fips.Estimator.S_y0.html#fips.Estimator.S_y0">S_y0 (fips.Estimator property)</a>
 </li>
       <li><a href="reference/api/fips.Estimator.S_z.html#fips.Estimator.S_z">S_z (fips.Estimator property)</a>
@@ -1265,6 +1294,8 @@
       </ul></li>
       <li><a href="reference/api/fips.base.SingleBlockMixin.html#fips.base.SingleBlockMixin">SingleBlockMixin (class in fips.base)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="reference/api/fips.covariance.KroneckerOperator.solve.html#fips.covariance.KroneckerOperator.solve">solve() (fips.covariance.KroneckerOperator method)</a>
 
       <ul>
@@ -1283,8 +1314,6 @@
         <li><a href="reference/api/fips.solve.html#fips.solve">(in module fips)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="reference/api/fips.operator.SparseOperator.html#fips.operator.SparseOperator">SparseOperator (class in fips.operator)</a>
 </li>
       <li><a href="reference/api/fips.ForwardOperator.state_index.html#fips.ForwardOperator.state_index">state_index (fips.ForwardOperator property)</a>
@@ -1465,6 +1494,18 @@
       </ul></li>
       <li><a href="reference/api/fips.Vector.html#fips.Vector">Vector (class in fips)</a>
 </li>
+  </ul></td>
+</tr></table>
+
+<h2 id="W">W</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="reference/api/fips.estimators.BayesianSolver.with_gamma.html#fips.estimators.BayesianSolver.with_gamma">with_gamma() (fips.estimators.BayesianSolver method)</a>
+
+      <ul>
+        <li><a href="reference/api/fips.Posterior.with_gamma.html#fips.Posterior.with_gamma">(fips.Posterior method)</a>
+</li>
+      </ul></li>
   </ul></td>
 </tr></table>
 

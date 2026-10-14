@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>User Guide &#8212; fips 0.1.0b10.dev56+g13ff038e6 documentation</title>
+    <title>User Guide &#8212; fips 0.1.0b10.dev57+g6f9d2299b documentation</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0" />
 
-    <script src="_static/documentation_options.js?v=00ee829f"></script>
+    <script src="_static/documentation_options.js?v=aad72aa2"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -135,8 +135,8 @@
       
     
     
-    <img src="_static/logo.png" class="logo__image only-light" alt="fips 0.1.0b10.dev56+g13ff038e6 documentation - Home"/>
-    <img src="_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.1.0b10.dev56+g13ff038e6 documentation - Home"/>
+    <img src="_static/logo.png" class="logo__image only-light" alt="fips 0.1.0b10.dev57+g6f9d2299b documentation - Home"/>
+    <img src="_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.1.0b10.dev57+g6f9d2299b documentation - Home"/>
   
   
 </a></div>
@@ -472,9 +472,10 @@
 <li><p><a class="reference internal" href="#data-model" id="id1">Data Model</a></p></li>
 <li><p><a class="reference internal" href="#constructing-covariance-matrices" id="id2">Constructing Covariance Matrices</a></p></li>
 <li><p><a class="reference internal" href="#sparse-matrices" id="id3">Sparse Matrices</a></p></li>
-<li><p><a class="reference internal" href="#domain-specific-problem-flux-inversion" id="id4">Domain-Specific Problem: Flux Inversion</a></p></li>
-<li><p><a class="reference internal" href="#advanced-subclassing-inverseproblem" id="id5">Advanced: Subclassing InverseProblem</a></p></li>
-<li><p><a class="reference internal" href="#advanced-inversion-pipelines" id="id6">Advanced: Inversion Pipelines</a></p></li>
+<li><p><a class="reference internal" href="#the-posterior" id="id4">The Posterior</a></p></li>
+<li><p><a class="reference internal" href="#domain-specific-problem-flux-inversion" id="id5">Domain-Specific Problem: Flux Inversion</a></p></li>
+<li><p><a class="reference internal" href="#advanced-subclassing-inverseproblem" id="id6">Advanced: Subclassing InverseProblem</a></p></li>
+<li><p><a class="reference internal" href="#advanced-inversion-pipelines" id="id7">Advanced: Inversion Pipelines</a></p></li>
 </ul>
 </nav>
 <section id="data-model">
@@ -659,12 +660,127 @@ sparse while it is mostly zeros, and is dense once more than a quarter of its
 entries are filled, since a dense solve is then faster. Solves divide by a
 diagonal, factor a sparse matrix with a sparse LU, and a dense one with
 Cholesky. A Kronecker prior error multiplies <span class="math notranslate nohighlight">\(H\)</span> through its factors, and
-solves through each factor’s Cholesky factorization. The outputs are dense
-whatever the inputs: the posterior covariance is a dense <span class="math notranslate nohighlight">\(n \times n\)</span>
-matrix (formed from the dense <span class="math notranslate nohighlight">\(S_0\)</span>), and the gain <span class="math notranslate nohighlight">\(n \times m\)</span>.</p>
+solves through each factor’s Cholesky factorization. The gain is a dense
+<span class="math notranslate nohighlight">\(n \times m\)</span> array whatever the inputs; the full posterior covariance is a
+dense <span class="math notranslate nohighlight">\(n \times n\)</span> matrix, formed only when it is read (see below).</p>
+</section>
+<section id="the-posterior">
+<h2><a class="toc-backref" href="#id4" role="doc-backlink">The Posterior</a><a class="headerlink" href="#the-posterior" title="Link to this heading">#</a></h2>
+<p><a class="reference internal" href="reference/api/fips.solve.html#fips.solve" title="fips.solve"><code class="xref py py-func docutils literal notranslate"><span class="pre">fips.solve()</span></code></a> returns a <a class="reference internal" href="reference/api/fips.Posterior.html#fips.Posterior" title="fips.Posterior"><code class="xref py py-class docutils literal notranslate"><span class="pre">Posterior</span></code></a>. The Bayesian solve
+whitens the problem once: it eigendecomposes an <span class="math notranslate nohighlight">\(m \times m\)</span> matrix
+built from <span class="math notranslate nohighlight">\(H S_0 H^T\)</span> and <span class="math notranslate nohighlight">\(S_z\)</span>, keeps the factors, and derives
+the estimate, the posterior variances, DOFS and the reduced chi-squared from
+them, without forming anything <span class="math notranslate nohighlight">\(n \times n\)</span>. The full posterior
+covariance (<code class="docutils literal notranslate"><span class="pre">post.covariance</span></code>) and averaging kernel
+(<code class="docutils literal notranslate"><span class="pre">post.averaging_kernel()</span></code>) are formed only when read.</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [20]: </span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+<span class="gp">In [21]: </span><span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+
+<span class="gp">In [22]: </span><span class="kn">import</span><span class="w"> </span><span class="nn">fips</span>
+
+<span class="gp">In [23]: </span><span class="kn">from</span><span class="w"> </span><span class="nn">fips</span><span class="w"> </span><span class="kn">import</span> <span class="n">ForwardOperator</span><span class="p">,</span> <span class="n">InverseProblem</span><span class="p">,</span> <span class="n">Matrix</span>
+
+<span class="gp">In [24]: </span><span class="kn">from</span><span class="w"> </span><span class="nn">fips.covariance</span><span class="w"> </span><span class="kn">import</span> <span class="n">KroneckerError</span>
+
+<span class="gp">In [25]: </span><span class="kn">from</span><span class="w"> </span><span class="nn">fips.kernels</span><span class="w"> </span><span class="kn">import</span> <span class="n">GridSpatialDecay</span><span class="p">,</span> <span class="n">GridTimeDecay</span>
+
+<span class="gp">In [26]: </span><span class="n">rng</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+<span class="gp">In [27]: </span><span class="n">times</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">date_range</span><span class="p">(</span><span class="s2">&quot;2024-01-01&quot;</span><span class="p">,</span> <span class="n">periods</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span> <span class="n">freq</span><span class="o">=</span><span class="s2">&quot;7D&quot;</span><span class="p">)</span>
+
+<span class="gp">In [28]: </span><span class="n">state</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">MultiIndex</span><span class="o">.</span><span class="n">from_product</span><span class="p">(</span>
+<span class="gp">   ....: </span>    <span class="p">[[</span><span class="s2">&quot;flux&quot;</span><span class="p">],</span> <span class="n">times</span><span class="p">,</span> <span class="p">[</span><span class="mf">40.5</span><span class="p">,</span> <span class="mf">40.6</span><span class="p">],</span> <span class="p">[</span><span class="o">-</span><span class="mf">112.0</span><span class="p">,</span> <span class="o">-</span><span class="mf">111.9</span><span class="p">]],</span>
+<span class="gp">   ....: </span>    <span class="n">names</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;block&quot;</span><span class="p">,</span> <span class="s2">&quot;time&quot;</span><span class="p">,</span> <span class="s2">&quot;lat&quot;</span><span class="p">,</span> <span class="s2">&quot;lon&quot;</span><span class="p">],</span>
+<span class="gp">   ....: </span><span class="p">)</span>
+<span class="gp">   ....: </span>
+
+<span class="gp">In [29]: </span><span class="n">obs</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">MultiIndex</span><span class="o">.</span><span class="n">from_product</span><span class="p">([[</span><span class="s2">&quot;conc&quot;</span><span class="p">],</span> <span class="nb">range</span><span class="p">(</span><span class="mi">15</span><span class="p">)],</span> <span class="n">names</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;block&quot;</span><span class="p">,</span> <span class="s2">&quot;obs_id&quot;</span><span class="p">])</span>
+
+<span class="gp">In [30]: </span><span class="n">H</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">rng</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="p">(</span><span class="mi">15</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">state</span><span class="p">))),</span> <span class="n">index</span><span class="o">=</span><span class="n">obs</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="n">state</span><span class="p">)</span>
+
+<span class="gp">In [31]: </span><span class="n">prior_error</span> <span class="o">=</span> <span class="n">KroneckerError</span><span class="p">(</span>
+<span class="gp">   ....: </span>    <span class="s2">&quot;prior_error&quot;</span><span class="p">,</span>
+<span class="gp">   ....: </span>    <span class="mf">0.25</span><span class="p">,</span>
+<span class="gp">   ....: </span>    <span class="p">[(</span><span class="s2">&quot;time&quot;</span><span class="p">,</span> <span class="n">GridTimeDecay</span><span class="p">(</span><span class="s2">&quot;14D&quot;</span><span class="p">)),</span> <span class="p">([</span><span class="s2">&quot;lat&quot;</span><span class="p">,</span> <span class="s2">&quot;lon&quot;</span><span class="p">],</span> <span class="n">GridSpatialDecay</span><span class="p">(</span><span class="s2">&quot;lat&quot;</span><span class="p">,</span> <span class="s2">&quot;lon&quot;</span><span class="p">,</span> <span class="mf">10.0</span><span class="p">))],</span>
+<span class="gp">   ....: </span><span class="p">)</span><span class="o">.</span><span class="n">operator</span><span class="p">(</span><span class="n">state</span><span class="p">)</span>
+<span class="gp">   ....: </span>
+
+<span class="gp">In [32]: </span><span class="n">problem</span> <span class="o">=</span> <span class="n">InverseProblem</span><span class="p">(</span>
+<span class="gp">   ....: </span>    <span class="n">obs</span><span class="o">=</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">rng</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mf">3.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mi">15</span><span class="p">),</span> <span class="n">index</span><span class="o">=</span><span class="n">obs</span><span class="p">),</span>
+<span class="gp">   ....: </span>    <span class="n">prior</span><span class="o">=</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">state</span><span class="p">),</span>
+<span class="gp">   ....: </span>    <span class="n">forward_operator</span><span class="o">=</span><span class="n">H</span><span class="p">,</span>
+<span class="gp">   ....: </span>    <span class="n">prior_error</span><span class="o">=</span><span class="n">prior_error</span><span class="p">,</span>
+<span class="gp">   ....: </span>    <span class="n">modeldata_mismatch</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
+<span class="gp">   ....: </span><span class="p">)</span>
+<span class="gp">   ....: </span>
+
+<span class="gp">In [33]: </span><span class="n">post</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">problem</span><span class="p">)</span>
+
+<span class="gp">In [34]: </span><span class="n">post</span><span class="o">.</span><span class="n">variances</span><span class="o">.</span><span class="n">to_series</span><span class="p">()</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+<span class="gh">Out[34]: </span>
+<span class="go">block  time        lat   lon   </span>
+<span class="go">flux   2024-01-01  40.5  -112.0    0.141587</span>
+<span class="go">                         -111.9    0.135547</span>
+<span class="go">                   40.6  -112.0    0.103495</span>
+<span class="go">                         -111.9    0.117122</span>
+<span class="go">       2024-01-08  40.5  -112.0    0.117855</span>
+<span class="go">Name: posterior_variance, dtype: float64</span>
+</pre></div>
+</div>
+<p>An aggregation turns the state into a few totals or means: a <a class="reference internal" href="reference/api/fips.Matrix.html#fips.Matrix" title="fips.Matrix"><code class="xref py py-class docutils literal notranslate"><span class="pre">Matrix</span></code></a>
+with one row per aggregate and the state index as its columns (<code class="docutils literal notranslate"><span class="pre">1</span></code> for a
+sum, <code class="docutils literal notranslate"><span class="pre">1/count</span></code> for a mean). <code class="docutils literal notranslate"><span class="pre">post.cov(W)</span></code> is the posterior covariance of
+the aggregates, <span class="math notranslate nohighlight">\(W \hat{S} W^T\)</span>, and <code class="docutils literal notranslate"><span class="pre">post.averaging_kernel(W)</span></code> their
+averaging kernel, <span class="math notranslate nohighlight">\(W A W^*\)</span> with <span class="math notranslate nohighlight">\(W^*\)</span> the pseudo-inverse of
+<span class="math notranslate nohighlight">\(W\)</span>; neither forms the <span class="math notranslate nohighlight">\(n \times n\)</span> matrices. Here, the total
+flux of each week:</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [35]: </span><span class="n">weeks</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">MultiIndex</span><span class="o">.</span><span class="n">from_product</span><span class="p">([[</span><span class="s2">&quot;total&quot;</span><span class="p">],</span> <span class="n">times</span><span class="p">],</span> <span class="n">names</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;block&quot;</span><span class="p">,</span> <span class="s2">&quot;week&quot;</span><span class="p">])</span>
+
+<span class="gp">In [36]: </span><span class="n">W</span> <span class="o">=</span> <span class="n">Matrix</span><span class="p">(</span>
+<span class="gp">   ....: </span>    <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
+<span class="gp">   ....: </span>        <span class="p">(</span><span class="n">state</span><span class="o">.</span><span class="n">get_level_values</span><span class="p">(</span><span class="s2">&quot;time&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span> <span class="o">==</span> <span class="n">times</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()[:,</span> <span class="kc">None</span><span class="p">])</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">),</span>
+<span class="gp">   ....: </span>        <span class="n">index</span><span class="o">=</span><span class="n">weeks</span><span class="p">,</span>
+<span class="gp">   ....: </span>        <span class="n">columns</span><span class="o">=</span><span class="n">state</span><span class="p">,</span>
+<span class="gp">   ....: </span>    <span class="p">)</span>
+<span class="gp">   ....: </span><span class="p">)</span>
+<span class="gp">   ....: </span>
+
+<span class="gp">In [37]: </span><span class="n">post</span><span class="o">.</span><span class="n">cov</span><span class="p">(</span><span class="n">W</span><span class="p">)</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
+<span class="gh">Out[37]: </span>
+<span class="go">block                 total             ...                      </span>
+<span class="go">week             2024-01-01 2024-01-08  ... 2024-01-29 2024-02-05</span>
+<span class="go">block week                              ...                      </span>
+<span class="go">total 2024-01-01     0.6497     0.1096  ...    -0.2091    -0.2697</span>
+<span class="go">      2024-01-08     0.1096     0.5943  ...    -0.2552    -0.1957</span>
+<span class="go">      2024-01-15    -0.0965    -0.0078  ...    -0.2423    -0.2615</span>
+<span class="go">      2024-01-22    -0.1685    -0.2140  ...    -0.0270    -0.2578</span>
+<span class="go">      2024-01-29    -0.2091    -0.2552  ...     0.6518     0.0829</span>
+<span class="go">      2024-02-05    -0.2697    -0.1957  ...     0.0829     0.9425</span>
+
+<span class="go">[6 rows x 6 columns]</span>
+
+<span class="gp">In [38]: </span><span class="n">post</span><span class="o">.</span><span class="n">averaging_kernel</span><span class="p">(</span><span class="n">W</span><span class="p">)</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span><span class="o">.</span><span class="n">diagonal</span><span class="p">()</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="gh">Out[38]: </span><span class="go">array([0.54 , 0.408, 0.349, 0.32 , 0.324, 0.296])</span>
+</pre></div>
+</div>
+<p>The factors do not depend on the regularization factor <code class="docutils literal notranslate"><span class="pre">gamma</span></code>, so
+<code class="docutils literal notranslate"><span class="pre">post.with_gamma(0.5)</span></code> is the posterior of <code class="docutils literal notranslate"><span class="pre">fips.solve(problem,</span> <span class="pre">gamma=0.5)</span></code>
+at the cost of a few products, not a new solve. A sweep over gamma factors
+once:</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [39]: </span><span class="k">for</span> <span class="n">gamma</span> <span class="ow">in</span> <span class="p">(</span><span class="mf">0.25</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">):</span>
+<span class="gp">   ....: </span>    <span class="n">p</span> <span class="o">=</span> <span class="n">post</span><span class="o">.</span><span class="n">with_gamma</span><span class="p">(</span><span class="n">gamma</span><span class="p">)</span>
+<span class="gp">   ....: </span>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;gamma </span><span class="si">{</span><span class="n">gamma</span><span class="si">}</span><span class="s2">: DOFS </span><span class="si">{</span><span class="n">p</span><span class="o">.</span><span class="n">dofs</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">, reduced chi2 </span><span class="si">{</span><span class="n">p</span><span class="o">.</span><span class="n">reduced_chi2</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="gp">   ....: </span>
+<span class="go">gamma 0.25: DOFS 3.10, reduced chi2 0.98</span>
+<span class="go">gamma 0.5: DOFS 4.39, reduced chi2 1.22</span>
+<span class="go">gamma 1.0: DOFS 5.98, reduced chi2 1.57</span>
+<span class="go">gamma 2.0: DOFS 7.68, reduced chi2 2.04</span>
+</pre></div>
+</div>
 </section>
 <section id="domain-specific-problem-flux-inversion">
-<span id="flux-inversion"></span><h2><a class="toc-backref" href="#id4" role="doc-backlink">Domain-Specific Problem: Flux Inversion</a><a class="headerlink" href="#domain-specific-problem-flux-inversion" title="Link to this heading">#</a></h2>
+<span id="flux-inversion"></span><h2><a class="toc-backref" href="#id5" role="doc-backlink">Domain-Specific Problem: Flux Inversion</a><a class="headerlink" href="#domain-specific-problem-flux-inversion" title="Link to this heading">#</a></h2>
 <p><a class="reference internal" href="reference/api/fips.problems.flux.FluxProblem.html#fips.problems.flux.FluxProblem" title="fips.problems.flux.FluxProblem"><code class="xref py py-class docutils literal notranslate"><span class="pre">FluxProblem</span></code></a> is a ready-made subclass of
 <a class="reference internal" href="reference/api/fips.InverseProblem.html#fips.InverseProblem" title="fips.InverseProblem"><code class="xref py py-class docutils literal notranslate"><span class="pre">InverseProblem</span></code></a> for atmospheric flux estimation using STILT
 transport footprints.  It adds named accessors that speak the language of the
@@ -721,7 +837,7 @@ observations and the prior to match.</p>
 </div>
 </section>
 <section id="advanced-subclassing-inverseproblem">
-<h2><a class="toc-backref" href="#id5" role="doc-backlink">Advanced: Subclassing InverseProblem</a><a class="headerlink" href="#advanced-subclassing-inverseproblem" title="Link to this heading">#</a></h2>
+<h2><a class="toc-backref" href="#id6" role="doc-backlink">Advanced: Subclassing InverseProblem</a><a class="headerlink" href="#advanced-subclassing-inverseproblem" title="Link to this heading">#</a></h2>
 <p>For full control, subclass <a class="reference internal" href="reference/api/fips.InverseProblem.html#fips.InverseProblem" title="fips.InverseProblem"><code class="xref py py-class docutils literal notranslate"><span class="pre">InverseProblem</span></code></a> directly to add
 domain-specific accessors, pre- or post-processing, or alternative solve
 strategies:</p>
@@ -748,7 +864,7 @@ strategies:</p>
 for what you access.</p>
 </section>
 <section id="advanced-inversion-pipelines">
-<h2><a class="toc-backref" href="#id6" role="doc-backlink">Advanced: Inversion Pipelines</a><a class="headerlink" href="#advanced-inversion-pipelines" title="Link to this heading">#</a></h2>
+<h2><a class="toc-backref" href="#id7" role="doc-backlink">Advanced: Inversion Pipelines</a><a class="headerlink" href="#advanced-inversion-pipelines" title="Link to this heading">#</a></h2>
 <p><a class="reference internal" href="reference/api/fips.InversionPipeline.html#fips.InversionPipeline" title="fips.pipeline.InversionPipeline"><code class="xref py py-class docutils literal notranslate"><span class="pre">InversionPipeline</span></code></a> provides a structured, reproducible
 workflow.  Subclass it, implement the abstract hooks, then call
 <code class="xref py py-meth docutils literal notranslate"><span class="pre">run()</span></code>:</p>
@@ -878,6 +994,7 @@ summary reporting) so you only need to supply your data loaders.</p>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#data-model">Data Model</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#constructing-covariance-matrices">Constructing Covariance Matrices</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sparse-matrices">Sparse Matrices</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-posterior">The Posterior</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#domain-specific-problem-flux-inversion">Domain-Specific Problem: Flux Inversion</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#advanced-subclassing-inverseproblem">Advanced: Subclassing InverseProblem</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#advanced-inversion-pipelines">Advanced: Inversion Pipelines</a></li>

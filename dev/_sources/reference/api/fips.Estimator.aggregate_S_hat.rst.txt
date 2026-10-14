@@ -1,0 +1,6 @@
+fips.Estimator.aggregate\_S\_hat
+================================
+
+.. currentmodule:: fips
+
+.. automethod:: Estimator.aggregate_S_hat

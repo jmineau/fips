@@ -1,0 +1,6 @@
+fips.estimators.BayesianSolver.aggregate\_S\_hat
+================================================
+
+.. currentmodule:: fips.estimators
+
+.. automethod:: BayesianSolver.aggregate_S_hat

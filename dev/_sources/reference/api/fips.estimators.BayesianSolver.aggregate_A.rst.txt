@@ -1,0 +1,6 @@
+fips.estimators.BayesianSolver.aggregate\_A
+===========================================
+
+.. currentmodule:: fips.estimators
+
+.. automethod:: BayesianSolver.aggregate_A

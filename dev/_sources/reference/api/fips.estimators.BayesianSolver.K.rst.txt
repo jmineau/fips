@@ -1,0 +1,6 @@
+fips.estimators.BayesianSolver.K
+================================
+
+.. currentmodule:: fips.estimators
+
+.. autoproperty:: BayesianSolver.K

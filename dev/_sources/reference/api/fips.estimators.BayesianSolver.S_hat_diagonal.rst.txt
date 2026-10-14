@@ -1,0 +1,6 @@
+fips.estimators.BayesianSolver.S\_hat\_diagonal
+===============================================
+
+.. currentmodule:: fips.estimators
+
+.. autoproperty:: BayesianSolver.S_hat_diagonal
