@@ -180,7 +180,11 @@ From `fips.__init__`:
   `DenseOperator` (no copy), `SparseOperator` (CSR) or `DiagonalOperator`, built
   on each access. Products and sums keep the cheapest exact form (the rule is in
   `operator.py`'s docstring). The tests are the eight dense/sparse combinations
-  in `tests/test_operator.py` and the oracle's sparse closed form.
+  in `tests/test_operator.py` and the oracle's sparse closed form. The
+  estimator keeps its matrices as operators under private names (`_H_op`,
+  `_S_0_op`, `_S_z_op`, `_S_z_orig_op`) and computes only with those; its
+  public `H`, `S_0` and `S_z` give an array (read-only) or a CSR matrix, as
+  before operators, so never compute with them inside the estimator.
 - **`Pickleable` contract.** Anything user-facing should round-trip through
   pickle. New stateful classes should inherit from `Pickleable` (in `base.py`)
   or document why not.

@@ -69,13 +69,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - **The estimator computes with operators.** `fips.solve` hands it each
-  matrix's `operator` instead of `.values`, and `Estimator.H`, `S_0` and `S_z`
-  hold `Operator`s (`np.asarray(estimator.H)` gives the array; `@`, `.T`,
-  `.shape`, `.dtype` and NumPy functions work as before). The estimator still
-  takes arrays and SciPy sparse matrices. Results are unchanged: for dense
-  inputs and for a sparse forward operator with dense covariances every output
-  is bit for bit what it was. A pickled estimator stores the matrices as
-  arrays, as before, so pickles read both ways.
+  matrix's `operator` instead of `.values`, and the estimator keeps them as
+  operators under private names. `Estimator.H`, `S_0` and `S_z` give what they
+  gave before: an array, or a CSR matrix for a sparse input; the array is now
+  read-only, so an edit cannot change the estimator's later outputs. The
+  estimator still takes arrays and SciPy sparse matrices. Results are
+  unchanged: for dense inputs and for a sparse forward operator with dense
+  covariances every output is bit for bit what it was. A pickled estimator
+  stores the matrices as arrays, as before, so pickles read both ways.
+  ([#79](https://github.com/jmineau/fips/issues/79))
+- Integer-valued structures compute in float64: `Matrix + Matrix`,
+  `CovarianceMatrix.variances` and `convolve` give float64 for integer data
+  (they kept the integer dtype), as the solve always did.
   ([#79](https://github.com/jmineau/fips/issues/79))
 - The sum of two sparse `Matrix` (or `CovarianceMatrix`, ...) objects is
   sparse; it was densified. A sum with a dense side is dense, as before.

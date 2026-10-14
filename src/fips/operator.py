@@ -20,7 +20,7 @@ Each is a :class:`scipy.sparse.linalg.LinearOperator`, so ``matvec``,
   :meth:`~Operator.to_frame`, and :meth:`~Operator.solve` for a symmetric
   positive-definite operator, each done the way its form makes cheap.
 - ``np.asarray(A)`` is :meth:`~Operator.dense`, so NumPy functions take an
-  operator as its matrix.
+  operator as its matrix; ``np.array(A)`` is a copy, as for an array.
 
 The operators are real (float64) and pickle with the standard protocol.
 """
@@ -32,7 +32,8 @@ import numpy as np
 import numpy.typing as npt
 import pandas as pd
 import scipy.sparse as sp
-from scipy.linalg import LinAlgError, solve
+from numpy.linalg import LinAlgError
+from scipy.linalg import solve
 from scipy.sparse.linalg import LinearOperator, splu
 
 from fips._sparse import frame_from_spmatrix
@@ -203,7 +204,8 @@ class Operator(LinearOperator):
         :class:`~numpy.linalg.LinAlgError` on a zero. A sparse one uses SuperLU
         (:func:`scipy.sparse.linalg.splu`): SciPy has no sparse Cholesky, and
         LU keeps the factors sparse, solves every column of `B` with one
-        factorization, and does not need positive-definiteness.
+        factorization, and does not need positive-definiteness. A singular
+        operator raises :class:`~numpy.linalg.LinAlgError` in every form.
 
         Parameters
         ----------
@@ -245,9 +247,25 @@ class Operator(LinearOperator):
         return frame_from_spmatrix(sp.csr_matrix(csr), index, columns)
 
     def __array__(self, dtype=None, copy=None) -> np.ndarray:
-        """Return :meth:`dense`, so NumPy functions take an operator as its matrix."""
+        """
+        Return :meth:`dense`, so NumPy functions take an operator as its matrix.
+
+        `copy` follows NumPy's protocol: ``np.array(op)`` (``copy=True``) never
+        shares memory with the operator, while ``np.asarray(op)`` gives a
+        :class:`DenseOperator`'s own array. Every other form builds a new
+        array either way.
+        """
         a = self.dense()
-        return a if dtype is None else a.astype(dtype)
+        if dtype is not None and np.dtype(dtype) != a.dtype:
+            if copy is False:
+                raise ValueError(
+                    f"An operator is float64: converting it to {np.dtype(dtype)} "
+                    "needs a copy."
+                )
+            return a.astype(dtype)
+        if copy and isinstance(self, DenseOperator):
+            return a.copy()
+        return a
 
     def dot(self, x):
         """
@@ -267,30 +285,30 @@ class Operator(LinearOperator):
         """
         if isinstance(x, Operator) or sp.issparse(x):
             return _product(self, as_operator(x))
-        if np.isscalar(x):
-            return self._elementwise(lambda a: a * x)
+        if np.ndim(x) == 0:  # a scalar, or a 0-d array
+            return self._elementwise(lambda a: a * float(x))
         return super().dot(x)
 
     def __rmatmul__(self, other):
         """Return ``other @ self``."""
         if isinstance(other, Operator) or sp.issparse(other):
             return _product(as_operator(other), self)
-        if np.isscalar(other):
+        if np.ndim(other) == 0:
             raise ValueError("Scalar operands are not allowed, use '*' instead")
         return self._rmatmul_array(np.asarray(other))
 
     def __rmul__(self, x):
         """Return ``x * self`` for a scalar, else ``x @ self``."""
-        if np.isscalar(x):
-            return self._elementwise(lambda a: x * a)
+        if np.ndim(x) == 0:  # a scalar, or a 0-d array
+            return self._elementwise(lambda a: float(x) * a)
         return self.__rmatmul__(x)
 
     # Returns an Operator, not SciPy's private class (see _transpose)
     def __truediv__(self, other):  # pyrefly: ignore[bad-override]
         """Return the operator divided by a scalar."""
-        if not np.isscalar(other):
+        if np.ndim(other) != 0:  # a scalar, or a 0-d array
             raise ValueError("Can only divide an operator by a scalar.")
-        return self._elementwise(lambda a: a / other)
+        return self._elementwise(lambda a: a / float(other))
 
     # Returns an Operator, not SciPy's private class (see _transpose)
     def __neg__(self):  # pyrefly: ignore[bad-override]
@@ -448,7 +466,13 @@ class SparseOperator(Operator):
         # SciPy has no sparse Cholesky (CHOLMOD is in scikit-sparse, not a
         # dependency). SuperLU keeps the factors sparse, and an LU does not
         # need the matrix to be positive-definite.
-        return splu(sp.csc_matrix(self.matrix)).solve(_as_array(B))
+        try:
+            lu = splu(sp.csc_matrix(self.matrix))
+        except RuntimeError as err:  # SuperLU's "Factor is exactly singular"
+            raise LinAlgError(
+                f"The sparse matrix is singular: its LU factorization failed ({err})."
+            ) from err
+        return lu.solve(_as_array(B))
 
 
 class DiagonalOperator(Operator):
