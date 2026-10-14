@@ -1,0 +1,6 @@
+fips.Posterior.obs\_index
+=========================
+
+.. currentmodule:: fips
+
+.. autoattribute:: Posterior.obs_index

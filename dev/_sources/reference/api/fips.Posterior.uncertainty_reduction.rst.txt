@@ -1,0 +1,6 @@
+fips.Posterior.uncertainty\_reduction
+=====================================
+
+.. currentmodule:: fips
+
+.. autoproperty:: Posterior.uncertainty_reduction

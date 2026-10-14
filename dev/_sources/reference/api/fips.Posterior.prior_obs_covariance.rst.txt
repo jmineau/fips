@@ -1,0 +1,6 @@
+fips.Posterior.prior\_obs\_covariance
+=====================================
+
+.. currentmodule:: fips
+
+.. autoproperty:: Posterior.prior_obs_covariance

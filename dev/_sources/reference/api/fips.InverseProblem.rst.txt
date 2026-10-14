@@ -33,6 +33,7 @@
    ~InverseProblem.prior_error
    ~InverseProblem.prior_obs
    ~InverseProblem.prior_obs_error
+   ~InverseProblem.result
    ~InverseProblem.state_index
 
 

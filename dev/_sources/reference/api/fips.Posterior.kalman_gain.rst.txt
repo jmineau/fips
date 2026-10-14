@@ -1,0 +1,6 @@
+fips.Posterior.kalman\_gain
+===========================
+
+.. currentmodule:: fips
+
+.. autoproperty:: Posterior.kalman_gain

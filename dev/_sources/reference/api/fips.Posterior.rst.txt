@@ -1,0 +1,47 @@
+﻿fips.Posterior
+==============
+
+.. currentmodule:: fips
+
+.. autoclass:: Posterior
+   :no-members:
+   :show-inheritance:
+
+
+
+
+.. rubric:: Attributes
+
+.. autosummary::
+   :toctree:
+
+   ~Posterior.averaging_kernel
+   ~Posterior.covariance
+   ~Posterior.desroziers
+   ~Posterior.dofs
+   ~Posterior.estimate
+   ~Posterior.estimator
+   ~Posterior.kalman_gain
+   ~Posterior.mean
+   ~Posterior.modeled_obs
+   ~Posterior.obs_index
+   ~Posterior.prior_modeled_obs
+   ~Posterior.prior_obs_covariance
+   ~Posterior.r2
+   ~Posterior.reduced_chi2
+   ~Posterior.rmse
+   ~Posterior.state_index
+   ~Posterior.uncertainty_reduction
+   ~Posterior.variances
+
+
+
+
+
+
+.. rubric:: Inherited
+
+
+From :class:`~.Pickleable`: :py:obj:`~.Pickleable.from_file`, :py:obj:`~.Pickleable.to_file`
+
+

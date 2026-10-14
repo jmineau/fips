@@ -1,0 +1,6 @@
+﻿fips.Posterior.from\_file
+=========================
+
+.. currentmodule:: fips
+
+.. automethod:: Posterior.from_file

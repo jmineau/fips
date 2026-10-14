@@ -1,0 +1,6 @@
+fips.Posterior.prior\_modeled\_obs
+==================================
+
+.. currentmodule:: fips
+
+.. autoproperty:: Posterior.prior_modeled_obs

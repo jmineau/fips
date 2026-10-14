@@ -1,0 +1,6 @@
+fips.Posterior.averaging\_kernel
+================================
+
+.. currentmodule:: fips
+
+.. autoproperty:: Posterior.averaging_kernel

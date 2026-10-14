@@ -1,0 +1,6 @@
+fips.Posterior.desroziers
+=========================
+
+.. currentmodule:: fips
+
+.. autoproperty:: Posterior.desroziers
