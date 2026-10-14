@@ -347,6 +347,7 @@ class Matrix(MultiBlockMixin, Structure2D):
             Sum of the two Matrix instances. It has the name of the two when
             they have the same one, and no name otherwise (``name`` is None), as
             the sum of two pandas Series does. A sum with a scalar has no name.
+            The sum of two sparse matrices is sparse; any other sum is dense.
         """
         Klass = type(self)
         if isinstance(other, Klass):
@@ -354,18 +355,11 @@ class Matrix(MultiBlockMixin, Structure2D):
                 other.columns
             ):
                 raise ValueError("Indices and columns must match for addition.")
-            # Densify both sides before adding; sparsity is not preserved through
-            # arbitrary addition (fill positions become non-zero).
-            # pandas-stubs do not type DataFrame.sparse
-            # pyrefly: ignore[missing-attribute]
-            a = self.data.sparse.to_dense() if self.is_sparse else self.data
-            # pyrefly: ignore[missing-attribute]
-            b = other.data.sparse.to_dense() if other.is_sparse else other.data
+            # The sum of two sparse matrices stays sparse; with a dense side it is dense
+            total = self.operator + other.operator
             return Klass(
-                a.values + b.values,
+                total.to_frame(self.index, self.columns),
                 name=self.name if self.name == other.name else None,
-                index=self.index,
-                columns=self.columns,
             )
         elif np.isscalar(other):
             # pandas-stubs do not type DataFrame.sparse

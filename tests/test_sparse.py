@@ -132,13 +132,26 @@ class TestSparseMatrix:
         assert np.allclose(result.values, 2 * np.eye(4))
 
     def test_add_sparse_and_sparse(self):
-        """Test adding two sparse matrices together."""
+        """The sum of two sparse matrices is sparse (#79)."""
         idx = _state_idx()
         block = _make_block(np.eye(4), "s", "s", idx, idx)
         Ms1 = Matrix([block], sparse=True)
         Ms2 = Matrix([block], sparse=True)
         result = Ms1 + Ms2
-        assert np.allclose(result.values, 2 * np.eye(4))
+        assert result.is_sparse
+        assert np.allclose(result.to_dense().values, 2 * np.eye(4))
+        assert result.index.equals(Ms1.index) and result.columns.equals(Ms1.columns)
+
+    def test_add_sparse_and_sparse_off_diagonal(self):
+        """A sparse sum with off-diagonal entries stays sparse and equals the dense sum."""
+        idx = _state_idx()
+        a = np.array([[1.0, 0, 0, 2], [0, 1, 0, 0], [0, 0, 1, 0], [2, 0, 0, 1]])
+        b = np.array([[1.0, 3, 0, 0], [3, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]])
+        Ma = Matrix([_make_block(a, "s", "s", idx, idx)], sparse=True)
+        Mb = Matrix([_make_block(b, "s", "s", idx, idx)], sparse=True)
+        result = Ma + Mb
+        assert result.is_sparse
+        np.testing.assert_array_equal(result.to_dense().values, a + b)
 
     def test_scale_preserves_sparsity(self):
         """Test that scaling a sparse matrix preserves sparsity."""
@@ -258,6 +271,54 @@ class TestSparseCovarianceBuilder:
         df = builder.build(midx, sparse=True)
         assert any(isinstance(dt, pd.SparseDtype) for dt in df.dtypes)
         assert np.allclose(np.diag(df.sparse.to_dense().to_numpy()), 2.0)
+
+
+# ---------------------------------------------------------------------------
+# CovarianceMatrix methods on sparse data (#79)
+# ---------------------------------------------------------------------------
+
+
+class TestSparseCovarianceMethods:
+    """``variances`` and ``force_symmetry`` work on a sparse covariance and keep it sparse."""
+
+    @staticmethod
+    def asymmetric():
+        """A sparse covariance whose two triangles differ by roundoff and more."""
+        idx = pd.MultiIndex.from_product([["s"], range(4)], names=["block", "cell"])
+        A = np.array(
+            [
+                [2.0, 0.5, 0, 0],
+                [0.5 + 1e-12, 3.0, 0, 0.2],
+                [0, 0, 1.0, 0],
+                [0, 0.3, 0, 4.0],
+            ]
+        )
+        return A, CovarianceMatrix(pd.DataFrame(A, index=idx, columns=idx), sparse=True)
+
+    def test_variances(self):
+        """``variances`` reads the diagonal of a sparse covariance."""
+        A, S = self.asymmetric()
+        assert S.is_sparse
+        np.testing.assert_array_equal(S.variances.values, np.diag(A))
+        assert S.variances.index.equals(S.index)
+
+    @pytest.mark.parametrize("keep", ["lower", "upper"])
+    def test_force_symmetry(self, keep):
+        """``force_symmetry`` on sparse data equals the dense result and stays sparse."""
+        A, S = self.asymmetric()
+        dense = S.to_dense().force_symmetry(keep=keep)
+        sym = S.force_symmetry(keep=keep)
+        assert sym.is_sparse
+        assert sym.name == S.name
+        assert sym.index.equals(S.index) and sym.columns.equals(S.columns)
+        np.testing.assert_array_equal(sym.to_dense().values, dense.values)
+        np.testing.assert_array_equal(sym.to_dense().values, sym.to_dense().values.T)
+
+    def test_force_symmetry_invalid_keep(self):
+        """An unknown ``keep`` raises on sparse data too."""
+        _, S = self.asymmetric()
+        with pytest.raises(ValueError, match="keep"):
+            S.force_symmetry(keep="both")
 
 
 # ---------------------------------------------------------------------------

@@ -42,6 +42,9 @@ src/fips/
   covariance.py      CovarianceMatrix — Matrix subclass; kernel-driven build,
                      sparse (csr_matrix) + joblib-parallel construction
   operators.py       ForwardOperator (Matrix subclass), convolve(state, H)
+  operator.py        Operator (scipy LinearOperator) and its forms: Dense-,
+                     Sparse-, DiagonalOperator; as_operator, dottest. What
+                     the estimators compute with (Structure2D.operator)
   estimators.py      Estimator ABC, ESTIMATOR_REGISTRY, available_estimators()
   problem.py         InverseProblem — top-level orchestrator that combines
                      obs, prior, H, S_0, S_z; solve(problem) fits an
@@ -104,8 +107,8 @@ From `fips.__init__`:
    block-structured Jacobian together.
 3. **Build covariances.** `CovarianceMatrix` can be hand-built from arrays
    or composed from `kernels.py` (exponential decay, time decay, etc.).
-   Use sparse (`csr_matrix`) when blocks are large; the package supports it
-   throughout.
+   Use sparse storage when blocks are large: `H`, `S_0` and `S_z` may each be
+   dense or sparse, and the solve keeps each in its form (see "Sparse paths").
 4. **Hand everything to `InverseProblem`.** It validates index alignment;
    `fips.solve(problem)` picks an estimator from `ESTIMATOR_REGISTRY` and
    returns a `Posterior` (estimate, covariance, diagnostics such as
@@ -173,7 +176,17 @@ From `fips.__init__`:
   fixes the regression; drop it when the minimum pandas has the fix.
 - **Sparse paths.** `CovarianceMatrix` and large operators may be sparse.
   Don't densify in helpers without a sparse fallback — flux-scale problems
-  are GB-class.
+  are GB-class. Compute with `Structure2D.operator`, not `.values`: it gives a
+  `DenseOperator` (the frame's array, no copy), a `SparseOperator` (SciPy CSR)
+  or, for a sparse matrix stored on its diagonal only, a `DiagonalOperator`,
+  and it is built on each access (no cache to go stale after `inplace=True`).
+  Products and sums keep the cheapest exact form (`operator.py`'s module
+  docstring has the rule; a product of two sparse operators turns dense past
+  a quarter filled). The estimator holds `H`, `S_0`, `S_z` as operators and
+  never forms a dense copy of a sparse input except where the result is dense
+  anyway (`S_hat`, `K`, `A`, `S_y0` are dense arrays). The tests that hold this
+  are the eight dense/sparse combinations in `tests/test_operator.py` and the
+  sparse half of the oracle's closed-form test.
 - **`Pickleable` contract.** Anything user-facing should round-trip through
   pickle. New stateful classes should inherit from `Pickleable` (in `base.py`)
   or document why not.
@@ -418,6 +431,14 @@ covariance). See README "Multi-block" example.
   show. pyrefly types `DataFrame.columns` as `Index[str]`, so it calls the
   `str(col)` in `plot_comparison` an unnecessary conversion, but a column label
   is an integer when a Series has no name: keep the `str()`.
+- **SciPy is not annotated, so pyrefly infers the return type of each
+  `LinearOperator` default** (a private class such as
+  `_TransposedLinearOperator`) and calls an override that returns an
+  `Operator` a `bad-override`; it also reads a sparse matrix's `shape` as
+  possibly `None` (its initial value). `operator.py` marks those four lines
+  (`_transpose`, `__truediv__`, `__neg__`, and `shape` in `SparseOperator`)
+  with `# pyrefly: ignore[...]` and the reason. A new form that only overrides
+  `_transpose` needs none, since the base declares it to return `Operator`.
 - **pyrefly (1.3.2) reads `type[X]` written inside a base class's arguments as
   `type[Any]`**: after `class R(dict[str, type[E]])` a lookup in `R()` is
   `type[Any]`, though `typing.Type[E]` or an alias of `type[E]` gives
@@ -432,7 +453,8 @@ covariance). See README "Multi-block" example.
   `Posterior`, and rebuilds the posterior on load, so a pickle reads the same
   with or without `posterior.py`. A `Posterior` pickles the estimator and the
   two indexes only; its labeled outputs are rebuilt when asked for.
-- Covariance solves in `estimators.py` go through `_solve_psd(A, B)`, **not**
+- Covariance solves go through `Operator.solve`, whose dense form is
+  `_solve_psd(A, B)` (in `operator.py`), **not**
   `scipy.linalg.solve(..., assume_a="pos")` directly. `A = H S_0 H^T + S_z` is
   PD in exact arithmetic, but when it is ill-conditioned (wide eigenvalue
   spread, `H S_0 H^T` large relative to `S_z`) roundoff can tip it numerically
@@ -442,4 +464,6 @@ covariance). See README "Multi-block" example.
   surfaced as a near-low-rank `S_0` from a smooth temporal prior, which blocked
   sub-yearly flux inversions). `_solve_psd` keeps the fast Cholesky path and
   falls back to a symmetric `LDL^T` solve (`assume_a="sym"`) with a warning. Use
-  it for any new covariance-like Cholesky solve here.
+  it for any new covariance-like Cholesky solve here. A sparse operator solves
+  with SuperLU (`splu`): SciPy has no sparse Cholesky, and an LU needs no
+  positive-definiteness, so the same roundoff does not stop it.

@@ -51,8 +51,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#82](https://github.com/jmineau/fips/issues/82),
   [#12](https://github.com/jmineau/fips/issues/12))
 
+- **Linear operators** (`fips.operator`): `DenseOperator`, `SparseOperator`
+  and `DiagonalOperator`, subclasses of SciPy's `LinearOperator` (`matvec`,
+  `rmatvec`, `matmat`, `.T`), with `dense()`, `diagonal()`, `trace()`,
+  `to_frame(index, columns)` and `solve(B)` for a symmetric positive-definite
+  operator (Cholesky with the `LDL^T` fallback for a dense one, a division for
+  a diagonal one, a sparse LU for a sparse one). `A @ B` of two operators keeps
+  the cheapest exact form (a diagonal times a sparse matrix stays sparse; a
+  dense side makes it dense), and so do `+`, `-` and a scalar `*` or `/`.
+  `as_operator(x)` wraps an array, a SciPy sparse matrix or a structure, and
+  `dottest(op)` checks that `rmatvec` is the adjoint of `matvec`. Every 2D
+  structure has a read-only `operator` property: its data as an operator,
+  without a dense copy of a sparse frame, and a `DiagonalOperator` for a sparse
+  diagonal such as `CovarianceMatrix.diagonal(..., sparse=True)`.
+  ([#82](https://github.com/jmineau/fips/issues/82))
+
 ### Changed
 
+- **The estimator computes with operators.** `fips.solve` hands it each
+  matrix's `operator` instead of `.values`, and `Estimator.H`, `S_0` and `S_z`
+  hold `Operator`s (`np.asarray(estimator.H)` gives the array; `@`, `.T`,
+  `.shape`, `.dtype` and NumPy functions work as before). The estimator still
+  takes arrays and SciPy sparse matrices. Results are unchanged: for dense
+  inputs and for a sparse forward operator with dense covariances every output
+  is bit for bit what it was. A pickled estimator stores the matrices as
+  arrays, as before, so pickles read both ways.
+  ([#79](https://github.com/jmineau/fips/issues/79))
+- The sum of two sparse `Matrix` (or `CovarianceMatrix`, ...) objects is
+  sparse; it was densified. A sum with a dense side is dense, as before.
+  ([#79](https://github.com/jmineau/fips/issues/79))
 - **`Matrix`, `CovarianceMatrix`, `ForwardOperator` and `MatrixBlock` take 2D
   data only** (breaking). A scalar or 1D input now raises a `ValueError` that
   names the replacement, where the constructor used to decide from the shape of
@@ -156,6 +183,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   wrong shape. It also holds one n x n array fewer while it builds (a 5.6 GB
   peak instead of 8.3 GB at n = 18,720, in the same time).
   ([#76](https://github.com/jmineau/fips/issues/76))
+- **A sparse prior error or model-data mismatch works**, in any combination
+  with a dense or sparse forward operator. With all three sparse, `solve`
+  raised `ValueError: Sparse arrays/matrices are not supported`; with sparse
+  covariances and a dense forward operator, the posterior covariance was an
+  `np.matrix` and `reduced_chi2`, `uncertainty_reduction` and `U_red` raised.
+  `CovarianceMatrix.force_symmetry` raised on sparse data and now returns a
+  sparse matrix, and `CovarianceMatrix.variances` reads a sparse diagonal
+  without forming the dense matrix. A sparse diagonal covariance is solved by
+  division. The usage guide's claim that sparsity is "detected automatically
+  at solve time" now holds and says what it does.
+  ([#79](https://github.com/jmineau/fips/issues/79))
 - **A sparse frame whose `fill_value` is neither 0.0 nor NaN raises a
   `ValueError`** when it is given to `Matrix`, `CovarianceMatrix`,
   `ForwardOperator`, `MatrixBlock`, or `ObsAggregator.apply` as the forward

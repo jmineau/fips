@@ -29,6 +29,7 @@ Attributes and underlying data
    CovarianceMatrix.columns
    CovarianceMatrix.shape
    CovarianceMatrix.values
+   CovarianceMatrix.operator
    CovarianceMatrix.variances
    CovarianceMatrix.blocks
 
