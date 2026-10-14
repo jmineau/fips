@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>User Guide &#8212; fips 0.1.0b10.dev51+g6aa1cd17c documentation</title>
+    <title>User Guide &#8212; fips 0.1.0b10.dev54+gdffbfd9d2 documentation</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0" />
 
-    <script src="_static/documentation_options.js?v=2bacf24a"></script>
+    <script src="_static/documentation_options.js?v=8b0f7eef"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -135,8 +135,8 @@
       
     
     
-    <img src="_static/logo.png" class="logo__image only-light" alt="fips 0.1.0b10.dev51+g6aa1cd17c documentation - Home"/>
-    <img src="_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.1.0b10.dev51+g6aa1cd17c documentation - Home"/>
+    <img src="_static/logo.png" class="logo__image only-light" alt="fips 0.1.0b10.dev54+gdffbfd9d2 documentation - Home"/>
+    <img src="_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.1.0b10.dev54+gdffbfd9d2 documentation - Home"/>
   
   
 </a></div>
@@ -471,7 +471,7 @@
 <ul class="simple">
 <li><p><a class="reference internal" href="#data-model" id="id1">Data Model</a></p></li>
 <li><p><a class="reference internal" href="#constructing-covariance-matrices" id="id2">Constructing Covariance Matrices</a></p></li>
-<li><p><a class="reference internal" href="#sparse-forward-operators" id="id3">Sparse Forward Operators</a></p></li>
+<li><p><a class="reference internal" href="#sparse-matrices" id="id3">Sparse Matrices</a></p></li>
 <li><p><a class="reference internal" href="#domain-specific-problem-flux-inversion" id="id4">Domain-Specific Problem: Flux Inversion</a></p></li>
 <li><p><a class="reference internal" href="#advanced-subclassing-inverseproblem" id="id5">Advanced: Subclassing InverseProblem</a></p></li>
 <li><p><a class="reference internal" href="#advanced-inversion-pipelines" id="id6">Advanced: Inversion Pipelines</a></p></li>
@@ -579,8 +579,8 @@ data only: a scalar or 1D input raises an error that points to <code class="docu
 <code class="docutils literal notranslate"><span class="pre">prior_error</span></code> and <code class="docutils literal notranslate"><span class="pre">modeldata_mismatch</span></code> can be given as a scalar variance, or
 as a Series or Vector of variances with a <code class="docutils literal notranslate"><span class="pre">&quot;block&quot;</span></code> level.</p>
 </section>
-<section id="sparse-forward-operators">
-<h2><a class="toc-backref" href="#id3" role="doc-backlink">Sparse Forward Operators</a><a class="headerlink" href="#sparse-forward-operators" title="Link to this heading">#</a></h2>
+<section id="sparse-matrices">
+<h2><a class="toc-backref" href="#id3" role="doc-backlink">Sparse Matrices</a><a class="headerlink" href="#sparse-matrices" title="Link to this heading">#</a></h2>
 <p>For large transport Jacobians (e.g. from STILT) with many structural zeros,
 sparse storage gives significant memory and speed savings.  Pass
 <code class="docutils literal notranslate"><span class="pre">sparse=True</span></code> to <a class="reference internal" href="reference/api/fips.MatrixBlock.html#fips.MatrixBlock" title="fips.MatrixBlock"><code class="xref py py-class docutils literal notranslate"><span class="pre">MatrixBlock</span></code></a> at construction time, or convert
@@ -599,8 +599,29 @@ See <a class="reference internal" href="terminology.html#inverse-problem-terms">
 <span class="n">H_sparse</span> <span class="o">=</span> <span class="n">problem</span><span class="o">.</span><span class="n">forward_operator</span><span class="o">.</span><span class="n">to_sparse</span><span class="p">(</span><span class="n">threshold</span><span class="o">=</span><span class="mf">1e-10</span><span class="p">)</span>
 </pre></div>
 </div>
-<p><em>fips</em> detects sparsity automatically at solve time and routes through
-<a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/sparse.html#module-scipy.sparse" title="(in SciPy v1.18.0)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">scipy.sparse</span></code></a> for the matrix algebra.</p>
+<p>The same holds for the covariances: the forward operator, the prior error and
+the model-data mismatch can each be dense or sparse, in any combination. The
+solve computes with each matrix’s <code class="docutils literal notranslate"><span class="pre">operator</span></code>
+(<a class="reference internal" href="reference/api/fips.base.Structure2D.operator.html#fips.base.Structure2D.operator" title="fips.base.Structure2D.operator"><code class="xref py py-attr docutils literal notranslate"><span class="pre">operator</span></code></a>), which holds a sparse matrix as a
+<a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/sparse.html#module-scipy.sparse" title="(in SciPy v1.18.0)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">scipy.sparse</span></code></a> matrix, never as the dense one, and a sparse matrix whose
+entries are all on its diagonal as that diagonal alone
+(<a class="reference internal" href="reference/operator.html#module-fips.operator" title="fips.operator"><code class="xref py py-mod docutils literal notranslate"><span class="pre">fips.operator</span></code></a>):</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [9]: </span><span class="n">S</span> <span class="o">=</span> <span class="n">CovarianceMatrix</span><span class="o">.</span><span class="n">diagonal</span><span class="p">([</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">],</span> <span class="n">index</span><span class="o">=</span><span class="n">idx</span><span class="p">,</span> <span class="n">sparse</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="gp">In [10]: </span><span class="n">S</span><span class="o">.</span><span class="n">operator</span>
+<span class="gh">Out[10]: </span><span class="go">&lt;3x3 DiagonalOperator with dtype=float64&gt;</span>
+
+<span class="gp">In [11]: </span><span class="n">S</span><span class="o">.</span><span class="n">operator</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="mi">3</span><span class="p">))</span>
+<span class="gh">Out[11]: </span><span class="go">array([2. , 1. , 0.5])</span>
+</pre></div>
+</div>
+<p>A product keeps the cheapest exact form: a diagonal times a sparse matrix is
+sparse, and anything times a dense matrix is dense. <span class="math notranslate nohighlight">\(H S_0 H^T\)</span> stays
+sparse while it is mostly zeros, and is dense once more than a quarter of its
+entries are filled, since a dense solve is then faster. Solves divide by a
+diagonal, factor a sparse matrix with a sparse LU, and a dense one with
+Cholesky. The outputs are dense whatever the inputs: the posterior covariance
+is a dense <span class="math notranslate nohighlight">\(n \times n\)</span> matrix, and the gain <span class="math notranslate nohighlight">\(n \times m\)</span>.</p>
 </section>
 <section id="domain-specific-problem-flux-inversion">
 <span id="flux-inversion"></span><h2><a class="toc-backref" href="#id4" role="doc-backlink">Domain-Specific Problem: Flux Inversion</a><a class="headerlink" href="#domain-specific-problem-flux-inversion" title="Link to this heading">#</a></h2>
@@ -816,7 +837,7 @@ summary reporting) so you only need to supply your data loaders.</p>
     <ul class="pst-show_toc_level nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#data-model">Data Model</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#constructing-covariance-matrices">Constructing Covariance Matrices</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sparse-forward-operators">Sparse Forward Operators</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sparse-matrices">Sparse Matrices</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#domain-specific-problem-flux-inversion">Domain-Specific Problem: Flux Inversion</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#advanced-subclassing-inverseproblem">Advanced: Subclassing InverseProblem</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#advanced-inversion-pipelines">Advanced: Inversion Pipelines</a></li>

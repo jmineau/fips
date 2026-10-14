@@ -1,0 +1,6 @@
+fips.operator.DenseOperator.trace
+=================================
+
+.. currentmodule:: fips.operator
+
+.. automethod:: DenseOperator.trace

@@ -1,0 +1,6 @@
+fips.operator.DenseOperator.array
+=================================
+
+.. currentmodule:: fips.operator
+
+.. autoattribute:: DenseOperator.array

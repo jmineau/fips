@@ -19,6 +19,7 @@
    ~Structure2D.data
    ~Structure2D.is_sparse
    ~Structure2D.name
+   ~Structure2D.operator
    ~Structure2D.values
 
 

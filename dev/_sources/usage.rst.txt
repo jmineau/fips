@@ -95,8 +95,8 @@ An :class:`~fips.InverseProblem` holds the indexes already, so its
 as a Series or Vector of variances with a ``"block"`` level.
 
 
-Sparse Forward Operators
-------------------------
+Sparse Matrices
+---------------
 
 For large transport Jacobians (e.g. from STILT) with many structural zeros,
 sparse storage gives significant memory and speed savings.  Pass
@@ -118,8 +118,27 @@ an existing operator:
    # Or convert an existing operator in-place
    H_sparse = problem.forward_operator.to_sparse(threshold=1e-10)
 
-*fips* detects sparsity automatically at solve time and routes through
-:mod:`scipy.sparse` for the matrix algebra.
+The same holds for the covariances: the forward operator, the prior error and
+the model-data mismatch can each be dense or sparse, in any combination. The
+solve computes with each matrix's ``operator``
+(:attr:`~fips.base.Structure2D.operator`), which holds a sparse matrix as a
+:mod:`scipy.sparse` matrix, never as the dense one, and a sparse matrix whose
+entries are all on its diagonal as that diagonal alone
+(:mod:`fips.operator`):
+
+.. ipython:: python
+
+   S = CovarianceMatrix.diagonal([0.5, 1.0, 2.0], index=idx, sparse=True)
+   S.operator
+   S.operator.solve(np.ones(3))
+
+A product keeps the cheapest exact form: a diagonal times a sparse matrix is
+sparse, and anything times a dense matrix is dense. :math:`H S_0 H^T` stays
+sparse while it is mostly zeros, and is dense once more than a quarter of its
+entries are filled, since a dense solve is then faster. Solves divide by a
+diagonal, factor a sparse matrix with a sparse LU, and a dense one with
+Cholesky. The outputs are dense whatever the inputs: the posterior covariance
+is a dense :math:`n \times n` matrix, and the gain :math:`n \times m`.
 
 
 .. _flux-inversion:

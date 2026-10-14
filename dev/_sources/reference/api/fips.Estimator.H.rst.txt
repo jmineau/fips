@@ -3,4 +3,4 @@ fips.Estimator.H
 
 .. currentmodule:: fips
 
-.. autoattribute:: Estimator.H
+.. autoproperty:: Estimator.H

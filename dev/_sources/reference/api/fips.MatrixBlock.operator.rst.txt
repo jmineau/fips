@@ -1,0 +1,6 @@
+﻿fips.MatrixBlock.operator
+=========================
+
+.. currentmodule:: fips
+
+.. autoproperty:: MatrixBlock.operator

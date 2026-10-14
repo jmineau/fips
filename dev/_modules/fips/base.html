@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>fips.base &#8212; fips 0.1.0b10.dev51+g6aa1cd17c documentation</title>
+    <title>fips.base &#8212; fips 0.1.0b10.dev54+gdffbfd9d2 documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0" />
 
-    <script src="../../_static/documentation_options.js?v=2bacf24a"></script>
+    <script src="../../_static/documentation_options.js?v=8b0f7eef"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -130,8 +130,8 @@
       
     
     
-    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.1.0b10.dev51+g6aa1cd17c documentation - Home"/>
-    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.1.0b10.dev51+g6aa1cd17c documentation - Home"/>
+    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.1.0b10.dev54+gdffbfd9d2 documentation - Home"/>
+    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.1.0b10.dev54+gdffbfd9d2 documentation - Home"/>
   
   
 </a></div>
@@ -483,6 +483,7 @@
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">fips._sparse</span><span class="w"> </span><span class="kn">import</span> <span class="n">frame_from_spmatrix</span><span class="p">,</span> <span class="n">normalize_fill_value</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">fips.indexes</span><span class="w"> </span><span class="kn">import</span> <span class="n">overlaps</span><span class="p">,</span> <span class="n">resolve_axes</span><span class="p">,</span> <span class="n">round_index</span><span class="p">,</span> <span class="n">to_numeric</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fips.operator</span><span class="w"> </span><span class="kn">import</span> <span class="n">DenseOperator</span><span class="p">,</span> <span class="n">Operator</span><span class="p">,</span> <span class="n">as_operator</span>
 
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
@@ -1231,6 +1232,42 @@
             <span class="c1"># pyrefly: ignore[missing-attribute]</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">sparse</span><span class="o">.</span><span class="n">to_coo</span><span class="p">()</span><span class="o">.</span><span class="n">tocsr</span><span class="p">()</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">operator</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Operator</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The data as a linear operator, for computing with.</span>
+
+<span class="sd">        A dense structure gives a :class:`~fips.operator.DenseOperator` on the</span>
+<span class="sd">        array the DataFrame holds (no copy for a float frame). A sparse one</span>
+<span class="sd">        gives a :class:`~fips.operator.SparseOperator` built from its stored</span>
+<span class="sd">        entries, never the dense matrix, or a</span>
+<span class="sd">        :class:`~fips.operator.DiagonalOperator` when every stored entry is on</span>
+<span class="sd">        the diagonal (as for :meth:`diagonal` with ``sparse=True``).</span>
+
+<span class="sd">        It is built on each access, so it always reads the current</span>
+<span class="sd">        :attr:`data`, after an in-place change too.</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        --------</span>
+<span class="sd">        fips.operator.as_operator : The same for an array or a SciPy sparse matrix.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; import pandas as pd</span>
+<span class="sd">        &gt;&gt;&gt; from fips import CovarianceMatrix</span>
+<span class="sd">        &gt;&gt;&gt; idx = pd.MultiIndex.from_product(</span>
+<span class="sd">        ...     [[&quot;obs&quot;], [&quot;a&quot;, &quot;b&quot;, &quot;c&quot;]], names=[&quot;block&quot;, &quot;site&quot;]</span>
+<span class="sd">        ... )</span>
+<span class="sd">        &gt;&gt;&gt; S = CovarianceMatrix.diagonal(0.25, index=idx, sparse=True)</span>
+<span class="sd">        &gt;&gt;&gt; S.operator.solve([1.0, 2.0, 3.0])</span>
+<span class="sd">        array([ 4.,  8., 12.])</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_sparse</span><span class="p">:</span>
+            <span class="c1"># pandas-stubs do not type DataFrame.sparse</span>
+            <span class="c1"># pyrefly: ignore[missing-attribute]</span>
+            <span class="k">return</span> <span class="n">as_operator</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">sparse</span><span class="o">.</span><span class="n">to_coo</span><span class="p">())</span>
+        <span class="k">return</span> <span class="n">DenseOperator</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">())</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">is_sparse</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>

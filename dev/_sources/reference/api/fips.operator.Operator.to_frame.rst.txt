@@ -1,0 +1,6 @@
+fips.operator.Operator.to\_frame
+================================
+
+.. currentmodule:: fips.operator
+
+.. automethod:: Operator.to_frame

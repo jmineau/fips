@@ -1,0 +1,6 @@
+fips.base.Structure2D.operator
+==============================
+
+.. currentmodule:: fips.base
+
+.. autoproperty:: Structure2D.operator

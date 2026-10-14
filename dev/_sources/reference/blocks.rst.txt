@@ -77,6 +77,7 @@ Attributes and underlying data
    MatrixBlock.columns
    MatrixBlock.shape
    MatrixBlock.values
+   MatrixBlock.operator
 
 Conversion
 ~~~~~~~~~~

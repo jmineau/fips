@@ -1,0 +1,6 @@
+fips.operator.SparseOperator.matrix
+===================================
+
+.. currentmodule:: fips.operator
+
+.. autoattribute:: SparseOperator.matrix

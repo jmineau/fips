@@ -1,0 +1,28 @@
+﻿fips.operator.Operator
+======================
+
+.. currentmodule:: fips.operator
+
+.. autoclass:: Operator
+   :no-members:
+   :show-inheritance:
+
+
+
+
+
+
+.. rubric:: Methods
+
+.. autosummary::
+   :toctree:
+
+   ~Operator.dense
+   ~Operator.diagonal
+   ~Operator.dot
+   ~Operator.solve
+   ~Operator.to_frame
+   ~Operator.trace
+
+
+

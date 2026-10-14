@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Index &#8212; fips 0.1.0b10.dev51+g6aa1cd17c documentation</title>
+    <title>Index &#8212; fips 0.1.0b10.dev54+gdffbfd9d2 documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0" />
 
-    <script src="_static/documentation_options.js?v=2bacf24a"></script>
+    <script src="_static/documentation_options.js?v=8b0f7eef"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -130,8 +130,8 @@
       
     
     
-    <img src="_static/logo.png" class="logo__image only-light" alt="fips 0.1.0b10.dev51+g6aa1cd17c documentation - Home"/>
-    <img src="_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.1.0b10.dev51+g6aa1cd17c documentation - Home"/>
+    <img src="_static/logo.png" class="logo__image only-light" alt="fips 0.1.0b10.dev54+gdffbfd9d2 documentation - Home"/>
+    <img src="_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.1.0b10.dev54+gdffbfd9d2 documentation - Home"/>
   
   
 </a></div>
@@ -499,8 +499,12 @@
 </li>
       <li><a href="reference/api/fips.indexes.apply_to_index.html#fips.indexes.apply_to_index">apply_to_index() (in module fips.indexes)</a>
 </li>
+      <li><a href="reference/api/fips.operator.DenseOperator.array.html#fips.operator.DenseOperator.array">array (fips.operator.DenseOperator attribute)</a>
+</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="reference/api/fips.operator.as_operator.html#fips.operator.as_operator">as_operator() (in module fips.operator)</a>
+</li>
       <li><a href="reference/api/fips.indexes.assign_block.html#fips.indexes.assign_block">assign_block() (in module fips.indexes)</a>
 </li>
       <li><a href="terminology.html#term-Averaging-Kernel"><strong>Averaging Kernel</strong></a>
@@ -659,6 +663,18 @@
         <li><a href="reference/api/fips.Vector.data.html#fips.Vector.data">(fips.Vector attribute)</a>
 </li>
       </ul></li>
+      <li><a href="reference/api/fips.operator.DenseOperator.dense.html#fips.operator.DenseOperator.dense">dense() (fips.operator.DenseOperator method)</a>
+
+      <ul>
+        <li><a href="reference/api/fips.operator.DiagonalOperator.dense.html#fips.operator.DiagonalOperator.dense">(fips.operator.DiagonalOperator method)</a>
+</li>
+        <li><a href="reference/api/fips.operator.Operator.dense.html#fips.operator.Operator.dense">(fips.operator.Operator method)</a>
+</li>
+        <li><a href="reference/api/fips.operator.SparseOperator.dense.html#fips.operator.SparseOperator.dense">(fips.operator.SparseOperator method)</a>
+</li>
+      </ul></li>
+      <li><a href="reference/api/fips.operator.DenseOperator.html#fips.operator.DenseOperator">DenseOperator (class in fips.operator)</a>
+</li>
       <li><a href="reference/api/fips.Estimator.desroziers.html#fips.Estimator.desroziers">desroziers (fips.Estimator property)</a>
 
       <ul>
@@ -680,12 +696,24 @@
 </li>
         <li><a href="reference/api/fips.MatrixBlock.diagonal.html#fips.MatrixBlock.diagonal">(fips.MatrixBlock class method)</a>
 </li>
+        <li><a href="reference/api/fips.operator.DiagonalOperator.diagonal.html#fips.operator.DiagonalOperator.diagonal">(fips.operator.DiagonalOperator method)</a>
+</li>
+        <li><a href="reference/api/fips.operator.Operator.diagonal.html#fips.operator.Operator.diagonal">(fips.operator.Operator method)</a>
+</li>
+        <li><a href="reference/api/fips.operator.SparseOperator.diagonal.html#fips.operator.SparseOperator.diagonal">(fips.operator.SparseOperator method)</a>
+</li>
       </ul></li>
       <li><a href="reference/api/fips.covariance.DiagonalError.html#fips.covariance.DiagonalError">DiagonalError (class in fips.covariance)</a>
+</li>
+      <li><a href="reference/api/fips.operator.DiagonalOperator.html#fips.operator.DiagonalOperator">DiagonalOperator (class in fips.operator)</a>
 </li>
       <li><a href="reference/api/fips.Estimator.DOFS.html#fips.Estimator.DOFS">DOFS (fips.Estimator property)</a>
 </li>
       <li><a href="reference/api/fips.Posterior.dofs.html#fips.Posterior.dofs">dofs (fips.Posterior property)</a>
+</li>
+      <li><a href="reference/api/fips.operator.Operator.dot.html#fips.operator.Operator.dot">dot() (fips.operator.Operator method)</a>
+</li>
+      <li><a href="reference/api/fips.operator.dottest.html#fips.operator.dottest">dottest() (in module fips.operator)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -729,6 +757,13 @@
         <li><a href="reference/api/fips.problems.flux.pipeline.FluxInversionPipeline.filter_state_space.html#fips.problems.flux.pipeline.FluxInversionPipeline.filter_state_space">(fips.problems.flux.pipeline.FluxInversionPipeline method)</a>
 </li>
       </ul></li>
+      <li>
+    fips.operator
+
+      <ul>
+        <li><a href="reference/operator.html#module-fips.operator">module</a>
+</li>
+      </ul></li>
       <li><a href="reference/api/fips.problems.flux.visualization.FluxPlotter.fluxes.html#fips.problems.flux.visualization.FluxPlotter.fluxes">fluxes() (fips.problems.flux.visualization.FluxPlotter method)</a>
 </li>
       <li><a href="reference/api/fips.problems.flux.pipeline.FluxInversionPipeline.html#fips.problems.flux.pipeline.FluxInversionPipeline">FluxInversionPipeline (class in fips.problems.flux.pipeline)</a>
@@ -745,10 +780,10 @@
 </li>
       <li><a href="reference/api/fips.InverseProblem.forward_operator.html#fips.InverseProblem.forward_operator">forward_operator (fips.InverseProblem attribute)</a>
 </li>
-      <li><a href="reference/api/fips.ForwardOperator.html#fips.ForwardOperator">ForwardOperator (class in fips)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="reference/api/fips.ForwardOperator.html#fips.ForwardOperator">ForwardOperator (class in fips)</a>
+</li>
       <li><a href="reference/api/fips.aggregators.ObsAggregator.freq.html#fips.aggregators.ObsAggregator.freq">freq (fips.aggregators.ObsAggregator attribute)</a>
 </li>
       <li><a href="reference/api/fips.base.Pickleable.from_file.html#fips.base.Pickleable.from_file">from_file() (fips.base.Pickleable class method)</a>
@@ -815,7 +850,7 @@
 <h2 id="H">H</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="reference/api/fips.Estimator.H.html#fips.Estimator.H">H (fips.Estimator attribute)</a>
+      <li><a href="reference/api/fips.Estimator.H.html#fips.Estimator.H">H (fips.Estimator property)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
@@ -919,6 +954,8 @@
 </li>
       <li><a href="reference/api/fips.Matrix.html#fips.Matrix">Matrix (class in fips)</a>
 </li>
+      <li><a href="reference/api/fips.operator.SparseOperator.matrix.html#fips.operator.SparseOperator.matrix">matrix (fips.operator.SparseOperator attribute)</a>
+</li>
       <li><a href="reference/api/fips.MatrixBlock.html#fips.MatrixBlock">MatrixBlock (class in fips)</a>
 </li>
       <li><a href="reference/api/fips.Posterior.mean.html#fips.Posterior.mean">mean (fips.Posterior property)</a>
@@ -931,6 +968,13 @@
 </li>
       <li><a href="reference/api/fips.Posterior.modeled_obs.html#fips.Posterior.modeled_obs">modeled_obs (fips.Posterior property)</a>
 </li>
+      <li>
+    module
+
+      <ul>
+        <li><a href="reference/operator.html#module-fips.operator">fips.operator</a>
+</li>
+      </ul></li>
       <li><a href="reference/api/fips.base.MultiBlockMixin.html#fips.base.MultiBlockMixin">MultiBlockMixin (class in fips.base)</a>
 </li>
   </ul></td>
@@ -989,12 +1033,26 @@
         <li><a href="reference/api/fips.Posterior.obs_index.html#fips.Posterior.obs_index">(fips.Posterior attribute)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="reference/api/fips.aggregators.ObsAggregator.html#fips.aggregators.ObsAggregator">ObsAggregator (class in fips.aggregators)</a>
 </li>
       <li><a href="terminology.html#term-Observation-Operator"><strong>Observation Operator</strong></a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="reference/api/fips.operator.Operator.html#fips.operator.Operator">Operator (class in fips.operator)</a>
+</li>
+      <li><a href="reference/api/fips.base.Structure2D.operator.html#fips.base.Structure2D.operator">operator (fips.base.Structure2D property)</a>
+
+      <ul>
+        <li><a href="reference/api/fips.CovarianceMatrix.operator.html#fips.CovarianceMatrix.operator">(fips.CovarianceMatrix property)</a>
+</li>
+        <li><a href="reference/api/fips.ForwardOperator.operator.html#fips.ForwardOperator.operator">(fips.ForwardOperator property)</a>
+</li>
+        <li><a href="reference/api/fips.Matrix.operator.html#fips.Matrix.operator">(fips.Matrix property)</a>
+</li>
+        <li><a href="reference/api/fips.MatrixBlock.operator.html#fips.MatrixBlock.operator">(fips.MatrixBlock property)</a>
+</li>
+      </ul></li>
       <li><a href="reference/api/fips.indexes.outer_align_levels.html#fips.indexes.outer_align_levels">outer_align_levels() (in module fips.indexes)</a>
 </li>
       <li><a href="reference/api/fips.indexes.overlaps.html#fips.indexes.overlaps">overlaps() (in module fips.indexes)</a>
@@ -1141,7 +1199,7 @@
 <h2 id="S">S</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="reference/api/fips.Estimator.S_0.html#fips.Estimator.S_0">S_0 (fips.Estimator attribute)</a>
+      <li><a href="reference/api/fips.Estimator.S_0.html#fips.Estimator.S_0">S_0 (fips.Estimator property)</a>
 </li>
       <li><a href="reference/api/fips.Estimator.S_hat.html#fips.Estimator.S_hat">S_hat (fips.Estimator property)</a>
 
@@ -1151,7 +1209,7 @@
       </ul></li>
       <li><a href="reference/api/fips.Estimator.S_y0.html#fips.Estimator.S_y0">S_y0 (fips.Estimator property)</a>
 </li>
-      <li><a href="reference/api/fips.Estimator.S_z.html#fips.Estimator.S_z">S_z (fips.Estimator attribute)</a>
+      <li><a href="reference/api/fips.Estimator.S_z.html#fips.Estimator.S_z">S_z (fips.Estimator property)</a>
 </li>
       <li><a href="reference/api/fips.Matrix.scale.html#fips.Matrix.scale">scale() (fips.Matrix method)</a>
 </li>
@@ -1171,18 +1229,28 @@
         <li><a href="reference/api/fips.Vector.shape.html#fips.Vector.shape">(fips.Vector property)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="reference/api/fips.base.SingleBlockMixin.html#fips.base.SingleBlockMixin">SingleBlockMixin (class in fips.base)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="reference/api/fips.InverseProblem.solve.html#fips.InverseProblem.solve">solve() (fips.InverseProblem method)</a>
 
       <ul>
+        <li><a href="reference/api/fips.operator.DenseOperator.solve.html#fips.operator.DenseOperator.solve">(fips.operator.DenseOperator method)</a>
+</li>
+        <li><a href="reference/api/fips.operator.DiagonalOperator.solve.html#fips.operator.DiagonalOperator.solve">(fips.operator.DiagonalOperator method)</a>
+</li>
+        <li><a href="reference/api/fips.operator.Operator.solve.html#fips.operator.Operator.solve">(fips.operator.Operator method)</a>
+</li>
+        <li><a href="reference/api/fips.operator.SparseOperator.solve.html#fips.operator.SparseOperator.solve">(fips.operator.SparseOperator method)</a>
+</li>
         <li><a href="reference/api/fips.problems.flux.FluxProblem.solve.html#fips.problems.flux.FluxProblem.solve">(fips.problems.flux.FluxProblem method)</a>
 </li>
         <li><a href="reference/api/fips.solve.html#fips.solve">(in module fips)</a>
 </li>
       </ul></li>
+      <li><a href="reference/api/fips.operator.SparseOperator.html#fips.operator.SparseOperator">SparseOperator (class in fips.operator)</a>
+</li>
       <li><a href="reference/api/fips.ForwardOperator.state_index.html#fips.ForwardOperator.state_index">state_index (fips.ForwardOperator property)</a>
 
       <ul>
@@ -1250,6 +1318,8 @@
 </li>
         <li><a href="reference/api/fips.MatrixBlock.to_frame.html#fips.MatrixBlock.to_frame">(fips.MatrixBlock method)</a>
 </li>
+        <li><a href="reference/api/fips.operator.Operator.to_frame.html#fips.operator.Operator.to_frame">(fips.operator.Operator method)</a>
+</li>
       </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
@@ -1299,6 +1369,12 @@
         <li><a href="reference/api/fips.Vector.to_xarray.html#fips.Vector.to_xarray">(fips.Vector method)</a>
 </li>
       </ul></li>
+      <li><a href="reference/api/fips.operator.DenseOperator.trace.html#fips.operator.DenseOperator.trace">trace() (fips.operator.DenseOperator method)</a>
+
+      <ul>
+        <li><a href="reference/api/fips.operator.Operator.trace.html#fips.operator.Operator.trace">(fips.operator.Operator method)</a>
+</li>
+      </ul></li>
   </ul></td>
 </tr></table>
 
@@ -1333,6 +1409,8 @@
         <li><a href="reference/api/fips.Matrix.values.html#fips.Matrix.values">(fips.Matrix property)</a>
 </li>
         <li><a href="reference/api/fips.MatrixBlock.values.html#fips.MatrixBlock.values">(fips.MatrixBlock property)</a>
+</li>
+        <li><a href="reference/api/fips.operator.DiagonalOperator.values.html#fips.operator.DiagonalOperator.values">(fips.operator.DiagonalOperator attribute)</a>
 </li>
         <li><a href="reference/api/fips.Vector.values.html#fips.Vector.values">(fips.Vector property)</a>
 </li>

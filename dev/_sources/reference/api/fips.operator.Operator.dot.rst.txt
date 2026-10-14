@@ -1,0 +1,6 @@
+fips.operator.Operator.dot
+==========================
+
+.. currentmodule:: fips.operator
+
+.. automethod:: Operator.dot

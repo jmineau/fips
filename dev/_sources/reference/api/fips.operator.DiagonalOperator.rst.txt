@@ -1,0 +1,39 @@
+﻿fips.operator.DiagonalOperator
+==============================
+
+.. currentmodule:: fips.operator
+
+.. autoclass:: DiagonalOperator
+   :no-members:
+   :show-inheritance:
+
+
+
+
+.. rubric:: Attributes
+
+.. autosummary::
+   :toctree:
+
+   ~DiagonalOperator.values
+
+
+
+.. rubric:: Methods
+
+.. autosummary::
+   :toctree:
+
+   ~DiagonalOperator.dense
+   ~DiagonalOperator.diagonal
+   ~DiagonalOperator.solve
+
+
+
+
+.. rubric:: Inherited
+
+
+From :class:`~.Operator`: :py:obj:`~.Operator.dot`, :py:obj:`~.Operator.to_frame`, :py:obj:`~.Operator.trace`
+
+

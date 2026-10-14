@@ -1,0 +1,6 @@
+fips.operator.DiagonalOperator.dense
+====================================
+
+.. currentmodule:: fips.operator
+
+.. automethod:: DiagonalOperator.dense

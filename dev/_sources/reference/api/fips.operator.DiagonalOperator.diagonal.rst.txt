@@ -1,0 +1,6 @@
+fips.operator.DiagonalOperator.diagonal
+=======================================
+
+.. currentmodule:: fips.operator
+
+.. automethod:: DiagonalOperator.diagonal
