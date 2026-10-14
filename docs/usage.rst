@@ -168,9 +168,85 @@ sparse while it is mostly zeros, and is dense once more than a quarter of its
 entries are filled, since a dense solve is then faster. Solves divide by a
 diagonal, factor a sparse matrix with a sparse LU, and a dense one with
 Cholesky. A Kronecker prior error multiplies :math:`H` through its factors, and
-solves through each factor's Cholesky factorization. The outputs are dense
-whatever the inputs: the posterior covariance is a dense :math:`n \times n`
-matrix (formed from the dense :math:`S_0`), and the gain :math:`n \times m`.
+solves through each factor's Cholesky factorization. The gain is a dense
+:math:`n \times m` array whatever the inputs; the full posterior covariance is a
+dense :math:`n \times n` matrix, formed only when it is read (see below).
+
+
+The Posterior
+-------------
+
+:func:`fips.solve` returns a :class:`~fips.Posterior`. The Bayesian solve
+whitens the problem once: it eigendecomposes an :math:`m \times m` matrix
+built from :math:`H S_0 H^T` and :math:`S_z`, keeps the factors, and derives
+the estimate, the posterior variances, DOFS and the reduced chi-squared from
+them, without forming anything :math:`n \times n`. The full posterior
+covariance (``post.covariance``) and averaging kernel
+(``post.averaging_kernel()``) are formed only when read.
+
+.. ipython:: python
+
+   import numpy as np
+   import pandas as pd
+   import fips
+   from fips import ForwardOperator, InverseProblem, Matrix
+   from fips.covariance import KroneckerError
+   from fips.kernels import GridSpatialDecay, GridTimeDecay
+
+   rng = np.random.default_rng(0)
+   times = pd.date_range("2024-01-01", periods=6, freq="7D")
+   state = pd.MultiIndex.from_product(
+       [["flux"], times, [40.5, 40.6], [-112.0, -111.9]],
+       names=["block", "time", "lat", "lon"],
+   )
+   obs = pd.MultiIndex.from_product([["conc"], range(15)], names=["block", "obs_id"])
+   H = pd.DataFrame(rng.uniform(0, 1, (15, len(state))), index=obs, columns=state)
+   prior_error = KroneckerError(
+       "prior_error",
+       0.25,
+       [("time", GridTimeDecay("14D")), (["lat", "lon"], GridSpatialDecay("lat", "lon", 10.0))],
+   ).operator(state)
+   problem = InverseProblem(
+       obs=pd.Series(rng.normal(3.0, 1.0, 15), index=obs),
+       prior=pd.Series(1.0, index=state),
+       forward_operator=H,
+       prior_error=prior_error,
+       modeldata_mismatch=0.5,
+   )
+   post = fips.solve(problem)
+   post.variances.to_series().head()
+
+An aggregation turns the state into a few totals or means: a :class:`~fips.Matrix`
+with one row per aggregate and the state index as its columns (``1`` for a
+sum, ``1/count`` for a mean). ``post.cov(W)`` is the posterior covariance of
+the aggregates, :math:`W \hat{S} W^T`, and ``post.averaging_kernel(W)`` their
+averaging kernel, :math:`W A W^*` with :math:`W^*` the pseudo-inverse of
+:math:`W`; neither forms the :math:`n \times n` matrices. Here, the total
+flux of each week:
+
+.. ipython:: python
+
+   weeks = pd.MultiIndex.from_product([["total"], times], names=["block", "week"])
+   W = Matrix(
+       pd.DataFrame(
+           (state.get_level_values("time").to_numpy() == times.to_numpy()[:, None]).astype(float),
+           index=weeks,
+           columns=state,
+       )
+   )
+   post.cov(W).data.round(4)
+   post.averaging_kernel(W).to_numpy().diagonal().round(3)
+
+The factors do not depend on the regularization factor ``gamma``, so
+``post.with_gamma(0.5)`` is the posterior of ``fips.solve(problem, gamma=0.5)``
+at the cost of a few products, not a new solve. A sweep over gamma factors
+once:
+
+.. ipython:: python
+
+   for gamma in (0.25, 0.5, 1.0, 2.0):
+       p = post.with_gamma(gamma)
+       print(f"gamma {gamma}: DOFS {p.dofs:.2f}, reduced chi2 {p.reduced_chi2:.2f}")
 
 
 .. _flux-inversion:

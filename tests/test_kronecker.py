@@ -892,6 +892,8 @@ def _compare(post, ref):
         _close(getattr(post.estimator, name), getattr(ref.estimator, name), name)
     for name in POSTERIOR_OUTPUTS:
         value, expected = getattr(post, name), getattr(ref, name)
+        if callable(value):  # averaging_kernel, with no aggregation
+            value, expected = value(), expected()
         if hasattr(value, "to_dense"):  # a labeled structure
             assert value.index.equals(expected.index), name
             value, expected = value.to_dense().values, expected.to_dense().values
@@ -965,9 +967,9 @@ def test_solve_never_forms_the_prior_error(no_dense):
     Building the problem and solving it never forms the ``n x n`` prior error.
 
     The prior comes in another row order with float labels, so the problem
-    rounds and reorders the covariance. Every output that does not need the
-    posterior covariance is read: those that do (``S_hat`` and what is read
-    from it) form ``S_0`` until the whitened solve.
+    rounds and reorders the covariance. Every output but the full posterior
+    covariance is read, the variances and an aggregated covariance included:
+    the whitened solve gives them from its factors.
     """
     index = _product()
     S, op = _kron_cov(index)
@@ -978,10 +980,13 @@ def test_solve_never_forms_the_prior_error(no_dense):
     post = fips.solve(problem)
     for name in (
         "estimate", "modeled_obs", "prior_modeled_obs", "prior_obs_covariance",
-        "kalman_gain", "averaging_kernel", "dofs", "reduced_chi2", "r2", "rmse",
-        "desroziers",
+        "kalman_gain", "dofs", "reduced_chi2", "r2", "rmse", "desroziers",
+        "variances", "uncertainty_reduction",
     ):  # fmt: skip
         getattr(post, name)
+    post.averaging_kernel()
+    rows = pd.MultiIndex.from_tuples([("total", "all")], names=["block", "region"])
+    post.cov(Matrix(pd.DataFrame(1.0, index=rows, columns=state)))
     post.estimator.cost(np.ones(len(index)))
     pickle.loads(pickle.dumps(problem.solve("bayesian")))
     assert problem.prior_error._data is None

@@ -12,8 +12,10 @@ from typing import Any
 
 import numpy as np
 import scipy.sparse as sp
-from scipy.linalg import inv
+from numpy.linalg import LinAlgError
+from scipy.linalg import inv, solve
 
+from fips._whitened import Whitened
 from fips.operator import (
     DenseOperator,
     DiagonalOperator,
@@ -40,6 +42,26 @@ _OPERATOR_NAMES = {
 }
 # Products cached as operators, pickled the same way under their own names.
 _CACHED_OPERATORS = ("_HS_0", "_HS_0H")
+
+
+def _times_pseudo_inverse(XWt: np.ndarray, W: Operator) -> np.ndarray:
+    """
+    Return ``X W*`` given ``X W^T``, where ``W* = W^T (W W^T)^-1`` is the pseudo-inverse of `W`.
+
+    Raises
+    ------
+    ValueError
+        If the rows of `W` are linearly dependent, so ``W W^T`` is singular.
+    """
+    G = (W @ W.T).dense()
+    try:
+        # X W^T (W W^T)^-1 is the transpose of (W W^T)^-1 (X W^T)^T
+        return solve(G, XWt.T, assume_a="pos").T
+    except LinAlgError as err:
+        raise ValueError(
+            "The rows of the aggregation are linearly dependent, so it has no "
+            "pseudo-inverse."
+        ) from err
 
 
 def _raw(op: Operator):
@@ -450,6 +472,72 @@ class Estimator(ABC):
         return self.K @ self._H_op
 
     @cached_property
+    def S_hat_diagonal(self) -> np.ndarray:
+        r"""
+        Posterior error variances, the diagonal of :math:`\hat{S}`.
+
+        Read from :attr:`S_hat` here; an estimator that can compute them
+        without the ``n x n`` matrix (:class:`~fips.estimators.BayesianSolver`)
+        does.
+
+        Returns
+        -------
+        np.ndarray
+            The ``n_x`` variances.
+        """
+        return np.diag(np.asarray(self.S_hat)).copy()
+
+    def aggregate_S_hat(self, W: OperatorLike) -> np.ndarray:
+        r"""
+        Posterior error covariance of an aggregate of the state, :math:`W \hat{S} W^T`.
+
+        Parameters
+        ----------
+        W : array-like, SciPy sparse matrix or Operator
+            The aggregation, ``k x n_x``: row ``i`` gives the weight of each
+            state element in aggregate ``i`` (ones for a sum, ``1/count`` for
+            a mean).
+
+        Returns
+        -------
+        np.ndarray
+            The ``k x k`` covariance.
+        """
+        W = as_operator(W)
+        return (W @ (W @ np.asarray(self.S_hat)).T).T
+
+    def aggregate_A(self, W: OperatorLike) -> np.ndarray:
+        r"""
+        Averaging kernel of an aggregate of the state, :math:`W A W^*`.
+
+        :math:`W^* = W^T (W W^T)^{-1}` is the pseudo-inverse of :math:`W`: it
+        spreads a change of the aggregates back over the state elements (for a
+        sum over a set of elements, evenly over them), so that :math:`W A W^*`
+        is the sensitivity of the aggregated estimate to the aggregated true
+        state. This is the form IMI uses; :math:`W A W^T` is not an averaging
+        kernel (its trace is not the aggregate's DOFS).
+
+        Parameters
+        ----------
+        W : array-like, SciPy sparse matrix or Operator
+            The aggregation, ``k x n_x``, with rows that are linearly
+            independent.
+
+        Returns
+        -------
+        np.ndarray
+            The ``k x k`` averaging kernel.
+
+        Raises
+        ------
+        ValueError
+            If the rows of `W` are linearly dependent.
+        """
+        W = as_operator(W)
+        WA = W @ np.asarray(self.A)
+        return _times_pseudo_inverse((W @ WA.T).T, W)
+
+    @cached_property
     def _HS_0(self) -> Operator:
         r"""
         Compute H S_0, in the cheapest form of the two.
@@ -589,7 +677,7 @@ class Estimator(ABC):
         """
         logger.debug("Calculating uncertainty reduction metric...")
         return float(
-            1 - (np.sqrt(np.trace(self.S_hat)) / np.sqrt(self._S_0_op.trace()))
+            1 - (np.sqrt(self.S_hat_diagonal.sum()) / np.sqrt(self._S_0_op.trace()))
         )
 
     @cached_property
@@ -640,13 +728,13 @@ class Estimator(ABC):
         """
         logger.debug("Calculating uncertainty reduction vector...")
         return (
-            1 - (np.sqrt(np.diag(self.S_hat)) / np.sqrt(self._S_0_op.diagonal()))
+            1 - (np.sqrt(self.S_hat_diagonal) / np.sqrt(self._S_0_op.diagonal()))
         ) * 100.0
 
 
 @ESTIMATOR_REGISTRY.register("bayesian")
 class BayesianSolver(Estimator):
-    """
+    r"""
     Bayesian inversion estimator class.
 
     This class implements a Bayesian inversion framework for solving inverse problems,
@@ -662,6 +750,20 @@ class BayesianSolver(Estimator):
     - gamma = 1: Standard Bayesian inversion (default)
     - gamma < 1: Decreases weight on data fitting (more regularization, stays closer to prior)
 
+    **The solve.** The solver whitens the problem once: with :math:`S_z = L L^T`
+    (Cholesky, or the square root of a diagonal), it eigendecomposes the
+    ``m x m`` matrix :math:`L^{-1} H S_0 H^T L^{-T} = V \Lambda V^T` and keeps
+    :math:`\Lambda`, :math:`V^T L^{-1}` and :math:`W = V^T L^{-1} H S_0`
+    (``m x n``). The estimate, the posterior variances
+    (:attr:`S_hat_diagonal`), the aggregated covariances and averaging kernels,
+    :attr:`DOFS` and :attr:`reduced_chi2` come from these factors, and nothing
+    ``n x n`` is formed unless :attr:`S_hat` or :attr:`A` is read.
+    :meth:`with_gamma` reuses the factors for another gamma. The eigenvalues
+    of that matrix, which is positive semidefinite, are clipped at zero, and a
+    clip larger than roundoff is logged. With more observations than state
+    elements (``m > n``) the state-space form would be cheaper; it is not
+    built, and a large such solve logs a warning.
+
     Parameters
     ----------
     z : np.ndarray
@@ -673,7 +775,7 @@ class BayesianSolver(Estimator):
     S_0 : np.ndarray, SciPy sparse matrix or Operator
         Prior error covariance
     S_z : np.ndarray, SciPy sparse matrix or Operator
-        Model-data mismatch covariance
+        Model-data mismatch covariance, positive-definite
     c : np.ndarray | float, optional
         Constant data, defaults to 0.0
     gamma : float, optional
@@ -719,6 +821,98 @@ class BayesianSolver(Estimator):
             f"gamma={self.gamma}, solved={solved})"
         )
 
+    def __getstate__(self) -> dict[str, Any]:
+        """
+        Return the state for pickling: the factors, and nothing ``n x n``.
+
+        The factors are stored as a dict of arrays. The cached ``S_hat``,
+        ``A``, ``K`` and ``H S_0`` are dropped, since the factors give them
+        again; a solver that has not factored keeps what it has.
+        """
+        state = super().__getstate__()
+        whitened = state.pop("_whitened", None)
+        if whitened is not None:
+            state["_whitened"] = whitened.to_dict()
+            for name in ("S_hat", "A", "K", "_HS_0"):
+                state.pop(name, None)
+        return state
+
+    def __setstate__(self, state: dict[str, Any]):
+        """Restore the state, the factors included."""
+        whitened = state.pop("_whitened", None)
+        super().__setstate__(state)
+        if whitened is not None:
+            self.__dict__["_whitened"] = Whitened(**whitened)
+
+    @cached_property
+    def _whitened(self) -> Whitened:
+        """The whitened factorization of the problem, which does not depend on gamma."""
+        logger.debug("Factoring the whitened problem...")
+        HS_0 = self._H_op @ self._S_0_op
+        HS_0H = self.__dict__.get("_HS_0H")
+        if HS_0H is None:
+            HS_0H = HS_0 @ self._H_op.T
+            self.__dict__["_HS_0H"] = HS_0H  # S_y0 reads it
+        return Whitened.factor(
+            HS_0.dense(),
+            HS_0H.dense(),
+            self._S_z_orig_op,
+            self.residual(self.x_0),
+            self._S_0_op.diagonal(),
+        )
+
+    def with_gamma(self, gamma: float) -> "BayesianSolver":
+        """
+        Return the solver for another regularization factor, without factoring again.
+
+        The new solver shares this one's inputs and factors, so it costs
+        :math:`O(m n)` rather than a new solve.
+
+        Parameters
+        ----------
+        gamma : float
+            The new regularization factor.
+
+        Returns
+        -------
+        BayesianSolver
+            A solver with the same problem and ``gamma``; its outputs are
+            those of ``BayesianSolver(..., gamma=gamma)``.
+
+        Examples
+        --------
+        >>> import numpy as np
+        >>> from fips.estimators import BayesianSolver
+        >>> H = np.array([[1.0, 0.0], [0.0, 1.0], [1.0, 1.0]])
+        >>> solver = BayesianSolver(
+        ...     np.array([1.0, 2.0, 3.0]), np.zeros(2), H, np.eye(2), 0.1 * np.eye(3)
+        ... )
+        >>> half = solver.with_gamma(0.5)
+        >>> fresh = BayesianSolver(
+        ...     np.array([1.0, 2.0, 3.0]),
+        ...     np.zeros(2),
+        ...     H,
+        ...     np.eye(2),
+        ...     0.1 * np.eye(3),
+        ...     gamma=0.5,
+        ... )
+        >>> bool(np.allclose(half.x_hat, fresh.x_hat))
+        True
+        """
+        new = type(self)(
+            z=self.z,
+            x_0=self.x_0,
+            H=self._H_op,
+            S_0=self._S_0_op,
+            S_z=self._S_z_orig_op,
+            c=self.c,
+            gamma=gamma,
+        )
+        new.__dict__["_whitened"] = self._whitened
+        if "_HS_0H" in self.__dict__:
+            new.__dict__["_HS_0H"] = self.__dict__["_HS_0H"]
+        return new
+
     def cost(self, x):
         r"""
         Cost function with regularization.
@@ -746,10 +940,26 @@ class BayesianSolver(Estimator):
         Posterior Mean Model Estimate (solution).
 
         .. math::
-            \\hat{x} = x_0 + K(z - Hx_0 - c)
+            \hat{x} = x_0 + K(z - Hx_0 - c) = x_0 + W^T \operatorname{diag}(w) e
+
+        From the factors: :math:`e` is the whitened innovation and
+        :math:`w_k = \gamma / (\gamma \lambda_k + 1)` (see the class).
         """
         logger.debug("Calculating Posterior Mean Model Estimate...")
-        return self.x_0 + self.K @ self.residual(self.x_0)
+        return self.x_0 + self._whitened.increment(self.gamma)
+
+    @cached_property
+    def K(self):
+        r"""
+        Kalman gain matrix.
+
+        .. math::
+            K = (H S_0)^T (H S_0 H^T + S_z)^{-1} = W^T \operatorname{diag}(w) V^T L^{-1}
+
+        From the factors, ``n x m``.
+        """
+        logger.debug("Calculating Kalman Gain Matrix...")
+        return self._whitened.gain(self.gamma)
 
     @cached_property
     def S_hat(self):  # type: ignore[override]
@@ -757,22 +967,130 @@ class BayesianSolver(Estimator):
         Posterior Error Covariance Matrix with regularization.
 
         .. math::
-            \\hat{S} = (H^T S_z^{-1} H + S_0^{-1})^{-1}
+            \hat{S} = (H^T S_z^{-1} H + S_0^{-1})^{-1}
                 = S_0 - (H S_0)^T(H S_0 H^T + S_z)^{-1}(H S_0)
-                = S_0 - K H S_0
+                = S_0 - W^T \operatorname{diag}(w) W
+
+        Dense, ``n x n``: reading it forms the matrix (and a Kronecker
+        :math:`S_0` too). :attr:`S_hat_diagonal` and :meth:`aggregate_S_hat`
+        do not.
 
         Note: S_z has already been scaled by the regularization factor gamma during initialization.
         """
         logger.debug("Calculating Posterior Error Covariance Matrix...")
-        # Mathematically, we want to subtract: B^T * A^-1 * B
-        # where A = (H S_0 H^T + S_z) and B = (H S_0)
-        #
-        # Using scipy.linalg.solve(A, B), we compute the (A^-1 * B) term without
-        # ever building the explicit inverse matrix.
-        # The equation simplifies to: S_0 - B^T @ solve(A, B)
-        # which is the same as S_0 - K @ H @ S_0 since K = (H S_0)^T (H S_0 H^T + S_z)^{-1}
+        S_hat = self._whitened.reduction(self.gamma)
+        np.subtract(self._S_0_op.dense(), S_hat, out=S_hat)
+        return S_hat
 
-        # Since gamma is already applied to S_z during initialization, all calculations
-        # automatically use the regularized covariance. The result is dense
-        # whatever the form of S_0: K H S_0 fills it.
-        return self._S_0_op.dense() - self.K @ self._HS_0
+    @cached_property
+    def S_hat_diagonal(self) -> np.ndarray:
+        r"""
+        Posterior error variances, the diagonal of :math:`\hat{S}`.
+
+        .. math::
+            \operatorname{diag}(\hat{S})_j = (S_0)_{jj} - \sum_k w_k W_{kj}^2
+
+        From the factors, in :math:`O(m n)`, without :attr:`S_hat`.
+
+        Returns
+        -------
+        np.ndarray
+            The ``n_x`` variances.
+        """
+        return self._whitened.variances(self.gamma)
+
+    def aggregate_S_hat(self, W: OperatorLike) -> np.ndarray:
+        r"""
+        Posterior error covariance of an aggregate of the state, :math:`W \hat{S} W^T`.
+
+        .. math::
+            W \hat{S} W^T = W S_0 W^T - (W W_f^T) \operatorname{diag}(w) (W W_f^T)^T
+
+        where :math:`W_f` is the factors' ``m x n`` matrix. Nothing ``n x n``
+        is formed: :math:`S_0` is applied to the ``k`` columns of
+        :math:`W^T` (through its factors, for a Kronecker covariance).
+
+        Parameters
+        ----------
+        W : array-like, SciPy sparse matrix or Operator
+            The aggregation, ``k x n_x``: row ``i`` gives the weight of each
+            state element in aggregate ``i`` (ones for a sum, ``1/count`` for
+            a mean).
+
+        Returns
+        -------
+        np.ndarray
+            The ``k x k`` covariance.
+        """
+        W = as_operator(W)
+        prior = np.asarray(W @ (self._S_0_op @ W.T))
+        WWf = W @ self._whitened.W.T  # k x m
+        return prior - (WWf * self._whitened.weights(self.gamma)) @ WWf.T
+
+    def aggregate_A(self, W: OperatorLike) -> np.ndarray:
+        r"""
+        Averaging kernel of an aggregate of the state, :math:`W A W^*`.
+
+        :math:`W^* = W^T (W W^T)^{-1}` is the pseudo-inverse of :math:`W` (see
+        :meth:`Estimator.aggregate_A`). Computed as :math:`(W K)(H W^T)(W
+        W^T)^{-1}` from the factors, without the ``n x n`` :attr:`A`.
+
+        Parameters
+        ----------
+        W : array-like, SciPy sparse matrix or Operator
+            The aggregation, ``k x n_x``, with rows that are linearly
+            independent.
+
+        Returns
+        -------
+        np.ndarray
+            The ``k x k`` averaging kernel.
+
+        Raises
+        ------
+        ValueError
+            If the rows of `W` are linearly dependent.
+        """
+        W = as_operator(W)
+        f = self._whitened
+        WK = ((W @ f.W.T) * f.weights(self.gamma)) @ f.whitener  # k x m
+        HWt = np.asarray(self._H_op @ W.T)  # m x k
+        return _times_pseudo_inverse(WK @ HWt, W)
+
+    @cached_property
+    def DOFS(self) -> float:
+        r"""
+        Degrees Of Freedom for Signal (DOFS).
+
+        .. math::
+            DOFS = Tr(A) = \sum_k \frac{\gamma \lambda_k}{\gamma \lambda_k + 1}
+
+        From the eigenvalues :math:`\lambda_k` of the factors, without :attr:`A`.
+
+        Returns
+        -------
+        float
+            Degrees of Freedom value.
+        """
+        return self._whitened.dofs(self.gamma)
+
+    @cached_property
+    def reduced_chi2(self) -> float:
+        r"""
+        Reduced Chi-squared statistic. Tarantola (1987).
+
+        .. math::
+            \chi^2 = \frac{1}{n_z} \left((z - H\hat{x} - c)^T S_z^{-1} (z - H\hat{x} - c) + (\hat{x} - x_0)^T S_0^{-1} (\hat{x} - x_0)\right)
+
+        with :math:`S_z` divided by gamma. The two misfits sum to
+        :math:`d^T (H S_0 H^T + S_z)^{-1} d` with :math:`d = z - H x_0 - c`, the
+        minimum of twice the cost, which the factors give as
+        :math:`\sum_k w_k e_k^2`: no solve with :math:`S_0` or :math:`S_z`.
+
+        Returns
+        -------
+        float
+            Reduced Chi-squared value.
+        """
+        logger.debug("Calculating Reduced Chi-squared statistic...")
+        return self._whitened.chi2(self.gamma) / self.n_z
