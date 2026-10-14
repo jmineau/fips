@@ -1,5 +1,7 @@
 """Tests for covariance module."""
 
+from functools import reduce
+
 import numpy as np
 import pandas as pd
 import pytest
@@ -11,6 +13,7 @@ from fips.covariance import (
     DiagonalError,
     KroneckerError,
 )
+from fips.kernels import GridSpatialDecay, GridTimeDecay
 
 
 class TestCovarianceMatrix:
@@ -300,6 +303,257 @@ class TestKroneckerError:
         result = component.build(idx)
 
         assert result.shape == (4, 4)
+
+
+TIMES = pd.date_range("2024-01-01", periods=3, freq="D")
+LATS = [40.0, 40.5, 41.0]
+LONS = [-112.0, -111.5]
+
+
+def _line_kernel(dim, scale):
+    """Exponential decay along one numeric level."""
+
+    def kernel(coords):
+        x = coords[dim].to_numpy(dtype=float)
+        return np.exp(-np.abs(x[:, None] - x[None, :]) / scale)
+
+    return kernel
+
+
+#: Two marginals: time, and space as one marginal of (lat, lon).
+KERNELS_2 = [
+    ("time", GridTimeDecay("1D")),
+    (["lat", "lon"], GridSpatialDecay("lat", "lon", 50.0)),
+]
+#: Three marginals: time, lat and lon separately.
+KERNELS_3 = [
+    ("time", GridTimeDecay("1D")),
+    ("lat", _line_kernel("lat", 0.7)),
+    ("lon", _line_kernel("lon", 0.4)),
+]
+
+
+def _product():
+    return pd.MultiIndex.from_product([TIMES, LATS, LONS], names=["time", "lat", "lon"])
+
+
+def _variances(index, seed=0):
+    rng = np.random.default_rng(seed)
+    return pd.Series(rng.uniform(0.5, 2.0, len(index)), index=index)
+
+
+def _build(kernels, variances, index):
+    return KroneckerError("prior", variances, kernels).build(index)
+
+
+def _old_formula(kernels, variances, index):
+    """What build computed before #76: np.kron of the marginals, scaled by std."""
+    frame = index.to_frame(index=False)
+    marginals = []
+    for dims, kernel in kernels:
+        dims = [dims] if isinstance(dims, str) else dims
+        marginals.append(kernel(frame[dims].drop_duplicates()))
+    std = np.sqrt(variances.reindex(index).to_numpy())
+    return std[:, None] * reduce(np.kron, marginals) * std[None, :]
+
+
+def _direct_formula(kernels, variances, index):
+    """std_i std_j prod_k C_k(row i, row j), one pair of rows at a time."""
+    frame = index.to_frame(index=False)
+    std = np.sqrt(variances.reindex(index).to_numpy())
+    n = len(index)
+    expected = np.empty((n, n))
+    for i in range(n):
+        for j in range(n):
+            corr = 1.0
+            for dims, kernel in kernels:
+                dims = [dims] if isinstance(dims, str) else dims
+                pair = frame.loc[[i, j], dims].reset_index(drop=True)
+                corr *= np.asarray(kernel(pair))[0, 1]
+            expected[i, j] = std[i] * std[j] * corr
+    return expected
+
+
+def _relabel(S, order):
+    """S with its index levels put in ``order`` (the same entries, by label)."""
+    index = S.index.reorder_levels(order)
+    return pd.DataFrame(S.to_numpy(), index=index, columns=index)
+
+
+class TestKroneckerErrorIndexOrder:
+    """KroneckerError.build is right for any row order and subset (#76)."""
+
+    @pytest.mark.parametrize("kernels", [KERNELS_2, KERNELS_3], ids=["2", "3"])
+    def test_product_order_matches_kron(self, kernels):
+        """On the product in the kernels' order the result is np.kron's."""
+        index = _product()
+        variances = _variances(index)
+        result = _build(kernels, variances, index)
+        np.testing.assert_allclose(
+            result.to_numpy(),
+            _old_formula(kernels, variances, index),
+            rtol=0,
+            atol=1e-15,
+        )
+        assert result.index.equals(index)
+        assert result.columns.equals(index)
+
+    @pytest.mark.parametrize("kernels", [KERNELS_2, KERNELS_3], ids=["2", "3"])
+    @pytest.mark.parametrize("seed", range(4))
+    def test_any_row_permutation(self, kernels, seed):
+        """Shuffled rows give the same entries, label by label."""
+        index = _product()
+        variances = _variances(index)
+        expected = _build(kernels, variances, index)
+
+        rng = np.random.default_rng(seed)
+        shuffled = index[rng.permutation(len(index))]
+        result = _build(kernels, variances, shuffled)
+
+        assert result.index.equals(shuffled)
+        np.testing.assert_allclose(
+            result.reindex(index=index, columns=index).to_numpy(),
+            expected.to_numpy(),
+            rtol=0,
+            atol=1e-15,
+        )
+
+    @pytest.mark.parametrize("kernels", [KERNELS_2, KERNELS_3], ids=["2", "3"])
+    @pytest.mark.parametrize("order", [["lat", "lon", "time"], ["lon", "lat", "time"]])
+    def test_space_first_orders(self, kernels, order):
+        """An index sorted by space first, as #76 reports, gives the same entries."""
+        index = _product()
+        variances = _variances(index)
+        expected = _relabel(_build(kernels, variances, index), order)
+
+        other = index.reorder_levels(order).sort_values()
+        result = _build(kernels, variances, other)
+
+        np.testing.assert_allclose(
+            result.to_numpy(),
+            expected.reindex(index=other, columns=other).to_numpy(),
+            rtol=0,
+            atol=1e-15,
+        )
+
+    @pytest.mark.parametrize("kernels", [KERNELS_2, KERNELS_3], ids=["2", "3"])
+    def test_same_cells_dropped_at_every_time(self, kernels):
+        """A product with the same cells left out at every time, as slv builds."""
+        index = _product()
+        lat = index.get_level_values("lat")
+        lon = index.get_level_values("lon")
+        subset = index[~((lat == 40.5) & (lon == -112.0))]
+        variances = _variances(index)
+
+        result = _build(kernels, variances, subset).to_numpy()
+
+        np.testing.assert_allclose(
+            result, _direct_formula(kernels, variances, subset), rtol=1e-14, atol=0
+        )
+        if kernels is KERNELS_2:
+            # Time by the remaining cells is still a product, and the result is
+            # what it was before #76.
+            np.testing.assert_allclose(
+                result, _old_formula(kernels, variances, subset), rtol=0, atol=1e-15
+            )
+
+    @pytest.mark.parametrize("kernels", [KERNELS_2, KERNELS_3], ids=["2", "3"])
+    def test_ragged_subset(self, kernels):
+        """A cell missing at one time only (this raised before #76)."""
+        index = _product()
+        missing = (TIMES[1], 40.5, -112.0)
+        subset = index[[label != missing for label in index]]
+        variances = _variances(index)
+
+        result = _build(kernels, variances, subset)
+
+        assert result.shape == (len(index) - 1, len(index) - 1)
+        np.testing.assert_allclose(
+            result.to_numpy(),
+            _direct_formula(kernels, variances, subset),
+            rtol=1e-14,
+            atol=0,
+        )
+
+    def test_ragged_shuffled_subset_with_scalar_variance(self):
+        """A ragged subset in shuffled order, with one variance for every row."""
+        index = _product()
+        rng = np.random.default_rng(7)
+        subset = index[rng.permutation(len(index))[:-4]]
+        variances = pd.Series(2.5, index=index)
+
+        result = _build(KERNELS_2, 2.5, subset)
+
+        np.testing.assert_allclose(
+            result.to_numpy(),
+            _direct_formula(KERNELS_2, variances, subset),
+            rtol=1e-14,
+            atol=0,
+        )
+
+    def test_variances_on_some_levels(self):
+        """A variance Series indexed by (lat, lon) is aligned onto every time."""
+        cells = pd.MultiIndex.from_product([LATS, LONS], names=["lat", "lon"])
+        cell_variances = pd.Series(np.arange(1.0, 7.0), index=cells, name="var")
+        other = _product().reorder_levels(["lon", "lat", "time"]).sort_values()
+
+        result = _build(KERNELS_2, cell_variances, other)
+
+        row_variances = pd.Series(
+            [cell_variances[(lat, lon)] for lon, lat, _ in other], index=other
+        )
+        np.testing.assert_allclose(
+            result.to_numpy(),
+            _direct_formula(KERNELS_2, row_variances, other),
+            rtol=1e-14,
+            atol=0,
+        )
+
+    def test_kernel_receives_unique_coords_in_first_appearance_order(self):
+        """Each kernel gets a DataFrame of the unique coordinates of its levels."""
+        seen = []
+
+        def recording_kernel(coords):
+            seen.append(coords.copy())
+            return np.eye(len(coords))
+
+        index = _product().reorder_levels(["lat", "lon", "time"]).sort_values()
+        KroneckerError(
+            "prior",
+            1.0,
+            [("time", recording_kernel), (["lat", "lon"], recording_kernel)],
+        ).build(index)
+
+        times, cells = seen
+        assert list(times.columns) == ["time"]
+        assert list(times["time"]) == list(TIMES)
+        assert list(cells.columns) == ["lat", "lon"]
+        assert list(cells.itertuples(index=False, name=None)) == [
+            (lat, lon) for lat in LATS for lon in LONS
+        ]
+
+    def test_repeated_coordinates_raise(self):
+        """Two blocks on the same grid would be perfectly correlated: raise."""
+        index = pd.MultiIndex.from_product(
+            [["a", "b"], TIMES, LATS, LONS], names=["block", "time", "lat", "lon"]
+        )
+        with pytest.raises(ValueError, match="its own combination"):
+            _build(KERNELS_2, 1.0, index)
+
+    def test_kernel_with_wrong_shape_raises(self):
+        """A kernel must return one row and column per unique coordinate."""
+        kernels = [
+            ("time", lambda coords: np.eye(2)),
+            ("lat", _line_kernel("lat", 1.0)),
+        ]
+        index = pd.MultiIndex.from_product([TIMES, LATS], names=["time", "lat"])
+        with pytest.raises(ValueError, match="expected \\(3, 3\\)"):
+            _build(kernels, 1.0, index)
+
+    def test_no_kernels_raise(self):
+        """At least one marginal kernel is needed."""
+        with pytest.raises(ValueError, match="at least one marginal kernel"):
+            _build([], 1.0, _product())
 
 
 class TestErrorComponentAddition:
