@@ -9,7 +9,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from fips.matrix import MatrixBlock
+from fips import Covariance, Operator
 from fips.problems.flux.pipeline import FluxInversionPipeline
 from fips.problems.flux.problem import FluxProblem
 from fips.vector import Block, Vector
@@ -164,19 +164,19 @@ def _solved_problem(times):
             pd.Series(rng.uniform(400, 410, n_obs), index=obs_idx, name="concentration")
         ),
         prior=Block(pd.Series(rng.uniform(1, 2, n_flux), index=flux_idx, name="flux")),
-        forward_operator=MatrixBlock(
+        forward_operator=Operator.from_frame(
             pd.DataFrame(
                 rng.uniform(0, 1, (n_obs, n_flux)), index=obs_idx, columns=flux_idx
             ),
             row_block="concentration",
             col_block="flux",
         ),
-        prior_error=MatrixBlock(
+        prior_error=Covariance.from_frame(
             pd.DataFrame(np.eye(n_flux) * 0.5, index=flux_idx, columns=flux_idx),
             row_block="flux",
             col_block="flux",
         ),
-        modeldata_mismatch=MatrixBlock(
+        modeldata_mismatch=Covariance.from_frame(
             pd.DataFrame(np.eye(n_obs) * 0.1, index=obs_idx, columns=obs_idx),
             row_block="concentration",
             col_block="concentration",

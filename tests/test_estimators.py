@@ -1021,7 +1021,7 @@ class TestRoundoffIndefiniteGain:
         _, _, H, S_0, S_z = self._roundoff_indefinite_problem()
         B = H @ S_0
         A = B @ H.T + S_z
-        with caplog.at_level(logging.WARNING, logger="fips.operator"):
+        with caplog.at_level(logging.WARNING, logger="fips.linalg"):
             _solve_psd(A, B)
         assert any("non-positive-definite" in r.message for r in caplog.records)
 

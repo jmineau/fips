@@ -1,17 +1,8 @@
 """Tests for index validation and manipulation utilities."""
 
-import numpy as np
 import pandas as pd
-import pytest
 
-from fips.indexes import (
-    apply_to_index,
-    assign_block,
-    outer_align_levels,
-    overlaps,
-    resolve_axes,
-    round_index,
-)
+from fips.indexes import apply_to_index, overlaps, round_index
 
 
 def test_apply_to_index():
@@ -33,53 +24,6 @@ def test_apply_to_index():
     pd.testing.assert_index_equal(res, expected)
 
 
-def test_assign_block():
-    """Test assigning block level to indices."""
-    # Single index
-    idx = pd.Index([1, 2, 3], name="a")
-    res = assign_block(idx, "block1")
-    expected = pd.MultiIndex.from_arrays(
-        [["block1"] * 3, [1, 2, 3]], names=["block", "a"]
-    )
-    pd.testing.assert_index_equal(res, expected)
-
-    # MultiIndex without block
-    midx = pd.MultiIndex.from_arrays([[1, 2], [3, 4]], names=["a", "b"])
-    res = assign_block(midx, "block2")
-    expected = pd.MultiIndex.from_arrays(
-        [["block2"] * 2, [1, 2], [3, 4]], names=["block", "a", "b"]
-    )
-    pd.testing.assert_index_equal(res, expected)
-
-    # MultiIndex with existing block
-    midx_block = pd.MultiIndex.from_arrays([["old"] * 2, [1, 2]], names=["block", "a"])
-    res = assign_block(midx_block, "new")
-    expected = pd.MultiIndex.from_arrays([["new"] * 2, [1, 2]], names=["block", "a"])
-    pd.testing.assert_index_equal(res, expected)
-
-
-def test_outer_align_levels():
-    """Test outer alignment of index levels across multiple objects."""
-    df1 = pd.DataFrame({"val": [1, 2]}, index=pd.Index([1, 2], name="a"))
-    df2 = pd.DataFrame({"val": [3, 4]}, index=pd.Index([3, 4], name="b"))
-
-    aligned = outer_align_levels([df1, df2], axis=0)
-
-    assert len(aligned) == 2
-
-    # df1 should have levels ['a', 'b']
-    expected_idx1 = pd.MultiIndex.from_arrays(
-        [[1, 2], [np.nan, np.nan]], names=["a", "b"]
-    )
-    pd.testing.assert_index_equal(aligned[0].index, expected_idx1)
-
-    # df2 should have levels ['a', 'b']
-    expected_idx2 = pd.MultiIndex.from_arrays(
-        [[np.nan, np.nan], [3, 4]], names=["a", "b"]
-    )
-    pd.testing.assert_index_equal(aligned[1].index, expected_idx2)
-
-
 def test_overlaps():
     """Test checking overlap between two indices."""
     idx1 = pd.Index([1, 2, 3])
@@ -90,18 +34,6 @@ def test_overlaps():
     assert overlaps(idx4, idx1) is True  # target is fully in available
     assert overlaps(idx1, idx2) == "partial"  # target is partially in available
     assert overlaps(idx1, idx3) is False  # target is not in available
-
-
-def test_resolve_axes():
-    """Test resolving axis specifications to numeric values."""
-    assert resolve_axes(0) == (0,)
-    assert resolve_axes("index") == (0,)
-    assert resolve_axes(1) == (1,)
-    assert resolve_axes("columns") == (1,)
-    assert resolve_axes("both") == (0, 1)
-
-    with pytest.raises(ValueError):
-        resolve_axes("invalid")
 
 
 def test_round_index():

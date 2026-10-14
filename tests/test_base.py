@@ -12,27 +12,7 @@ from fips.base import (
     SingleBlockMixin,
     Structure,
     Structure1D,
-    Structure2D,
-    xselect,
 )
-
-
-def test_xselect():
-    """
-    Test the xselect utility function for MultiIndex selection.
-    """
-    midx = pd.MultiIndex.from_product([["A", "B"], [1, 2]], names=["L1", "L2"])
-    df = pd.DataFrame({"val": [10, 20, 30, 40]}, index=midx)
-
-    # Select L1="A"
-    res = xselect(df, key="A", axis=0, level="L1", drop_level=True)
-    expected = pd.DataFrame({"val": [10, 20]}, index=pd.Index([1, 2], name="L2"))
-    pd.testing.assert_frame_equal(res, expected)
-
-    # Select L2=1
-    res2 = xselect(df, key=1, axis=0, level="L2", drop_level=True)
-    expected2 = pd.DataFrame({"val": [10, 30]}, index=pd.Index(["A", "B"], name="L1"))
-    pd.testing.assert_frame_equal(res2, expected2)
 
 
 class DummyPickleable(Pickleable):
@@ -204,52 +184,27 @@ def test_structure1d_from_2d():
         Structure1D(df.to_numpy(), name="test")
 
 
-def test_structure2d():
-    """Test Structure2D initialization and conversion to DataFrame."""
-    df = pd.DataFrame(
-        [[1, 2], [3, 4]],
-        index=pd.Index([1, 2], name="a"),
-        columns=pd.Index([1, 2], name="b"),
-    )
-    struct = Structure2D(df, name="test")
-
-    assert struct.name == "test"
-    pd.testing.assert_frame_equal(struct.to_frame(), df)
-    pd.testing.assert_index_equal(struct.columns, pd.Index([1, 2], name="b"))
-
-    # Test symmetric assumption
-    struct_sym = Structure2D(
-        np.array([[1, 2], [3, 4]]), index=pd.Index([1, 2], name="a")
-    )
-    pd.testing.assert_index_equal(struct_sym.columns, pd.Index([1, 2], name="a"))
-
-
 @pytest.mark.parametrize(
     ("name", "expected"),
     [("test", "test"), (0, "0"), (5, "5"), ((1, 2), "(1, 2)"), (None, None)],
     ids=["str", "zero", "int", "tuple", "None"],
 )
-def test_structure2d_name_is_a_string_or_none(name, expected):
-    """A name that is not None becomes a string, and None stays None, as in Structure1D."""
-    df = pd.DataFrame([[1.0, 2.0], [3.0, 4.0]], index=pd.Index([1, 2], name="a"))
-    df.columns.name = "b"
+def test_structure1d_name_is_a_string_or_none(name, expected):
+    """A name that is not None becomes a string, and None stays None."""
     series = pd.Series([1.0, 2.0], index=pd.Index([1, 2], name="a"))
 
-    struct_2d = Structure2D(df, name=name)
-    struct_1d = Structure1D(series, name=name)
+    struct = Structure1D(series, name=name)
 
-    assert struct_2d.name == expected
-    assert type(struct_2d.name) is type(expected)
-    assert struct_2d.name == struct_1d.name
+    assert struct.name == expected
+    assert type(struct.name) is type(expected)
 
 
-def test_structure2d_name_is_kept_by_copy_and_pickle():
+def test_structure1d_name_is_kept_by_copy_and_pickle():
     """The stored name is the string, so a copy and an unpickled copy have the same one."""
-    df = pd.DataFrame([[1.0, 2.0], [3.0, 4.0]], index=pd.Index([1, 2], name="a"))
-    df.columns.name = "b"
+    series = pd.Series([1.0, 2.0], index=pd.Index([1, 2], name="a"))
 
     for name, expected in [(5, "5"), (None, None)]:
-        struct = Structure2D(df, name=name)
+        struct = Structure1D(series, name=name)
         for result in (struct.copy(), pickle.loads(pickle.dumps(struct))):
             assert result.name == expected
             assert type(result.name) is type(expected)
@@ -264,7 +219,7 @@ class DummySingleBlock(SingleBlockMixin, DummyStructure):
 def test_single_block_mixin():
     """Test SingleBlockMixin validation and requirements."""
     # Missing name
-    with pytest.raises(ValueError, match="must have a name property"):
+    with pytest.raises(ValueError, match="must have a name"):
         DummySingleBlock(pd.Series([1, 2], index=pd.Index([0, 1], name="idx")))
 
     # Has block level

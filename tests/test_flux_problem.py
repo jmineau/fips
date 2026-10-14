@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from fips.matrix import MatrixBlock
+from fips import Covariance, Operator
 from fips.problems.flux.problem import FluxProblem
 from fips.vector import Block
 
@@ -47,9 +47,9 @@ def flux_obs(obs_idx):
 
 @pytest.fixture
 def flux_jacobian(obs_idx, flux_idx):
-    """Jacobian MatrixBlock mapping flux → concentration."""
+    """Jacobian Operator mapping flux → concentration."""
     H = np.eye(4)
-    return MatrixBlock(
+    return Operator.from_frame(
         pd.DataFrame(H, index=obs_idx, columns=flux_idx),
         row_block="concentration",
         col_block="flux",
@@ -58,8 +58,8 @@ def flux_jacobian(obs_idx, flux_idx):
 
 @pytest.fixture
 def flux_prior_error(flux_idx):
-    """Prior flux error CovarianceMatrix (diagonal)."""
-    return MatrixBlock(
+    """Prior flux error Covariance (diagonal)."""
+    return Covariance.from_frame(
         pd.DataFrame(np.eye(4) * 0.5, index=flux_idx, columns=flux_idx),
         row_block="flux",
         col_block="flux",
@@ -68,8 +68,8 @@ def flux_prior_error(flux_idx):
 
 @pytest.fixture
 def flux_mismatch(obs_idx):
-    """Observation error CovarianceMatrix (diagonal)."""
-    return MatrixBlock(
+    """Observation error Covariance (diagonal)."""
+    return Covariance.from_frame(
         pd.DataFrame(np.eye(4) * 0.1, index=obs_idx, columns=obs_idx),
         row_block="concentration",
         col_block="concentration",
@@ -219,23 +219,26 @@ class TestFluxProblemStateProperties:
             flux_problem.prior_fluxes.values, [1.0, 2.0, 3.0, 4.0]
         )
 
-    def test_jacobian_is_dataframe(self, flux_problem):
-        """Test that jacobian returns a DataFrame."""
+    def test_jacobian_is_operator(self, flux_problem):
+        """Test that jacobian returns the Operator block concentration x flux."""
         result = flux_problem.jacobian
-        assert isinstance(result, pd.DataFrame)
+        assert isinstance(result, Operator)
         assert result.shape == (4, 4)
+        assert (result.rows.names, result.cols.names) == (("concentration",), ("flux",))
 
-    def test_prior_flux_error_is_dataframe(self, flux_problem):
-        """Test that prior_flux_error returns a DataFrame."""
+    def test_prior_flux_error_is_covariance(self, flux_problem):
+        """Test that prior_flux_error returns the Covariance block of the fluxes."""
         result = flux_problem.prior_flux_error
-        assert isinstance(result, pd.DataFrame)
+        assert isinstance(result, Covariance)
         assert result.shape == (4, 4)
+        np.testing.assert_allclose(result.dense(), np.eye(4) * 0.5)
 
-    def test_concentration_error_is_dataframe(self, flux_problem):
-        """Test that concentration_error returns a DataFrame."""
+    def test_concentration_error_is_covariance(self, flux_problem):
+        """Test that concentration_error returns the Covariance block of the obs."""
         result = flux_problem.concentration_error
-        assert isinstance(result, pd.DataFrame)
+        assert isinstance(result, Covariance)
         assert result.shape == (4, 4)
+        np.testing.assert_allclose(result.dense(), np.eye(4) * 0.1)
 
 
 # ---------------------------------------------------------------------------
@@ -275,20 +278,21 @@ class TestFluxProblemPosteriorProperties:
         assert isinstance(result, pd.Series)
         assert len(result) == 4
 
-    def test_posterior_flux_error_is_dataframe(self, solved_flux_problem):
-        """Test that posterior_flux_error returns a DataFrame."""
+    def test_posterior_flux_error_is_covariance(self, solved_flux_problem):
+        """Test that posterior_flux_error returns a Covariance."""
         result = solved_flux_problem.posterior_flux_error
-        assert isinstance(result, pd.DataFrame)
+        assert isinstance(result, Covariance)
         assert result.shape == (4, 4)
 
     def test_prior_concentration_error_is_on_the_obs_index(self, solved_flux_problem):
         """The prior flux error mapped to concentrations, block-indexed like the obs."""
         S = solved_flux_problem.prior_concentration_error
-        assert isinstance(S, pd.DataFrame)
+        assert isinstance(S, Covariance)
         assert S.shape == (solved_flux_problem.n_obs, solved_flux_problem.n_obs)
-        H = solved_flux_problem.jacobian.to_numpy()
-        S_0 = solved_flux_problem.prior_flux_error.to_numpy()
-        np.testing.assert_allclose(S.to_numpy(), H @ S_0 @ H.T)
+        assert S.space == solved_flux_problem.jacobian.rows
+        H = solved_flux_problem.jacobian.dense()
+        S_0 = solved_flux_problem.prior_flux_error.dense()
+        np.testing.assert_allclose(S.dense(), H @ S_0 @ H.T)
 
     def test_prior_concentrations_is_series(self, solved_flux_problem):
         """Test that prior_concentrations returns a Series."""
@@ -304,8 +308,8 @@ class TestFluxProblemPosteriorProperties:
 
     def test_posterior_reduces_error(self, solved_flux_problem):
         """Posterior error variance should be less than or equal to prior."""
-        prior_var = np.diag(solved_flux_problem.prior_flux_error.values)
-        post_var = np.diag(solved_flux_problem.posterior_flux_error.values)
+        prior_var = np.diag(solved_flux_problem.prior_flux_error.dense())
+        post_var = np.diag(solved_flux_problem.posterior_flux_error.dense())
         assert np.all(post_var <= prior_var + 1e-10)
 
 
