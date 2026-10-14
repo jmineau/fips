@@ -176,17 +176,11 @@ From `fips.__init__`:
   fixes the regression; drop it when the minimum pandas has the fix.
 - **Sparse paths.** `CovarianceMatrix` and large operators may be sparse.
   Don't densify in helpers without a sparse fallback — flux-scale problems
-  are GB-class. Compute with `Structure2D.operator`, not `.values`: it gives a
-  `DenseOperator` (the frame's array, no copy), a `SparseOperator` (SciPy CSR)
-  or, for a sparse matrix stored on its diagonal only, a `DiagonalOperator`,
-  and it is built on each access (no cache to go stale after `inplace=True`).
-  Products and sums keep the cheapest exact form (`operator.py`'s module
-  docstring has the rule; a product of two sparse operators turns dense past
-  a quarter filled). The estimator holds `H`, `S_0`, `S_z` as operators and
-  never forms a dense copy of a sparse input except where the result is dense
-  anyway (`S_hat`, `K`, `A`, `S_y0` are dense arrays). The tests that hold this
-  are the eight dense/sparse combinations in `tests/test_operator.py` and the
-  sparse half of the oracle's closed-form test.
+  are GB-class. Compute with `Structure2D.operator`, not `.values`: a
+  `DenseOperator` (no copy), `SparseOperator` (CSR) or `DiagonalOperator`, built
+  on each access. Products and sums keep the cheapest exact form (the rule is in
+  `operator.py`'s docstring). The tests are the eight dense/sparse combinations
+  in `tests/test_operator.py` and the oracle's sparse closed form.
 - **`Pickleable` contract.** Anything user-facing should round-trip through
   pickle. New stateful classes should inherit from `Pickleable` (in `base.py`)
   or document why not.
@@ -431,14 +425,10 @@ covariance). See README "Multi-block" example.
   show. pyrefly types `DataFrame.columns` as `Index[str]`, so it calls the
   `str(col)` in `plot_comparison` an unnecessary conversion, but a column label
   is an integer when a Series has no name: keep the `str()`.
-- **SciPy is not annotated, so pyrefly infers the return type of each
-  `LinearOperator` default** (a private class such as
-  `_TransposedLinearOperator`) and calls an override that returns an
-  `Operator` a `bad-override`; it also reads a sparse matrix's `shape` as
-  possibly `None` (its initial value). `operator.py` marks those four lines
-  (`_transpose`, `__truediv__`, `__neg__`, and `shape` in `SparseOperator`)
-  with `# pyrefly: ignore[...]` and the reason. A new form that only overrides
-  `_transpose` needs none, since the base declares it to return `Operator`.
+- **SciPy is not annotated**: pyrefly takes the private class a `LinearOperator`
+  default returns as the type an override must return, and a sparse `shape` as
+  possibly `None`. `operator.py` marks those four lines with an ignore and the
+  reason; a new form that overrides only `_transpose` needs none.
 - **pyrefly (1.3.2) reads `type[X]` written inside a base class's arguments as
   `type[Any]`**: after `class R(dict[str, type[E]])` a lookup in `R()` is
   `type[Any]`, though `typing.Type[E]` or an alias of `type[E]` gives
