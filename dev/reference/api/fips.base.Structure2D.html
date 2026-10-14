@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>fips.base.Structure2D &#8212; fips 0.1.0b10.dev44+g371da9d2f documentation</title>
+    <title>fips.base.Structure2D &#8212; fips 0.1.0b10.dev45+g6b4eacb44 documentation</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0" />
 
-    <script src="../../_static/documentation_options.js?v=1a9975e2"></script>
+    <script src="../../_static/documentation_options.js?v=877b613a"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -133,8 +133,8 @@
       
     
     
-    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.1.0b10.dev44+g371da9d2f documentation - Home"/>
-    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.1.0b10.dev44+g371da9d2f documentation - Home"/>
+    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.1.0b10.dev45+g6b4eacb44 documentation - Home"/>
+    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.1.0b10.dev45+g6b4eacb44 documentation - Home"/>
   
   
 </a></div>
@@ -967,7 +967,8 @@
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>data</strong> (<em>np.ndarray</em><em> or </em><em>pd.DataFrame</em>) – 2D data. For a diagonal, use <a class="reference internal" href="fips.base.Structure2D.diagonal.html#fips.base.Structure2D.diagonal" title="fips.base.Structure2D.diagonal"><code class="xref py py-meth docutils literal notranslate"><span class="pre">diagonal()</span></code></a>.</p></li>
-<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a><em>, </em><em>optional</em>) – Name for the Structure.</p></li>
+<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a><em>, </em><em>optional</em>) – Name for the Structure. A name that is not None is converted to a string
+during construction, as <a class="reference internal" href="fips.base.Structure1D.html#fips.base.Structure1D" title="fips.base.Structure1D"><code class="xref py py-class docutils literal notranslate"><span class="pre">Structure1D</span></code></a> does.</p></li>
 <li><p><strong>index</strong> (<em>pd.Index</em>) – Index for the rows of the DataFrame.</p></li>
 <li><p><strong>columns</strong> (<em>pd.Index</em><em>, </em><em>optional</em>) – Index for the columns of the DataFrame. If None, uses the same as <cite>index</cite>.</p></li>
 <li><p><strong>dtype</strong> (<em>data type</em><em>, </em><em>optional</em>) – Data type to force.</p></li>
@@ -1005,7 +1006,7 @@ setting sparse=True (e.g. via a threshold in the builder).</p></li>
 <td><p>True if the internal DataFrame uses pandas sparse storage.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="fips.base.Structure2D.name.html#fips.base.Structure2D.name" title="fips.base.Structure2D.name"><code class="xref py py-obj docutils literal notranslate"><span class="pre">name</span></code></a></p></td>
-<td><p>Name of the structure, used for error messages and block naming.</p></td>
+<td><p>a string, or None when it has none.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="fips.base.Structure2D.values.html#fips.base.Structure2D.values" title="fips.base.Structure2D.values"><code class="xref py py-obj docutils literal notranslate"><span class="pre">values</span></code></a></p></td>
 <td><p>Return values as numpy array or sparse matrix.</p></td>

@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>fips.MatrixBlock &#8212; fips 0.1.0b10.dev44+g371da9d2f documentation</title>
+    <title>fips.MatrixBlock &#8212; fips 0.1.0b10.dev45+g6b4eacb44 documentation</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0" />
 
-    <script src="../../_static/documentation_options.js?v=1a9975e2"></script>
+    <script src="../../_static/documentation_options.js?v=877b613a"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -133,8 +133,8 @@
       
     
     
-    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.1.0b10.dev44+g371da9d2f documentation - Home"/>
-    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.1.0b10.dev44+g371da9d2f documentation - Home"/>
+    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.1.0b10.dev45+g6b4eacb44 documentation - Home"/>
+    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.1.0b10.dev45+g6b4eacb44 documentation - Home"/>
   
   
 </a></div>
@@ -977,7 +977,8 @@ semantics for how different components interact.</p>
 diagonal, use <a class="reference internal" href="fips.MatrixBlock.diagonal.html#fips.MatrixBlock.diagonal" title="fips.MatrixBlock.diagonal"><code class="xref py py-meth docutils literal notranslate"><span class="pre">diagonal()</span></code></a>.</p></li>
 <li><p><strong>row_block</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a><em>, </em><em>optional</em>) – Name of the row block (e.g., “state”, “obs”). Required if data is not a MatrixBlock.</p></li>
 <li><p><strong>col_block</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a><em>, </em><em>optional</em>) – Name of the column block (e.g., “state”, “obs”). Required if data is not a MatrixBlock.</p></li>
-<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a><em>, </em><em>optional</em>) – Name for the block. If None, defaults to “{row_block}_{col_block}”.</p></li>
+<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a><em>, </em><em>optional</em>) – Name for the block. If None, defaults to “{row_block}_{col_block}”.
+A name that is not a string is converted to one.</p></li>
 <li><p><strong>index</strong> (<em>pd.Index</em><em>, </em><em>optional</em>) – Index for the rows of the DataFrame.</p></li>
 <li><p><strong>columns</strong> (<em>pd.Index</em><em>, </em><em>optional</em>) – Index for the columns of the DataFrame. If None, uses the same as <cite>index</cite>.</p></li>
 <li><p><strong>dtype</strong> (<em>data type</em><em>, </em><em>optional</em>) – Data type to force.</p></li>
