@@ -132,6 +132,35 @@ class TestEachForm:
             assert isinstance(result, KIND[form])
             np.testing.assert_array_equal(result.dense(), expected)
 
+    def test_zero_dim_array_is_a_scalar(self, form):
+        """A 0-d array (``gamma=np.array(0.5)``) scales as the scalar it holds."""
+        A = square(form, np.random.default_rng(4))
+        op = make(form, A)
+        g = np.array(0.5)
+        for result, expected in [
+            (op * g, A * 0.5),
+            (g * op, 0.5 * A),
+            (op / g, A / 0.5),
+            (op.dot(g), A * 0.5),
+        ]:
+            assert isinstance(result, KIND[form])
+            np.testing.assert_array_equal(result.dense(), expected)
+        with pytest.raises(ValueError, match="Scalar operands"):
+            op.__rmatmul__(g)
+
+    def test_array_copies_when_asked(self, form):
+        """``np.array(op)`` never shares memory with the operator; ``np.asarray`` may."""
+        A = square(form, np.random.default_rng(7))
+        op = make(form, A)
+        copy = np.array(op)
+        copy[0, 0] = 99.0
+        np.testing.assert_array_equal(op.dense(), A)
+        assert not np.shares_memory(np.array(op, copy=True), op.dense())
+        np.testing.assert_array_equal(np.asarray(op), A)
+        np.testing.assert_array_equal(np.array(op, dtype=np.float32), A.astype("f4"))
+        if form == "dense":
+            assert np.asarray(op) is op.dense()  # no copy unless asked
+
     def test_to_frame(self, form):
         """``to_frame`` labels the matrix; sparse forms give a sparse frame."""
         rng = np.random.default_rng(5)
@@ -168,6 +197,14 @@ def test_diagonal_solve_raises_on_zero():
     """A zero on the diagonal is singular."""
     with pytest.raises(LinAlgError, match="singular"):
         DiagonalOperator([1.0, 0.0]).solve(np.ones(2))
+
+
+def test_singular_raises_linalgerror_in_every_form():
+    """A singular sparse matrix raises ``LinAlgError``, as a dense one does (not SuperLU's ``RuntimeError``)."""
+    S = np.array([[1.0, 1.0, 0.0], [1.0, 1.0, 0.0], [0.0, 0.0, 1.0]])
+    for op in (DenseOperator(S), SparseOperator(sp.csr_matrix(S))):
+        with pytest.raises(LinAlgError, match="singular"):
+            op.solve(np.ones(3))
 
 
 def test_dense_solve_keeps_ldl_fallback(caplog):
@@ -354,6 +391,28 @@ class TestStructureOperator:
         S.reindex(idx[::-1], columns=idx[::-1], inplace=True)
         np.testing.assert_array_equal(S.operator.diagonal(), [4.0, 3.0, 2.0, 1.0])
 
+    def test_integer_data_computes_in_float64(self):
+        """Integer structures give float64 from a sum, ``variances`` and ``convolve``."""
+        from fips import Vector, convolve
+
+        idx = self.index()[:2]
+        o = pd.MultiIndex.from_product(
+            [["z"], ["o1", "o2", "o3"]], names=["block", "obs"]
+        )
+        M = Matrix(pd.DataFrame(np.array([[1, 2], [3, 4]]), index=idx, columns=idx))
+        assert set(map(str, (M + M).data.dtypes)) == {"float64"}
+        np.testing.assert_array_equal((M + M).values, [[2.0, 4.0], [6.0, 8.0]])
+        C = CovarianceMatrix(
+            pd.DataFrame(np.array([[2, 1], [1, 3]]), index=idx, columns=idx)
+        )
+        assert C.variances.data.dtype == np.float64
+        H = ForwardOperator(
+            pd.DataFrame(np.array([[1, 0], [0, 1], [1, 1]]), index=o, columns=idx)
+        )
+        y = convolve(Vector(pd.Series([1, 2], index=idx, name="prior")), H)
+        assert y.dtype == np.float64
+        np.testing.assert_array_equal(y.values, [1.0, 2.0, 3.0])
+
     def test_forward_operator(self):
         """A sparse forward operator's ``operator`` is rectangular and sparse."""
         o = pd.MultiIndex.from_product([["z"], ["o1", "o2"]], names=["block", "obs"])
@@ -473,12 +532,12 @@ def test_all_sparse_diagonal_problem_stays_sparse():
     """Sparse ``H`` with diagonal covariances: the gain solve goes through the sparse path."""
     post = _problem("diagonal", (True, True, True)).solve("bayesian").result
     est = post.estimator
-    assert isinstance(est.H, SparseOperator)
-    assert isinstance(est.S_0, DiagonalOperator) and isinstance(
-        est.S_z, DiagonalOperator
+    assert isinstance(est._H_op, SparseOperator)
+    assert isinstance(est._S_0_op, DiagonalOperator) and isinstance(
+        est._S_z_op, DiagonalOperator
     )
     assert isinstance(est._HS_0, SparseOperator)
-    assert isinstance(est._HS_0H + est.S_z, SparseOperator)
+    assert isinstance(est._HS_0H + est._S_z_op, SparseOperator)
 
 
 def test_estimator_takes_arrays_and_sparse_matrices():
@@ -486,14 +545,78 @@ def test_estimator_takes_arrays_and_sparse_matrices():
     z, x_0, H, S_0, S_z, c = _inputs("diagonal")
     dense = BayesianSolver(z, x_0, H, S_0, S_z, c=c)
     mixed = BayesianSolver(z, x_0, sp.csr_matrix(H), sp.csr_matrix(S_0), S_z, c=c)
-    assert isinstance(mixed.H, SparseOperator) and isinstance(
-        mixed.S_0, DiagonalOperator
+    assert isinstance(mixed._H_op, SparseOperator) and isinstance(
+        mixed._S_0_op, DiagonalOperator
     )
     _close(mixed.x_hat, dense.x_hat, "x_hat")
     _close(mixed.S_hat, dense.S_hat, "S_hat")
     # The matrices read back as arrays
     np.testing.assert_array_equal(np.asarray(dense.H), H)
-    np.testing.assert_array_equal(np.asarray(mixed.S_0), S_0)
+    np.testing.assert_array_equal(mixed.S_0.toarray(), S_0)
+
+
+def test_gamma_as_zero_dim_array():
+    """``gamma`` given as a 0-d array solves as the float it holds."""
+    z, x_0, H, S_0, S_z, c = _inputs("banded")
+    ref = BayesianSolver(z, x_0, H, S_0, S_z, c=c, gamma=0.5)
+    est = BayesianSolver(z, x_0, H, S_0, S_z, c=c, gamma=np.array(0.5))
+    np.testing.assert_array_equal(est.x_hat, ref.x_hat)
+    assert est.reduced_chi2 == ref.reduced_chi2
+
+
+class TestEstimatorAttributes:
+    """``H``, ``S_0``, ``S_z`` and ``_S_z_orig`` give what they gave before operators."""
+
+    def test_dense_inputs_give_arrays(self):
+        """Dense inputs read back as arrays, which index and multiply elementwise."""
+        z, x_0, H, S_0, S_z, c = _inputs("banded")
+        est = BayesianSolver(z, x_0, H, S_0, S_z, c=c, gamma=0.5)
+        for name, expected in (
+            ("H", H),
+            ("S_0", S_0),
+            ("S_z", S_z / 0.5),
+            ("_S_z_orig", S_z),
+        ):
+            value = getattr(est, name)
+            assert type(value) is np.ndarray, name
+            np.testing.assert_array_equal(value, expected)
+        v = np.arange(1.0, N + 1)
+        np.testing.assert_array_equal(est.S_0 * v, S_0 * v)  # elementwise
+        assert est.S_0[0, 1] == S_0[0, 1]
+        np.testing.assert_array_equal(est.H.sum(axis=0), H.sum(axis=0))
+
+    def test_sparse_inputs_give_csr_matrices(self):
+        """A sparse or diagonal input reads back as a CSR matrix, as ``.values`` gives it."""
+        z, x_0, H, S_0, S_z, c = _inputs("diagonal")
+        est = BayesianSolver(
+            z, x_0, sp.csr_matrix(H), sp.csr_matrix(S_0), sp.csr_matrix(S_z), c=c
+        )
+        for name, expected in (("H", H), ("S_0", S_0), ("S_z", S_z)):
+            value = getattr(est, name)
+            assert isinstance(value, sp.csr_matrix), name
+            np.testing.assert_array_equal(value.toarray(), expected)
+
+    def test_an_edit_does_not_reach_the_estimator(self):
+        """The arrays are read-only, and ``np.array`` of one is a copy."""
+        z, x_0, H, S_0, S_z, c = _inputs("banded")
+        est = BayesianSolver(z, x_0, H, S_0, S_z, c=c)
+        with pytest.raises(ValueError, match="read-only"):
+            est.H[0, 0] = 99.0
+        copy = np.array(est.H)
+        copy[:] = 0.0
+        np.testing.assert_array_equal(est.H, H)
+        np.testing.assert_allclose(est.A, BayesianSolver(z, x_0, H, S_0, S_z, c=c).A)
+
+    def test_problem_estimator_attributes(self):
+        """Through ``fips.solve``: arrays for dense structures, CSR for sparse ones."""
+        dense = _problem("banded", (False, False, False)).solve("bayesian").estimator
+        sparse = _problem("banded", (True, True, True)).solve("bayesian").estimator
+        for name in ("H", "S_0", "S_z"):
+            assert type(getattr(dense, name)) is np.ndarray, name
+            assert isinstance(getattr(sparse, name), sp.csr_matrix), name
+            np.testing.assert_allclose(
+                getattr(sparse, name).toarray(), getattr(dense, name)
+            )
 
 
 class TestEstimatorPickle:
@@ -506,9 +629,10 @@ class TestEstimatorPickle:
         _ = est.x_hat, est.reduced_chi2
         state = est.__getstate__()
         assert not any(isinstance(v, Operator) for v in state.values())
+        assert {"H", "S_0", "S_z", "_S_z_orig"} <= set(state)
         loaded = pickle.loads(pickle.dumps(est))
-        assert isinstance(loaded.H, SparseOperator)
-        assert isinstance(loaded.S_0, DiagonalOperator)
+        assert isinstance(loaded._H_op, SparseOperator)
+        assert isinstance(loaded._S_0_op, DiagonalOperator)
         np.testing.assert_array_equal(loaded.x_hat, est.x_hat)
         assert loaded.uncertainty_reduction == est.uncertainty_reduction
 
@@ -520,6 +644,7 @@ class TestEstimatorPickle:
         old["_H_T"] = H.T
         loaded = BayesianSolver.__new__(BayesianSolver)
         loaded.__setstate__(old)
-        assert isinstance(loaded.H, DenseOperator) and "_H_T" not in vars(loaded)
+        assert isinstance(loaded._H_op, DenseOperator) and "_H_T" not in vars(loaded)
+        assert type(loaded.H) is np.ndarray
         _close(loaded.reduced_chi2, est.reduced_chi2, "reduced_chi2")
         _close(loaded.U_red, est.U_red, "U_red")
