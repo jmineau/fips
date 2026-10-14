@@ -119,6 +119,9 @@ def outer_align_levels(
 
             for name in schema_names:
                 if name in idx.names:
+                    # pandas-stubs take only int | str as a level, though a level
+                    # name is any Hashable
+                    # pyrefly: ignore[bad-argument-type]
                     arrays.append(idx.get_level_values(name))
                 else:
                     arrays.append(np.full(len(idx), fill_value))
@@ -219,6 +222,9 @@ def to_numeric(index: pd.Index) -> pd.Index:
         return index
 
     try:
+        # pandas-stubs have no to_numeric() overload for an Index; pandas takes
+        # one and returns an Index
+        # pyrefly: ignore[no-matching-overload]
         numeric_index = pd.to_numeric(index, errors="raise")
         return pd.Index(numeric_index, name=index.name)
     except (ValueError, TypeError):

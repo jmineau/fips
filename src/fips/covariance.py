@@ -109,6 +109,9 @@ class ErrorComponent(ABC):
 
             # Convert the target index to a dataframe just to use its join capabilities
             target_df = pd.DataFrame(index=index)
+            # pandas-stubs take only str names in join(on=), though a level name
+            # is any Hashable
+            # pyrefly: ignore[bad-argument-type]
             aligned = target_df.join(variances, on=target_levels)
             return aligned[variances.name].fillna(0.0)
 
