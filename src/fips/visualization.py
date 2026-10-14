@@ -10,8 +10,8 @@ from collections.abc import Iterable, Sequence
 import numpy as np
 import pandas as pd
 
-from fips.covariance import CovarianceMatrix
-from fips.matrix import Matrix
+from fips.covariance import Covariance
+from fips.operator import Operator
 from fips.vector import Block, Vector
 
 ArrayLike = Sequence | np.ndarray
@@ -107,8 +107,7 @@ def plot_comparison(
     *series: pd.Series | Vector | Block,
     x: str | int | None = None,
     truth: pd.Series | Vector | Block | None = None,
-    errors: Sequence[pd.DataFrame | CovarianceMatrix | Matrix | pd.Series | None]
-    | None = None,
+    errors: Sequence[pd.DataFrame | Operator | pd.Series | None] | None = None,
     kind: str | None = None,
 ):
     """
@@ -125,9 +124,10 @@ def plot_comparison(
         Name or level of the index to use for x-axis. Required if series have MultiIndex.
     truth : pd.Series or Vector or Block, optional
         True values to plot as reference.
-    errors : Sequence of pd.DataFrame or CovarianceMatrix or Matrix or pd.Series or None, optional
+    errors : Sequence of pd.DataFrame or Covariance or Operator or pd.Series or None, optional
         Error estimates for each series. Must match length of series.
-        If CovarianceMatrix or Matrix, extracts diagonal as standard deviations.
+        If a Covariance or an Operator, its diagonal's square roots (the
+        standard deviations) are used.
         Use None for a series with no error: it is plotted without a band or
         error bars.
     kind : {'line', 'bar'}, optional
@@ -156,10 +156,14 @@ def plot_comparison(
 
             name = df.columns[i]
 
-            if isinstance(err, CovarianceMatrix):
-                e = pd.Series(np.sqrt(err.variances.values), index=err.index, name=name)
-            elif isinstance(err, Matrix):
-                e = pd.Series(np.sqrt(np.diag(err.values)), index=err.index, name=name)
+            if isinstance(err, Covariance):
+                variances = err.variances
+                e = pd.Series(
+                    np.sqrt(variances.values), index=variances.index, name=name
+                )
+            elif isinstance(err, Operator):
+                diagonal = np.sqrt(err.data.diagonal())
+                e = pd.Series(diagonal, index=err.rows.index, name=name)
             else:
                 e = _unwrap(err)
                 if isinstance(e, pd.Series):

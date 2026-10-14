@@ -16,14 +16,14 @@ from numpy.linalg import LinAlgError
 from scipy.linalg import inv, solve
 
 from fips._whitened import Whitened
-from fips.operator import (
+from fips.linalg import (
     DenseOperator,
     DiagonalOperator,
-    Operator,
-    OperatorLike,
+    LinearOperator,
+    LinearOperatorLike,
     SparseOperator,
     _solve_psd,
-    as_operator,
+    as_linear_operator,
 )
 
 logger = logging.getLogger(__name__)
@@ -44,7 +44,7 @@ _OPERATOR_NAMES = {
 _CACHED_OPERATORS = ("_HS_0", "_HS_0H")
 
 
-def _times_pseudo_inverse(XWt: np.ndarray, W: Operator) -> np.ndarray:
+def _times_pseudo_inverse(XWt: np.ndarray, W: LinearOperator) -> np.ndarray:
     """
     Return ``X W*`` given ``X W^T``, where ``W* = W^T (W W^T)^-1`` is the pseudo-inverse of `W`.
 
@@ -64,7 +64,7 @@ def _times_pseudo_inverse(XWt: np.ndarray, W: Operator) -> np.ndarray:
         ) from err
 
 
-def _raw(op: Operator):
+def _raw(op: LinearOperator):
     """Return the array or SciPy sparse matrix an operator holds; a form of its own (Kronecker) stays itself."""
     if isinstance(op, DenseOperator):
         return op.array
@@ -73,7 +73,7 @@ def _raw(op: Operator):
     return op
 
 
-def _public(op: Operator) -> "np.ndarray | sp.csr_matrix":
+def _public(op: LinearOperator) -> "np.ndarray | sp.csr_matrix":
     """
     Return an operator as the estimator's public attributes give a matrix.
 
@@ -146,8 +146,8 @@ class Estimator(ABC):
     Base inversion estimator class.
 
     The matrices may be dense arrays, SciPy sparse matrices or
-    :class:`~fips.operator.Operator`; the estimator computes with each as an
-    operator (:func:`~fips.operator.as_operator`), so a sparse or diagonal
+    :class:`~fips.linalg.LinearOperator`; the estimator computes with each as an
+    operator (:func:`~fips.linalg.as_linear_operator`), so a sparse or diagonal
     covariance stays sparse or diagonal through the solve. Its attributes
     :attr:`H`, :attr:`S_0` and :attr:`S_z` give each matrix as an array (a
     CSR matrix for a sparse one).
@@ -158,11 +158,11 @@ class Estimator(ABC):
         Observed data.
     x_0 : np.ndarray
         Prior model state estimate.
-    H : np.ndarray, SciPy sparse matrix or Operator
+    H : np.ndarray, SciPy sparse matrix or LinearOperator
         Forward operator.
-    S_0 : np.ndarray, SciPy sparse matrix or Operator
+    S_0 : np.ndarray, SciPy sparse matrix or LinearOperator
         Prior error covariance.
-    S_z : np.ndarray, SciPy sparse matrix or Operator
+    S_z : np.ndarray, SciPy sparse matrix or LinearOperator
         Model-data mismatch covariance.
     c : np.ndarray or float, optional
         Constant data, defaults to 0.0.
@@ -172,9 +172,9 @@ class Estimator(ABC):
     """Observed data."""
     x_0: np.ndarray
     """Prior model state estimate."""
-    _H_op: Operator
-    _S_0_op: Operator
-    _S_z_op: Operator
+    _H_op: LinearOperator
+    _S_0_op: LinearOperator
+    _S_z_op: LinearOperator
     c: np.ndarray
     """Constant data, which can be a scalar or an array matching the shape of z."""
     n_z: int
@@ -186,16 +186,16 @@ class Estimator(ABC):
         self,
         z: np.ndarray,
         x_0: np.ndarray,
-        H: OperatorLike,
-        S_0: OperatorLike,
-        S_z: OperatorLike,
+        H: LinearOperatorLike,
+        S_0: LinearOperatorLike,
+        S_z: LinearOperatorLike,
         c: np.ndarray | float | None = None,
     ):
         self.z = z.astype(float)
         self.x_0 = x_0.astype(float)
-        self._H_op = as_operator(H)
-        self._S_0_op = as_operator(S_0)
-        self._S_z_op = as_operator(S_z)
+        self._H_op = as_linear_operator(H)
+        self._S_0_op = as_linear_operator(S_0)
+        self._S_z_op = as_linear_operator(S_z)
 
         # Handle optional constant data
         if c is None:
@@ -216,7 +216,7 @@ class Estimator(ABC):
         Forward operator.
 
         An array (read-only), or a CSR matrix when it is sparse. The estimator
-        computes with it as an :class:`~fips.operator.Operator`.
+        computes with it as an :class:`~fips.linalg.LinearOperator`.
         """
         return _public(self._H_op)
 
@@ -228,7 +228,7 @@ class Estimator(ABC):
         An array (read-only), or a CSR matrix when it is sparse or diagonal. A
         covariance kept in another form (as Kronecker factors) is formed as a
         dense array each time this is read; the estimator computes with its
-        :class:`~fips.operator.Operator`.
+        :class:`~fips.linalg.LinearOperator`.
         """
         return _public(self._S_0_op)
 
@@ -238,7 +238,7 @@ class Estimator(ABC):
         Model-data mismatch covariance.
 
         An array (read-only), or a CSR matrix when it is sparse or diagonal.
-        The estimator computes with it as an :class:`~fips.operator.Operator`.
+        The estimator computes with it as an :class:`~fips.linalg.LinearOperator`.
         """
         return _public(self._S_z_op)
 
@@ -257,10 +257,10 @@ class Estimator(ABC):
         """Restore the state, holding each matrix as an operator again."""
         for public, private in _OPERATOR_NAMES.items():
             if public in state:
-                state[private] = as_operator(state.pop(public))
+                state[private] = as_linear_operator(state.pop(public))
         for name in _CACHED_OPERATORS:
             if name in state:
-                state[name] = as_operator(state[name])
+                state[name] = as_linear_operator(state[name])
         state.pop("_H_T", None)  # cached by earlier versions; no longer used
         self.__dict__.update(state)
 
@@ -487,13 +487,13 @@ class Estimator(ABC):
         """
         return np.diag(np.asarray(self.S_hat)).copy()
 
-    def aggregate_S_hat(self, W: OperatorLike) -> np.ndarray:
+    def aggregate_S_hat(self, W: LinearOperatorLike) -> np.ndarray:
         r"""
         Posterior error covariance of an aggregate of the state, :math:`W \hat{S} W^T`.
 
         Parameters
         ----------
-        W : array-like, SciPy sparse matrix or Operator
+        W : array-like, SciPy sparse matrix or LinearOperator
             The aggregation, ``k x n_x``: row ``i`` gives the weight of each
             state element in aggregate ``i`` (ones for a sum, ``1/count`` for
             a mean).
@@ -503,10 +503,10 @@ class Estimator(ABC):
         np.ndarray
             The ``k x k`` covariance.
         """
-        W = as_operator(W)
+        W = as_linear_operator(W)
         return (W @ (W @ np.asarray(self.S_hat)).T).T
 
-    def aggregate_A(self, W: OperatorLike) -> np.ndarray:
+    def aggregate_A(self, W: LinearOperatorLike) -> np.ndarray:
         r"""
         Averaging kernel of an aggregate of the state, :math:`W A W^*`.
 
@@ -519,7 +519,7 @@ class Estimator(ABC):
 
         Parameters
         ----------
-        W : array-like, SciPy sparse matrix or Operator
+        W : array-like, SciPy sparse matrix or LinearOperator
             The aggregation, ``k x n_x``, with rows that are linearly
             independent.
 
@@ -533,12 +533,12 @@ class Estimator(ABC):
         ValueError
             If the rows of `W` are linearly dependent.
         """
-        W = as_operator(W)
+        W = as_linear_operator(W)
         WA = W @ np.asarray(self.A)
         return _times_pseudo_inverse((W @ WA.T).T, W)
 
     @cached_property
-    def _HS_0(self) -> Operator:
+    def _HS_0(self) -> LinearOperator:
         r"""
         Compute H S_0, in the cheapest form of the two.
 
@@ -548,7 +548,7 @@ class Estimator(ABC):
         return self._H_op @ self._S_0_op
 
     @cached_property
-    def _HS_0H(self) -> Operator:
+    def _HS_0H(self) -> LinearOperator:
         r"""
         Compute H S_0 H^T, in the cheapest form of the three.
 
@@ -616,7 +616,7 @@ class Estimator(ABC):
         # is slow and memory-intensive.
         #
         # Instead, we solve the system: S * y = r  -->  y = S^-1 * r
-        # Then we compute: r^T @ y. Operator.solve does it the way the
+        # Then we compute: r^T @ y. LinearOperator.solve does it the way the
         # covariance is stored (a division for a diagonal, a sparse LU for a
         # sparse one); a dense one falls back to a symmetric LDL^T solve if
         # roundoff (e.g. after aggregation) tips it off positive-definite.
@@ -770,11 +770,11 @@ class BayesianSolver(Estimator):
         Observed data
     x_0 : np.ndarray
         Prior model estimate
-    H : np.ndarray, SciPy sparse matrix or Operator
+    H : np.ndarray, SciPy sparse matrix or LinearOperator
         Forward operator
-    S_0 : np.ndarray, SciPy sparse matrix or Operator
+    S_0 : np.ndarray, SciPy sparse matrix or LinearOperator
         Prior error covariance
-    S_z : np.ndarray, SciPy sparse matrix or Operator
+    S_z : np.ndarray, SciPy sparse matrix or LinearOperator
         Model-data mismatch covariance, positive-definite
     c : np.ndarray | float, optional
         Constant data, defaults to 0.0
@@ -788,21 +788,21 @@ class BayesianSolver(Estimator):
     Values > 1 increase weight on data fitting (less regularization),
     values < 1 decrease weight on data fitting (more regularization).
     """
-    _S_z_orig_op: Operator
+    _S_z_orig_op: LinearOperator
 
     def __init__(
         self,
         z: np.ndarray,
         x_0: np.ndarray,
-        H: OperatorLike,
-        S_0: OperatorLike,
-        S_z: OperatorLike,
+        H: LinearOperatorLike,
+        S_0: LinearOperatorLike,
+        S_z: LinearOperatorLike,
         c: np.ndarray | float | None = None,
         gamma: float = 1.0,
     ):
         # Store original S_z and gamma, then pass regularized S_z to parent
         # Note: S_z is scaled by 1/gamma so that S_z^{-1} is scaled by gamma in the cost function
-        self._S_z_orig_op = as_operator(S_z)
+        self._S_z_orig_op = as_linear_operator(S_z)
         self.gamma = gamma
         S_z_reg = self._S_z_orig_op / gamma
         super().__init__(z=z, x_0=x_0, H=H, S_0=S_0, S_z=S_z_reg, c=c)
@@ -999,7 +999,7 @@ class BayesianSolver(Estimator):
         """
         return self._whitened.variances(self.gamma)
 
-    def aggregate_S_hat(self, W: OperatorLike) -> np.ndarray:
+    def aggregate_S_hat(self, W: LinearOperatorLike) -> np.ndarray:
         r"""
         Posterior error covariance of an aggregate of the state, :math:`W \hat{S} W^T`.
 
@@ -1012,7 +1012,7 @@ class BayesianSolver(Estimator):
 
         Parameters
         ----------
-        W : array-like, SciPy sparse matrix or Operator
+        W : array-like, SciPy sparse matrix or LinearOperator
             The aggregation, ``k x n_x``: row ``i`` gives the weight of each
             state element in aggregate ``i`` (ones for a sum, ``1/count`` for
             a mean).
@@ -1022,12 +1022,12 @@ class BayesianSolver(Estimator):
         np.ndarray
             The ``k x k`` covariance.
         """
-        W = as_operator(W)
+        W = as_linear_operator(W)
         prior = np.asarray(W @ (self._S_0_op @ W.T))
         WWf = W @ self._whitened.W.T  # k x m
         return prior - (WWf * self._whitened.weights(self.gamma)) @ WWf.T
 
-    def aggregate_A(self, W: OperatorLike) -> np.ndarray:
+    def aggregate_A(self, W: LinearOperatorLike) -> np.ndarray:
         r"""
         Averaging kernel of an aggregate of the state, :math:`W A W^*`.
 
@@ -1037,7 +1037,7 @@ class BayesianSolver(Estimator):
 
         Parameters
         ----------
-        W : array-like, SciPy sparse matrix or Operator
+        W : array-like, SciPy sparse matrix or LinearOperator
             The aggregation, ``k x n_x``, with rows that are linearly
             independent.
 
@@ -1051,7 +1051,7 @@ class BayesianSolver(Estimator):
         ValueError
             If the rows of `W` are linearly dependent.
         """
-        W = as_operator(W)
+        W = as_linear_operator(W)
         f = self._whitened
         WK = ((W @ f.W.T) * f.weights(self.gamma)) @ f.whitener  # k x m
         HWt = np.asarray(self._H_op @ W.T)  # m x k

@@ -12,8 +12,10 @@ import numpy as np
 import pandas as pd
 from scipy.sparse import csr_matrix
 
-from fips._sparse import check_fill_value, frame_from_spmatrix
-from fips.matrix import Matrix, MatrixBlock
+from fips.covariance import Covariance
+from fips.linalg import as_linear_operator
+from fips.operator import Operator, _axis_space, _frame_matrix
+from fips.space import Space
 from fips.vector import Block, Vector
 
 
@@ -278,27 +280,30 @@ class ObsAggregator:
     def apply(
         self,
         obs: pd.Series | Block | Vector,
-        forward_operator: pd.DataFrame | MatrixBlock | Matrix,
-        modeldata_mismatch: pd.DataFrame | MatrixBlock | Matrix,
+        forward_operator: "pd.DataFrame | Operator",
+        modeldata_mismatch: "pd.DataFrame | Operator",
         constant: float | pd.Series | Block | Vector | None = None,
     ):
         """
         Apply W to the inverse problem components.
 
-        Inputs may be bare pandas objects or fips wrapper types (``Vector``,
-        ``ForwardOperator``, ``CovarianceMatrix``); return types mirror the
-        inputs. See the class docstring for the mathematical transforms.
+        Inputs may be bare pandas objects or fips types (``Vector``,
+        :class:`~fips.Operator`, :class:`~fips.Covariance`); return types
+        mirror the inputs. See the class docstring for the mathematical
+        transforms.
 
-        The aggregator ensures all inputs are properly aligned to obs.index
-        before building the weight matrix W.
+        The rows of the forward operator and both axes of the mismatch are
+        matched to the observations by label before W is applied: an
+        operator must have exactly the observations' labels (in any order),
+        and a DataFrame is reindexed onto them, zero where it has no entry.
 
         Parameters
         ----------
         obs : pd.Series | Block | Vector
             Observation vector to be aggregated.
-        forward_operator : pd.DataFrame | MatrixBlock | Matrix
+        forward_operator : pd.DataFrame | Operator
             Forward operator matrix to be aggregated.
-        modeldata_mismatch : pd.DataFrame | MatrixBlock | Matrix
+        modeldata_mismatch : pd.DataFrame | Operator
             Model-data mismatch covariance matrix to be aggregated.
         constant : float | pd.Series | Block | Vector | None, optional
             Optional constant offset vector to be aggregated. Scalars are invariant to aggregation. Default is None.
@@ -311,76 +316,76 @@ class ObsAggregator:
         Raises
         ------
         ValueError
-            If `forward_operator` is a sparse DataFrame with a `fill_value`
-            other than 0.0 or NaN: its implicit entries are not zeros, which is
-            how the aggregation reads them.
+            If an operator's rows do not have exactly the observations'
+            labels, or a DataFrame has a sparse column whose `fill_value` is
+            not 0.0 or NaN: its implicit entries are not zeros, which is how
+            the aggregation reads them.
         """
-
-        # Unwrap fips types to the underlying pandas object for arithmetic.
-        def unwrap(obj):
-            """Return the underlying pandas object of a fips structure."""
-            return obj.data if hasattr(obj, "data") else obj
-
-        z_df = unwrap(obs)
-        H_df = unwrap(forward_operator)
-        # A bare sparse frame skips the structures' constructors, and to_coo()
-        # below reads its implicit entries as zeros whatever its fill is.
-        check_fill_value(H_df)
-        S_z_df = unwrap(modeldata_mismatch)
-
-        # Ensure matrices are aligned to obs.index before aggregation
-        # This guarantees W has compatible dimensions for matrix operations
-        H_df = H_df.reindex(index=z_df.index, fill_value=0.0)
-        S_z_df = S_z_df.reindex(index=z_df.index, columns=z_df.index, fill_value=0.0)
-        if constant is not None and not np.isscalar(constant):
-            c_df = unwrap(constant)
-            c_df = c_df.reindex(index=z_df.index, fill_value=0.0)
-        else:
-            c_df = None
-        if any(len(x) == 0 for x in [z_df, H_df, S_z_df]):
+        z = obs.data if isinstance(obs, (Block, Vector)) else obs
+        if len(z) == 0:
             raise ValueError("Input data contains empty dimensions, cannot aggregate.")
+        W, agg_idx = self._build_operator(z.index)
+        z_agg = pd.Series(W @ z.to_numpy(dtype=float), index=agg_idx, name=z.name)
 
-        W, agg_idx = self._build_operator(z_df.index)
-
-        # Obs vector aggregation
-        # z_agg = W @ z
-        z_agg = pd.Series(W @ z_df.values, index=agg_idx, name=z_df.name)
-
-        # Forward operator aggregation
-        # H_agg = W @ H  (preserve SparseDtype if present)
-        if all(isinstance(dt, pd.SparseDtype) for dt in H_df.dtypes):
-            H_agg_vals = W @ H_df.sparse.to_coo().tocsr()
-            H_agg = frame_from_spmatrix(H_agg_vals, index=agg_idx, columns=H_df.columns)
-        else:
-            H_agg = pd.DataFrame(W @ H_df.values, index=agg_idx, columns=H_df.columns)
-
-        # Covariance aggregation with full propagation
-        # S_z_agg = W @ S_z @ W.T  — for diagonal S_z with variance σ² and
-        # mean aggregation of n obs this yields σ²/n on the diagonal.
-        S_z_agg_vals = W @ S_z_df.values @ W.T
-        if hasattr(S_z_agg_vals, "toarray"):
-            S_z_agg_vals = S_z_agg_vals.toarray()
-        S_z_agg = pd.DataFrame(S_z_agg_vals, index=agg_idx, columns=agg_idx)
-
-        def repack(orig_obj, new_df):
-            """Re-wrap new_df in the same type as orig_obj if it is a fips wrapper."""
-            return (
-                type(orig_obj)(new_df, name=orig_obj.name)
-                if hasattr(orig_obj, "data")
-                else new_df
+        def on_obs(matrix, square: bool):
+            """Return `matrix` aggregated: ``W M`` (or ``W M W^T`` if `square`), in its own type."""
+            if isinstance(matrix, Operator):
+                block = matrix.rows.names[0] if len(matrix.rows.names) == 1 else None
+                space, order = _axis_space(
+                    z.index, None if "block" in z.index.names else block, "rows"
+                )
+                found = np.empty(len(z), dtype=np.intp)
+                found[order] = space.align(matrix.rows)
+                cols = found if square else np.arange(matrix.shape[1])
+                form = as_linear_operator(W) @ matrix.data._select(found, cols)
+                agg_space = _agg_space(agg_idx, block)
+                if square:
+                    form = form @ as_linear_operator(W.T)
+                    return Covariance(form, agg_space, name=matrix.name)
+                return Operator(form, agg_space, matrix.cols, name=matrix.name)
+            frame = matrix.reindex(
+                index=z.index, columns=z.index if square else None, fill_value=0.0
             )
+            if any(len(axis) == 0 for axis in frame.axes):
+                raise ValueError(
+                    "Input data contains empty dimensions, cannot aggregate."
+                )
+            values = W @ _frame_matrix(frame)
+            if square:
+                values = values @ W.T
+            values = values.toarray() if hasattr(values, "toarray") else values
+            columns = agg_idx if square else frame.columns
+            return pd.DataFrame(values, index=agg_idx, columns=columns)
 
-        # c_agg = W @ c. There is no c_df when there is no constant or it is a
-        # scalar, which aggregation leaves unchanged.
-        if c_df is None:
+        def repack(orig_obj, new_series):
+            """Re-wrap a Series in the type of `orig_obj` if it is a fips vector."""
+            if isinstance(orig_obj, (Block, Vector)):
+                return type(orig_obj)(new_series, name=orig_obj.name)
+            return new_series
+
+        # c_agg = W @ c. A scalar constant (or none) is unchanged by aggregation.
+        if constant is None or isinstance(constant, (int, float, np.number)):
             c_agg = constant
         else:
-            c_vals = pd.Series(W @ c_df.values, index=agg_idx, name=c_df.name)
+            c = constant.data if isinstance(constant, (Block, Vector)) else constant
+            c = c.reindex(index=z.index, fill_value=0.0)
+            c_vals = pd.Series(W @ c.to_numpy(dtype=float), index=agg_idx, name=c.name)
             c_agg = repack(constant, c_vals)
 
         return (
             repack(obs, z_agg),
-            repack(forward_operator, H_agg),
-            repack(modeldata_mismatch, S_z_agg),
+            on_obs(forward_operator, square=False),
+            on_obs(modeldata_mismatch, square=True),
             c_agg,
         )
+
+
+def _agg_space(index: pd.Index, block: str | None) -> Space:
+    """Return the space of the aggregated observations: the blocks of `index`, or its one block."""
+    if "block" in index.names:
+        return Space.from_index(index)
+    if block is None:
+        raise ValueError(
+            "Observations without a 'block' level aggregate an operator of one block."
+        )
+    return Space({block: index})

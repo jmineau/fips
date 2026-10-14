@@ -12,12 +12,13 @@ from typing import Any
 
 import numpy as np
 import pandas as pd
-import scipy.sparse as sp
 
 from fips.base import Pickleable
-from fips.covariance import CovarianceMatrix
+from fips.covariance import Covariance
 from fips.estimators import Estimator
-from fips.matrix import Matrix, MatrixLike
+from fips.linalg import LinearOperator
+from fips.operator import Operator
+from fips.space import Space
 from fips.vector import Vector
 
 logger = logging.getLogger(__name__)
@@ -82,6 +83,24 @@ class Posterior(Pickleable):
         self.estimator = estimator
         self.state_index = state_index
         self.obs_index = obs_index
+
+    @cached_property
+    def state_space(self) -> Space:
+        """
+        The state's labels as a :class:`~fips.Space`, which labels every state axis of a matrix.
+
+        Raises
+        ------
+        ValueError
+            If the state index has a block's rows apart (the estimator's
+            arrays would not be in the space's order).
+        """
+        return _space_of(self.state_index, "state")
+
+    @cached_property
+    def obs_space(self) -> Space:
+        """The observations' labels as a :class:`~fips.Space`, which labels every observation axis of a matrix."""
+        return _space_of(self.obs_index, "observation")
 
     def __getstate__(self) -> dict[str, Any]:
         """Return the estimator and the two indexes; the labeled outputs are rebuilt."""
@@ -149,9 +168,9 @@ class Posterior(Pickleable):
         return self.estimate
 
     @cached_property
-    def covariance(self) -> CovarianceMatrix:
+    def covariance(self) -> Covariance:
         r"""
-        The posterior error covariance, :math:`\hat{S}`, on the state index.
+        The posterior error covariance, :math:`\hat{S}`, on the state space.
 
         A dense n x n matrix.
 
@@ -159,11 +178,8 @@ class Posterior(Pickleable):
         --------
         variances : Its diagonal.
         """
-        return CovarianceMatrix(
-            np.asarray(self.estimator.S_hat),
-            index=self.state_index,
-            columns=self.state_index,
-            name="posterior_error",
+        return Covariance(
+            np.asarray(self.estimator.S_hat), self.state_space, name="posterior_error"
         )
 
     @cached_property
@@ -182,60 +198,56 @@ class Posterior(Pickleable):
         """
         return self._state_vector(self.estimator.S_hat_diagonal, "posterior_variance")
 
-    def _aggregation(
-        self, W: MatrixLike
-    ) -> tuple[np.ndarray | sp.csr_matrix, pd.Index]:
+    def _aggregation(self, W: Operator) -> LinearOperator:
         """
-        Return an aggregation's values with its columns in state order, and its row labels.
+        Return an aggregation's matrix with its columns in state order.
 
         Raises
         ------
+        TypeError
+            If `W` is not an Operator.
         ValueError
-            If the columns are not exactly the state index (a label missing,
-            extra or repeated).
+            If the columns are not exactly the state's labels (a label
+            missing or extra).
         """
-        W = W if isinstance(W, Matrix) else Matrix(W)
-        cols = W.columns
-        if cols.has_duplicates:
-            raise ValueError("The aggregation's columns repeat a state label.")
-        missing = self.state_index.difference(cols, sort=False)
-        extra = cols.difference(self.state_index, sort=False)
-        if len(missing) or len(extra):
-            raise ValueError(
-                "The aggregation's columns must be the state index. "
-                f"{len(missing)} state labels are not among them "
-                f"(first: {list(missing[:3])}), and {len(extra)} of its labels "
-                f"are not in the state (first: {list(extra[:3])})."
+        if not isinstance(W, Operator):
+            raise TypeError(
+                f"An aggregation is an Operator, not {type(W).__name__}: build one "
+                "with Operator.from_frame or Operator.from_blocks."
             )
-        values = W.values
-        return values[:, cols.get_indexer(self.state_index)], W.index
+        try:
+            return W._on(W.rows, self.state_space)
+        except ValueError as err:
+            raise ValueError(
+                "The aggregation's columns must have exactly the state's labels "
+                f"(the other space below is the aggregation's columns). {err}"
+            ) from None
 
-    def cov(self, W: "MatrixLike | None" = None) -> CovarianceMatrix:
+    def cov(self, W: Operator | None = None) -> Covariance:
         r"""
         Return the posterior error covariance, of the state or of aggregates of it.
 
         Parameters
         ----------
-        W : Matrix or DataFrame, optional
+        W : Operator, optional
             An aggregation, ``k x n``: one row per aggregate (a region, a
-            month, a total), one column per state element, with the state
-            index as its columns (in any order) and a ``block`` level on both
-            axes, as a :class:`~fips.Matrix` takes it. Row ``i`` holds the
-            weight of each state element in aggregate ``i``: ones for a sum,
+            month, a total), one column per state element, with the state's
+            labels as its columns (in any order). Row ``i`` holds the weight
+            of each state element in aggregate ``i``: ones for a sum,
             ``1/count`` for a mean. It may be sparse.
 
         Returns
         -------
-        CovarianceMatrix
+        Covariance
             Without `W`, :attr:`covariance` (dense, ``n x n``). With `W`,
-            :math:`W \hat{S} W^T` on the aggregation's row labels, ``k x k``,
+            :math:`W \hat{S} W^T` on the aggregation's rows, ``k x k``,
             computed without the ``n x n`` covariance for the Bayesian solve.
 
         Raises
         ------
         ValueError
-            If the columns of `W` are not exactly the state index: a state label
-            missing, a label that is not in the state, or one repeated.
+            If the columns of `W` are not exactly the state's labels: a state
+            label missing, or a label that is not in the state.
 
         See Also
         --------
@@ -259,23 +271,21 @@ class Posterior(Pickleable):
         ...     modeldata_mismatch=0.1,
         ... )
         >>> post = fips.solve(problem)
-        >>> total = fips.MatrixBlock(
+        >>> total = fips.Operator.from_frame(
         ...     pd.DataFrame(
         ...         1.0, index=pd.Index(["total"], name="region"), columns=state
         ...     ),
         ...     row_block="region",
         ...     col_block="prior",
         ... )
-        >>> post.cov(total).values.round(3)
+        >>> post.cov(total).dense().round(3)
         array([[0.722]])
         """
         if W is None:
             return self.covariance
-        values, index = self._aggregation(W)
-        return CovarianceMatrix(
-            self.estimator.aggregate_S_hat(values),
-            index=index,
-            columns=index,
+        return Covariance(
+            self.estimator.aggregate_S_hat(self._aggregation(W)),
+            W.rows,
             name="posterior_error",
         )
 
@@ -303,7 +313,7 @@ class Posterior(Pickleable):
         return self._obs_vector(self.estimator.y_0, "prior_obs")
 
     @cached_property
-    def prior_obs_covariance(self) -> CovarianceMatrix:
+    def prior_obs_covariance(self) -> Covariance:
         r"""
         The prior error in observation space, :math:`H S_0 H^T`.
 
@@ -312,38 +322,35 @@ class Posterior(Pickleable):
         prior's share of each observation's error budget; add the model-data
         mismatch in quadrature for the total the solve expects.
         """
-        return CovarianceMatrix(
-            np.asarray(self.estimator.S_y0),
-            index=self.obs_index,
-            columns=self.obs_index,
-            name="prior_obs_error",
+        return Covariance(
+            np.asarray(self.estimator.S_y0), self.obs_space, name="prior_obs_error"
         )
 
     @cached_property
-    def kalman_gain(self) -> Matrix:
+    def kalman_gain(self) -> Operator:
         r"""
         The gain :math:`K`, state by observations.
 
         :math:`\hat{x} = x_0 + K (z - H x_0 - c)`.
         """
-        return Matrix(
+        return Operator(
             np.asarray(self.estimator.K),
-            index=self.state_index,
-            columns=self.obs_index,
+            self.state_space,
+            self.obs_space,
             name="kalman_gain",
         )
 
     @cached_property
-    def _averaging_kernel(self) -> Matrix:
+    def _averaging_kernel(self) -> Operator:
         """The full averaging kernel, built once."""
-        return Matrix(
+        return Operator(
             np.asarray(self.estimator.A),
-            index=self.state_index,
-            columns=self.state_index,
+            self.state_space,
+            self.state_space,
             name="averaging_kernel",
         )
 
-    def averaging_kernel(self, W: "MatrixLike | None" = None) -> Matrix:
+    def averaging_kernel(self, W: Operator | None = None) -> Operator:
         r"""
         Return the averaging kernel, of the state or of aggregates of it.
 
@@ -358,21 +365,21 @@ class Posterior(Pickleable):
 
         Parameters
         ----------
-        W : Matrix or DataFrame, optional
+        W : Operator, optional
             An aggregation, as :meth:`cov` takes it. Its rows must be linearly
             independent.
 
         Returns
         -------
-        Matrix
-            ``n x n`` on the state index, or ``k x k`` on the aggregation's row
-            labels.
+        Operator
+            ``n x n`` on the state space, or ``k x k`` on the aggregation's
+            rows.
 
         Raises
         ------
         ValueError
-            If the columns of `W` are not exactly the state index, or its rows
-            are linearly dependent.
+            If the columns of `W` are not exactly the state's labels, or its
+            rows are linearly dependent.
 
         See Also
         --------
@@ -381,11 +388,10 @@ class Posterior(Pickleable):
         """
         if W is None:
             return self._averaging_kernel
-        values, index = self._aggregation(W)
-        return Matrix(
-            self.estimator.aggregate_A(values),
-            index=index,
-            columns=index,
+        return Operator(
+            self.estimator.aggregate_A(self._aggregation(W)),
+            W.rows,
+            W.rows,
             name="averaging_kernel",
         )
 
@@ -443,19 +449,14 @@ class Posterior(Pickleable):
         return post
 
     @cached_property
-    def desroziers(self) -> CovarianceMatrix:
+    def desroziers(self) -> Covariance:
         """
         The observation error covariance diagnosed by Desroziers et al. (2005).
 
         On the observation index. See :attr:`~fips.Estimator.desroziers` for the
         formula.
         """
-        return CovarianceMatrix(
-            self.estimator.desroziers,
-            index=self.obs_index,
-            columns=self.obs_index,
-            name="desroziers",
-        )
+        return Covariance(self.estimator.desroziers, self.obs_space, name="desroziers")
 
     @property
     def dofs(self) -> float:
@@ -502,3 +503,21 @@ class Posterior(Pickleable):
         roots of the traces of :math:`\hat{S}` and :math:`S_0`.
         """
         return self.estimator.uncertainty_reduction
+
+
+def _space_of(index: pd.Index, what: str) -> Space:
+    """
+    Return the space of `index`, checking that it keeps the index's order.
+
+    :meth:`Space.from_index` puts each block's rows together, so an index
+    whose blocks are interleaved would label the estimator's arrays wrongly.
+    """
+    space = Space.from_index(index)
+    blocks = index.get_level_values("block").astype(str)
+    rank = pd.Index(space.names).get_indexer(blocks)
+    if (np.diff(rank) < 0).any():
+        raise ValueError(
+            f"The {what} index has the rows of a block apart; put each block's "
+            "rows together (InverseProblem does)."
+        )
+    return space
