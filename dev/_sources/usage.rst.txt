@@ -260,6 +260,17 @@ workflow.  Subclass it, implement the abstract hooks, then call
 
    solved = MyPipeline(config).run()
 
+``run`` logs each step, with its elapsed time, at ``INFO`` level through the
+``fips.pipeline`` logger, and prints nothing. Python shows only warnings until
+logging is configured, so to follow a long run, or to keep the steps in a batch
+job's output, configure it before the call:
+
+.. code-block:: python
+
+   import logging
+
+   logging.basicConfig(level=logging.INFO)
+
 Optional hooks let you customise the workflow without touching its core:
 
 .. list-table::
