@@ -9,7 +9,6 @@ Bayesian estimation.
 import logging
 from abc import ABC, abstractmethod
 from collections.abc import Callable
-from functools import reduce
 
 import numpy as np
 import pandas as pd
@@ -261,9 +260,13 @@ class BlockDecayError(ErrorComponent):
 
 class KroneckerError(ErrorComponent):
     """
-    Builds a full covariance matrix for a strict grid.
+    Builds a covariance matrix from a product of marginal correlation matrices.
 
-    Uses Kronecker products of N arbitrary marginal correlation matrices.
+    Each marginal kernel gives the correlation along some of the index's levels
+    (time, or ``lat`` and ``lon`` together), and the correlation between two
+    elements is the product of their marginal correlations. On the full product
+    of the marginal coordinates, in the kernels' order, this is the Kronecker
+    product of the marginal correlation matrices.
 
     Parameters
     ----------
@@ -279,10 +282,18 @@ class KroneckerError(ErrorComponent):
         2. The Callable kernel function that takes a DataFrame of those
            unique coordinates and returns a 2D correlation matrix.
 
-    Note
-    ----
-    ORDER MATTERS: These must be provided in the exact order
-    that the dimensions appear in the matrix's MultiIndex!
+    Notes
+    -----
+    The index can hold its rows in any order, and any subset of the product of
+    the marginal coordinates: a grid with some cells left out, at every time or
+    at only some. Entry ``(i, j)`` of the result is
+    ``std[i] * std[j] * C_1[i, j] * C_2[i, j] * ...``, where ``C_k[i, j]`` is
+    the correlation the k-th kernel gives between the coordinates of rows i and
+    j on that kernel's levels. Each kernel receives the unique coordinates of
+    its levels in the order they first appear in the index. Every row must have
+    its own combination of the kernels' coordinates: two rows that differ only
+    on a level no kernel names (two blocks on the same grid, say) would be
+    perfectly correlated, so `build` raises a `ValueError` instead.
     """
 
     marginal_kernels: list[tuple[str | list[str], Callable]]
@@ -304,7 +315,8 @@ class KroneckerError(ErrorComponent):
         Parameters
         ----------
         index : pd.MultiIndex
-            The MultiIndex of the covariance matrix, which must contain the dimensions specified in marginal_kernels in the same order.
+            The MultiIndex of the covariance matrix. It must contain the
+            levels named in ``marginal_kernels``; its rows can be in any order.
         **kwargs
             Additional keyword arguments that may be needed by the kernel functions.
 
@@ -312,32 +324,66 @@ class KroneckerError(ErrorComponent):
         -------
         pd.DataFrame
             The constructed covariance matrix with the given index on both rows and columns.
+
+        Raises
+        ------
+        ValueError
+            If no marginal kernels were given, if two rows of the index have the
+            same coordinates on every kernel's levels, or if a kernel does not
+            return a square matrix with one row per unique coordinate.
         """
+        if not self.marginal_kernels:
+            raise ValueError("KroneckerError needs at least one marginal kernel.")
+
         variances = self._align_variances(index)
+        coords = index.to_frame(index=False)
 
-        corr_matrices = []
-        for dims, kernel_func in self.marginal_kernels:
-            # Standardize string vs list of strings
-            if isinstance(dims, str):
-                dims = [dims]
+        dims_list = [
+            [dims] if isinstance(dims, str) else list(dims)
+            for dims, _ in self.marginal_kernels
+        ]
+        kernel_dims = list(dict.fromkeys(d for dims in dims_list for d in dims))
+        n_repeated = int(coords.duplicated(subset=kernel_dims).sum())
+        if n_repeated:
+            raise ValueError(
+                f"KroneckerError needs each row of the index to have its own "
+                f"combination of the kernels' coordinates {kernel_dims}, but "
+                f"{n_repeated} rows repeat one. Rows that differ only on another "
+                f"level would be perfectly correlated."
+            )
 
-            # Extract the unique coordinates for this specific marginal dimension
-            # We use drop_duplicates to isolate the strict grid points
-            coords = index.to_frame(index=False)[dims].drop_duplicates()
+        # Each marginal is its correlation matrix C over the unique coordinates
+        # of its levels, and pos, the position of each row's coordinates among
+        # them (numbered in order of first appearance).
+        marginals = []
+        for dims, (_, kernel_func) in zip(
+            dims_list, self.marginal_kernels, strict=True
+        ):
+            pos = coords.groupby(dims, sort=False, dropna=False).ngroup().to_numpy()
+            first = np.unique(pos, return_index=True)[1]
+            C = np.asarray(kernel_func(coords[dims].iloc[first]), dtype=float)
+            if C.shape != (len(first), len(first)):
+                raise ValueError(
+                    f"The kernel for {dims} returned a matrix of shape {C.shape} "
+                    f"for {len(first)} unique coordinates; expected "
+                    f"({len(first)}, {len(first)})."
+                )
+            marginals.append((C, pos))
 
-            # Build the marginal correlation matrix
-            C_marginal = kernel_func(coords)
-            corr_matrices.append(C_marginal)
-
-        # Combine all marginals using consecutive Kronecker products
-        # reduce(np.kron, [A, B, C]) is mathematically equivalent to np.kron(A, np.kron(B, C))
-        corr_matrix = reduce(np.kron, corr_matrices)
+        # corr[i, j] = prod_k C_k[pos_k[i], pos_k[j]], for any row order and any
+        # subset of the product. On the full product in the kernels' order it
+        # equals reduce(np.kron, [C_1, C_2, ...]).
+        C, pos = marginals[0]
+        corr_matrix = C.take(pos, axis=0).take(pos, axis=1)
+        for C, pos in marginals[1:]:
+            corr_matrix *= C.take(pos, axis=0).take(pos, axis=1)
 
         # Scale by variances
         std_dev = np.sqrt(variances.to_numpy())
-        cov_matrix = std_dev[:, None] * corr_matrix * std_dev[None, :]
+        corr_matrix *= std_dev[:, None]
+        corr_matrix *= std_dev[None, :]
 
-        return pd.DataFrame(cov_matrix, index=index, columns=index)
+        return pd.DataFrame(corr_matrix, index=index, columns=index)
 
     def __repr__(self) -> str:
         """Return string representation."""
