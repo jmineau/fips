@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>fips.covariance.KroneckerError.build &#8212; fips 0.1.0b10.dev47+gb536a11a9 documentation</title>
+    <title>fips.covariance.KroneckerError.build &#8212; fips 0.1.0b10.dev48+g3a93280ab documentation</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0" />
 
-    <script src="../../_static/documentation_options.js?v=e6b5e3f5"></script>
+    <script src="../../_static/documentation_options.js?v=b9904403"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -133,8 +133,8 @@
       
     
     
-    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.1.0b10.dev47+gb536a11a9 documentation - Home"/>
-    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.1.0b10.dev47+gb536a11a9 documentation - Home"/>
+    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.1.0b10.dev48+g3a93280ab documentation - Home"/>
+    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.1.0b10.dev48+g3a93280ab documentation - Home"/>
   
   
 </a></div>
@@ -968,7 +968,8 @@
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>index</strong> (<em>pd.MultiIndex</em>) – The MultiIndex of the covariance matrix, which must contain the dimensions specified in marginal_kernels in the same order.</p></li>
+<li><p><strong>index</strong> (<em>pd.MultiIndex</em>) – The MultiIndex of the covariance matrix. It must contain the
+levels named in <code class="docutils literal notranslate"><span class="pre">marginal_kernels</span></code>; its rows can be in any order.</p></li>
 <li><p><strong>**kwargs</strong> – Additional keyword arguments that may be needed by the kernel functions.</p></li>
 </ul>
 </dd>
@@ -977,6 +978,11 @@
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>pd.DataFrame</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/builtins/exceptions.html#ValueError" title="(in Python v3.15)"><strong>ValueError</strong></a> – If no marginal kernels were given, if two rows of the index have the
+    same coordinates on every kernel’s levels, or if a kernel does not
+    return a square matrix with one row per unique coordinate.</p>
 </dd>
 </dl>
 </dd></dl>

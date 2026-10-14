@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>fips.covariance &#8212; fips 0.1.0b10.dev47+gb536a11a9 documentation</title>
+    <title>fips.covariance &#8212; fips 0.1.0b10.dev48+g3a93280ab documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0" />
 
-    <script src="../../_static/documentation_options.js?v=e6b5e3f5"></script>
+    <script src="../../_static/documentation_options.js?v=b9904403"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -130,8 +130,8 @@
       
     
     
-    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.1.0b10.dev47+gb536a11a9 documentation - Home"/>
-    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.1.0b10.dev47+gb536a11a9 documentation - Home"/>
+    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.1.0b10.dev48+g3a93280ab documentation - Home"/>
+    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.1.0b10.dev48+g3a93280ab documentation - Home"/>
   
   
 </a></div>
@@ -472,7 +472,6 @@
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">ABC</span><span class="p">,</span> <span class="n">abstractmethod</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">functools</span><span class="w"> </span><span class="kn">import</span> <span class="n">reduce</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
@@ -765,9 +764,13 @@
 <a class="viewcode-back" href="../../reference/api/fips.covariance.KroneckerError.html#fips.KroneckerError">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">KroneckerError</span><span class="p">(</span><span class="n">ErrorComponent</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Builds a full covariance matrix for a strict grid.</span>
+<span class="sd">    Builds a covariance matrix from a product of marginal correlation matrices.</span>
 
-<span class="sd">    Uses Kronecker products of N arbitrary marginal correlation matrices.</span>
+<span class="sd">    Each marginal kernel gives the correlation along some of the index&#39;s levels</span>
+<span class="sd">    (time, or ``lat`` and ``lon`` together), and the correlation between two</span>
+<span class="sd">    elements is the product of their marginal correlations. On the full product</span>
+<span class="sd">    of the marginal coordinates, in the kernels&#39; order, this is the Kronecker</span>
+<span class="sd">    product of the marginal correlation matrices.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -783,10 +786,18 @@
 <span class="sd">        2. The Callable kernel function that takes a DataFrame of those</span>
 <span class="sd">           unique coordinates and returns a 2D correlation matrix.</span>
 
-<span class="sd">    Note</span>
-<span class="sd">    ----</span>
-<span class="sd">    ORDER MATTERS: These must be provided in the exact order</span>
-<span class="sd">    that the dimensions appear in the matrix&#39;s MultiIndex!</span>
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    The index can hold its rows in any order, and any subset of the product of</span>
+<span class="sd">    the marginal coordinates: a grid with some cells left out, at every time or</span>
+<span class="sd">    at only some. Entry ``(i, j)`` of the result is</span>
+<span class="sd">    ``std[i] * std[j] * C_1[i, j] * C_2[i, j] * ...``, where ``C_k[i, j]`` is</span>
+<span class="sd">    the correlation the k-th kernel gives between the coordinates of rows i and</span>
+<span class="sd">    j on that kernel&#39;s levels. Each kernel receives the unique coordinates of</span>
+<span class="sd">    its levels in the order they first appear in the index. Every row must have</span>
+<span class="sd">    its own combination of the kernels&#39; coordinates: two rows that differ only</span>
+<span class="sd">    on a level no kernel names (two blocks on the same grid, say) would be</span>
+<span class="sd">    perfectly correlated, so `build` raises a `ValueError` instead.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">marginal_kernels</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span> <span class="o">|</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">Callable</span><span class="p">]]</span>
@@ -810,7 +821,8 @@
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        index : pd.MultiIndex</span>
-<span class="sd">            The MultiIndex of the covariance matrix, which must contain the dimensions specified in marginal_kernels in the same order.</span>
+<span class="sd">            The MultiIndex of the covariance matrix. It must contain the</span>
+<span class="sd">            levels named in ``marginal_kernels``; its rows can be in any order.</span>
 <span class="sd">        **kwargs</span>
 <span class="sd">            Additional keyword arguments that may be needed by the kernel functions.</span>
 
@@ -818,32 +830,66 @@
 <span class="sd">        -------</span>
 <span class="sd">        pd.DataFrame</span>
 <span class="sd">            The constructed covariance matrix with the given index on both rows and columns.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            If no marginal kernels were given, if two rows of the index have the</span>
+<span class="sd">            same coordinates on every kernel&#39;s levels, or if a kernel does not</span>
+<span class="sd">            return a square matrix with one row per unique coordinate.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">marginal_kernels</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;KroneckerError needs at least one marginal kernel.&quot;</span><span class="p">)</span>
+
         <span class="n">variances</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_align_variances</span><span class="p">(</span><span class="n">index</span><span class="p">)</span>
+        <span class="n">coords</span> <span class="o">=</span> <span class="n">index</span><span class="o">.</span><span class="n">to_frame</span><span class="p">(</span><span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 
-        <span class="n">corr_matrices</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="k">for</span> <span class="n">dims</span><span class="p">,</span> <span class="n">kernel_func</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">marginal_kernels</span><span class="p">:</span>
-            <span class="c1"># Standardize string vs list of strings</span>
-            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dims</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
-                <span class="n">dims</span> <span class="o">=</span> <span class="p">[</span><span class="n">dims</span><span class="p">]</span>
+        <span class="n">dims_list</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="p">[</span><span class="n">dims</span><span class="p">]</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dims</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">else</span> <span class="nb">list</span><span class="p">(</span><span class="n">dims</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">dims</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">marginal_kernels</span>
+        <span class="p">]</span>
+        <span class="n">kernel_dims</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">dict</span><span class="o">.</span><span class="n">fromkeys</span><span class="p">(</span><span class="n">d</span> <span class="k">for</span> <span class="n">dims</span> <span class="ow">in</span> <span class="n">dims_list</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">dims</span><span class="p">))</span>
+        <span class="n">n_repeated</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">coords</span><span class="o">.</span><span class="n">duplicated</span><span class="p">(</span><span class="n">subset</span><span class="o">=</span><span class="n">kernel_dims</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span>
+        <span class="k">if</span> <span class="n">n_repeated</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;KroneckerError needs each row of the index to have its own &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;combination of the kernels&#39; coordinates </span><span class="si">{</span><span class="n">kernel_dims</span><span class="si">}</span><span class="s2">, but &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">n_repeated</span><span class="si">}</span><span class="s2"> rows repeat one. Rows that differ only on another &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;level would be perfectly correlated.&quot;</span>
+            <span class="p">)</span>
 
-            <span class="c1"># Extract the unique coordinates for this specific marginal dimension</span>
-            <span class="c1"># We use drop_duplicates to isolate the strict grid points</span>
-            <span class="n">coords</span> <span class="o">=</span> <span class="n">index</span><span class="o">.</span><span class="n">to_frame</span><span class="p">(</span><span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">)[</span><span class="n">dims</span><span class="p">]</span><span class="o">.</span><span class="n">drop_duplicates</span><span class="p">()</span>
+        <span class="c1"># Each marginal is its correlation matrix C over the unique coordinates</span>
+        <span class="c1"># of its levels, and pos, the position of each row&#39;s coordinates among</span>
+        <span class="c1"># them (numbered in order of first appearance).</span>
+        <span class="n">marginals</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">dims</span><span class="p">,</span> <span class="p">(</span><span class="n">_</span><span class="p">,</span> <span class="n">kernel_func</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span>
+            <span class="n">dims_list</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">marginal_kernels</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="kc">True</span>
+        <span class="p">):</span>
+            <span class="n">pos</span> <span class="o">=</span> <span class="n">coords</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="n">dims</span><span class="p">,</span> <span class="n">sort</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">dropna</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">ngroup</span><span class="p">()</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
+            <span class="n">first</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">pos</span><span class="p">,</span> <span class="n">return_index</span><span class="o">=</span><span class="kc">True</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">C</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">kernel_func</span><span class="p">(</span><span class="n">coords</span><span class="p">[</span><span class="n">dims</span><span class="p">]</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">first</span><span class="p">]),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">C</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">first</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">first</span><span class="p">)):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;The kernel for </span><span class="si">{</span><span class="n">dims</span><span class="si">}</span><span class="s2"> returned a matrix of shape </span><span class="si">{</span><span class="n">C</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2"> &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;for </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">first</span><span class="p">)</span><span class="si">}</span><span class="s2"> unique coordinates; expected &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;(</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">first</span><span class="p">)</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">first</span><span class="p">)</span><span class="si">}</span><span class="s2">).&quot;</span>
+                <span class="p">)</span>
+            <span class="n">marginals</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">C</span><span class="p">,</span> <span class="n">pos</span><span class="p">))</span>
 
-            <span class="c1"># Build the marginal correlation matrix</span>
-            <span class="n">C_marginal</span> <span class="o">=</span> <span class="n">kernel_func</span><span class="p">(</span><span class="n">coords</span><span class="p">)</span>
-            <span class="n">corr_matrices</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">C_marginal</span><span class="p">)</span>
-
-        <span class="c1"># Combine all marginals using consecutive Kronecker products</span>
-        <span class="c1"># reduce(np.kron, [A, B, C]) is mathematically equivalent to np.kron(A, np.kron(B, C))</span>
-        <span class="n">corr_matrix</span> <span class="o">=</span> <span class="n">reduce</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">kron</span><span class="p">,</span> <span class="n">corr_matrices</span><span class="p">)</span>
+        <span class="c1"># corr[i, j] = prod_k C_k[pos_k[i], pos_k[j]], for any row order and any</span>
+        <span class="c1"># subset of the product. On the full product in the kernels&#39; order it</span>
+        <span class="c1"># equals reduce(np.kron, [C_1, C_2, ...]).</span>
+        <span class="n">C</span><span class="p">,</span> <span class="n">pos</span> <span class="o">=</span> <span class="n">marginals</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">corr_matrix</span> <span class="o">=</span> <span class="n">C</span><span class="o">.</span><span class="n">take</span><span class="p">(</span><span class="n">pos</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">take</span><span class="p">(</span><span class="n">pos</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">C</span><span class="p">,</span> <span class="n">pos</span> <span class="ow">in</span> <span class="n">marginals</span><span class="p">[</span><span class="mi">1</span><span class="p">:]:</span>
+            <span class="n">corr_matrix</span> <span class="o">*=</span> <span class="n">C</span><span class="o">.</span><span class="n">take</span><span class="p">(</span><span class="n">pos</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">take</span><span class="p">(</span><span class="n">pos</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 
         <span class="c1"># Scale by variances</span>
         <span class="n">std_dev</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">variances</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">())</span>
-        <span class="n">cov_matrix</span> <span class="o">=</span> <span class="n">std_dev</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="n">corr_matrix</span> <span class="o">*</span> <span class="n">std_dev</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="p">:]</span>
+        <span class="n">corr_matrix</span> <span class="o">*=</span> <span class="n">std_dev</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">]</span>
+        <span class="n">corr_matrix</span> <span class="o">*=</span> <span class="n">std_dev</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="p">:]</span>
 
-        <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">cov_matrix</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">index</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="n">index</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">corr_matrix</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">index</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="n">index</span><span class="p">)</span></div>
 
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>

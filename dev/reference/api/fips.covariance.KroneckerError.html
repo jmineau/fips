@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>fips.covariance.KroneckerError &#8212; fips 0.1.0b10.dev47+gb536a11a9 documentation</title>
+    <title>fips.covariance.KroneckerError &#8212; fips 0.1.0b10.dev48+g3a93280ab documentation</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0" />
 
-    <script src="../../_static/documentation_options.js?v=e6b5e3f5"></script>
+    <script src="../../_static/documentation_options.js?v=b9904403"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -133,8 +133,8 @@
       
     
     
-    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.1.0b10.dev47+gb536a11a9 documentation - Home"/>
-    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.1.0b10.dev47+gb536a11a9 documentation - Home"/>
+    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.1.0b10.dev48+g3a93280ab documentation - Home"/>
+    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.1.0b10.dev48+g3a93280ab documentation - Home"/>
   
   
 </a></div>
@@ -962,8 +962,12 @@
 <dt class="sig sig-object py" id="fips.covariance.KroneckerError">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">fips.covariance.</span></span><span class="sig-name descname"><span class="pre">KroneckerError</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variances</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">marginal_kernels</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/fips/covariance.html#KroneckerError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fips.covariance.KroneckerError" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="fips.covariance.ErrorComponent.html#fips.covariance.ErrorComponent" title="fips.covariance.ErrorComponent"><code class="xref py py-class docutils literal notranslate"><span class="pre">ErrorComponent</span></code></a></p>
-<p>Builds a full covariance matrix for a strict grid.</p>
-<p>Uses Kronecker products of N arbitrary marginal correlation matrices.</p>
+<p>Builds a covariance matrix from a product of marginal correlation matrices.</p>
+<p>Each marginal kernel gives the correlation along some of the index’s levels
+(time, or <code class="docutils literal notranslate"><span class="pre">lat</span></code> and <code class="docutils literal notranslate"><span class="pre">lon</span></code> together), and the correlation between two
+elements is the product of their marginal correlations. On the full product
+of the marginal coordinates, in the kernels’ order, this is the Kronecker
+product of the marginal correlation matrices.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -980,11 +984,17 @@ unique coordinates and returns a 2D correlation matrix.</p></li>
 </ul>
 </dd>
 </dl>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>ORDER MATTERS: These must be provided in the exact order
-that the dimensions appear in the matrix’s MultiIndex!</p>
-</div>
+<p class="rubric">Notes</p>
+<p>The index can hold its rows in any order, and any subset of the product of
+the marginal coordinates: a grid with some cells left out, at every time or
+at only some. Entry <code class="docutils literal notranslate"><span class="pre">(i,</span> <span class="pre">j)</span></code> of the result is
+<code class="docutils literal notranslate"><span class="pre">std[i]</span> <span class="pre">*</span> <span class="pre">std[j]</span> <span class="pre">*</span> <span class="pre">C_1[i,</span> <span class="pre">j]</span> <span class="pre">*</span> <span class="pre">C_2[i,</span> <span class="pre">j]</span> <span class="pre">*</span> <span class="pre">...</span></code>, where <code class="docutils literal notranslate"><span class="pre">C_k[i,</span> <span class="pre">j]</span></code> is
+the correlation the k-th kernel gives between the coordinates of rows i and
+j on that kernel’s levels. Each kernel receives the unique coordinates of
+its levels in the order they first appear in the index. Every row must have
+its own combination of the kernels’ coordinates: two rows that differ only
+on a level no kernel names (two blocks on the same grid, say) would be
+perfectly correlated, so <cite>build</cite> raises a <cite>ValueError</cite> instead.</p>
 </dd></dl>
 
 <p class="rubric">Attributes</p>
