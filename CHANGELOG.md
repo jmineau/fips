@@ -65,6 +65,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   without a dense copy of a sparse frame, and a `DiagonalOperator` for a sparse
   diagonal such as `CovarianceMatrix.diagonal(..., sparse=True)`.
   ([#82](https://github.com/jmineau/fips/issues/82))
+- **Kronecker covariances kept as their factors.**
+  `KroneckerError.operator(index)` returns a `KroneckerOperator`
+  (`fips.covariance`): the marginal correlation matrices, each row's position in
+  them and the standard deviations, for any row order and any subset of the
+  product, never the `n x n` matrix. `H @ S_0` and `H @ S_0 @ H.T` go through
+  the factors, `solve` through each factor's Cholesky factorization (a subset of
+  the product by a Schur complement on the missing entries), `diagonal()` and
+  `trace()` from the factors; `dense()` is the matrix `KroneckerError.build`
+  gives, number for number. `KroneckerError.build` is unchanged.
+  ([#6](https://github.com/jmineau/fips/issues/6))
+- **`from_operator`, a 2D structure that holds an operator**:
+  `CovarianceMatrix.from_operator(error.operator(index), index)` (also on
+  `Matrix`, `ForwardOperator` and `MatrixBlock`) checks the labels and keeps
+  the operator; `reindex` to labels it has, `round_index`, `copy`, `scale` and
+  pickling keep it too, so `InverseProblem` and `fips.solve` never form the
+  matrix. `data`, `values` and anything that reads them form the DataFrame the
+  first time (logged at INFO past 5,000 rows), as before. `InverseProblem` also
+  takes an operator as `prior_error` or `modeldata_mismatch` and labels it with
+  the prior's or the observations' index. At 208 times by 90 cells (n =
+  18,720, a sparse `H` with m = 2,800), the solve with `dofs` and
+  `reduced_chi2` took 39 s and 3.9 GB from the factors against 86 s and
+  14.9 GB from the dense `build`, with the same estimate.
+  ([#6](https://github.com/jmineau/fips/issues/6))
 
 ### Changed
 

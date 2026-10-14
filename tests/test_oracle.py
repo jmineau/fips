@@ -34,6 +34,7 @@ from fips import (
     convolve,
 )
 from fips.aggregators import ObsAggregator
+from fips.covariance import KroneckerOperator
 from fips.estimators import ESTIMATOR_REGISTRY
 
 ESTIMATORS = available_estimators()
@@ -417,6 +418,41 @@ def test_diagonal_given_as_variances(estimator, form):
         problem = case.problem(
             prior_error=prior_error, modeldata_mismatch=mismatch
         ).solve(estimator)
+        check_posterior(
+            problem, expected, case.state_index, case.obs_index, f"seed {seed}"
+        )
+
+
+@pytest.mark.parametrize("estimator", ESTIMATORS)
+@pytest.mark.parametrize("rows", ["product", "permuted", "ragged"])
+def test_kronecker_prior_error(estimator, rows):
+    """
+    A prior error kept as Kronecker factors gives the closed form of its matrix.
+
+    The matrix for the closed form is ``np.kron`` of the factors, with the rows
+    picked and scaled here: the whole product in order, a permutation of it, or
+    9 of its 12 rows.
+    """
+    sizes = (3, 4)
+    for seed in range(5):
+        rng = np.random.default_rng(100 + seed)
+        chosen = {
+            "product": np.arange(12),
+            "permuted": rng.permutation(12),
+            "ragged": rng.permutation(12)[:9],
+        }[rows]
+        case = Case.random(seed, len(chosen), 7)
+        factors = [random_spd(rng, k) for k in sizes]
+        std = rng.uniform(0.5, 2.0, len(chosen))
+        S_0 = std[:, None] * np.kron(*factors)[np.ix_(chosen, chosen)] * std[None, :]
+        expected = closed_form(case.z, case.x_0, case.H, S_0, case.S_z, case.c)
+        op = KroneckerOperator(
+            factors, std=std, positions=np.unravel_index(chosen, sizes)
+        )
+        problem = case.problem(
+            prior_error=CovarianceMatrix.from_operator(op, case.state_index)
+        ).solve(estimator)
+        assert isinstance(problem.estimator._S_0_op, KroneckerOperator)
         check_posterior(
             problem, expected, case.state_index, case.obs_index, f"seed {seed}"
         )

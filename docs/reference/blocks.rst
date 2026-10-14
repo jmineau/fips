@@ -63,6 +63,7 @@ Constructor
 
    MatrixBlock
    MatrixBlock.diagonal
+   MatrixBlock.from_operator
 
 Attributes and underlying data
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

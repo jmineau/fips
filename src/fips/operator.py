@@ -5,15 +5,19 @@ A structure (:class:`~fips.Matrix`, :class:`~fips.CovarianceMatrix`, ...) keeps
 its labels in a pandas DataFrame. Its :attr:`~fips.base.Structure2D.operator`
 gives the same matrix as an :class:`Operator`, which the estimators compute
 with: a :class:`DenseOperator` (a NumPy array), a :class:`SparseOperator` (a
-SciPy sparse matrix) or a :class:`DiagonalOperator` (the diagonal only).
+SciPy sparse matrix) or a :class:`DiagonalOperator` (the diagonal only). A
+covariance kept as Kronecker factors is a
+:class:`~fips.covariance.KroneckerOperator`, and a structure holds one through
+:meth:`~fips.base.Structure2D.from_operator`.
 
 Each is a :class:`scipy.sparse.linalg.LinearOperator`, so ``matvec``,
 ``rmatvec``, ``matmat`` and ``.T`` work as in SciPy. On top of that:
 
 - ``A @ B`` of two operators keeps the cheapest form that is exact: diagonal
   times diagonal is diagonal; sparse or diagonal times sparse is sparse; a
-  product with a dense side is dense. ``A @ x`` with an array is an array, as
-  in SciPy.
+  product with a dense side is dense; a Kronecker operator times a sparse one
+  (``H @ S_0``) is computed through the factors and is dense. ``A @ x`` with an
+  array is an array, as in SciPy.
 - ``A + B`` and ``A - B`` follow the same rule (an array counts as dense), and
   a scalar ``*`` or ``/`` keeps the form.
 - :meth:`~Operator.dense`, :meth:`~Operator.diagonal`, :meth:`~Operator.trace`,
@@ -112,7 +116,10 @@ class Operator(LinearOperator):
     :class:`DiagonalOperator`: build one of those, or let :func:`as_operator`
     choose. A new form subclasses this one and implements ``_matmat`` and
     ``_transpose``. Every other method has a default that is right for any
-    form, which the subclass overrides where its form has a cheaper way.
+    form, which the subclass overrides where its form has a cheaper way. A
+    form that is neither dense nor sparse (a
+    :class:`~fips.covariance.KroneckerOperator`) also gets a SciPy sparse
+    matrix in ``_matmat``, from a product with a :class:`SparseOperator`.
 
     Parameters
     ----------
@@ -153,8 +160,21 @@ class Operator(LinearOperator):
         return self._transpose().matmat(X.T).T
 
     def _elementwise(self, func) -> "Operator":
-        """Return the operator with `func` (which maps 0 to 0) applied to its entries."""
+        """
+        Return the operator with `func` applied to its entries.
+
+        `func` multiplies by a scalar (``a * c``, ``a / c`` or ``-a``), so it
+        maps 0 to 0 and a form can apply it to what it stores.
+        """
         return DenseOperator(func(self.dense()))
+
+    def _select(self, rows: np.ndarray, cols: np.ndarray) -> "Operator":
+        """Return the operator's entries at `rows` and `cols` (integer positions), in that order."""
+        csr = self._csr()
+        if csr is None:
+            return DenseOperator(self.dense()[np.ix_(rows, cols)])
+        # SciPy is not annotated, so pyrefly finds no __getitem__ on a sparse array
+        return _from_sparse(csr[rows][:, cols])  # pyrefly: ignore[bad-index]
 
     def _csr(self) -> "sp.csr_array | None":
         """Return the operator as a CSR array, or None if its form is dense."""
@@ -568,7 +588,16 @@ def _product(a: Operator, b: Operator) -> Operator:
         return DenseOperator(a.matmat(b.array))
     if isinstance(a, DenseOperator):
         return DenseOperator(b._rmatmul_array(a.array))
-    return DenseOperator(a.matmat(b.dense()))  # forms with no rule of their own
+    # Left: a form of its own (a Kronecker covariance) on at least one side. A
+    # sparse matrix (a Jacobian) goes through that form's own product, never
+    # its dense matrix; anything else gives a product as big as the dense one.
+    if isinstance(b, SparseOperator):
+        return DenseOperator(a._matmat(b.matrix))
+    if isinstance(a, SparseOperator):
+        return DenseOperator(b._transpose()._matmat(a.matrix.T).T)
+    if b_csr is not None:  # a diagonal right side scales the columns
+        return DenseOperator(b._rmatmul_array(a.dense()))
+    return DenseOperator(a.matmat(b.dense()))
 
 
 def _sum(a: Operator, b: Operator) -> Operator:

@@ -18,13 +18,14 @@ from fips.base import (
     MultiBlockMixin,
     SingleBlockMixin,
     Structure2D,
+    _OperatorData,
     xselect,
 )
 from fips.indexes import assign_block, outer_align_levels
 
 logger = logging.getLogger(__name__)
 
-MatrixBlockLike: TypeAlias = "ArrayLike | MatrixBlock"
+MatrixBlockLike: TypeAlias = "ArrayLike | MatrixBlock | _OperatorData"
 MatrixLike: TypeAlias = (
     "MatrixBlockLike | dict | Sequence[pd.DataFrame | MatrixBlock] | Matrix"
 )
@@ -103,10 +104,14 @@ class MatrixBlock(SingleBlockMixin, Structure2D):
             row_block = row_block or data.row_block
             col_block = col_block or data.col_block
             name = name or data.name
-            data = data.data
-            index = data.index
-            columns = data.columns
-            copy = True  # Always copy when passed a MatrixBlock
+            held = data._operator_data()
+            if held is not None:  # built on an operator: keep it, not a frame
+                data = held
+            else:
+                data = data.data
+                index = data.index
+                columns = data.columns
+                copy = True  # Always copy when passed a MatrixBlock
 
         self.row_block = row_block
         self.col_block = col_block
@@ -122,7 +127,7 @@ class MatrixBlock(SingleBlockMixin, Structure2D):
             sparse=sparse,
         )
 
-    def _with_data(self, data: pd.Series | pd.DataFrame) -> Self:
+    def _with_data(self, data: "pd.Series | pd.DataFrame | _OperatorData") -> Self:
         """Return a new block that holds `data` and keeps this one's name and block names."""
         return type(self)(
             data,
@@ -170,16 +175,14 @@ class MatrixBlock(SingleBlockMixin, Structure2D):
     def __getstate__(self):
         """Explicit pickle support: return state as dict."""
         return {
-            "data": self.data,
-            "name": self.name,
+            **super().__getstate__(),
             "row_block": self.row_block,
             "col_block": self.col_block,
         }
 
     def __setstate__(self, state):
         """Explicit pickle support: restore state from dict."""
-        self.data = state["data"]
-        self.name = state["name"]
+        super().__setstate__(state)
         self.row_block = state["row_block"]
         self.col_block = state["col_block"]
 
@@ -252,12 +255,16 @@ class Matrix(MultiBlockMixin, Structure2D):
     ):
         blocks = None
 
-        # Accept Matrix - extract DataFrame
+        # Accept Matrix - extract DataFrame, or the operator it is built on
         if isinstance(data, Matrix):
-            data = data.data
-            index = data.index
-            columns = data.columns
-            copy = True  # Always copy when passed a Matrix
+            held = data._operator_data()
+            if held is not None:
+                data = held
+            else:
+                data = data.data
+                index = data.index
+                columns = data.columns
+                copy = True  # Always copy when passed a Matrix
 
         elif isinstance(data, MatrixBlock):
             blocks = [data]
@@ -386,6 +393,11 @@ class Matrix(MultiBlockMixin, Structure2D):
         """
         if not np.isscalar(factor):
             raise TypeError("Factor must be a scalar (float or int).")
+        held = self._operator_data()
+        if held is not None:  # built on an operator: scale the operator
+            return self._with_data(
+                _OperatorData(held.operator * factor, held.index, held.columns)
+            )
         # Multiply via pandas so SparseDtype is preserved naturally
         return self._with_data(self.data * factor)
 

@@ -17,6 +17,7 @@ Constructor
 
    CovarianceMatrix
    CovarianceMatrix.diagonal
+   CovarianceMatrix.from_operator
 
 Attributes and underlying data
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -102,6 +103,38 @@ Binary operations
    :toctree: api/
 
     ErrorComponent.__add__
+
+
+Kronecker factors
+=================
+
+A Kronecker covariance kept as its marginal correlations, so that the
+``n x n`` matrix is never formed. :meth:`KroneckerError.operator` builds one on
+an index, and :meth:`fips.CovarianceMatrix.from_operator` labels it.
+
+.. autosummary::
+   :toctree: api/
+
+   KroneckerOperator
+   KroneckerError.operator
+
+Linear algebra
+~~~~~~~~~~~~~~
+.. autosummary::
+   :toctree: api/
+
+   KroneckerOperator.solve
+   KroneckerOperator.dense
+   KroneckerOperator.diagonal
+
+Stored data
+~~~~~~~~~~~
+.. autosummary::
+   :toctree: api/
+
+   KroneckerOperator.factors
+   KroneckerOperator.positions
+   KroneckerOperator.std
 
 
 CovarianceBuilder
