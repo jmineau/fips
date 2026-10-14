@@ -12,6 +12,7 @@ from typing import Self
 import numpy as np
 import pandas as pd
 
+from fips import indexes
 from fips.base import Pickleable, Structure1D
 from fips.covariance import CovarianceMatrix
 from fips.estimators import ESTIMATOR_REGISTRY, Estimator
@@ -19,60 +20,32 @@ from fips.matrix import Matrix, MatrixBlock, MatrixLike
 from fips.operator import Operator
 from fips.operators import ForwardOperator
 from fips.posterior import Posterior
+from fips.space import _SHOWN, _first_duplicates, _listed
 from fips.vector import Vector, VectorLike
 
 logger = logging.getLogger(__name__)
 
-_SHOWN = 5  # how many labels an error message lists
 
-
-def _plain(label):
-    """Return ``label`` with NumPy scalars as Python ones, so it prints as typed."""
-    if isinstance(label, tuple):
-        return tuple(_plain(part) for part in label)
-    return label.item() if isinstance(label, np.generic) else label
-
-
-def _listed(labels: list) -> str:
-    """Return the first few of ``labels`` as text, saying how many were left out."""
-    text = ", ".join(repr(_plain(label)) for label in labels[:_SHOWN])
-    if len(labels) > _SHOWN:
-        text += f" and {len(labels) - _SHOWN} more"
-    return text
-
-
-def _check_unique_labels(
-    index: pd.Index,
-    space: str,
-    unrounded: pd.Index | None = None,
-    decimals: int | None = None,
+def _check_rounded_labels(
+    index: pd.Index, unrounded: pd.Index, space: str, decimals: int
 ) -> None:
     """
-    Raise a ValueError naming the duplicate labels of ``index``.
+    Raise a ValueError naming the labels of ``unrounded`` that rounding merged in ``index``.
 
     Parameters
     ----------
     index : pd.Index
-        The state or observation index.
+        The state or observation index, after ``round_index``.
+    unrounded : pd.Index
+        ``index`` before ``round_index`` rounded it.
     space : str
         What the index labels ("state" or "observation"), for the message.
-    unrounded : pd.Index, optional
-        ``index`` before ``round_index`` rounded it. When given, the message
-        names the distinct labels that rounding merged.
-    decimals : int, optional
+    decimals : int
         The ``round_index`` that was used, for the message.
     """
-    # The first position of each label that appears more than once
-    firsts = np.flatnonzero(
-        index.duplicated(keep=False) & ~index.duplicated(keep="first")
-    )
+    firsts = _first_duplicates(index)
     if len(firsts) == 0:
         return
-    if unrounded is None:
-        raise ValueError(
-            f"The {space} index has duplicate labels: "
-            f"{_listed(list(index[firsts]))}. Each label must be unique."
-        )
     merged = []
     for first in firsts[:_SHOWN]:
         label = index[[first]]
@@ -81,8 +54,8 @@ def _check_unique_labels(
     more = f"; {len(firsts) - _SHOWN} more labels" if len(firsts) > _SHOWN else ""
     raise ValueError(
         f"round_index={decimals} merges distinct labels of the {space} index: "
-        f"{'; '.join(merged)}{more}. Pass round_index=None, or more decimals, "
-        "to keep them apart."
+        f"{'; '.join(merged)}{more}. Pass round_index=None (the default), or more "
+        "decimals, to keep them apart."
     )
 
 
@@ -143,9 +116,10 @@ class InverseProblem(Pickleable):
     constant : VectorLike or float, optional
         Optional constant term added to the forward model (e.g., background or bias).
     round_index : int, optional
-        Number of decimal places to round float labels to. If None, no
-        rounding is performed. Labels that rounding makes equal raise a
-        ValueError rather than being merged.
+        Number of decimal places to round every float label of every input
+        to. By default the labels are kept as given: fips does not round them
+        unless asked. Labels that rounding makes equal raise a ValueError
+        rather than being merged.
 
     Raises
     ------
@@ -178,7 +152,7 @@ class InverseProblem(Pickleable):
         modeldata_mismatch: "MatrixLike | Vector | Operator",
         prior_error: "MatrixLike | Vector | Operator",
         constant: "VectorLike | float | None" = None,
-        round_index: int | None = 6,
+        round_index: int | None = None,
     ):
         obs = Vector(obs)
         prior = Vector(prior)
@@ -241,16 +215,25 @@ class InverseProblem(Pickleable):
             constant_index = obs.index if isinstance(constant, (int, float)) else None
             constant = Vector(constant, index=constant_index)
 
-        _check_unique_labels(obs.index, "observation")
-        _check_unique_labels(prior.index, "state")
-
-        # Round to specified precision if provided
+        # Duplicate labels raised when obs and prior became vectors. Rounding is
+        # opt-in; the rounded labels are checked before the vectors are rebuilt
+        # on them, so that labels rounding merges are named as such.
         if round_index is not None:
             unrounded_obs, unrounded_prior = obs.index, prior.index
+            _check_rounded_labels(
+                indexes.round_index(obs.index, decimals=round_index),
+                unrounded_obs,
+                "observation",
+                round_index,
+            )
+            _check_rounded_labels(
+                indexes.round_index(prior.index, decimals=round_index),
+                unrounded_prior,
+                "state",
+                round_index,
+            )
             obs = obs.round_index(round_index)
             prior = prior.round_index(round_index)
-            _check_unique_labels(obs.index, "observation", unrounded_obs, round_index)
-            _check_unique_labels(prior.index, "state", unrounded_prior, round_index)
             forward_operator = forward_operator.round_index(round_index, axis="both")
             modeldata_mismatch = modeldata_mismatch.round_index(
                 round_index, axis="both"

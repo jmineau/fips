@@ -663,13 +663,13 @@ class TestFromOperator:
             CovarianceMatrix(OPS["whole"])
 
     def test_labels_are_sanitized(self, no_dense):
-        """The ``block`` level moves first and numeric strings become numbers, as for a frame."""
+        """The ``block`` level moves first and the labels are kept, as for a frame."""
         idx = pd.MultiIndex.from_product(
             [["1", "2"], ["flux"]], names=["cell", "block"]
         )
         S = CovarianceMatrix.from_operator(KroneckerOperator([np.eye(2)]), idx)
         assert list(S.index.names) == ["block", "cell"]
-        assert list(S.index.get_level_values("cell")) == [1, 2]
+        assert list(S.index.get_level_values("cell")) == ["1", "2"]
         assert S.columns.equals(S.index)
 
     def test_reindex_and_round_keep_the_operator(self, no_dense):

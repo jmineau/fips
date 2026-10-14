@@ -14,11 +14,13 @@ from importlib.metadata import version as _version
 
 from .covariance import CovarianceMatrix
 from .estimators import Estimator, available_estimators
+from .field import Field
 from .matrix import Matrix, MatrixBlock
 from .operators import ForwardOperator, convolve
 from .pipeline import InversionPipeline
 from .posterior import Posterior
 from .problem import InverseProblem, solve
+from .space import Space
 from .vector import Block, Vector
 
 try:
@@ -30,6 +32,8 @@ logging.getLogger(__name__).addHandler(logging.NullHandler())
 
 __all__ = [
     "__version__",
+    "Space",
+    "Field",
     "Block",
     "Vector",
     "Matrix",

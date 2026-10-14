@@ -1,8 +1,9 @@
 """
 Index validation and manipulation utilities.
 
-This module provides utilities for checking index overlap, promoting indices,
-and sanitizing index types for consistent handling across data structures.
+This module provides utilities for checking index overlap, assigning and
+aligning block levels, and rounding labels on request. fips never converts or
+rounds labels on its own.
 """
 
 from functools import wraps
@@ -195,37 +196,3 @@ def round_index(index: pd.Index, decimals: int) -> pd.Index:
         rounded_values = np.round(index.values, decimals)
         return pd.Index(rounded_values, name=index.name)
     return index
-
-
-@apply_to_index
-def to_numeric(index: pd.Index) -> pd.Index:
-    """
-    Attempt to convert index to numeric types.
-
-    Parameters
-    ----------
-    index : pd.Index
-        The index to convert.
-
-    Returns
-    -------
-    pd.Index
-        A new index with values converted to numeric types where possible.
-        Non-convertible values are returned unchanged.
-    """
-    # Prevent converting Datetime/Timedelta/Period indices to numeric
-    if (
-        pd.api.types.is_datetime64_any_dtype(index)
-        or pd.api.types.is_timedelta64_dtype(index)
-        or isinstance(index, pd.PeriodDtype)
-    ):
-        return index
-
-    try:
-        # pandas-stubs have no to_numeric() overload for an Index; pandas takes
-        # one and returns an Index
-        # pyrefly: ignore[no-matching-overload]
-        numeric_index = pd.to_numeric(index, errors="raise")
-        return pd.Index(numeric_index, name=index.name)
-    except (ValueError, TypeError):
-        return index

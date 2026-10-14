@@ -3,7 +3,9 @@ Vector data structures for inverse problems.
 
 This module provides the `Vector` and `Block` classes for representing
 state vectors, observations, and other 1D data structures with automatic
-index management and serialization support.
+index management and serialization support. Both are deprecated in favor of
+:class:`~fips.Field`, which they are built with: a `Vector` assembles its
+blocks as a field and selects a block through its :class:`~fips.Space`.
 """
 
 import logging
@@ -18,8 +20,9 @@ from fips.base import (
     MultiBlockMixin,
     SingleBlockMixin,
     Structure1D,
-    xselect,
 )
+from fips.field import Field
+from fips.space import Space
 
 logger = logging.getLogger(__name__)
 
@@ -39,6 +42,16 @@ class Block(SingleBlockMixin, Structure1D):
     Inverse problems can be customized by creating Blocks
     with specific indices and names to represent different state or
     observation components relevant to the application.
+
+    .. deprecated:: 0.2.0b1
+       `Block` will be removed. Build a :class:`~fips.Field` instead:
+       ``Field.from_series(series, block="flux")``. A `Block` does not warn
+       yet, because fips itself still builds blocks for an
+       :class:`~fips.InverseProblem`.
+
+    The labels are kept as given: they are not converted to numbers, and
+    duplicate or missing labels raise a ``ValueError`` (the checks of
+    :class:`~fips.Space`).
 
     Parameters
     ----------
@@ -85,6 +98,9 @@ class Block(SingleBlockMixin, Structure1D):
         if "block" in self.data.index.names:
             raise ValueError("""Block data should not have a 'block' level in the index.
                              The Series name should be used for the block name instead.""")
+
+        # Duplicate, missing and unnamed labels: the checks of a Space's block
+        Space({self.name: self.index})
 
     def __repr__(self):
         """Return string representation."""
@@ -137,6 +153,21 @@ class Vector(MultiBlockMixin, Structure1D):
     Vectors are used to represent the full state or observation space and are the
     1D matrix components in the inversion framework.
 
+    .. deprecated:: 0.2.0b1
+       `Vector` will be removed. Build a :class:`~fips.Field` instead:
+       ``Field.from_blocks({"flux": flux, "bias": bias})``, or
+       ``Field.from_series(series)`` for a Series with a ``block`` level. A
+       `Vector` does not warn yet, because fips itself still builds vectors
+       for an :class:`~fips.InverseProblem` and its posterior.
+
+    Blocks are assembled as a :class:`~fips.Field`: the ``block`` level
+    comes first, and a level one block has and another lacks is missing
+    (NaN) on the other's rows (:attr:`Space.index <fips.Space.index>`). The
+    labels are kept as given: they are not converted to numbers, and a block
+    with duplicate labels, or with labels on a level for only some of its
+    rows, raises a ``ValueError`` (:meth:`Space.from_index
+    <fips.Space.from_index>`).
+
     Parameters
     ----------
     data : pd.Series, Vector, Block, Sequence[Block | pd.Series], or array-like
@@ -188,34 +219,14 @@ class Vector(MultiBlockMixin, Structure1D):
             if any(isinstance(item, (Block, pd.Series)) for item in data):
                 blocks = data
 
-        if blocks:  # Build from blocks
-            seen_blocks = set()
-            dfs: list[pd.DataFrame] = []
-            dims = {}
-
+        if blocks:  # Build from blocks, as a Field
+            named: dict[str, pd.Series] = {}
             for b in blocks:
-                # Convert to Block
                 block = Block(b)
-                if block.name in seen_blocks:
+                if block.name in named:
                     raise ValueError(f"Duplicate block name '{block.name}' found")
-                seen_blocks.add(block.name)
-
-                # Collect unique dimensions in order
-                for dim in block.data.index.names:
-                    dims[dim] = True
-
-                # Format for concatenation
-                dfs.append(
-                    block.to_series(add_block_level=True).rename(name).reset_index()
-                )
-
-            combined = pd.concat(dfs, ignore_index=True)
-
-            # Handle Ragged Hierarchies (Fill integers with -1)
-            # combined[list(dims.keys())] = combined[list(dims.keys())].fillna(-1)
-
-            levels = ["block"] + list(dims.keys())
-            data = combined.set_index(levels)[name or 0].rename(name)
+                named[block.name] = block.data
+            data = Field.from_blocks(named, name=name).to_series()
         else:
             # If we get here, data should be array-like and we can let the parent class handle it
             if name is None:
@@ -223,14 +234,32 @@ class Vector(MultiBlockMixin, Structure1D):
 
         super().__init__(data, name=name, index=index, dtype=dtype, copy=copy)
 
+    def _validate(self):
+        """Raise unless the labels make a Space: unique, and no level missing for only some of a block's rows."""
+        super()._validate()
+        Space.from_index(self.index)
+
     def __repr__(self) -> str:
         """Return string representation."""
         header = f"Vector(name='{self.name}', shape={self.shape})\n"
         return header + repr(self.data)
 
     def __getitem__(self, block) -> pd.Series:
-        """Get block by name."""
-        return xselect(self.data, block, level="block")
+        """
+        Get a block by name, labeled as the block was given.
+
+        The ``block`` level and the levels only other blocks have are
+        dropped, and each level keeps the dtype the block was built with
+        (:meth:`Space.select <fips.Space.select>`).
+
+        Raises
+        ------
+        KeyError
+            If the vector has no block of that name.
+        """
+        labels = Space.from_index(self.index).select(str(block))
+        rows = self.index.get_level_values("block").astype(str) == str(block)
+        return self.data[rows].set_axis(labels)
 
     @property
     def blocks(self) -> _BlockAccessor:  # type: ignore[override]

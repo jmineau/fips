@@ -108,8 +108,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `S_hat` and `A` for any estimator, from the factors for `BayesianSolver`).
   ([#23](https://github.com/jmineau/fips/issues/23),
   [#22](https://github.com/jmineau/fips/issues/22))
+- **`Space` and `Field`, the labels and the values of a vector.** A `Space` is
+  an ordered set of named blocks, each labeled by its own pandas index; its
+  `index` is one `MultiIndex` with the `block` level first, a level one block
+  lacks being missing (NaN) on its rows, and every level keeping its dtype (an
+  integer `cell` level stays integer). `select(block)` gives a block's labels
+  as they were given, `slice(block)` and `offsets` its positions,
+  `Space.from_index(index)` the space a padded index describes, `align(other)`
+  the positions of its labels in a space with exactly the same labels (in any
+  order; otherwise it raises and names the labels missing from either), and
+  `round_labels(decimals)` rounds float labels on request. A `Field` is values
+  on a space: `Field.from_series`, `Field.from_blocks`, `field["flux"]` (a
+  `Field` of that block), `to_series`, `align` and `round_labels`; its values
+  are a read-only float array. Labels are kept as given, and duplicate, missing
+  or unnamed labels raise a `ValueError` that names them.
+  ([#82](https://github.com/jmineau/fips/issues/82))
 
 ### Changed
+
+- **Labels are kept as given.** A structure no longer converts its labels to
+  numbers: site codes `"001"`, `"010"` stay strings, where they became `1`,
+  `10`. `InverseProblem` (and `FluxProblem`) no longer round float labels by
+  default: `round_index` is `None` unless passed. A forward operator, a
+  covariance or an offset whose labels match the state's or the observations'
+  only after one of the two conversions now fails to align (with the "Partial
+  overlap" warning or the "does not overlap" error); convert or round the labels
+  on purpose (`round_index=6`, `Space.round_labels`).
+  ([#77](https://github.com/jmineau/fips/issues/77),
+  [#82](https://github.com/jmineau/fips/issues/82))
+- **`Block` and `Vector` check their labels with a `Space`, and a `Vector`
+  assembles its blocks as a `Field`.** A block with duplicate labels, a
+  missing (NaN) label, or labels on a level for only some of its rows raises a
+  `ValueError` when the `Block` or `Vector` is built (an `InverseProblem` with
+  duplicate labels raised already, with another message). A `Vector` built from
+  blocks holds floats, and its index keeps each level's dtype.
+  ([#82](https://github.com/jmineau/fips/issues/82))
 
 - **`BayesianSolver` solves by whitening and keeps its factorization.** It
   whitens with the Cholesky factor `L` of the model-data mismatch (or the square
@@ -211,13 +244,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   so does a subclass that prints in its own `run`.
   ([#8](https://github.com/jmineau/fips/issues/8))
 
+### Deprecated
+
+- **`Block` and `Vector`**, in favor of `Field`: `Field.from_series(series,
+  block="flux")` for one block, `Field.from_blocks({...})` for several. They
+  do not warn yet, because fips itself still builds them for `InverseProblem`
+  and `Posterior`. ([#82](https://github.com/jmineau/fips/issues/82))
+
 ### Removed
+
+- `fips.indexes.to_numeric`, which converted labels to numbers when a
+  structure was built. ([#77](https://github.com/jmineau/fips/issues/77))
 
 - `Estimator._output_meta`, the private table `InverseProblem` read to label
   the estimator's outputs: `Posterior` labels them itself.
   ([#12](https://github.com/jmineau/fips/issues/12))
 
 ### Fixed
+
+- **A block of a `Vector` keeps the dtype of its labels.** `v["flux"]` (and
+  `v.blocks["flux"]`) of a vector whose other blocks lack the `cell` level gave
+  the integer cells `1, 2` back as `1.0, 2.0`; it now gives them as the block
+  was built. ([#82](https://github.com/jmineau/fips/issues/82))
 
 - **`Estimator.leverage` works for a state vector.** It raised
   `ValueError: Expected at least ndim=2` on every one-dimensional state, which is
@@ -227,7 +275,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   trace 1), and the tests pin it to the formula written out in numpy.
   ([#81](https://github.com/jmineau/fips/issues/81))
 - **`InverseProblem` refuses duplicate state or observation labels**, given
-  twice in the input or made equal by `round_index` (6 decimals by default),
+  twice in the input or made equal by `round_index`,
   with a `ValueError` that names them; for rounding it names the labels that
   merged. Two labels that differed past the sixth decimal used to become one,
   the problem kept both rows under it, and the posterior had fewer entries than

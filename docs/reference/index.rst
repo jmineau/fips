@@ -6,6 +6,7 @@ This reference provides detailed documentation for all public classes, functions
 .. toctree::
    :maxdepth: 2
 
+   space
    blocks
    multiblocks
    operators

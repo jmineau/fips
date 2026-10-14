@@ -38,8 +38,10 @@ automatically: :class:`~fips.InverseProblem` places each matrix on the
 observation and state labels, and fills the labels a matrix lacks within a
 block with zeros (with a warning). A block name that matches no block of the
 state or the observations raises a :class:`ValueError`, and so does a label
-that appears twice in the state or the observations, including two labels
-that ``round_index`` rounds to the same value.
+that appears twice in a block, including two labels that ``round_index``
+rounds to the same value. Labels are kept as given: fips does not convert
+them to numbers, and rounds float labels only when ``round_index`` is passed
+(see :class:`~fips.Space`).
 
 .. tip::
 
