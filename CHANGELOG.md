@@ -35,6 +35,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   (each input in its own random order gives the same labeled posterior); and
   dot tests of `convolve` and of `ObsAggregator`'s aggregation. No library
   code changed. ([#82](https://github.com/jmineau/fips/issues/82))
+- **`fips.solve(problem)` returns a `Posterior`**, the solution labeled with
+  the problem's indexes: `estimate` (and `mean`, the same object for every
+  estimator fips has), `covariance`, `variances`, `modeled_obs`,
+  `prior_modeled_obs`, `prior_obs_covariance`, `kalman_gain`,
+  `averaging_kernel`, `desroziers`, the scalars `dofs`, `reduced_chi2`, `r2`,
+  `rmse` and `uncertainty_reduction`, and the fitted `estimator`. Each output is
+  built once and kept. The estimator defaults to `"bayesian"`; options such as
+  `gamma` are passed on. `fips.solve` does not change the problem.
+  `InverseProblem.solve` calls it, keeps the posterior as `problem.result`,
+  and returns the problem as before; `problem.posterior` and the other result
+  properties give the posterior's outputs, with the same values, labels, types
+  and names as before. They now return the same object on every access instead
+  of a new one, so a change made to one in place shows in the next.
+  ([#82](https://github.com/jmineau/fips/issues/82),
+  [#12](https://github.com/jmineau/fips/issues/12))
 
 ### Changed
 
@@ -94,8 +109,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   so does a subclass that prints in its own `run`.
   ([#8](https://github.com/jmineau/fips/issues/8))
 
+### Removed
+
+- `Estimator._output_meta`, the private table `InverseProblem` read to label
+  the estimator's outputs: `Posterior` labels them itself.
+  ([#12](https://github.com/jmineau/fips/issues/12))
+
 ### Fixed
 
+- **`Estimator.leverage` works for a state vector.** It raised
+  `ValueError: Expected at least ndim=2` on every one-dimensional state, which is
+  the only kind there is: the product `(Hx)^T (H S_0 H^T + S_z)^{-1} Hx` of a
+  vector is a scalar, and `scipy.linalg.inv` refuses one. `Hx` is now one column,
+  so the result is the `n_z` by `n_z` projection the docstring describes (idempotent,
+  trace 1), and the tests pin it to the formula written out in numpy.
+  ([#81](https://github.com/jmineau/fips/issues/81))
 - **`InverseProblem` refuses duplicate state or observation labels**, given
   twice in the input or made equal by `round_index` (6 decimals by default),
   with a `ValueError` that names them; for rounding it names the labels that

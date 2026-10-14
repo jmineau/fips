@@ -11,6 +11,7 @@ This reference provides detailed documentation for all public classes, functions
    operators
    covariance
    inverse
+   posterior
    estimators
    pipeline
    base

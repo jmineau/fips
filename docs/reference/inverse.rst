@@ -35,6 +35,7 @@ Solving the Inverse Problem
 
    InverseProblem.estimator
    InverseProblem.solve
+   InverseProblem.result
 
 Results
 ~~~~~~~
@@ -45,8 +46,10 @@ Results
    InverseProblem.posterior_error
    InverseProblem.prior_obs
    InverseProblem.posterior_obs
+   InverseProblem.prior_obs_error
    InverseProblem.kalman_gain
    InverseProblem.averaging_kernel
+   InverseProblem.desroziers
 
 Selection and indexing
 ~~~~~~~~~~~~~~~~~~~~~~

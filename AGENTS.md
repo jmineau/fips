@@ -33,7 +33,8 @@ PyPI name and import name are both `fips`. Source lives in `src/fips/`.
 src/fips/
   __init__.py        public exports (re-exports Block, Vector, Matrix,
                      MatrixBlock, CovarianceMatrix, ForwardOperator,
-                     Estimator, InverseProblem, InversionPipeline, convolve)
+                     Estimator, InverseProblem, Posterior, solve,
+                     InversionPipeline, convolve)
   base.py            Pickleable, MultiBlockMixin, SingleBlockMixin,
                      Structure1D/2D — foundational mixins all blocks build on
   vector.py          Block, Vector — 1D labeled containers (state, obs)
@@ -43,7 +44,10 @@ src/fips/
   operators.py       ForwardOperator (Matrix subclass), convolve(state, H)
   estimators.py      Estimator ABC, ESTIMATOR_REGISTRY, available_estimators()
   problem.py         InverseProblem — top-level orchestrator that combines
-                     obs, prior, H, S_0, S_z and dispatches to an Estimator
+                     obs, prior, H, S_0, S_z; solve(problem) fits an
+                     Estimator and returns a Posterior
+  posterior.py       Posterior — the estimator's outputs, labeled with the
+                     problem's state and obs indexes, each built once
   pipeline.py        InversionPipeline ABC — workflow template for repeated
                      inversions (load data, build covariances, solve)
   aggregators.py     Time/space binning (e.g. integrate_over_time_bins)
@@ -85,7 +89,8 @@ From `fips.__init__`:
 | `ForwardOperator` | Matrix specialization for the Jacobian H |
 | `convolve` | apply H to a state vector |
 | `Estimator`, `available_estimators` | swappable solvers via registry |
-| `InverseProblem` | orchestrator (`solve()` returns posterior + diagnostics) |
+| `InverseProblem` | orchestrator; `solve()` keeps a `Posterior` as `result` and returns the problem |
+| `solve`, `Posterior` | `fips.solve(problem)` returns the labeled posterior and diagnostics |
 | `InversionPipeline` | repeatable workflow template |
 
 ## Mental model
@@ -101,9 +106,11 @@ From `fips.__init__`:
    or composed from `kernels.py` (exponential decay, time decay, etc.).
    Use sparse (`csr_matrix`) when blocks are large; the package supports it
    throughout.
-4. **Hand everything to `InverseProblem`.** It validates index alignment,
-   picks an estimator from `ESTIMATOR_REGISTRY`, and `.solve()` returns
-   posterior plus diagnostics (e.g. `reduced_chi2`).
+4. **Hand everything to `InverseProblem`.** It validates index alignment;
+   `fips.solve(problem)` picks an estimator from `ESTIMATOR_REGISTRY` and
+   returns a `Posterior` (estimate, covariance, diagnostics such as
+   `reduced_chi2`), and `problem.solve()` keeps that posterior as
+   `problem.result`, whose outputs `problem.posterior` and friends forward to.
 5. **For repeated inversions, subclass `InversionPipeline`** so loading,
    covariance build, and solve are templated.
 
@@ -367,8 +374,12 @@ covariance). See README "Multi-block" example.
 1. Subclass `Estimator` in `estimators.py`.
 2. Implement the abstract solve method.
 3. Register via the `EstimatorRegistry` decorator (`@ESTIMATOR_REGISTRY.register("name")`).
-4. Now available via `available_estimators()` and selectable on
-   `InverseProblem`.
+4. Now available via `available_estimators()` and selectable in `fips.solve`
+   and `InverseProblem.solve`. `Posterior` labels the outputs every estimator
+   has (`x_hat`, `S_hat`, `y_hat`, `y_0`, `S_y0`, `K`, `A`, `desroziers`) and
+   knows which index goes on each axis; an output a new estimator adds is
+   reached unlabeled through `post.estimator` until `Posterior` gets a
+   property for it.
 5. `tests/test_oracle.py` is parametrized over the registry, so the new
    estimator is held to the closed-form Gaussian posterior and the
    permutation test at once. An estimator whose answer is not that posterior
@@ -415,8 +426,12 @@ covariance). See README "Multi-block" example.
   container holds classes.
 - `convolve(state, H)` returns a `Vector`, not a numpy array. Don't expect
   raw arrays out of public APIs.
-- `reduced_chi2` lives on the *estimator*, not the problem
-  (`problem.estimator.reduced_chi2`).
+- `reduced_chi2` lives on the *estimator* and the *posterior*, not the problem
+  (`problem.estimator.reduced_chi2`, `problem.result.reduced_chi2`).
+- `InverseProblem` pickles its estimator under `_estimator`, not the
+  `Posterior`, and rebuilds the posterior on load, so a pickle reads the same
+  with or without `posterior.py`. A `Posterior` pickles the estimator and the
+  two indexes only; its labeled outputs are rebuilt when asked for.
 - Covariance solves in `estimators.py` go through `_solve_psd(A, B)`, **not**
   `scipy.linalg.solve(..., assume_a="pos")` directly. `A = H S_0 H^T + S_z` is
   PD in exact arithmetic, but when it is ill-conditioned (wide eigenvalue

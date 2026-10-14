@@ -95,7 +95,8 @@ def available_estimators() -> list[str]:
     Returns
     -------
     list of str
-        Names that can be passed to :meth:`~fips.InverseProblem.solve`.
+        Names that can be passed to :func:`fips.solve` and
+        :meth:`~fips.InverseProblem.solve`.
     """
     return list(ESTIMATOR_REGISTRY.keys())
 
@@ -136,19 +137,6 @@ class Estimator(ABC):
     """Number of observations (length of z)."""
     n_x: int
     """Number of state variables (length of x_0)."""
-
-    _output_meta = {
-        # attr : (row_space, col_space, is_covariance)
-        "x_hat": ("state", None, False),
-        "S_hat": ("state", "state", True),
-        "y_hat": ("obs", None, False),
-        "y_0": ("obs", None, False),
-        "S_y0": ("obs", "obs", True),
-        "K": ("state", "obs", False),
-        "A": ("state", "state", False),
-        "U_red": ("state", None, False),
-        "desroziers": ("obs", "obs", True),
-    }
 
     def __init__(
         self,
@@ -227,18 +215,32 @@ class Estimator(ABC):
         .. math::
             L = Hx ((Hx)^T (H S_0 H^T + S_z)^{-1} Hx)^{-1} (Hx)^T (H S_0 H^T + S_z)^{-1}
 
+        This is the generalized-least-squares hat matrix of the one regressor
+        :math:`Hx`: the projection onto :math:`Hx` in the metric
+        :math:`(H S_0 H^T + S_z)^{-1}`. It is idempotent and its trace is 1, so
+        the diagonal shares one unit of leverage among the observations. When
+        the errors are correlated an entry of the diagonal can be negative.
+
         Parameters
         ----------
         x : np.ndarray
-            State vector.
+            State vector, of length ``n_x``.
 
         Returns
         -------
         np.ndarray
-            Leverage matrix.
+            Leverage matrix, ``n_z`` by ``n_z``.
+
+        Notes
+        -----
+        ``Hx`` is ``forward(x)``, which includes the constant ``c``.
         """
         logger.debug("Calculating Leverage matrix...")
-        Hx = self.forward(x)
+        Hx = np.asarray(self.forward(x), dtype=float)
+        if Hx.ndim == 1:
+            # One regressor: the vector is the single column of the design
+            # matrix, so (Hx)^T A^-1 Hx below is 1 x 1, not a scalar.
+            Hx = Hx[:, None]
         Hx_T = Hx.T
 
         # Equation: L = Hx (Hx^T (H S_0 H^T + S_z)^-1 Hx)^-1 Hx^T (H S_0 H^T + S_z)^-1

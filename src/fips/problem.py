@@ -17,6 +17,7 @@ from fips.covariance import CovarianceMatrix
 from fips.estimators import ESTIMATOR_REGISTRY, Estimator
 from fips.matrix import Matrix, MatrixBlock, MatrixLike
 from fips.operators import ForwardOperator
+from fips.posterior import Posterior
 from fips.vector import Vector, VectorLike
 
 logger = logging.getLogger(__name__)
@@ -281,7 +282,7 @@ class InverseProblem(Pickleable):
         self.modeldata_mismatch = modeldata_mismatch
         self.prior_error = prior_error
         self.constant = constant
-        self._estimator: Estimator | None = None  # init empty estimator
+        self._result: Posterior | None = None  # set by solve
 
     @property
     def state_index(self) -> pd.Index:
@@ -304,11 +305,32 @@ class InverseProblem(Pickleable):
         return len(self.obs_index)
 
     @property
+    def result(self) -> Posterior:
+        """
+        The posterior from the last :meth:`solve` (raises if not solved).
+
+        ``posterior``, ``posterior_error``, ``posterior_obs``, ``prior_obs``,
+        ``prior_obs_error``, ``kalman_gain``, ``averaging_kernel`` and
+        ``desroziers`` are its outputs, under the names they have on the
+        problem: ``problem.posterior`` is ``problem.result.estimate``.
+
+        See Also
+        --------
+        fips.solve : Solve a problem and return its posterior.
+        """
+        if self._result is None:
+            raise RuntimeError("Problem has not been solved. Call .solve() first.")
+        return self._result
+
+    @property
     def estimator(self) -> Estimator:
         """Return the fitted estimator (raises if not solved)."""
-        if self._estimator is None:
-            raise RuntimeError("Problem has not been solved. Call .solve() first.")
-        return self._estimator
+        return self.result.estimator
+
+    @property
+    def _estimator(self) -> Estimator | None:
+        """The fitted estimator, or None before :meth:`solve`."""
+        return None if self._result is None else self._result.estimator
 
     def get_block(
         self, component: str, block: str, crossblock: str | None = None
@@ -345,6 +367,9 @@ class InverseProblem(Pickleable):
         """
         Solve the inverse problem using the specified estimator.
 
+        Calls :func:`fips.solve` and keeps the :class:`~fips.Posterior` it
+        returns as :attr:`result`.
+
         Parameters
         ----------
         estimator : str or type[Estimator]
@@ -357,61 +382,9 @@ class InverseProblem(Pickleable):
         Self
             The InverseProblem instance with the estimator fitted.
         """
-        # Get estimator class
-        if isinstance(estimator, str):
-            if estimator not in ESTIMATOR_REGISTRY:
-                raise ValueError(f"Estimator '{estimator}' is not registered.")
-            estimator_cls = ESTIMATOR_REGISTRY[estimator]
-        elif isinstance(estimator, type) and issubclass(estimator, Estimator):
-            estimator_cls = estimator
-        else:
-            raise TypeError("Estimator must be a string or a subclass of Estimator.")
-
-        logger.info(f"Solving using {estimator_cls.__name__}...")
-        z = self.obs.values
-        x_0 = self.prior.values
-        H = self.forward_operator.values
-        S_0 = self.prior_error.values
-        S_z = self.modeldata_mismatch.values
-        c = getattr(self.constant, "values", None)
-
-        self._estimator = estimator_cls(
-            z=z, x_0=x_0, H=H, S_0=S_0, S_z=S_z, c=c, **kwargs
-        )
-
-        # Trigger computation of posterior
-        _ = self.posterior
-
+        # The module's solve function, not this method.
+        self._result = solve(self, estimator, **kwargs)
         return self
-
-    def _wrap(self, math_attr: str, friendly_name: str):
-        """Fetch raw math from the estimator and wrap it using the Estimator's space manifest."""
-        # Get the raw numpy data
-        raw_data = getattr(self.estimator, math_attr)
-
-        # Look up the metadata from the Estimator's manifest
-        meta = self.estimator._output_meta.get(math_attr)
-
-        # If it's not in the manifest (e.g., chi2, DOFS), just return the raw float/array
-        if not meta:
-            return raw_data
-
-        row_space, col_space, is_covariance = meta
-
-        # Wrap 1D Vectors
-        if col_space is None:
-            index = self.state_index if row_space == "state" else self.obs_index
-            return Vector(raw_data, index=index, name=friendly_name)
-
-        # Wrap 2D Matrices
-        idx_0 = self.state_index if row_space == "state" else self.obs_index
-        idx_1 = self.state_index if col_space == "state" else self.obs_index
-
-        if is_covariance:
-            return CovarianceMatrix(
-                raw_data, index=idx_0, columns=idx_1, name=friendly_name
-            )
-        return Matrix(raw_data, index=idx_0, columns=idx_1, name=friendly_name)
 
     def __getstate__(self):
         """Explicit pickle support: return state as dict."""
@@ -422,6 +395,8 @@ class InverseProblem(Pickleable):
             "prior_error": self.prior_error,
             "modeldata_mismatch": self.modeldata_mismatch,
             "constant": self.constant,
+            # The estimator, not the posterior, so a pickle reads as it did
+            # before the posterior existed; the posterior is rebuilt from it.
             "_estimator": self._estimator,
         }
 
@@ -433,7 +408,12 @@ class InverseProblem(Pickleable):
         self.prior_error = state["prior_error"]
         self.modeldata_mismatch = state["modeldata_mismatch"]
         self.constant = state["constant"]
-        self._estimator = state.get("_estimator", None)
+        estimator = state.get("_estimator", None)
+        self._result = (
+            None
+            if estimator is None
+            else Posterior(estimator, self.state_index, self.obs_index)
+        )
 
     def __repr__(self) -> str:
         """Return string representation."""
@@ -445,23 +425,23 @@ class InverseProblem(Pickleable):
 
     @property
     def posterior(self) -> Vector:
-        """Posterior state estimate."""
-        return self._wrap("x_hat", "posterior")  # type: ignore[return-value]
+        """Posterior state estimate (:attr:`~fips.Posterior.estimate`)."""
+        return self.result.estimate
 
     @property
     def posterior_error(self) -> CovarianceMatrix:
-        """Posterior error covariance."""
-        return self._wrap("S_hat", "posterior_error")  # type: ignore[return-value]
+        """Posterior error covariance (:attr:`~fips.Posterior.covariance`)."""
+        return self.result.covariance
 
     @property
     def posterior_obs(self) -> Vector:
-        """Modeled observations (H @ posterior)."""
-        return self._wrap("y_hat", "modeled_obs")  # type: ignore[return-value]
+        """Modeled observations, H @ posterior + c (:attr:`~fips.Posterior.modeled_obs`)."""
+        return self.result.modeled_obs
 
     @property
     def prior_obs(self) -> Vector:
-        """Modeled observations using the prior (H @ prior)."""
-        return self._wrap("y_0", "prior_obs")  # type: ignore[return-value]
+        """Modeled observations, H @ prior + c (:attr:`~fips.Posterior.prior_modeled_obs`)."""
+        return self.result.prior_modeled_obs
 
     @property
     def prior_obs_error(self) -> CovarianceMatrix:
@@ -471,21 +451,104 @@ class InverseProblem(Pickleable):
         The uncertainty of ``prior_obs`` that the prior error implies, on the
         observation index. Its diagonal, square-rooted, is the prior's share
         of each observation's error budget; add the model-data mismatch in
-        quadrature for the total the solve expects.
+        quadrature for the total the solve expects
+        (:attr:`~fips.Posterior.prior_obs_covariance`).
         """
-        return self._wrap("S_y0", "prior_obs_error")  # type: ignore[return-value]
+        return self.result.prior_obs_covariance
 
     @property
     def kalman_gain(self) -> Matrix:
-        """Kalman gain matrix (K)."""
-        return self._wrap("K", "kalman_gain")  # type: ignore[return-value]
+        """Kalman gain matrix, K (:attr:`~fips.Posterior.kalman_gain`)."""
+        return self.result.kalman_gain
 
     @property
     def averaging_kernel(self) -> Matrix:
-        """Averaging kernel matrix (A)."""
-        return self._wrap("A", "averaging_kernel")  # type: ignore[return-value]
+        """Averaging kernel matrix, A (:attr:`~fips.Posterior.averaging_kernel`)."""
+        return self.result.averaging_kernel
 
     @property
     def desroziers(self) -> CovarianceMatrix:
-        """Desroziers et al. (2005) diagnosed observation error covariance."""
-        return self._wrap("desroziers", "desroziers")  # type: ignore[return-value]
+        """Desroziers et al. (2005) diagnosed observation error covariance (:attr:`~fips.Posterior.desroziers`)."""
+        return self.result.desroziers
+
+
+def solve(
+    problem: InverseProblem,
+    estimator: str | type[Estimator] = "bayesian",
+    **options,
+) -> Posterior:
+    """
+    Solve an inverse problem and return its posterior.
+
+    Fits the estimator to the problem's inputs and labels what it computes
+    with the problem's indexes. The problem is not changed;
+    :meth:`~fips.InverseProblem.solve` calls this and keeps the result.
+
+    Parameters
+    ----------
+    problem : InverseProblem
+        The problem to solve.
+    estimator : str or type[Estimator], default "bayesian"
+        A registered estimator's name (see :func:`~fips.available_estimators`) or
+        an :class:`~fips.Estimator` subclass.
+    **options
+        Passed to the estimator, such as ``gamma`` for ``"bayesian"``.
+
+    Returns
+    -------
+    Posterior
+        The labeled solution. Its estimate is computed before it returns.
+
+    Raises
+    ------
+    ValueError
+        If ``estimator`` is a name that is not registered.
+    TypeError
+        If ``estimator`` is neither a name nor an Estimator subclass.
+
+    See Also
+    --------
+    fips.Posterior : What it returns.
+    fips.InverseProblem.solve : Solve in place and keep the posterior.
+
+    Examples
+    --------
+    >>> import pandas as pd
+    >>> import fips
+    >>> state = pd.Index(["a", "b"], name="cell")
+    >>> obs = pd.Index(["o1", "o2", "o3"], name="obs_id")
+    >>> problem = fips.InverseProblem(
+    ...     obs=pd.Series([1.0, 2.0, 3.0], index=obs, name="obs"),
+    ...     prior=pd.Series([0.0, 0.0], index=state, name="prior"),
+    ...     forward_operator=pd.DataFrame(
+    ...         [[1.0, 0.0], [0.0, 1.0], [1.0, 1.0]], index=obs, columns=state
+    ...     ),
+    ...     prior_error=1.0,
+    ...     modeldata_mismatch=0.1,
+    ... )
+    >>> post = fips.solve(problem, gamma=0.5)
+    >>> post.estimator.gamma
+    0.5
+    """
+    if isinstance(estimator, str):
+        if estimator not in ESTIMATOR_REGISTRY:
+            raise ValueError(f"Estimator '{estimator}' is not registered.")
+        estimator_cls = ESTIMATOR_REGISTRY[estimator]
+    elif isinstance(estimator, type) and issubclass(estimator, Estimator):
+        estimator_cls = estimator
+    else:
+        raise TypeError("Estimator must be a string or a subclass of Estimator.")
+
+    logger.info(f"Solving using {estimator_cls.__name__}...")
+    fitted = estimator_cls(
+        z=problem.obs.values,
+        x_0=problem.prior.values,
+        H=problem.forward_operator.values,
+        S_0=problem.prior_error.values,
+        S_z=problem.modeldata_mismatch.values,
+        c=getattr(problem.constant, "values", None),
+        **options,
+    )
+    posterior = Posterior(fitted, problem.state_index, problem.obs_index)
+    _ = posterior.estimate  # solve now, as InverseProblem.solve always has
+    return posterior

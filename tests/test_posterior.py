@@ -1,0 +1,369 @@
+"""Tests for fips.solve and the Posterior it returns."""
+
+import pickle
+
+import numpy as np
+import pandas as pd
+import pytest
+
+import fips
+from fips import (
+    Block,
+    CovarianceMatrix,
+    Estimator,
+    InverseProblem,
+    Matrix,
+    MatrixBlock,
+    Posterior,
+    Vector,
+)
+from fips.estimators import BayesianSolver
+from fips.problems.flux import FluxProblem
+
+
+def _spd(rng, n):
+    a = rng.normal(size=(n, n))
+    return a @ a.T + n * np.eye(n)
+
+
+def _problem(cls=InverseProblem, seed=0):
+    """A two-block state (flux, bias), one obs block, and a background."""
+    rng = np.random.default_rng(seed)
+    times = pd.date_range("2023-01", periods=3, freq="MS")
+    flux_idx = pd.MultiIndex.from_product([times, ["A", "B"]], names=["time", "loc"])
+    bias_idx = pd.Index(["S1", "S2"], name="site")
+    obs_idx = pd.MultiIndex.from_tuples(
+        [
+            (t, s)
+            for t in pd.date_range("2023-01-01", periods=4, freq="20D")
+            for s in ["S1", "S2"]
+        ],
+        names=["time", "site"],
+    )
+    prior = Vector(
+        [
+            Block(pd.Series(rng.normal(size=6), index=flux_idx, name="flux")),
+            Block(pd.Series([0.1, -0.1], index=bias_idx, name="bias")),
+        ]
+    )
+    obs = Block(
+        pd.Series(400 + rng.normal(size=8), index=obs_idx, name="concentration")
+    )
+    H = [
+        MatrixBlock(
+            pd.DataFrame(rng.random((8, 6)), index=obs_idx, columns=flux_idx),
+            "concentration",
+            "flux",
+        ),
+        MatrixBlock(
+            pd.DataFrame(np.tile(np.eye(2), (4, 1)), index=obs_idx, columns=bias_idx),
+            "concentration",
+            "bias",
+        ),
+    ]
+    S_0 = CovarianceMatrix(
+        [
+            MatrixBlock(
+                pd.DataFrame(_spd(rng, 6), index=flux_idx, columns=flux_idx),
+                "flux",
+                "flux",
+            ),
+            MatrixBlock.diagonal(
+                0.01, index=bias_idx, row_block="bias", col_block="bias"
+            ),
+        ]
+    )
+    S_z = MatrixBlock(
+        pd.DataFrame(_spd(rng, 8), index=obs_idx, columns=obs_idx),
+        "concentration",
+        "concentration",
+    )
+    background = Block(
+        pd.Series(np.full(8, 399.0), index=obs_idx, name="concentration")
+    )
+    return cls(
+        obs=obs,
+        prior=prior,
+        forward_operator=H,
+        prior_error=S_0,
+        modeldata_mismatch=S_z,
+        constant=background,
+    )
+
+
+@pytest.fixture
+def problem():
+    """An unsolved two-block problem."""
+    return _problem()
+
+
+@pytest.fixture
+def post(problem):
+    """The posterior of ``problem``."""
+    return fips.solve(problem)
+
+
+# (Posterior attribute, InverseProblem property, estimator attribute, row
+# space, column space or None, type, name). The labels are what
+# InverseProblem built for each property before Posterior existed.
+OUTPUTS = [
+    ("estimate", "posterior", "x_hat", "state", None, Vector, "posterior"),
+    (
+        "covariance",
+        "posterior_error",
+        "S_hat",
+        "state",
+        "state",
+        CovarianceMatrix,
+        "posterior_error",
+    ),
+    ("modeled_obs", "posterior_obs", "y_hat", "obs", None, Vector, "modeled_obs"),
+    ("prior_modeled_obs", "prior_obs", "y_0", "obs", None, Vector, "prior_obs"),
+    (
+        "prior_obs_covariance",
+        "prior_obs_error",
+        "S_y0",
+        "obs",
+        "obs",
+        CovarianceMatrix,
+        "prior_obs_error",
+    ),
+    ("kalman_gain", "kalman_gain", "K", "state", "obs", Matrix, "kalman_gain"),
+    (
+        "averaging_kernel",
+        "averaging_kernel",
+        "A",
+        "state",
+        "state",
+        Matrix,
+        "averaging_kernel",
+    ),
+    (
+        "desroziers",
+        "desroziers",
+        "desroziers",
+        "obs",
+        "obs",
+        CovarianceMatrix,
+        "desroziers",
+    ),
+]
+OUTPUT_IDS = [o[0] for o in OUTPUTS]
+
+SCALARS = [
+    ("dofs", "DOFS"),
+    ("reduced_chi2", "reduced_chi2"),
+    ("r2", "R2"),
+    ("rmse", "RMSE"),
+    ("uncertainty_reduction", "uncertainty_reduction"),
+]
+
+
+def _expected(problem, est, est_attr, row, col, cls, name):
+    """Label an estimator array the way InverseProblem labeled it."""
+    spaces = {"state": problem.state_index, "obs": problem.obs_index}
+    raw = getattr(est, est_attr)
+    if col is None:
+        return Vector(raw, index=spaces[row], name=name)
+    return cls(raw, index=spaces[row], columns=spaces[col], name=name)
+
+
+def _assert_same(result, expected):
+    assert type(result) is type(expected)
+    assert result.name == expected.name
+    if isinstance(expected, Vector):
+        pd.testing.assert_series_equal(result.data, expected.data, check_exact=True)
+    else:
+        pd.testing.assert_frame_equal(result.data, expected.data, check_exact=True)
+
+
+class TestOutputs:
+    """Each output has the values, labels, type and name the problem gave."""
+
+    @pytest.mark.parametrize(
+        ("attr", "prop", "est_attr", "row", "col", "cls", "name"),
+        OUTPUTS,
+        ids=OUTPUT_IDS,
+    )
+    def test_output_is_labeled_as_before(
+        self, problem, post, attr, prop, est_attr, row, col, cls, name
+    ):
+        expected = _expected(problem, post.estimator, est_attr, row, col, cls, name)
+        _assert_same(getattr(post, attr), expected)
+
+    @pytest.mark.parametrize(
+        ("attr", "prop", "est_attr", "row", "col", "cls", "name"),
+        OUTPUTS,
+        ids=OUTPUT_IDS,
+    )
+    def test_problem_property_forwards_to_the_posterior(
+        self, problem, attr, prop, est_attr, row, col, cls, name
+    ):
+        problem.solve("bayesian")
+        result = getattr(problem, prop)
+        assert result is getattr(problem.result, attr)
+        expected = _expected(problem, problem.estimator, est_attr, row, col, cls, name)
+        _assert_same(result, expected)
+
+    def test_labels_are_the_problem_indexes(self, problem, post):
+        assert post.estimate.index.equals(problem.state_index)
+        assert post.modeled_obs.index.equals(problem.obs_index)
+        assert post.kalman_gain.index.equals(problem.state_index)
+        assert post.kalman_gain.columns.equals(problem.obs_index)
+
+    def test_mean_is_the_estimate(self, post):
+        assert post.mean is post.estimate
+
+    def test_variances_are_the_diagonal_of_the_covariance(self, problem, post):
+        assert isinstance(post.variances, Vector)
+        assert post.variances.index.equals(problem.state_index)
+        np.testing.assert_array_equal(
+            post.variances.values, np.diag(post.covariance.to_numpy())
+        )
+
+    @pytest.mark.parametrize(("attr", "est_attr"), SCALARS)
+    def test_scalars_are_the_estimators(self, post, attr, est_attr):
+        value = getattr(post, attr)
+        assert isinstance(value, float)
+        assert value == getattr(post.estimator, est_attr)
+
+    def test_modeled_obs_include_the_constant(self, problem, post):
+        est = post.estimator
+        np.testing.assert_allclose(
+            post.modeled_obs.values, est.H @ est.x_hat + problem.constant.values
+        )
+        np.testing.assert_allclose(
+            post.prior_modeled_obs.values, est.H @ est.x_0 + problem.constant.values
+        )
+
+
+class TestCaching:
+    """Each labeled output is built once."""
+
+    @pytest.mark.parametrize("attr", [*OUTPUT_IDS, "mean", "variances"])
+    def test_same_object_twice(self, post, attr):
+        assert getattr(post, attr) is getattr(post, attr)
+
+    def test_problem_property_same_object_twice(self, problem):
+        problem.solve("bayesian")
+        assert problem.posterior is problem.posterior
+        assert problem.posterior_error is problem.posterior_error
+
+    def test_a_new_solve_gives_new_outputs(self, problem):
+        problem.solve("bayesian")
+        first = problem.posterior
+        problem.solve("bayesian", gamma=0.5)
+        assert problem.posterior is not first
+        assert problem.estimator.gamma == 0.5
+
+
+class TestSolve:
+    """fips.solve and InverseProblem.solve."""
+
+    def test_returns_a_posterior(self, post):
+        assert isinstance(post, Posterior)
+        assert isinstance(post.estimator, BayesianSolver)
+
+    def test_estimate_is_computed_before_it_returns(self, post):
+        assert "x_hat" in vars(post.estimator)
+
+    def test_does_not_change_the_problem(self, problem):
+        fips.solve(problem)
+        assert problem._estimator is None
+        with pytest.raises(RuntimeError, match="not been solved"):
+            _ = problem.result
+
+    def test_options_reach_the_estimator(self, problem):
+        assert fips.solve(problem, gamma=0.5).estimator.gamma == 0.5
+
+    def test_estimator_by_class(self, problem):
+        post = fips.solve(problem, BayesianSolver)
+        assert type(post.estimator) is BayesianSolver
+
+    def test_same_as_the_problems_solve(self, problem):
+        post = fips.solve(problem, "bayesian", gamma=2.0)
+        problem.solve("bayesian", gamma=2.0)
+        _assert_same(problem.posterior, post.estimate)
+        _assert_same(problem.posterior_error, post.covariance)
+
+    def test_unregistered_name_raises(self, problem):
+        with pytest.raises(ValueError, match="is not registered"):
+            fips.solve(problem, "nope")
+
+    def test_not_an_estimator_raises(self, problem):
+        with pytest.raises(TypeError, match="subclass of Estimator"):
+            fips.solve(problem, object)  # type: ignore[arg-type]
+
+    def test_problem_solve_returns_the_problem(self, problem):
+        assert problem.solve("bayesian") is problem
+        assert isinstance(problem.result, Posterior)
+        assert problem.estimator is problem.result.estimator
+        assert problem._estimator is problem.result.estimator
+
+    def test_unsolved_problem_raises(self, problem):
+        with pytest.raises(RuntimeError, match="not been solved"):
+            _ = problem.result
+        with pytest.raises(RuntimeError, match="not been solved"):
+            _ = problem.posterior
+
+    def test_flux_problem(self):
+        problem = _problem(FluxProblem).solve()
+        post = problem.result
+        pd.testing.assert_series_equal(problem.posterior_fluxes, post.estimate["flux"])
+        pd.testing.assert_series_equal(
+            problem.posterior_concentrations, post.modeled_obs["concentration"]
+        )
+        pd.testing.assert_series_equal(
+            problem.prior_concentrations, post.prior_modeled_obs["concentration"]
+        )
+
+
+class TestPickle:
+    """A Posterior and a solved problem round-trip through pickle."""
+
+    def test_posterior_round_trip(self, post):
+        for attr in OUTPUT_IDS:
+            getattr(post, attr)
+        loaded = pickle.loads(pickle.dumps(post))
+        assert isinstance(loaded, Posterior)
+        for attr in OUTPUT_IDS:
+            _assert_same(getattr(loaded, attr), getattr(post, attr))
+        assert loaded.dofs == post.dofs
+
+    def test_labeled_outputs_are_not_pickled(self, post):
+        for attr in OUTPUT_IDS:
+            getattr(post, attr)
+        assert set(post.__getstate__()) == {"estimator", "state_index", "obs_index"}
+        loaded = pickle.loads(pickle.dumps(post))
+        assert not set(OUTPUT_IDS) & set(vars(loaded))
+
+    def test_solved_problem_round_trip(self, problem, tmp_path):
+        problem.solve("bayesian")
+        _ = problem.posterior_error  # cache an n x n output
+        path = tmp_path / "problem.pkl"
+        problem.to_file(path)
+        loaded = InverseProblem.from_file(path)
+        assert isinstance(loaded.result, Posterior)
+        assert loaded.estimator is loaded.result.estimator
+        for attr in ("posterior", "posterior_error", "kalman_gain", "desroziers"):
+            _assert_same(getattr(loaded, attr), getattr(problem, attr))
+
+    def test_problem_pickle_holds_the_estimator_once(self, problem):
+        problem.solve("bayesian")
+        state = problem.__getstate__()
+        assert state["_estimator"] is problem.estimator
+        assert not any(isinstance(v, Posterior) for v in state.values())
+
+    def test_unsolved_problem_round_trip(self, problem):
+        loaded = pickle.loads(pickle.dumps(problem))
+        assert loaded._estimator is None
+
+
+def test_output_meta_is_gone():
+    assert not hasattr(Estimator, "_output_meta")
+
+
+def test_exported():
+    assert fips.solve is fips.problem.solve
+    assert "solve" in fips.__all__
+    assert "Posterior" in fips.__all__
