@@ -210,6 +210,21 @@ class Case:
         args.update(inputs)
         return InverseProblem(**args)
 
+    def sparse_inputs(self) -> dict[str, Matrix]:
+        """Return ``H``, ``S_0`` and ``S_z`` stored sparse, as inputs of :meth:`problem`."""
+        s, o = self.state_index, self.obs_index
+        return {
+            "forward_operator": ForwardOperator(
+                pd.DataFrame(self.H, index=o, columns=s), sparse=True
+            ),
+            "prior_error": CovarianceMatrix(
+                pd.DataFrame(self.S_0, index=s, columns=s), sparse=True
+            ),
+            "modeldata_mismatch": CovarianceMatrix(
+                pd.DataFrame(self.S_z, index=o, columns=o), sparse=True
+            ),
+        }
+
 
 # ---------------------------------------------------------------------------
 # Reading the labeled outputs
@@ -307,14 +322,16 @@ def takes_gamma(estimator: str) -> bool:
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.parametrize("sparse", [False, True], ids=["dense", "sparse"])
 @pytest.mark.parametrize("estimator", ESTIMATORS)
 @pytest.mark.parametrize("n, m", SIZES)
-def test_closed_form(estimator, n, m):
+def test_closed_form(estimator, n, m, sparse):
     """
     The posterior equals the closed form, in both covariance forms, for 20 seeds.
 
     The constant is a scalar for the even seeds and a vector for the odd ones,
-    so each size sees both forms without solving every problem twice.
+    so each size sees both forms without solving every problem twice. With
+    ``sparse``, ``H``, ``S_0`` and ``S_z`` are stored sparse (#79).
     """
     for seed in SEEDS:
         case = Case.random(seed, n, m, "scalar" if seed % 2 == 0 else "vector")
@@ -326,9 +343,13 @@ def test_closed_form(estimator, n, m):
             expected.scale["S_hat"],
             f"seed {seed}: the covariance and information forms",
         )
-        problem = case.problem().solve(estimator)
+        problem = case.problem(**case.sparse_inputs() if sparse else {})
         check_posterior(
-            problem, expected, case.state_index, case.obs_index, f"seed {seed}"
+            problem.solve(estimator),
+            expected,
+            case.state_index,
+            case.obs_index,
+            f"seed {seed}",
         )
 
 
@@ -378,13 +399,7 @@ def _diagonal_inputs(case: Case, form: str, v_0: np.ndarray, v_z: np.ndarray):
         "vector",
         "scalar",
         "diagonal",
-        pytest.param(
-            "sparse",
-            marks=pytest.mark.xfail(
-                strict=True,
-                reason="#79: a sparse prior error or mismatch fails in the diagnostics",
-            ),
-        ),
+        "sparse",
     ],
 )
 def test_diagonal_given_as_variances(estimator, form):

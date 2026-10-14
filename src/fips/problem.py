@@ -543,9 +543,9 @@ def solve(
     fitted = estimator_cls(
         z=problem.obs.values,
         x_0=problem.prior.values,
-        H=problem.forward_operator.values,
-        S_0=problem.prior_error.values,
-        S_z=problem.modeldata_mismatch.values,
+        H=problem.forward_operator.operator,
+        S_0=problem.prior_error.operator,
+        S_z=problem.modeldata_mismatch.operator,
         c=getattr(problem.constant, "values", None),
         **options,
     )

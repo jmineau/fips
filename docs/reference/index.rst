@@ -10,6 +10,7 @@ This reference provides detailed documentation for all public classes, functions
    multiblocks
    operators
    covariance
+   operator
    inverse
    posterior
    estimators

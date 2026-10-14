@@ -159,7 +159,7 @@ class Posterior(Pickleable):
         variances : Its diagonal.
         """
         return CovarianceMatrix(
-            self.estimator.S_hat,
+            np.asarray(self.estimator.S_hat),
             index=self.state_index,
             columns=self.state_index,
             name="posterior_error",
@@ -177,7 +177,7 @@ class Posterior(Pickleable):
         covariance : The full posterior error covariance.
         """
         return self._state_vector(
-            np.diag(self.estimator.S_hat).copy(), "posterior_variance"
+            np.diag(np.asarray(self.estimator.S_hat)).copy(), "posterior_variance"
         )
 
     @cached_property
@@ -214,7 +214,7 @@ class Posterior(Pickleable):
         mismatch in quadrature for the total the solve expects.
         """
         return CovarianceMatrix(
-            self.estimator.S_y0,
+            np.asarray(self.estimator.S_y0),
             index=self.obs_index,
             columns=self.obs_index,
             name="prior_obs_error",
@@ -228,7 +228,7 @@ class Posterior(Pickleable):
         :math:`\hat{x} = x_0 + K (z - H x_0 - c)`.
         """
         return Matrix(
-            self.estimator.K,
+            np.asarray(self.estimator.K),
             index=self.state_index,
             columns=self.obs_index,
             name="kalman_gain",
@@ -244,7 +244,7 @@ class Posterior(Pickleable):
         dofs : Its trace.
         """
         return Matrix(
-            self.estimator.A,
+            np.asarray(self.estimator.A),
             index=self.state_index,
             columns=self.state_index,
             name="averaging_kernel",

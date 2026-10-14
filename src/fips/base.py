@@ -20,6 +20,7 @@ from scipy.sparse import csr_matrix
 
 from fips._sparse import frame_from_spmatrix, normalize_fill_value
 from fips.indexes import overlaps, resolve_axes, round_index, to_numeric
+from fips.operator import DenseOperator, Operator, as_operator
 
 logger = logging.getLogger(__name__)
 
@@ -730,6 +731,42 @@ class Structure2D(Structure):
             # pyrefly: ignore[missing-attribute]
             return self.data.sparse.to_coo().tocsr()
         return self.data.to_numpy()
+
+    @property
+    def operator(self) -> Operator:
+        """
+        The data as a linear operator, for computing with.
+
+        A dense structure gives a :class:`~fips.operator.DenseOperator` on the
+        array the DataFrame holds (no copy for a float frame). A sparse one
+        gives a :class:`~fips.operator.SparseOperator` built from its stored
+        entries, never the dense matrix, or a
+        :class:`~fips.operator.DiagonalOperator` when every stored entry is on
+        the diagonal (as for :meth:`diagonal` with ``sparse=True``).
+
+        It is built on each access, so it always reads the current
+        :attr:`data`, after an in-place change too.
+
+        See Also
+        --------
+        fips.operator.as_operator : The same for an array or a SciPy sparse matrix.
+
+        Examples
+        --------
+        >>> import pandas as pd
+        >>> from fips import CovarianceMatrix
+        >>> idx = pd.MultiIndex.from_product(
+        ...     [["obs"], ["a", "b", "c"]], names=["block", "site"]
+        ... )
+        >>> S = CovarianceMatrix.diagonal(0.25, index=idx, sparse=True)
+        >>> S.operator.solve([1.0, 2.0, 3.0])
+        array([ 4.,  8., 12.])
+        """
+        if self.is_sparse:
+            # pandas-stubs do not type DataFrame.sparse
+            # pyrefly: ignore[missing-attribute]
+            return as_operator(self.data.sparse.to_coo())
+        return DenseOperator(self.data.to_numpy())
 
     @property
     def is_sparse(self) -> bool:

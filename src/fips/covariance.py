@@ -13,6 +13,7 @@ from collections.abc import Callable
 import numpy as np
 import pandas as pd
 from joblib import Parallel, delayed
+from scipy import sparse
 from scipy.sparse import csr_matrix
 
 from fips._sparse import frame_from_spmatrix
@@ -33,8 +34,13 @@ class CovarianceMatrix(Matrix):
 
     @property
     def variances(self) -> Vector:
-        """Returns the variances (diagonal elements) of the covariance matrix."""
-        return Vector(np.diag(self.data.values), index=self.data.index, name="variance")
+        """
+        The variances (diagonal elements) of the covariance matrix.
+
+        Read from the stored entries of a sparse covariance, without forming
+        the dense matrix.
+        """
+        return Vector(self.operator.diagonal(), index=self.data.index, name="variance")
 
     def force_symmetry(self, keep: str = "lower") -> "CovarianceMatrix":
         """
@@ -50,19 +56,31 @@ class CovarianceMatrix(Matrix):
         Returns
         -------
         CovarianceMatrix
-            A new, perfectly symmetric covariance matrix.
+            A new, perfectly symmetric covariance matrix, sparse if this one is.
         """
+        if keep not in ("lower", "upper"):
+            raise ValueError("keep must be 'lower' or 'upper'")
+
+        if self.is_sparse:
+            # The kept triangle, diagonal included, plus the transpose of the
+            # same triangle without its diagonal
+            mat = self.values
+            if keep == "lower":
+                sym = sparse.tril(mat) + sparse.tril(mat, k=-1).T
+            else:
+                sym = sparse.triu(mat) + sparse.triu(mat, k=1).T
+            frame = frame_from_spmatrix(sparse.csr_matrix(sym), self.index, self.index)
+            return type(self)(frame, name=self.name)
+
         mat = self.values.copy()
 
         if keep == "lower":
             # Extract lower triangle and add its transpose (minus the diagonal so it doesn't double)
             lower = np.tril(mat)
             sym_mat = lower + lower.T - np.diag(np.diag(lower))
-        elif keep == "upper":
+        else:
             upper = np.triu(mat)
             sym_mat = upper + upper.T - np.diag(np.diag(upper))
-        else:
-            raise ValueError("keep must be 'lower' or 'upper'")
 
         return type(self)(sym_mat, index=self.index, name=self.name)
 

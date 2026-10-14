@@ -77,6 +77,7 @@ Attributes and underlying data
    Matrix.columns
    Matrix.shape
    Matrix.values
+   Matrix.operator
 
 Conversion
 ~~~~~~~~~~

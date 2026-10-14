@@ -8,48 +8,32 @@ in linear inverse problems, computing posterior distributions and diagnostics.
 import logging
 from abc import ABC, abstractmethod
 from functools import cached_property
+from typing import Any
 
 import numpy as np
-from scipy.linalg import LinAlgError, inv, solve
+from scipy.linalg import inv
+
+from fips.operator import (
+    Operator,
+    OperatorLike,
+    _solve_psd,  # noqa: F401  (imported from here before)
+    as_operator,
+)
 
 logger = logging.getLogger(__name__)
 
+# The attributes an estimator holds as operators. A pickle stores them as the
+# arrays (or SciPy sparse matrices) they hold, so it reads on a fips that has
+# no operators, and one written by such a fips reads here.
+_OPERATOR_ATTRS = ("H", "S_0", "S_z", "_S_z_orig", "_HS_0", "_HS_0H")
 
-def _solve_psd(A: np.ndarray, B: np.ndarray) -> np.ndarray:
-    r"""
-    Solve ``A X = B`` for a symmetric positive-definite ``A``, robust to roundoff.
 
-    Covariance-like matrices such as ``A = H S_0 H^T + S_z`` are positive-definite
-    in exact arithmetic (``S_z`` is positive-definite), so the fast Cholesky path
-    (``assume_a="pos"``) is tried first. When ``A`` is ill-conditioned -- a wide
-    eigenvalue spread, with ``H S_0 H^T`` large relative to ``S_z`` -- roundoff in
-    forming ``A`` can tip it just off positive-definite, and Cholesky raises
-    :class:`~numpy.linalg.LinAlgError`. In that case we symmetrize ``A`` and fall
-    back to the symmetric-indefinite ``LDL^T`` factorization (``assume_a="sym"``),
-    which tolerates the roundoff and stays backward-stable.
-
-    Parameters
-    ----------
-    A : np.ndarray
-        Symmetric matrix, positive-definite in exact arithmetic.
-    B : np.ndarray
-        Right-hand side.
-
-    Returns
-    -------
-    np.ndarray
-        Solution ``X`` of ``A X = B``.
-    """
-    try:
-        return solve(A, B, assume_a="pos")
-    except LinAlgError:
-        logger.warning(
-            "Covariance matrix is numerically non-positive-definite (likely "
-            "roundoff from a dominant H S_0 H^T term); falling back to a symmetric "
-            "LDL^T solve. Inspect problem conditioning if results look unphysical."
-        )
-        A = 0.5 * (A + A.T)
-        return solve(A, B, assume_a="sym")
+def _raw(op: Operator):
+    """Return the array or SciPy sparse matrix an operator holds."""
+    if isinstance(op, Operator):
+        csr = op._csr()
+        return op.dense() if csr is None else csr
+    return op
 
 
 # An alias, because pyrefly reads ``type[...]`` written inside a base class's
@@ -105,17 +89,22 @@ class Estimator(ABC):
     """
     Base inversion estimator class.
 
+    The matrices may be dense arrays, SciPy sparse matrices or
+    :class:`~fips.operator.Operator`; the estimator holds each as an operator
+    (:func:`~fips.operator.as_operator`), so a sparse or diagonal covariance
+    stays sparse or diagonal through the solve.
+
     Parameters
     ----------
     z : np.ndarray
         Observed data.
     x_0 : np.ndarray
         Prior model state estimate.
-    H : np.ndarray
+    H : np.ndarray, SciPy sparse matrix or Operator
         Forward operator.
-    S_0 : np.ndarray
+    S_0 : np.ndarray, SciPy sparse matrix or Operator
         Prior error covariance.
-    S_z : np.ndarray
+    S_z : np.ndarray, SciPy sparse matrix or Operator
         Model-data mismatch covariance.
     c : np.ndarray or float, optional
         Constant data, defaults to 0.0.
@@ -125,12 +114,12 @@ class Estimator(ABC):
     """Observed data."""
     x_0: np.ndarray
     """Prior model state estimate."""
-    H: np.ndarray
-    """Forward operator."""
-    S_0: np.ndarray
-    """Prior error covariance."""
-    S_z: np.ndarray
-    """Model-data mismatch covariance."""
+    H: Operator
+    """Forward operator, as an operator (``np.asarray(H)`` gives the matrix)."""
+    S_0: Operator
+    """Prior error covariance, as an operator."""
+    S_z: Operator
+    """Model-data mismatch covariance, as an operator."""
     c: np.ndarray
     """Constant data, which can be a scalar or an array matching the shape of z."""
     n_z: int
@@ -142,16 +131,16 @@ class Estimator(ABC):
         self,
         z: np.ndarray,
         x_0: np.ndarray,
-        H: np.ndarray,
-        S_0: np.ndarray,
-        S_z: np.ndarray,
+        H: OperatorLike,
+        S_0: OperatorLike,
+        S_z: OperatorLike,
         c: np.ndarray | float | None = None,
     ):
         self.z = z.astype(float)
         self.x_0 = x_0.astype(float)
-        self.H = H.astype(float)
-        self.S_0 = S_0.astype(float)
-        self.S_z = S_z.astype(float)
+        self.H = as_operator(H)
+        self.S_0 = as_operator(S_0)
+        self.S_z = as_operator(S_z)
 
         # Handle optional constant data
         if c is None:
@@ -165,6 +154,22 @@ class Estimator(ABC):
 
         self.n_z = z.shape[0]
         self.n_x = x_0.shape[0]
+
+    def __getstate__(self) -> dict[str, Any]:
+        """Return the state for pickling, with each operator as the array it holds."""
+        state = self.__dict__.copy()
+        for name in _OPERATOR_ATTRS:
+            if name in state:
+                state[name] = _raw(state[name])
+        return state
+
+    def __setstate__(self, state: dict[str, Any]):
+        """Restore the state, holding each matrix as an operator again."""
+        for name in _OPERATOR_ATTRS:
+            if name in state:
+                state[name] = as_operator(state[name])
+        state.pop("_H_T", None)  # cached by earlier versions; no longer used
+        self.__dict__.update(state)
 
     def forward(self, x) -> np.ndarray:
         """
@@ -245,7 +250,7 @@ class Estimator(ABC):
 
         # Equation: L = Hx (Hx^T (H S_0 H^T + S_z)^-1 Hx)^-1 Hx^T (H S_0 H^T + S_z)^-1
         # Let A = (H S_0 H^T + S_z)
-        A = self._HS_0H + self.S_z
+        A = (self._HS_0H + self.S_z).dense()
 
         # 1. Compute term_1 = A^-1 @ Hx using solve
         term_1 = _solve_psd(A, Hx)
@@ -355,8 +360,7 @@ class Estimator(ABC):
         # Since A is symmetric, solve(A, B) computes A^-1 B.
         # So K = (A^-1 B)^T = solve(A, B).T
         A = self._HS_0H + self.S_z
-        B = self._HS_0
-        return _solve_psd(A, B).T
+        return A.solve(self._HS_0).T
 
     @cached_property
     def A(self):
@@ -375,16 +379,9 @@ class Estimator(ABC):
         return self.K @ self.H
 
     @cached_property
-    def _H_T(self):
-        """
-        Transpose of the forward operator.
-        """
-        return self.H.T
-
-    @cached_property
-    def _HS_0(self):
+    def _HS_0(self) -> Operator:
         r"""
-        Compute H S_0.
+        Compute H S_0, in the cheapest form of the two.
 
         .. math::
             H S_0
@@ -392,14 +389,14 @@ class Estimator(ABC):
         return self.H @ self.S_0
 
     @cached_property
-    def _HS_0H(self):
+    def _HS_0H(self) -> Operator:
         r"""
-        Compute H S_0 H^T.
+        Compute H S_0 H^T, in the cheapest form of the three.
 
         .. math::
             H S_0 H^T
         """
-        return self._HS_0 @ self._H_T
+        return self._HS_0 @ self.H.T
 
     @cached_property
     def S_y0(self) -> np.ndarray:
@@ -415,8 +412,9 @@ class Estimator(ABC):
         between observations that see the same state. The square root of its
         diagonal is the prior's share of the error budget at each
         observation, alongside the model-data mismatch ``S_z``.
+        A dense array.
         """
-        return self._HS_0H
+        return self._HS_0H.dense()
 
     @cached_property
     def DOFS(self) -> float:
@@ -459,15 +457,16 @@ class Estimator(ABC):
         # is slow and memory-intensive.
         #
         # Instead, we solve the system: S * y = r  -->  y = S^-1 * r
-        # Then we compute: r^T @ y. _solve_psd falls back to a symmetric LDL^T
-        # solve if roundoff (e.g. after aggregation) tips the covariance off
-        # positive-definite.
+        # Then we compute: r^T @ y. Operator.solve does it the way the
+        # covariance is stored (a division for a diagonal, a sparse LU for a
+        # sparse one); a dense one falls back to a symmetric LDL^T solve if
+        # roundoff (e.g. after aggregation) tips it off positive-definite.
 
         # 1. Scaled Data Misfit: data_residual^T @ (S_z^-1 @ data_residual)
-        scaled_data_misfit = data_residual.T @ _solve_psd(self.S_z, data_residual)
+        scaled_data_misfit = data_residual.T @ self.S_z.solve(data_residual)
 
         # 2. Scaled Model Misfit: model_residual^T @ (S_0^-1 @ model_residual)
-        scaled_model_misfit = model_residual.T @ _solve_psd(self.S_0, model_residual)
+        scaled_model_misfit = model_residual.T @ self.S_0.solve(model_residual)
 
         return float((scaled_data_misfit + scaled_model_misfit) / self.n_z)
 
@@ -518,7 +517,7 @@ class Estimator(ABC):
             Uncertainty reduction value.
         """
         logger.debug("Calculating uncertainty reduction metric...")
-        return float(1 - (np.sqrt(np.trace(self.S_hat)) / np.sqrt(np.trace(self.S_0))))
+        return float(1 - (np.sqrt(np.trace(self.S_hat)) / np.sqrt(self.S_0.trace())))
 
     @cached_property
     def desroziers(self) -> np.ndarray:
@@ -567,7 +566,9 @@ class Estimator(ABC):
             Uncertainty reduction vector.
         """
         logger.debug("Calculating uncertainty reduction vector...")
-        return (1 - (np.sqrt(np.diag(self.S_hat)) / np.sqrt(np.diag(self.S_0)))) * 100.0
+        return (
+            1 - (np.sqrt(np.diag(self.S_hat)) / np.sqrt(self.S_0.diagonal()))
+        ) * 100.0
 
 
 @ESTIMATOR_REGISTRY.register("bayesian")
@@ -594,11 +595,11 @@ class BayesianSolver(Estimator):
         Observed data
     x_0 : np.ndarray
         Prior model estimate
-    H : np.ndarray
+    H : np.ndarray, SciPy sparse matrix or Operator
         Forward operator
-    S_0 : np.ndarray
+    S_0 : np.ndarray, SciPy sparse matrix or Operator
         Prior error covariance
-    S_z : np.ndarray
+    S_z : np.ndarray, SciPy sparse matrix or Operator
         Model-data mismatch covariance
     c : np.ndarray | float, optional
         Constant data, defaults to 0.0
@@ -612,22 +613,22 @@ class BayesianSolver(Estimator):
     Values > 1 increase weight on data fitting (less regularization),
     values < 1 decrease weight on data fitting (more regularization).
     """
-    _S_z_orig: np.ndarray
+    _S_z_orig: Operator
     """Original observation error covariance before regularization."""
 
     def __init__(
         self,
         z: np.ndarray,
         x_0: np.ndarray,
-        H: np.ndarray,
-        S_0: np.ndarray,
-        S_z: np.ndarray,
+        H: OperatorLike,
+        S_0: OperatorLike,
+        S_z: OperatorLike,
         c: np.ndarray | float | None = None,
         gamma: float = 1.0,
     ):
         # Store original S_z and gamma, then pass regularized S_z to parent
         # Note: S_z is scaled by 1/gamma so that S_z^{-1} is scaled by gamma in the cost function
-        self._S_z_orig = S_z.astype(float)
+        self._S_z_orig = as_operator(S_z)
         self.gamma = gamma
         S_z_reg = self._S_z_orig / gamma
         super().__init__(z=z, x_0=x_0, H=H, S_0=S_0, S_z=S_z_reg, c=c)
@@ -657,8 +658,8 @@ class BayesianSolver(Estimator):
         # Like the Chi-square, the cost function relies on r^T * S^-1 * r.
         # We replace inv(S) @ r with solve(S, r) to avoid calculating the full inverse.
 
-        cost_model = diff_model.T @ _solve_psd(self.S_0, diff_model)
-        cost_data = diff_data.T @ _solve_psd(self.S_z, diff_data)
+        cost_model = diff_model.T @ self.S_0.solve(diff_model)
+        cost_data = diff_data.T @ self.S_z.solve(diff_data)
 
         return 0.5 * (cost_model + cost_data)
 
@@ -695,5 +696,6 @@ class BayesianSolver(Estimator):
         # which is the same as S_0 - K @ H @ S_0 since K = (H S_0)^T (H S_0 H^T + S_z)^{-1}
 
         # Since gamma is already applied to S_z during initialization, all calculations
-        # automatically use the regularized covariance.
-        return self.S_0 - self.K @ self._HS_0
+        # automatically use the regularized covariance. The result is dense
+        # whatever the form of S_0: K H S_0 fills it.
+        return self.S_0.dense() - self.K @ self._HS_0

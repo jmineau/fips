@@ -32,6 +32,7 @@ Attributes and underlying data
    ForwardOperator.state_index
    ForwardOperator.shape
    ForwardOperator.values
+   ForwardOperator.operator
    ForwardOperator.blocks
 
 Conversion
