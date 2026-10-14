@@ -107,6 +107,20 @@ labelled *fips* objects that behave like pandas Series / DataFrames:
    print(f"R²:         {est.R2:.3f}")
    print(f"RMSE:       {est.RMSE:.4f}")
 
+The same results come as one object from :func:`fips.solve`, which returns a
+:class:`~fips.Posterior` and leaves the problem as it was.
+:meth:`~fips.InverseProblem.solve` calls it and keeps the posterior as
+``problem.result``:
+
+.. ipython:: python
+
+   import fips
+
+   post = fips.solve(problem)       # estimator="bayesian" by default
+   post.estimate                    # the posterior state, as problem.posterior
+   post.variances                   # the diagonal of post.covariance
+   print(f"DOFS: {post.dofs:.2f}, reduced χ²: {post.reduced_chi2:.3f}")
+
 
 Working with Blocks and MatrixBlocks
 -------------------------------------

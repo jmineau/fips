@@ -95,7 +95,8 @@ def available_estimators() -> list[str]:
     Returns
     -------
     list of str
-        Names that can be passed to :meth:`~fips.InverseProblem.solve`.
+        Names that can be passed to :func:`fips.solve` and
+        :meth:`~fips.InverseProblem.solve`.
     """
     return list(ESTIMATOR_REGISTRY.keys())
 
@@ -136,19 +137,6 @@ class Estimator(ABC):
     """Number of observations (length of z)."""
     n_x: int
     """Number of state variables (length of x_0)."""
-
-    _output_meta = {
-        # attr : (row_space, col_space, is_covariance)
-        "x_hat": ("state", None, False),
-        "S_hat": ("state", "state", True),
-        "y_hat": ("obs", None, False),
-        "y_0": ("obs", None, False),
-        "S_y0": ("obs", "obs", True),
-        "K": ("state", "obs", False),
-        "A": ("state", "state", False),
-        "U_red": ("state", None, False),
-        "desroziers": ("obs", "obs", True),
-    }
 
     def __init__(
         self,
