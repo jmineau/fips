@@ -20,12 +20,12 @@ import scipy.sparse as sp
 from numpy.linalg import LinAlgError
 
 import fips
-from fips import CovarianceMatrix, ForwardOperator, InverseProblem, Matrix
-from fips._sparse import frame_from_spmatrix
-from fips.covariance import KroneckerError, KroneckerOperator
+from fips import Covariance, InverseProblem, Operator, Space, Vector
+from fips.covariance import KroneckerError
 from fips.estimators import BayesianSolver, Estimator
 from fips.kernels import GridSpatialDecay, GridTimeDecay
-from fips.operator import DiagonalOperator
+from fips.kronecker import KroneckerOperator
+from fips.linalg import DiagonalOperator, SparseOperator
 
 RTOL = 1e-10
 GAMMAS = [0.1, 0.5, 1.0, 3.0, 20.0]
@@ -216,8 +216,8 @@ def _labeled(seed: int = 0, n_time: int = 3, n_cell: int = 4, m: int = 9):
     problem = InverseProblem(
         obs=pd.Series(H @ x_0 + rng.normal(0, 1, m), index=obs),
         prior=pd.Series(x_0, index=state),
-        forward_operator=ForwardOperator(
-            pd.DataFrame(H, index=obs, columns=state), sparse=True
+        forward_operator=Operator(
+            sp.csr_array(H), Space.from_index(obs), Space.from_index(state)
         ),
         prior_error=S_0,
         modeldata_mismatch=rng.uniform(0.2, 0.5),
@@ -238,7 +238,10 @@ def _aggregation(state, sparse=False, shuffle=False):
     W = pd.DataFrame(np.array(rows), index=index, columns=state)
     if shuffle:
         W = W.iloc[:, np.random.default_rng(1).permutation(len(state))]
-    return Matrix(W, sparse=sparse), W.reindex(columns=state).to_numpy()
+    Wa = W.reindex(columns=state).to_numpy()
+    if sparse:
+        W = W.astype(pd.SparseDtype(float, 0.0))
+    return Operator.from_frame(W), Wa
 
 
 @pytest.mark.parametrize("sparse", [False, True], ids=["dense W", "sparse W"])
@@ -248,23 +251,25 @@ def test_cov_and_averaging_kernel_of_an_aggregation(sparse, shuffle):
     problem, state = _labeled()
     post = fips.solve(problem, gamma=0.8)
     W, Wa = _aggregation(state, sparse=sparse, shuffle=shuffle)
-    S_hat = post.covariance.to_numpy()
-    A = post.averaging_kernel().to_numpy()
+    assert isinstance(W.data, SparseOperator) == sparse
+    S_hat = post.covariance.dense()
+    A = post.averaging_kernel().dense()
 
     cov = post.cov(W)
-    assert isinstance(cov, CovarianceMatrix)
-    assert cov.index.equals(W.index) and cov.columns.equals(W.index)
+    assert isinstance(cov, Covariance)
+    assert cov.rows.index.equals(W.rows.index) and cov.cols.index.equals(W.rows.index)
     assert cov.name == "posterior_error"
-    _close(cov.to_numpy(), Wa @ S_hat @ Wa.T, "cov(W)")
+    _close(cov.dense(), Wa @ S_hat @ Wa.T, "cov(W)")
 
     kernel = post.averaging_kernel(W)
-    assert isinstance(kernel, Matrix)
-    assert kernel.index.equals(W.index) and kernel.columns.equals(W.index)
-    _close(kernel.to_numpy(), Wa @ A @ np.linalg.pinv(Wa), "averaging_kernel(W)")
+    assert isinstance(kernel, Operator)
+    assert kernel.rows.index.equals(W.rows.index)
+    assert kernel.cols.index.equals(W.rows.index)
+    _close(kernel.dense(), Wa @ A @ np.linalg.pinv(Wa), "averaging_kernel(W)")
     # For sums over disjoint sets, W* = W^T diag(1 / count): an even spread
-    sums = post.averaging_kernel(Matrix(W.data.iloc[:3]))
+    sums = post.averaging_kernel(Operator.from_frame(W.to_frame().iloc[:3]))
     counts = Wa[:3].sum(axis=1)
-    _close(sums.to_numpy(), Wa[:3] @ A @ (Wa[:3].T / counts), "sums")
+    _close(sums.dense(), Wa[:3] @ A @ (Wa[:3].T / counts), "sums")
 
 
 def test_full_outputs_without_an_aggregation():
@@ -284,7 +289,7 @@ def test_variances_without_the_covariance():
     variances = post.variances
     assert "S_hat" not in vars(post.estimator)
     assert variances.index.equals(state) and variances.name == "posterior_variance"
-    _close(variances.values, np.diag(post.covariance.to_numpy()), "variances", 1e-12)
+    _close(variances.values, np.diag(post.covariance.dense()), "variances", 1e-12)
 
 
 def test_aggregation_labels_must_be_the_state():
@@ -292,9 +297,14 @@ def test_aggregation_labels_must_be_the_state():
     problem, state = _labeled()
     post = fips.solve(problem)
     W, _ = _aggregation(state)
-    frame = W.data
-    with pytest.raises(ValueError, match="1 state labels are not among them"):
-        post.cov(Matrix(frame.iloc[:, 1:]))
+    frame = W.to_frame()
+    with pytest.raises(TypeError, match="An aggregation is an Operator"):
+        post.cov(frame)  # type: ignore[arg-type]
+    with pytest.raises(
+        ValueError,
+        match=r"must have exactly the state's labels.*block 'flux' missing from the other",
+    ):
+        post.cov(Operator.from_frame(frame.iloc[:, 1:]))
     extra = pd.DataFrame(
         1.0,
         index=frame.index,
@@ -302,10 +312,14 @@ def test_aggregation_labels_must_be_the_state():
             [("flux", pd.Timestamp("2030-01-01"), "c0")], names=state.names
         ),
     )
-    with pytest.raises(ValueError, match="1 of its labels are not in the state"):
-        post.averaging_kernel(Matrix(pd.concat([frame, extra], axis=1)))
-    with pytest.raises(ValueError, match="repeat a state label"):
-        post.cov(Matrix(pd.concat([frame, frame.iloc[:, :1]], axis=1)))
+    with pytest.raises(
+        ValueError,
+        match=r"must have exactly the state's labels.*block 'flux' only the other space has",
+    ):
+        post.averaging_kernel(Operator.from_frame(pd.concat([frame, extra], axis=1)))
+    # A repeated state label cannot label an Operator at all
+    with pytest.raises(ValueError, match="Block 'flux' has duplicate labels"):
+        Operator.from_frame(pd.concat([frame, frame.iloc[:, :1]], axis=1))
 
 
 def test_dependent_aggregation_rows_raise():
@@ -313,12 +327,12 @@ def test_dependent_aggregation_rows_raise():
     problem, state = _labeled()
     post = fips.solve(problem)
     W, _ = _aggregation(state)
-    frame = W.data
+    frame = W.to_frame()
     twice = pd.concat(
         [frame.iloc[:1], frame.iloc[:1].rename(index={"2024-01-01": "again"})]
     )
     with pytest.raises(ValueError, match="linearly dependent"):
-        post.averaging_kernel(Matrix(twice))
+        post.averaging_kernel(Operator.from_frame(twice))
 
 
 def test_aggregation_across_blocks():
@@ -352,10 +366,12 @@ def test_aggregation_across_blocks():
     )
     Wa = np.array([[1, 1, 1, 0, 0], [0, 0, 0, 1, 1]], dtype=float)
     order = np.array([4, 2, 0, 3, 1])
-    W = Matrix(pd.DataFrame(Wa[:, order], index=rows, columns=state[order]))
+    W = Operator.from_frame(
+        pd.DataFrame(Wa[:, order], index=rows, columns=state[order])
+    )
     _close(
-        post.cov(W).to_numpy(),
-        Wa @ post.covariance.to_numpy() @ Wa.T,
+        post.cov(W).dense(),
+        Wa @ post.covariance.dense() @ Wa.T,
         "cov across blocks",
     )
 
@@ -381,8 +397,13 @@ def test_posterior_with_gamma(gamma):
         (swept.modeled_obs, fresh.modeled_obs),
     ]
     for got, expected in pairs:
-        assert got.index.equals(expected.index)
-        _close(got.to_numpy(), expected.to_numpy(), got.name)
+        if isinstance(expected, Vector):
+            assert got.index.equals(expected.index)
+            _close(got.values, expected.values, got.name)
+        else:
+            assert got.rows.index.equals(expected.rows.index)
+            assert got.cols.index.equals(expected.cols.index)
+            _close(got.dense(), expected.dense(), got.name)
     for name in ("dofs", "reduced_chi2", "r2", "rmse", "uncertainty_reduction"):
         _close(getattr(swept, name), getattr(fresh, name), name)
 
@@ -408,10 +429,10 @@ def test_with_gamma_needs_a_gamma():
         post.with_gamma(2.0)
     # The generic forms of the new outputs, from S_hat and A
     W, Wa = _aggregation(problem.state_index)
-    _close(post.variances.values, np.diag(post.covariance.to_numpy()), "variances")
-    _close(post.cov(W).to_numpy(), Wa @ post.covariance.to_numpy() @ Wa.T, "cov(W)")
-    A = post.averaging_kernel().to_numpy()
-    _close(post.averaging_kernel(W).to_numpy(), Wa @ A @ np.linalg.pinv(Wa), "A(W)")
+    _close(post.variances.values, np.diag(post.covariance.dense()), "variances")
+    _close(post.cov(W).dense(), Wa @ post.covariance.dense() @ Wa.T, "cov(W)")
+    A = post.averaging_kernel().dense()
+    _close(post.averaging_kernel(W).dense(), Wa @ A @ np.linalg.pinv(Wa), "A(W)")
 
 
 # ---------------------------------------------------------------------------
@@ -454,18 +475,17 @@ def test_nothing_n_by_n_is_allocated(prior):
     problem = InverseProblem(
         obs=pd.Series(rng.normal(size=m), index=obs),
         prior=pd.Series(rng.normal(size=n), index=state),
-        forward_operator=ForwardOperator(frame_from_spmatrix(H, obs, state)),
+        forward_operator=Operator(H, Space.from_index(obs), Space.from_index(state)),
         prior_error=S_0,
         modeldata_mismatch=0.1,
         round_index=None,
     )
-    W = Matrix(
-        pd.DataFrame(
-            1.0,
-            index=pd.MultiIndex.from_tuples([("t", "all")]).set_names(["block", "agg"]),
-            columns=state,
+    W = Operator(
+        sp.csr_array(np.ones((1, n))),
+        Space.from_index(
+            pd.MultiIndex.from_tuples([("t", "all")]).set_names(["block", "agg"])
         ),
-        sparse=True,
+        Space.from_index(state),
     )
     n_by_n = n * n * 8
     tracemalloc.start()
@@ -499,9 +519,7 @@ def test_pickle_keeps_the_factors_and_drops_n_by_n():
     loaded = pickle.loads(pickle.dumps(post))
     assert not {"S_hat", "A", "K"} & set(vars(loaded.estimator))
     np.testing.assert_array_equal(loaded.variances.values, post.variances.values)
-    np.testing.assert_array_equal(
-        loaded.covariance.to_numpy(), post.covariance.to_numpy()
-    )
+    np.testing.assert_array_equal(loaded.covariance.dense(), post.covariance.dense())
     _close(
         loaded.with_gamma(3.0).estimate.values,
         fips.solve(problem, gamma=3.0).estimate.values,

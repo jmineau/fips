@@ -4,10 +4,8 @@ import numpy as np
 import pandas as pd
 import pytest
 
+from fips import Covariance, Operator, Space
 from fips.aggregators import ObsAggregator, integrate_over_time_bins
-from fips.covariance import CovarianceMatrix
-from fips.indexes import assign_block
-from fips.operators import ForwardOperator
 from fips.vector import Vector
 
 # ---------------------------------------------------------------------------
@@ -130,7 +128,7 @@ def obs_idx():
         ],
         name="obs_time",
     )
-    return assign_block(times, "obs")
+    return Space({"obs": times}).index
 
 
 @pytest.fixture
@@ -138,7 +136,7 @@ def state_idx():
     """
     Fixture providing a simple state index.
     """
-    return assign_block(pd.Index(["s0", "s1", "s2"], name="state_id"), "state")
+    return Space({"state": pd.Index(["s0", "s1", "s2"], name="state_id")}).index
 
 
 @pytest.fixture
@@ -154,7 +152,7 @@ def fwd_op(obs_idx, state_idx):
     """
     Fixture providing forward operator.
     """
-    return ForwardOperator(
+    return Operator.from_frame(
         pd.DataFrame(np.ones((4, 3)) * 0.5, index=obs_idx, columns=state_idx)
     )
 
@@ -164,7 +162,7 @@ def cov_Sz(obs_idx):
     """
     Fixture providing observation error covariance matrix.
     """
-    return CovarianceMatrix(
+    return Covariance.from_frame(
         pd.DataFrame(np.eye(4) * 2.0, index=obs_idx, columns=obs_idx)
     )
 
@@ -239,17 +237,17 @@ class TestObsAggregator:
         agg = ObsAggregator(by=daily_groupby, func="mean")
         new_obs, new_H, new_Sz, _ = agg.apply(obs_vec, fwd_op, cov_Sz)
         assert isinstance(new_obs, Vector)
-        assert isinstance(new_H, ForwardOperator)
-        assert isinstance(new_Sz, CovarianceMatrix)
+        assert isinstance(new_H, Operator)
+        assert isinstance(new_Sz, Covariance)
 
     def test_apply_names_its_results_like_its_inputs(self, obs_idx, state_idx):
         """Each aggregated structure has the name of the one it came from, as a string."""
         obs = Vector(pd.Series([1.0, 2.0, 3.0, 4.0], index=obs_idx), name="obs")
-        H = ForwardOperator(
+        H = Operator.from_frame(
             pd.DataFrame(np.ones((4, 3)), index=obs_idx, columns=state_idx), name=5
         )
-        S_z = CovarianceMatrix.diagonal(2.0, index=obs_idx, name="S_z")
-        S_unnamed = CovarianceMatrix.diagonal(2.0, index=obs_idx)
+        S_z = Covariance.diagonal(2.0, Space.from_index(obs_idx), name="S_z")
+        S_unnamed = Covariance.diagonal(2.0, Space.from_index(obs_idx))
         agg = ObsAggregator(by=daily_groupby, func="mean")
 
         new_obs, new_H, new_Sz, _ = agg.apply(obs, H, S_z)
@@ -262,8 +260,8 @@ class TestObsAggregator:
         """Diagonal S_z=2I mean-aggregated with 2 obs/group → S_z_agg = I (=2/2)."""
         agg = ObsAggregator(by=daily_groupby, func="mean")
         _, _, new_Sz, _ = agg.apply(obs_vec, fwd_op, cov_Sz)
-        np.testing.assert_allclose(np.diag(new_Sz.values), 1.0)
-        off = new_Sz.values - np.diag(np.diag(new_Sz.values))
+        np.testing.assert_allclose(np.diag(new_Sz.dense()), 1.0)
+        off = new_Sz.dense() - np.diag(np.diag(new_Sz.dense()))
         np.testing.assert_allclose(off, 0.0, atol=1e-12)
 
     def test_Sz_is_symmetric(self, obs_vec, fwd_op, cov_Sz):
@@ -272,7 +270,7 @@ class TestObsAggregator:
         """
         agg = ObsAggregator(by=daily_groupby, func="mean")
         _, _, new_Sz, _ = agg.apply(obs_vec, fwd_op, cov_Sz)
-        np.testing.assert_allclose(new_Sz.values, new_Sz.values.T, atol=1e-12)
+        np.testing.assert_allclose(new_Sz.dense(), new_Sz.dense().T, atol=1e-12)
 
     def test_apply_aggregates_constant_vector(self, obs_vec, fwd_op, cov_Sz):
         """
@@ -307,17 +305,17 @@ class TestObsAggregator:
         bias_times = pd.DatetimeIndex(
             ["2023-01-03 00:00", "2023-01-03 12:00"], name="obs_time"
         )
-        bias_idx = assign_block(bias_times, "bias")
+        bias_idx = Space({"bias": bias_times}).index
         combined_idx = obs_idx.append(bias_idx)
 
         n_total = len(combined_idx)
         z = Vector(pd.Series(np.ones(n_total), index=combined_idx, name="obs"))
-        H = ForwardOperator(
+        H = Operator.from_frame(
             pd.DataFrame(
                 np.ones((n_total, 3)) * 0.5, index=combined_idx, columns=state_idx
             )
         )
-        S_z = CovarianceMatrix(
+        S_z = Covariance.from_frame(
             pd.DataFrame(np.eye(n_total), index=combined_idx, columns=combined_idx)
         )
 
@@ -327,6 +325,50 @@ class TestObsAggregator:
         # "obs" block: 4 → 2 rows. "bias" block: 2 pass-through rows. Total = 4.
         assert new_obs.shape[0] == 4
         assert new_H.shape[0] == 4
+
+    def test_apply_matches_operator_rows_by_label(self, obs_vec, obs_idx, state_idx):
+        """An operator whose rows are the obs labels in another order is aggregated by label."""
+        values = np.arange(12.0).reshape(4, 3)
+        frame = pd.DataFrame(values, index=obs_idx, columns=state_idx)
+        H = Operator.from_frame(frame.iloc[::-1])
+        S_z = Covariance.from_frame(
+            pd.DataFrame(np.diag([1.0, 2.0, 3.0, 4.0]), index=obs_idx, columns=obs_idx)
+        )
+        reversed_obs = Space.from_index(obs_idx[::-1])
+        S_z = S_z.align(reversed_obs, reversed_obs)
+        agg = ObsAggregator(by=daily_groupby, func="mean")
+        _, new_H, new_Sz, _ = agg.apply(obs_vec, H, S_z)
+        np.testing.assert_allclose(
+            new_H.dense(), [values[:2].mean(axis=0), values[2:].mean(axis=0)]
+        )
+        np.testing.assert_allclose(new_Sz.dense(), np.diag([0.75, 1.75]))
+
+    def test_apply_refuses_operator_on_other_labels(self, obs_vec, obs_idx, state_idx):
+        """An operator whose rows are not exactly the observations' labels raises."""
+        H = Operator.from_frame(
+            pd.DataFrame(np.ones((3, 3)), index=obs_idx[:3], columns=state_idx)
+        )
+        S_z = Covariance.diagonal(1.0, Space.from_index(obs_idx))
+        agg = ObsAggregator(by=daily_groupby, func="mean")
+        with pytest.raises(ValueError):
+            agg.apply(obs_vec, H, S_z)
+
+    def test_apply_dataframe_inputs_give_dense_frames(
+        self, obs_vec, obs_idx, state_idx
+    ):
+        """DataFrame inputs give dense DataFrames, reindexed onto the obs with zero fill."""
+        H = pd.DataFrame(np.ones((4, 3)), index=obs_idx, columns=state_idx)
+        # The mismatch lacks the last observation: its row and column are zero
+        S_z = pd.DataFrame(np.eye(3) * 2.0, index=obs_idx[:3], columns=obs_idx[:3])
+        agg = ObsAggregator(by=daily_groupby, func="mean")
+        _, new_H, new_Sz, _ = agg.apply(obs_vec, H, S_z)
+        assert isinstance(new_H, pd.DataFrame)
+        assert isinstance(new_Sz, pd.DataFrame)
+        assert new_H.shape == (2, 3)
+        assert new_H.columns.equals(state_idx)
+        assert new_Sz.index.equals(new_Sz.columns)
+        np.testing.assert_allclose(new_H.to_numpy(), 1.0)
+        np.testing.assert_allclose(new_Sz.to_numpy(), np.diag([1.0, 0.5]))
 
     def test_build_operator_returns_sparse(self, obs_idx):
         """_build_operator should return a scipy sparse matrix."""

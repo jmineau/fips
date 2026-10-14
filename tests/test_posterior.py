@@ -9,12 +9,12 @@ import pytest
 import fips
 from fips import (
     Block,
-    CovarianceMatrix,
+    Covariance,
     Estimator,
     InverseProblem,
-    Matrix,
-    MatrixBlock,
+    Operator,
     Posterior,
+    Space,
     Vector,
 )
 from fips.estimators import BayesianSolver
@@ -49,34 +49,28 @@ def _problem(cls=InverseProblem, seed=0):
     obs = Block(
         pd.Series(400 + rng.normal(size=8), index=obs_idx, name="concentration")
     )
-    H = [
-        MatrixBlock(
-            pd.DataFrame(rng.random((8, 6)), index=obs_idx, columns=flux_idx),
-            "concentration",
-            "flux",
-        ),
-        MatrixBlock(
-            pd.DataFrame(np.tile(np.eye(2), (4, 1)), index=obs_idx, columns=bias_idx),
-            "concentration",
-            "bias",
-        ),
-    ]
-    S_0 = CovarianceMatrix(
-        [
-            MatrixBlock(
-                pd.DataFrame(_spd(rng, 6), index=flux_idx, columns=flux_idx),
-                "flux",
-                "flux",
+    H = Operator.from_blocks(
+        {
+            ("concentration", "flux"): pd.DataFrame(
+                rng.random((8, 6)), index=obs_idx, columns=flux_idx
             ),
-            MatrixBlock.diagonal(
-                0.01, index=bias_idx, row_block="bias", col_block="bias"
+            ("concentration", "bias"): pd.DataFrame(
+                np.tile(np.eye(2), (4, 1)), index=obs_idx, columns=bias_idx
             ),
-        ]
+        }
     )
-    S_z = MatrixBlock(
+    S_0 = Covariance.from_blocks(
+        {
+            ("flux", "flux"): pd.DataFrame(
+                _spd(rng, 6), index=flux_idx, columns=flux_idx
+            ),
+            ("bias", "bias"): Covariance.diagonal(0.01, Space({"bias": bias_idx})),
+        }
+    )
+    S_z = Covariance.from_frame(
         pd.DataFrame(_spd(rng, 8), index=obs_idx, columns=obs_idx),
-        "concentration",
-        "concentration",
+        row_block="concentration",
+        col_block="concentration",
     )
     background = Block(
         pd.Series(np.full(8, 399.0), index=obs_idx, name="concentration")
@@ -114,7 +108,7 @@ OUTPUTS = [
         "S_hat",
         "state",
         "state",
-        CovarianceMatrix,
+        Covariance,
         "posterior_error",
     ),
     ("modeled_obs", "posterior_obs", "y_hat", "obs", None, Vector, "modeled_obs"),
@@ -125,17 +119,17 @@ OUTPUTS = [
         "S_y0",
         "obs",
         "obs",
-        CovarianceMatrix,
+        Covariance,
         "prior_obs_error",
     ),
-    ("kalman_gain", "kalman_gain", "K", "state", "obs", Matrix, "kalman_gain"),
+    ("kalman_gain", "kalman_gain", "K", "state", "obs", Operator, "kalman_gain"),
     (
         "averaging_kernel",
         "averaging_kernel",
         "A",
         "state",
         "state",
-        Matrix,
+        Operator,
         "averaging_kernel",
     ),
     (
@@ -144,7 +138,7 @@ OUTPUTS = [
         "desroziers",
         "obs",
         "obs",
-        CovarianceMatrix,
+        Covariance,
         "desroziers",
     ),
 ]
@@ -161,11 +155,14 @@ SCALARS = [
 
 def _expected(problem, est, est_attr, row, col, cls, name):
     """Label an estimator array the way InverseProblem labeled it."""
-    spaces = {"state": problem.state_index, "obs": problem.obs_index}
+    indexes = {"state": problem.state_index, "obs": problem.obs_index}
     raw = getattr(est, est_attr)
     if col is None:
-        return Vector(raw, index=spaces[row], name=name)
-    return cls(raw, index=spaces[row], columns=spaces[col], name=name)
+        return Vector(raw, index=indexes[row], name=name)
+    spaces = {name: Space.from_index(index) for name, index in indexes.items()}
+    if cls is Covariance:
+        return Covariance(np.asarray(raw), spaces[row], name=name)
+    return cls(np.asarray(raw), spaces[row], spaces[col], name=name)
 
 
 def _assert_same(result, expected):
@@ -174,7 +171,9 @@ def _assert_same(result, expected):
     if isinstance(expected, Vector):
         pd.testing.assert_series_equal(result.data, expected.data, check_exact=True)
     else:
-        pd.testing.assert_frame_equal(result.data, expected.data, check_exact=True)
+        assert result.rows.index.equals(expected.rows.index)
+        assert result.cols.index.equals(expected.cols.index)
+        np.testing.assert_array_equal(result.dense(), expected.dense())
 
 
 def _output(post, attr):
@@ -214,8 +213,23 @@ class TestOutputs:
     def test_labels_are_the_problem_indexes(self, problem, post):
         assert post.estimate.index.equals(problem.state_index)
         assert post.modeled_obs.index.equals(problem.obs_index)
-        assert post.kalman_gain.index.equals(problem.state_index)
-        assert post.kalman_gain.columns.equals(problem.obs_index)
+        assert post.kalman_gain.rows.index.equals(problem.state_index)
+        assert post.kalman_gain.cols.index.equals(problem.obs_index)
+        assert post.state_space == Space.from_index(problem.state_index)
+        assert post.obs_space == Space.from_index(problem.obs_index)
+
+    def test_state_index_with_a_block_apart_raises(self, problem, post):
+        """A state index with a block's rows apart has no state space to label the arrays."""
+        index = problem.state_index
+        assert index.get_level_values("block")[[5, 6]].tolist() == ["flux", "bias"]
+        apart = index[[0, 1, 2, 6, 3, 4, 5, 7]]  # flux, bias, flux, bias
+        broken = Posterior(post.estimator, apart, problem.obs_index)
+        with pytest.raises(ValueError, match="has the rows of a block apart"):
+            _ = broken.state_space
+        with pytest.raises(ValueError, match="has the rows of a block apart"):
+            _ = broken.covariance
+        with pytest.raises(ValueError, match="has the rows of a block apart"):
+            _ = broken.kalman_gain
 
     def test_mean_is_the_estimate(self, post):
         assert post.mean is post.estimate
@@ -225,7 +239,7 @@ class TestOutputs:
         assert isinstance(post.variances, Vector)
         assert post.variances.index.equals(problem.state_index)
         np.testing.assert_allclose(
-            post.variances.values, np.diag(post.covariance.to_numpy()), rtol=1e-12
+            post.variances.values, np.diag(post.covariance.dense()), rtol=1e-12
         )
 
     @pytest.mark.parametrize(("attr", "est_attr"), SCALARS)
