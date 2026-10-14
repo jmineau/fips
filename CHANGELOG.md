@@ -25,6 +25,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   the observations. A `Series` or a `Vector` of variances with a `block` level
   gives one for each, as a `Series` did before.
   ([#61](https://github.com/jmineau/fips/issues/61))
+- **Oracle tests** (`tests/test_oracle.py`), for every registered estimator:
+  the posterior mean and covariance, Kalman gain, averaging kernel, DOFS,
+  modeled observations and reduced chi-squared against the closed-form
+  Gaussian posterior written independently in the test (both covariance
+  forms, 20 seeds, several sizes, at 1e-10); `gamma` against a mismatch
+  scaled by hand; diagonal covariances given as variances, a scalar or a full
+  matrix; a multi-block problem read back block by block; a permutation test
+  (each input in its own random order gives the same labeled posterior); and
+  dot tests of `convolve` and of `ObsAggregator`'s aggregation. No library
+  code changed. ([#82](https://github.com/jmineau/fips/issues/82))
 
 ### Changed
 

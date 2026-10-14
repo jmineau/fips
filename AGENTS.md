@@ -365,6 +365,10 @@ covariance). See README "Multi-block" example.
 3. Register via the `EstimatorRegistry` decorator (`@ESTIMATOR_REGISTRY.register("name")`).
 4. Now available via `available_estimators()` and selectable on
    `InverseProblem`.
+5. `tests/test_oracle.py` is parametrized over the registry, so the new
+   estimator is held to the closed-form Gaussian posterior and the
+   permutation test at once. An estimator whose answer is not that posterior
+   (bounded, lognormal, sampled) says so there, with its own reference.
 
 ### Adding a new problem domain
 1. Create `src/fips/problems/<domain>/` with `__init__.py` re-exporting the
