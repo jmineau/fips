@@ -86,6 +86,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **`KroneckerError.build` gives the right covariance for any row order of
+  its index.** It laid the Kronecker product of the marginal correlations over
+  the rows as if they were the product of the marginal coordinates in the
+  kernels' order, and never checked: the same labels sorted another way, by
+  `(lat, lon, time)` against kernels given as `[time, (lat, lon)]`, gave entries
+  off by up to 0.37 on a correlation scale, with no warning, and an index with
+  a cell missing at only some times raised a broadcast error. Each entry is now
+  `std_i * std_j` times the product of the marginal correlations between rows i
+  and j, for any row order and any subset of the product. An index that is the
+  product in the kernels' order, with or without the same cells left out at
+  every time, gets the same matrix as before, bit for bit. Each kernel still
+  receives the unique coordinates of its levels in order of first appearance.
+  `build` raises a `ValueError` when two rows have the same coordinates on
+  every kernel's level (two blocks on one grid would be perfectly correlated;
+  this raised a broadcast error before) or a kernel returns a matrix of the
+  wrong shape. It also holds one n x n array fewer while it builds (a 5.6 GB
+  peak instead of 8.3 GB at n = 18,720, in the same time).
+  ([#76](https://github.com/jmineau/fips/issues/76))
 - **A sparse frame whose `fill_value` is neither 0.0 nor NaN raises a
   `ValueError`** when it is given to `Matrix`, `CovarianceMatrix`,
   `ForwardOperator`, `MatrixBlock`, or `ObsAggregator.apply` as the forward
