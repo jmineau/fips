@@ -71,17 +71,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   them and the standard deviations, for any row order and any subset of the
   product, never the `n x n` matrix. `H @ S_0` and `H @ S_0 @ H.T` go through
   the factors, `solve` through each factor's Cholesky factorization (a subset of
-  the product by a Schur complement on the missing entries), `diagonal()` and
+  the product by a Schur complement on the missing entries, whose backward
+  error is checked: when ill-conditioned factors make it inaccurate, the dense
+  matrix is solved instead, with a logged warning), `diagonal()` and
   `trace()` from the factors; `dense()` is the matrix `KroneckerError.build`
   gives, number for number. `KroneckerError.build` is unchanged.
   ([#6](https://github.com/jmineau/fips/issues/6))
 - **`from_operator`, a 2D structure that holds an operator**:
   `CovarianceMatrix.from_operator(error.operator(index), index)` (also on
-  `Matrix`, `ForwardOperator` and `MatrixBlock`) checks the labels and keeps
-  the operator; `reindex` to labels it has, `round_index`, `copy`, `scale` and
+  `Matrix`, `ForwardOperator` and `MatrixBlock`) checks the labels and the
+  stored values (a NaN raises, as in a frame) and keeps the operator; `reindex` to labels it has, `round_index`, `copy`, `scale` and
   pickling keep it too, so `InverseProblem` and `fips.solve` never form the
   matrix. `data`, `values` and anything that reads them form the DataFrame the
-  first time (logged at INFO past 5,000 rows), as before. `InverseProblem` also
+  first time (with a `UserWarning` past 5,000 rows), as before; `repr` does
+  not. `InverseProblem` also
   takes an operator as `prior_error` or `modeldata_mismatch` and labels it with
   the prior's or the observations' index. At 208 times by 90 cells (n =
   18,720, a sparse `H` with m = 2,800), the solve with `dofs` and

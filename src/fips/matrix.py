@@ -146,10 +146,13 @@ class MatrixBlock(SingleBlockMixin, Structure2D):
             )
 
     def __repr__(self):
-        """Return string representation."""
+        """Return string representation; a block built on an operator shows the operator, not its frame."""
         header = (
             f"MatrixBlock(row_block='{self.row_block}', col_block='{self.col_block}')\n"
         )
+        held = self._operator_data()
+        if held is not None:  # do not form the DataFrame to print it
+            return header + f"<{type(held.operator).__name__} : shape={self.shape}>"
         return header + repr(self.data)
 
     def to_frame(self, add_block_level=False) -> pd.DataFrame:

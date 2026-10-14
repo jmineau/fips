@@ -365,6 +365,11 @@ class KroneckerOperator(Operator):
         E[missing, np.arange(len(missing))] = 1.0
         return missing, self._through(E, self._inverses)
 
+    @cached_property
+    def _norm(self) -> float:
+        """An upper bound on the 2-norm of the rows' correlation: the product of the factors' 2-norms."""
+        return math.prod(float(np.linalg.norm(C, 2)) for C in self.factors)
+
     def solve(self, B) -> np.ndarray:
         r"""
         Solve ``self @ X = B`` through the factors.
@@ -378,10 +383,17 @@ class KroneckerOperator(Operator):
         When the rows are a strict subset of the product, with ``d`` entries
         of the product missing, the inverse of the kept rows' correlation is
         the Schur complement :math:`G_{kk} - G_{kd} G_{dd}^{-1} G_{dk}` of
-        the full product's inverse :math:`G`: exact, at the cost of ``d``
-        products with the factors' inverses and one ``d x d`` solve. When
-        that would hold more than the dense matrix (``N d > n^2``), the
-        dense matrix is solved instead.
+        the full product's inverse :math:`G`, at the cost of ``d`` products
+        with the factors' inverses and one ``d x d`` solve. That is the
+        inverse in exact arithmetic, but in floating point it loses accuracy
+        when the factors are ill-conditioned (the complement subtracts large
+        terms of :math:`G`). So the solve checks its result: when the
+        backward error of any column, :math:`\|R y - c\| / (\|R\| \|y\| +
+        \|c\|)` for the rows' correlation :math:`R`, is larger than
+        ``n * eps`` (the bound a dense Cholesky solve meets), it logs a
+        warning and solves the dense matrix instead. When the complement
+        would hold more than the dense matrix (``N d > n^2``), the dense
+        matrix is solved from the start.
 
         Parameters
         ----------
@@ -415,25 +427,46 @@ class KroneckerOperator(Operator):
             return _solve_psd(self.dense(), B)
 
         inv_s = 1.0 / self.std[:, None]
+        tol = n * np.finfo(float).eps
+        worst = 0.0  # the largest backward error of the Schur complement
 
         def apply(Y):
             """Return ``S^-1 Y`` for a block of columns."""
-            Z = self._through(self._scatter(inv_s * Y), self._inverses)
-            X = self._gather(Z)
+            nonlocal worst
+            c = inv_s * Y  # the right-hand side in the correlation's units
+            Z = self._through(self._scatter(c), self._inverses)
+            y = self._gather(Z)
             if n < self._size:  # a strict subset: the Schur complement
                 missing, W = self._complement
-                X = X - W[self._rows] @ _solve_psd(W[missing], Z[missing])
-            return inv_s * X
+                y = y - W[self._rows] @ _solve_psd(W[missing], Z[missing])
+                Ry = self._gather(self._through(self._scatter(y), self.factors))
+                scale = self._norm * np.linalg.norm(y, axis=0) + np.linalg.norm(
+                    c, axis=0
+                )
+                error = np.linalg.norm(Ry - c, axis=0)
+                worst = max(worst, float(np.max(error / np.maximum(scale, 1e-300))))
+            return inv_s * y
 
-        if B.ndim == 1:
-            return self._by_columns(B[:, None], apply)[:, 0]
-        return self._by_columns(B, apply)
+        X = self._by_columns(B[:, None] if B.ndim == 1 else B, apply)
+        if worst > tol:
+            logger.warning(
+                "The factored solve of the %d x %d Kronecker covariance lost "
+                "accuracy (backward error %.1e, more than %.1e), likely from "
+                "ill-conditioned factors; solving the dense matrix instead.",
+                n,
+                n,
+                worst,
+                tol,
+            )
+            return _solve_psd(self.dense(), B)
+        return X[:, 0] if B.ndim == 1 else X
 
     def __getstate__(self) -> dict[str, Any]:
         """Return the state for pickling, without the cached inverses."""
         state = self.__dict__.copy()
         state.pop("_inverses", None)
         state.pop("_complement", None)
+        state.pop("_norm", None)
         return state
 
 

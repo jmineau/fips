@@ -10,6 +10,7 @@ matrix.
 
 import logging
 import pickle
+import warnings
 from functools import reduce
 
 import numpy as np
@@ -379,6 +380,44 @@ def test_solve_of_a_thin_subset_is_dense(caplog):
     np.testing.assert_allclose(x, np.linalg.solve(op.dense(), b), rtol=1e-10)
 
 
+def _gauss(n: int, scale: float) -> np.ndarray:
+    """A Gaussian correlation on a line, badly conditioned for a wide scale."""
+    t = np.arange(n, dtype=float)
+    return np.exp(-(((t[:, None] - t[None, :]) / scale) ** 2)) + 1e-8 * np.eye(n)
+
+
+def _backward_error(S: np.ndarray, x: np.ndarray, b: np.ndarray) -> float:
+    """The normwise backward error of `x` as a solution of ``S x = b``."""
+    r = np.linalg.norm(S @ x - b)
+    return r / (np.linalg.norm(S, 2) * np.linalg.norm(x) + np.linalg.norm(b))
+
+
+def test_subset_solve_on_ill_conditioned_factors_falls_back(caplog):
+    """When the Schur complement loses accuracy, the residual check solves the dense matrix."""
+    rng = np.random.default_rng(0)
+    keep = np.sort(rng.permutation(900)[:700])
+    op = KroneckerOperator(
+        [_gauss(30, 3.0), _gauss(30, 3.0)], positions=np.unravel_index(keep, (30, 30))
+    )
+    S, b = op.dense(), rng.standard_normal(700)
+    with caplog.at_level(logging.WARNING, logger="fips.covariance"):
+        x = op.solve(b)
+    assert "lost accuracy" in caplog.text
+    eps = np.finfo(float).eps
+    assert _backward_error(S, x, b) < 700 * eps
+    # The same factors on the whole grid, and a well-conditioned subset: no fallback
+    caplog.clear()
+    with caplog.at_level(logging.WARNING, logger="fips.covariance"):
+        KroneckerOperator([_gauss(30, 3.0), _gauss(30, 3.0)]).solve(np.ones(900))
+        good = KroneckerOperator(
+            [_gauss(30, 1.0), _gauss(30, 1.0)],
+            positions=np.unravel_index(keep, (30, 30)),
+        )
+        x = good.solve(b)
+    assert "lost accuracy" not in caplog.text
+    np.testing.assert_allclose(x, np.linalg.solve(good.dense(), b), rtol=1e-10)
+
+
 def test_solve_with_a_zero_std_raises():
     """A zero standard deviation makes the operator singular."""
     op = KroneckerOperator([np.eye(2)], std=[1.0, 0.0])
@@ -574,15 +613,16 @@ class TestFromOperator:
         repr(S)
         np.testing.assert_array_equal(S.variances.values, op.diagonal())
 
-    def test_data_forms_the_frame_once(self, caplog, monkeypatch):
-        """``data`` forms the frame (logged past the size), and the structure then holds it."""
+    def test_data_forms_the_frame_once(self, monkeypatch):
+        """``data`` forms the frame (a warning past the size, once), and the structure then holds it."""
         S, op = _kron_cov()
-        monkeypatch.setattr("fips.base._FRAME_LOG_SIZE", 10)
-        with caplog.at_level(logging.INFO, logger="fips.base"):
+        monkeypatch.setattr("fips.base._FRAME_WARN_SIZE", 10)
+        with pytest.warns(UserWarning, match="Forming the 24 x 24 DataFrame"):
             frame = S.data
-        assert "Forming the 24 x 24 DataFrame" in caplog.text
         np.testing.assert_array_equal(frame.to_numpy(), op.dense())
-        assert S.data is frame  # held
+        with warnings.catch_warnings():
+            warnings.simplefilter("error")  # no second warning
+            assert S.data is frame  # held
         assert isinstance(S.operator, DenseOperator)
         np.testing.assert_array_equal(S.values, op.dense())
 
@@ -656,15 +696,36 @@ class TestFromOperator:
         )
         np.testing.assert_array_equal(R.operator.dense(), expected.to_numpy())
 
-    def test_reindex_with_levels_in_another_order(self, no_dense):
-        """A target with the levels in another order is matched label by label."""
+    def test_reindex_with_levels_in_another_order(self):
+        """A target with the levels in another order is matched label by label, overlap checked."""
         S, op = _kron_cov()
         target = (
             _product().reorder_levels(["block", "lat", "lon", "time"]).sort_values()
         )
-        R = S.reindex(index=target, columns=target)
-        assert isinstance(R.operator, KroneckerOperator)
+        with warnings.catch_warnings():
+            warnings.simplefilter("error")  # full overlap: no warning
+            R = S.reindex(index=target, columns=target, verify_overlap=True)
+        assert isinstance(R.operator, KroneckerOperator) and R._data is None
         assert R.index.equals(target)
+        ref = CovarianceMatrix(
+            pd.DataFrame(op.dense(), index=_product(), columns=_product())
+        )
+        expected = ref.reindex(index=target, columns=target, verify_overlap=True)
+        np.testing.assert_array_equal(R.values, expected.values)
+
+    def test_problem_with_levels_in_another_order(self):
+        """``InverseProblem`` takes a factored covariance whose levels are in another order than the prior's."""
+        S, op = _kron_cov()
+        inputs = _problem_inputs(_product(), sparse_h=True)
+        order = ["block", "lat", "lon", "time"]
+        S_other = CovarianceMatrix.from_operator(op, _product().reorder_levels(order))
+        dense = CovarianceMatrix(
+            pd.DataFrame(op.dense(), index=_product(), columns=_product())
+        )
+        post = fips.solve(InverseProblem(prior_error=S_other, **inputs))
+        ref = fips.solve(InverseProblem(prior_error=dense, **inputs))
+        assert isinstance(post.estimator._S_0_op, KroneckerOperator)
+        _close(post.estimate.values, ref.estimate.values, "estimate")
 
     def test_reindex_with_a_new_label_forms_the_frame(self):
         """A label the operator does not have: the DataFrame path, which fills zeros and warns."""
@@ -737,6 +798,34 @@ class TestFromOperator:
             MatrixBlock.from_operator(
                 OPS["whole"], _product()[:24], row_block="flux", col_block="flux"
             )
+
+    def test_repr_does_not_form_the_frame(self, no_dense):
+        """``repr`` of a block or a matrix built on an operator shows the operator, not a frame."""
+        idx = _product(block=False)
+        op = KroneckerError("prior", 1.0, KERNELS_2).operator(idx)
+        B = MatrixBlock.from_operator(op, idx, row_block="flux", col_block="flux")
+        text = repr(B)
+        assert "KroneckerOperator" in text and "shape=(24, 24)" in text
+        assert B._data is None and B.operator is op
+        S, _ = _kron_cov()
+        repr(S)
+        assert S._data is None
+
+    @pytest.mark.parametrize("form", ["array", "dense", "sparse", "diagonal"])
+    def test_nan_raises_as_for_a_frame(self, form):
+        """An operator that stores a NaN is refused, as a frame with one is."""
+        idx = pd.MultiIndex.from_product([["flux"], [0, 1]], names=["block", "cell"])
+        A = np.array([[1.0, np.nan], [np.nan, 1.0]])
+        op = {
+            "array": A,
+            "dense": DenseOperator(A),
+            "sparse": SparseOperator(sp.csr_matrix(A)),
+            "diagonal": DiagonalOperator([1.0, np.nan]),
+        }[form]
+        with pytest.raises(ValueError, match="NaN"):
+            CovarianceMatrix.from_operator(op, idx)
+        with pytest.raises(ValueError, match="NaN"):
+            CovarianceMatrix(pd.DataFrame(A, index=idx, columns=idx))
 
     def test_sparse_operator_behind_labels(self):
         """A sparse operator stays sparse, and its frame is a sparse frame."""
@@ -908,6 +997,10 @@ def test_solved_problem_pickles():
     assert isinstance(loaded.prior_error.operator, KroneckerOperator)
     assert isinstance(loaded.estimator._S_0_op, KroneckerOperator)
     np.testing.assert_array_equal(loaded.posterior.values, problem.posterior.values)
+    # The public attribute is the dense matrix, formed when read
+    S_0 = problem.estimator.S_0
+    assert type(S_0) is np.ndarray
+    np.testing.assert_array_equal(S_0, op.dense())
     np.testing.assert_array_equal(
         loaded.estimator.reduced_chi2, problem.estimator.reduced_chi2
     )
