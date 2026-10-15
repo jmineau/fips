@@ -858,10 +858,18 @@ def _matrix_structure(kind: str, sparse: bool, rng: np.random.Generator):
         return values
 
     if kind == "Covariance":
+        # a covariance is symmetric: each diagonal block plus its transpose,
+        # and the block below the diagonal the transpose of the one above
+        flux_flux, flux_bias, bias_bias = (
+            block(flux, flux),
+            block(flux, bias),
+            block(bias, bias),
+        )
         blocks = {
-            ("flux", "flux"): block(flux, flux),
-            ("flux", "bias"): block(flux, bias),
-            ("bias", "bias"): block(bias, bias),
+            ("flux", "flux"): flux_flux + flux_flux.T,
+            ("flux", "bias"): flux_bias,
+            ("bias", "flux"): flux_bias.T,
+            ("bias", "bias"): bias_bias + bias_bias.T,
         }
         space = Space({"flux": flux, "bias": bias})
         return Covariance.from_blocks(blocks, rows=space, cols=space)

@@ -185,6 +185,33 @@ class TestPlotComparison:
 
     @pytest.mark.parametrize(
         "wrap",
+        [pytest.param(lambda e: e, id="series"), pytest.param(_block, id="vector")],
+    )
+    def test_truth_is_matched_by_label(self, wrap):
+        """A truth in another order is drawn at its labels, on a line and on bars."""
+        a = self._series("a", [1.0, 2.0, 3.0])
+        truth = wrap(self._series("t", [10.0, 20.0, 30.0]).iloc[::-1])
+
+        _, ax = plot_comparison(a, truth=truth)
+
+        np.testing.assert_array_equal(ax.lines[-1].get_ydata(), [10.0, 20.0, 30.0])
+
+        b = self._series("b", [1.0, 2.0, 3.0], labels=["u", "v", "w"])
+        t = self._series("t", [10.0, 20.0, 30.0], labels=["u", "v", "w"]).iloc[::-1]
+        _, ax = plot_comparison(b, truth=wrap(t))
+        (crosses,) = ax.collections
+        np.testing.assert_array_equal(crosses.get_offsets()[:, 1], [10.0, 20.0, 30.0])
+
+    def test_a_truth_missing_a_label_raises(self):
+        """A label of the series the truth has no value for is named."""
+        a = self._series("a", [1.0, 2.0, 3.0])
+        truth = self._series("t", [10.0, 20.0], labels=(0.0, 1.0))
+
+        with pytest.raises(ValueError, match="truth has no value .*2.0"):
+            plot_comparison(a, truth=truth)
+
+    @pytest.mark.parametrize(
+        "wrap",
         [
             pytest.param(lambda e: e, id="series"),
             pytest.param(_block, id="vector"),
@@ -233,7 +260,7 @@ class TestPlotComparison:
 
     def test_a_truth_labeled_data_is_plotted_as_a_series(self):
         """The truth is not unpacked as ``truth.data`` when its index has that label."""
-        a = self._series("a", [1.0, 2.0, 3.0], labels=["u", "v", "w"])
+        a = self._series("a", [1.0, 2.0, 3.0], labels=["data", "b", "c"])
         truth = self._series("t", [1.1, 2.1, 3.1], labels=["data", "b", "c"])
 
         _, ax = plot_comparison(a, truth=truth)

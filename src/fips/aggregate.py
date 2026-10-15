@@ -36,7 +36,7 @@ every label of a block a group label on one level:
   maps): sites to networks, cells to regions.
 
 The group labels of every key together label the groups. A label a key cannot
-place (outside every interval, missing from a mapping) raises.
+place (outside every interval, missing from a mapping, mapped to NaN) raises.
 """
 
 from collections.abc import Hashable, Sequence
@@ -132,7 +132,7 @@ def _mapped(
     ------
     ValueError
         If a value is not in `lookup` (outside every interval of an
-        IntervalIndex).
+        IntervalIndex), or `to` gives it a missing (NaN) group.
     """
     values = _level(index, lookup.name, block)
     if isinstance(lookup, pd.IntervalIndex):
@@ -156,7 +156,16 @@ def _mapped(
             f"Labels of block {block!r} with a {lookup.name!r} {where}: "
             f"{_listed(values[positions < 0].unique())}."
         )
-    return pd.Index(to.take(positions), name=name)
+    groups = to.take(positions)
+    missing = np.asarray(groups.isna())
+    if missing.any():
+        raise ValueError(
+            f"The Series in `by` maps {lookup.name!r} "
+            f"{_listed(values[missing].unique())} (on labels of block "
+            f"{block!r}) to a missing (NaN) group. Give each a group, or leave "
+            "their labels out of the space."
+        )
+    return pd.Index(groups, name=name)
 
 
 def _groups(
@@ -264,8 +273,8 @@ def sum(space: Space, by: Any, blocks: "str | Sequence[str] | None" = None) -> O
     ValueError
         If `by` is empty, a block summed lacks a level a key reads, a key
         cannot place a label (outside every interval, missing from a
-        mapping), two keys label one level, or `blocks` names no block of
-        `space`.
+        mapping or mapped to NaN), two keys label one level, or `blocks`
+        names no block of `space`.
 
     See Also
     --------

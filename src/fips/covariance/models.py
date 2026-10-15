@@ -495,7 +495,7 @@ class _Scaled(CovarianceModel):
                 f"{len(space)} labels."
             )
         form = self.model._form(_coords(space, self.model._reads()))
-        return Covariance(_scaled(form, std), space, name=name)
+        return Covariance._computed(_scaled(form, std), space, name=name)
 
     def __repr__(self) -> str:
         """Return how the model was made."""
@@ -506,7 +506,7 @@ class _Scaled(CovarianceModel):
 def _on(part: "CovarianceModel | Covariance", space: Space) -> Covariance:
     """Return `part` on `space`: a model built there, a covariance aligned to it."""
     if isinstance(part, Covariance):
-        return Covariance(part._on(space, space), space)
+        return Covariance._computed(part._on(space, space), space)
     return part.build(space)
 
 
@@ -522,7 +522,7 @@ class _Sum(CovarianceModel):
         total = _on(self.terms[0], space)
         for term in self.terms[1:]:
             total = total + _on(term, space)
-        return Covariance(total.data, space, name=name)
+        return Covariance._computed(total.data, space, name=name)
 
     def __repr__(self) -> str:
         """Return the terms joined by ``+``."""
@@ -555,8 +555,8 @@ class _BlockDiagonal(CovarianceModel):
         form, joined = _side_by_side(built)
         name = self.name if name is None else name
         if joined.names != space.names:  # put the blocks in the space's order
-            form = Covariance(form, joined)._on(space, space)
-        return Covariance(form, space, name=name)
+            form = Covariance._computed(form, joined)._on(space, space)
+        return Covariance._computed(form, space, name=name)
 
     def __repr__(self) -> str:
         """Return the parts by block."""

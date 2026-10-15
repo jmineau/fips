@@ -195,6 +195,12 @@ The one plot is `fips.visualization.plot_comparison` (not exported from
   from an array fips just made, or from another form's read-only arrays, uses
   `_adopt` (no second copy); the public constructors are for what a caller
   hands over.
+- **A covariance is symmetric.** `Covariance(...)` (so `from_frame` and
+  `from_blocks`) checks a dense or sparse matrix to 1e-10 of its largest
+  entry, without densifying, and `KroneckerOperator` its factors. A covariance
+  fips computes from covariances or models (a sum, a reordering, a block
+  diagonal, `W S W^T`, a posterior) is built with `Covariance._computed`,
+  which skips the check: its roundoff can come near 1e-10.
 - **MultiIndex preservation.** The whole design hinges on labels surviving.
   Do not silently `.values` or `.to_numpy()` away from Series/DataFrame.
 - **Labels are kept as given.** Nothing converts labels to numbers or rounds
@@ -506,8 +512,8 @@ stay there too. A statistic that any problem could use goes on `Posterior`.
 ## Gotchas
 
 - **An `Operator` takes its matrix by position, a DataFrame by
-  `from_frame`.** The constructor refuses a pandas object, since its labels
-  would be ignored; a diagonal is `Covariance.diagonal(values, space)` (kept
+  `from_frame`.** The constructor refuses a pandas object or an `Operator`
+  (and `Vector` a `Vector`), since its labels would be ignored; a diagonal is `Covariance.diagonal(values, space)` (kept
   as a `DiagonalOperator`). An `Operator` multiplies an `Operator` or a
   `Vector`, never an array (no labels to check): compute by position with
   `op.data`.

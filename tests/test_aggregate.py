@@ -303,6 +303,18 @@ class TestOperators:
         with pytest.raises(ValueError, match="duplicate entries"):
             fips.aggregate.sum(obs.space, by=duplicated)
 
+    def test_a_mapping_to_nan_raises_about_the_mapping(self):
+        """A value mapped to NaN is named, with the mapping, not as missing labels of the user's block."""
+        sites = Space({"co2": pd.Index(["A", "B", "C"], name="site")})
+        for networks in (["n1", "n1", np.nan], [np.nan, "n1", "n1"]):
+            by = pd.Series(networks, index=sites.select("co2"), name="network")
+            for aggregate in (fips.aggregate.sum, fips.aggregate.mean):
+                with pytest.raises(
+                    ValueError,
+                    match=r"maps 'site' '[AC]' \(on labels of block 'co2'\) to a missing",
+                ):
+                    aggregate(sites, by=by)
+
     def test_unknown_blocks_raise(self, obs):
         """A block that is not in the space is named, with the blocks there are."""
         with pytest.raises(

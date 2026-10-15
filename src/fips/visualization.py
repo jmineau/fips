@@ -15,13 +15,14 @@ import pandas as pd
 
 from fips.covariance import Covariance
 from fips.operator import Operator
+from fips.space import _listed
 from fips.vector import Vector
 
 
 def _require_matplotlib():
     """Import and return ``matplotlib.pyplot``, with an install hint when missing."""
     try:
-        import matplotlib.pyplot as plt  # type: ignore
+        import matplotlib.pyplot as plt
 
         return plt
     except ImportError as exc:
@@ -63,7 +64,8 @@ def plot_comparison(
     x : str or int, optional
         Name or level of the index to use for x-axis. Required if series have MultiIndex.
     truth : pd.Series or Vector, optional
-        True values to plot as reference.
+        True values to plot as reference, matched to the series by label (in
+        any order), as the errors are.
     errors : Sequence of pd.DataFrame or Covariance or Operator or pd.Series or None, optional
         Error estimates for each series. Must match length of series.
         If a Covariance or an Operator, its diagonal's square roots (the
@@ -79,6 +81,12 @@ def plot_comparison(
         The figure object.
     ax : matplotlib.axes.Axes
         The axes object.
+
+    Raises
+    ------
+    ValueError
+        If `x` is not given for series with a MultiIndex, or `truth` has no
+        value for a label of the series.
     """
     plt = _require_matplotlib()
 
@@ -156,7 +164,12 @@ def plot_comparison(
             )
 
     if truth is not None:
-        t_data = _unwrap(truth)
+        t_data = _unwrap(truth).reindex(df.index)
+        if t_data.isna().any():
+            raise ValueError(
+                "truth has no value for some labels of the series: "
+                f"{_listed(df.index[t_data.isna().to_numpy()])}."
+            )
         if kind == "line":
             ax.plot(x_vals, t_data, label="truth", color="black", linestyle="--")
         else:

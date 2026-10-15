@@ -165,6 +165,13 @@ def _where(target: pd.Index, given: pd.Index, block: str, what: str) -> np.ndarr
     return found
 
 
+def _difference(first: pd.Index, other: pd.Index) -> tuple[pd.Index, pd.Index]:
+    """Return the labels only in `first` and those only in `other`, two labelings of one block with the same levels (in any order)."""
+    if isinstance(other, pd.MultiIndex) and other.names != first.names:
+        other = other.reorder_levels(list(first.names))
+    return first[~first.isin(other)], other[~other.isin(first)]
+
+
 def _placed(
     op: "Operator", rows: pd.Index, cols: pd.Index, key: tuple[str, str]
 ) -> LinearOperator:
@@ -230,6 +237,8 @@ class Operator:
         :class:`~fips.linalg.DiagonalOperator`); a form of :mod:`fips.linalg`
         already holds its own copy and is kept as it is. A DataFrame is
         refused, since its labels would be ignored: use :meth:`from_frame`.
+        So is an :class:`Operator`: use :meth:`align` to put it on other
+        labels, or its :attr:`data` for the matrix by position.
     rows : Space
         The labels of the rows.
     cols : Space
@@ -241,7 +250,8 @@ class Operator:
     Raises
     ------
     TypeError
-        If `data` is a pandas object, or `rows` or `cols` is not a Space.
+        If `data` is a pandas object or an :class:`Operator`, or `rows` or
+        `cols` is not a Space.
     ValueError
         If the shape of `data` does not match the spaces, or it stores a NaN.
 
@@ -281,6 +291,13 @@ class Operator:
                 f"{type(self).__name__} takes the matrix as an array, in the "
                 "spaces' order. Build one from a DataFrame with "
                 f"{type(self).__name__}.from_frame, which reads its labels."
+            )
+        if isinstance(data, Operator):
+            raise TypeError(
+                f"{type(self).__name__} takes a matrix, not a labeled "
+                f"{type(data).__name__}, whose labels would be ignored. To put an "
+                "operator on other labels (in any order), use op.align(rows, "
+                "cols); for its matrix by position, op.data."
             )
         for space, what in ((rows, "rows"), (cols, "cols")):
             if not isinstance(space, Space):
@@ -402,7 +419,9 @@ class Operator:
             or a sparse matrix is copied, as for :class:`Operator`.
         rows, cols : Space, optional
             The labels of the rows and columns. By default each block's labels
-            are those of the first labeled matrix in its row or column; an
+            are those of the labeled matrices in its row or column, which must
+            then have the same labels (in any order); a matrix that covers
+            part of a block is placed by giving the block's labels here. An
             unlabeled matrix needs its blocks' labels from here or from a
             labeled matrix in the same row or column block.
         name : str, optional
@@ -419,10 +438,12 @@ class Operator:
         Raises
         ------
         ValueError
-            If a pair is given twice, a block's labels are found nowhere, a
-            labeled matrix has a label its block does not have (the message
-            names it), a labeled matrix is on other blocks than its key
-            names, or an unlabeled matrix has the wrong shape.
+            If a pair is given twice, a block's labels are found nowhere, two
+            labeled matrices of a block have different labels and `rows` or
+            `cols` does not give them, a labeled matrix has a label its block
+            does not have (the message names it), a labeled matrix is on
+            other blocks than its key names, or an unlabeled matrix has the
+            wrong shape.
 
         Examples
         --------
@@ -489,13 +510,31 @@ class Operator:
             """Return the space of one axis: `given`, or the labeled blocks' labels."""
             if given is not None:
                 return given
+            keyword = "rows" if axis == 0 else "cols"
             found: dict[str, pd.Index] = {}
+            first: dict[str, tuple[str, str]] = {}
             for key, op in labeled.items():
                 space = op.rows if axis == 0 else op.cols
-                found.setdefault(key[axis], space.select(key[axis]))
+                index = space.select(key[axis])
+                if key[axis] not in found:
+                    found[key[axis]], first[key[axis]] = index, key
+                    continue
+                if set(index.names) != set(found[key[axis]].names):
+                    continue  # placing it raises, naming the levels
+                only_first, only_this = _difference(found[key[axis]], index)
+                if len(only_first) or len(only_this):
+                    what = "rows" if axis == 0 else "columns"
+                    raise ValueError(
+                        f"The {what} of the matrices of {first[key[axis]]} and "
+                        f"{key} differ: {_listed(only_first) or 'none'} only in "
+                        f"the first, {_listed(only_this) or 'none'} only in the "
+                        f"second. Without `{keyword}`, the labeled matrices of a "
+                        f"block must have the same labels; to place a matrix "
+                        f"that covers part of block {key[axis]!r}, give its "
+                        f"labels in `{keyword}`."
+                    )
             for key in [*labeled, *unlabeled]:
                 if key[axis] not in found:
-                    keyword = "rows" if axis == 0 else "cols"
                     raise ValueError(
                         f"Block {key[axis]!r} has no labels: give a labeled matrix "
                         f"for one of its pairs, or `{keyword}`."

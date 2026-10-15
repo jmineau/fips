@@ -99,6 +99,60 @@ def _read_only(array: np.ndarray) -> np.ndarray:
     return array
 
 
+_SYMMETRY_RTOL = 1e-10
+"""How far from symmetric a covariance may be: ``max|A - A^T| <= 1e-10 * max|A|``."""
+
+_SYMMETRY_CHUNK = 2**22
+"""How many entries of a dense matrix the symmetry check reads at once (32 MB of float64)."""
+
+
+def _entry(A: sp.csr_array, i: int, j: int) -> float:
+    """Return entry ``(i, j)`` of a CSR array, read from its arrays (duplicates summed)."""
+    row = slice(A.indptr[i], A.indptr[i + 1])
+    return float(A.data[row][A.indices[row] == j].sum())
+
+
+def _asymmetry(matrix) -> tuple[int, int, float, float, float] | None:
+    """
+    Return the largest asymmetry of a square array or SciPy sparse matrix, if it is past the tolerance.
+
+    Returns ``(i, j, A[i, j], A[j, i], max|A|)`` at the largest
+    ``|A[i, j] - A[j, i]|`` when that is more than ``_SYMMETRY_RTOL`` times
+    ``max|A|``, else None. A dense matrix is read in blocks of rows and a
+    sparse one is subtracted as sparse, so neither is copied whole.
+    """
+    if sp.issparse(matrix):
+        A = sp.csr_array(matrix)
+        if A.nnz == 0:
+            return None
+        scale = float(np.abs(A.data).max())
+        D = sp.coo_array(A - A.T)
+        if D.nnz == 0:
+            return None
+        k = int(np.argmax(np.abs(D.data)))
+        if abs(D.data[k]) <= _SYMMETRY_RTOL * scale:
+            return None
+        i, j = int(D.row[k]), int(D.col[k])
+        return i, j, _entry(A, i, j), _entry(A, j, i), scale
+    A = np.asarray(matrix)
+    n = len(A)
+    step = max(1, _SYMMETRY_CHUNK // max(n, 1))
+    worst, scale, at = 0.0, 0.0, (0, 0)
+    for start in range(0, n, step):
+        rows = A[start : start + step]
+        scale = max(scale, float(np.abs(rows).max()))
+        difference = np.abs(rows - A[:, start : start + step].T)
+        k = int(np.argmax(difference))
+        if difference.flat[k] > worst:
+            worst = float(difference.flat[k])
+            i, j = np.unravel_index(k, difference.shape)
+            at = (start + int(i), int(j))
+    if worst <= _SYMMETRY_RTOL * scale:
+        return None
+    i, j = at
+    return i, j, float(A[i, j]), float(A[j, i]), scale
+
+
 def _sparse_array(matrix, copy: bool) -> "sp.csr_array | sp.csc_array":
     """Return a SciPy sparse matrix as a float64 CSR array (CSC for a CSC input), copied if `copy`."""
     kind = sp.csc_array if matrix.format == "csc" else sp.csr_array
