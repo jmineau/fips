@@ -750,11 +750,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   a copy (they were writable and shared by `with_gamma` and `with_data`). A
   `Problem` names its covariances `"prior_cov"` and `"obs_cov"` whether it was
   given a model or a `Covariance` (a `Covariance` used to keep its own
-  name; the object you pass is not changed). The posterior takes
-  `H S_0 H^T` from the solution that formed it (an optional `HS_0H` member of
-  `Solution`) instead of forming it again for `innovation_cov` and `leverage`;
-  `with_data` builds its problem with the constructor; one `Operator._on` puts
-  an operator on two spaces. No number changes.
+  name; the object you pass is not changed). `with_data` builds its problem
+  with the constructor, and one `Operator._on` puts an operator on two spaces.
+  No number changes.
 
 - **A block of a `Vector` keeps the dtype of its labels.** `v["flux"]` (and
   `v.blocks["flux"]`) of a vector whose other blocks lack the `cell` level gave
