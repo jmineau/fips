@@ -1,1045 +1,414 @@
-"""Test suite for fips.problem module."""
+"""Tests for fips.problem: a Problem checks its labels once, by an exact join."""
 
+import pickle
 import warnings
 
 import numpy as np
 import pandas as pd
 import pytest
+import scipy.sparse as sp
 
-from fips import Covariance, Operator
-from fips.linalg import DenseOperator
-from fips.problem import InverseProblem
-from fips.vector import Vector
-from tests.generate_data import generate_test_data
+import fips
+from fips import (
+    Covariance,
+    Exponential,
+    Independent,
+    Kronecker,
+    Operator,
+    Problem,
+    Space,
+    Vector,
+)
+from fips.kronecker import KroneckerOperator
+from fips.linalg import DiagonalOperator, SparseOperator
+
+CELLS = pd.Index([1, 2, 3], name="cell")
+SITES = pd.Index(["A", "B"], name="site")
+OBS_A = pd.Index(["o1", "o2"], name="obs_id")
+OBS_B = pd.Index(["o3"], name="obs_id")
+
+STATE = Space({"flux": CELLS, "bias": SITES})
+OBS = Space({"a": OBS_A, "b": OBS_B})
+
+H_VALUES = np.array(
+    [
+        [1.0, 0.5, 0.0, 1.0, 0.0],
+        [0.0, 1.0, 0.5, 1.0, 0.0],
+        [0.2, 0.0, 1.0, 0.0, 1.0],
+    ]
+)
 
 
-class TestInverseProblemCreation:
-    """Tests for InverseProblem initialization."""
-
-    def test_inverse_problem_basic_creation(
-        self,
-        simple_prior,
-        simple_obs,
-        simple_forward_operator,
-        simple_prior_error,
-        simple_modeldata_mismatch,
-    ):
-        """Test basic InverseProblem creation."""
-        problem = InverseProblem(
-            prior=simple_prior,
-            obs=simple_obs,
-            forward_operator=simple_forward_operator,
-            prior_error=simple_prior_error,
-            modeldata_mismatch=simple_modeldata_mismatch,
-        )
-
-        assert problem.prior is not None
-        assert problem.obs is not None
-        assert problem.forward_operator is not None
-
-    def test_inverse_problem_with_vector_objects(self):
-        """Test InverseProblem with Vector objects instead of Series."""
-        # Use consistent dimension naming - both use 'id' as dimension name
-        prior = Vector.from_blocks(
-            {"state": pd.Series([1.0, 2.0], index=pd.Index(["x", "y"], name="id"))},
-            name="prior",
-        )
-
-        obs = pd.Series(
-            [1.0, 2.0], index=pd.Index(["obs_0", "obs_1"], name="id"), name="obs"
-        )
-
-        # Create simple matrices - use 'id' for dimension name to match vectors
-        state_labels = ["x", "y"]
-        obs_labels = ["obs_0", "obs_1"]
-
-        H = pd.DataFrame(
-            [[1, 0.5], [0.5, 1]],
-            index=pd.Index(obs_labels, name="id"),
-            columns=pd.Index(state_labels, name="id"),
-        )
-
-        S_0 = pd.DataFrame(
-            np.eye(2),
-            index=pd.Index(state_labels, name="id"),
-            columns=pd.Index(state_labels, name="id"),
-        )
-        S_z = pd.DataFrame(
-            np.eye(2),
-            index=pd.Index(obs_labels, name="id"),
-            columns=pd.Index(obs_labels, name="id"),
-        )
-
-        problem = InverseProblem(
-            obs=obs,
-            prior=prior,
-            forward_operator=H,
-            modeldata_mismatch=S_z,
-            prior_error=S_0,
-        )
-
-        assert isinstance(problem.prior, Vector)
-        assert isinstance(problem.obs, Vector)
-
-    @pytest.mark.parametrize("scalar", [0.5, 2, np.float32(0.5)])
-    def test_scalar_covariances_are_diagonals(
-        self, scalar, simple_prior, simple_obs, simple_forward_operator
-    ):
-        """A scalar covariance is that variance for every element, labeled by the vector."""
-        problem = InverseProblem(
-            prior=simple_prior,
-            obs=simple_obs,
-            forward_operator=simple_forward_operator,
-            prior_error=scalar,
-            modeldata_mismatch=scalar,
-        )
-
-        assert isinstance(problem.prior_error, Covariance)
-        pd.testing.assert_index_equal(
-            problem.prior_error.rows.index, problem.prior.index
-        )
-        pd.testing.assert_index_equal(
-            problem.modeldata_mismatch.rows.index, problem.obs.index
-        )
-        np.testing.assert_allclose(problem.prior_error.dense(), scalar * np.eye(3))
-        np.testing.assert_allclose(
-            problem.modeldata_mismatch.dense(), scalar * np.eye(4)
-        )
-
-    def test_scalar_covariances_solve_like_the_matrices(
-        self, simple_prior, simple_obs, simple_forward_operator
-    ):
-        """A problem given scalars has the posterior of one given the diagonal matrices."""
-        state = simple_prior.index
-        obs = simple_obs.index
-        common = {
-            "prior": simple_prior,
-            "obs": simple_obs,
-            "forward_operator": simple_forward_operator,
-        }
-
-        from_scalars = InverseProblem(
-            **common, prior_error=0.5, modeldata_mismatch=0.25
-        ).solve("bayesian")
-        from_matrices = InverseProblem(
-            **common,
-            prior_error=pd.DataFrame(0.5 * np.eye(3), index=state, columns=state),
-            modeldata_mismatch=pd.DataFrame(0.25 * np.eye(4), index=obs, columns=obs),
-        ).solve("bayesian")
-
-        pd.testing.assert_series_equal(
-            from_scalars.posterior.to_series(), from_matrices.posterior.to_series()
-        )
-
-    @pytest.mark.parametrize(
-        "wrap", [lambda s: s, Vector.from_series], ids=["series", "vector"]
+def _reversed(space: Space) -> Space:
+    """The same labels, every block reversed and the blocks in reverse order."""
+    return Space(
+        {name: space.select(name)[::-1] for name in reversed(space.names)},
     )
-    def test_labeled_variances_are_diagonals(
-        self, wrap, simple_prior, simple_obs, simple_forward_operator
-    ):
-        """A Series or a Vector with a block level is the diagonal, matched by label."""
-        prior = Vector.from_series(simple_prior, block=simple_prior.name)
-        obs = Vector.from_series(simple_obs, block=simple_obs.name)
-        # Given in another order than the vectors: the labels decide, not the position
-        prior_var = pd.Series([3.0, 2.0, 1.0], index=prior.index[::-1], name="var")
-        obs_var = pd.Series([4.0, 3.0, 2.0, 1.0], index=obs.index[::-1], name="var")
 
-        problem = InverseProblem(
-            prior=simple_prior,
-            obs=simple_obs,
-            forward_operator=simple_forward_operator,
-            prior_error=wrap(prior_var),
-            modeldata_mismatch=wrap(obs_var),
+
+def _on(values: np.ndarray, rows: Space, cols: Space, new_rows: Space, new_cols: Space):
+    """Return `values` (on `rows` x `cols`) reordered onto `new_rows` x `new_cols`."""
+    return values[np.ix_(new_rows.align(rows), new_cols.align(cols))]
+
+
+def _inputs(**changes):
+    """The inputs of a two-block problem; keyword arguments replace one."""
+    inputs = {
+        "prior": Vector([1.0, 2.0, 3.0, 0.0, 0.0], STATE, name="prior"),
+        "prior_cov": Covariance.diagonal([4.0, 4.0, 4.0, 1.0, 1.0], STATE),
+        "obs": Vector([5.0, 6.0, 7.0], OBS, name="obs"),
+        "obs_cov": Covariance.diagonal(0.5, OBS),
+        "forward": Operator(H_VALUES, OBS, STATE, name="H"),
+        "offset": None,
+    }
+    inputs.update(changes)
+    return inputs
+
+
+class TestConstruction:
+    def test_inputs_are_kept_on_their_spaces(self):
+        problem = Problem(**_inputs())
+        assert problem.prior.space is STATE and problem.obs.space is OBS
+        assert problem.forward.rows is OBS and problem.forward.cols is STATE
+        assert problem.prior_cov.space is STATE and problem.obs_cov.space is OBS
+        np.testing.assert_array_equal(problem.forward.dense(), H_VALUES)
+        assert problem.offset is None
+        assert problem.forward.name == "H"
+
+    def test_repr(self):
+        assert repr(Problem(**_inputs())) == (
+            "Problem(state: Space(flux: 3 x ['cell'], bias: 2 x ['site']), "
+            "obs: Space(a: 2 x ['obs_id'], b: 1 x ['obs_id']))"
         )
 
-        np.testing.assert_array_equal(
-            problem.prior_error.dense(), np.diag([1.0, 2.0, 3.0])
-        )
-        np.testing.assert_array_equal(
-            problem.modeldata_mismatch.dense(), np.diag([1.0, 2.0, 3.0, 4.0])
-        )
-
-    def test_1d_array_covariance_is_refused(
-        self, simple_prior, simple_obs, simple_forward_operator
-    ):
-        """An unlabeled 1D array is not matched to the state by position."""
-        with pytest.raises(TypeError, match="prior_error must be an Operator"):
-            InverseProblem(
-                prior=simple_prior,
-                obs=simple_obs,
-                forward_operator=simple_forward_operator,
-                prior_error=np.array([1.0, 2.0, 3.0]),
-                modeldata_mismatch=0.5,
-            )
-
-    def test_inverse_problem_stores_matrices(
-        self,
-        simple_prior,
-        simple_obs,
-        simple_forward_operator,
-        simple_prior_error,
-        simple_modeldata_mismatch,
-    ):
-        """Test that InverseProblem stores all matrices."""
-        problem = InverseProblem(
-            prior=simple_prior,
-            obs=simple_obs,
-            forward_operator=simple_forward_operator,
-            prior_error=simple_prior_error,
-            modeldata_mismatch=simple_modeldata_mismatch,
-        )
-
-        assert hasattr(problem, "forward_operator")
-        assert hasattr(problem, "prior_error")
-        assert hasattr(problem, "modeldata_mismatch")
-
-    def test_inverse_problem_stores_vectors(
-        self,
-        simple_prior,
-        simple_obs,
-        simple_forward_operator,
-        simple_prior_error,
-        simple_modeldata_mismatch,
-    ):
-        """Test that InverseProblem stores all vectors."""
-        problem = InverseProblem(
-            prior=simple_prior,
-            obs=simple_obs,
-            forward_operator=simple_forward_operator,
-            prior_error=simple_prior_error,
-            modeldata_mismatch=simple_modeldata_mismatch,
-        )
-
-        assert hasattr(problem, "prior")
-        assert hasattr(problem, "obs")
-
-    @pytest.mark.parametrize("kind", ["none", "scalar", "series"])
-    def test_constant_is_a_vector_or_none(
-        self,
-        simple_prior,
-        simple_obs,
-        simple_forward_operator,
-        simple_prior_error,
-        simple_modeldata_mismatch,
-        kind,
-    ):
-        """The constant is stored as a Vector, whatever it was given as, or None."""
-        constant = {
-            "none": None,
-            "scalar": 2.5,
-            "series": simple_obs * 2,
-        }[kind]
-
-        problem = InverseProblem(
-            prior=simple_prior,
-            obs=simple_obs,
-            forward_operator=simple_forward_operator,
-            prior_error=simple_prior_error,
-            modeldata_mismatch=simple_modeldata_mismatch,
-            constant=constant,
-        )
-
-        if kind == "none":
-            assert problem.constant is None
-        else:
-            assert isinstance(problem.constant, Vector)
-            expected = [2.5] * 4 if kind == "scalar" else [3.0, 5.0, 7.0, 9.0]
-            np.testing.assert_allclose(problem.constant.values, expected)
-
-
-class TestInverseProblemProperties:
-    """Tests for InverseProblem property accessors."""
-
-    def test_prior_property(
-        self,
-        simple_prior,
-        simple_obs,
-        simple_forward_operator,
-        simple_prior_error,
-        simple_modeldata_mismatch,
-    ):
-        """Test prior property access."""
-        problem = InverseProblem(
-            prior=simple_prior,
-            obs=simple_obs,
-            forward_operator=simple_forward_operator,
-            prior_error=simple_prior_error,
-            modeldata_mismatch=simple_modeldata_mismatch,
-        )
-
-        prior = problem.prior
-        assert isinstance(prior, Vector)
-        assert len(prior) == 3
-
-    def test_obs_property(
-        self,
-        simple_prior,
-        simple_obs,
-        simple_forward_operator,
-        simple_prior_error,
-        simple_modeldata_mismatch,
-    ):
-        """Test obs property access."""
-        problem = InverseProblem(
-            prior=simple_prior,
-            obs=simple_obs,
-            forward_operator=simple_forward_operator,
-            prior_error=simple_prior_error,
-            modeldata_mismatch=simple_modeldata_mismatch,
-        )
-
-        obs = problem.obs
-        assert isinstance(obs, Vector)
-        assert len(obs) == 4
-
-    def test_forward_operator_property(
-        self,
-        simple_prior,
-        simple_obs,
-        simple_forward_operator,
-        simple_prior_error,
-        simple_modeldata_mismatch,
-    ):
-        """Test forward_operator property access."""
-        problem = InverseProblem(
-            prior=simple_prior,
-            obs=simple_obs,
-            forward_operator=simple_forward_operator,
-            prior_error=simple_prior_error,
-            modeldata_mismatch=simple_modeldata_mismatch,
-        )
-
-        H = problem.forward_operator
-        assert isinstance(H, Operator)
-        assert H.shape == (4, 3)
-
-    def test_prior_error_property(
-        self,
-        simple_prior,
-        simple_obs,
-        simple_forward_operator,
-        simple_prior_error,
-        simple_modeldata_mismatch,
-    ):
-        """Test prior_error property access."""
-        problem = InverseProblem(
-            prior=simple_prior,
-            obs=simple_obs,
-            forward_operator=simple_forward_operator,
-            prior_error=simple_prior_error,
-            modeldata_mismatch=simple_modeldata_mismatch,
-        )
-
-        # Check that prior_error is accessible and correctly wrapped
-        S_a = problem.prior_error
-        assert isinstance(S_a, Covariance)
-        assert isinstance(S_a.data, DenseOperator)
-        assert S_a.shape == (3, 3)
-
-    def test_modeldata_mismatch_property(
-        self,
-        simple_prior,
-        simple_obs,
-        simple_forward_operator,
-        simple_prior_error,
-        simple_modeldata_mismatch,
-    ):
-        """Test modeldata_mismatch property access."""
-        problem = InverseProblem(
-            prior=simple_prior,
-            obs=simple_obs,
-            forward_operator=simple_forward_operator,
-            prior_error=simple_prior_error,
-            modeldata_mismatch=simple_modeldata_mismatch,
-        )
-
-        # Check that modeldata_mismatch is accessible and correctly wrapped
-        S_z = problem.modeldata_mismatch
-        assert isinstance(S_z, Covariance)
-        assert isinstance(S_z.data, DenseOperator)
-        assert S_z.shape == (4, 4)
-
-
-class TestInverseProblemMatrixHandling:
-    """Tests for matrix handling in InverseProblem."""
-
-    def test_matrix_wrapping_covariance(
-        self,
-        simple_prior,
-        simple_obs,
-        simple_forward_operator,
-        simple_prior_error,
-        simple_modeldata_mismatch,
-    ):
-        """Covariance objects built from blocks are placed on the problem's spaces."""
-        cov_prior = Covariance.from_blocks({("state", "state"): simple_prior_error})
-        cov_mismatch = Covariance.from_blocks(
-            {("obs", "obs"): simple_modeldata_mismatch}
-        )
-
-        problem = InverseProblem(
-            prior=simple_prior,
-            obs=simple_obs,
-            forward_operator=simple_forward_operator,
-            prior_error=cov_prior,
-            modeldata_mismatch=cov_mismatch,
-        )
-
-        # Check that matrices are stored properly
-        np.testing.assert_array_equal(
-            problem.prior_error.dense(), simple_prior_error.to_numpy()
-        )
-        np.testing.assert_array_equal(
-            problem.modeldata_mismatch.dense(), simple_modeldata_mismatch.to_numpy()
-        )
-
-    def test_matrix_wrapping_forward_operator(
-        self,
-        simple_prior,
-        simple_obs,
-        simple_forward_operator,
-        simple_prior_error,
-        simple_modeldata_mismatch,
-    ):
-        """An Operator built from blocks is placed on the problem's spaces."""
-        forward = Operator.from_blocks({("obs", "state"): simple_forward_operator})
-
-        problem = InverseProblem(
-            prior=simple_prior,
-            obs=simple_obs,
-            forward_operator=forward,
-            prior_error=simple_prior_error,
-            modeldata_mismatch=simple_modeldata_mismatch,
-        )
-
-        np.testing.assert_array_equal(
-            problem.forward_operator.dense(), simple_forward_operator.to_numpy()
-        )
-
-
-class TestInverseProblemIndexAlignment:
-    """Tests for index alignment in InverseProblem."""
-
-    def test_mismatched_prior_indices_raises(self):
-        """Test error when prior indices don't match."""
-        prior = pd.Series(
-            [1.0, 2.0], index=pd.Index(["a", "b"], name="id"), name="prior"
-        )
-        obs = pd.Series([1.0, 2.0], index=pd.Index(["o1", "o2"], name="id"), name="obs")
-
-        # Forward operator uses different state indices
-        H = pd.DataFrame(
-            [[1, 0], [0, 1]],
-            index=pd.Index(["o1", "o2"], name="id"),
-            columns=pd.Index(["x", "y"], name="id"),
-        )
-
-        prior_idx = pd.Index(["a", "b"], name="id")
-        obs_idx = pd.Index(["o1", "o2"], name="id")
-        S_a = pd.DataFrame(np.eye(2), index=prior_idx, columns=prior_idx)
-        S_z = pd.DataFrame(np.eye(2), index=obs_idx, columns=obs_idx)
-
-        with pytest.raises(ValueError, match="No label of forward_operator"):
-            InverseProblem(
-                obs=obs,
-                prior=prior,
-                forward_operator=H,
-                modeldata_mismatch=S_z,
-                prior_error=S_a,
-            )
-
-    def test_matrix_reindexing_fills_zeros(self):
-        """Test that matrices are reindexed with zero-filling."""
-        prior = pd.Series(
-            [1.0, 2.0, 3.0], index=pd.Index(["a", "b", "c"], name="id"), name="prior"
-        )
-        obs = pd.Series([1.0, 2.0], index=pd.Index(["o1", "o2"], name="id"), name="obs")
-
-        # Forward operator doesn't cover all state variables
-        H = pd.DataFrame(
-            [[1, 0.5, 0], [0.5, 1, 0.5]],
-            index=pd.Index(["o1", "o2"], name="id"),
-            columns=pd.Index(["a", "b", "c"], name="id"),
-        )
-
-        state_idx = pd.Index(["a", "b", "c"], name="id")
-        obs_idx = pd.Index(["o1", "o2"], name="id")
-        S_a = pd.DataFrame(np.eye(3), index=state_idx, columns=state_idx)
-        S_z = pd.DataFrame(np.eye(2), index=obs_idx, columns=obs_idx)
-
-        with warnings.catch_warnings(record=True):
-            warnings.simplefilter("always")
-            problem = InverseProblem(
-                obs=obs,
-                prior=prior,
-                forward_operator=H,
-                modeldata_mismatch=S_z,
-                prior_error=S_a,
-            )
-
-            # H should still have the right shape
-            assert problem.forward_operator.shape == (2, 3)
-
-
-class TestInverseProblemFloatPrecision:
-    """Tests for float precision handling."""
-
-    def test_float_precision_rounding(self):
-        """Test float precision rounding in InverseProblem."""
-        prior = pd.Series(
-            [1.0, 2.0], index=pd.Index([1.123456, 2.654321], name="id"), name="prior"
-        )
-        obs = pd.Series(
-            [1.0, 2.0], index=pd.Index([3.111111, 4.222222], name="id"), name="obs"
-        )
-
-        H = pd.DataFrame(
-            np.eye(2),
-            index=pd.Index([3.111111, 4.222222], name="id"),
-            columns=pd.Index([1.123456, 2.654321], name="id"),
-        )
-
-        state_idx = pd.Index([1.123456, 2.654321], name="id")
-        obs_idx = pd.Index([3.111111, 4.222222], name="id")
-        S_a = pd.DataFrame(np.eye(2), index=state_idx, columns=state_idx)
-        S_z = pd.DataFrame(np.eye(2), index=obs_idx, columns=obs_idx)
-
-        problem = InverseProblem(
-            obs=obs,
-            prior=prior,
-            forward_operator=H,
-            modeldata_mismatch=S_z,
-            prior_error=S_a,
-            round_index=2,
-        )
-
-        # Should have rounded indices
-        assert problem.state_index.get_level_values("id").tolist() == [1.12, 2.65]
-        assert problem.obs_index.get_level_values("id").tolist() == [3.11, 4.22]
-        assert problem.forward_operator.cols.select("prior").tolist() == [1.12, 2.65]
-        np.testing.assert_array_equal(problem.forward_operator.dense(), np.eye(2))
-
-
-class TestInverseProblemDimensions:
-    """Tests for dimension consistency."""
-
-    def test_rectangular_problem(self):
-        """Test with more observations than states (overdetermined)."""
-        prior = pd.Series(
-            np.ones(5),
-            index=pd.Index([f"s{i}" for i in range(5)], name="id"),
-            name="prior",
-        )
-        obs = pd.Series(
-            np.ones(10),
-            index=pd.Index([f"o{i}" for i in range(10)], name="id"),
-            name="obs",
-        )
-
-        H = pd.DataFrame(
-            np.ones((10, 5)),
-            index=pd.Index([f"o{i}" for i in range(10)], name="id"),
-            columns=pd.Index([f"s{i}" for i in range(5)], name="id"),
-        )
-
-        state_idx = pd.Index([f"s{i}" for i in range(5)], name="id")
-        obs_idx = pd.Index([f"o{i}" for i in range(10)], name="id")
-        S_a = pd.DataFrame(
-            np.eye(5),
-            index=state_idx,
-            columns=state_idx,
-        )
-        S_z = pd.DataFrame(
-            np.eye(10),
-            index=obs_idx,
-            columns=obs_idx,
-        )
-
-        with warnings.catch_warnings(record=True):
-            warnings.simplefilter("always")
-            problem = InverseProblem(
-                obs=obs,
-                prior=prior,
-                forward_operator=H,
-                modeldata_mismatch=S_z,
-                prior_error=S_a,
-            )
-
-            assert problem.forward_operator.shape == (10, 5)
-            assert len(problem.prior) == 5
-            assert len(problem.obs) == 10
-
-    def test_square_problem(self):
-        """Test with equal dimensions."""
-        n = 7
-        prior = pd.Series(
-            np.ones(n),
-            index=pd.Index([f"s{i}" for i in range(n)], name="id"),
-            name="prior",
-        )
-        obs = pd.Series(
-            np.ones(n),
-            index=pd.Index([f"o{i}" for i in range(n)], name="id"),
-            name="obs",
-        )
-
-        H = pd.DataFrame(
-            np.eye(n),
-            index=pd.Index([f"o{i}" for i in range(n)], name="id"),
-            columns=pd.Index([f"s{i}" for i in range(n)], name="id"),
-        )
-
-        state_idx = pd.Index([f"s{i}" for i in range(n)], name="id")
-        obs_idx = pd.Index([f"o{i}" for i in range(n)], name="id")
-        S_a = pd.DataFrame(
-            np.eye(n),
-            index=state_idx,
-            columns=state_idx,
-        )
-        S_z = pd.DataFrame(
-            np.eye(n),
-            index=obs_idx,
-            columns=obs_idx,
-        )
-
-        problem = InverseProblem(
-            obs=obs,
-            prior=prior,
-            forward_operator=H,
-            modeldata_mismatch=S_z,
-            prior_error=S_a,
-        )
-
-        assert problem.forward_operator.shape == (n, n)
-
-    def test_underdetermined_problem(self):
-        """Test with fewer observations than states (underdetermined)."""
-        prior = pd.Series(
-            np.ones(10),
-            index=pd.Index([f"s{i}" for i in range(10)], name="id"),
-            name="prior",
-        )
-        obs = pd.Series(
-            np.ones(5),
-            index=pd.Index([f"o{i}" for i in range(5)], name="id"),
-            name="obs",
-        )
-
-        H = pd.DataFrame(
-            np.ones((5, 10)),
-            index=pd.Index([f"o{i}" for i in range(5)], name="id"),
-            columns=pd.Index([f"s{i}" for i in range(10)], name="id"),
-        )
-
-        state_idx = pd.Index([f"s{i}" for i in range(10)], name="id")
-        obs_idx = pd.Index([f"o{i}" for i in range(5)], name="id")
-        S_a = pd.DataFrame(
-            np.eye(10),
-            index=state_idx,
-            columns=state_idx,
-        )
-        S_z = pd.DataFrame(
-            np.eye(5),
-            index=obs_idx,
-            columns=obs_idx,
-        )
-
-        with warnings.catch_warnings(record=True):
-            warnings.simplefilter("always")
-            problem = InverseProblem(
-                obs=obs,
-                prior=prior,
-                forward_operator=H,
-                modeldata_mismatch=S_z,
-                prior_error=S_a,
-            )
-
-            assert problem.forward_operator.shape == (5, 10)
-
-
-class TestInverseProblemInitializerNone:
-    """Tests for initializer being None."""
-
-    def test_estimator_initially_none(
-        self,
-        simple_prior,
-        simple_obs,
-        simple_forward_operator,
-        simple_prior_error,
-        simple_modeldata_mismatch,
-    ):
-        """Test that estimator is initially None."""
-        problem = InverseProblem(
-            prior=simple_prior,
-            obs=simple_obs,
-            forward_operator=simple_forward_operator,
-            prior_error=simple_prior_error,
-            modeldata_mismatch=simple_modeldata_mismatch,
-        )
-
-        assert problem._estimator is None
-
-
-class TestInverseProblemSolve:
-    """Tests for solving an inverse problem end-to-end."""
-
-    def test_solve_bayesian_with_generated_data(self):
-        """Generate synthetic data, build problem, and solve with bayesian estimator."""
-        data = generate_test_data(n_state=5, n_obs=8, seed=1, correlation_len=1.5)
-
-        # Directly pass generated data (Series/DataFrame/CovarianceMatrix)
-        problem = InverseProblem(
-            prior=data["prior"],
-            obs=data["obs"],
-            forward_operator=data["forward_operator"],
-            prior_error=data["prior_error"],
-            modeldata_mismatch=data["modeldata_mismatch"],
-        )
-
-        problem.solve(estimator="bayesian")
-
-        # Estimator is attached
-        assert problem._estimator is not None
-
-        # Check estimator has the results
-        estimator = problem.estimator
-        assert estimator.x_hat.shape[0] == len(data["prior"])
-        assert estimator.y_hat.shape[0] == len(data["obs"])
-        assert estimator.S_hat.shape == (
-            len(data["prior"]),
-            len(data["prior"]),
-        )
-
-        # No NaNs or infs in outputs
-        assert np.isfinite(estimator.x_hat).all()
-        assert np.isfinite(estimator.y_hat).all()
-        assert np.isfinite(estimator.S_hat).all()
-
-    def test_prior_obs_error_is_h_s0_ht_on_the_obs_index(self):
-        """``prior_obs_error`` wraps H S_0 H^T as a covariance on the observations."""
-        data = generate_test_data(n_state=5, n_obs=8, seed=2, correlation_len=1.5)
-        problem = InverseProblem(
-            prior=data["prior"],
-            obs=data["obs"],
-            forward_operator=data["forward_operator"],
-            prior_error=data["prior_error"],
-            modeldata_mismatch=data["modeldata_mismatch"],
-        )
-        with pytest.raises(RuntimeError, match="not been solved"):
-            _ = problem.prior_obs_error
-        problem.solve(estimator="bayesian")
-
-        S_y0 = problem.prior_obs_error
-        assert isinstance(S_y0, Covariance)
-        assert S_y0.rows.index.equals(problem.obs_index)
-        assert S_y0.cols.index.equals(problem.obs_index)
-        est = problem.estimator
-        expected = est.H @ est.S_0 @ est.H.T
-        np.testing.assert_allclose(S_y0.dense(), expected)
-        np.testing.assert_allclose(S_y0.dense(), S_y0.dense().T)
-        assert (np.diag(S_y0.dense()) >= 0).all()
-
-
-class TestInverseProblemLabelChecks:
-    """Duplicate labels (#78) and unknown block names (#80) raise."""
-
-    @staticmethod
-    def _rounding_problem(round_index=6):
-        """Build the problem of #78: two depths that differ past the 6th decimal."""
-        state = pd.Index([10.1234567, 10.1234568, 20.0], name="depth_m")
-        prior = pd.Series([1.0, 2.0, 3.0], index=state, name="density")
-        obs_idx = pd.Index([0, 1], name="obs_id")
-        obs = pd.Series([1.0, 2.0], index=obs_idx, name="gravity")
-        H = pd.DataFrame(
-            [[1.0, 0.0, 0.0], [0.0, 1.0, 1.0]], index=obs_idx, columns=state
-        )
-        return InverseProblem(
-            obs=obs,
-            prior=prior,
-            forward_operator=H,
-            prior_error=1.0,
-            modeldata_mismatch=1.0,
-            round_index=round_index,
-        )
-
-    def test_issue_78_labels_merged_by_rounding_raise(self):
-        """The reproduction of #78 raises and names the labels that merged."""
-        with pytest.raises(ValueError) as excinfo:
-            self._rounding_problem()
-        message = str(excinfo.value)
-        assert "round_index=6" in message
-        assert "state index" in message
-        assert "10.1234567" in message
-        assert "10.1234568" in message
-        assert "10.123457" in message
-
-    def test_without_rounding_the_labels_stay_distinct(self):
-        """With round_index=None the three labels of #78 are kept."""
-        problem = self._rounding_problem(round_index=None)
-        assert problem.n_state == 3
-        assert not problem.state_index.has_duplicates
-
-    def test_obs_labels_merged_by_rounding_raise(self):
-        """Rounding that merges two observation labels raises too."""
-        state = pd.Index(["a", "b"], name="id")
-        obs_idx = pd.Index([0.5, 0.50000001], name="time")
-        prior = pd.Series([1.0, 2.0], index=state, name="state")
-        obs = pd.Series([1.0, 2.0], index=obs_idx, name="obs")
-        H = pd.DataFrame(np.eye(2), index=obs_idx, columns=state)
-        with pytest.raises(
-            ValueError, match=r"round_index=6 merges .* observation index.*0\.5"
-        ):
-            InverseProblem(
-                obs=obs,
-                prior=prior,
-                forward_operator=H,
-                prior_error=1.0,
-                modeldata_mismatch=1.0,
-                round_index=6,
-            )
-
-    def test_labels_are_not_rounded_by_default(self):
-        """Without round_index the labels of #78 stay as given and distinct."""
-        problem = self._rounding_problem(round_index=None)
-        default = InverseProblem(
-            obs=problem.obs,
-            prior=problem.prior,
-            forward_operator=problem.forward_operator,
-            prior_error=1.0,
-            modeldata_mismatch=1.0,
-        )
-        assert default.state_index.equals(problem.state_index)
-        assert 10.1234567 in default.state_index.get_level_values("depth_m")
-
-    @pytest.mark.parametrize("round_index", [None, 6])
-    @pytest.mark.parametrize("space", ["state", "observation"])
-    def test_duplicate_input_labels_raise(self, space, round_index):
-        """A label given twice raises, with or without rounding."""
-        unique = pd.Index(["a", "b", "c"], name="id")
-        repeated = pd.Index(["a", "b", "b"], name="id")
-        state = repeated if space == "state" else unique
-        obs_idx = repeated if space == "observation" else unique
-        prior = pd.Series([1.0, 2.0, 3.0], index=state, name="state")
-        obs = pd.Series([1.0, 2.0, 3.0], index=obs_idx, name="obs")
-        H = pd.DataFrame(np.eye(3), index=obs_idx, columns=state)
-        block = "state" if space == "state" else "obs"
-        with pytest.raises(
-            ValueError, match=rf"Block '{block}' has duplicate labels: 'b'"
-        ):
-            InverseProblem(
-                obs=obs,
-                prior=prior,
-                forward_operator=H,
-                prior_error=1.0,
-                modeldata_mismatch=1.0,
-                round_index=round_index,
-            )
-
-    @staticmethod
-    def _blocks_problem(typo=None, cells=(1, 2)):
-        """
-        Build a problem with two state blocks and two obs blocks.
-
-        ``typo`` is ``(argument, axis, block)``: in that argument's matrix,
-        the block named ``block`` gets an ``x`` appended on ``axis`` ("row"
-        or "column"). ``cells`` are the flux cells the Jacobian covers.
-        """
-        flux = pd.Index([1, 2], name="cell")
-        bias = pd.Index(["A"], name="site")
-        obs_a = pd.Index([0, 1], name="obs_id")
-        obs_b = pd.Index([2], name="obs_id")
-        prior = Vector.from_blocks(
-            {
-                "flux": pd.Series([1.0, 2.0], index=flux),
-                "bias": pd.Series([0.0], index=bias),
-            }
-        )
-        obs = Vector.from_blocks(
-            {
-                "a": pd.Series([5.0, 6.0], index=obs_a),
-                "b": pd.Series([7.0], index=obs_b),
-            }
-        )
-        covered = pd.Index(list(cells), name="cell")
-        H = {
-            ("a", "flux"): pd.DataFrame(1.0, index=obs_a, columns=covered),
-            ("b", "flux"): pd.DataFrame(1.0, index=obs_b, columns=covered),
-            ("a", "bias"): pd.DataFrame(1.0, index=obs_a, columns=bias),
-            ("b", "bias"): pd.DataFrame(1.0, index=obs_b, columns=bias),
-        }
-        S_0 = {
-            ("flux", "flux"): pd.DataFrame(np.eye(2), index=flux, columns=flux),
-            ("bias", "bias"): pd.DataFrame([[1.0]], index=bias, columns=bias),
-        }
-        S_z = {
-            ("a", "a"): pd.DataFrame(np.eye(2), index=obs_a, columns=obs_a),
-            ("b", "b"): pd.DataFrame([[1.0]], index=obs_b, columns=obs_b),
-        }
-        matrices = {
-            "forward_operator": H,
-            "prior_error": S_0,
-            "modeldata_mismatch": S_z,
-        }
-        if typo is not None:
-            argument, axis, block = typo
-            blocks = matrices[argument]
-            for row, col in list(blocks):
-                new_row = row + "x" if axis == "row" and row == block else row
-                new_col = col + "x" if axis == "column" and col == block else col
-                blocks[new_row, new_col] = blocks.pop((row, col))
-        # Operator, not Covariance: a covariance with a typo on one axis only
-        # would not build, and the typo must reach InverseProblem
-        operators = {k: Operator.from_blocks(v) for k, v in matrices.items()}
-        return InverseProblem(obs=obs, prior=prior, **operators)
-
-    def test_issue_80_unknown_col_block_raises(self):
-        """The reproduction of #80 raises and names the unknown and known blocks."""
-        cells = pd.Index([1, 2], name="cell")
-        sites = pd.Index(["A"], name="site")
-        oidx = pd.Index([0], name="obs_id")
-        prior = Vector.from_blocks(
-            {
-                "flux": pd.Series([1.0, 2.0], index=cells),
-                "bias": pd.Series([0.0], index=sites),
-            }
-        )
-        obs = pd.Series([5.0], index=oidx, name="conc")
-        H = Operator.from_blocks(
-            {
-                ("conc", "fluxx"): pd.DataFrame(
-                    [[1.0, 1.0]], index=oidx, columns=cells
-                ),
-                ("conc", "bias"): pd.DataFrame([[1.0]], index=oidx, columns=sites),
-            }
-        )
-        with pytest.raises(ValueError) as excinfo:
-            InverseProblem(
-                obs=obs,
-                prior=prior,
-                forward_operator=H,
-                prior_error=1.0,
-                modeldata_mismatch=1.0,
-            )
-        message = str(excinfo.value)
-        assert "forward_operator has column blocks" in message
-        assert "'fluxx'" in message
-        assert "The known blocks are 'flux', 'bias'" in message
-
-    @pytest.mark.parametrize(
-        ("argument", "axis", "block", "known"),
-        [
-            ("forward_operator", "row", "a", "'a', 'b'"),
-            ("forward_operator", "column", "flux", "'flux', 'bias'"),
-            ("prior_error", "row", "bias", "'flux', 'bias'"),
-            ("prior_error", "column", "flux", "'flux', 'bias'"),
-            ("modeldata_mismatch", "row", "b", "'a', 'b'"),
-            ("modeldata_mismatch", "column", "a", "'a', 'b'"),
-        ],
-    )
-    def test_unknown_block_name_raises(self, argument, axis, block, known):
-        """A misspelled row or column block raises for H, S_0 and S_z."""
-        with pytest.raises(ValueError) as excinfo:
-            self._blocks_problem(typo=(argument, axis, block))
-        message = str(excinfo.value)
-        assert f"{argument} has {axis} blocks" in message
-        assert f"'{block}x'" in message
-        assert f"The known blocks are {known}" in message
-
-    def test_known_blocks_build_without_warning(self):
-        """A problem whose blocks all match builds silently, as before."""
+    def test_builds_silently(self):
         with warnings.catch_warnings():
             warnings.simplefilter("error")
-            problem = self._blocks_problem()
-        assert problem.forward_operator.shape == (3, 3)
-        assert problem.forward_operator.dense().tolist() == [[1.0] * 3] * 3
+            Problem(**_inputs())
 
-    def test_labels_missing_within_a_known_block_are_zero_filled(self):
-        """A Jacobian that covers only some cells of a block is still filled with zeros."""
-        with pytest.warns(UserWarning, match="Partial overlap"):
-            problem = self._blocks_problem(cells=(2,))
-        H = problem.forward_operator
-        assert H.shape == (3, 3)
-        assert H["a", "flux"].dense().tolist() == [[0.0, 1.0], [0.0, 1.0]]
-        assert H["b", "flux"].dense().tolist() == [[0.0, 1.0]]
-        assert H["a", "bias"].dense().tolist() == [[1.0], [1.0]]
-        assert H["a", "flux"].cols.select("flux").tolist() == [1, 2]
+    @pytest.mark.parametrize(
+        ("argument", "value", "match"),
+        [
+            ("prior", pd.Series([1.0]), "prior must be a Vector.*Vector.from_series"),
+            ("obs", np.ones(3), "obs must be a Vector"),
+            ("forward", H_VALUES, "forward must be an Operator"),
+            (
+                "forward",
+                pd.DataFrame(H_VALUES),
+                "forward must be an Operator.*Operator.from_frame",
+            ),
+            ("prior_cov", 1.0, "prior_cov must be a Covariance or a covariance model"),
+            (
+                "obs_cov",
+                Operator(np.eye(3), OBS, OBS),
+                "obs_cov must be a Covariance",
+            ),
+            ("offset", "1", "offset must be a Vector, a number or None"),
+        ],
+    )
+    def test_refused_types_name_the_way_in(self, argument, value, match):
+        with pytest.raises(TypeError, match=match):
+            Problem(**_inputs(**{argument: value}))
+
+    def test_has_no_solve_method(self):
+        """A problem is solved by fips.solve, which returns the posterior."""
+        assert not hasattr(Problem(**_inputs()), "solve")
 
 
-class TestInverseProblemSpaceOrder:
-    """obs and prior are put in Space order: each block's rows together."""
+class TestExactJoin:
+    """Every input is put on the prior's or the observations' space by its labels."""
+
+    def test_inputs_in_another_order_are_reordered(self):
+        state, obs = _reversed(STATE), _reversed(OBS)
+        given = Problem(**_inputs())
+        S_0 = given.prior_cov.dense() + 0.1  # not diagonal, so an order shows
+        S_z = given.obs_cov.dense() + 0.01
+        problem = Problem(
+            **_inputs(
+                forward=Operator(_on(H_VALUES, OBS, STATE, obs, state), obs, state),
+                prior_cov=Covariance(_on(S_0, STATE, STATE, state, state), state),
+                obs_cov=Covariance(_on(S_z, OBS, OBS, obs, obs), obs),
+                offset=Vector([0.3, 0.1, 0.2], Space({"b": OBS_B, "a": OBS_A[::-1]})),
+            )
+        )
+        np.testing.assert_array_equal(problem.forward.dense(), H_VALUES)
+        np.testing.assert_array_equal(problem.prior_cov.dense(), S_0)
+        np.testing.assert_array_equal(problem.obs_cov.dense(), S_z)
+        assert problem.offset is not None
+        np.testing.assert_array_equal(problem.offset.values, [0.2, 0.1, 0.3])
+        assert problem.offset.space is OBS
+
+    def test_a_jacobian_on_part_of_the_state_raises(self):
+        """A column missing (a cell no footprint touched) raises, naming it: no zero fill."""
+        cols = Space({"flux": CELLS[:2], "bias": SITES})
+        H = Operator(np.delete(H_VALUES, 2, axis=1), OBS, cols)
+        with pytest.raises(
+            ValueError,
+            match=r"The columns of forward and the prior do not have the same labels: "
+            r"labels of block 'flux' missing from the columns of forward: 3\.",
+        ):
+            Problem(**_inputs(forward=H))
+
+    def test_a_label_only_forward_has_raises(self):
+        cols = Space({"flux": pd.Index([1, 2, 3, 4], name="cell"), "bias": SITES})
+        H = Operator(np.insert(H_VALUES, 3, 1.0, axis=1), OBS, cols)
+        with pytest.raises(
+            ValueError, match="block 'flux' only in the columns of forward: 4"
+        ):
+            Problem(**_inputs(forward=H))
+
+    def test_issue_80_a_misspelled_block_raises(self):
+        """The reproduction of #80: a column block that matches no state block raises."""
+        cols = Space({"fluxx": CELLS, "bias": SITES})
+        with pytest.raises(ValueError) as excinfo:
+            Problem(**_inputs(forward=Operator(H_VALUES, OBS, cols)))
+        message = str(excinfo.value)
+        assert "blocks missing from the columns of forward: 'flux'" in message
+        assert "blocks only in the columns of forward: 'fluxx'" in message
+
+    def test_rows_of_forward_are_the_observations(self):
+        rows = Space({"a": OBS_A, "c": OBS_B})
+        with pytest.raises(
+            ValueError, match="The rows of forward and the observations do not have"
+        ):
+            Problem(**_inputs(forward=Operator(H_VALUES, rows, STATE)))
+
+    @pytest.mark.parametrize(
+        ("argument", "space", "what"),
+        [
+            (
+                "prior_cov",
+                Space({"flux": CELLS, "bias": pd.Index(["A", "C"], name="site")}),
+                "prior_cov",
+            ),
+            (
+                "obs_cov",
+                Space({"a": OBS_A, "b": pd.Index(["o4"], name="obs_id")}),
+                "obs_cov",
+            ),
+        ],
+    )
+    def test_a_covariance_on_other_labels_raises(self, argument, space, what):
+        with pytest.raises(ValueError, match=f"The rows of {what} and the"):
+            Problem(**_inputs(**{argument: Covariance.diagonal(1.0, space)}))
+
+    def test_an_offset_on_other_labels_raises(self):
+        offset = Vector([1.0, 2.0], Space({"a": OBS_A}))
+        with pytest.raises(ValueError, match="blocks missing from the offset: 'b'"):
+            Problem(**_inputs(offset=offset))
+
+    def test_float_noise_in_labels_is_not_matched(self):
+        """Labels are matched as given (#78): noise raises, and rounding on purpose matches them."""
+        lats = pd.Index([40.1, 40.2], name="lat")
+        noisy = pd.Index([40.1 + 1e-9, 40.2], name="lat")
+        state, obs = Space({"flux": lats}), Space({"co2": pd.Index([0], name="obs_id")})
+        inputs = {
+            "prior": Vector([0.0, 0.0], state),
+            "prior_cov": Covariance.diagonal(1.0, state),
+            "obs": Vector([1.0], obs),
+            "obs_cov": Covariance.diagonal(1.0, obs),
+            "forward": Operator(np.ones((1, 2)), obs, Space({"flux": noisy})),
+        }
+        with pytest.raises(
+            ValueError, match="missing from the columns of forward: 40.1"
+        ):
+            Problem(**inputs)
+        inputs["forward"] = inputs["forward"].round_labels(6)
+        inputs["prior"] = inputs["prior"].round_labels(6)
+        inputs["prior_cov"] = inputs["prior_cov"].round_labels(6)
+        Problem(**inputs)
+
+    def test_labels_are_kept_as_given(self):
+        """Site codes stay strings (#77)."""
+        codes = pd.Index(["001", "010"], name="site")
+        state, obs = (
+            Space({"bias": codes}),
+            Space({"co2": pd.Index([0], name="obs_id")}),
+        )
+        problem = Problem(
+            prior=Vector([0.0, 0.0], state),
+            prior_cov=Independent().with_std(1.0),
+            obs=Vector([1.0], obs),
+            obs_cov=Independent().with_std(1.0),
+            forward=Operator(np.ones((1, 2)), obs, state),
+        )
+        assert problem.prior_cov.space.select("bias").tolist() == ["001", "010"]
+
+
+class TestForms:
+    """The forms are kept: a sparse, diagonal or Kronecker input stays one."""
+
+    def test_sparse_forward_and_diagonal_covariances(self):
+        problem = Problem(
+            **_inputs(forward=Operator(sp.csr_array(H_VALUES), OBS, STATE))
+        )
+        assert isinstance(problem.forward.data, SparseOperator)
+        assert isinstance(problem.prior_cov.data, DiagonalOperator)
+        assert isinstance(problem.obs_cov.data, DiagonalOperator)
+
+    def test_sparse_forward_reordered_stays_sparse(self):
+        state, obs = _reversed(STATE), _reversed(OBS)
+        H = Operator(sp.csr_array(_on(H_VALUES, OBS, STATE, obs, state)), obs, state)
+        problem = Problem(**_inputs(forward=H))
+        assert isinstance(problem.forward.data, SparseOperator)
+        np.testing.assert_array_equal(problem.forward.dense(), H_VALUES)
+
+
+class TestModels:
+    """A covariance model is built on the problem's spaces."""
 
     @staticmethod
-    def _problem(interleaved):
-        """Two state blocks and two obs blocks, the rows given grouped or interleaved."""
-        state = pd.MultiIndex.from_tuples(
-            [("flux", "f1"), ("flux", "f2"), ("bias", "b1")], names=["block", "id"]
-        )
-        obs = pd.MultiIndex.from_tuples(
-            [("a", "o1"), ("a", "o2"), ("b", "o3")], names=["block", "id"]
-        )
-        prior = pd.Series([1.0, 2.0, 0.5], index=state, name="prior")
-        z = pd.Series([3.0, 4.0, 5.0], index=obs, name="obs")
-        constant = pd.Series([0.1, 0.2, 0.3], index=obs, name="background")
-        H = pd.DataFrame(
-            [[1.0, 0.5, 1.0], [0.2, 1.0, 1.0], [0.7, 0.3, 0.0]],
-            index=obs,
-            columns=state,
-        )
-        variances = pd.Series([2.0, 3.0, 0.25], index=state, name="var")
-        if interleaved:
-            # flux, bias, flux and a, b, a: a block's rows apart
-            prior, variances = prior.iloc[[0, 2, 1]], variances.iloc[[0, 2, 1]]
-            z, constant = z.iloc[[0, 2, 1]], constant.iloc[[0, 2, 1]]
-            H = H.iloc[[0, 2, 1], [0, 2, 1]]
-        return InverseProblem(
-            obs=z,
-            prior=prior,
-            forward_operator=H,
-            prior_error=variances,
-            modeldata_mismatch=0.5,
-            constant=constant,
-        )
+    def _grid():
+        times = pd.date_range("2024-01-01", periods=3, freq="D")
+        cells = pd.MultiIndex.from_product([times, [40.0, 40.5]], names=["time", "lat"])
+        state = Space({"flux": cells})
+        obs = Space({"co2": pd.Index(range(4), name="obs_id")})
+        return state, obs
 
-    def test_interleaved_rows_are_put_together(self):
-        """The rows of each block are put together, the blocks in the order they first appear."""
-        problem = self._problem(interleaved=True)
-        assert problem.state_index.tolist() == [
-            ("flux", "f1"),
-            ("flux", "f2"),
-            ("bias", "b1"),
-        ]
-        assert problem.obs_index.tolist() == [("a", "o1"), ("a", "o2"), ("b", "o3")]
-        np.testing.assert_array_equal(problem.prior.values, [1.0, 2.0, 0.5])
-        np.testing.assert_array_equal(problem.obs.values, [3.0, 4.0, 5.0])
-        np.testing.assert_array_equal(problem.constant.values, [0.1, 0.2, 0.3])
-        assert problem.forward_operator.rows.index.equals(problem.obs_index)
-        assert problem.forward_operator.cols.index.equals(problem.state_index)
+    def test_a_model_is_built_on_the_prior_space(self):
+        state, obs = self._grid()
+        model = Kronecker(Exponential("time", "2D"), Exponential("lat", 1.0)).with_std(
+            2.0
+        )
+        problem = Problem(
+            prior=Vector(np.zeros(6), state),
+            prior_cov=model,
+            obs=Vector(np.ones(4), obs),
+            obs_cov=Independent().with_std(0.5),
+            forward=Operator(np.ones((4, 6)), obs, state),
+        )
+        assert isinstance(problem.prior_cov.data, KroneckerOperator)
+        assert (
+            problem.prior_cov.space is state and problem.prior_cov.name == "prior_cov"
+        )
         np.testing.assert_array_equal(
-            problem.prior_error.variances.values, [2.0, 3.0, 0.25]
+            problem.prior_cov.dense(), model.build(state).dense()
+        )
+        np.testing.assert_array_equal(
+            problem.obs_cov.variances.values, np.full(4, 0.25)
+        )
+        assert problem.obs_cov.name == "obs_cov"
+
+    def test_a_model_reading_a_level_the_space_lacks_raises(self):
+        state, obs = self._grid()
+        with pytest.raises(KeyError, match="'obs_time'"):
+            Problem(
+                prior=Vector(np.zeros(6), state),
+                prior_cov=Independent().with_std(1.0),
+                obs=Vector(np.ones(4), obs),
+                obs_cov=Exponential("obs_time", "1h").with_std(1.0),
+                forward=Operator(np.ones((4, 6)), obs, state),
+            )
+
+    def test_a_model_given_a_vector_is_checked_by_the_join(self):
+        """``with_std(Vector)`` is a Covariance already: its labels must be the space's."""
+        state, obs = self._grid()
+        std = Vector(np.ones(5), Space({"flux": state.select("flux")[:5]}))
+        with pytest.raises(ValueError, match="The rows of prior_cov and the prior"):
+            Problem(
+                prior=Vector(np.zeros(6), state),
+                prior_cov=Independent().with_std(std),
+                obs=Vector(np.ones(4), obs),
+                obs_cov=Independent().with_std(1.0),
+                forward=Operator(np.ones((4, 6)), obs, state),
+            )
+
+    def test_block_diag_of_models_by_block(self):
+        problem = Problem(
+            **_inputs(
+                prior_cov=Covariance.block_diag(
+                    flux=Exponential("cell", 1.0).with_std(2.0),
+                    bias=Independent().with_std(0.1),
+                )
+            )
+        )
+        np.testing.assert_allclose(
+            problem.prior_cov.variances.values, [4.0, 4.0, 4.0, 0.01, 0.01]
         )
 
-    def test_interleaved_rows_solve_as_grouped(self):
-        """A problem given interleaved rows solves the same as one given them grouped."""
-        grouped = self._problem(interleaved=False).solve("bayesian")
-        interleaved = self._problem(interleaved=True).solve("bayesian")
-        pd.testing.assert_index_equal(interleaved.state_index, grouped.state_index)
-        pd.testing.assert_index_equal(interleaved.obs_index, grouped.obs_index)
+
+class TestOffset:
+    def test_a_number_is_the_same_for_every_observation(self):
+        problem = Problem(**_inputs(offset=2.5))
+        assert problem.offset is not None
+        assert problem.offset.space is OBS
+        np.testing.assert_array_equal(problem.offset.values, [2.5, 2.5, 2.5])
+
+    def test_an_offset_enters_the_modeled_observations(self):
+        offset = Vector([1.0, 2.0, 3.0], OBS, name="background")
+        with_offset = fips.solve(Problem(**_inputs(offset=offset)))
+        without = fips.solve(Problem(**_inputs()))
         np.testing.assert_allclose(
-            interleaved.forward_operator.dense(), grouped.forward_operator.dense()
+            with_offset.prior_modeled_obs.values - without.prior_modeled_obs.values,
+            [1.0, 2.0, 3.0],
         )
-        pd.testing.assert_series_equal(
-            interleaved.posterior.to_series(), grouped.posterior.to_series(), rtol=1e-12
+        assert with_offset.problem.offset is not None
+        assert with_offset.problem.offset.name == "background"
+
+
+class TestStiltShapedForward:
+    """The recipe in Problem's notes: a Jacobian on the cells a footprint touched, put on the whole state."""
+
+    def test_recipe_gives_the_dense_answer(self):
+        rng = np.random.default_rng(0)
+        cells = pd.Index(range(10), name="cell")
+        prior = Vector.from_series(
+            pd.Series(rng.uniform(1, 2, 10), index=cells), block="flux"
         )
-        pd.testing.assert_series_equal(
-            interleaved.posterior_obs.to_series(),
-            grouped.posterior_obs.to_series(),
-            rtol=1e-12,
+        obs_ids = pd.Index(range(4), name="obs_id")
+        obs = Vector.from_series(
+            pd.Series(rng.uniform(0, 5, 4), index=obs_ids), block="co2"
         )
-        np.testing.assert_allclose(
-            interleaved.posterior_error.dense(),
-            grouped.posterior_error.dense(),
-            rtol=1e-12,
+        touched = pd.Index([7, 2, 5], name="cell")  # in the Jacobian's own order
+        J = sp.csr_array(rng.uniform(0, 1, (4, 3)))
+
+        state = prior.space.select("flux")
+        coo = sp.coo_array(J)
+        full = sp.csr_array(
+            (coo.data, (coo.row, state.get_indexer(touched)[coo.col])),
+            shape=(J.shape[0], len(state)),
         )
-        np.testing.assert_allclose(
-            interleaved.kalman_gain.dense(), grouped.kalman_gain.dense(), rtol=1e-12
+        forward = Operator.from_blocks(
+            {("co2", "flux"): full}, rows=obs.space, cols=prior.space
         )
+        problem = Problem(
+            prior=prior,
+            prior_cov=Independent().with_std(0.5),
+            obs=obs,
+            obs_cov=Independent().with_std(0.1),
+            forward=forward,
+        )
+        assert isinstance(problem.forward.data, SparseOperator)
+        dense = np.zeros((4, 10))
+        dense[:, [7, 2, 5]] = J.toarray()
+        np.testing.assert_array_equal(problem.forward.dense(), dense)
+        post = fips.solve(problem)
+        untouched = [c for c in range(10) if c not in (7, 2, 5)]
+        np.testing.assert_array_equal(
+            post.estimate.values[untouched], prior.values[untouched]
+        )
+
+
+class TestPickle:
+    def test_round_trip_keeps_the_forms_and_spaces(self, tmp_path):
+        problem = Problem(
+            **_inputs(forward=Operator(sp.csr_array(H_VALUES), OBS, STATE), offset=1.0)
+        )
+        path = tmp_path / "problem.pkl"
+        problem.to_file(path)
+        loaded = Problem.from_file(path)
+        assert loaded.prior.space == STATE and loaded.obs.space == OBS
+        assert isinstance(loaded.forward.data, SparseOperator)
+        np.testing.assert_array_equal(loaded.forward.dense(), H_VALUES)
+        np.testing.assert_array_equal(
+            loaded.prior_cov.dense(), problem.prior_cov.dense()
+        )
+        assert loaded.offset is not None
+        np.testing.assert_array_equal(loaded.offset.values, [1.0, 1.0, 1.0])
+        np.testing.assert_array_equal(
+            fips.solve(loaded).estimate.values, fips.solve(problem).estimate.values
+        )
+
+    def test_pickle_shares_the_spaces(self):
+        loaded = pickle.loads(pickle.dumps(Problem(**_inputs())))
+        assert loaded.forward.cols is loaded.prior.space

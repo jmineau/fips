@@ -45,63 +45,6 @@ def pandas_lt(major, minor=0, patch=0):
 
 
 @pytest.fixture
-def simple_prior():
-    """Provide a simple prior state vector."""
-    return pd.Series(
-        [1.0, 2.0, 3.0],
-        index=pd.Index(["state_0", "state_1", "state_2"], name="state_id"),
-        name="state",
-    )
-
-
-@pytest.fixture
-def simple_obs():
-    """Provide a simple observation vector."""
-    return pd.Series(
-        [1.5, 2.5, 3.5, 4.5],
-        index=pd.Index(["obs_0", "obs_1", "obs_2", "obs_3"], name="obs_id"),
-        name="obs",
-    )
-
-
-@pytest.fixture
-def simple_forward_operator():
-    """Provide a simple forward operator matrix."""
-    H = pd.DataFrame(
-        np.array(
-            [[1.0, 0.5, 0.0], [0.5, 1.0, 0.5], [0.0, 0.5, 1.0], [0.25, 0.25, 0.25]]
-        ),
-        index=pd.Index(["obs_0", "obs_1", "obs_2", "obs_3"], name="obs_id"),
-        columns=pd.Index(["state_0", "state_1", "state_2"], name="state_id"),
-    )
-    return H
-
-
-@pytest.fixture
-def simple_prior_error():
-    """Provide a simple prior error covariance matrix."""
-    idx = pd.Index(["state_0", "state_1", "state_2"], name="state_id")
-    S_a = pd.DataFrame(
-        np.array([[1.0, 0.2, 0.0], [0.2, 1.0, 0.2], [0.0, 0.2, 1.0]]),
-        index=idx,
-        columns=idx,
-    )
-    return S_a
-
-
-@pytest.fixture
-def simple_modeldata_mismatch():
-    """Provide a simple model-data mismatch covariance matrix."""
-    idx = pd.Index(["obs_0", "obs_1", "obs_2", "obs_3"], name="obs_id")
-    S_z = pd.DataFrame(
-        np.eye(4) * 0.5,
-        index=idx,
-        columns=idx,
-    )
-    return S_z
-
-
-@pytest.fixture
 def random_state():
     """Random state for reproducible tests."""
     return np.random.RandomState(42)

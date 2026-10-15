@@ -24,12 +24,11 @@ import fips
 from fips import (
     Covariance,
     Exponential,
-    InverseProblem,
     Kronecker,
     Operator,
+    Problem,
     Space,
     Vector,
-    available_estimators,
 )
 from fips.correlation import CorrelationModel
 from fips.kronecker import KroneckerOperator
@@ -847,35 +846,30 @@ class TestCovarianceOnFactors:
             S.align(other, other)
 
     def test_problem_with_levels_in_another_order(self):
-        """``InverseProblem`` takes a factored covariance whose levels are in another order than the prior's."""
+        """``Problem`` takes a factored covariance whose levels are in another order than the prior's."""
         _, op = _kron_cov()
         inputs = _problem_inputs(_product(), sparse_h=True)
         order = ["block", "lat", "lon", "time"]
         S_other = Covariance(op, Space.from_index(_product().reorder_levels(order)))
-        post = fips.solve(InverseProblem(prior_error=S_other, **inputs))
-        ref = fips.solve(
-            InverseProblem(prior_error=_dense_cov(op, _product()), **inputs)
-        )
-        assert isinstance(post.estimator._S_0_op, KroneckerOperator)
+        problem = Problem(prior_cov=S_other, **inputs)
+        assert isinstance(problem.prior_cov.data, KroneckerOperator)
+        post = fips.solve(problem)
+        ref = fips.solve(Problem(prior_cov=_dense_cov(op, _product()), **inputs))
         _close(post.estimate.values, ref.estimate.values, "estimate")
 
-    def test_problem_with_a_new_label_fills_zeros(self):
-        """A state label the covariance does not have: a zero row and column, with a warning."""
-        S, op = _kron_cov()
+    def test_problem_with_a_new_label_raises(self):
+        """A state label the covariance does not have raises, naming it: no zero fill."""
+        S, _ = _kron_cov()
         idx = _product()
         extra = pd.MultiIndex.from_tuples(
             [("flux", TIMES[0], 39.0, -112.0)], names=idx.names
         )
-        target = idx.append(extra)
-        with pytest.warns(UserWarning, match="Partial overlap"):
-            problem = InverseProblem(
-                prior_error=S, **_problem_inputs(target, sparse_h=True)
-            )
-        placed = problem.prior_error
-        assert isinstance(placed, Covariance)
-        assert isinstance(placed.data, DenseOperator)
-        np.testing.assert_array_equal(placed.dense()[:-1, :-1], op.dense())
-        assert not placed.dense()[-1].any() and not placed.dense()[:, -1].any()
+        inputs = _problem_inputs(idx.append(extra), sparse_h=True)
+        with pytest.raises(
+            ValueError,
+            match=r"labels of block 'flux' missing from the rows of prior_cov",
+        ):
+            Problem(prior_cov=S, **inputs)
 
     def test_scalars_and_relabeling_keep_the_factors(self, no_dense):
         """A positive scalar, and the form put behind labels again, keep the factors."""
@@ -938,14 +932,10 @@ class TestCovarianceOnFactors:
 # The solve, from the factors against the dense matrix
 # ---------------------------------------------------------------------------
 
-ESTIMATOR_OUTPUTS = [
-    "x_hat", "S_hat", "K", "A", "y_hat", "y_0", "S_y0", "desroziers", "U_red",
-    "DOFS", "reduced_chi2", "R2", "RMSE", "uncertainty_reduction",
-]  # fmt: skip
 POSTERIOR_OUTPUTS = [
-    "estimate", "mean", "covariance", "variances", "modeled_obs", "prior_modeled_obs",
-    "prior_obs_covariance", "kalman_gain", "averaging_kernel", "desroziers",
-    "dofs", "reduced_chi2", "r2", "rmse", "uncertainty_reduction",
+    "estimate", "mean", "cov", "variances", "modeled_obs", "prior_modeled_obs",
+    "prior_obs_cov", "kalman_gain", "averaging_kernel", "desroziers", "dofs", "chi2",
+    "reduced_chi2", "r2", "rmse", "uncertainty_reduction",
 ]  # fmt: skip
 
 
@@ -959,7 +949,7 @@ def _close(actual, expected, what):
 
 
 def _problem_inputs(state_index, sparse_h: bool, seed: int = 11):
-    """The obs, prior, H, S_z and constant of a small problem on `state_index`."""
+    """The obs, prior, H, S_z and offset of a small problem on `state_index`."""
     rng = np.random.default_rng(seed)
     n, m = len(state_index), 15
     obs_index = pd.MultiIndex.from_product(
@@ -971,27 +961,25 @@ def _problem_inputs(state_index, sparse_h: bool, seed: int = 11):
         H[i, rng.choice(n, 4, replace=False)] = rng.uniform(0.5, 2.0, 4)
     x_0 = rng.normal(5.0, 1.0, n)
     z = H @ x_0 + rng.normal(0, 1.0, m)
+    state_space = Space.from_index(state_index)
     return {
-        "obs": pd.Series(z, index=obs_index),
-        "prior": pd.Series(x_0, index=state_index),
-        "forward_operator": Operator(
-            sp.csr_array(H) if sparse_h else H,
-            obs_space,
-            Space.from_index(state_index),
-        ),
-        "modeldata_mismatch": Covariance.diagonal(rng.uniform(0.1, 0.4, m), obs_space),
-        "constant": pd.Series(rng.normal(0.5, 0.1, m), index=obs_index),
+        "obs": Vector(z, obs_space),
+        "prior": Vector(x_0, state_space),
+        "forward": Operator(sp.csr_array(H) if sparse_h else H, obs_space, state_space),
+        "obs_cov": Covariance.diagonal(rng.uniform(0.1, 0.4, m), obs_space),
+        "offset": Vector(rng.normal(0.5, 0.1, m), obs_space),
     }
 
 
 def _compare(post, ref):
-    """Every estimator and Posterior output of `post` against `ref`, at 1e-10."""
-    for name in ESTIMATOR_OUTPUTS:
-        _close(getattr(post.estimator, name), getattr(ref.estimator, name), name)
+    """Every Posterior output of `post` against `ref`, at 1e-10."""
     for name in POSTERIOR_OUTPUTS:
         value, expected = getattr(post, name), getattr(ref, name)
-        if callable(value):  # averaging_kernel, with no aggregation
+        if callable(value):  # cov, averaging_kernel, desroziers: with no argument
             value, expected = value(), expected()
+        if isinstance(value, pd.DataFrame):  # desroziers
+            assert value.index.equals(expected.index), name
+            value, expected = value.to_numpy(), expected.to_numpy()
         if isinstance(value, Operator):  # a labeled matrix
             assert value.rows == expected.rows and value.cols == expected.cols, name
             value, expected = value.dense(), expected.dense()
@@ -999,15 +987,12 @@ def _compare(post, ref):
             assert value.index.equals(expected.index), name
             value, expected = value.values, expected.values
         _close(value, expected, f"posterior {name}")
-    x = np.linspace(1.0, 2.0, post.estimator.n_x)
-    _close(post.estimator.cost(x), ref.estimator.cost(x), "cost")
 
 
-@pytest.mark.parametrize("estimator", available_estimators())
 @pytest.mark.parametrize("sparse_h", [False, True], ids=["dense H", "sparse H"])
 @pytest.mark.parametrize("shape", ["product", "permuted", "ragged"])
 @KERNELS
-def test_solve_matches_the_dense_build(estimator, sparse_h, shape, kernels):
+def test_solve_matches_the_dense_build(sparse_h, shape, kernels):
     """
     A problem whose prior error is built on the factors solves as the dense one does.
 
@@ -1032,14 +1017,10 @@ def test_solve_matches_the_dense_build(estimator, sparse_h, shape, kernels):
 
     S_factored = Covariance(op, Space.from_index(index))
     S_dense = Covariance.from_frame(pd.DataFrame(dense, index=index, columns=index))
-    options = {"gamma": 0.7} if estimator == "bayesian" else {}
-    post = fips.solve(
-        InverseProblem(prior_error=S_factored, **inputs), estimator, **options
-    )
-    ref = fips.solve(
-        InverseProblem(prior_error=S_dense, **inputs), estimator, **options
-    )
-    assert isinstance(post.estimator._S_0_op, KroneckerOperator)
+    problem = Problem(prior_cov=S_factored, **inputs)
+    assert isinstance(problem.prior_cov.data, KroneckerOperator)
+    post = fips.solve(problem, gamma=0.7)
+    ref = fips.solve(Problem(prior_cov=S_dense, **inputs), gamma=0.7)
     _compare(post, ref)
 
 
@@ -1063,15 +1044,14 @@ def _flux_and_bias(seed: int = 3):
         H[i, len(cells) + i % 3] = 1.0  # each observation sees one site's bias
     z = H @ prior.values + rng.normal(0, 1.0, m)
     inputs = {
-        "obs": Vector(z, obs_space, name="obs").to_series(),
-        "forward_operator": Operator(sp.csr_array(H), obs_space, S_0.space),
-        "modeldata_mismatch": Covariance.diagonal(rng.uniform(0.1, 0.4, m), obs_space),
+        "obs": Vector(z, obs_space, name="obs"),
+        "forward": Operator(sp.csr_array(H), obs_space, S_0.space),
+        "obs_cov": Covariance.diagonal(rng.uniform(0.1, 0.4, m), obs_space),
     }
     return S_0, prior, inputs
 
 
-@pytest.mark.parametrize("estimator", available_estimators())
-def test_block_diagonal_prior_error_solves_as_the_dense_one(estimator):
+def test_block_diagonal_prior_error_solves_as_the_dense_one():
     """
     A Kronecker flux block and a diagonal bias block, kept as forms, solve as the dense matrix does.
 
@@ -1086,19 +1066,13 @@ def test_block_diagonal_prior_error_solves_as_the_dense_one(estimator):
         S_0.dense(), scipy.linalg.block_diag(flux.dense(), bias.dense())
     )
     S_dense = Covariance(S_0.dense(), S_0.space)
-    options = {"gamma": 0.7} if estimator == "bayesian" else {}
-    problem = InverseProblem(prior=prior.to_series(), prior_error=S_0, **inputs)
-    post = fips.solve(problem, estimator, **options)
-    ref = fips.solve(
-        InverseProblem(prior=prior.to_series(), prior_error=S_dense, **inputs),
-        estimator,
-        **options,
-    )
-    assert isinstance(problem.prior_error.data, BlockDiagonalOperator)
-    assert isinstance(post.estimator._S_0_op, BlockDiagonalOperator)
-    assert isinstance(post.estimator._S_0_op.blocks[0], KroneckerOperator)
+    problem = Problem(prior=prior, prior_cov=S_0, **inputs)
+    post = fips.solve(problem, gamma=0.7)
+    ref = fips.solve(Problem(prior=prior, prior_cov=S_dense, **inputs), gamma=0.7)
+    assert isinstance(problem.prior_cov.data, BlockDiagonalOperator)
+    assert isinstance(problem.prior_cov.data.blocks[0], KroneckerOperator)
     _compare(post, ref)
-    flux_cov = problem.get_block("prior_error", "flux")
+    flux_cov = problem.prior_cov["flux", "flux"]
     assert isinstance(flux_cov, Covariance)
     np.testing.assert_array_equal(flux_cov.dense(), flux.dense())
 
@@ -1126,18 +1100,18 @@ def test_block_diagonal_in_another_block_order_keeps_the_factors():
     assert isinstance(R.data.blocks[1], KroneckerOperator)
 
 
-def test_operator_given_to_the_problem():
-    """A form as ``prior_error`` is labeled by the prior's space."""
+def test_a_model_given_to_the_problem_is_kept_as_factors():
+    """A Kronecker covariance model is built on the prior's space as a ``KroneckerOperator``."""
     index = _product()
-    op = _operator(KERNELS_2, _variances(index), index)
-    inputs = _problem_inputs(index, sparse_h=True)
-    problem = InverseProblem(prior_error=op, **inputs)
-    assert isinstance(problem.prior_error, Covariance)
-    assert problem.prior_error.data is op
-    assert problem.prior_error.rows.index.equals(problem.prior.index)
-    ref = InverseProblem(prior_error=Covariance(op, Space.from_index(index)), **inputs)
+    model = Kronecker(
+        Exponential("time", "30D"),
+        Exponential(["lat", "lon"], 50.0, metric="haversine"),
+    ).with_std(0.5)
+    problem = Problem(prior_cov=model, **_problem_inputs(index, sparse_h=True))
+    assert isinstance(problem.prior_cov.data, KroneckerOperator)
+    assert problem.prior_cov.space is problem.prior.space
     np.testing.assert_array_equal(
-        fips.solve(problem).estimate.values, fips.solve(ref).estimate.values
+        problem.prior_cov.dense(), model.build(Space.from_index(index)).dense()
     )
 
 
@@ -1153,41 +1127,34 @@ def test_solve_never_forms_the_prior_error(no_dense):
     index = _product()
     S, op = _kron_cov(index)
     state = index[np.random.default_rng(2).permutation(len(index))]
-    problem = InverseProblem(prior_error=S, **_problem_inputs(state, sparse_h=True))
-    assert isinstance(problem.prior_error.data, KroneckerOperator)
+    problem = Problem(prior_cov=S, **_problem_inputs(state, sparse_h=True))
+    assert isinstance(problem.prior_cov.data, KroneckerOperator)
     post = fips.solve(problem)
     for name in (
-        "estimate", "modeled_obs", "prior_modeled_obs", "prior_obs_covariance",
-        "kalman_gain", "dofs", "reduced_chi2", "r2", "rmse", "desroziers",
+        "estimate", "modeled_obs", "prior_modeled_obs", "prior_obs_cov",
+        "kalman_gain", "dofs", "chi2", "reduced_chi2", "r2", "rmse",
         "variances", "uncertainty_reduction",
     ):  # fmt: skip
         getattr(post, name)
     post.averaging_kernel()
+    post.desroziers()
+    post.leverage(post.estimate)
     rows = pd.MultiIndex.from_tuples([("total", "all")], names=["block", "region"])
     post.cov(Operator.from_frame(pd.DataFrame(1.0, index=rows, columns=state)))
-    post.estimator.cost(np.ones(len(index)))
-    pickle.loads(pickle.dumps(problem.solve("bayesian")))
-    assert isinstance(problem.prior_error.data, KroneckerOperator)
+    pickle.loads(pickle.dumps(post.with_gamma(2.0)))
+    assert isinstance(problem.prior_cov.data, KroneckerOperator)
 
 
-def test_solved_problem_pickles():
-    """A solved problem on factors pickles, and its posterior reads back."""
+def test_posterior_on_factors_pickles():
+    """A posterior whose prior error is factors pickles, and keeps the factors."""
     index = _product()
-    S, op = _kron_cov(index)
-    problem = InverseProblem(prior_error=S, **_problem_inputs(index, sparse_h=True))
-    problem.solve("bayesian")
-    loaded = pickle.loads(pickle.dumps(problem))
-    assert isinstance(loaded.prior_error, Covariance)
-    assert isinstance(loaded.prior_error.data, KroneckerOperator)
-    assert isinstance(loaded.estimator._S_0_op, KroneckerOperator)
-    np.testing.assert_array_equal(loaded.posterior.values, problem.posterior.values)
-    # The public attribute is the dense matrix, formed when read
-    S_0 = problem.estimator.S_0
-    assert type(S_0) is np.ndarray
-    np.testing.assert_array_equal(S_0, op.dense())
-    np.testing.assert_array_equal(
-        loaded.estimator.reduced_chi2, problem.estimator.reduced_chi2
-    )
+    S, _ = _kron_cov(index)
+    post = fips.solve(Problem(prior_cov=S, **_problem_inputs(index, sparse_h=True)))
+    loaded = pickle.loads(pickle.dumps(post))
+    assert isinstance(loaded.problem.prior_cov, Covariance)
+    assert isinstance(loaded.problem.prior_cov.data, KroneckerOperator)
+    np.testing.assert_array_equal(loaded.estimate.values, post.estimate.values)
+    assert loaded.reduced_chi2 == post.reduced_chi2
 
 
 def test_kron_reduce_matches_product_order():

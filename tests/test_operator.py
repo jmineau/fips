@@ -1,5 +1,5 @@
 """
-Tests of the labeled operator, :class:`fips.Operator`, and :func:`fips.convolve`.
+Tests of the labeled operator, :class:`fips.Operator`.
 
 An operator is a matrix in its cheapest form (:mod:`fips.linalg`) with a
 :class:`fips.Space` of labels on each axis. These tests cover the ways in
@@ -15,7 +15,7 @@ import pandas as pd
 import pytest
 import scipy.sparse as sp
 
-from fips import Covariance, Operator, Space, Vector, convolve
+from fips import Covariance, Operator, Space, Vector
 from fips.linalg import DenseOperator, DiagonalOperator, SparseOperator
 
 # A scalar in each form a caller might pass: Python float and int, a NumPy scalar, a 0-d array
@@ -578,6 +578,25 @@ class TestMatmul:
         with pytest.raises(TypeError, match=r"op\.data @ x"):
             H @ np.ones(3)
 
+    def test_a_vector_missing_a_column_raises(self, H, state):
+        """A vector must have exactly the columns' labels: a missing one is named, not zero."""
+        block = state.names[0]
+        short = Space({block: state.select(block)[:2]})
+        with pytest.raises(ValueError, match="missing from the other space"):
+            H @ Vector([1.0, 2.0], short)
+
+    def test_multiindex_block_labels(self):
+        """A block labeled by several levels is matched on all of them."""
+        labels = pd.MultiIndex.from_tuples(
+            [("sub1", "a"), ("sub1", "b"), ("sub2", "a")], names=["subblock", "element"]
+        )
+        obs = Space({"obs": pd.Index(["o1", "o2"], name="obs")})
+        H = Operator(
+            np.array([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]]), obs, Space({"state": labels})
+        )
+        x = Vector([30.0, 20.0, 10.0], Space({"state": labels[::-1]}))
+        np.testing.assert_array_equal((H @ x).values, [140.0, 320.0])
+
 
 class TestSum:
     """Sums and differences join both spaces exactly, by label."""
@@ -820,104 +839,3 @@ class TestPickle:
 
         assert type(again) is Covariance and type(again.data) is DiagonalOperator
         assert again.space == state and again.name == "S"
-
-
-class TestConvolve:
-    """The labeled product of a forward operator and a state."""
-
-    @staticmethod
-    def series(values: dict, name="x_0"):
-        """A state Series on block 'flux', with a block level, from cell labels to values."""
-        index = pd.MultiIndex.from_product(
-            [["flux"], list(values)], names=["block", "cell"]
-        )
-        return pd.Series(list(values.values()), index=index, name=name)
-
-    def test_series(self, H):
-        """A Series with a block level is multiplied by label; the result is labeled by the rows."""
-        result = convolve(self.series({"c": 1.0, "a": 2.0, "b": 3.0}), H)
-
-        assert isinstance(result, pd.Series)
-        pd.testing.assert_index_equal(result.index, H.rows.index)
-        np.testing.assert_array_equal(result.to_numpy(), [8.0, 26.0])
-        assert result.name == "x_0_obs"
-
-    def test_vector(self, H):
-        """A Vector gives the same result as its Series."""
-        series = self.series({"c": 1.0, "a": 2.0, "b": 3.0})
-        expected = convolve(series, H)
-
-        pd.testing.assert_series_equal(
-            convolve(Vector.from_series(series), H), expected
-        )
-
-    def test_frame_operator(self, H):
-        """A frame with block levels on both axes is read as an operator."""
-        state = self.series({"c": 1.0, "a": 2.0, "b": 3.0})
-
-        pd.testing.assert_series_equal(
-            convolve(state, H.to_frame()), convolve(state, H)
-        )
-
-    def test_matched_by_label(self, H):
-        """The state is matched by label, not position; a label H has no column for is unused."""
-        result = convolve(self.series({"d": 4.0, "b": 3.0, "a": 2.0, "c": 1.0}), H)
-
-        np.testing.assert_array_equal(result.to_numpy(), [8.0, 26.0])
-
-    def test_partial_overlap_fills_zero_and_warns(self, H):
-        """A column without a state value takes zero, with a warning naming it."""
-        with pytest.warns(UserWarning, match=r"Partial overlap: 1 of 3.*'b'"):
-            result = convolve(self.series({"c": 1.0, "a": 2.0}), H)
-
-        np.testing.assert_array_equal(result.to_numpy(), [2.0, 11.0])
-
-    def test_no_overlap_raises(self, H):
-        """No column with a state value raises."""
-        with pytest.raises(ValueError, match="No label of the state"):
-            convolve(self.series({"x": 1.0, "y": 2.0}), H)
-
-    def test_no_check_without_verify_overlap(self, H):
-        """With verify_overlap=False, missing columns take zero silently."""
-        result = convolve(self.series({"c": 1.0, "a": 2.0}), H, verify_overlap=False)
-
-        np.testing.assert_array_equal(result.to_numpy(), [2.0, 11.0])
-
-    @pytest.mark.parametrize(
-        ("decimals", "op_labels", "state_labels"),
-        [
-            pytest.param(3, [1.23456789, 2.3456789], [1.23457, 2.34568], id="3"),
-            pytest.param(0, [0.4, 1.4], [0.0, 1.0], id="0"),
-        ],
-    )
-    def test_round_index(self, decimals, op_labels, state_labels):
-        """Float labels that differ by noise match once both are rounded, and not before."""
-        space = Space({"flux": pd.Index(op_labels, name="lat")})
-        identity = Operator(np.eye(2), space, space)
-        state = Vector([1.0, 2.0], Space({"flux": pd.Index(state_labels, name="lat")}))
-
-        result = convolve(state, identity, round_index=decimals)
-
-        np.testing.assert_array_equal(result.to_numpy(), [1.0, 2.0])
-        with pytest.raises(ValueError, match="No label of the state"):
-            convolve(state, identity)
-
-    def test_sparse_operator(self, H):
-        """A sparse operator gives the numbers of the dense one."""
-        sparse = Operator(sp.csr_array(H.dense()), H.rows, H.cols)
-        state = self.series({"c": 1.0, "a": 2.0, "b": 3.0})
-
-        pd.testing.assert_series_equal(convolve(state, sparse), convolve(state, H))
-
-    def test_multiindex_state_labels(self):
-        """A state block labeled by several levels is matched on all of them."""
-        labels = pd.MultiIndex.from_tuples(
-            [("sub1", "a"), ("sub1", "b"), ("sub2", "a")], names=["subblock", "element"]
-        )
-        obs = Space({"obs": pd.Index(["o1", "o2"], name="obs")})
-        H = Operator(
-            np.array([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]]), obs, Space({"state": labels})
-        )
-        state = Vector([30.0, 20.0, 10.0], Space({"state": labels[::-1]}))
-
-        np.testing.assert_array_equal(convolve(state, H).to_numpy(), [140.0, 320.0])

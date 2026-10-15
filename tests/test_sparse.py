@@ -16,7 +16,7 @@ import pytest
 import scipy.sparse as sp
 
 import fips
-from fips import Covariance, InverseProblem, Operator, Space
+from fips import Covariance, Operator, Problem, Space, Vector
 from fips.aggregators import ObsAggregator
 from fips.linalg import (
     BlockDiagonalOperator,
@@ -379,8 +379,8 @@ class TestArithmetic:
 # ---------------------------------------------------------------------------
 
 
-def _problem(sparse: bool, drop_cell: bool = False) -> InverseProblem:
-    """The problem of `_jacobian`, its matrices as pandas-sparse frames or dense frames."""
+def _frames(sparse: bool, drop_cell: bool = False) -> dict:
+    """The inputs of `_jacobian`'s problem, its matrices as pandas-sparse frames or dense frames."""
     rng = np.random.default_rng(1)
     state, obs = STATE.index, OBS.index
     H, S_0, S_z = _jacobian(), _banded(N, seed=2), np.diag(rng.uniform(0.1, 0.5, M))
@@ -395,25 +395,37 @@ def _problem(sparse: bool, drop_cell: bool = False) -> InverseProblem:
     if drop_cell:
         H_frame = H_frame.drop(columns=H_frame.columns[[3]])
     x_0 = rng.normal(5.0, 1.0, N)
-    return InverseProblem(
-        obs=pd.Series(H @ x_0 + rng.normal(0, 1.0, M), index=obs, name="obs"),
-        prior=pd.Series(x_0, index=state, name="prior"),
-        forward_operator=H_frame,
-        prior_error=frame(S_0, state, state),
-        modeldata_mismatch=frame(S_z, obs, obs),
+    return {
+        "obs": pd.Series(H @ x_0 + rng.normal(0, 1.0, M), index=obs, name="obs"),
+        "prior": pd.Series(x_0, index=state, name="prior"),
+        "forward": H_frame,
+        "prior_cov": frame(S_0, state, state),
+        "obs_cov": frame(S_z, obs, obs),
+    }
+
+
+def _problem(sparse: bool) -> Problem:
+    """The problem of `_jacobian`, read from pandas-sparse frames or dense frames."""
+    frames = _frames(sparse)
+    return Problem(
+        obs=Vector.from_series(frames["obs"]),
+        prior=Vector.from_series(frames["prior"]),
+        forward=Operator.from_frame(frames["forward"]),
+        prior_cov=Covariance.from_frame(frames["prior_cov"]),
+        obs_cov=Covariance.from_frame(frames["obs_cov"]),
     )
 
 
-class TestInverseProblem:
+class TestProblem:
     """Sparse ``H``, ``S_0`` and ``S_z`` given as pandas-sparse frames stay sparse and solve as dense ones."""
 
     def test_forms(self):
         """The problem holds sparse frames as sparse forms, and dense frames as dense ones."""
         problem, dense = _problem(sparse=True), _problem(sparse=False)
-        assert isinstance(problem.forward_operator.data, SparseOperator)
-        assert isinstance(problem.prior_error.data, SparseOperator)
-        assert isinstance(problem.modeldata_mismatch.data, DiagonalOperator)
-        for name in ("forward_operator", "prior_error", "modeldata_mismatch"):
+        assert isinstance(problem.forward.data, SparseOperator)
+        assert isinstance(problem.prior_cov.data, SparseOperator)
+        assert isinstance(problem.obs_cov.data, DiagonalOperator)
+        for name in ("forward", "prior_cov", "obs_cov"):
             assert isinstance(getattr(dense, name).data, DenseOperator)
             np.testing.assert_array_equal(
                 getattr(problem, name).dense(), getattr(dense, name).dense()
@@ -428,25 +440,40 @@ class TestInverseProblem:
             np.testing.assert_allclose(
                 getattr(post, name).values, getattr(ref, name).values, rtol=1e-10
             )
-        for name in ("covariance", "kalman_gain"):
+        for got, want in ((post.cov(), ref.cov()), (post.kalman_gain, ref.kalman_gain)):
             np.testing.assert_allclose(
-                getattr(post, name).dense(),
-                getattr(ref, name).dense(),
-                rtol=1e-10,
-                atol=1e-12,
+                got.dense(), want.dense(), rtol=1e-10, atol=1e-12
             )
         assert post.dofs == pytest.approx(ref.dofs, rel=1e-10)
 
-    def test_partial_overlap_stays_sparse(self):
-        """A state cell missing from a sparse ``H`` is a zero column, with a warning; ``H`` stays sparse."""
-        with pytest.warns(UserWarning, match="Partial overlap"):
-            problem = _problem(sparse=True, drop_cell=True)
-        with pytest.warns(UserWarning, match="Partial overlap"):
-            dense = _problem(sparse=False, drop_cell=True)
-        H = problem.forward_operator
+    def test_a_cell_missing_from_h_raises(self):
+        """A state cell missing from a sparse ``H`` raises, naming it: no zero fill."""
+        frames = _frames(sparse=True, drop_cell=True)
+        prior = Vector.from_series(frames["prior"])
+        with pytest.raises(
+            ValueError, match="missing from the columns of forward: 'c3'"
+        ):
+            Problem(
+                obs=Vector.from_series(frames["obs"]),
+                prior=prior,
+                forward=Operator.from_frame(frames["forward"]),
+                prior_cov=Covariance.from_frame(frames["prior_cov"]),
+                obs_cov=Covariance.from_frame(frames["obs_cov"]),
+            )
+
+    def test_a_frame_reindexed_onto_the_state_stays_sparse(self):
+        """``frame.reindex(columns=state, fill_value=0.0)`` puts a pandas-sparse ``H`` on the whole state, sparse."""
+        frames = _frames(sparse=True, drop_cell=True)
+        state = frames["prior"].index
+        H = Operator.from_frame(
+            frames["forward"].reindex(columns=state, fill_value=0.0)
+        )
         assert isinstance(H.data, SparseOperator)
         assert not H.dense()[:, 3].any()
-        np.testing.assert_array_equal(H.dense(), dense.forward_operator.dense())
+        full = Operator.from_frame(_frames(sparse=True)["forward"])
+        expected = full.dense()
+        expected[:, 3] = 0.0
+        np.testing.assert_array_equal(H.dense(), expected)
 
 
 # ---------------------------------------------------------------------------

@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
+import fips
 from fips import Covariance, Operator
 from fips.problems.flux.problem import FluxProblem
 from fips.vector import Vector
@@ -85,9 +86,9 @@ def flux_problem(flux_obs, flux_prior, flux_jacobian, flux_prior_error, flux_mis
     return FluxProblem(
         obs=flux_obs,
         prior=flux_prior,
-        forward_operator=flux_jacobian,
-        prior_error=flux_prior_error,
-        modeldata_mismatch=flux_mismatch,
+        forward=flux_jacobian,
+        prior_cov=flux_prior_error,
+        obs_cov=flux_mismatch,
     )
 
 
@@ -111,15 +112,15 @@ class TestFluxProblemConstruction:
 
     def test_n_state(self, flux_problem):
         """Test n_state property returns correct count."""
-        assert flux_problem.n_state == 4
+        assert len(flux_problem.prior) == 4
 
     def test_n_obs(self, flux_problem):
         """Test n_obs property returns correct count."""
-        assert flux_problem.n_obs == 4
+        assert len(flux_problem.obs) == 4
 
     def test_unsolved_by_default(self, flux_problem):
         """Test that FluxProblem is unsolved by default."""
-        assert flux_problem._estimator is None
+        assert flux_problem.result is None
 
 
 # ---------------------------------------------------------------------------
@@ -164,10 +165,10 @@ class TestFluxProblemObsProperties:
         problem = FluxProblem(
             obs=flux_obs,
             prior=flux_prior,
-            forward_operator=flux_jacobian,
-            prior_error=flux_prior_error,
-            modeldata_mismatch=flux_mismatch,
-            constant=background,
+            forward=flux_jacobian,
+            prior_cov=flux_prior_error,
+            obs_cov=flux_mismatch,
+            offset=background,
         )
         result = problem.enhancement
         expected = flux_obs.values - 390.0
@@ -194,10 +195,10 @@ class TestFluxProblemObsProperties:
         problem = FluxProblem(
             obs=flux_obs,
             prior=flux_prior,
-            forward_operator=flux_jacobian,
-            prior_error=flux_prior_error,
-            modeldata_mismatch=flux_mismatch,
-            constant=background,
+            forward=flux_jacobian,
+            prior_cov=flux_prior_error,
+            obs_cov=flux_mismatch,
+            offset=background,
         )
         result = problem.background
         assert isinstance(result, pd.Series)
@@ -259,9 +260,9 @@ class TestFluxProblemSolve:
         result = flux_problem.solve()
         assert result is flux_problem
 
-    def test_solve_sets_estimator(self, solved_flux_problem):
-        """Test that solve sets the internal estimator."""
-        assert solved_flux_problem._estimator is not None
+    def test_solve_keeps_the_posterior(self, solved_flux_problem):
+        """Solve keeps the posterior fips.solve returns as ``result``."""
+        assert isinstance(solved_flux_problem.result, fips.Posterior)
 
     def test_unsolved_raises_on_posterior(self, flux_problem):
         """Test that accessing posterior before solving raises an error."""
@@ -293,7 +294,8 @@ class TestFluxProblemPosteriorProperties:
         """The prior flux error mapped to concentrations, block-indexed like the obs."""
         S = solved_flux_problem.prior_concentration_error
         assert isinstance(S, Covariance)
-        assert S.shape == (solved_flux_problem.n_obs, solved_flux_problem.n_obs)
+        n_obs = len(solved_flux_problem.obs)
+        assert S.shape == (n_obs, n_obs)
         assert S.space == solved_flux_problem.jacobian.rows
         H = solved_flux_problem.jacobian.dense()
         S_0 = solved_flux_problem.prior_flux_error.dense()
