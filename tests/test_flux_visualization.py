@@ -55,24 +55,24 @@ def solved_problem():
             pd.Series(rng.uniform(1, 2, n_flux), index=flux_idx, name="flux"),
             block="flux",
         ),
-        forward_operator=Operator.from_frame(
+        forward=Operator.from_frame(
             pd.DataFrame(
                 rng.uniform(0, 1, (n_obs, n_flux)), index=obs_idx, columns=flux_idx
             ),
             row_block="concentration",
             col_block="flux",
         ),
-        prior_error=Covariance.from_frame(
+        prior_cov=Covariance.from_frame(
             pd.DataFrame(np.eye(n_flux) * 0.5, index=flux_idx, columns=flux_idx),
             row_block="flux",
             col_block="flux",
         ),
-        modeldata_mismatch=Covariance.from_frame(
+        obs_cov=Covariance.from_frame(
             pd.DataFrame(np.eye(n_obs) * 0.1, index=obs_idx, columns=obs_idx),
             row_block="concentration",
             col_block="concentration",
         ),
-        constant=Vector.from_series(
+        offset=Vector.from_series(
             pd.Series(np.full(n_obs, 395.0), index=obs_idx, name="concentration"),
             block="concentration",
         ),

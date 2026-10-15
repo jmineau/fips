@@ -7,8 +7,8 @@ import numpy as np
 import pandas as pd
 import pytest
 
+from fips import Covariance, Operator, Problem, Vector
 from fips.pipeline import InversionPipeline
-from fips.problem import InverseProblem
 
 # What get_inputs says about each step: one line as the step starts, one as it
 # ends with its elapsed time. Hooks that can do nothing say so ("Optionally").
@@ -49,28 +49,26 @@ class _Pipeline(InversionPipeline):
     """A pipeline for a three-element state observed four times."""
 
     def __init__(self):
-        super().__init__(config=None, problem=InverseProblem, estimator="bayesian")
+        super().__init__(config=None, problem=Problem)
         self.state_idx = pd.Index(["s0", "s1", "s2"], name="state_id")
         self.obs_idx = pd.Index(["o0", "o1", "o2", "o3"], name="obs_id")
 
     def get_obs(self):
-        return pd.Series([1.0, 2.0, 3.0, 4.0], index=self.obs_idx, name="obs")
+        series = pd.Series([1.0, 2.0, 3.0, 4.0], index=self.obs_idx, name="obs")
+        return Vector.from_series(series, block="obs")
 
     def get_prior(self):
-        return pd.Series([0.0, 0.0, 0.0], index=self.state_idx, name="prior")
+        series = pd.Series([0.0, 0.0, 0.0], index=self.state_idx, name="prior")
+        return Vector.from_series(series, block="state")
 
     def get_forward_operator(self, obs, prior):
-        return pd.DataFrame(
-            np.full((len(obs), len(prior)), 0.5),
-            index=obs.index,
-            columns=prior.index,
-        )
+        return Operator(np.full((len(obs), len(prior)), 0.5), obs.space, prior.space)
 
     def get_prior_error(self, prior):
-        return pd.DataFrame(np.eye(len(prior)), index=prior.index, columns=prior.index)
+        return Covariance.diagonal(1.0, prior.space)
 
     def get_modeldata_mismatch(self, obs):
-        return pd.DataFrame(np.eye(len(obs)) * 2.0, index=obs.index, columns=obs.index)
+        return Covariance.diagonal(2.0, obs.space)
 
 
 def _pipeline_messages(caplog):
@@ -102,10 +100,10 @@ class TestStepLogging:
         assert set(inputs) == {
             "obs",
             "prior",
-            "forward_operator",
-            "prior_error",
-            "modeldata_mismatch",
-            "constant",
+            "forward",
+            "prior_cov",
+            "obs_cov",
+            "offset",
         }
 
     def test_run_logs_each_step(self, caplog):
@@ -113,11 +111,12 @@ class TestStepLogging:
         pipeline = _Pipeline()
 
         with caplog.at_level(logging.INFO, logger="fips.pipeline"):
-            problem = pipeline.run()
+            post = pipeline.run()
 
         _assert_steps(_pipeline_messages(caplog), RUN_MESSAGES)
-        assert problem is pipeline.problem
-        assert problem.n_obs == 4
+        assert post is pipeline.posterior
+        assert post.problem is pipeline.problem
+        assert len(pipeline.problem.obs) == 4
 
     @pytest.mark.parametrize("method", ["get_inputs", "run"])
     def test_nothing_is_printed(self, method, capsys, caplog):

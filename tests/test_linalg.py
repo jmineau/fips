@@ -1,4 +1,4 @@
-"""Tests for fips.linalg: each form against its dense equivalent, and the estimator on every form."""
+"""Tests for fips.linalg: each form against its dense equivalent, and the solve on every form."""
 
 import pickle
 
@@ -9,8 +9,8 @@ import scipy.sparse as sp
 from scipy.linalg import LinAlgError, block_diag
 from scipy.sparse.linalg import LinearOperator as SciPyLinearOperator
 
-from fips import Covariance, InverseProblem, Operator, Space, convolve
-from fips.estimators import BayesianSolver
+import fips
+from fips import Covariance, Operator, Problem, Space, Vector
 from fips.kronecker import KroneckerOperator
 from fips.linalg import (
     BlockDiagonalOperator,
@@ -629,7 +629,7 @@ class TestAsLinearOperator:
         assert np.shares_memory(op.data.array, array)
 
     def test_integer_operator_computes_in_float64(self):
-        """Integer matrices give float64 from a sum, ``variances`` and ``convolve``."""
+        """Integer matrices give float64 from a sum, ``variances`` and a product with a vector."""
         cells = Space({"s": pd.Index(["c0", "c1"], name="cell")})
         obs = Space({"z": pd.Index(["o1", "o2", "o3"], name="obs")})
         M = Operator(np.array([[1, 2], [3, 4]]), cells, cells)
@@ -638,13 +638,13 @@ class TestAsLinearOperator:
         C = Covariance(np.array([[2, 1], [1, 3]]), cells)
         assert C.variances.values.dtype == np.float64
         H = Operator(np.array([[1, 0], [0, 1], [1, 1]]), obs, cells)
-        y = convolve(pd.Series([1, 2], index=cells.index, name="prior"), H)
-        assert y.dtype == np.float64
+        y = H @ Vector(np.array([1, 2]), cells)
+        assert y.values.dtype == np.float64
         np.testing.assert_array_equal(y.values, [1.0, 2.0, 3.0])
 
 
 # ---------------------------------------------------------------------------
-# The estimator on every combination of dense and sparse inputs (#79)
+# The solve on every combination of dense and sparse inputs (#79)
 # ---------------------------------------------------------------------------
 
 N, M = 30, 20
@@ -667,19 +667,19 @@ def _inputs(cov_shape: str):
     return z, x_0, H, S_0, S_z, rng.normal(0.5, 0.1, M)
 
 
-def _labeled(z, x_0, H, S_0, S_z, c) -> InverseProblem:
+def _labeled(z, x_0, H, S_0, S_z, c) -> Problem:
     """The labeled problem of the arrays (each matrix an array, a sparse matrix or a form)."""
-    return InverseProblem(
-        obs=pd.Series(z, index=OBS.index),
-        prior=pd.Series(x_0, index=STATE.index),
-        forward_operator=Operator(H, OBS, STATE),
-        prior_error=Covariance(S_0, STATE),
-        modeldata_mismatch=Covariance(S_z, OBS),
-        constant=pd.Series(c, index=OBS.index),
+    return Problem(
+        obs=Vector(z, OBS),
+        prior=Vector(x_0, STATE),
+        forward=Operator(H, OBS, STATE),
+        prior_cov=Covariance(S_0, STATE),
+        obs_cov=Covariance(S_z, OBS),
+        offset=Vector(c, OBS),
     )
 
 
-def _problem(cov_shape: str, sparse: tuple[bool, bool, bool]) -> InverseProblem:
+def _problem(cov_shape: str, sparse: tuple[bool, bool, bool]) -> Problem:
     """The labeled problem, with each of ``H``, ``S_0``, ``S_z`` dense or sparse."""
     z, x_0, H, S_0, S_z, c = _inputs(cov_shape)
     H, S_0, S_z = (
@@ -689,14 +689,10 @@ def _problem(cov_shape: str, sparse: tuple[bool, bool, bool]) -> InverseProblem:
     return _labeled(z, x_0, H, S_0, S_z, c)
 
 
-ESTIMATOR_OUTPUTS = [
-    "x_hat", "S_hat", "K", "A", "y_hat", "y_0", "S_y0", "desroziers", "U_red",
-    "DOFS", "reduced_chi2", "R2", "RMSE", "uncertainty_reduction",
-]  # fmt: skip
 POSTERIOR_OUTPUTS = [
-    "estimate", "mean", "covariance", "variances", "modeled_obs", "prior_modeled_obs",
-    "prior_obs_covariance", "kalman_gain", "averaging_kernel", "desroziers",
-    "dofs", "reduced_chi2", "r2", "rmse", "uncertainty_reduction",
+    "estimate", "mean", "cov", "variances", "modeled_obs", "prior_modeled_obs",
+    "prior_obs_cov", "kalman_gain", "averaging_kernel", "desroziers", "dofs", "chi2",
+    "reduced_chi2", "r2", "rmse", "uncertainty_reduction",
 ]  # fmt: skip
 COMBINATIONS = [
     (h, s0, sz) for h in (False, True) for s0 in (False, True) for sz in (False, True)
@@ -713,16 +709,14 @@ def _close(actual, expected, what):
 
 
 def _assert_same_posterior(post, ref) -> None:
-    """Every estimator output, every Posterior output and the cost of `post` match `ref`."""
-    for name in ESTIMATOR_OUTPUTS:
-        value = getattr(post.estimator, name)
-        if isinstance(value, np.ndarray):
-            assert type(value) is np.ndarray, f"{name} is {type(value)}"
-        _close(value, getattr(ref.estimator, name), name)
+    """Every Posterior output of `post` matches `ref`."""
     for name in POSTERIOR_OUTPUTS:
         value, expected = getattr(post, name), getattr(ref, name)
-        if callable(value):  # averaging_kernel, with no aggregation
+        if callable(value):  # cov, averaging_kernel, desroziers: with no argument
             value, expected = value(), expected()
+        if isinstance(value, pd.DataFrame):  # desroziers
+            assert value.index.equals(expected.index), name
+            value, expected = value.to_numpy(), expected.to_numpy()
         if isinstance(value, Operator):  # a Covariance among them
             assert type(value) is type(expected), name
             assert value.rows == expected.rows and value.cols == expected.cols, name
@@ -731,8 +725,6 @@ def _assert_same_posterior(post, ref) -> None:
             assert value.index.equals(expected.index), name
             value, expected = value.values, expected.values
         _close(value, expected, f"posterior {name}")
-    x = np.linspace(1.0, 2.0, N)
-    _close(post.estimator.cost(x), ref.estimator.cost(x), "cost")
 
 
 @pytest.mark.parametrize("cov_shape", ["banded", "diagonal"])
@@ -743,20 +735,19 @@ def test_every_combination_matches_dense(cov_shape, sparse):
     """
     Each of the eight dense/sparse combinations of ``H``, ``S_0``, ``S_z`` gives the dense solve.
 
-    Every estimator output and every ``Posterior`` output is compared, with a
-    ``gamma`` other than 1. ``ids`` read ``H S_0 S_z``: ``s`` sparse, ``d`` dense.
+    Every ``Posterior`` output is compared, with a ``gamma`` other than 1. ``ids`` read ``H S_0 S_z``: ``s`` sparse, ``d`` dense.
     """
     reference = _problem(cov_shape, (False, False, False))
     problem = _problem(cov_shape, sparse)
     cov_kind = SparseOperator if cov_shape == "banded" else DiagonalOperator
     for data, is_sparse, kind in [
-        (problem.forward_operator.data, sparse[0], SparseOperator),
-        (problem.prior_error.data, sparse[1], cov_kind),
-        (problem.modeldata_mismatch.data, sparse[2], cov_kind),
+        (problem.forward.data, sparse[0], SparseOperator),
+        (problem.prior_cov.data, sparse[1], cov_kind),
+        (problem.obs_cov.data, sparse[2], cov_kind),
     ]:
         assert type(data) is (kind if is_sparse else DenseOperator)
-    ref = reference.solve("bayesian", gamma=0.5).result
-    post = problem.solve("bayesian", gamma=0.5).result
+    ref = fips.solve(reference, gamma=0.5)
+    post = fips.solve(problem, gamma=0.5)
     _assert_same_posterior(post, ref)
 
 
@@ -768,129 +759,19 @@ def test_block_diagonal_prior_error_matches_dense():
     )  # 24 cells
     S_0 = BlockDiagonalOperator([K, DiagonalOperator(np.linspace(1.0, 2.0, N - 24))])
     problem = _labeled(z, x_0, sp.csr_array(H), S_0, S_z, c)
-    assert problem.prior_error.data is S_0
+    assert problem.prior_cov.data is S_0
     reference = _labeled(z, x_0, H, S_0.dense(), S_z, c)
     _assert_same_posterior(
-        problem.solve("bayesian", gamma=0.5).result,
-        reference.solve("bayesian", gamma=0.5).result,
+        fips.solve(problem, gamma=0.5), fips.solve(reference, gamma=0.5)
     )
 
 
 def test_all_sparse_diagonal_problem_stays_sparse():
-    """Sparse ``H`` with diagonal covariances: the gain solve goes through the sparse path."""
-    post = _problem("diagonal", (True, True, True)).solve("bayesian").result
-    est = post.estimator
-    assert isinstance(est._H_op, SparseOperator)
-    assert isinstance(est._S_0_op, DiagonalOperator)
-    assert isinstance(est._S_z_op, DiagonalOperator)
-    assert isinstance(est._HS_0, SparseOperator)
-    assert isinstance(est._HS_0H + est._S_z_op, SparseOperator)
-
-
-def test_estimator_takes_arrays_and_sparse_matrices():
-    """The estimator takes plain arrays and SciPy sparse matrices, as before."""
-    z, x_0, H, S_0, S_z, c = _inputs("diagonal")
-    dense = BayesianSolver(z, x_0, H, S_0, S_z, c=c)
-    mixed = BayesianSolver(z, x_0, sp.csr_matrix(H), sp.csr_matrix(S_0), S_z, c=c)
-    assert isinstance(mixed._H_op, SparseOperator)
-    assert isinstance(mixed._S_0_op, DiagonalOperator)
-    _close(mixed.x_hat, dense.x_hat, "x_hat")
-    _close(mixed.S_hat, dense.S_hat, "S_hat")
-    # The matrices read back as arrays
-    np.testing.assert_array_equal(np.asarray(dense.H), H)
-    np.testing.assert_array_equal(mixed.S_0.toarray(), S_0)
-
-
-def test_gamma_as_zero_dim_array():
-    """``gamma`` given as a 0-d array solves as the float it holds."""
-    z, x_0, H, S_0, S_z, c = _inputs("banded")
-    ref = BayesianSolver(z, x_0, H, S_0, S_z, c=c, gamma=0.5)
-    est = BayesianSolver(z, x_0, H, S_0, S_z, c=c, gamma=np.array(0.5))
-    np.testing.assert_array_equal(est.x_hat, ref.x_hat)
-    assert est.reduced_chi2 == ref.reduced_chi2
-
-
-class TestEstimatorAttributes:
-    """``H``, ``S_0``, ``S_z`` and ``_S_z_orig`` give what they gave before operators."""
-
-    def test_dense_inputs_give_arrays(self):
-        """Dense inputs read back as arrays, which index and multiply elementwise."""
-        z, x_0, H, S_0, S_z, c = _inputs("banded")
-        est = BayesianSolver(z, x_0, H, S_0, S_z, c=c, gamma=0.5)
-        for name, expected in (
-            ("H", H),
-            ("S_0", S_0),
-            ("S_z", S_z / 0.5),
-            ("_S_z_orig", S_z),
-        ):
-            value = getattr(est, name)
-            assert type(value) is np.ndarray, name
-            np.testing.assert_array_equal(value, expected)
-        v = np.arange(1.0, N + 1)
-        np.testing.assert_array_equal(est.S_0 * v, S_0 * v)  # elementwise
-        assert est.S_0[0, 1] == S_0[0, 1]
-        np.testing.assert_array_equal(est.H.sum(axis=0), H.sum(axis=0))
-
-    def test_sparse_inputs_give_csr_matrices(self):
-        """A sparse or diagonal input reads back as a CSR matrix."""
-        z, x_0, H, S_0, S_z, c = _inputs("diagonal")
-        est = BayesianSolver(
-            z, x_0, sp.csr_matrix(H), sp.csr_matrix(S_0), sp.csr_matrix(S_z), c=c
-        )
-        for name, expected in (("H", H), ("S_0", S_0), ("S_z", S_z)):
-            value = getattr(est, name)
-            assert isinstance(value, sp.csr_matrix), name
-            np.testing.assert_array_equal(value.toarray(), expected)
-
-    def test_an_edit_does_not_reach_the_estimator(self):
-        """The arrays are read-only, and ``np.array`` of one is a copy."""
-        z, x_0, H, S_0, S_z, c = _inputs("banded")
-        est = BayesianSolver(z, x_0, H, S_0, S_z, c=c)
-        with pytest.raises(ValueError, match="read-only"):
-            est.H[0, 0] = 99.0
-        copy = np.array(est.H)
-        copy[:] = 0.0
-        np.testing.assert_array_equal(est.H, H)
-        np.testing.assert_allclose(est.A, BayesianSolver(z, x_0, H, S_0, S_z, c=c).A)
-
-    def test_problem_estimator_attributes(self):
-        """Through ``fips.solve``: arrays for dense operators, CSR for sparse ones."""
-        dense = _problem("banded", (False, False, False)).solve("bayesian").estimator
-        sparse = _problem("banded", (True, True, True)).solve("bayesian").estimator
-        for name in ("H", "S_0", "S_z"):
-            assert type(getattr(dense, name)) is np.ndarray, name
-            assert isinstance(getattr(sparse, name), sp.csr_matrix), name
-            np.testing.assert_allclose(
-                getattr(sparse, name).toarray(), getattr(dense, name)
-            )
-
-
-class TestEstimatorPickle:
-    """A pickle stores the matrices as arrays, so it reads with or without operators."""
-
-    def test_round_trip(self):
-        """A solved estimator pickles and keeps its operators and results."""
-        z, x_0, H, S_0, S_z, c = _inputs("diagonal")
-        est = BayesianSolver(z, x_0, sp.csr_matrix(H), sp.csr_matrix(S_0), S_z, c=c)
-        _ = est.x_hat, est.reduced_chi2
-        state = est.__getstate__()
-        assert not any(isinstance(v, LinearOperator) for v in state.values())
-        assert {"H", "S_0", "S_z", "_S_z_orig"} <= set(state)
-        loaded = pickle.loads(pickle.dumps(est))
-        assert isinstance(loaded._H_op, SparseOperator)
-        assert isinstance(loaded._S_0_op, DiagonalOperator)
-        np.testing.assert_array_equal(loaded.x_hat, est.x_hat)
-        assert loaded.uncertainty_reduction == est.uncertainty_reduction
-
-    def test_state_without_operators(self):
-        """State written by a fips without operators (plain arrays, ``_H_T``) still computes."""
-        z, x_0, H, S_0, S_z, c = _inputs("banded")
-        est = BayesianSolver(z, x_0, H, S_0, S_z, c=c)
-        old = dict(est.__getstate__())
-        old["_H_T"] = H.T
-        loaded = BayesianSolver.__new__(BayesianSolver)
-        loaded.__setstate__(old)
-        assert isinstance(loaded._H_op, DenseOperator) and "_H_T" not in vars(loaded)
-        assert type(loaded.H) is np.ndarray
-        _close(loaded.reduced_chi2, est.reduced_chi2, "reduced_chi2")
-        _close(loaded.U_red, est.U_red, "U_red")
+    """Sparse ``H`` with diagonal covariances: the products keep the sparse forms."""
+    problem = _problem("diagonal", (True, True, True))
+    assert isinstance(problem.forward.data, SparseOperator)
+    assert isinstance(problem.prior_cov.data, DiagonalOperator)
+    assert isinstance(problem.obs_cov.data, DiagonalOperator)
+    post = fips.solve(problem)
+    assert isinstance(post._HS_0H, SparseOperator)
+    assert isinstance(post._HS_0H + problem.obs_cov.data, SparseOperator)

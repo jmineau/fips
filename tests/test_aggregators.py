@@ -110,7 +110,7 @@ def test_integrate_over_time_bins_mixed_resolutions():
 # ---------------------------------------------------------------------------
 # Fixtures for ObsAggregator tests
 # ---------------------------------------------------------------------------
-# 4 hourly obs, 2 per day — block-wrapped as InverseProblem would see them
+# 4 hourly obs, 2 per day, with a block level as a Problem has them
 
 
 @pytest.fixture
@@ -391,8 +391,8 @@ def test_pipeline_obs_aggregator_hook():
     """
     Test that Pipeline subclass overriding aggregate_obs_space properly reduces obs count.
     """
+    from fips import Problem
     from fips.pipeline import InversionPipeline
-    from fips.problem import InverseProblem
 
     # 2 obs per day over 2 days → 4 total, 2 groups
     times = pd.DatetimeIndex(
@@ -408,27 +408,23 @@ def test_pipeline_obs_aggregator_hook():
 
     class SimplePipeline(InversionPipeline):
         def get_obs(self):
-            return pd.Series([1.0, 2.0, 3.0, 4.0], index=times, name="obs")
+            series = pd.Series([1.0, 2.0, 3.0, 4.0], index=times, name="obs")
+            return Vector.from_series(series, block="obs")
 
         def get_prior(self):
-            return pd.Series([0.0, 0.0, 0.0], index=state_idx, name="prior")
+            series = pd.Series([0.0, 0.0, 0.0], index=state_idx, name="prior")
+            return Vector.from_series(series, block="state")
 
         def get_forward_operator(self, obs, prior):
-            return pd.DataFrame(
-                np.ones((len(obs), len(prior))) * 0.5,
-                index=obs.index,
-                columns=prior.index,
+            return Operator(
+                np.full((len(obs), len(prior)), 0.5), obs.space, prior.space
             )
 
         def get_prior_error(self, prior):
-            return pd.DataFrame(
-                np.eye(len(prior)), index=prior.index, columns=prior.index
-            )
+            return Covariance.diagonal(1.0, prior.space)
 
         def get_modeldata_mismatch(self, obs):
-            return pd.DataFrame(
-                np.eye(len(obs)) * 2.0, index=obs.index, columns=obs.index
-            )
+            return Covariance.diagonal(2.0, obs.space)
 
         def aggregate_obs_space(
             self, obs, forward_operator, modeldata_mismatch, constant
@@ -436,8 +432,8 @@ def test_pipeline_obs_aggregator_hook():
             agg = ObsAggregator(by=daily_groupby, func="mean")
             return agg.apply(obs, forward_operator, modeldata_mismatch, constant)
 
-    result = SimplePipeline(
-        config=None, problem=InverseProblem, estimator="bayesian"
-    ).run()
+    post = SimplePipeline(config=None, problem=Problem).run()
 
-    assert result.n_obs == 2, f"Expected 2 aggregated obs, got {result.n_obs}"
+    assert len(post.problem.obs) == 2, (
+        f"Expected 2 aggregated obs, got {len(post.problem.obs)}"
+    )
