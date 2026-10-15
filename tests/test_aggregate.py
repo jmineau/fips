@@ -347,7 +347,7 @@ class TestProblemAggregate:
         assert daily.prior_cov.space == problem.prior_cov.space
 
     def test_types_and_names(self, problem):
-        """A Problem of a Vector, an Operator and a Covariance, each named as before."""
+        """A Problem of a Vector, an Operator and a Covariance, each named as before (the problem names its covariances)."""
         named = _with(
             problem,
             obs_cov=Covariance.diagonal(2.0, problem.obs.space, name="S_z"),
@@ -361,7 +361,7 @@ class TestProblemAggregate:
         assert (daily.obs.name, daily.forward.name, daily.obs_cov.name) == (
             "obs",
             "5",
-            "S_z",
+            "obs_cov",
         )
 
     def test_mismatch_of_a_mean(self, problem):

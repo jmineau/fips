@@ -353,15 +353,12 @@ class Posterior:
                 f"An aggregation is an Operator, not {type(W).__name__}: build one "
                 "with Operator.from_frame or Operator.from_blocks."
             )
-        state = self._problem.prior.space
-        c = state._align(
-            W.cols,
-            "the columns of the aggregation",
-            "The columns of the aggregation and the state",
+        return W._on(
+            W.rows,
+            self._problem.prior.space,
+            "the aggregation",
+            ("its rows", "the state"),
         )
-        if np.array_equal(c, np.arange(len(c))):
-            return W.data
-        return W.data._select(np.arange(W.shape[0]), c)
 
     @cached_property
     def _cov(self) -> Covariance:
@@ -888,10 +885,14 @@ class Posterior:
         positions = space._align(
             obs.space, "the new observations", "The new observations and the problem's"
         )
-        state = problem.__getstate__()
-        state["obs"] = Vector(obs.values[positions], space, name=obs.name)
-        new = type(problem).__new__(type(problem))
-        new.__setstate__(state)
+        new = type(problem)(
+            prior=problem.prior,
+            prior_cov=problem.prior_cov,
+            obs=Vector(obs.values[positions], space, name=obs.name),
+            obs_cov=problem.obs_cov,
+            forward=problem.forward,
+            offset=problem.offset,
+        )
         post = type(self)(new, resolve(new), self._options)
         _ = post.estimate
         return post

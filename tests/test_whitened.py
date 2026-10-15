@@ -10,6 +10,7 @@ nothing ``n x n`` is allocated unless the full covariance or averaging kernel
 is read.
 """
 
+import copy
 import logging
 import pickle
 import tracemalloc
@@ -259,6 +260,60 @@ def test_with_data_is_a_fresh_solve(form, gamma):
     np.testing.assert_array_equal(post.problem.obs.values, z)
 
 
+@pytest.mark.parametrize("form", FORMS)
+def test_the_factors_are_read_only(form):
+    """No array of the factors can be written to, however the solution was made: a solve, a sweep, new data, a pickle, a copy."""
+    post = fips.solve(_problem(*_arrays(form, 6)))
+    solutions = {
+        "factor": post._solution,
+        "with_gamma": post.with_gamma(2.0)._solution,
+        "with_data": post.with_data(post.problem.obs)._solution,
+        "pickle": pickle.loads(pickle.dumps(post))._solution,
+        "deepcopy": copy.deepcopy(post._solution),
+    }
+    for how, solution in solutions.items():
+        assert isinstance(solution, Whitened)
+        for name in ("eigenvalues", "whitener", "W", "innovation", "prior_variances"):
+            array = getattr(solution, name)
+            assert not array.flags.writeable, f"{name} after {how}"
+            with pytest.raises(ValueError, match="read-only"):
+                array.fill(0.0)
+
+
+class _Counted(Problem):
+    """A problem that counts how many times its constructor ran."""
+
+    built = 0
+
+    def __init__(self, *args, **kwargs):
+        type(self).built += 1
+        super().__init__(*args, **kwargs)
+
+
+def test_with_data_builds_its_problem_with_the_constructor():
+    """The new problem is made by the problem's own class, from the same inputs (their forms are shared)."""
+    p = _problem(*_arrays("dense", 4))
+    problem = _Counted(
+        prior=p.prior,
+        prior_cov=p.prior_cov,
+        obs=p.obs,
+        obs_cov=p.obs_cov,
+        forward=p.forward,
+        offset=p.offset,
+    )
+    post = fips.solve(problem)
+    before = _Counted.built
+    swept = post.with_data(Vector(problem.obs.values + 1.0, problem.obs.space))
+    assert _Counted.built == before + 1
+    new = swept.problem
+    assert type(new) is _Counted and new is not problem
+    assert new.prior is problem.prior and new.obs.space is problem.obs.space
+    for name in ("prior_cov", "obs_cov", "forward"):
+        assert getattr(new, name).data is getattr(problem, name).data, name
+    np.testing.assert_array_equal(new.offset.values, problem.offset.values)
+    np.testing.assert_array_equal(new.obs.values, problem.obs.values + 1.0)
+
+
 def test_with_data_needs_the_same_labels():
     """New observations on other labels raise, naming them."""
     z, x_0, H, S_0, S_z, c = _arrays("dense", 0)
@@ -270,6 +325,55 @@ def test_with_data_needs_the_same_labels():
         r".*missing from the new observations: 0;.*only in the new observations: 7",
     ):
         post.with_data(other)
+
+
+def test_the_factors_hold_no_m_by_m_matrix_beyond_the_whitener():
+    """H S_0 H^T is formed when ``innovation_cov`` or ``leverage`` asks, not held after a solve (and not pickled)."""
+    z, x_0, H, S_0, S_z, c = _arrays("dense", 5)
+    post = fips.solve(_problem(z, x_0, H, S_0, S_z, c))
+    m = len(z)
+    assert "_HS_0H" not in vars(post)
+    assert not hasattr(post._solution, "HS_0H")
+    assert not [
+        k
+        for k, v in vars(post._solution).items()
+        if getattr(v, "shape", ()) == (m, m) and k != "whitener"
+    ]
+    assert "_HS_0H" not in vars(pickle.loads(pickle.dumps(post)))
+    _ = post.innovation_cov
+    assert "_HS_0H" in vars(post)
+
+
+class _Asked(Problem):
+    """A problem that counts how often it is asked for a prediction."""
+
+    asked = 0
+
+    def predict(self, x):
+        self.asked += 1
+        return super().predict(x)
+
+
+def test_the_innovation_is_read_through_predict():
+    """The whitened innovation is built from ``problem.predict(prior)``, with its offset, not around it."""
+    z, x_0, H, S_0, S_z, c = _arrays("dense", 2)
+    p = _problem(z, x_0, H, S_0, S_z, c)
+    problem = _Asked(
+        prior=p.prior,
+        prior_cov=p.prior_cov,
+        obs=p.obs,
+        obs_cov=p.obs_cov,
+        forward=p.forward,
+        offset=p.offset,
+    )
+    post = fips.solve(problem)
+    assert problem.asked == 1
+    whitener = post._solution.whitener
+    np.testing.assert_array_equal(
+        post._solution.innovation,
+        whitener @ (z - problem.predict(problem.prior).values),
+    )
+    assert not np.array_equal(post._solution.innovation, whitener @ (z - H @ x_0))
 
 
 # ---------------------------------------------------------------------------

@@ -21,7 +21,6 @@ from typing import Any
 import numpy as np
 
 from fips.covariance import Covariance, CovarianceModel
-from fips.linalg import LinearOperator
 from fips.operator import Operator
 from fips.space import Space
 from fips.vector import Vector
@@ -39,34 +38,14 @@ def _vector(value: Any, what: str) -> Vector:
     return value
 
 
-def _on(
-    op: Operator, rows: Space, cols: Space, what: str, of: tuple[str, str]
-) -> LinearOperator:
-    """
-    Return the form of `op` with its rows on `rows` and its columns on `cols`.
-
-    Both are exact joins: a label on one side and not the other raises, and
-    the message names it (:meth:`Space.align <fips.Space.align>`). `of` names
-    what `rows` and `cols` are the labels of, for the message.
-    """
-    r = rows._align(op.rows, f"the rows of {what}", f"The rows of {what} and {of[0]}")
-    if cols is rows and op.cols is op.rows:
-        c = r
-    else:
-        c = cols._align(
-            op.cols, f"the columns of {what}", f"The columns of {what} and {of[1]}"
-        )
-    if np.array_equal(r, np.arange(len(r))) and np.array_equal(c, np.arange(len(c))):
-        return op.data
-    return op.data._select(r, c)
-
-
 def _covariance(value: Any, space: Space, what: str, of: str) -> Covariance:
     """
-    Return `value` as a covariance on `space`.
+    Return `value` as a covariance on `space`, named `what`.
 
     A :class:`~fips.covariance.CovarianceModel` is built there; a
-    :class:`~fips.Covariance` must have exactly the space's labels.
+    :class:`~fips.Covariance` must have exactly the space's labels, and comes
+    back as a renamed copy that shares its form (the caller's covariance keeps
+    its name).
     """
     if isinstance(value, CovarianceModel):
         return value.build(space, name=what)
@@ -78,7 +57,7 @@ def _covariance(value: Any, space: Space, what: str, of: str) -> Covariance:
             "or Covariance.from_frame(frame)."
         )
     return Covariance._computed(
-        _on(value, space, space, what, (of, of)), space, name=value.name
+        value._on(space, space, what, (of, of)), space, name=what
     )
 
 
@@ -106,13 +85,16 @@ class Problem:
         The prior state :math:`x_0`. Its space labels the state.
     prior_cov : Covariance or CovarianceModel
         The prior error covariance :math:`S_0`. A covariance model (such as
-        ``Kronecker(...).with_std(std)``) is built on the prior's space.
+        ``Kronecker(...).with_std(std)``) is built on the prior's space. The
+        problem names it ``"prior_cov"`` whatever it was given as (a
+        covariance of yours is not renamed: the problem's copy shares its
+        matrix).
     obs : Vector
         The observations :math:`z`. Its space labels the observations.
     obs_cov : Covariance or CovarianceModel
         The model-data mismatch :math:`S_z`, the covariance of the
         observation error; a model is built on the observations' space. It
-        must be positive-definite.
+        must be positive-definite. The problem names it ``"obs_cov"``.
     forward : Operator
         The forward operator :math:`H`, from the state (its columns) to the
         observations (its rows).
@@ -194,7 +176,7 @@ class Problem:
                 "Operator.from_frame."
             )
         self._forward = Operator(
-            _on(forward, observed, state, "forward", ("the observations", "the prior")),
+            forward._on(observed, state, "forward", ("the observations", "the prior")),
             observed,
             state,
             name=forward.name,
@@ -223,7 +205,7 @@ class Problem:
 
     @property
     def prior_cov(self) -> Covariance:
-        """The prior error covariance, :math:`S_0`, on the prior's space."""
+        """The prior error covariance, :math:`S_0`, on the prior's space; named ``"prior_cov"``."""
         return self._prior_cov
 
     @property
@@ -233,7 +215,7 @@ class Problem:
 
     @property
     def obs_cov(self) -> Covariance:
-        """The model-data mismatch, :math:`S_z`, on the observations' space."""
+        """The model-data mismatch, :math:`S_z`, on the observations' space; named ``"obs_cov"``."""
         return self._obs_cov
 
     @property
@@ -399,9 +381,7 @@ class Problem:
         prior_cov = self._prior_cov
         return type(self)(
             prior=Vector(self._prior.values[kept], keep, name=self._prior.name),
-            prior_cov=Covariance._computed(
-                prior_cov.data._select(kept, kept), keep, name=prior_cov.name
-            ),
+            prior_cov=Covariance._computed(prior_cov.data._select(kept, kept), keep),
             obs=self._obs,
             obs_cov=self._obs_cov,
             forward=Operator(
@@ -473,8 +453,8 @@ class Problem:
                 "with fips.aggregate.mean or fips.aggregate.sum."
             )
         observed = self._obs.space
-        form = _on(
-            W, W.rows, observed, "the aggregation", ("its rows", "the observations")
+        form = W._on(
+            W.rows, observed, "the aggregation", ("its rows", "the observations")
         )
         rows = W.rows
         offset = self._offset
@@ -486,7 +466,7 @@ class Problem:
             prior_cov=self._prior_cov,
             obs=Vector(form @ self._obs.values, rows, name=self._obs.name),
             obs_cov=Covariance._computed(
-                (form @ obs_cov.data) @ form._transpose(), rows, name=obs_cov.name
+                (form @ obs_cov.data) @ form._transpose(), rows
             ),
             forward=Operator(
                 form @ self._forward.data,
