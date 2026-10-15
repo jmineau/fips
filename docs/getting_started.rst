@@ -195,8 +195,8 @@ What's Next
 -----------
 
 - **A flux inversion** — see :ref:`flux-inversion` in the User Guide: the
-  blocks of a problem and of its posterior read by name, and their plots
-  (:func:`~fips.visualization.plot_map`, :func:`~fips.visualization.plot_obs`).
+  blocks of a problem and of its posterior read by name, and plotted with
+  pandas, xarray or :func:`~fips.visualization.plot_comparison`.
 - **Repeated inversions** — a workflow as functions, and
   :meth:`~fips.Posterior.summary` to stack the diagnostics of many solves, in
   :doc:`usage`.
