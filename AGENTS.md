@@ -25,7 +25,7 @@ PyPI name and import name are both `fips`. Source lives in `src/fips/`.
 - Not nonlinear-problem aware. The framework assumes linearity around the
   prior; nonlinear iterations are the caller's responsibility.
 - Not opinionated about file formats. Inputs are pandas/xarray; serialization
-  is via `pickle` through the `Pickleable` mixin.
+  is plain `pickle` (a `Problem` and a `Posterior` pickle).
 
 ## Module layout
 
@@ -42,48 +42,69 @@ src/fips/
   operator.py        Operator — a matrix (a linalg form) with a Space on each
                      axis: from_frame, from_blocks, op[r, c], @ / + by exact
                      join, align, to_frame
-  covariance.py      Covariance — Operator on one space: diagonal, block_diag
-                     (in order, or by block name with models), variances,
-                     solve, logdet, quadratic_form, sqrt
-  correlation.py     CorrelationModel (base; with_std), Independent, Kronecker
-  kernels.py         the kernels: Exponential, Gaussian, Matern, Constant, and
-                     within= (zero between groups of labels, sparse)
-  models.py          CovarianceModel — a covariance waiting for its space
-                     (with_std of a scalar or array, sums, block_diag with a
-                     model); build(space) gives the Covariance
-  linalg.py          the unlabeled forms the solvers compute with:
-                     LinearOperator (scipy LinearOperator) and Dense-,
-                     Sparse-, Diagonal-, BlockDiagonalOperator;
-                     as_linear_operator, dottest, _solve_psd
-  kronecker.py       KroneckerOperator — a covariance kept as its factors
-  base.py            Pickleable — to_file / from_file (Problem, Posterior)
   problem.py         Problem — prior, prior_cov, obs, obs_cov, forward,
                      offset, checked once by exact join; models built there;
                      predict(x) = H x + c; restrict (part of the state
                      held at the prior) and aggregate (the observations
                      through one W)
-  solve.py           solve(problem, method, **options), the method registry
-                     (_register, available_methods) and each method's options
-                     dataclass (AnalyticOptions); the analytic method
-  _whitened.py       Whitened — the factorization the analytic method keeps:
-                     the estimate, variances, gain, DOFS, chi-squared for any
-                     gamma
   posterior.py       Posterior — the problem, the options and the factors;
                      every output derived from them, labeled, each built once;
-                     summary() returns the diagnostics as one row
+                     summary() returns the diagnostics as one row. Whitened —
+                     the factorization the analytic method keeps: the estimate,
+                     variances, gain, DOFS, chi-squared for any gamma
   aggregate.py       sum, mean: an aggregation W (sparse Operator) from a
                      Space to groups of its labels (levels, a pandas Grouper,
                      an IntervalIndex, a Series mapping); offset_block, the
                      same groups as a block of offsets in the state
-  filters.py         Selection helpers (e.g. enough_obs_per_interval)
-  metrics.py         haversine_matrix, chordal_matrix, time_diff_matrix
   visualization.py   plot_comparison (the `viz` extra: matplotlib): several
                      series on one axes, with error bands or bars
+  covariance/        covariances, and the models that write them down
+                     (public as `fips.covariance`)
+    __init__.py      re-exports Covariance and the models
+    covariance.py    Covariance — Operator on one space: diagonal, block_diag
+                     (in order, or by block name; a part that is a model goes
+                     to models.py through a hook), variances, solve, logdet,
+                     quadratic_form, sqrt
+    models.py        CorrelationModel (base; with_std), Independent, Kronecker;
+                     CovarianceModel — a covariance waiting for its space
+                     (with_std of a scalar or array, sums, block_diag with a
+                     model); build(space) gives the Covariance
+    kernels.py       the kernels: Exponential, Gaussian, Matern, Constant, and
+                     within= (zero between groups of labels, sparse)
+    distances.py     haversine_matrix, chordal_matrix, time_diff_matrix
+  methods/           how a Problem is solved (`fips.solve` is the function)
+    __init__.py      solve(problem, method, **options), the method registry
+                     (_METHODS, available_methods)
+    analytic.py      AnalyticOptions, and the analytic method: the whitened
+                     solve, a Posterior holding a Whitened
+  linalg/            the unlabeled forms the solvers compute with (public as
+                     `fips.linalg`)
+    __init__.py      re-exports the forms; its docstring says what a form does
+    base.py          LinearOperator (scipy LinearOperator) and the Dense-,
+                     Sparse- and DiagonalOperator it builds, products and sums
+                     (_product, _sum), as_linear_operator, dottest, _adopt,
+                     _solve_psd
+    block.py         BlockDiagonalOperator
+    kronecker.py     KroneckerOperator — a covariance kept as its factors
   py.typed           ships type hints
 tests/               pytest suite (no integration markers in use)
 docs/                Sphinx (pydata-sphinx-theme + numpy-style docstrings)
 archive/             local-only, not tracked
 ```
+
+Imports run one way: `space` < `vector` and `linalg` < `operator` <
+`covariance` < `problem` < `posterior` < `methods`, with `aggregate` and
+`visualization` on top of `operator` and `covariance`, and no module imports
+one to its right (no import inside a function to avoid a cycle, and none under
+`TYPE_CHECKING` except `posterior`'s annotation of its options). `Covariance`
+does not import the models: `models.py` hands `Covariance.block_diag` the
+function that makes the block diagonal of parts some of which are models
+(`Covariance._block_diag_models`), so `import fips.covariance` always sets it.
+`Whitened` is in `posterior.py`, not in `methods/analytic.py`, because
+`Posterior.__setstate__` builds it from the pickled dict and the analytic
+method builds a `Posterior`. `linalg/base.py` holds `LinearOperator` and the
+three forms it builds in one module, since the base class names its
+subclasses.
 
 ### No domain subpackages
 
@@ -157,7 +178,7 @@ The one plot is `fips.visualization.plot_comparison` (not exported from
   `None` to a string, so a name is one spelling everywhere; an unnamed object
   keeps `None`. A sum of two operators keeps the name when both have the same
   one and is `None` otherwise (pandas' rule for a sum of two Series).
-- **A structure owns its data.** `Vector` and `Operator` (every `linalg.py`
+- **A structure owns its data.** `Vector` and `Operator` (every `fips.linalg`
   form) copy their input and make the copy read-only. Code that builds a form
   from an array fips just made, or from another form's read-only arrays, uses
   `_adopt` (no second copy); the public constructors are for what a caller
@@ -175,7 +196,7 @@ The one plot is `fips.visualization.plot_comparison` (not exported from
   give a block on single-block spaces, labeled as the block was given. A block
   labeled by a MultiIndex of one level is held as that level's plain Index.
 - **An operator's labels are beside its matrix.** `Operator.data` is a form of
-  `linalg.py` with rows and columns in the order of `rows` and `cols`. Every
+  `fips.linalg` with rows and columns in the order of `rows` and `cols`. Every
   product, sum and placement puts the other side in this side's order with
   `Space.align` (an exact join) before computing, and a method that changes
   labels or data builds its result with `_like` (or `_build` in a
@@ -219,13 +240,13 @@ The one plot is `fips.visualization.plot_comparison` (not exported from
   GB-class. Compute with `Operator.data` (a `DenseOperator`, `SparseOperator`,
   `DiagonalOperator`, `BlockDiagonalOperator` or `KroneckerOperator`), never
   with `dense()` or `to_frame()`. Products and sums keep the cheapest exact form
-  (the rule is in `linalg.py`'s docstring). The tests are the dense/sparse
+  (the rule is in the docstring of `linalg/__init__.py`). The tests are the dense/sparse
   combinations in `tests/test_linalg.py` and the oracle's sparse closed form.
   The analytic method and the `Posterior` compute with `problem.forward.data`,
   `prior_cov.data` and `obs_cov.data`, never with their dense matrices.
 - **Covariance models.** A model is a frozen dataclass whose parameters are
   checked in `__init__`; it reads its levels from the labels of the space it
-  is built on (`models._coords`, which raises when a block lacks one) and gives
+  is built on (`covariance/models.py`'s `_coords`, which raises when a block lacks one) and gives
   its correlation in its cheapest form (`_form`: `Independent` a diagonal, a
   kernel `within` groups sparse, `Kronecker` a `KroneckerOperator` with each
   factor evaluated once on the unique coordinates of its levels, in first
@@ -235,7 +256,7 @@ The one plot is `fips.visualization.plot_comparison` (not exported from
   3; bit for bit there, and to the last bit on pandas 2, whose time
   differences are in nanoseconds): keep
   the order of the products (`(std_i * C_ij) * std_j`) and the distance
-  functions of `metrics.py` when changing a kernel.
+  functions of `covariance/distances.py` when changing a kernel.
 - **Aggregations.** `fips.aggregate.sum` and `mean` build `W` block by
   block: each aggregated block's groups are its rows, sorted, and a block not
   named in `blocks=` passes through (one row per label); `offset_block` forms
@@ -245,10 +266,10 @@ The one plot is `fips.visualization.plot_comparison` (not exported from
   label a key cannot place raises. `Problem.aggregate` and `restrict` return a
   new problem of the same class, built through `__init__` (the exact join
   runs again); `restrict` keeps each covariance's form (`form._select`).
-- **`Pickleable` contract.** Anything user-facing should round-trip through
-  pickle. `Problem` and `Posterior` inherit `Pickleable` (in `base.py`) for
-  `to_file` / `from_file`; a `Posterior` pickles the problem, the options and
-  the factors (a dict of arrays), never an output, which is rebuilt when read.
+- **Pickling.** Anything user-facing should round-trip through plain
+  `pickle`: `Problem` and `Posterior` define `__getstate__` and `__setstate__`
+  for it. A `Posterior` pickles the problem, the options and the factors (a
+  dict of arrays), never an output, which is rebuilt when read.
 - **Logging, not printing.** Every module uses
   `logger = logging.getLogger(__name__)`; `__init__.py` attaches a
   `NullHandler`. Don't `print()` in library code: a report is returned
@@ -410,7 +431,7 @@ that come close use dense `inv`. So:
   `scipy.linalg` (Cholesky, triangular solves, `eigh`); the value of fips is
   the labeled/block layer around it, and routing arrays through an external
   solver is exactly where labels get lost. Do not add a dependency to replace
-  the analytic method (`solve.py`, `_whitened.py`); improve it in place.
+  the analytic method (`methods/analytic.py`, `Whitened` in `posterior.py`); improve it in place.
 - **Delegate factorizations and operator plumbing to scipy.** `scipy.linalg`
   for dense factorizations, `scipy.sparse` for storage,
   `scipy.sparse.linalg.LinearOperator` as the matvec abstraction when
@@ -420,7 +441,7 @@ that come close use dense `inv`. So:
 - **pylops is read, not installed or copied** (LGPL; decided 2026-10-14): fips
   writes the few operators it needs on `LinearOperator`, as `KroneckerOperator`.
 - **Optional, not required:** `GSTools` (covariance models, only if
-  `kernels.py` outgrows its exponential, Gaussian and Matérn kernels). If adopted, it goes in an extra,
+  `covariance/kernels.py` outgrows its exponential, Gaussian and Matérn kernels). If adopted, it goes in an extra,
   never in `[project]` dependencies.
 - **Never write a sampler.** If MCMC lands, use PyMC or CUQIpy for
   sampling and ArviZ for diagnostics, as `openghg_inversions` does. Same for a
@@ -443,12 +464,13 @@ block-diagonal `obs_cov` (`Covariance.block_diag`) is the common pattern (no
 inter-source error covariance). See README "Multi-block" example.
 
 ### Adding a new method
-1. Write its options as a frozen dataclass in `solve.py` (the only place they
-   are declared: `solve` checks the caller's keywords against its fields and
-   lists them for an unknown one; check values in `__post_init__`).
-2. Write the method as a function `(problem, options) -> Posterior` and
-   register it with `@_register("name", Options)`; `available_methods()` and
-   `fips.solve(problem, "name")` then find it.
+1. Write its options as a frozen dataclass in a new `methods/<name>.py` (the
+   only place they are declared: `solve` checks the caller's keywords against
+   its fields and lists them for an unknown one; check values in
+   `__post_init__`).
+2. Write the method as a function `(problem, options) -> Posterior` in the same
+   file and list it in `_METHODS` in `methods/__init__.py`;
+   `available_methods()` and `fips.solve(problem, "name")` then find it.
 3. The `Posterior` is the analytic (Gaussian) one: `mean` is its `estimate`.
    A method whose posterior is not Gaussian (bounded, lognormal, sampled)
    needs its own class, and a base class extracted from `Posterior`: `mean`
@@ -481,7 +503,7 @@ stay there too. A statistic that any problem could use goes on `Posterior`.
   is an integer when a Series has no name: keep the `str()`.
 - **SciPy is not annotated**: pyrefly takes the private class a `LinearOperator`
   default returns as the type an override must return, and a sparse `shape` as
-  possibly `None`, and finds no `__getitem__` on a sparse array. `linalg.py`
+  possibly `None`, and finds no `__getitem__` on a sparse array. `linalg/base.py`
   marks those lines with an ignore and the reason; a new form that
   overrides only `_transpose` needs none. `form.T` is typed as SciPy's private
   transposed class: call `form._transpose()` to keep a fips form.
@@ -498,11 +520,6 @@ stay there too. A statistic that any problem could use goes on `Posterior`.
   frequency key is grouped.
 - `H @ vector` is a `Vector`, not a numpy array. Don't expect raw arrays out
   of public APIs.
-- **`fips.solve` is the function, `fips/solve.py` the module.** `__init__`
-  binds the name `fips.solve` to the function, so reach the module's other
-  names with `from fips.solve import AnalyticOptions` (which reads the module
-  from `sys.modules`), never `fips.solve.AnalyticOptions` or
-  `import fips.solve as m`.
 - **The analytic method never factors `H S_0 H^T + S_z`.** It whitens with the
   Cholesky factor of `S_z` alone (or the square root of its diagonal), so `S_z`
   must be positive-definite (it raises otherwise), and eigendecomposes the
@@ -511,7 +528,7 @@ stay there too. A statistic that any problem could use goes on `Posterior`.
   beyond roundoff is logged). A smooth temporal prior that makes `S_0` near-low-rank
   (what used to tip the sum off positive-definite and block sub-yearly
   inversions) therefore cannot stop the solve. Everything is derived from the
-  factors (`fips/_whitened.py`'s docstring has the formulas); nothing `n x n`
+  factors (`Whitened`'s docstring in `fips/posterior.py` has the formulas); nothing `n x n`
   is formed unless `post.cov()` or `post.averaging_kernel()` is read, and
   `tests/test_whitened.py` fails if `fips.solve` with the variances, DOFS or
   chi-squared allocates one. With `m > n`
@@ -519,7 +536,7 @@ stay there too. A statistic that any problem could use goes on `Posterior`.
   solve logs a warning.
 - Other covariance solves (`Covariance.solve`, `KroneckerOperator.solve`,
   `Posterior.leverage`) go through `LinearOperator.solve` or `_solve_psd`, whose dense form is
-  `_solve_psd(A, B)` (in `linalg.py`), **not**
+  `_solve_psd(A, B)` (in `linalg/base.py`), **not**
   `scipy.linalg.solve(..., assume_a="pos")` directly: it keeps the fast
   Cholesky path and falls back, with a warning, to a symmetric `LDL^T` solve when
   roundoff has tipped a matrix that is PD in exact arithmetic off-PD. Use it for

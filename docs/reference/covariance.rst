@@ -64,8 +64,8 @@ Covariance models
 A correlation model says how correlated two labels are, from the coordinates
 on some levels of their space; ``model.with_std(std)`` makes it a covariance.
 With the standard deviations as a :class:`Vector`, that is a :class:`Covariance`
-at once; with a scalar or an array, a :class:`~fips.models.CovarianceModel`,
-which :meth:`~fips.models.CovarianceModel.build` puts on a space. Models add,
+at once; with a scalar or an array, a :class:`~fips.covariance.CovarianceModel`,
+which :meth:`~fips.covariance.CovarianceModel.build` puts on a space. Models add,
 and :meth:`Covariance.block_diag` takes them by block name.
 
 .. ipython:: python
@@ -112,7 +112,7 @@ Parameters
    Kronecker.factors
    Kronecker.levels
 
-.. currentmodule:: fips.correlation
+.. currentmodule:: fips.covariance
 
 The base of every model
 ~~~~~~~~~~~~~~~~~~~~~~~
@@ -124,8 +124,6 @@ The base of every model
    CorrelationModel.correlation
    CorrelationModel.with_std
 
-.. currentmodule:: fips.models
-
 A covariance waiting for its space
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 .. autosummary::
@@ -134,3 +132,17 @@ A covariance waiting for its space
    CovarianceModel
    CovarianceModel.build
    CovarianceModel.__add__
+
+Distances
+~~~~~~~~~
+The kernels measure distance with these functions of
+:mod:`fips.covariance.distances`.
+
+.. currentmodule:: fips.covariance.distances
+
+.. autosummary::
+   :toctree: api/
+
+   haversine_matrix
+   chordal_matrix
+   time_diff_matrix

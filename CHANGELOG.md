@@ -67,7 +67,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#82](https://github.com/jmineau/fips/issues/82))
 - **Kronecker covariances kept as their factors.**
   `KroneckerError.operator(index)` returns a `KroneckerOperator`
-  (`fips.covariance`): the marginal correlation matrices, each row's position in
+  (`fips.linalg`): the marginal correlation matrices, each row's position in
   them and the standard deviations, for any row order and any subset of the
   product, never the `n x n` matrix. `H @ S_0` and `H @ S_0 @ H.T` go through
   the factors, `solve` through each factor's Cholesky factorization (a subset of
@@ -168,16 +168,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   when a model is made (a scale that is not positive, a Gaussian on the great
   circle, `nu` outside (0, 50] raise). `with_std` takes the standard deviations
   as a `Vector` (the `Covariance` on its space, at once) or as a scalar or an
-  array in the space's order (a `fips.models.CovarianceModel`, which
+  array in the space's order (a `fips.covariance.CovarianceModel`, which
   `build(space)` puts on a space). Covariance models and covariances add, and
   `Covariance.block_diag` takes parts by block name as well as in order:
   `Covariance.block_diag(flux=Kronecker(...).with_std(std),
   bias=Independent().with_std(0.1)).build(state_space)`. A new model is a
-  frozen dataclass subclass of `fips.correlation.CorrelationModel` with
+  frozen dataclass subclass of `fips.covariance.CorrelationModel` with
   `levels` and `correlation(coords)`. Each covariance the removed builders
   made comes out of a model with the same numbers, bit for bit.
   ([#82](https://github.com/jmineau/fips/issues/82))
-- `fips.metrics.chordal_matrix`, the pairwise chordal distance between points
+- `fips.covariance.distances.chordal_matrix`, the pairwise chordal distance between points
   on the Earth, in km. ([#82](https://github.com/jmineau/fips/issues/82))
 - **`Problem`, the inputs of a solve, checked once.**
   `Problem(prior, prior_cov, obs, obs_cov, forward, offset=None)` takes the
@@ -207,7 +207,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   cols=prior.space)`. ([#82](https://github.com/jmineau/fips/issues/82))
 - **`fips.solve(problem, method="analytic", **options)`** returns a
   `Posterior`. Each method declares its options once, as a dataclass
-  (`fips.solve.AnalyticOptions`: `gamma`, which must be positive and finite);
+  (`fips.methods.analytic.AnalyticOptions`: `gamma`, which must be positive and finite);
   an unknown method or option raises a `ValueError` listing the ones it knows,
   and `fips.available_methods()` names the methods. The `"analytic"` method is
   phase 1's whitened solve: it factors the problem once, and the posterior
@@ -274,6 +274,43 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **The source is grouped by idea, in three subpackages.** Nothing changes in
+  what the code does: no number, name of a public class or function, default or
+  message differs. `fips.covariance` holds `Covariance` and the models that
+  write one down (`CorrelationModel`, `Independent`, `Kronecker`,
+  `CovarianceModel`, the kernels, and the distances the kernels use),
+  `fips.methods` holds `solve`, the method registry and the analytic method,
+  and `fips.linalg` holds every form, `KroneckerOperator` among them. The
+  names the top level exports (`fips.Space`, `fips.Covariance`,
+  `fips.Exponential`, `fips.solve`, ...) and every name `fips.linalg` exported
+  are the same. `Covariance` no longer imports the models, so the import cycle
+  between `covariance.py` and `models.py` is gone; `Covariance.block_diag` with
+  a model part works as before. `fips.solve` is only the function: there is no
+  `solve` module. Pickles written before this change that hold a
+  `KroneckerOperator`, a covariance model or a `Posterior` do not load (those
+  classes' module paths changed); none of it was released.
+
+  **Migration**, each import path that changed:
+
+  | Before | Now |
+  |---|---|
+  | `fips.kronecker.KroneckerOperator` | `fips.linalg.KroneckerOperator` |
+  | `fips.correlation.CorrelationModel`, `Independent`, `Kronecker` | `fips.covariance.CorrelationModel`, `Independent`, `Kronecker` (`fips.Independent` and `fips.Kronecker` as before) |
+  | `fips.models.CovarianceModel` | `fips.covariance.CovarianceModel` |
+  | `fips.kernels.Exponential`, `Gaussian`, `Matern`, `Constant` | `fips.Exponential`, `Gaussian`, `Matern`, `Constant` (or `fips.covariance`) |
+  | `fips.metrics.haversine_matrix`, `chordal_matrix`, `time_diff_matrix` | `fips.covariance.distances.haversine_matrix`, `chordal_matrix`, `time_diff_matrix` |
+  | `from fips.solve import AnalyticOptions` | `from fips.methods.analytic import AnalyticOptions` |
+  | `fips.solve` the module (`_METHODS`) | `fips.methods` (the function is still `fips.solve`) |
+  | `fips._whitened.Whitened` (private) | `fips.posterior.Whitened` |
+  | the `fips.solve` logger | `fips.methods` (the whitened solve's warnings: `fips.posterior`) |
+  | the `fips.kronecker` and `fips.linalg` loggers | `fips.linalg.kronecker` and `fips.linalg.base` |
+  | `fips.base`, `fips.filters` | removed (see Removed) |
+
+  `fips.covariance.Covariance`, `fips.linalg.LinearOperator`, `DenseOperator`,
+  `SparseOperator`, `DiagonalOperator`, `BlockDiagonalOperator`,
+  `as_linear_operator` and `dottest` keep their paths.
+  ([#82](https://github.com/jmineau/fips/issues/82))
+
 - **An `Operator` copies its input and makes the copy read-only, as a `Vector`
   does.** `Operator(array, rows, cols)` kept the caller's array, so changing it
   afterwards silently changed the operator. Now `Operator(data, rows, cols)`,
@@ -290,9 +327,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   is loaded. `CorrelationModel.correlation(coords)` still returns a writable
   array of its own. There is no `copy=False` option.
   ([#82](https://github.com/jmineau/fips/issues/82))
-- **The `flux` extra is renamed `viz`** and installs cartopy and matplotlib
-  (`pip install "fips[viz]"`); it no longer installs `h5py`, which nothing in
-  fips imported. `joblib` is no longer a dependency: nothing imports it since
 - **The `flux` extra is renamed `viz`** and installs matplotlib only
   (`pip install "fips[viz]"`), for `plot_comparison`; it no longer installs
   cartopy, which only the flux maps used, or `h5py`, which nothing in fips
@@ -323,7 +357,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   names the labeled class: `fips.operator.Operator` is
   `fips.linalg.LinearOperator`, `as_operator` is `as_linear_operator`, and
   `DenseOperator`, `SparseOperator`, `DiagonalOperator` and `dottest` are in
-  `fips.linalg`; `KroneckerOperator` is in `fips.kronecker`. The forms no longer
+  `fips.linalg`, with `KroneckerOperator`. The forms no longer
   have `to_frame` (an `Operator` has). `fips.convolve` is in `fips.operator`.
   ([#82](https://github.com/jmineau/fips/issues/82))
 
@@ -509,14 +543,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   | `BlockDecayError.build(index, n_jobs=...)` | (none: `build` is sequential and sparse) |
   | `m.to_file(path)`, `Matrix.from_file(path)` | `pickle` |
   | `fips.operator.Operator`, `as_operator` | `fips.linalg.LinearOperator`, `as_linear_operator` |
-  | `fips.covariance.KroneckerOperator` | `fips.kronecker.KroneckerOperator` |
+  | `fips.covariance.KroneckerOperator` | `fips.linalg.KroneckerOperator` |
   | `assign_block`, `outer_align_levels` | `Space({name: index}).index`, `Space` |
 
 - **`InverseProblem`, `Estimator`, `BayesianSolver`, the estimator registry
   and `convolve`**, with the modules `fips.estimators` and `fips.indexes`; the
   old 1D classes **`Block` and `Vector`** (a `Vector` is now the class `Field`
   was, renamed: `Field` was never released), and `fips.base`'s `Structure`,
-  `Structure1D` and block mixins (`Pickleable` stays). There is no deprecation
+  `Structure1D` and block mixins. There is no deprecation
   period: the problem is a `Problem`, `fips.solve` returns the `Posterior`, and
   the analytic method is the solve `BayesianSolver` did, with the same numbers.
   Old pickles of the removed classes do not load.
@@ -534,7 +568,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   | `v["flux"]` (a Series), `v.blocks["flux"]` (a `Block`) | `v["flux"]` (a `Vector`; `.to_series()` for pandas) |
   | `v.reindex(index)`, `v.round_index(d)`, `v.xs(...)`, `v.copy()` | `v.align(space)`, `v.round_labels(d)`, `v[block]`, (vectors are read-only) |
   | `v.shape`, `v.to_numpy()` | `len(v)`, `v.values` |
-  | `v.to_file(path)` | `pickle` (`Problem` and `Posterior` keep `to_file`) |
+  | `v.to_file(path)` | `pickle` |
   | `InverseProblem(obs, prior, forward_operator, modeldata_mismatch, prior_error, constant)` | `Problem(prior, prior_cov, obs, obs_cov, forward, offset)` |
   | `InverseProblem(obs=series, ...)` | `Problem(obs=Vector.from_series(series, block=...), ...)` |
   | `forward_operator=frame` | `forward=Operator.from_frame(frame)` |
@@ -632,7 +666,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   | `FluxPlotter(post).fluxes(...)` | removed; the downstream package keeps its own (it is geography: latitude and longitude, cartopy tiles, in a grid-agnostic package). In fips: `post.estimate["flux"].to_xarray().mean("time").plot(x="lon", y="lat")` |
   | `FluxPlotter(post).concentrations(...)` | removed; the downstream package keeps its own (it is `plot_comparison` with a panel per site). In fips: `plot_comparison` of `problem.obs`, `problem.predict(problem.prior)` and `post.modeled_obs`, one site's Series each |
   | `InversionPipeline`, `FluxInversionPipeline` (`get_obs`, `get_prior`, `get_forward_operator`, `get_prior_error`, `get_modeldata_mismatch`, `get_constant`, `get_inputs`) | functions in your code that return the `Problem`'s inputs |
-  | `pipeline.filter_state_space(obs, prior)` (observations in time bins with too few dropped) | `fips.filters.select_intervals_with_min_obs(obs.to_series(), intervals, threshold, level="obs_time")`, or `problem.restrict(keep)` to hold part of the state at its prior |
+  | `pipeline.filter_state_space(obs, prior)` (observations in time bins with too few dropped) | choose the observations to keep in your code, then `problem.restrict(keep)` to hold part of the state at its prior |
   | `pipeline.aggregate_obs_space(...)` | `problem.aggregate(W)` |
   | `pipeline.run(options)`, `.problem`, `.posterior`, `.method` | `post = fips.solve(problem, method, **options)`; `post.problem` |
   | `FluxInversionPipeline.summarize()` (printed) | `post.summary()` (a one-row DataFrame: DOFS, chi-squared, reduced chi-squared, R², RMSE, uncertainty reduction); the flux means, negative cells, observation fit before and after, mean flux per time step and its trend per year are a few lines on `post.estimate["flux"]`, `post.modeled_obs` and `problem.predict(problem.prior)` |
@@ -649,6 +683,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   |---|---|
   | `compute_credible_interval(samples, q=(0.05, 0.95))` | `np.quantile(samples, q[0], axis=0), np.quantile(samples, q[1], axis=0)` |
   | `plot_error_norm(prior, posterior, truth, norm="l2")` | `np.linalg.norm(prior - truth, axis=1)` and `np.linalg.norm(posterior - truth, axis=1)`, plotted with matplotlib |
+
+- **`fips.base` (`Pickleable`: `Problem.to_file`, `Problem.from_file`,
+  `Posterior.to_file` and `Posterior.from_file`) and `fips.filters`.** A
+  `Problem` and a `Posterior` pickle with the standard library; they keep their
+  `__getstate__` and `__setstate__` (a posterior pickles its problem, options
+  and factors, not its outputs). Nothing in fips used `fips.filters`
+  (`enough_obs_per_interval`, `select_intervals_with_min_obs`): the observations
+  to keep are chosen in the caller's code, and `problem.restrict(keep)` holds
+  the rest of the state at its prior.
+  ([#82](https://github.com/jmineau/fips/issues/82))
+
+  | Removed | Use |
+  |---|---|
+  | `problem.to_file(path)`, `post.to_file(path)` | `with open(path, "wb") as f: pickle.dump(problem, f)` |
+  | `Problem.from_file(path)`, `Posterior.from_file(path)` | `with open(path, "rb") as f: problem = pickle.load(f)` |
+  | `fips.filters.enough_obs_per_interval`, `select_intervals_with_min_obs` | a mask over `obs.to_series()` in your code |
 
 - `Estimator._output_meta`, the private table `InverseProblem` read to label
   the estimator's outputs: `Posterior` labels them itself.

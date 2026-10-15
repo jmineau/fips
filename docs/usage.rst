@@ -119,7 +119,7 @@ straight line, or a distance on the Earth), :class:`~fips.Constant` is one,
 multiplies models on separate levels. ``model.with_std(std)`` is the
 covariance: given the standard deviations as a :class:`~fips.Vector`, it is a
 :class:`~fips.Covariance` at once; given a scalar or an array, it is a
-:class:`~fips.models.CovarianceModel`, which ``build(space)`` puts on a space.
+:class:`~fips.covariance.CovarianceModel`, which ``build(space)`` puts on a space.
 Models add (``a + b``), and :meth:`~fips.Covariance.block_diag` takes them by
 block name.
 
@@ -143,7 +143,7 @@ matrix is then sparse.
    S_z.build(obs_space).dense().round(3)
 
 A :class:`~fips.Kronecker` model is kept as its factors: its covariance holds
-a :class:`~fips.kronecker.KroneckerOperator`, which never forms the
+a :class:`~fips.linalg.KroneckerOperator`, which never forms the
 :math:`n \times n` matrix. Each factor is evaluated once, on the unique
 coordinates of its levels; the rows can be any subset of the product, in any
 order. The solve computes :math:`H S_0` and :math:`H S_0 H^T` from the
@@ -500,7 +500,7 @@ the rows of many solves stack into one table:
        ignore_index=True,
    )
 
-:func:`fips.solve` logs at ``INFO`` level through the ``fips.solve`` logger,
+:func:`fips.solve` logs at ``INFO`` level through the ``fips.methods`` logger,
 and prints nothing. Python shows only warnings until logging is configured, so
 to keep the steps in a batch job's output, configure it before the call:
 

@@ -9,7 +9,7 @@ Solving and Posterior
 and no :math:`m \times m` matrix (:meth:`Problem.predict`); the posterior is
 the answer and holds what depends on the solve or on the :math:`m \times m`
 matrix it factors (:attr:`Posterior.innovation_cov`). Each method declares its options once (for ``"analytic"``,
-:class:`~fips.solve.AnalyticOptions`), and an unknown method or option raises
+:class:`~fips.methods.analytic.AnalyticOptions`), and an unknown method or option raises
 with the names it knows. The posterior keeps the factorization of the solve:
 everything it gives is derived from it and labeled with the problem's spaces,
 nothing :math:`n \times n` is formed unless the full covariance or averaging
@@ -29,7 +29,7 @@ Solving
    solve
    available_methods
 
-.. currentmodule:: fips.solve
+.. currentmodule:: fips.methods.analytic
 
 .. autosummary::
    :toctree: api/
@@ -104,8 +104,6 @@ Reusing the factorization
 
 Serialization
 ~~~~~~~~~~~~~
-.. autosummary::
-   :toctree: api/
-
-   Posterior.from_file
-   Posterior.to_file
+A posterior pickles with the standard library (``pickle.dump(post, file)``):
+it keeps the problem, the options and the factorization, and rebuilds every
+output when it is read.
