@@ -110,7 +110,7 @@ class FluxInversionPipeline(InversionPipeline[FluxProblem], ABC):
                     level="obs_time",
                 )
 
-            obs = Vector(obs_series, name=obs.name)
+            obs = Vector.from_series(obs_series)
 
         return obs, prior
 

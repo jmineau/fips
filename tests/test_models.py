@@ -1,7 +1,7 @@
 """
 Tests for the covariance models (``fips.models``).
 
-``with_std`` (a Field gives a Covariance at once, a scalar or an array a model),
+``with_std`` (a Vector gives a Covariance at once, a scalar or an array a model),
 ``build`` on a space (the levels read, the order of the space, the form kept),
 sums of models and covariances, and pickling.
 """
@@ -16,10 +16,10 @@ from fips import (
     Constant,
     Covariance,
     Exponential,
-    Field,
     Independent,
     Kronecker,
     Space,
+    Vector,
 )
 from fips.kronecker import KroneckerOperator
 from fips.linalg import DenseOperator, DiagonalOperator, SparseOperator
@@ -54,9 +54,9 @@ class TestWithStd:
             assert isinstance(S, Covariance) and S.space == SPACE
             np.testing.assert_allclose(S.dense(), _scaled(C, value), rtol=1e-15)
 
-    def test_field_gives_a_covariance_on_its_space(self):
-        """A Field brings its labels: the covariance is made at once."""
-        std = Field([1.0, 2.0, 3.0, 4.0], SPACE)
+    def test_vector_gives_a_covariance_on_its_space(self):
+        """A Vector brings its labels: the covariance is made at once."""
+        std = Vector([1.0, 2.0, 3.0, 4.0], SPACE)
         S = Independent().with_std(std)
         assert isinstance(S, Covariance) and S.space is SPACE
         np.testing.assert_array_equal(S.variances.values, [1.0, 4.0, 9.0, 16.0])

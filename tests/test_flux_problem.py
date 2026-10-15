@@ -6,7 +6,7 @@ import pytest
 
 from fips import Covariance, Operator
 from fips.problems.flux.problem import FluxProblem
-from fips.vector import Block
+from fips.vector import Vector
 
 # ---------------------------------------------------------------------------
 # Fixtures
@@ -33,15 +33,18 @@ def obs_idx():
 
 @pytest.fixture
 def flux_prior(flux_idx):
-    """Prior flux Block with correct block name."""
-    return Block(pd.Series([1.0, 2.0, 3.0, 4.0], index=flux_idx, name="flux"))
+    """Prior flux, one block."""
+    return Vector.from_series(
+        pd.Series([1.0, 2.0, 3.0, 4.0], index=flux_idx, name="flux"), block="flux"
+    )
 
 
 @pytest.fixture
 def flux_obs(obs_idx):
-    """Observed concentration Block with correct block name."""
-    return Block(
-        pd.Series([400.0, 401.0, 402.0, 403.0], index=obs_idx, name="concentration")
+    """Observed concentrations, one block."""
+    return Vector.from_series(
+        pd.Series([400.0, 401.0, 402.0, 403.0], index=obs_idx, name="concentration"),
+        block="concentration",
     )
 
 
@@ -154,8 +157,9 @@ class TestFluxProblemObsProperties:
         obs_idx,
     ):
         """With a background, enhancement = concentrations - background."""
-        background = Block(
-            pd.Series(np.ones(4) * 390.0, index=obs_idx, name="concentration")
+        background = Vector.from_series(
+            pd.Series(np.ones(4) * 390.0, index=obs_idx, name="concentration"),
+            block="concentration",
         )
         problem = FluxProblem(
             obs=flux_obs,
@@ -166,7 +170,7 @@ class TestFluxProblemObsProperties:
             constant=background,
         )
         result = problem.enhancement
-        expected = flux_obs.data.to_numpy() - 390.0
+        expected = flux_obs.values - 390.0
         np.testing.assert_allclose(result.to_numpy(), expected)
 
     def test_background_none_when_not_set(self, flux_problem):
@@ -183,8 +187,9 @@ class TestFluxProblemObsProperties:
         obs_idx,
     ):
         """Test that background returns a Series when set."""
-        background = Block(
-            pd.Series(np.ones(4) * 390.0, index=obs_idx, name="concentration")
+        background = Vector.from_series(
+            pd.Series(np.ones(4) * 390.0, index=obs_idx, name="concentration"),
+            block="concentration",
         )
         problem = FluxProblem(
             obs=flux_obs,

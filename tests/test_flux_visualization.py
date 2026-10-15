@@ -6,7 +6,7 @@ import pytest
 
 from fips import Covariance, Operator
 from fips.problems.flux.problem import FluxProblem
-from fips.vector import Block
+from fips.vector import Vector
 
 plt = pytest.importorskip("matplotlib.pyplot")
 
@@ -45,10 +45,16 @@ def solved_problem():
     n_flux, n_obs = len(flux_idx), len(obs_idx)
 
     problem = FluxProblem(
-        obs=Block(
-            pd.Series(rng.uniform(400, 410, n_obs), index=obs_idx, name="concentration")
+        obs=Vector.from_series(
+            pd.Series(
+                rng.uniform(400, 410, n_obs), index=obs_idx, name="concentration"
+            ),
+            block="concentration",
         ),
-        prior=Block(pd.Series(rng.uniform(1, 2, n_flux), index=flux_idx, name="flux")),
+        prior=Vector.from_series(
+            pd.Series(rng.uniform(1, 2, n_flux), index=flux_idx, name="flux"),
+            block="flux",
+        ),
         forward_operator=Operator.from_frame(
             pd.DataFrame(
                 rng.uniform(0, 1, (n_obs, n_flux)), index=obs_idx, columns=flux_idx
@@ -66,8 +72,9 @@ def solved_problem():
             row_block="concentration",
             col_block="concentration",
         ),
-        constant=Block(
-            pd.Series(np.full(n_obs, 395.0), index=obs_idx, name="concentration")
+        constant=Vector.from_series(
+            pd.Series(np.full(n_obs, 395.0), index=obs_idx, name="concentration"),
+            block="concentration",
         ),
     )
     return problem.solve()

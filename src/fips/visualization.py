@@ -12,7 +12,7 @@ import pandas as pd
 
 from fips.covariance import Covariance
 from fips.operator import Operator
-from fips.vector import Block, Vector
+from fips.vector import Vector
 
 ArrayLike = Sequence | np.ndarray
 
@@ -29,15 +29,23 @@ def _require_matplotlib():
         ) from exc
 
 
-def _unwrap(x: pd.Series | pd.DataFrame | Vector | Block) -> pd.Series | pd.DataFrame:
-    """Return the pandas object inside a ``Block`` or ``Vector``; anything else as is."""
-    return x.data if isinstance(x, (Block, Vector)) else x
+def _unwrap(x: pd.Series | pd.DataFrame | Vector) -> pd.Series | pd.DataFrame:
+    """
+    Return a ``Vector`` as a Series; anything else as is.
+
+    A vector of one block is the Series on the block's own labels, without
+    the ``block`` level; one of several blocks keeps it.
+    """
+    if not isinstance(x, Vector):
+        return x
+    series = x.to_series()
+    return series.droplevel("block") if len(x.space.names) == 1 else series
 
 
 def plot_error_norm(
-    prior: ArrayLike | Vector | Block,
-    posterior: ArrayLike | Vector | Block,
-    truth: ArrayLike | Vector | Block,
+    prior: ArrayLike | Vector,
+    posterior: ArrayLike | Vector,
+    truth: ArrayLike | Vector,
     t: Iterable[float] | None = None,
     norm: str = "l2",
     figsize: tuple[float, float] | None = None,
@@ -47,11 +55,11 @@ def plot_error_norm(
 
     Parameters
     ----------
-    prior : ArrayLike or Vector or Block
+    prior : ArrayLike or Vector
         Prior estimates.
-    posterior : ArrayLike or Vector or Block
+    posterior : ArrayLike or Vector
         Posterior estimates.
-    truth : ArrayLike or Vector or Block
+    truth : ArrayLike or Vector
         True values for comparison.
     t : Iterable[float], optional
         Time or x-axis values. If None, uses integer indices.
@@ -104,9 +112,9 @@ def plot_error_norm(
 
 
 def plot_comparison(
-    *series: pd.Series | Vector | Block,
+    *series: pd.Series | Vector,
     x: str | int | None = None,
-    truth: pd.Series | Vector | Block | None = None,
+    truth: pd.Series | Vector | None = None,
     errors: Sequence[pd.DataFrame | Operator | pd.Series | None] | None = None,
     kind: str | None = None,
 ):
@@ -118,11 +126,11 @@ def plot_comparison(
 
     Parameters
     ----------
-    *series : pd.Series or Vector or Block
+    *series : pd.Series or Vector
         Variable number of series to compare.
     x : str or int, optional
         Name or level of the index to use for x-axis. Required if series have MultiIndex.
-    truth : pd.Series or Vector or Block, optional
+    truth : pd.Series or Vector, optional
         True values to plot as reference.
     errors : Sequence of pd.DataFrame or Covariance or Operator or pd.Series or None, optional
         Error estimates for each series. Must match length of series.

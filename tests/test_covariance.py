@@ -21,11 +21,11 @@ from fips import (
     Constant,
     Covariance,
     Exponential,
-    Field,
     Independent,
     Kronecker,
     Operator,
     Space,
+    Vector,
 )
 from fips.kronecker import KroneckerOperator
 from fips.linalg import (
@@ -232,18 +232,18 @@ class TestDiagonal:
         assert isinstance(S.data, DiagonalOperator)
         np.testing.assert_array_equal(S.variances.values, values)
 
-    def test_field(self):
-        """A field brings its own space."""
-        field = Field(np.arange(1.0, 7.0), CELLS)
-        S = Covariance.diagonal(field)
+    def test_vector(self):
+        """A vector brings its own space."""
+        vector = Vector(np.arange(1.0, 7.0), CELLS)
+        S = Covariance.diagonal(vector)
         assert S.space is CELLS
-        np.testing.assert_array_equal(S.dense(), np.diag(field.values))
+        np.testing.assert_array_equal(S.dense(), np.diag(vector.values))
 
-    def test_field_on_a_space_in_another_order(self):
-        """A field and a space in another order: the variances follow the space."""
+    def test_vector_on_a_space_in_another_order(self):
+        """A vector and a space in another order: the variances follow the space."""
         values = np.arange(1.0, 7.0)
         other = _shuffled(CELLS)
-        S = Covariance.diagonal(Field(values, CELLS), other)
+        S = Covariance.diagonal(Vector(values, CELLS), other)
         assert S.space is other
         np.testing.assert_array_equal(
             S.variances.values, _values_on(values, CELLS, other)
@@ -256,12 +256,12 @@ class TestDiagonal:
             (np.ones(6), None, "needs `space`"),
             (np.ones((6, 1)), CELLS, "scalar or 1D"),
             (np.ones(5), CELLS, "Got 5 variances"),
-            (Field(np.ones(6), CELLS), SITES, "same labels"),
+            (Vector(np.ones(6), CELLS), SITES, "same labels"),
         ],
-        ids=["scalar", "array", "2D", "length", "field"],
+        ids=["scalar", "array", "2D", "length", "vector"],
     )
     def test_errors(self, values, space, match):
-        """No space for a scalar or array, a 2D array, a wrong length, a field on other labels."""
+        """No space for a scalar or array, a 2D array, a wrong length, a vector on other labels."""
         with pytest.raises(ValueError, match=match):
             Covariance.diagonal(values, space)
 
@@ -316,20 +316,20 @@ class TestAgainstNumPy:
 
     @EACH_FORM
     def test_variances(self, form):
-        """The variances are the diagonal, as a field on the space."""
+        """The variances are the diagonal, as a vector on the space."""
         S = COVS[form]
         variances = S.variances
-        assert isinstance(variances, Field) and variances.space is S.space
+        assert isinstance(variances, Vector) and variances.space is S.space
         assert variances.name == "variance"
         np.testing.assert_allclose(variances.values, np.diag(S.dense()), rtol=1e-14)
 
     @EACH_FORM
     def test_solve_a_field(self, form):
-        """``solve`` of a field is ``np.linalg.solve``, on the covariance's space."""
+        """``solve`` of a vector is ``np.linalg.solve``, on the covariance's space."""
         S = COVS[form]
         b = np.random.default_rng(5).standard_normal(len(S.space))
-        x = S.solve(Field(b, S.space))
-        assert isinstance(x, Field) and x.space is S.space
+        x = S.solve(Vector(b, S.space))
+        assert isinstance(x, Vector) and x.space is S.space
         np.testing.assert_allclose(x.values, np.linalg.solve(S.dense(), b), rtol=1e-10)
 
     @EACH_FORM
@@ -338,7 +338,7 @@ class TestAgainstNumPy:
         S = COVS[form]
         b = np.random.default_rng(6).standard_normal(len(S.space))
         other = _shuffled(S.space)
-        x = S.solve(Field(_values_on(b, S.space, other), other))
+        x = S.solve(Vector(_values_on(b, S.space, other), other))
         assert x.space is S.space
         np.testing.assert_allclose(x.values, np.linalg.solve(S.dense(), b), rtol=1e-10)
 
@@ -358,12 +358,12 @@ class TestAgainstNumPy:
 
     @EACH_FORM
     def test_solve_refuses_arrays_and_other_labels(self, form):
-        """An array has no labels to check; a field on other labels raises."""
+        """An array has no labels to check; a vector on other labels raises."""
         S = COVS[form]
         with pytest.raises(TypeError, match="no labels"):
             S.solve(np.ones(len(S.space)))
         with pytest.raises(ValueError, match="same labels"):
-            S.solve(Field(np.ones(2), OTHER))
+            S.solve(Vector(np.ones(2), OTHER))
 
     @EACH_FORM
     def test_logdet(self, form):
@@ -400,9 +400,11 @@ class TestAgainstNumPy:
         S = COVS[form]
         x = np.random.default_rng(8).standard_normal(len(S.space))
         expected = x @ np.linalg.solve(S.dense(), x)
-        assert S.quadratic_form(Field(x, S.space)) == pytest.approx(expected, rel=1e-10)
+        assert S.quadratic_form(Vector(x, S.space)) == pytest.approx(
+            expected, rel=1e-10
+        )
         other = _shuffled(S.space)
-        shuffled = Field(_values_on(x, S.space, other), other)
+        shuffled = Vector(_values_on(x, S.space, other), other)
         assert S.quadratic_form(shuffled) == pytest.approx(expected, rel=1e-10)
 
     @EACH_FORM
@@ -503,7 +505,7 @@ class TestArithmeticAndBlocks:
     def test_pickle(self, form):
         """A pickle keeps the form, the space and the name."""
         S = COVS[form]
-        S.solve(Field(np.ones(len(S.space)), S.space))  # fill any cache
+        S.solve(Vector(np.ones(len(S.space)), S.space))  # fill any cache
         loaded = pickle.loads(pickle.dumps(S))
         assert isinstance(loaded, Covariance)
         assert isinstance(loaded.data, FORM_TYPES[form])

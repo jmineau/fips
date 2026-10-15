@@ -144,7 +144,9 @@ def obs_vec(obs_idx):
     """
     Fixture providing observation vector.
     """
-    return Vector(pd.Series([1.0, 2.0, 3.0, 4.0], index=obs_idx, name="obs"))
+    return Vector.from_series(
+        pd.Series([1.0, 2.0, 3.0, 4.0], index=obs_idx, name="obs")
+    )
 
 
 @pytest.fixture
@@ -225,7 +227,7 @@ class TestObsAggregator:
         """
         agg = ObsAggregator(by=daily_groupby, func="mean")
         new_obs, new_H, new_Sz, new_c = agg.apply(obs_vec, fwd_op, cov_Sz)
-        assert new_obs.shape[0] == 2
+        assert len(new_obs) == 2
         assert new_H.shape == (2, 3)
         assert new_Sz.shape == (2, 2)
         assert new_c is None
@@ -242,7 +244,9 @@ class TestObsAggregator:
 
     def test_apply_names_its_results_like_its_inputs(self, obs_idx, state_idx):
         """Each aggregated structure has the name of the one it came from, as a string."""
-        obs = Vector(pd.Series([1.0, 2.0, 3.0, 4.0], index=obs_idx), name="obs")
+        obs = Vector.from_series(
+            pd.Series([1.0, 2.0, 3.0, 4.0], index=obs_idx, name="obs")
+        )
         H = Operator.from_frame(
             pd.DataFrame(np.ones((4, 3)), index=obs_idx, columns=state_idx), name=5
         )
@@ -277,11 +281,10 @@ class TestObsAggregator:
         Test that constant vector is properly aggregated.
         """
         agg = ObsAggregator(by=daily_groupby, func="mean")
-        c = Vector(pd.Series(obs_vec.values, index=obs_vec.index, name="constant"))
+        c = Vector(obs_vec.values, obs_vec.space, name="constant")
         _, _, _, new_c = agg.apply(obs_vec, fwd_op, cov_Sz, constant=c)
-        print(f"{new_c = }")
         assert isinstance(new_c, Vector)
-        assert new_c.shape[0] == 2
+        assert len(new_c) == 2
 
     def test_apply_scalar_constant_passthrough(self, obs_vec, fwd_op, cov_Sz):
         """Scalar constant should be returned unchanged."""
@@ -295,9 +298,7 @@ class TestObsAggregator:
         agg_freq = ObsAggregator(level="obs_time", freq="D", func="mean")
         obs_by, _, _, _ = agg_by.apply(obs_vec, fwd_op, cov_Sz)
         obs_freq, _, _, _ = agg_freq.apply(obs_vec, fwd_op, cov_Sz)
-        np.testing.assert_allclose(
-            sorted(obs_by.to_numpy()), sorted(obs_freq.to_numpy())
-        )
+        np.testing.assert_allclose(sorted(obs_by.values), sorted(obs_freq.values))
 
     def test_blocks_filter_only_aggregates_target_block(self, obs_idx, state_idx):
         """With blocks=, untargeted blocks should pass through as identity rows."""
@@ -309,7 +310,9 @@ class TestObsAggregator:
         combined_idx = obs_idx.append(bias_idx)
 
         n_total = len(combined_idx)
-        z = Vector(pd.Series(np.ones(n_total), index=combined_idx, name="obs"))
+        z = Vector.from_series(
+            pd.Series(np.ones(n_total), index=combined_idx, name="obs")
+        )
         H = Operator.from_frame(
             pd.DataFrame(
                 np.ones((n_total, 3)) * 0.5, index=combined_idx, columns=state_idx
@@ -323,7 +326,7 @@ class TestObsAggregator:
         new_obs, new_H, new_Sz, _ = agg.apply(z, H, S_z)
 
         # "obs" block: 4 → 2 rows. "bias" block: 2 pass-through rows. Total = 4.
-        assert new_obs.shape[0] == 4
+        assert len(new_obs) == 4
         assert new_H.shape[0] == 4
 
     def test_apply_matches_operator_rows_by_label(self, obs_vec, obs_idx, state_idx):

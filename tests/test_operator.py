@@ -15,7 +15,7 @@ import pandas as pd
 import pytest
 import scipy.sparse as sp
 
-from fips import Covariance, Field, Operator, Space, Vector, convolve
+from fips import Covariance, Operator, Space, Vector, convolve
 from fips.linalg import DenseOperator, DiagonalOperator, SparseOperator
 
 # A scalar in each form a caller might pass: Python float and int, a NumPy scalar, a 0-d array
@@ -562,14 +562,14 @@ class TestMatmul:
             H @ G
         assert all(name in str(error.value) for name in named)
 
-    def test_field_in_any_order(self, H, state):
-        """A field is aligned to the columns, and the result is a field on the rows."""
-        x = Field([1.0, 2.0, 3.0], state)
-        flipped = Field([3.0, 2.0, 1.0], reordered(state))
+    def test_vector_in_any_order(self, H, state):
+        """A vector is aligned to the columns, and the result is a vector on the rows."""
+        x = Vector([1.0, 2.0, 3.0], state)
+        flipped = Vector([3.0, 2.0, 1.0], reordered(state))
 
-        for field in (x, flipped):
-            y = H @ field
-            assert isinstance(y, Field)
+        for vector in (x, flipped):
+            y = H @ vector
+            assert isinstance(y, Vector)
             assert y.space is H.rows
             np.testing.assert_array_equal(y.values, H.dense() @ x.values)
 
@@ -842,13 +842,14 @@ class TestConvolve:
         np.testing.assert_array_equal(result.to_numpy(), [8.0, 26.0])
         assert result.name == "x_0_obs"
 
-    def test_field_and_vector(self, H):
-        """A Field or a Vector gives the same result as its Series."""
+    def test_vector(self, H):
+        """A Vector gives the same result as its Series."""
         series = self.series({"c": 1.0, "a": 2.0, "b": 3.0})
         expected = convolve(series, H)
 
-        pd.testing.assert_series_equal(convolve(Field.from_series(series), H), expected)
-        pd.testing.assert_series_equal(convolve(Vector(series), H), expected)
+        pd.testing.assert_series_equal(
+            convolve(Vector.from_series(series), H), expected
+        )
 
     def test_frame_operator(self, H):
         """A frame with block levels on both axes is read as an operator."""
@@ -893,7 +894,7 @@ class TestConvolve:
         """Float labels that differ by noise match once both are rounded, and not before."""
         space = Space({"flux": pd.Index(op_labels, name="lat")})
         identity = Operator(np.eye(2), space, space)
-        state = Field([1.0, 2.0], Space({"flux": pd.Index(state_labels, name="lat")}))
+        state = Vector([1.0, 2.0], Space({"flux": pd.Index(state_labels, name="lat")}))
 
         result = convolve(state, identity, round_index=decimals)
 
@@ -917,6 +918,6 @@ class TestConvolve:
         H = Operator(
             np.array([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]]), obs, Space({"state": labels})
         )
-        state = Field([30.0, 20.0, 10.0], Space({"state": labels[::-1]}))
+        state = Vector([30.0, 20.0, 10.0], Space({"state": labels[::-1]}))
 
         np.testing.assert_array_equal(convolve(state, H).to_numpy(), [140.0, 320.0])

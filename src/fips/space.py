@@ -65,6 +65,10 @@ def _checked_block(name: str, index: pd.Index) -> pd.Index:
             f"The labels of block {name!r} must be a pandas Index, got "
             f"{type(index).__name__}."
         )
+    if isinstance(index, pd.MultiIndex) and index.nlevels == 1:
+        index = index.get_level_values(
+            0
+        )  # one level is a plain Index, as from_index gives
     if len(index) == 0:
         raise ValueError(f"Block {name!r} has no labels.")
     if None in index.names:
@@ -152,7 +156,7 @@ class Space:
 
     See Also
     --------
-    Field : Values on a space.
+    Vector : Values on a space.
 
     Examples
     --------

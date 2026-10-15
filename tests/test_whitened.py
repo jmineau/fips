@@ -349,13 +349,11 @@ def test_aggregation_across_blocks():
     )
     bias = pd.MultiIndex.from_product([["bias"], ["s1", "s2"]], names=["block", "site"])
     obs = pd.MultiIndex.from_product([["conc"], range(6)], names=["block", "obs_id"])
-    prior = fips.Vector(
-        [
-            fips.Block(
-                pd.Series(rng.normal(size=3), index=flux.droplevel(0), name="flux")
-            ),
-            fips.Block(pd.Series([0.1, -0.1], index=bias.droplevel(0), name="bias")),
-        ]
+    prior = Vector.from_blocks(
+        {
+            "flux": pd.Series(rng.normal(size=3), index=flux.droplevel(0)),
+            "bias": pd.Series([0.1, -0.1], index=bias.droplevel(0)),
+        }
     )
     state = prior.index
     H = pd.DataFrame(rng.uniform(0, 1, (6, 5)), index=obs, columns=state)

@@ -9,7 +9,7 @@ import pytest
 from fips import Covariance, Operator
 from fips.linalg import DenseOperator
 from fips.problem import InverseProblem
-from fips.vector import Block, Vector
+from fips.vector import Vector
 from tests.generate_data import generate_test_data
 
 
@@ -40,10 +40,10 @@ class TestInverseProblemCreation:
     def test_inverse_problem_with_vector_objects(self):
         """Test InverseProblem with Vector objects instead of Series."""
         # Use consistent dimension naming - both use 'id' as dimension name
-        block_prior = Block(
-            pd.Series([1.0, 2.0], index=pd.Index(["x", "y"], name="id"), name="state")
+        prior = Vector.from_blocks(
+            {"state": pd.Series([1.0, 2.0], index=pd.Index(["x", "y"], name="id"))},
+            name="prior",
         )
-        prior = Vector(data=[block_prior], name="prior")
 
         obs = pd.Series(
             [1.0, 2.0], index=pd.Index(["obs_0", "obs_1"], name="id"), name="obs"
@@ -128,16 +128,18 @@ class TestInverseProblemCreation:
         ).solve("bayesian")
 
         pd.testing.assert_series_equal(
-            from_scalars.posterior.data, from_matrices.posterior.data
+            from_scalars.posterior.to_series(), from_matrices.posterior.to_series()
         )
 
-    @pytest.mark.parametrize("wrap", [lambda s: s, Vector], ids=["series", "vector"])
+    @pytest.mark.parametrize(
+        "wrap", [lambda s: s, Vector.from_series], ids=["series", "vector"]
+    )
     def test_labeled_variances_are_diagonals(
         self, wrap, simple_prior, simple_obs, simple_forward_operator
     ):
         """A Series or a Vector with a block level is the diagonal, matched by label."""
-        prior = Vector(simple_prior)
-        obs = Vector(simple_obs)
+        prior = Vector.from_series(simple_prior, block=simple_prior.name)
+        obs = Vector.from_series(simple_obs, block=simple_obs.name)
         # Given in another order than the vectors: the labels decide, not the position
         prior_var = pd.Series([3.0, 2.0, 1.0], index=prior.index[::-1], name="var")
         obs_var = pd.Series([4.0, 3.0, 2.0, 1.0], index=obs.index[::-1], name="var")
@@ -267,7 +269,7 @@ class TestInverseProblemProperties:
 
         prior = problem.prior
         assert isinstance(prior, Vector)
-        assert prior.shape[0] == 3
+        assert len(prior) == 3
 
     def test_obs_property(
         self,
@@ -288,7 +290,7 @@ class TestInverseProblemProperties:
 
         obs = problem.obs
         assert isinstance(obs, Vector)
-        assert obs.shape[0] == 4
+        assert len(obs) == 4
 
     def test_forward_operator_property(
         self,
@@ -564,8 +566,8 @@ class TestInverseProblemDimensions:
             )
 
             assert problem.forward_operator.shape == (10, 5)
-            assert len(problem.prior.data) == 5
-            assert len(problem.obs.data) == 10
+            assert len(problem.prior) == 5
+            assert len(problem.obs) == 10
 
     def test_square_problem(self):
         """Test with equal dimensions."""
@@ -846,17 +848,17 @@ class TestInverseProblemLabelChecks:
         bias = pd.Index(["A"], name="site")
         obs_a = pd.Index([0, 1], name="obs_id")
         obs_b = pd.Index([2], name="obs_id")
-        prior = Vector(
-            [
-                Block(pd.Series([1.0, 2.0], index=flux, name="flux")),
-                Block(pd.Series([0.0], index=bias, name="bias")),
-            ]
+        prior = Vector.from_blocks(
+            {
+                "flux": pd.Series([1.0, 2.0], index=flux),
+                "bias": pd.Series([0.0], index=bias),
+            }
         )
-        obs = Vector(
-            [
-                Block(pd.Series([5.0, 6.0], index=obs_a, name="a")),
-                Block(pd.Series([7.0], index=obs_b, name="b")),
-            ]
+        obs = Vector.from_blocks(
+            {
+                "a": pd.Series([5.0, 6.0], index=obs_a),
+                "b": pd.Series([7.0], index=obs_b),
+            }
         )
         covered = pd.Index(list(cells), name="cell")
         H = {
@@ -895,11 +897,11 @@ class TestInverseProblemLabelChecks:
         cells = pd.Index([1, 2], name="cell")
         sites = pd.Index(["A"], name="site")
         oidx = pd.Index([0], name="obs_id")
-        prior = Vector(
-            [
-                Block(pd.Series([1.0, 2.0], index=cells, name="flux")),
-                Block(pd.Series([0.0], index=sites, name="bias")),
-            ]
+        prior = Vector.from_blocks(
+            {
+                "flux": pd.Series([1.0, 2.0], index=cells),
+                "bias": pd.Series([0.0], index=sites),
+            }
         )
         obs = pd.Series([5.0], index=oidx, name="conc")
         H = Operator.from_blocks(
@@ -1026,10 +1028,12 @@ class TestInverseProblemSpaceOrder:
             interleaved.forward_operator.dense(), grouped.forward_operator.dense()
         )
         pd.testing.assert_series_equal(
-            interleaved.posterior.data, grouped.posterior.data, rtol=1e-12
+            interleaved.posterior.to_series(), grouped.posterior.to_series(), rtol=1e-12
         )
         pd.testing.assert_series_equal(
-            interleaved.posterior_obs.data, grouped.posterior_obs.data, rtol=1e-12
+            interleaved.posterior_obs.to_series(),
+            grouped.posterior_obs.to_series(),
+            rtol=1e-12,
         )
         np.testing.assert_allclose(
             interleaved.posterior_error.dense(),

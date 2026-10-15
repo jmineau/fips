@@ -8,7 +8,6 @@ import pytest
 
 import fips
 from fips import (
-    Block,
     Covariance,
     Estimator,
     InverseProblem,
@@ -40,14 +39,15 @@ def _problem(cls=InverseProblem, seed=0):
         ],
         names=["time", "site"],
     )
-    prior = Vector(
-        [
-            Block(pd.Series(rng.normal(size=6), index=flux_idx, name="flux")),
-            Block(pd.Series([0.1, -0.1], index=bias_idx, name="bias")),
-        ]
+    prior = Vector.from_blocks(
+        {
+            "flux": pd.Series(rng.normal(size=6), index=flux_idx),
+            "bias": pd.Series([0.1, -0.1], index=bias_idx),
+        }
     )
-    obs = Block(
-        pd.Series(400 + rng.normal(size=8), index=obs_idx, name="concentration")
+    obs = Vector.from_series(
+        pd.Series(400 + rng.normal(size=8), index=obs_idx, name="concentration"),
+        block="concentration",
     )
     H = Operator.from_blocks(
         {
@@ -72,8 +72,9 @@ def _problem(cls=InverseProblem, seed=0):
         row_block="concentration",
         col_block="concentration",
     )
-    background = Block(
-        pd.Series(np.full(8, 399.0), index=obs_idx, name="concentration")
+    background = Vector.from_series(
+        pd.Series(np.full(8, 399.0), index=obs_idx, name="concentration"),
+        block="concentration",
     )
     return cls(
         obs=obs,
@@ -158,7 +159,7 @@ def _expected(problem, est, est_attr, row, col, cls, name):
     indexes = {"state": problem.state_index, "obs": problem.obs_index}
     raw = getattr(est, est_attr)
     if col is None:
-        return Vector(raw, index=indexes[row], name=name)
+        return Vector.from_series(pd.Series(raw, index=indexes[row], name=name))
     spaces = {name: Space.from_index(index) for name, index in indexes.items()}
     if cls is Covariance:
         return Covariance(np.asarray(raw), spaces[row], name=name)
@@ -169,7 +170,9 @@ def _assert_same(result, expected):
     assert type(result) is type(expected)
     assert result.name == expected.name
     if isinstance(expected, Vector):
-        pd.testing.assert_series_equal(result.data, expected.data, check_exact=True)
+        pd.testing.assert_series_equal(
+            result.to_series(), expected.to_series(), check_exact=True
+        )
     else:
         assert result.rows.index.equals(expected.rows.index)
         assert result.cols.index.equals(expected.cols.index)
@@ -330,12 +333,19 @@ class TestSolve:
     def test_flux_problem(self):
         problem = _problem(FluxProblem).solve()
         post = problem.result
-        pd.testing.assert_series_equal(problem.posterior_fluxes, post.estimate["flux"])
+
+        def block(vector, name):
+            return vector[name].to_series().droplevel("block")
+
         pd.testing.assert_series_equal(
-            problem.posterior_concentrations, post.modeled_obs["concentration"]
+            problem.posterior_fluxes, block(post.estimate, "flux")
         )
         pd.testing.assert_series_equal(
-            problem.prior_concentrations, post.prior_modeled_obs["concentration"]
+            problem.posterior_concentrations, block(post.modeled_obs, "concentration")
+        )
+        pd.testing.assert_series_equal(
+            problem.prior_concentrations,
+            block(post.prior_modeled_obs, "concentration"),
         )
 
 

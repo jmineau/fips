@@ -16,8 +16,6 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from fips.vector import Block, Vector
-
 # ---------------------------------------------------------------------------
 # Pandas version compatibility utilities
 # ---------------------------------------------------------------------------
@@ -101,20 +99,6 @@ def simple_modeldata_mismatch():
         columns=idx,
     )
     return S_z
-
-
-@pytest.fixture
-def simple_vector_multi_block():
-    """Provide a simple multi-block vector."""
-    block1 = Block(
-        pd.Series([1.0, 2.0], index=pd.Index(["x", "y"], name="dim"), name="state_a")
-    )
-    block2 = Block(
-        pd.Series(
-            [3.0, 4.0, 5.0], index=pd.Index(["a", "b", "c"], name="dim"), name="state_b"
-        )
-    )
-    return Vector(data=[block1, block2], name="state")
 
 
 @pytest.fixture
