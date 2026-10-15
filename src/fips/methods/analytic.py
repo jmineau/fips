@@ -44,13 +44,15 @@ from fips.problem import Problem
 
 logger = logging.getLogger(__name__)
 
-_LARGE_M = 1000
+_LARGE_M = 5000
 """
-The number of observations from which a solve with more observations than state elements logs a warning.
+The number of observations above which a whitened solve with many more observations than state elements logs a warning.
 
-The whitened solve eigendecomposes an ``m x m`` matrix. When ``m > n`` the
-state-space (information) form, ``n x n``, would be cheaper; below this size
-the difference is too small to mention.
+The whitened form eigendecomposes an ``m x m`` matrix, in a time that grows as
+``m^3``. Measured on one core of a cluster node (``n = 100``), the whole solve
+took 2 s at ``m = 2,205``, 25 s at ``5,000``, 85 s at ``7,500`` and 203 s at
+``10,000``. When the information form could not be used and ``m`` is more
+than twice ``n``, a solve above this size says why.
 """
 
 _CHEAP_INVERSE = (DiagonalOperator, SparseOperator, BlockDiagonalOperator)
@@ -189,17 +191,6 @@ class Whitened:
         HQ = HS_0.dense()
         HQH = HS_0H.dense()
         S_z = problem.obs_cov.data
-        m, n = HQ.shape
-        if m > n and m >= _LARGE_M:
-            logger.warning(
-                "The whitened solve eigendecomposes an m x m matrix, with m = %d "
-                "observations, more than the n = %d state elements: its time grows "
-                "as m^3. The state-space (information) form, n x n, would be "
-                "cheaper; fips does not have it yet. Aggregating the observations "
-                "makes m smaller.",
-                m,
-                n,
-            )
         if isinstance(S_z, DiagonalOperator):
             if not np.all(S_z.values > 0):
                 raise LinAlgError(
@@ -596,7 +587,10 @@ def _factor(problem: Problem, gamma: float) -> "Whitened | Information":
 
     The information form needs a square root of the prior error covariance;
     when it has none (it is not positive-definite to working precision), the
-    whitened form, which needs none, factors the problem.
+    whitened form, which needs none, factors the problem. A whitened solve
+    with many more observations than state elements and more than
+    ``_LARGE_M`` of them logs a warning that says why the information form was
+    not used.
     """
     form, why = _choose(problem)
     if form is Information:
@@ -612,6 +606,17 @@ def _factor(problem: Problem, gamma: float) -> "Whitened | Information":
             logger.debug("The analytic method uses the information form: %s.", why)
             return solution
     logger.debug("The analytic method uses the whitened form: %s.", why)
+    m, n = problem.forward.data.shape
+    if m > _LARGE_M and m > 2 * n:
+        logger.warning(
+            "The whitened form eigendecomposes an m x m matrix, with m = %d "
+            "observations, more than twice the n = %d state elements: its time "
+            "grows as m^3. The information form (n x n) would be cheaper, but %s. "
+            "Aggregating the observations makes m smaller.",
+            m,
+            n,
+            why,
+        )
     return Whitened.factor(problem, gamma)
 
 
