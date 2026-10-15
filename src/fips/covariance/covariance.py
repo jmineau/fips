@@ -18,14 +18,16 @@ import pandas as pd
 
 from fips.linalg import (
     BlockDiagonalOperator,
+    DenseOperator,
     DiagonalOperator,
     LinearOperator,
     LinearOperatorLike,
+    SparseOperator,
     as_linear_operator,
 )
-from fips.linalg.forms import _adopt
+from fips.linalg.forms import _adopt, _asymmetry
 from fips.operator import Operator
-from fips.space import Space
+from fips.space import Space, _plain
 from fips.vector import Vector
 
 logger = logging.getLogger(__name__)
@@ -58,6 +60,39 @@ def _side_by_side(parts: "list[Covariance]") -> tuple[LinearOperator, Space]:
     return BlockDiagonalOperator(forms), Space(blocks)
 
 
+def _check_symmetric(form: LinearOperator, space: Space, start: int = 0) -> None:
+    """
+    Raise a ValueError if a dense or sparse form (or block of one) is not symmetric.
+
+    The check is ``max|A - A^T| <= 1e-10 * max|A|``, without forming a dense
+    matrix from a sparse one. A diagonal form is symmetric; a block diagonal
+    one is checked block by block; a Kronecker form checked its factors when
+    it was built; any other form is not checked.
+    """
+    if isinstance(form, BlockDiagonalOperator):
+        for block in form.blocks:
+            _check_symmetric(block, space, start)
+            start += block.shape[0]
+        return
+    if isinstance(form, DenseOperator):
+        found = _asymmetry(form.array)
+    elif isinstance(form, SparseOperator):
+        found = _asymmetry(form.matrix)
+    else:
+        return
+    if found is not None:
+        i, j, a_ij, a_ji, scale = found
+        row, col = (_plain(space.index[start + k]) for k in (i, j))
+        raise ValueError(
+            f"A covariance must be symmetric, but the entry at ({row!r}, {col!r}) "
+            f"is {a_ij:.6g} and the one at ({col!r}, {row!r}) is "
+            f"{a_ji:.6g}: a difference of {abs(a_ij - a_ji):.3g}, the largest, "
+            f"more than 1e-10 of the largest entry ({scale:.3g}). Give the "
+            "whole matrix (both triangles), or (A + A.T) / 2 if the difference "
+            "is roundoff."
+        )
+
+
 class Covariance(Operator):
     """
     A covariance: a symmetric operator from a :class:`~fips.Space` to itself.
@@ -85,8 +120,12 @@ class Covariance(Operator):
     TypeError
         If `data` is a pandas object or `space` is not a Space.
     ValueError
-        If the matrix does not have one row and one column per label, or it
-        stores a NaN.
+        If the matrix does not have one row and one column per label, it
+        stores a NaN, or a dense or sparse matrix is not symmetric: its
+        largest ``|A - A^T|`` is more than 1e-10 of its largest entry (the
+        message names the two entries and their labels). A diagonal or
+        Kronecker form is symmetric by construction, and a block diagonal one
+        is checked block by block.
 
     See Also
     --------
@@ -113,6 +152,23 @@ class Covariance(Operator):
 
     def __init__(self, data: LinearOperatorLike, space: Space, name: str | None = None):
         super().__init__(data, space, space, name=name)
+        _check_symmetric(self._data, space)
+
+    @classmethod
+    def _computed(
+        cls, data: LinearOperatorLike, space: Space, name: str | None = None
+    ) -> Self:
+        """
+        Return a covariance fips made from covariances or models, without the symmetry check.
+
+        A sum, a reordering, a block diagonal or a product such as
+        ``W S W^T`` of symmetric matrices is symmetric up to roundoff, which in
+        a posterior covariance can be more than the check's 1e-10; what a
+        caller hands over goes through ``Covariance(...)``, which checks it.
+        """
+        cov = cls.__new__(cls)
+        Operator.__init__(cov, data, space, space, name=name)
+        return cov
 
     @classmethod
     def _build(
@@ -134,13 +190,13 @@ class Covariance(Operator):
     ) -> Operator:
         """Return the sum `total`: a covariance when `other` is one too."""
         if isinstance(other, Covariance):
-            return Covariance(total, self._rows, name=name)
+            return Covariance._computed(total, self._rows, name=name)
         return super()._sum_like(other, total, name)
 
     def _like(self, data: LinearOperatorLike, rows: Space, cols: Space) -> Operator:
         """Return a covariance when the two axes are one space, else an operator."""
         if rows is cols or rows == cols:
-            return Covariance(data, rows, name=self._name)
+            return Covariance._computed(data, rows, name=self._name)
         return Operator(data, rows, cols, name=self._name)
 
     def __repr__(self) -> str:
@@ -286,7 +342,7 @@ class Covariance(Operator):
         for key, cov in zip(blocks, parts[len(covariances) :], strict=True):
             if cov.space.names != (key,):
                 raise ValueError(f"The covariance given as {key}= is on {cov.space}.")
-        return cls(*_side_by_side(parts), name=name)
+        return cls._computed(*_side_by_side(parts), name=name)
 
     @property
     def variances(self) -> Vector:

@@ -627,6 +627,78 @@ class TestBlockDiagByName:
             Covariance.block_diag(COVS["dense"], flux=Independent().with_std(1.0))
 
 
+class TestSymmetry:
+    """A covariance refuses a matrix that is not symmetric, in every way in."""
+
+    def _upper(self) -> np.ndarray:
+        """A symmetric positive-definite matrix given by its upper triangle only."""
+        return np.triu(_spd(np.random.default_rng(7), 6))
+
+    def test_dense_upper_triangle_raises(self):
+        """An upper triangle is not the covariance; the message names the entries' labels."""
+        with pytest.raises(ValueError, match=r"must be symmetric.*'flux'.*1e-10"):
+            Covariance(self._upper(), CELLS)
+
+    def test_sparse_raises(self):
+        """A sparse matrix is checked as sparse."""
+        with pytest.raises(ValueError, match="must be symmetric"):
+            Covariance(sp.csr_array(self._upper()), CELLS)
+
+    def test_from_frame_and_from_blocks_raise(self):
+        """Both labeled ways in check too."""
+        labels = CELLS.select("flux")
+        with pytest.raises(ValueError, match="must be symmetric"):
+            Covariance.from_frame(
+                _frame(self._upper(), labels), row_block="flux", col_block="flux"
+            )
+        with pytest.raises(ValueError, match="must be symmetric"):
+            Covariance.from_blocks({("flux", "flux"): _frame(self._upper(), labels)})
+
+    def test_a_block_of_a_block_diagonal_form_raises(self):
+        """A block diagonal form is checked block by block, labels at the right place."""
+        form = BlockDiagonalOperator([np.eye(2), np.array([[1.0, 0.5], [0.0, 1.0]])])
+        space = Space({"bias": SITES.select("bias"), "other": OTHER.select("other")})
+        with pytest.raises(
+            ValueError, match=r"\('other', nan, 1\).*\('other', nan, 2\)"
+        ):
+            Covariance(form, space)
+
+    def test_roundoff_is_accepted(self):
+        """A difference below 1e-10 of the largest entry is roundoff, not an error."""
+        A = _spd(np.random.default_rng(8), 6)
+        A[0, 1] += 1e-12 * np.abs(A).max()
+        np.testing.assert_array_equal(Covariance(A, CELLS).dense(), A)
+
+    def test_the_solve_the_review_found(self):
+        """A non-symmetric prior covariance gave a solve that was not its closed form: it raises now."""
+        S0 = np.array([[1.0, 0.9, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]])
+        space = Space({"flux": pd.Index(["a", "b", "c"], name="cell")})
+        with pytest.raises(ValueError, match="0.9 and the one at"):
+            Covariance(S0, space)
+
+    def test_what_fips_computes_is_not_rechecked(self, monkeypatch):
+        """
+        Sums, reorderings, blocks and block diagonals of covariances skip the check.
+
+        They are symmetric up to roundoff, which in a computed covariance (a
+        posterior, ``W S W^T``) can pass 1e-10 of the largest entry.
+        """
+        import fips.covariance.covariance as module
+
+        def refuse(form, space, start=0):
+            raise AssertionError("checked again")
+
+        monkeypatch.setattr(module, "_check_symmetric", refuse)
+        dense = COVS["dense"]
+        assert isinstance(dense + dense, Covariance)
+        assert isinstance(2.0 * dense, Covariance)
+        assert isinstance(dense.align(_shuffled(CELLS), _shuffled(CELLS)), Covariance)
+        assert isinstance(COVS["block"]["bias", "bias"], Covariance)
+        assert isinstance(Covariance.block_diag(COVS["block"]), Covariance)
+        model = Independent().with_std(1.0) + dense
+        assert isinstance(model.build(CELLS), Covariance)
+
+
 # ---------------------------------------------------------------------------
 # The models, pinned to the builders they replaced
 # ---------------------------------------------------------------------------
