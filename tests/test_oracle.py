@@ -22,6 +22,7 @@ import pandas as pd
 import pytest
 import scipy.sparse as sp
 
+import fips
 from fips import (
     Covariance,
     Independent,
@@ -33,7 +34,6 @@ from fips import (
     available_methods,
     solve,
 )
-from fips.aggregators import ObsAggregator
 from fips.kronecker import KroneckerOperator
 from fips.linalg import DiagonalOperator, SparseOperator
 from fips.solve import _METHODS
@@ -904,69 +904,230 @@ def _obs_index(blocks: list[str], seed: int) -> pd.MultiIndex:
     return idx[np.random.default_rng(seed).permutation(len(idx))]
 
 
-@pytest.mark.parametrize("sparse", [False, True], ids=["dense", "sparse"])
-@pytest.mark.parametrize(
-    "aggregator, blocks",
-    [
-        (ObsAggregator(level="time", freq="D"), ["conc"]),
-        (ObsAggregator(by="site", func="sum"), ["conc"]),
-        (ObsAggregator(level="time", freq="D", blocks="co2"), ["co2", "ch4"]),
-    ],
-    ids=["daily-mean", "site-sum", "one-block"],
+_DAILY = pd.Grouper(level="time", freq="D")
+_DAYS = pd.IntervalIndex.from_breaks(
+    pd.date_range("2024-01-01", periods=4, freq="D"), closed="left", name="time"
 )
-def test_dot_test_obs_aggregator(aggregator, blocks, sparse):
-    """
-    The aggregation of the observations and of the forward operator are one map ``W``.
 
-    ``W z`` comes from the aggregated observations. ``W`` itself comes from
-    aggregating the identity as a forward operator, so ``W^T y`` is that
-    frame's transpose applied to ``y`` by label. The aggregated mismatch is
-    ``W S_z W^T`` with the same ``W``.
+
+def _groups_by_hand(
+    index: pd.MultiIndex, aggregated: list[str], by: list[str], passthrough: bool
+):
     """
+    The group of each label, written with pandas alone: (block, site and/or day).
+
+    A label of a block not aggregated is its own group if it passes through,
+    and in none (None) if not.
+    """
+    day = index.get_level_values("time").floor("D")
+    site = index.get_level_values("site")
+    block = index.get_level_values("block")
+    keys = []
+    for k in range(len(index)):
+        if block[k] in aggregated:
+            parts = {"site": site[k], "day": day[k]}
+            keys.append((block[k], *(parts[name] for name in by)))
+        else:
+            keys.append(("pass", *index[k]) if passthrough else None)
+    return keys
+
+
+def _expected_aggregation(index, aggregated, by, average, passthrough):
+    """W written by hand: rows are the groups (in any order), columns the labels of `index`."""
+    keys = _groups_by_hand(index, aggregated, by, passthrough)
+    groups = sorted({key for key in keys if key is not None}, key=repr)
+    W = np.zeros((len(groups), len(index)))
+    for j, key in enumerate(keys):
+        if key is not None:
+            W[groups.index(key), j] = 1.0
+    if average:
+        W /= W.sum(axis=1, keepdims=True)
+    return W
+
+
+AGGREGATIONS = {
+    "daily-mean": (
+        lambda s: fips.aggregate.mean(s, by=["site", _DAILY]),
+        ["conc"],
+        ["conc"],
+        ["site", "day"],
+        True,
+        True,
+    ),
+    "site-sum": (
+        lambda s: fips.aggregate.sum(s, by="site"),
+        ["conc"],
+        ["conc"],
+        ["site"],
+        False,
+        True,
+    ),
+    "one-block": (
+        lambda s: fips.aggregate.mean(s, by=["site", _DAYS], blocks="co2"),
+        ["co2", "ch4"],
+        ["co2"],
+        ["site", "day"],
+        True,
+        True,
+    ),
+    "offsets": (
+        lambda s: fips.offset_block(s, by=_DAILY, blocks="co2")[1].T,
+        ["co2", "ch4"],
+        ["co2"],
+        ["day"],
+        False,
+        False,
+    ),
+}
+
+
+@pytest.mark.parametrize("name", list(AGGREGATIONS))
+def test_dot_test_aggregation(name):
+    """
+    An aggregation and its transpose, applied to vectors by label, are adjoint, and the matrix is the one written by hand.
+
+    ``W z`` comes from ``W @ Vector`` with the observations in a random
+    order; ``W^T y`` from ``W.T @ Vector`` with the aggregates in another.
+    The matrix is compared with one built from the labels with pandas alone
+    (rows matched by their groups). The offsets' forward block is the
+    transpose of a sum, so its transpose is checked as one.
+    """
+    make, blocks, aggregated, by, average, passthrough = AGGREGATIONS[name]
     rng = np.random.default_rng(2)
     obs_index = _obs_index(blocks, seed=3)
-    m = len(obs_index)
-    # Each input in its own order, so W is right only if apply aligns them
-    identity = Operator.from_frame(
-        _shuffled(pd.DataFrame(np.eye(m), index=obs_index, columns=obs_index), rng)
-    )
-    if sparse:
-        identity = Operator(
-            sp.csr_array(identity.dense()), identity.rows, identity.cols
-        )
-    S_z = random_spd(rng, m)
-    S_z_frame = pd.DataFrame(S_z, index=obs_index, columns=obs_index)
-    _, W, S_z_agg, _ = aggregator.apply(
-        obs=_shuffled(pd.Series(np.zeros(m), index=obs_index, name="z"), rng),
-        forward_operator=identity,
-        modeldata_mismatch=_shuffled(S_z_frame, rng),
-    )
-    assert isinstance(W, Operator)
-    W_frame = W.to_frame()
-    agg_index = W_frame.index
-    k = len(agg_index)
+    space = Space.from_index(obs_index)
+    W = make(space)
+    m, k = len(space), W.shape[0]
+    assert W.cols == space
     assert k < m
 
     def forward(x):
         perm = rng.permutation(m)
-        z = pd.Series(x[perm], index=obs_index[perm], name="z")
-        z_agg, _, _, _ = aggregator.apply(
-            obs=z, forward_operator=identity, modeldata_mismatch=S_z_frame
-        )
-        assert z_agg.index.sort_values().equals(agg_index.sort_values())
-        return z_agg.reindex(agg_index).to_numpy()
+        z = Vector.from_series(pd.Series(x[perm], index=space.index[perm]))
+        Wz = W @ z
+        assert Wz.space == W.rows
+        return Wz.values
 
     def adjoint(y):
         perm = rng.permutation(k)
-        y_agg = pd.Series(y[perm], index=agg_index[perm])
-        return W_frame.T.dot(y_agg).reindex(obs_index).to_numpy()
+        y_agg = Vector.from_series(pd.Series(y[perm], index=W.rows.index[perm]))
+        WTy = W.T @ y_agg
+        assert WTy.space == space
+        return WTy.values
 
     dot_test(forward, adjoint, m, k, rng)
 
-    W_values = W_frame.reindex(columns=obs_index).to_numpy()
-    np.testing.assert_allclose(
-        S_z_agg.reindex(index=agg_index, columns=agg_index).to_numpy(),
-        W_values @ S_z @ W_values.T,
-        rtol=1e-12,
-        atol=1e-12 * np.abs(S_z).max(),
+    expected = _expected_aggregation(space.index, aggregated, by, average, passthrough)
+    got = W.dense()
+    # Rows in fips's order: match each to the hand-written row with its pattern
+    assert expected.shape == got.shape
+    order = [int(np.flatnonzero((expected == row).all(axis=1))[0]) for row in got]
+    assert sorted(order) == list(range(k)), "a group is missing or doubled"
+    np.testing.assert_array_equal(got, expected[order])
+
+
+@pytest.mark.parametrize("sparse", [False, True], ids=["dense", "sparse"])
+@pytest.mark.parametrize("name", ["daily-mean", "site-sum", "one-block"])
+def test_problem_aggregate_is_one_map(name, sparse):
+    """
+    ``Problem.aggregate(W)`` puts the observations, ``H``, ``S_z`` and the offset through one ``W``.
+
+    Each input is given in its own random order, so the result is right only
+    if each is aligned by label: ``W z``, ``W H``, ``W S_z W^T`` and ``W c``
+    against the matrices by position.
+    """
+    make, blocks = AGGREGATIONS[name][:2]
+    rng = np.random.default_rng(4)
+    obs_index = _obs_index(blocks, seed=5)
+    m, n = len(obs_index), 3
+    state_index = pd.MultiIndex.from_arrays(
+        [["flux"] * n, [f"c{j}" for j in range(n)]], names=["block", "cell"]
+    )
+    z, c = rng.standard_normal(m), rng.standard_normal(m)
+    H, S_z = rng.standard_normal((m, n)), random_spd(rng, m)
+    forward = Operator.from_frame(
+        _shuffled(pd.DataFrame(H, index=obs_index, columns=state_index), rng)
+    )
+    obs_cov = Covariance.from_frame(
+        _shuffled(pd.DataFrame(S_z, index=obs_index, columns=obs_index), rng)
+    )
+    if sparse:
+        forward = Operator(
+            SparseOperator(sp.csr_array(forward.dense())), forward.rows, forward.cols
+        )
+        obs_cov = Covariance(
+            SparseOperator(sp.csr_array(obs_cov.dense())), obs_cov.space
+        )
+    problem = Problem(
+        prior=Vector(np.zeros(n), Space.from_index(state_index)),
+        prior_cov=Independent().with_std(1.0),
+        obs=Vector.from_series(_shuffled(pd.Series(z, index=obs_index), rng)),
+        obs_cov=obs_cov,
+        forward=forward,
+        offset=Vector.from_series(_shuffled(pd.Series(c, index=obs_index), rng)),
+    )
+    W = make(Space.from_index(_shuffled(pd.Series(0.0, index=obs_index), rng).index))
+    agg = problem.aggregate(W)
+    W_pos = W.to_frame().reindex(columns=obs_index).to_numpy()
+    rows = W.rows.index
+    scale = np.abs(W_pos).sum(axis=1).max()
+    assert_close(_aligned(agg.obs, rows), W_pos @ z, scale * np.abs(z).max(), "W z")
+    assert_close(_aligned(agg.offset, rows), W_pos @ c, scale * np.abs(c).max(), "W c")
+    assert_close(
+        _aligned(agg.forward, rows, state_index),
+        W_pos @ H,
+        scale * np.abs(H).max(),
+        "W H",
+    )
+    assert_close(
+        _aligned(agg.obs_cov, rows, rows),
+        W_pos @ S_z @ W_pos.T,
+        scale**2 * np.abs(S_z).max(),
+        "W S_z W^T",
+    )
+
+
+@pytest.mark.parametrize("method", METHODS)
+@pytest.mark.parametrize("average", [False, True], ids=["sum", "mean"])
+def test_posterior_of_state_aggregates(method, average):
+    """
+    ``post.cov(W)`` and ``post.averaging_kernel(W)`` with an aggregation of the state are the closed form's.
+
+    The state's cells are mapped to regions (a ``Series`` key) and summed or
+    averaged: ``W S_hat W^T`` and ``W A W^T (W W^T)^-1``.
+    """
+    case = Case.random(seed=11, n=7, m=10)
+    post = solve(case.problem(), method)
+    cells = case.state_index.get_level_values("cell")
+    regions = pd.Series(
+        ["east", "west", "east", "north", "west", "east", "north"],
+        index=pd.Index([f"c{j}" for j in range(7)], name="cell"),
+        name="region",
+    )
+    aggregate = fips.aggregate.mean if average else fips.aggregate.sum
+    W = aggregate(case.state_space, by=regions)
+    W_pos = W.to_frame().reindex(columns=case.state_index).to_numpy()
+    by_hand = np.zeros_like(W_pos)
+    names = list(W.rows.select("flux"))
+    for j, cell in enumerate(cells):
+        by_hand[names.index(regions[cell]), j] = 1.0
+    if average:
+        by_hand /= by_hand.sum(axis=1, keepdims=True)
+    np.testing.assert_array_equal(W_pos, by_hand)
+
+    expected = closed_form(case.z, case.x_0, case.H, case.S_0, case.S_z, case.c)
+    sc = expected.scale
+    rows = W.rows.index
+    assert_close(
+        _aligned(post.cov(W), rows, rows),
+        W_pos @ expected.S_hat_cov @ W_pos.T,
+        sc["S_hat"] * 7,
+        "W S_hat W^T",
+    )
+    pinv = W_pos.T @ np.linalg.inv(W_pos @ W_pos.T)
+    assert_close(
+        _aligned(post.averaging_kernel(W), rows, rows),
+        W_pos @ expected.A @ pinv,
+        sc["A"] * 7,
+        "W A W*",
     )
