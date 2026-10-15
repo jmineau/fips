@@ -529,6 +529,35 @@ class TestFromBlocks:
         with pytest.raises(ValueError, match="'z'"):
             Operator.from_blocks({("co2", "flux"): bare(H), ("ch4", "flux"): ch4})
 
+    def test_labeled_matrices_of_a_block_must_agree(self):
+        """
+        Without `rows`, the labeled matrices of a row block give it the same labels, in either order of the keys.
+
+        The order of the keys used to decide: the first matrix's labels won,
+        and another raised or was zero-filled.
+        """
+        two = pd.Index(["o1", "o2"], name="obs_id")
+        three = pd.Index(["o1", "o2", "o3"], name="obs_id")
+        flux = pd.DataFrame(1.0, index=two, columns=pd.Index(["a"], name="cell"))
+        bias = pd.DataFrame(2.0, index=three, columns=pd.Index(["S"], name="site"))
+        for blocks in (
+            {("co2", "flux"): flux, ("co2", "bias"): bias},
+            {("co2", "bias"): bias, ("co2", "flux"): flux},
+        ):
+            with pytest.raises(ValueError, match=r"'o3' only in the .*`rows`"):
+                Operator.from_blocks(blocks)
+        rows = Space({"co2": three})
+        op = Operator.from_blocks(
+            {("co2", "flux"): flux, ("co2", "bias"): bias}, rows=rows
+        )
+        np.testing.assert_array_equal(op.dense(), [[1.0, 2.0], [1.0, 2.0], [0.0, 2.0]])
+
+    def test_labels_of_a_block_in_another_order_agree(self, H):
+        """The same labels in another order are the same labels."""
+        flipped = bare(H).iloc[::-1, ::-1]
+        op = Operator.from_blocks({("co2", "flux"): bare(H), ("ch4", "flux"): flipped})
+        np.testing.assert_array_equal(op.dense()[2:], H.dense()[::-1])
+
     def test_operator_on_other_blocks_raises(self, H):
         """An Operator must be on the one row block and one column block its key names."""
         with pytest.raises(ValueError, match="must be on the one block its key names"):
