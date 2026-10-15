@@ -9,6 +9,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **The analytic method's information form, chosen by size.** With fewer
+  state elements than observations (`n < m`) and a model-data mismatch that
+  is diagonal, sparse or block diagonal, `fips.solve` factors the prior
+  instead of the observations: with `S_0 = R R^T` (the form's own square root;
+  through the factors' Cholesky factors for a Kronecker `S_0`), it
+  eigendecomposes the `n x n` matrix `R^T H^T S_z^-1 H R` instead of the
+  `m x m` one, holds `n x n` instead of `m x m`, and gives the same posterior
+  (both forms are held to the closed-form oracle at 1e-10; `with_gamma` and
+  `with_data` work in both). Otherwise, and when `S_0` has no Cholesky
+  factor, the whitened form solves as before, bit for bit. There is no option:
+  the choice is logged at DEBUG. The warning about a large solve now fires
+  only for a whitened solve with more than 5,000 observations and more than
+  twice as many observations as state elements, and says why the information
+  form was not used (before, every solve with `m > n` and `m >= 1000`
+  warned). `KroneckerOperator.sqrt` gives its root through the factors when
+  its rows are the whole product.
+  With `n = 300`, `m = 10,000` and a diagonal `S_z` on one core, a solve
+  with the variances, DOFS and chi-squared takes 0.14 s at a 238 MB peak
+  (194 s and 3.4 GB in the whitened form); at `n = 500`, `m = 5,000` a
+  posterior holds 2 MB after the solve instead of 220 MB.
+  ([#90](https://github.com/jmineau/fips/issues/90))
 - **`diagonal`, a constructor for diagonal matrices**, on `Matrix`,
   `CovarianceMatrix`, `ForwardOperator` and `MatrixBlock`:
   `CovarianceMatrix.diagonal(0.25, index=idx)` is the matrix with 0.25 on the
