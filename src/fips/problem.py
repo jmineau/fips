@@ -21,7 +21,6 @@ from typing import Any
 import numpy as np
 
 from fips.covariance import Covariance, CovarianceModel
-from fips.linalg import LinearOperator
 from fips.operator import Operator
 from fips.space import Space
 from fips.vector import Vector
@@ -37,28 +36,6 @@ def _vector(value: Any, what: str) -> Vector:
             "Vector.from_series(series, block=...) or Vector.from_blocks({...})."
         )
     return value
-
-
-def _on(
-    op: Operator, rows: Space, cols: Space, what: str, of: tuple[str, str]
-) -> LinearOperator:
-    """
-    Return the form of `op` with its rows on `rows` and its columns on `cols`.
-
-    Both are exact joins: a label on one side and not the other raises, and
-    the message names it (:meth:`Space.align <fips.Space.align>`). `of` names
-    what `rows` and `cols` are the labels of, for the message.
-    """
-    r = rows._align(op.rows, f"the rows of {what}", f"The rows of {what} and {of[0]}")
-    if cols is rows and op.cols is op.rows:
-        c = r
-    else:
-        c = cols._align(
-            op.cols, f"the columns of {what}", f"The columns of {what} and {of[1]}"
-        )
-    if np.array_equal(r, np.arange(len(r))) and np.array_equal(c, np.arange(len(c))):
-        return op.data
-    return op.data._select(r, c)
 
 
 def _covariance(value: Any, space: Space, what: str, of: str) -> Covariance:
@@ -78,7 +55,7 @@ def _covariance(value: Any, space: Space, what: str, of: str) -> Covariance:
             "or Covariance.from_frame(frame)."
         )
     return Covariance._computed(
-        _on(value, space, space, what, (of, of)), space, name=value.name
+        value._on(space, space, what, (of, of)), space, name=value.name
     )
 
 
@@ -194,7 +171,7 @@ class Problem:
                 "Operator.from_frame."
             )
         self._forward = Operator(
-            _on(forward, observed, state, "forward", ("the observations", "the prior")),
+            forward._on(observed, state, "forward", ("the observations", "the prior")),
             observed,
             state,
             name=forward.name,
@@ -473,8 +450,8 @@ class Problem:
                 "with fips.aggregate.mean or fips.aggregate.sum."
             )
         observed = self._obs.space
-        form = _on(
-            W, W.rows, observed, "the aggregation", ("its rows", "the observations")
+        form = W._on(
+            W.rows, observed, "the aggregation", ("its rows", "the observations")
         )
         rows = W.rows
         offset = self._offset
