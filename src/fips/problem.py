@@ -20,7 +20,6 @@ from typing import Any
 
 import numpy as np
 
-from fips.base import Pickleable
 from fips.covariance import Covariance, CovarianceModel
 from fips.linalg import LinearOperator
 from fips.operator import Operator
@@ -81,7 +80,7 @@ def _covariance(value: Any, space: Space, what: str, of: str) -> Covariance:
     return Covariance(_on(value, space, space, what, (of, of)), space, name=value.name)
 
 
-class Problem(Pickleable):
+class Problem:
     r"""
     A linear inverse problem: what is known before the observations, and the observations.
 
