@@ -259,6 +259,40 @@ def test_with_data_is_a_fresh_solve(form, gamma):
     np.testing.assert_array_equal(post.problem.obs.values, z)
 
 
+class _Counted(Problem):
+    """A problem that counts how many times its constructor ran."""
+
+    built = 0
+
+    def __init__(self, *args, **kwargs):
+        type(self).built += 1
+        super().__init__(*args, **kwargs)
+
+
+def test_with_data_builds_its_problem_with_the_constructor():
+    """The new problem is made by the problem's own class, from the same inputs (their forms are shared)."""
+    p = _problem(*_arrays("dense", 4))
+    problem = _Counted(
+        prior=p.prior,
+        prior_cov=p.prior_cov,
+        obs=p.obs,
+        obs_cov=p.obs_cov,
+        forward=p.forward,
+        offset=p.offset,
+    )
+    post = fips.solve(problem)
+    before = _Counted.built
+    swept = post.with_data(Vector(problem.obs.values + 1.0, problem.obs.space))
+    assert _Counted.built == before + 1
+    new = swept.problem
+    assert type(new) is _Counted and new is not problem
+    assert new.prior is problem.prior and new.obs.space is problem.obs.space
+    for name in ("prior_cov", "obs_cov", "forward"):
+        assert getattr(new, name).data is getattr(problem, name).data, name
+    np.testing.assert_array_equal(new.offset.values, problem.offset.values)
+    np.testing.assert_array_equal(new.obs.values, problem.obs.values + 1.0)
+
+
 def test_with_data_needs_the_same_labels():
     """New observations on other labels raise, naming them."""
     z, x_0, H, S_0, S_z, c = _arrays("dense", 0)
