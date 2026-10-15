@@ -264,20 +264,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   the forward operator. **`Vector.combine_first(other)`** puts the estimate
   back on the whole state, with the prior where the state was held.
   ([#82](https://github.com/jmineau/fips/issues/82))
+- **`fips.visualization.plot_map(post, block=None, time="mean", ...)`**: maps
+  of a block of the state, the prior, the estimate and their difference (or,
+  with `truth`, the truth first and the estimate minus the truth last), on any
+  levels (`x="lon"`, `y="lat"`, `time_level="time"`), with optional map tiles
+  (cartopy) and site markers. **`fips.visualization.plot_obs(post, block=None,
+  location=None, location_level="obs_location", time_level=None, ...)`**: one
+  figure per location of the observations against the prior's and the
+  posterior's modeled observations over time, as points and rolling means,
+  with gaps shaded. They are `FluxPlotter.fluxes` and `.concentrations` as
+  functions of the posterior, with the block and level names as arguments
+  and the block's name on the colorbar, title and axis (where the plotter
+  wrote "Flux" and "Concentration"). `plot_obs` no longer calls `plt.show()`,
+  takes a location label of any type (an integer site number too), and drops
+  `**kwargs`, which the plotter accepted and ignored; `plot_map` raises
+  `TypeError` for `sites` that is not a dict.
+  ([#82](https://github.com/jmineau/fips/issues/82))
+- **`Posterior.summary()`**: the diagnostics of the solve as a one-row
+  `DataFrame` (`gamma`, `n_state`, `n_obs`, `dofs`, `chi2`, `reduced_chi2`,
+  `r2`, `rmse`, `uncertainty_reduction`), computed and returned, never printed.
+  The rows of several posteriors stack: `pd.concat([post.with_gamma(g).summary()
+  for g in gammas], ignore_index=True)`.
+  ([#8](https://github.com/jmineau/fips/issues/8),
+  [#82](https://github.com/jmineau/fips/issues/82))
 
 ### Changed
 
-- **The pipelines and the flux problem take and give operators and
-  vectors.** `InversionPipeline(config, problem, method="analytic")` builds the
-  problem from `get_inputs()` (whose keys are now `obs`, `prior`, `forward`,
-  `prior_cov`, `obs_cov`, `offset`), and `run(options=None, **kwargs)` returns
-  the `Posterior` (kept as `pipeline.posterior`, the problem as
-  `pipeline.problem`). `FluxProblem` is a `Problem` with the same keywords,
-  solved with `fips.solve`; it keeps the accessors that need no solve
-  (`prior_concentrations` is `predict(prior)`), and `FluxProblem.jacobian` and
-  the other matrix accessors give the block as an `Operator`. `FluxPlotter`
-  plots a `Posterior`: `FluxPlotter(post).fluxes()`. A plot of a `Vector` of one
-  block (`plot_comparison`) is on the block's own labels, as a `Block`'s was.
+- **The `flux` extra is renamed `viz`** and installs cartopy and matplotlib
+  (`pip install "fips[viz]"`); it no longer installs `h5py`, which nothing in
+  fips imported. `joblib` is no longer a dependency: nothing imports it since
+  the covariance builders went.
+  ([#82](https://github.com/jmineau/fips/issues/82))
+
+- A plot of a `Vector` of one block (`plot_comparison`) is on the block's own
+  labels, as a `Block`'s was. (The pipelines and the flux problem, which this
+  step had moved onto operators and vectors, are removed: see Removed.)
   ([#82](https://github.com/jmineau/fips/issues/82))
 - **A label on one side only raises when a problem is built**, where
   `InverseProblem` filled the labels a matrix lacked within a known block with
@@ -541,9 +562,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   | `BayesianSolver.with_gamma` | `post.with_gamma` |
   | `convolve(state, H)` | `H @ vector` (a `Vector`; a label `H` has and the vector lacks raises) |
   | `fips.indexes.round_index`, `overlaps`, `apply_to_index` | `Space.round_labels`; `Space.align` |
-  | `InversionPipeline(config, problem, estimator)`, `run(estimator_kwargs=...)` | `InversionPipeline(config, problem, method="analytic")`, `run(options=...)` (returns the `Posterior`) |
-  | `FluxProblem(...).solve()`, `.estimator`, `.posterior_fluxes`, `.posterior_concentrations`, `.posterior_flux_error` | `post = fips.solve(flux_problem)`; `post.estimate["flux"]`, `post.modeled_obs["concentration"]`, `post.cov()["flux", "flux"]` |
-  | `flux_problem.plot.fluxes()` | `FluxPlotter(post).fluxes()` |
+  | `InversionPipeline(config, problem, estimator)`, `run(estimator_kwargs=...)` | (removed: see `InversionPipeline` below) |
+  | `FluxProblem(...).solve()`, `.estimator`, `.posterior_fluxes`, `.posterior_concentrations`, `.posterior_flux_error` | `post = fips.solve(problem)`; `post.estimate["flux"]`, `post.modeled_obs["concentration"]`, `post.cov()["flux", "flux"]` |
+  | `flux_problem.plot.fluxes()`, `.plot.concentrations()` | `fips.visualization.plot_map(post)`, `plot_obs(post)` |
 
 - **`ObsAggregator` and `integrate_over_time_bins`**, with the module
   `fips.aggregators`: an aggregation is an `Operator` from `fips.aggregate`,
@@ -568,6 +589,47 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   | `agg.apply(obs, forward_operator, modeldata_mismatch, constant)` | `problem.aggregate(W)` (a `Problem`), or `W @ obs`, `W @ H`, `W @ S_z @ W.T` |
   | `agg._build_operator(index)` | `fips.aggregate.mean(Space.from_index(index), by=...)` (`.data` for the matrix) |
   | `integrate_over_time_bins(series, bins, time_dim="time")` | `fips.aggregate.sum(v.space, by=[bins.rename("time"), <other levels>]) @ v` |
+
+- **`InversionPipeline` (the module `fips.pipeline`) and the subpackage
+  `fips.problems`**, with `FluxProblem`, `FluxInversionPipeline` and
+  `FluxPlotter`: fips knows no science domain. A flux inversion is a
+  `Problem` whose blocks are named `flux` and `concentration`, read by name;
+  its workflow is a few functions in the caller's package that build the
+  `Problem` and call `fips.solve`; its plots are `fips.visualization.plot_map`
+  and `plot_obs`, and its statistics `Posterior.summary()`. The pipeline's
+  printed report goes, and its statistics are returned
+  ([#8](https://github.com/jmineau/fips/issues/8)); with the pipeline go the
+  missing hook ([#9](https://github.com/jmineau/fips/issues/9)), the unused
+  `min_sims_per_interval` ([#10](https://github.com/jmineau/fips/issues/10)),
+  the hard-coded block names ([#11](https://github.com/jmineau/fips/issues/11))
+  and the `solve` override and stale docstring of `fips.problems`
+  ([#13](https://github.com/jmineau/fips/issues/13)). Old pickles of a
+  `FluxProblem` do not load. ([#82](https://github.com/jmineau/fips/issues/82))
+
+  **Migration** (`problem` a `Problem`, `post = fips.solve(problem)`; a block
+  as a Series on its own labels is `v["flux"].to_series().droplevel("block")`):
+
+  | Removed | Use |
+  |---|---|
+  | `FluxProblem(prior, prior_cov, obs, obs_cov, forward, offset)` | `Problem(prior, prior_cov, obs, obs_cov, forward, offset)` |
+  | `problem.concentrations` | `problem.obs["concentration"]` |
+  | `problem.enhancement` | `problem.obs["concentration"].values - problem.offset["concentration"].values` (or the observations when there is no offset) |
+  | `problem.background` | `problem.offset["concentration"]` (`problem.offset` is `None` without one) |
+  | `problem.prior_fluxes` | `problem.prior["flux"]` |
+  | `problem.jacobian` | `problem.forward["concentration", "flux"]` |
+  | `problem.prior_flux_error` | `problem.prior_cov["flux", "flux"]` |
+  | `problem.concentration_error` | `problem.obs_cov["concentration", "concentration"]` |
+  | `problem.prior_concentrations` | `problem.predict(problem.prior)["concentration"]` |
+  | `problem.prior_concentration_error` (`H S_0 H^T`) | `post.innovation_cov["concentration", "concentration"]` (`H S_0 H^T + S_z / gamma`); `H S_0 H^T` alone is `problem.forward @ problem.prior_cov @ problem.forward.T` |
+  | `repr(flux_problem)` (`n_obs`, `n_flux`, `n_state`) | `len(problem.obs)`, `len(problem.prior["flux"])`, `len(problem.prior)` |
+  | `FluxPlotter(post)`, `.posterior` | `post`, passed to each plot |
+  | `FluxPlotter(post).fluxes(time, truth, x_dim, y_dim, time_dim, sites, sites_kwargs)` | `plot_map(post, block="flux", time=..., truth=..., x=..., y=..., time_level=..., sites=..., sites_kwargs=...)` |
+  | `FluxPlotter(post).concentrations(location, location_dim, rolling_window, gap_threshold, show_raw)` | `plot_obs(post, block="concentration", location=..., location_level=..., rolling_window=..., gap_threshold=..., show_raw=...)` |
+  | `InversionPipeline`, `FluxInversionPipeline` (`get_obs`, `get_prior`, `get_forward_operator`, `get_prior_error`, `get_modeldata_mismatch`, `get_constant`, `get_inputs`) | functions in your code that return the `Problem`'s inputs |
+  | `pipeline.filter_state_space(obs, prior)` (observations in time bins with too few dropped) | `fips.filters.select_intervals_with_min_obs(obs.to_series(), intervals, threshold, level="obs_time")`, or `problem.restrict(keep)` to hold part of the state at its prior |
+  | `pipeline.aggregate_obs_space(...)` | `problem.aggregate(W)` |
+  | `pipeline.run(options)`, `.problem`, `.posterior`, `.method` | `post = fips.solve(problem, method, **options)`; `post.problem` |
+  | `FluxInversionPipeline.summarize()` (printed) | `post.summary()` (a one-row DataFrame: DOFS, chi-squared, reduced chi-squared, R², RMSE, uncertainty reduction); the flux means, negative cells, observation fit before and after, mean flux per time step and its trend per year are a few lines on `post.estimate["flux"]`, `post.modeled_obs` and `problem.predict(problem.prior)` |
 
 - `Estimator._output_meta`, the private table `InverseProblem` read to label
   the estimator's outputs: `Posterior` labels them itself.

@@ -33,8 +33,7 @@ PyPI name and import name are both `fips`. Source lives in `src/fips/`.
 src/fips/
   __init__.py        public exports (Space, Vector, Operator, Covariance, the
                      covariance models, Problem, solve, available_methods,
-                     Posterior, the aggregate module, offset_block,
-                     InversionPipeline)
+                     Posterior, the aggregate module, offset_block)
   space.py           Space — ordered named blocks, the padded MultiIndex,
                      select, from_index, exact align, round_labels
   vector.py          Vector — values on a Space (read-only float array);
@@ -70,37 +69,36 @@ src/fips/
                      the estimate, variances, gain, DOFS, chi-squared for any
                      gamma
   posterior.py       Posterior — the problem, the options and the factors;
-                     every output derived from them, labeled, each built once
-  pipeline.py        InversionPipeline ABC — workflow template for repeated
-                     inversions (load data, build covariances, solve)
+                     every output derived from them, labeled, each built once;
+                     summary() returns the diagnostics as one row
   aggregate.py       sum, mean: an aggregation W (sparse Operator) from a
                      Space to groups of its labels (levels, a pandas Grouper,
                      an IntervalIndex, a Series mapping); offset_block, the
                      same groups as a block of offsets in the state
   filters.py         Selection helpers (e.g. enough_obs_per_interval)
   metrics.py         haversine_matrix, chordal_matrix, time_diff_matrix
-  visualization.py   Generic plotting helpers
+  visualization.py   Plotting (the `viz` extra): plot_map (a block of the
+                     state on x/y levels), plot_obs (the observations
+                     against the prior's and the posterior's predictions),
+                     plot_comparison, plot_error_norm
   py.typed           ships type hints
-  problems/          domain-specific problem subpackages
-    flux/            atmospheric flux inversion (see below)
 tests/               pytest suite (no integration markers in use)
 docs/                Sphinx (pydata-sphinx-theme + numpy-style docstrings)
 archive/             local-only, not tracked
 ```
 
-### `fips.problems.flux`
+### No domain subpackages
 
-Specialization for atmospheric flux inversion. Public exports:
-
-- `FluxProblem` — `Problem` subclass with block accessors (solved with
-  `fips.solve`, as any problem)
-- `FluxInversionPipeline` — `InversionPipeline` subclass
-- `FluxPlotter` — visualization of a `Posterior` (`FluxPlotter(post)`)
-
-The `flux` extra pulls in `cartopy`, `h5py`, `matplotlib`. fips does not
-build transport Jacobians: PYSTILT's `project.jacobian()` does, and the
-caller puts a `Space` on each axis of its sparse matrix (`Operator(J.data,
-rows, cols)`).
+fips knows no science domain: a flux inversion is a `Problem` whose blocks
+are named `flux` and `concentration`, read by name (`post.estimate["flux"]`),
+and its workflow lives in its user's package as functions. The plots in
+`visualization.py` take the block and the level names as arguments; nothing
+in fips's public names, defaults or docstrings (beyond an example) is flux
+science. The `viz` extra pulls in `cartopy` and
+`matplotlib`. fips does not build transport Jacobians: PYSTILT's
+`project.jacobian()` does, and the caller places its sparse matrix with its
+labels (`Operator.from_blocks({("concentration", "flux"): (J.data, rows,
+cols)}, rows=obs.space, cols=prior.space)`).
 
 ## Public API summary
 
@@ -117,7 +115,9 @@ From `fips.__init__`:
 | `Posterior` | the estimate and every diagnostic, labeled, from the kept factorization |
 | `aggregate.sum`, `aggregate.mean` | an aggregation `W` of a space by group: `problem.aggregate(W)` on the observations, `post.cov(W)` on the state |
 | `offset_block` | a block of offsets in the state, one per group of observations, and its forward block |
-| `InversionPipeline` | repeatable workflow template |
+
+Plots are in `fips.visualization` (not exported from `fips`): `plot_map`,
+`plot_obs`, `plot_comparison`, `plot_error_norm`.
 
 ## Mental model
 
@@ -146,9 +146,11 @@ From `fips.__init__`:
    obs_cov, forward, offset=None)` checks the labels once (exact join) and
    builds a covariance model on its space. `fips.solve(problem)` returns a
    `Posterior` (estimate, `cov(W)`, `variances`, diagnostics such as `dofs`
-   and `reduced_chi2`); the problem has no `solve` method and is not changed.
-5. **For repeated inversions, subclass `InversionPipeline`** so loading,
-   covariance build, and solve are templated.
+   and `reduced_chi2`; `post.summary()` gives them as one row); the problem
+   has no `solve` method and is not changed.
+5. **A repeated inversion is a function** that builds the `Problem` from its
+   settings, then `fips.solve`; the rows of `post.summary()` stack over a
+   sweep.
 
 ## Invariants to respect
 
@@ -245,7 +247,9 @@ From `fips.__init__`:
   the factors (a dict of arrays), never an output, which is rebuilt when read.
 - **Logging, not printing.** Every module uses
   `logger = logging.getLogger(__name__)`; `__init__.py` attaches a
-  `NullHandler`. Don't `print()` in library code.
+  `NullHandler`. Don't `print()` in library code: a report is returned
+  (`Posterior.summary()` is a DataFrame), and a plot returns its figure or
+  axes without `plt.show()`.
 - **Docstring convention.** `pydocstyle` (numpy convention) is enforced via
   ruff (`D` rules). Public functions need at least a one-line docstring.
 
@@ -255,7 +259,7 @@ Driven by `just` + `uv`; CI runs the same recipes.
 
 | Command | What it does |
 |---|---|
-| `just sync` | `uv sync`: fips, its `flux` extra, and the dev tools |
+| `just sync` | `uv sync`: fips, its `viz` extra, and the dev tools |
 | `just quality-check` | `lint` + `type-check` + `docstr` + `test`: what CI checks |
 | `just test` | pytest in parallel (up to 8 workers), skipping `network`/`slow`; extra args go to pytest (`-n 0` for serial) |
 | `just lint` / `just format` | ruff check and format check / fix and format |
@@ -306,8 +310,8 @@ The tooling comes from
 - **Coverage**: configured in `pyproject.toml`; `tests/` is the only
   testpath. `coverage.exclude_also` skips `__repr__`, abstract methods,
   `if __name__ == "__main__":`, etc.
-- **Dependency groups**: runtime deps in `[project]`; the `flux` extra adds
-  cartopy/h5py/matplotlib; the `dev` group is what `just sync`
+- **Dependency groups**: runtime deps in `[project]`; the `viz` extra adds
+  cartopy/matplotlib; the `dev` group is what `just sync`
   syncs.
 
 ## Examples in the docs
@@ -382,8 +386,8 @@ when one breaks.
 - **Data:** the docs build on GitHub Actions, so an example uses synthetic data,
   a small file in the repository, or a public download, never a machine-specific
   path. Seed random numbers so the figures don't change from build to build.
-- **Optional dependencies:** the `dev` group already lists `fips[flux]` (cartopy,
-  h5py, matplotlib), so `uv sync` installs them here and in CI. If an example
+- **Optional dependencies:** the `dev` group already lists `fips[viz]` (cartopy,
+  matplotlib), so `uv sync` installs them here and in CI. If an example
   needs another extra, add `fips[extra]` the same way.
 - **A notebook that can't run in CI** (it needs data only one machine has) is
   committed with its outputs and `"mystnb": {"execution_mode": "off"}` in its
@@ -450,13 +454,12 @@ inter-source error covariance). See README "Multi-block" example.
    permutation test at once. A method whose answer is not that posterior says
    so there, with its own reference.
 
-### Adding a new problem domain
-1. Create `src/fips/problems/<domain>/` with `__init__.py` re-exporting the
-   public surface.
-2. Subclass `Problem` for the domain's block names (accessors, no new
-   checks); subclass `InversionPipeline` for the workflow template.
-3. Mirror the `flux` package's layout (`problem.py`, `pipeline.py`,
-   `visualization.py`).
+### A new problem domain
+fips gets no subpackage, `Problem` subclass or pipeline for it (see "No
+domain subpackages"): the domain names its blocks, writes its workflow as
+functions in its own package, and reads the outputs by block name. A plot or
+statistic that any problem could use goes in `visualization.py` or on
+`Posterior`, with the block and level names as arguments.
 
 ## Gotchas
 

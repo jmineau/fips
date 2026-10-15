@@ -293,8 +293,6 @@ once:
        print(f"gamma {gamma}: DOFS {p.dofs:.2f}, reduced chi2 {p.reduced_chi2:.2f}")
 
 
-.. _flux-inversion:
-
 Aggregating, Offsets and Restricting
 ------------------------------------
 
@@ -358,43 +356,45 @@ estimate back on the whole state:
    small.offset.to_series().head(3)
    fips.solve(small).estimate.combine_first(hourly.prior).to_series().round(3)
 
-Domain-Specific Problem: Flux Inversion
------------------------------------------
+.. _flux-inversion:
 
-:class:`~fips.problems.flux.FluxProblem` is a ready-made subclass of
-:class:`~fips.Problem` for atmospheric flux estimation using STILT
-transport footprints.  It adds named accessors that speak the language of the
-application; it is solved with :func:`fips.solve`, as any problem:
+Example: Flux Inversion
+-----------------------
+
+An atmospheric flux inversion is a :class:`~fips.Problem` whose state has a
+``flux`` block and whose observations a ``concentration`` block (any names
+will do); it is solved with :func:`fips.solve`, as any problem, and its
+blocks are read by name:
 
 .. code-block:: python
 
    import fips
-   from fips import Vector
-   from fips.problems.flux import FluxPlotter, FluxProblem
+   from fips import Problem, Vector
+   from fips.visualization import plot_map, plot_obs
 
-   inversion = FluxProblem(
+   problem = Problem(
        obs=Vector.from_series(concentrations, block="concentration"),
        prior=Vector.from_series(prior_fluxes, block="flux"),
        forward=jacobian,  # an Operator: the transport Jacobian
        obs_cov=S_z,       # concentration error covariance (or a model)
        prior_cov=S_0,     # flux error covariance (or a model)
    )
-   post = fips.solve(inversion)
+   post = fips.solve(problem)
 
-   # Domain-aware accessors of the problem
-   inversion.concentrations        # observed concentrations
-   inversion.prior_fluxes          # prior flux pd.Series
-   inversion.prior_concentrations  # H @ prior + c, inversion.predict(inversion.prior)
+   # The problem's blocks
+   problem.obs["concentration"]                      # observed concentrations, a Vector
+   problem.prior["flux"]                             # prior fluxes (.to_series() for pandas)
+   problem.predict(problem.prior)["concentration"]   # H @ prior + c
 
    # The posterior's blocks
-   post.estimate["flux"]           # posterior fluxes, a Vector (.to_series())
-   post.cov()["flux", "flux"]      # posterior flux error, a Covariance
+   post.estimate["flux"]              # posterior fluxes, a Vector
+   post.cov()["flux", "flux"]         # posterior flux error, a Covariance
    post.modeled_obs["concentration"]  # H @ posterior + c
+   post.summary()                     # DOFS, chi-squared, R², RMSE, ... as one row
 
-   # Built-in plots of a posterior (requires cartopy)
-   plot = FluxPlotter(post)
-   plot.fluxes()
-   plot.concentrations()
+   # Plots of a posterior (the viz extra: matplotlib, and cartopy for tiles)
+   plot_map(post, block="flux")              # prior, posterior and their difference
+   plot_obs(post, block="concentration")     # observed, prior and posterior over time
 
 For a STILT Jacobian, `PYSTILT <https://jmineau.github.io/PYSTILT>`_ sums the
 footprints onto your flux grid and time bins, as a sparse matrix with its
@@ -428,11 +428,12 @@ Background subtraction is supported via the ``offset`` argument to
 
 .. code-block:: python
 
-   inversion = FluxProblem(
+   problem = Problem(
        ...
        offset=background,  # a Vector on the observations, subtracted from them
    )
-   inversion.background    # returns the background pd.Series
+   problem.offset["concentration"]  # the background, a Vector
+   problem.obs.values - problem.offset.values  # the enhancement
 
 
 Advanced: Reading Blocks of the Results
@@ -463,71 +464,37 @@ All :class:`~fips.Posterior` results are computed when first read, so you only
 pay for what you access.
 
 
-Advanced: Inversion Pipelines
-------------------------------
+Advanced: Repeated Inversions
+-----------------------------
 
-:class:`~fips.pipeline.InversionPipeline` provides a structured, reproducible
-workflow.  Subclass it, implement the abstract hooks, then call
-:meth:`~fips.pipeline.InversionPipeline.run`:
+A workflow run many times (one inversion per month, a sweep over settings) is
+a few functions in your own code: one that builds the :class:`~fips.Problem`
+from your settings, then :func:`fips.solve`. :meth:`Posterior.summary
+<fips.Posterior.summary>` returns the diagnostics of a solve as one row, so
+the rows of many solves stack into one table:
 
 .. code-block:: python
 
-   from fips import Covariance, Operator, Problem, Vector
-   from fips.pipeline import InversionPipeline
+   import pandas as pd
 
-   class MyPipeline(InversionPipeline):
+   import fips
 
-       def __init__(self, config):
-           super().__init__(config=config, problem=Problem, method="analytic")
+   def build_problem(config) -> fips.Problem:
+       """Load the observations and the prior, build H and the covariances."""
+       ...
 
-       # --- Required hooks ---
+   post = fips.solve(build_problem(config))
+   table = pd.concat(
+       [post.with_gamma(g).summary() for g in (0.25, 0.5, 1.0, 2.0)],
+       ignore_index=True,
+   )
 
-       def get_obs(self) -> Vector:
-           """Load observations from config / disk / API."""
-           ...
-
-       def get_prior(self) -> Vector:
-           """Load prior from inventory / model output."""
-           ...
-
-       def get_forward_operator(self, obs, prior) -> Operator:
-           """Build or load the Jacobian."""
-           ...
-
-       def get_prior_error(self, prior) -> Covariance:
-           ...
-
-       def get_modeldata_mismatch(self, obs) -> Covariance:
-           ...
-
-   post = MyPipeline(config).run()  # a Posterior; the problem is .problem
-
-``run`` logs each step, with its elapsed time, at ``INFO`` level through the
-``fips.pipeline`` logger, and prints nothing. Python shows only warnings until
-logging is configured, so to follow a long run, or to keep the steps in a batch
-job's output, configure it before the call:
+:func:`fips.solve` logs at ``INFO`` level through the ``fips.solve`` logger,
+and prints nothing. Python shows only warnings until logging is configured, so
+to keep the steps in a batch job's output, configure it before the call:
 
 .. code-block:: python
 
    import logging
 
    logging.basicConfig(level=logging.INFO)
-
-Optional hooks let you customise the workflow without touching its core:
-
-.. list-table::
-   :header-rows: 1
-   :widths: 35 65
-
-   * - Hook
-     - Purpose
-   * - :meth:`~fips.pipeline.InversionPipeline.filter_state_space`
-     - Trim or align obs / state space before building operators
-   * - :meth:`~fips.pipeline.InversionPipeline.aggregate_obs_space`
-     - Aggregate observations (e.g. hourly → daily) after building operators
-   * - :meth:`~fips.pipeline.InversionPipeline.get_constant`
-     - Provide a background or offset to subtract from observations
-
-For atmospheric flux inversion, :class:`~fips.problems.flux.pipeline.FluxInversionPipeline`
-pre-implements several of these hooks (interval filtering, minimum-obs thresholds,
-summary reporting) so you only need to supply your data loaders.
