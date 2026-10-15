@@ -511,6 +511,12 @@ class TestAnotherMethod:
         pd.testing.assert_frame_equal(other.summary(), post.summary(), rtol=1e-10)
         assert other.options == _Options() and other.problem is problem
 
+    def test_a_solution_without_HS_0H_gets_it_from_the_problem(self, problem, other):
+        """``HS_0H`` is optional: the posterior forms H S_0 H^T from the problem when the solution has none."""
+        assert not hasattr(other._solution, "HS_0H")
+        H, S_0 = problem.forward.dense(), problem.prior_cov.dense()
+        np.testing.assert_allclose(other._HS_0H.dense(), H @ S_0 @ H.T, rtol=1e-12)
+
     def test_analytic_only_members_say_so(self, problem, other):
         with pytest.raises(TypeError, match="cannot give another gamma's posterior"):
             other.with_gamma(2.0)

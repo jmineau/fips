@@ -133,6 +133,8 @@ class Whitened:
     """The whitened innovation :math:`e = B (z - H x_0 - c)` (``m``)."""
     prior_variances: np.ndarray
     """The diagonal of :math:`Q` (``n``)."""
+    HS_0H: LinearOperator
+    r""":math:`H Q H^T` (``m x m``) in the cheapest form of its factors: ``factor`` formed it, and the posterior reuses it."""
 
     @classmethod
     def factor(cls, problem: Problem, gamma: float) -> "Whitened":
@@ -163,7 +165,7 @@ class Whitened:
         S_0 = problem.prior_cov.data
         HS_0 = H @ S_0
         HS_0H = HS_0 @ H._transpose()
-        d = problem.obs.values - (H @ problem.prior.values + problem._offset_values())
+        d = problem.obs.values - problem.predict(problem.prior).values
         HQ = HS_0.dense()
         HQH = HS_0H.dense()
         S_z = problem.obs_cov.data
@@ -222,6 +224,7 @@ class Whitened:
             W=B @ HQ,
             innovation=B @ d,
             prior_variances=np.asarray(S_0.diagonal(), dtype=float),
+            HS_0H=HS_0H,
         )
 
     def weights(self) -> np.ndarray:
