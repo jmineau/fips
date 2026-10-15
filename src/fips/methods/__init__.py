@@ -19,7 +19,9 @@ below:
   ``with_gamma(gamma)`` and ``with_data(problem)``, which give another
   solution without solving again, and ``estimate_is_mean = True`` when its
   estimate is the posterior mean; a posterior whose solution lacks one of
-  them raises when that feature is asked for;
+  them raises when that feature is asked for. An attribute ``HS_0H``,
+  :math:`H S_0 H^T` if the method formed it, saves the posterior forming it
+  again;
 - a function from a :class:`~fips.Problem` and the options to
   ``Posterior(problem, solution, options)``.
 
