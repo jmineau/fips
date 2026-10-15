@@ -272,7 +272,7 @@ class TestAlign:
             a.align(b)
         message = str(excinfo.value)
         assert "labels of block 'x' missing from the other space: 1" in message
-        assert "labels of block 'x' only the other space has: 4" in message
+        assert "labels of block 'x' only in the other space: 4" in message
 
     def test_missing_and_extra_blocks_are_named(self, ragged):
         other = Space({"flux": ragged.select("flux"), "conc": pd.Index([0], name="t")})
@@ -280,7 +280,7 @@ class TestAlign:
             ValueError, match="blocks missing from the other space: 'bias'"
         ):
             ragged.align(other)
-        with pytest.raises(ValueError, match="blocks only the other space has: 'conc'"):
+        with pytest.raises(ValueError, match="blocks only in the other space: 'conc'"):
             ragged.align(other)
 
     def test_other_levels_raise(self):

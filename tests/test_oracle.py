@@ -1,22 +1,21 @@
 """
 Oracle tests: the posterior against formulas written in this file.
 
-The other estimator tests check properties: shapes, labels, signs, the
+The other posterior tests check properties: shapes, labels, signs, the
 direction in which ``gamma`` moves a diagnostic, and ``K`` against its own
-equation. The tests here pin the numbers. Each output of
-:meth:`fips.InverseProblem.solve` is compared with the closed-form Gaussian
-posterior, written below with ``numpy.linalg`` and nothing from
-``fips.estimators``. They are parametrized over the estimator registry, so an
-estimator registered later is held to them too.
+equation. The tests here pin the numbers. Each output of the
+:class:`fips.Posterior` that :func:`fips.solve` returns is compared with the
+closed-form Gaussian posterior, written below with ``numpy.linalg`` and
+nothing from fips. They are parametrized over the registered methods, so a
+method registered later is held to them too.
 
 Also here: a permutation test (the labeled posterior does not depend on the
 order in which any input is given) and dot tests (the adjoint of each linear
 map fips applies is its transpose).
 """
 
-import inspect
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, fields
 
 import numpy as np
 import pandas as pd
@@ -25,19 +24,21 @@ import scipy.sparse as sp
 
 from fips import (
     Covariance,
-    InverseProblem,
+    Independent,
     Operator,
+    Posterior,
+    Problem,
     Space,
     Vector,
-    available_estimators,
-    convolve,
+    available_methods,
+    solve,
 )
 from fips.aggregators import ObsAggregator
-from fips.estimators import ESTIMATOR_REGISTRY
 from fips.kronecker import KroneckerOperator
 from fips.linalg import DiagonalOperator, SparseOperator
+from fips.solve import _METHODS
 
-ESTIMATORS = available_estimators()
+METHODS = available_methods()
 
 RTOL = 1e-10
 """
@@ -59,7 +60,7 @@ SIZES = [(n, m) for n in (1, 3, 7) for m in (1, 2, 10)]
 
 
 # ---------------------------------------------------------------------------
-# The closed form, written independently of fips.estimators
+# The closed form, written independently of fips
 # ---------------------------------------------------------------------------
 
 
@@ -85,8 +86,8 @@ def closed_form(z, x_0, H, S_0, S_z, c) -> ClosedForm:
     Return the posterior of ``z = H x + c + e`` with ``x ~ N(x_0, S_0)``, ``e ~ N(0, S_z)``.
 
     Written with explicit inverses, the formulas as they are printed, so that
-    the reference does not share an algorithm with the estimator (which uses
-    Cholesky solves).
+    the reference does not share an algorithm with the solve (which whitens
+    and eigendecomposes).
     """
     inv = np.linalg.inv
     G = H @ S_0 @ H.T + S_z
@@ -158,7 +159,7 @@ class Case:
     S_0: np.ndarray
     S_z: np.ndarray
     c: np.ndarray
-    constant: float | pd.Series
+    offset: float | Vector
     state_index: pd.MultiIndex
     obs_index: pd.MultiIndex
 
@@ -167,8 +168,7 @@ class Case:
         """
         Draw a problem with ``n`` states and ``m`` observations.
 
-        Labels are strings that are not digits, in a random order, so neither
-        ``round_index`` nor the numeric conversion of labels changes them.
+        Labels are strings, in a random order.
         """
         rng = np.random.default_rng(seed)
         state_index = pd.MultiIndex.from_arrays(
@@ -189,27 +189,27 @@ class Case:
             c, const = np.full(m, value), value
         else:
             c = rng.normal(1.0, 0.5, m)
-            const = pd.Series(c, index=obs_index)
+            const = Vector.from_series(pd.Series(c, index=obs_index))
         return cls(z, x_0, H, S_0, S_z, c, const, state_index, obs_index)
 
-    def problem(self, **inputs) -> InverseProblem:
+    def problem(self, **inputs) -> Problem:
         """Build the labeled problem; keyword arguments replace an input."""
         args = {
-            "obs": pd.Series(self.z, index=self.obs_index),
-            "prior": pd.Series(self.x_0, index=self.state_index),
-            "forward_operator": pd.DataFrame(
-                self.H, index=self.obs_index, columns=self.state_index
+            "obs": Vector.from_series(pd.Series(self.z, index=self.obs_index)),
+            "prior": Vector.from_series(pd.Series(self.x_0, index=self.state_index)),
+            "forward": Operator.from_frame(
+                pd.DataFrame(self.H, index=self.obs_index, columns=self.state_index)
             ),
-            "prior_error": pd.DataFrame(
-                self.S_0, index=self.state_index, columns=self.state_index
+            "prior_cov": Covariance.from_frame(
+                pd.DataFrame(self.S_0, index=self.state_index, columns=self.state_index)
             ),
-            "modeldata_mismatch": pd.DataFrame(
-                self.S_z, index=self.obs_index, columns=self.obs_index
+            "obs_cov": Covariance.from_frame(
+                pd.DataFrame(self.S_z, index=self.obs_index, columns=self.obs_index)
             ),
-            "constant": self.constant,
+            "offset": self.offset,
         }
         args.update(inputs)
-        return InverseProblem(**args)
+        return Problem(**args)
 
     @property
     def state_space(self) -> Space:
@@ -226,9 +226,9 @@ class Case:
         s, o = self.state_space, self.obs_space
         # SparseOperator itself: a 1 x 1 sparse matrix would read as a diagonal
         return {
-            "forward_operator": Operator(SparseOperator(sp.csr_array(self.H)), o, s),
-            "prior_error": Covariance(SparseOperator(sp.csr_array(self.S_0)), s),
-            "modeldata_mismatch": Covariance(SparseOperator(sp.csr_array(self.S_z)), o),
+            "forward": Operator(SparseOperator(sp.csr_array(self.H)), o, s),
+            "prior_cov": Covariance(SparseOperator(sp.csr_array(self.S_0)), s),
+            "obs_cov": Covariance(SparseOperator(sp.csr_array(self.S_z)), o),
         }
 
 
@@ -257,69 +257,76 @@ def matrix_on(M: Operator, index: pd.Index, columns: pd.Index, what: str) -> np.
 
 
 def check_posterior(
-    problem: InverseProblem,
+    post: Posterior,
     expected: ClosedForm,
     state_index: pd.Index,
     obs_index: pd.Index,
     what: str,
 ) -> None:
-    """Compare every output of a solved problem with the closed form, by label."""
+    """Compare every output of a posterior with the closed form, by label."""
     s, o, sc = state_index, obs_index, expected.scale
 
     def at(name):
         return f"{what}: {name}"
 
-    assert_close(
-        vector_on(problem.posterior, s, at("posterior")),
-        expected.x_hat,
-        sc["x_hat"],
-        at("posterior"),
-    )
-    S_hat = matrix_on(problem.posterior_error, s, s, at("posterior_error"))
+    assert isinstance(post, Posterior), what
+    x_hat = vector_on(post.estimate, s, at("estimate"))
+    assert_close(x_hat, expected.x_hat, sc["x_hat"], at("estimate"))
+    assert post.mean is post.estimate
+    S_hat = matrix_on(post.cov(), s, s, at("cov()"))
     assert_close(S_hat, expected.S_hat_cov, sc["S_hat"], at("S_hat, covariance form"))
     assert_close(S_hat, expected.S_hat_info, sc["S_hat"], at("S_hat, information form"))
     assert_close(
-        matrix_on(problem.kalman_gain, s, o, at("kalman_gain")),
+        vector_on(post.variances, s, at("variances")),
+        np.diag(expected.S_hat_cov),
+        sc["S_hat"],
+        at("variances"),
+    )
+    assert_close(
+        matrix_on(post.kalman_gain, s, o, at("kalman_gain")),
         expected.K,
         sc["K"],
         at("kalman_gain"),
     )
     assert_close(
-        matrix_on(problem.averaging_kernel, s, s, at("averaging_kernel")),
+        matrix_on(post.averaging_kernel(), s, s, at("averaging_kernel")),
         expected.A,
         sc["A"],
         at("averaging_kernel"),
     )
-    assert_close(problem.estimator.DOFS, expected.DOFS, sc["DOFS"], at("DOFS"))
+    assert_close(post.dofs, expected.DOFS, sc["DOFS"], at("dofs"))
     assert_close(
-        vector_on(problem.posterior_obs, o, at("posterior_obs")),
+        vector_on(post.modeled_obs, o, at("modeled_obs")),
         expected.y_hat,
         sc["y"],
-        at("posterior_obs"),
+        at("modeled_obs"),
     )
     assert_close(
-        vector_on(problem.prior_obs, o, at("prior_obs")),
+        vector_on(post.prior_modeled_obs, o, at("prior_modeled_obs")),
         expected.y_0,
         sc["y"],
-        at("prior_obs"),
+        at("prior_modeled_obs"),
     )
     assert_close(
-        matrix_on(problem.prior_obs_error, o, o, at("prior_obs_error")),
+        matrix_on(post.prior_obs_cov, o, o, at("prior_obs_cov")),
         expected.S_y0,
         sc["S_y0"],
-        at("prior_obs_error"),
+        at("prior_obs_cov"),
     )
     assert_close(
-        problem.estimator.reduced_chi2,
-        expected.reduced_chi2,
-        sc["chi2"],
-        at("reduced_chi2"),
+        post.reduced_chi2, expected.reduced_chi2, sc["chi2"], at("reduced_chi2")
+    )
+    assert_close(
+        post.chi2,
+        expected.reduced_chi2 * len(o),
+        sc["chi2"] * len(o),
+        at("chi2"),
     )
 
 
-def takes_gamma(estimator: str) -> bool:
-    """Return True if the registered estimator takes a ``gamma`` argument."""
-    return "gamma" in inspect.signature(ESTIMATOR_REGISTRY[estimator]).parameters
+def takes_gamma(method: str) -> bool:
+    """Return True if the registered method has a ``gamma`` option."""
+    return "gamma" in [f.name for f in fields(_METHODS[method].options)]
 
 
 # ---------------------------------------------------------------------------
@@ -328,13 +335,13 @@ def takes_gamma(estimator: str) -> bool:
 
 
 @pytest.mark.parametrize("sparse", [False, True], ids=["dense", "sparse"])
-@pytest.mark.parametrize("estimator", ESTIMATORS)
+@pytest.mark.parametrize("method", METHODS)
 @pytest.mark.parametrize("n, m", SIZES)
-def test_closed_form(estimator, n, m, sparse):
+def test_closed_form(method, n, m, sparse):
     """
     The posterior equals the closed form, in both covariance forms, for 20 seeds.
 
-    The constant is a scalar for the even seeds and a vector for the odd ones,
+    The offset is a scalar for the even seeds and a vector for the odd ones,
     so each size sees both forms without solving every problem twice. With
     ``sparse``, ``H``, ``S_0`` and ``S_z`` are stored sparse (#79).
     """
@@ -350,7 +357,7 @@ def test_closed_form(estimator, n, m, sparse):
         )
         problem = case.problem(**case.sparse_inputs() if sparse else {})
         check_posterior(
-            problem.solve(estimator),
+            solve(problem, method),
             expected,
             case.state_index,
             case.obs_index,
@@ -358,34 +365,54 @@ def test_closed_form(estimator, n, m, sparse):
         )
 
 
-@pytest.mark.parametrize("estimator", [e for e in ESTIMATORS if takes_gamma(e)])
+@pytest.mark.parametrize("method", [m for m in METHODS if takes_gamma(m)])
 @pytest.mark.parametrize("gamma", [0.25, 3.0])
 @pytest.mark.parametrize("n, m", [(3, 10), (7, 2)])
-def test_gamma_scales_mismatch(estimator, gamma, n, m):
+def test_gamma_scales_mismatch(method, gamma, n, m):
     """``gamma`` gives the closed form with the model-data mismatch divided by ``gamma``."""
     for seed in range(5):
         case = Case.random(seed, n, m)
         expected = closed_form(
             case.z, case.x_0, case.H, case.S_0, case.S_z / gamma, case.c
         )
-        problem = case.problem().solve(estimator, gamma=gamma)
+        post = solve(case.problem(), method, gamma=gamma)
         check_posterior(
-            problem, expected, case.state_index, case.obs_index, f"seed {seed}"
+            post, expected, case.state_index, case.obs_index, f"seed {seed}"
+        )
+        # and from another gamma's factorization
+        post = solve(case.problem(), method, gamma=1.0).with_gamma(gamma)
+        check_posterior(
+            post, expected, case.state_index, case.obs_index, f"seed {seed}, with_gamma"
         )
 
 
 def _diagonal_inputs(case: Case, form: str, v_0: np.ndarray, v_z: np.ndarray):
     """Return the prior error and mismatch given as variances, in one of several forms."""
     s, o = case.state_index, case.obs_index
-    if form == "series":
-        return pd.Series(v_0, index=s), pd.Series(v_z, index=o)
     if form == "vector":
         return (
-            Vector.from_series(pd.Series(v_0, index=s)),
-            Vector.from_series(pd.Series(v_z, index=o)),
+            Covariance.diagonal(Vector.from_series(pd.Series(v_0, index=s))),
+            Covariance.diagonal(Vector.from_series(pd.Series(v_z, index=o))),
+        )
+    if form == "model":
+        return (
+            Independent().with_std(np.sqrt(v_0)),
+            Independent().with_std(np.sqrt(v_z)),
+        )
+    if form == "std_vector":
+        return (
+            Independent().with_std(
+                Vector.from_series(pd.Series(np.sqrt(v_0), index=s))
+            ),
+            Independent().with_std(
+                Vector.from_series(pd.Series(np.sqrt(v_z), index=o))
+            ),
         )
     if form == "scalar":
-        return float(v_0[0]), float(v_z[0])
+        return (
+            Independent().with_std(np.sqrt(v_0[0])),
+            Independent().with_std(np.sqrt(v_z[0])),
+        )
     if form == "diagonal":
         S_0 = Covariance.diagonal(v_0, case.state_space)
         S_z = Covariance.diagonal(v_z, case.obs_space)
@@ -399,19 +426,20 @@ def _diagonal_inputs(case: Case, form: str, v_0: np.ndarray, v_z: np.ndarray):
     raise ValueError(form)
 
 
-@pytest.mark.parametrize("estimator", ESTIMATORS)
+@pytest.mark.parametrize("method", METHODS)
 @pytest.mark.parametrize(
     "form",
     [
-        "series",
         "vector",
+        "model",
+        "std_vector",
         "scalar",
         "diagonal",
         "sparse",
     ],
 )
-def test_diagonal_given_as_variances(estimator, form):
-    """A diagonal covariance given as its variances solves as the full matrix does."""
+def test_diagonal_given_as_variances(method, form):
+    """A diagonal covariance, given as variances or as a model, solves as the full matrix does."""
     for seed in range(5):
         case = Case.random(seed, 7, 10)
         rng = np.random.default_rng(seed)
@@ -421,18 +449,16 @@ def test_diagonal_given_as_variances(estimator, form):
             v_0, v_z = rng.uniform(0.5, 4.0, 7), rng.uniform(0.1, 1.0, 10)
         S_0, S_z = np.diag(v_0), np.diag(v_z)
         expected = closed_form(case.z, case.x_0, case.H, S_0, S_z, case.c)
-        prior_error, mismatch = _diagonal_inputs(case, form, v_0, v_z)
-        problem = case.problem(
-            prior_error=prior_error, modeldata_mismatch=mismatch
-        ).solve(estimator)
+        prior_cov, obs_cov = _diagonal_inputs(case, form, v_0, v_z)
+        post = solve(case.problem(prior_cov=prior_cov, obs_cov=obs_cov), method)
         check_posterior(
-            problem, expected, case.state_index, case.obs_index, f"seed {seed}"
+            post, expected, case.state_index, case.obs_index, f"seed {seed}"
         )
 
 
-@pytest.mark.parametrize("estimator", ESTIMATORS)
+@pytest.mark.parametrize("method", METHODS)
 @pytest.mark.parametrize("rows", ["product", "permuted", "ragged"])
-def test_kronecker_prior_error(estimator, rows):
+def test_kronecker_prior_error(method, rows):
     """
     A prior error kept as Kronecker factors gives the closed form of its matrix.
 
@@ -456,17 +482,16 @@ def test_kronecker_prior_error(estimator, rows):
         op = KroneckerOperator(
             factors, std=std, positions=np.unravel_index(chosen, sizes)
         )
-        problem = case.problem(prior_error=Covariance(op, case.state_space)).solve(
-            estimator
-        )
-        assert isinstance(problem.estimator._S_0_op, KroneckerOperator)
+        problem = case.problem(prior_cov=Covariance(op, case.state_space))
+        assert isinstance(problem.prior_cov.data, KroneckerOperator)
+        post = solve(problem, method)
         check_posterior(
-            problem, expected, case.state_index, case.obs_index, f"seed {seed}"
+            post, expected, case.state_index, case.obs_index, f"seed {seed}"
         )
 
 
-@pytest.mark.parametrize("estimator", ESTIMATORS)
-def test_sparse_forward_operator(estimator):
+@pytest.mark.parametrize("method", METHODS)
+def test_sparse_forward_operator(method):
     """A sparse forward operator gives the closed form, as the dense one does."""
     for seed in range(5):
         case = Case.random(seed, 7, 10)
@@ -474,9 +499,9 @@ def test_sparse_forward_operator(estimator):
         expected = closed_form(case.z, case.x_0, case.H, case.S_0, case.S_z, case.c)
         H = Operator(sp.csr_array(case.H), case.obs_space, case.state_space)
         assert isinstance(H.data, SparseOperator)
-        problem = case.problem(forward_operator=H).solve(estimator)
+        post = solve(case.problem(forward=H), method)
         check_posterior(
-            problem, expected, case.state_index, case.obs_index, f"seed {seed}"
+            post, expected, case.state_index, case.obs_index, f"seed {seed}"
         )
 
 
@@ -545,8 +570,8 @@ class MultiBlockCase:
         """Where each observation block sits in the assembled observation arrays."""
         return self._slices(self.obs)
 
-    def problem(self) -> InverseProblem:
-        """Build the problem from Blocks and operators assembled from their blocks."""
+    def problem(self) -> Problem:
+        """Build the problem from vectors and operators assembled from their blocks."""
         ss, os_ = self.state_slices, self.obs_slices
 
         def vector(values, blocks, slices):
@@ -557,8 +582,8 @@ class MultiBlockCase:
                 }
             )
 
-        def blocks_2d(values, rows, cols, rs, cs, skip=()):
-            return Operator.from_blocks(
+        def blocks_2d(values, rows, cols, rs, cs, skip=(), cls=Operator):
+            return cls.from_blocks(
                 {
                     (r, c): pd.DataFrame(values[rs[r], cs[c]], index=ri, columns=ci)
                     for r, ri in rows.items()
@@ -567,15 +592,17 @@ class MultiBlockCase:
                 }
             )
 
-        return InverseProblem(
+        return Problem(
             obs=vector(self.z, self.obs, os_),
             prior=vector(self.x_0, self.state, ss),
-            forward_operator=blocks_2d(
+            forward=blocks_2d(
                 self.H, self.obs, self.state, os_, ss, skip={("co2", "bias")}
             ),
-            prior_error=blocks_2d(self.S_0, self.state, self.state, ss, ss),
-            modeldata_mismatch=blocks_2d(self.S_z, self.obs, self.obs, os_, os_),
-            constant=vector(self.c, self.obs, os_),
+            prior_cov=blocks_2d(
+                self.S_0, self.state, self.state, ss, ss, cls=Covariance
+            ),
+            obs_cov=blocks_2d(self.S_z, self.obs, self.obs, os_, os_, cls=Covariance),
+            offset=vector(self.c, self.obs, os_),
         )
 
 
@@ -596,44 +623,42 @@ def _block_values(structure, key, index, columns=None) -> np.ndarray:
     return op.dense()
 
 
-@pytest.mark.parametrize("estimator", ESTIMATORS)
+@pytest.mark.parametrize("method", METHODS)
 @pytest.mark.parametrize("seed", range(5))
-def test_multi_block(estimator, seed):
+def test_multi_block(method, seed):
     """Block by block, read back by label, the posterior equals the closed form."""
     case = MultiBlockCase.random(seed)
     expected = closed_form(case.z, case.x_0, case.H, case.S_0, case.S_z, case.c)
-    problem = case.problem().solve(estimator)
+    post = solve(case.problem(), method)
     sc = expected.scale
     ss, os_ = case.state_slices, case.obs_slices
 
     for b, idx in case.state.items():
-        what = f"seed {seed}: posterior[{b}]"
-        got = _block_values(problem.posterior, b, idx)
+        what = f"seed {seed}: estimate[{b}]"
+        got = _block_values(post.estimate, b, idx)
         assert_close(got, expected.x_hat[ss[b]], sc["x_hat"], what)
         for b2, idx2 in case.state.items():
             what = f"seed {seed}: [{b}, {b2}]"
-            got = _block_values(problem.posterior_error, (b, b2), idx, idx2)
+            got = _block_values(post.cov(), (b, b2), idx, idx2)
             assert_close(got, expected.S_hat_cov[ss[b], ss[b2]], sc["S_hat"], what)
-            got = _block_values(problem.averaging_kernel, (b, b2), idx, idx2)
+            got = _block_values(post.averaging_kernel(), (b, b2), idx, idx2)
             assert_close(got, expected.A[ss[b], ss[b2]], sc["A"], what)
         for o, oidx in case.obs.items():
             what = f"seed {seed}: kalman_gain[{b}, {o}]"
-            got = _block_values(problem.kalman_gain, (b, o), idx, oidx)
+            got = _block_values(post.kalman_gain, (b, o), idx, oidx)
             assert_close(got, expected.K[ss[b], os_[o]], sc["K"], what)
 
     for o, oidx in case.obs.items():
-        what = f"seed {seed}: posterior_obs[{o}]"
-        got = _block_values(problem.posterior_obs, o, oidx)
+        what = f"seed {seed}: modeled_obs[{o}]"
+        got = _block_values(post.modeled_obs, o, oidx)
         assert_close(got, expected.y_hat[os_[o]], sc["y"], what)
         for o2, oidx2 in case.obs.items():
-            what = f"seed {seed}: prior_obs_error[{o}, {o2}]"
-            got = _block_values(problem.prior_obs_error, (o, o2), oidx, oidx2)
+            what = f"seed {seed}: prior_obs_cov[{o}, {o2}]"
+            got = _block_values(post.prior_obs_cov, (o, o2), oidx, oidx2)
             assert_close(got, expected.S_y0[os_[o], os_[o2]], sc["S_y0"], what)
 
-    assert_close(problem.estimator.DOFS, expected.DOFS, sc["DOFS"], "DOFS")
-    assert_close(
-        problem.estimator.reduced_chi2, expected.reduced_chi2, sc["chi2"], "chi2"
-    )
+    assert_close(post.dofs, expected.DOFS, sc["DOFS"], "dofs")
+    assert_close(post.reduced_chi2, expected.reduced_chi2, sc["chi2"], "chi2")
 
 
 # ---------------------------------------------------------------------------
@@ -664,47 +689,50 @@ def _aligned(structure, index, columns=None) -> np.ndarray:
     return data.reindex(index=index, columns=columns).to_numpy()
 
 
-@pytest.mark.parametrize("estimator", ESTIMATORS)
+@pytest.mark.parametrize("method", METHODS)
 @pytest.mark.parametrize("seed", range(5))
-def test_permutation(estimator, seed):
+def test_permutation(method, seed):
     """Each input in its own random order gives the same labeled posterior."""
     case = MultiBlockCase.random(seed)
-    ref = case.problem().solve(estimator)
+    ref = solve(case.problem(), method)
+    p = ref.problem
     rng = np.random.default_rng(1000 + seed)
 
     # The assembled inputs, with block levels, each shuffled on its own
-    shuffled = InverseProblem(
-        obs=_shuffled(ref.obs.to_series(), rng),
-        prior=_shuffled(ref.prior.to_series(), rng),
-        forward_operator=_shuffled(ref.forward_operator.to_frame(), rng),
-        prior_error=_shuffled(ref.prior_error.to_frame(), rng),
-        modeldata_mismatch=_shuffled(ref.modeldata_mismatch.to_frame(), rng),
-        constant=_shuffled(ref.constant.to_series(), rng),
-    ).solve(estimator)
+    shuffled = solve(
+        Problem(
+            obs=Vector.from_series(_shuffled(p.obs.to_series(), rng)),
+            prior=Vector.from_series(_shuffled(p.prior.to_series(), rng)),
+            forward=Operator.from_frame(_shuffled(p.forward.to_frame(), rng)),
+            prior_cov=Covariance.from_frame(_shuffled(p.prior_cov.to_frame(), rng)),
+            obs_cov=Covariance.from_frame(_shuffled(p.obs_cov.to_frame(), rng)),
+            offset=Vector.from_series(_shuffled(p.offset.to_series(), rng)),
+        ),
+        method,
+    )
 
-    s, o = ref.state_index, ref.obs_index
+    s, o = p.prior.index, p.obs.index
     expected = closed_form(case.z, case.x_0, case.H, case.S_0, case.S_z, case.c)
     sc = expected.scale
-    pairs = [
-        ("posterior", s, None, "x_hat"),
-        ("posterior_error", s, s, "S_hat"),
-        ("averaging_kernel", s, s, "A"),
-        ("kalman_gain", s, o, "K"),
-        ("posterior_obs", o, None, "y"),
-        ("prior_obs_error", o, o, "S_y0"),
+    outputs = [
+        ("estimate", lambda post: post.estimate, s, None, "x_hat"),
+        ("cov()", lambda post: post.cov(), s, s, "S_hat"),
+        ("averaging_kernel()", lambda post: post.averaging_kernel(), s, s, "A"),
+        ("kalman_gain", lambda post: post.kalman_gain, s, o, "K"),
+        ("modeled_obs", lambda post: post.modeled_obs, o, None, "y"),
+        ("prior_obs_cov", lambda post: post.prior_obs_cov, o, o, "S_y0"),
     ]
-    for name, rows, cols, key in pairs:
+    for name, output, rows, cols, key in outputs:
+        want = output(ref)
         assert_close(
-            _aligned(getattr(shuffled, name), rows, cols),
-            getattr(ref, name).dense()
-            if cols is not None
-            else getattr(ref, name).values,
+            _aligned(output(shuffled), rows, cols),
+            want.dense() if cols is not None else want.values,
             sc[key],
             f"seed {seed}: {name}",
         )
-    for diag in ["DOFS", "reduced_chi2", "R2", "RMSE", "uncertainty_reduction"]:
-        got = getattr(shuffled.estimator, diag)
-        want = getattr(ref.estimator, diag)
+    for diag in ["dofs", "chi2", "reduced_chi2", "r2", "rmse", "uncertainty_reduction"]:
+        got = getattr(shuffled, diag)
+        want = getattr(ref, diag)
         assert_close(got, want, abs(want), f"seed {seed}: {diag}")
 
 
@@ -756,19 +784,21 @@ def test_dot_test_catches_a_wrong_adjoint():
 
 def _labeled_map(frame: pd.DataFrame, rng: np.random.Generator):
     """
-    Return the map ``x -> frame @ x`` through :func:`fips.convolve`.
+    Return the map ``x -> frame @ x`` through ``Operator @ Vector``.
 
     ``x`` is in the order of ``frame.columns`` and the result in the order of
-    ``frame.index``; the state is handed to ``convolve`` in a random order, so
-    the product goes through the label alignment.
+    ``frame.index``; the state is given to the product in a random order, so
+    it goes through the label alignment.
     """
+    H = Operator.from_frame(frame)
 
     def apply(x: np.ndarray) -> np.ndarray:
         perm = rng.permutation(len(x))
         state = pd.Series(x[perm], index=frame.columns[perm], name="x")
-        y = convolve(state, frame)
+        y = H @ Vector.from_series(state)
+        assert isinstance(y, Vector)
         assert y.index.equals(frame.index)
-        return y.to_numpy()
+        return y.values
 
     return apply
 
@@ -810,7 +840,7 @@ def _matrix_structure(kind: str, sparse: bool, rng: np.random.Generator):
 @pytest.mark.parametrize("sparse", [False, True], ids=["dense", "sparse"])
 @pytest.mark.parametrize("kind", ["Operator", "Covariance"])
 def test_dot_test_structures(kind, sparse):
-    """``convolve`` with an operator and with its transpose are adjoint, by label."""
+    """An operator and its transpose, applied to vectors by label, are adjoint."""
     rng = np.random.default_rng(1)
     M = _matrix_structure(kind, sparse, rng)
     assert isinstance(M.data, SparseOperator) == sparse

@@ -1,67 +1,102 @@
-"""
+r"""
 The posterior of a solved inverse problem.
 
-:func:`fips.solve` fits an estimator and returns a :class:`~fips.Posterior`, which
-puts the problem's labels on what the estimator computed: the state index on
-the state axes, the observation index on the observation axes.
+:func:`fips.solve` returns a :class:`Posterior`: the problem, the options of
+the method, and the factorization of the whitened system
+(:mod:`fips._whitened`). Everything it gives is derived from the factors,
+labeled with the problem's spaces, and nothing :math:`n \times n` is formed
+unless the full covariance or averaging kernel is asked for. A new
+regularization factor or new observations reuse the factors.
 """
 
+import dataclasses
 import logging
 from functools import cached_property
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 import pandas as pd
+from numpy.linalg import LinAlgError
+from scipy.linalg import inv, solve
 
+from fips._whitened import Whitened
 from fips.base import Pickleable
 from fips.covariance import Covariance
-from fips.estimators import Estimator
-from fips.linalg import LinearOperator
+from fips.linalg import LinearOperator, _solve_psd
 from fips.operator import Operator
-from fips.space import Space
+from fips.problem import Problem
 from fips.vector import Vector
+
+if TYPE_CHECKING:
+    from fips.solve import AnalyticOptions
 
 logger = logging.getLogger(__name__)
 
 
-class Posterior(Pickleable):
+def _times_pseudo_inverse(XWt: np.ndarray, W: LinearOperator) -> np.ndarray:
     """
+    Return ``X W*`` given ``X W^T``, where ``W* = W^T (W W^T)^-1`` is the pseudo-inverse of `W`.
+
+    Raises
+    ------
+    ValueError
+        If the rows of `W` are linearly dependent, so ``W W^T`` is singular.
+    """
+    G = (W @ W.T).dense()
+    try:
+        # X W^T (W W^T)^-1 is the transpose of (W W^T)^-1 (X W^T)^T
+        return solve(G, XWt.T, assume_a="pos").T
+    except LinAlgError as err:
+        raise ValueError(
+            "The rows of the aggregation are linearly dependent, so it has no "
+            "pseudo-inverse."
+        ) from err
+
+
+class Posterior(Pickleable):
+    r"""
     The solution of an inverse problem, labeled.
 
-    :func:`fips.solve` builds it; there is no need to build one by hand. Each
-    output is computed when first asked for, then kept, so asking again
-    returns the same object. The outputs are shared: change one in place and
-    the next access shows the change.
+    :func:`fips.solve` builds it; there is no need to build one by hand. It
+    keeps the factorization of the solve, and each output is computed from it
+    when first asked for, then kept. For the ``"analytic"`` method the
+    posterior is Gaussian: :attr:`estimate` is its mean (so :attr:`mean` is
+    the same object), and the posterior covariance is
+    :math:`\hat{S} = (H^T S_z^{-1} H + S_0^{-1})^{-1}`, with :math:`S_z`
+    divided by the regularization factor :math:`\gamma`.
 
     Parameters
     ----------
-    estimator : Estimator
-        The fitted estimator.
-    state_index : pd.Index
-        The problem's state index, which labels every state axis.
-    obs_index : pd.Index
-        The problem's observation index, which labels every observation axis.
+    problem : Problem
+        The problem that was solved.
+    factors : fips._whitened.Whitened
+        The factorization of its whitened system.
+    options : fips.solve.AnalyticOptions
+        The options of the method.
 
     See Also
     --------
     fips.solve : Solve a problem and return its posterior.
-    fips.InverseProblem.solve : Solve a problem in place.
 
     Examples
     --------
     >>> import numpy as np
     >>> import pandas as pd
     >>> import fips
-    >>> state = pd.Index(["a", "b"], name="cell")
-    >>> obs = pd.Index(["o1", "o2", "o3"], name="obs_id")
-    >>> problem = fips.InverseProblem(
-    ...     obs=pd.Series([1.0, 2.0, 3.0], index=obs, name="obs"),
-    ...     prior=pd.Series([0.0, 0.0], index=state, name="prior"),
-    ...     forward_operator=pd.DataFrame(
-    ...         [[1.0, 0.0], [0.0, 1.0], [1.0, 1.0]], index=obs, columns=state
+    >>> cells = pd.Index(["a", "b"], name="cell")
+    >>> obs_id = pd.Index(["o1", "o2", "o3"], name="obs_id")
+    >>> prior = fips.Vector.from_series(pd.Series(0.0, index=cells), block="flux")
+    >>> obs = fips.Vector.from_series(
+    ...     pd.Series([1.0, 2.0, 3.0], index=obs_id), block="co2"
+    ... )
+    >>> problem = fips.Problem(
+    ...     prior=prior,
+    ...     prior_cov=fips.Independent().with_std(1.0),
+    ...     obs=obs,
+    ...     obs_cov=fips.Independent().with_std(np.sqrt(0.1)),
+    ...     forward=fips.Operator(
+    ...         np.array([[1.0, 0.0], [0.0, 1.0], [1.0, 1.0]]), obs.space, prior.space
     ...     ),
-    ...     prior_error=1.0,
-    ...     modeldata_mismatch=0.1,
     ... )
     >>> post = fips.solve(problem)
     >>> post.estimate.values.round(3)
@@ -70,158 +105,123 @@ class Posterior(Pickleable):
     1.877
     """
 
-    estimator: Estimator
-    """The fitted estimator, which holds the unlabeled arrays."""
-    state_index: pd.Index
-    """The state index, which labels every state axis."""
-    obs_index: pd.Index
-    """The observation index, which labels every observation axis."""
+    def __init__(self, problem: Problem, factors: Whitened, options: "AnalyticOptions"):
+        self._problem = problem
+        self._factors = factors
+        self._options = options
 
-    def __init__(
-        self, estimator: Estimator, state_index: pd.Index, obs_index: pd.Index
-    ):
-        self.estimator = estimator
-        self.state_index = state_index
-        self.obs_index = obs_index
+    @property
+    def problem(self) -> Problem:
+        """The problem that was solved."""
+        return self._problem
 
-    @cached_property
-    def state_space(self) -> Space:
-        """
-        The state's labels as a :class:`~fips.Space`, which labels every state axis of a matrix.
+    @property
+    def options(self) -> "AnalyticOptions":
+        """The options the method solved with (``gamma``)."""
+        return self._options
 
-        Raises
-        ------
-        ValueError
-            If the state index has a block's rows apart (the estimator's
-            arrays would not be in the space's order).
-        """
-        return _space_of(self.state_index, "state")
-
-    @cached_property
-    def obs_space(self) -> Space:
-        """The observations' labels as a :class:`~fips.Space`, which labels every observation axis of a matrix."""
-        return _space_of(self.obs_index, "observation")
-
-    def __getstate__(self) -> dict[str, Any]:
-        """Return the estimator and the two indexes; the labeled outputs are rebuilt."""
-        return {
-            "estimator": self.estimator,
-            "state_index": self.state_index,
-            "obs_index": self.obs_index,
-        }
-
-    def __setstate__(self, state: dict[str, Any]):
-        """Restore the estimator and the two indexes."""
-        self.estimator = state["estimator"]
-        self.state_index = state["state_index"]
-        self.obs_index = state["obs_index"]
+    @property
+    def _gamma(self) -> float:
+        """The regularization factor."""
+        return self._options.gamma
 
     def __repr__(self) -> str:
-        """Return string representation."""
+        """Return the options and the sizes."""
         return (
-            f"{self.__class__.__name__}("
-            f"estimator={type(self.estimator).__name__}, "
-            f"n_state={len(self.state_index)}, n_obs={len(self.obs_index)})"
+            f"Posterior({self._options!r}, n_state={len(self._problem.prior)}, "
+            f"n_obs={len(self._problem.obs)})"
         )
 
-    # The names given to the outputs below are the names they had as
-    # properties of InverseProblem, so ``problem.posterior`` and
-    # ``post.estimate`` are one object with one name.
+    def __getstate__(self) -> dict[str, Any]:
+        """Return the problem, the options and the factors; the outputs are rebuilt."""
+        return {
+            "problem": self._problem,
+            "options": self._options,
+            "factors": self._factors.to_dict(),
+        }
 
-    def _state_vector(self, values: np.ndarray, name: str) -> Vector:
-        """Label ``values`` with the state space."""
-        return Vector(values, self.state_space, name=name)
+    def __setstate__(self, state: dict[str, Any]) -> None:
+        """Restore from :meth:`__getstate__`."""
+        self._problem = state["problem"]
+        self._options = state["options"]
+        self._factors = Whitened(**state["factors"])
 
-    def _obs_vector(self, values: np.ndarray, name: str) -> Vector:
-        """Label ``values`` with the observation space."""
-        return Vector(values, self.obs_space, name=name)
+    # -- the state -----------------------------------------------------------
 
     @cached_property
     def estimate(self) -> Vector:
         r"""
-        The posterior state estimate, :math:`\hat{x}`, on the state index.
+        The posterior state estimate, :math:`\hat{x}`, on the prior's space.
 
-        The point estimate of the method. For the analytic Bayesian solve it
-        is the posterior mean, so it is also :attr:`mean`.
+        The point estimate of the method; for the analytic method the
+        posterior mean, :math:`\hat{x} = x_0 + K (z - H x_0 - c)`.
 
         See Also
         --------
-        mean : The posterior mean, where the method gives it.
-        covariance : The posterior error covariance.
+        mean : The posterior mean.
+        variances : The posterior error variances.
         """
-        return self._state_vector(self.estimator.x_hat, "posterior")
+        x_0 = self._problem.prior
+        values = x_0.values + self._factors.increment(self._gamma)
+        return Vector(values, x_0.space, name="estimate")
 
-    @cached_property
+    @property
     def mean(self) -> Vector:
-        r"""
-        The posterior mean, on the state index.
+        """
+        The posterior mean, :attr:`estimate` itself.
 
-        Every estimator in fips gives the posterior mean as its estimate
-        (:attr:`~fips.Estimator.x_hat`), so this is the same object as
-        :attr:`estimate`. A method whose estimate is not the mean, such as a
-        bounded one that gives the mode, will not have it.
-
-        See Also
-        --------
-        estimate : The point estimate.
+        The analytic method's posterior is Gaussian, so its estimate is its
+        mean.
         """
         return self.estimate
-
-    @cached_property
-    def covariance(self) -> Covariance:
-        r"""
-        The posterior error covariance, :math:`\hat{S}`, on the state space.
-
-        A dense n x n matrix.
-
-        See Also
-        --------
-        variances : Its diagonal.
-        """
-        return Covariance(
-            np.asarray(self.estimator.S_hat), self.state_space, name="posterior_error"
-        )
 
     @cached_property
     def variances(self) -> Vector:
         r"""
         The posterior error variances, the diagonal of :math:`\hat{S}`.
 
-        The estimator's :attr:`~fips.Estimator.S_hat_diagonal`: for the
-        Bayesian solve, computed from its factorization without forming the
-        ``n x n`` :attr:`covariance`.
+        Computed from the factors in :math:`O(m n)`, without the
+        :math:`n \times n` covariance.
 
         See Also
         --------
-        covariance : The full posterior error covariance.
-        cov : The covariance of aggregates of the state.
+        cov : The posterior error covariance, of the state or of aggregates.
         """
-        return self._state_vector(self.estimator.S_hat_diagonal, "posterior_variance")
+        values = self._factors.variances(self._gamma)
+        return Vector(values, self._problem.prior.space, name="variance")
 
     def _aggregation(self, W: Operator) -> LinearOperator:
         """
-        Return an aggregation's matrix with its columns in state order.
+        Return an aggregation's matrix with its columns in the state's order.
 
         Raises
         ------
         TypeError
             If `W` is not an Operator.
         ValueError
-            If the columns are not exactly the state's labels (a label
-            missing or extra).
+            If its columns do not have exactly the state's labels.
         """
         if not isinstance(W, Operator):
             raise TypeError(
                 f"An aggregation is an Operator, not {type(W).__name__}: build one "
                 "with Operator.from_frame or Operator.from_blocks."
             )
-        try:
-            return W._on(W.rows, self.state_space)
-        except ValueError as err:
-            raise ValueError(
-                "The aggregation's columns must have exactly the state's labels "
-                f"(the other space below is the aggregation's columns). {err}"
-            ) from None
+        state = self._problem.prior.space
+        c = state._align(
+            W.cols,
+            "the columns of the aggregation",
+            "The columns of the aggregation and the state",
+        )
+        if np.array_equal(c, np.arange(len(c))):
+            return W.data
+        return W.data._select(np.arange(W.shape[0]), c)
+
+    @cached_property
+    def _cov(self) -> Covariance:
+        """The full posterior covariance, formed once."""
+        S_hat = self._factors.reduction(self._gamma)
+        np.subtract(self._problem.prior_cov.data.dense(), S_hat, out=S_hat)
+        return Covariance(S_hat, self._problem.prior.space, name="posterior_cov")
 
     def cov(self, W: Operator | None = None) -> Covariance:
         r"""
@@ -239,15 +239,15 @@ class Posterior(Pickleable):
         Returns
         -------
         Covariance
-            Without `W`, :attr:`covariance` (dense, ``n x n``). With `W`,
-            :math:`W \hat{S} W^T` on the aggregation's rows, ``k x k``,
-            computed without the ``n x n`` covariance for the Bayesian solve.
+            Without `W`, :math:`\hat{S}`, dense, ``n x n`` (formed once, the
+            same object each time). With `W`, :math:`W \hat{S} W^T` on the
+            aggregation's rows, ``k x k``, computed without the ``n x n``
+            covariance.
 
         Raises
         ------
         ValueError
-            If the columns of `W` are not exactly the state's labels: a state
-            label missing, or a label that is not in the state.
+            If the columns of `W` do not have exactly the state's labels.
 
         See Also
         --------
@@ -259,109 +259,71 @@ class Posterior(Pickleable):
         >>> import numpy as np
         >>> import pandas as pd
         >>> import fips
-        >>> state = pd.Index(["a", "b", "c"], name="cell")
-        >>> obs = pd.Index(["o1", "o2"], name="obs_id")
-        >>> problem = fips.InverseProblem(
-        ...     obs=pd.Series([1.0, 2.0], index=obs, name="obs"),
-        ...     prior=pd.Series(0.0, index=state, name="prior"),
-        ...     forward_operator=pd.DataFrame(
-        ...         [[1.0, 1.0, 0.0], [0.0, 1.0, 1.0]], index=obs, columns=state
+        >>> cells = pd.Index(["a", "b", "c"], name="cell")
+        >>> prior = fips.Vector.from_series(pd.Series(0.0, index=cells), block="flux")
+        >>> obs = fips.Vector.from_series(
+        ...     pd.Series([1.0, 2.0], index=pd.Index(["o1", "o2"], name="obs_id")),
+        ...     block="co2",
+        ... )
+        >>> problem = fips.Problem(
+        ...     prior=prior,
+        ...     prior_cov=fips.Independent().with_std(1.0),
+        ...     obs=obs,
+        ...     obs_cov=fips.Independent().with_std(np.sqrt(0.1)),
+        ...     forward=fips.Operator(
+        ...         np.array([[1.0, 1.0, 0.0], [0.0, 1.0, 1.0]]), obs.space, prior.space
         ...     ),
-        ...     prior_error=1.0,
-        ...     modeldata_mismatch=0.1,
         ... )
         >>> post = fips.solve(problem)
-        >>> total = fips.Operator.from_frame(
-        ...     pd.DataFrame(
-        ...         1.0, index=pd.Index(["total"], name="region"), columns=state
-        ...     ),
-        ...     row_block="region",
-        ...     col_block="prior",
+        >>> total = fips.Operator(
+        ...     np.ones((1, 3)),
+        ...     fips.Space({"total": pd.Index(["all"], name="region")}),
+        ...     prior.space,
         ... )
         >>> post.cov(total).dense().round(3)
-        array([[0.722]])
+        array([[0.419]])
         """
         if W is None:
-            return self.covariance
-        return Covariance(
-            self.estimator.aggregate_S_hat(self._aggregation(W)),
-            W.rows,
-            name="posterior_error",
-        )
-
-    @cached_property
-    def modeled_obs(self) -> Vector:
-        r"""
-        The observations the estimate models, :math:`H \hat{x} + c`.
-
-        See Also
-        --------
-        prior_modeled_obs : The observations the prior models.
-        """
-        return self._obs_vector(self.estimator.y_hat, "modeled_obs")
-
-    @cached_property
-    def prior_modeled_obs(self) -> Vector:
-        r"""
-        The observations the prior models, :math:`H x_0 + c`.
-
-        See Also
-        --------
-        modeled_obs : The observations the estimate models.
-        prior_obs_covariance : Their covariance from the prior error.
-        """
-        return self._obs_vector(self.estimator.y_0, "prior_obs")
-
-    @cached_property
-    def prior_obs_covariance(self) -> Covariance:
-        r"""
-        The prior error in observation space, :math:`H S_0 H^T`.
-
-        The uncertainty of :attr:`prior_modeled_obs` that the prior error
-        implies, on the observation index. Its diagonal, square-rooted, is the
-        prior's share of each observation's error budget; add the model-data
-        mismatch in quadrature for the total the solve expects.
-        """
-        return Covariance(
-            np.asarray(self.estimator.S_y0), self.obs_space, name="prior_obs_error"
-        )
+            return self._cov
+        W_form = self._aggregation(W)
+        prior = np.asarray(W_form @ (self._problem.prior_cov.data @ W_form.T))
+        WWf = W_form @ self._factors.W.T  # k x m
+        values = prior - (WWf * self._factors.weights(self._gamma)) @ WWf.T
+        return Covariance(values, W.rows, name="posterior_cov")
 
     @cached_property
     def kalman_gain(self) -> Operator:
         r"""
-        The gain :math:`K`, state by observations.
+        The gain :math:`K`, state by observations, dense.
 
         :math:`\hat{x} = x_0 + K (z - H x_0 - c)`.
         """
         return Operator(
-            np.asarray(self.estimator.K),
-            self.state_space,
-            self.obs_space,
+            self._factors.gain(self._gamma),
+            self._problem.prior.space,
+            self._problem.obs.space,
             name="kalman_gain",
         )
 
     @cached_property
     def _averaging_kernel(self) -> Operator:
-        """The full averaging kernel, built once."""
-        return Operator(
-            np.asarray(self.estimator.A),
-            self.state_space,
-            self.state_space,
-            name="averaging_kernel",
-        )
+        """The full averaging kernel, formed once."""
+        A = self.kalman_gain.dense() @ self._problem.forward.data
+        space = self._problem.prior.space
+        return Operator(np.asarray(A), space, space, name="averaging_kernel")
 
     def averaging_kernel(self, W: Operator | None = None) -> Operator:
         r"""
         Return the averaging kernel, of the state or of aggregates of it.
 
-        Without `W`, :math:`A = K H`, state by state (dense, ``n x n``; the same
-        object each time). With an aggregation :math:`W`, :math:`W A W^*`,
-        where :math:`W^* = W^T (W W^T)^{-1}` is the pseudo-inverse of
-        :math:`W`: it spreads a change of the aggregates back over the state
-        elements (for a sum, evenly over the elements summed), so :math:`W A
-        W^*` is how the aggregated estimate responds to the aggregated truth.
-        This is the form IMI uses; :math:`W A W^T` is not an averaging kernel.
-        For the Bayesian solve it is computed without the ``n x n`` kernel.
+        Without `W`, :math:`A = K H`, state by state (dense, ``n x n``; formed
+        once, the same object each time). With an aggregation :math:`W`,
+        :math:`W A W^*`, where :math:`W^* = W^T (W W^T)^{-1}` is the
+        pseudo-inverse of :math:`W`: it spreads a change of the aggregates back
+        over the state elements (for a sum, evenly over the elements summed),
+        so :math:`W A W^*` is how the aggregated estimate responds to the
+        aggregated truth. This is the form IMI uses; :math:`W A W^T` is not an
+        averaging kernel. It is computed without the ``n x n`` kernel.
 
         Parameters
         ----------
@@ -372,14 +334,14 @@ class Posterior(Pickleable):
         Returns
         -------
         Operator
-            ``n x n`` on the state space, or ``k x k`` on the aggregation's
+            ``n x n`` on the state's space, or ``k x k`` on the aggregation's
             rows.
 
         Raises
         ------
         ValueError
-            If the columns of `W` are not exactly the state's labels, or its
-            rows are linearly dependent.
+            If the columns of `W` do not have exactly the state's labels, or
+            its rows are linearly dependent.
 
         See Also
         --------
@@ -388,20 +350,250 @@ class Posterior(Pickleable):
         """
         if W is None:
             return self._averaging_kernel
-        return Operator(
-            self.estimator.aggregate_A(self._aggregation(W)),
-            W.rows,
-            W.rows,
-            name="averaging_kernel",
+        W_form = self._aggregation(W)
+        f = self._factors
+        WK = ((W_form @ f.W.T) * f.weights(self._gamma)) @ f.whitener  # k x m
+        HWt = np.asarray(self._problem.forward.data @ W_form.T)  # m x k
+        values = _times_pseudo_inverse(WK @ HWt, W_form)
+        return Operator(values, W.rows, W.rows, name="averaging_kernel")
+
+    # -- the observations ----------------------------------------------------
+
+    def _modeled(self, x: np.ndarray) -> np.ndarray:
+        """Return ``H x + c``."""
+        return self._problem.forward.data @ x + self._problem._offset_values()
+
+    @cached_property
+    def modeled_obs(self) -> Vector:
+        r"""
+        The observations the estimate models, :math:`H \hat{x} + c`.
+
+        See Also
+        --------
+        prior_modeled_obs : The observations the prior models.
+        """
+        values = self._modeled(self.estimate.values)
+        return Vector(values, self._problem.obs.space, name="modeled_obs")
+
+    @cached_property
+    def prior_modeled_obs(self) -> Vector:
+        r"""
+        The observations the prior models, :math:`H x_0 + c`.
+
+        See Also
+        --------
+        modeled_obs : The observations the estimate models.
+        prior_obs_cov : Their covariance from the prior error.
+        """
+        values = self._modeled(self._problem.prior.values)
+        return Vector(values, self._problem.obs.space, name="prior_modeled_obs")
+
+    @cached_property
+    def _HS_0H(self) -> LinearOperator:
+        r""":math:`H S_0 H^T`, in the cheapest form of its factors."""
+        H = self._problem.forward.data
+        return (H @ self._problem.prior_cov.data) @ H._transpose()
+
+    @cached_property
+    def prior_obs_cov(self) -> Covariance:
+        r"""
+        The prior error in observation space, :math:`H S_0 H^T`, dense.
+
+        The uncertainty of :attr:`prior_modeled_obs` that the prior error
+        implies. Its diagonal, square-rooted, is the prior's share of each
+        observation's error budget; add the model-data mismatch for the
+        total the solve expects.
+        """
+        return Covariance(
+            self._HS_0H.dense(), self._problem.obs.space, name="prior_obs_cov"
         )
+
+    def desroziers(self, by: Any = None) -> pd.DataFrame:
+        r"""
+        Compare the observation error variances Desroziers et al. (2005) diagnose with those the solve used.
+
+        With :math:`d^b = z - H x_0 - c` (the innovation) and
+        :math:`d^a = z - H \hat{x} - c` (the residual), the expected value of
+        :math:`d^a_i d^b_i` is the variance of the error of observation
+        :math:`i` when the covariances of the problem are right. One
+        observation's product is noisy; its mean over a group of observations
+        (a site, a month) is the diagnostic.
+
+        Parameters
+        ----------
+        by : str, list or pandas.Grouper, optional
+            The levels of the observations' labels to group by, as
+            :meth:`pandas.DataFrame.groupby` takes them: ``"site"``,
+            ``["site", "block"]``, or ``pd.Grouper(level="obs_time",
+            freq="MS")``. Observations whose block lacks a level are left out
+            of a grouping by it. By default, one row per observation.
+
+        Returns
+        -------
+        pandas.DataFrame
+            ``diagnosed`` (:math:`d^a_i d^b_i`, or its mean over a group),
+            ``specified`` (the diagonal of :math:`S_z / \gamma`, the
+            variances the solve used, or their mean), and ``ratio``
+            (diagnosed over specified; near 1 when they agree). Indexed by
+            the observations' labels, or by the groups.
+
+        References
+        ----------
+        Desroziers, G., Berre, L., Chapnik, B., & Poli, P. (2005). Diagnosis
+        of observation, background and analysis-error statistics in
+        observation space. Q.J.R. Meteorol. Soc., 131, 3385-3396.
+
+        Examples
+        --------
+        >>> import numpy as np
+        >>> import pandas as pd
+        >>> import fips
+        >>> sites = pd.MultiIndex.from_product(
+        ...     [["A", "B"], [0, 1, 2]], names=["site", "hour"]
+        ... )
+        >>> cell = pd.Index(["c"], name="cell")
+        >>> prior = fips.Vector.from_series(pd.Series(0.0, index=cell), block="flux")
+        >>> obs = fips.Vector.from_series(
+        ...     pd.Series([1.0, 2.0, 0.5, 3.0, 2.5, 1.0], index=sites), block="co2"
+        ... )
+        >>> problem = fips.Problem(
+        ...     prior=prior,
+        ...     prior_cov=fips.Independent().with_std(1.0),
+        ...     obs=obs,
+        ...     obs_cov=fips.Independent().with_std(1.0),
+        ...     forward=fips.Operator(np.ones((6, 1)), obs.space, prior.space),
+        ... )
+        >>> fips.solve(problem).desroziers(by="site").round(3).reset_index()
+          site  diagnosed  specified  ratio
+        0    A      0.083        1.0  0.083
+        1    B      2.321        1.0  2.321
+        """
+        problem = self._problem
+        before = problem.obs.values - self.prior_modeled_obs.values
+        after = problem.obs.values - self.modeled_obs.values
+        frame = pd.DataFrame(
+            {
+                "diagnosed": after * before,
+                "specified": problem.obs_cov.data.diagonal() / self._gamma,
+            },
+            index=problem.obs.index,
+        )
+        if by is not None:
+            frame = frame.groupby(by).mean()
+        frame["ratio"] = frame["diagnosed"] / frame["specified"]
+        return frame
+
+    def leverage(self, x: Vector) -> Operator:
+        r"""
+        Return the leverage matrix of the state `x`: which observations weigh most on it.
+
+        .. math::
+            L = Hx \left((Hx)^T G^{-1} Hx\right)^{-1} (Hx)^T G^{-1},
+            \qquad G = H S_0 H^T + S_z / \gamma
+
+        This is the generalized-least-squares hat matrix of the one regressor
+        :math:`Hx` (which includes the offset :math:`c`): the projection onto
+        :math:`Hx` in the metric :math:`G^{-1}`. It is idempotent and its
+        trace is 1, so its diagonal shares one unit of leverage among the
+        observations; with correlated errors an entry can be negative.
+
+        Parameters
+        ----------
+        x : Vector
+            A state, on the prior's labels (in any order), such as
+            :attr:`estimate` or the problem's prior.
+
+        Returns
+        -------
+        Operator
+            ``m x m``, dense, on the observations' space.
+
+        Raises
+        ------
+        ValueError
+            If `x` does not have exactly the state's labels.
+        """
+        problem = self._problem
+        values = x.align(problem.prior.space).values
+        Hx = np.asarray(self._modeled(values), dtype=float)[:, None]
+        G = (self._HS_0H + problem.obs_cov.data / self._gamma).dense()
+        term = _solve_psd(G, Hx)
+        L = Hx @ inv(Hx.T @ term) @ term.T
+        space = problem.obs.space
+        return Operator(L, space, space, name="leverage")
+
+    # -- scalars -------------------------------------------------------------
+
+    @property
+    def dofs(self) -> float:
+        r"""
+        Degrees of freedom for signal, the trace of :meth:`averaging_kernel`.
+
+        :math:`\sum_k \gamma\lambda_k / (\gamma\lambda_k + 1)` over the
+        eigenvalues :math:`\lambda_k` of the whitened system, without the
+        kernel.
+        """
+        return self._factors.dofs(self._gamma)
+
+    @property
+    def chi2(self) -> float:
+        r"""
+        The chi-squared of the solution: the sum of the data and the state misfits.
+
+        .. math::
+            \chi^2 = (z - H\hat{x} - c)^T (S_z/\gamma)^{-1} (z - H\hat{x} - c)
+                + (\hat{x} - x_0)^T S_0^{-1} (\hat{x} - x_0)
+
+        which equals :math:`d^T (H S_0 H^T + S_z/\gamma)^{-1} d` with
+        :math:`d = z - H x_0 - c`, and is read from the factors.
+
+        See Also
+        --------
+        reduced_chi2 : It, divided by the number of observations.
+        """
+        return self._factors.chi2(self._gamma)
+
+    @property
+    def reduced_chi2(self) -> float:
+        """
+        :attr:`chi2` divided by the number of observations; near 1 when the covariances are right.
+
+        Tarantola (1987), as in Kunik et al. (2019),
+        https://doi.org/10.1525/elementa.375.
+        """
+        return self.chi2 / len(self._problem.obs)
+
+    @property
+    def r2(self) -> float:
+        """The squared correlation of the observations and :attr:`modeled_obs`."""
+        z = self._problem.obs.values
+        return float(np.corrcoef(z, self.modeled_obs.values)[0, 1] ** 2)
+
+    @property
+    def rmse(self) -> float:
+        """The root mean square of the observations minus :attr:`modeled_obs`."""
+        r = self._problem.obs.values - self.modeled_obs.values
+        return float(np.sqrt((r**2).sum() / len(r)))
+
+    @property
+    def uncertainty_reduction(self) -> float:
+        r"""
+        One minus the ratio of the posterior to the prior total error.
+
+        :math:`1 - \sqrt{\operatorname{tr}(\hat{S})} / \sqrt{\operatorname{tr}(S_0)}`.
+        """
+        prior = self._problem.prior_cov.data.trace()
+        return float(1 - np.sqrt(self.variances.values.sum()) / np.sqrt(prior))
+
+    # -- reusing the factorization --------------------------------------------
 
     def with_gamma(self, gamma: float) -> "Posterior":
         r"""
         Return the posterior of the same problem with another regularization factor.
 
-        The Bayesian solve keeps its factorization, which does not depend on
-        gamma, so the new posterior costs :math:`O(m n)` instead of a new
-        solve: a sweep over gamma factors once. The problem is unchanged.
+        The factorization does not depend on gamma, so this costs
+        :math:`O(m n)` instead of a new solve: a sweep over gamma factors
+        once.
 
         Parameters
         ----------
@@ -415,109 +607,75 @@ class Posterior(Pickleable):
             The posterior ``fips.solve(problem, gamma=gamma)`` would give, its
             estimate computed.
 
-        Raises
-        ------
-        TypeError
-            If the estimator has no regularization factor to change.
-
         Examples
         --------
+        >>> import numpy as np
         >>> import pandas as pd
         >>> import fips
-        >>> state = pd.Index(["a", "b"], name="cell")
-        >>> obs = pd.Index(["o1", "o2", "o3"], name="obs_id")
-        >>> problem = fips.InverseProblem(
-        ...     obs=pd.Series([1.0, 2.0, 3.0], index=obs, name="obs"),
-        ...     prior=pd.Series([0.0, 0.0], index=state, name="prior"),
-        ...     forward_operator=pd.DataFrame(
-        ...         [[1.0, 0.0], [0.0, 1.0], [1.0, 1.0]], index=obs, columns=state
+        >>> cells = pd.Index(["a", "b"], name="cell")
+        >>> obs_id = pd.Index(["o1", "o2", "o3"], name="obs_id")
+        >>> prior = fips.Vector.from_series(pd.Series(0.0, index=cells), block="flux")
+        >>> obs = fips.Vector.from_series(
+        ...     pd.Series([1.0, 2.0, 3.0], index=obs_id), block="co2"
+        ... )
+        >>> problem = fips.Problem(
+        ...     prior=prior,
+        ...     prior_cov=fips.Independent().with_std(1.0),
+        ...     obs=obs,
+        ...     obs_cov=fips.Independent().with_std(np.sqrt(0.1)),
+        ...     forward=fips.Operator(
+        ...         np.array([[1.0, 0.0], [0.0, 1.0], [1.0, 1.0]]),
+        ...         obs.space,
+        ...         prior.space,
         ...     ),
-        ...     prior_error=1.0,
-        ...     modeldata_mismatch=0.1,
         ... )
         >>> post = fips.solve(problem)
         >>> [round(post.with_gamma(g).dofs, 3) for g in (0.1, 1.0, 10.0)]
-        [0.886, 1.877, 1.986]
+        [1.25, 1.877, 1.987]
         """
-        with_gamma = getattr(self.estimator, "with_gamma", None)
-        if with_gamma is None:
-            raise TypeError(
-                f"{type(self.estimator).__name__} has no regularization factor to change."
-            )
-        post = type(self)(with_gamma(gamma), self.state_index, self.obs_index)
+        options = dataclasses.replace(self._options, gamma=gamma)
+        post = type(self)(self._problem, self._factors, options)
         _ = post.estimate
         return post
 
-    @cached_property
-    def desroziers(self) -> Covariance:
-        """
-        The observation error covariance diagnosed by Desroziers et al. (2005).
-
-        On the observation index. See :attr:`~fips.Estimator.desroziers` for the
-        formula.
-        """
-        return Covariance(self.estimator.desroziers, self.obs_space, name="desroziers")
-
-    @property
-    def dofs(self) -> float:
-        """
-        Degrees of freedom for signal, the trace of :meth:`averaging_kernel`.
-
-        The estimator's :attr:`~fips.Estimator.DOFS`.
-        """
-        return self.estimator.DOFS
-
-    @property
-    def reduced_chi2(self) -> float:
-        """
-        The reduced chi-squared of the solution.
-
-        The estimator's :attr:`~fips.Estimator.reduced_chi2`.
-        """
-        return self.estimator.reduced_chi2
-
-    @property
-    def r2(self) -> float:
-        """
-        The squared correlation of the observations and :attr:`modeled_obs`.
-
-        The estimator's :attr:`~fips.Estimator.R2`.
-        """
-        return self.estimator.R2
-
-    @property
-    def rmse(self) -> float:
-        """
-        The root mean square of the observations minus :attr:`modeled_obs`.
-
-        The estimator's :attr:`~fips.Estimator.RMSE`.
-        """
-        return self.estimator.RMSE
-
-    @property
-    def uncertainty_reduction(self) -> float:
+    def with_data(self, obs: Vector) -> "Posterior":
         r"""
-        One minus the ratio of the posterior to the prior total error.
+        Return the posterior of the same problem with other observations.
 
-        The estimator's :attr:`~fips.Estimator.uncertainty_reduction`: the square
-        roots of the traces of :math:`\hat{S}` and :math:`S_0`.
+        The factorization depends on where the observations are and how
+        uncertain they are, not on their values, so this costs one
+        :math:`m \times m` product instead of a new solve (a bootstrap, or
+        synthetic observations of a known truth).
+
+        Parameters
+        ----------
+        obs : Vector
+            New observations, with exactly the labels of the problem's (in
+            any order).
+
+        Returns
+        -------
+        Posterior
+            The posterior of the problem with `obs`, its estimate computed.
+
+        Raises
+        ------
+        ValueError
+            If `obs` does not have exactly the observations' labels.
         """
-        return self.estimator.uncertainty_reduction
-
-
-def _space_of(index: pd.Index, what: str) -> Space:
-    """
-    Return the space of `index`, checking that it keeps the index's order.
-
-    :meth:`Space.from_index` puts each block's rows together, so an index
-    whose blocks are interleaved would label the estimator's arrays wrongly.
-    """
-    space = Space.from_index(index)
-    blocks = index.get_level_values("block").astype(str)
-    rank = pd.Index(space.names).get_indexer(blocks)
-    if (np.diff(rank) < 0).any():
-        raise ValueError(
-            f"The {what} index has the rows of a block apart; put each block's "
-            "rows together (InverseProblem does)."
+        problem = self._problem
+        space = problem.obs.space
+        positions = space._align(
+            obs.space, "the new observations", "The new observations and the problem's"
         )
-    return space
+        state = problem.__getstate__()
+        state["obs"] = Vector(obs.values[positions], space, name=obs.name)
+        new = type(problem).__new__(type(problem))
+        new.__setstate__(state)
+        d = new.obs.values - self.prior_modeled_obs.values
+        factors = dataclasses.replace(
+            self._factors, innovation=self._factors.whitener @ d
+        )
+        post = type(self)(new, factors, self._options)
+        _ = post.estimate
+        return post

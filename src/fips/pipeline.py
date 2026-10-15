@@ -16,14 +16,15 @@ from abc import ABC, abstractmethod
 from typing import Any, Generic, TypeVar
 
 from fips.covariance import Covariance
-from fips.estimators import Estimator
 from fips.operator import Operator
-from fips.problem import InverseProblem
+from fips.posterior import Posterior
+from fips.problem import Problem
+from fips.solve import solve
 from fips.vector import Vector
 
 logger = logging.getLogger(__name__)
 
-_Problem = TypeVar("_Problem", bound=InverseProblem)
+_Problem = TypeVar("_Problem", bound=Problem)
 
 
 class InversionPipeline(ABC, Generic[_Problem]):
@@ -32,7 +33,7 @@ class InversionPipeline(ABC, Generic[_Problem]):
 
     This class defines the standard workflow for running an inversion, including
     methods for loading observations and priors, building the forward operator and
-    covariance matrices, and executing the solve process.
+    covariance matrices, and solving with :func:`fips.solve`.
 
     Subclasses should implement the abstract methods to handle the specifics of
     data loading and covariance construction for their particular problem domain.
@@ -42,9 +43,9 @@ class InversionPipeline(ABC, Generic[_Problem]):
     config : Any
         Configuration object containing necessary parameters and settings for the pipeline.
     problem : type[_Problem]
-        The specific InverseProblem class that defines the mathematical formulation of the problem.
-    estimator : type[Estimator] | str
-        The estimator to use for solving the inverse problem, either as a class or a string identifier.
+        The :class:`~fips.Problem` class (or a subclass) the inputs are put in.
+    method : str, default "analytic"
+        The method :func:`fips.solve` uses.
 
     Notes
     -----
@@ -56,18 +57,22 @@ class InversionPipeline(ABC, Generic[_Problem]):
 
     config: Any
     """Configuration object containing necessary parameters and settings for the pipeline."""
-    estimator: type[Estimator] | str
-    """The estimator to use for solving the inverse problem, either as a class or a string identifier."""
+    method: str
+    """The method :func:`fips.solve` uses."""
+    problem: _Problem
+    """The problem :meth:`run` built."""
+    posterior: Posterior
+    """The posterior :meth:`run` returned."""
 
     def __init__(
         self,
         config: Any,
         problem: type[_Problem],
-        estimator: type[Estimator] | str,
+        method: str = "analytic",
     ):
         self.config = config
-        self._InverseProblem = problem
-        self.estimator = estimator
+        self._problem_class = problem
+        self.method = method
 
     @abstractmethod
     def get_obs(self) -> Vector:
@@ -189,30 +194,32 @@ class InversionPipeline(ABC, Generic[_Problem]):
         return dict(
             obs=obs,
             prior=prior,
-            forward_operator=forward_operator,
-            prior_error=prior_error,
-            modeldata_mismatch=mdm,
-            constant=constant,
+            forward=forward_operator,
+            prior_cov=prior_error,
+            obs_cov=mdm,
+            offset=constant,
         )
 
-    def run(self, estimator_kwargs: dict[str, Any] | None = None, **kwargs) -> _Problem:
+    def run(self, options: dict[str, Any] | None = None, **kwargs) -> Posterior:
         """
         Execute the standard inversion workflow.
 
         Parameters
         ----------
-        estimator_kwargs : dict[str, Any], optional
-            Additional keyword arguments to pass to the estimator (e.g., gamma for BayesianSolver).
+        options : dict[str, Any], optional
+            The method's options, passed to :func:`fips.solve` (``gamma`` for
+            ``"analytic"``).
         **kwargs
-            Additional keyword arguments to pass to the InverseProblem constructor.
+            Additional keyword arguments to pass to the problem's constructor.
 
         Returns
         -------
-        _Problem
-            The solved inverse problem.
+        Posterior
+            The posterior; the problem is kept as :attr:`problem` and the
+            posterior as :attr:`posterior`.
         """
-        if estimator_kwargs is None:
-            estimator_kwargs = {}
+        if options is None:
+            options = {}
 
         total_start = time.perf_counter()
         logger.info("Getting problem inputs...")
@@ -221,17 +228,14 @@ class InversionPipeline(ABC, Generic[_Problem]):
 
         step_start = time.perf_counter()
         logger.info("Initializing solver...")
-        self.problem = self._InverseProblem(
-            **inputs,
-            **kwargs,
-        )
+        self.problem = self._problem_class(**inputs, **kwargs)
         logger.info(f"Solver initialized in {time.perf_counter() - step_start:.2f}s")
 
         step_start = time.perf_counter()
         logger.info("Solving...")
-        self.problem.solve(estimator=self.estimator, **estimator_kwargs)
+        self.posterior = solve(self.problem, self.method, **options)
         logger.info(f"Solve completed in {time.perf_counter() - step_start:.2f}s")
 
         logger.info(f"Total pipeline time: {time.perf_counter() - total_start:.2f}s")
 
-        return self.problem
+        return self.posterior
