@@ -27,8 +27,9 @@ The :class:`~fips.Posterior` puts the labels on, keeps each output, and
 writes everything else (the averaging kernel, the innovation covariance,
 Desroziers, leverage, the scalars, the summary) from those answers and the
 problem, so a new method gets them all. The analytic method's solution is
-``Whitened``, the factorization of its whitened system. A lognormal method
-would keep its estimate (the mode) and the Gaussian of the log state around
+``Whitened`` or ``Information``, the factorization of its whitened
+(``m x m``) or information (``n x n``) system, whichever its size calls for.
+A lognormal method would keep its estimate (the mode) and the Gaussian of the log state around
 it, and answer from those carried back to the state (the gain of the problem
 linearized at the mode; no ``estimate_is_mean``); an ensemble method would keep its posterior ensemble and answer from the
 sample mean and covariance (``estimate_is_mean = True``). Neither can change

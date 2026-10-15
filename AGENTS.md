@@ -79,12 +79,13 @@ src/fips/
   methods/           how a Problem is solved (`fips.solve` is the function)
     __init__.py      solve(problem, method, **options), the method registry
                      (_METHODS, available_methods)
-    analytic.py      AnalyticOptions, and the analytic method: Whitened —
-                     its Solution, the factorization of the whitened system
-                     read at one gamma (estimate, variances, gain, DOFS,
-                     chi-squared; with_gamma and with_data share the
-                     factors, which are read-only) — and _analytic, which
-                     returns Posterior(problem, Whitened.factor(...), options)
+    analytic.py      AnalyticOptions, and the analytic method: its two
+                     Solutions, Whitened (m x m) and Information (n x n),
+                     each a factorization read at one gamma (estimate,
+                     variances, gain, DOFS, chi-squared; with_gamma and
+                     with_data share the factors, which are read-only);
+                     _choose picks the form by size, and _analytic returns
+                     Posterior(problem, _factor(...), options)
   linalg/            the unlabeled forms the solvers compute with (public as
                      `fips.linalg`)
     __init__.py      re-exports the forms; its docstring says what a form does
@@ -557,9 +558,19 @@ stay there too. A statistic that any problem could use goes on `Posterior`.
   factors (`Whitened`'s docstring in `fips/methods/analytic.py` has the formulas); nothing `n x n`
   is formed unless `post.cov()` or `post.averaging_kernel()` is read, and
   `tests/test_whitened.py` fails if `fips.solve` with the variances, DOFS or
-  chi-squared allocates one. With `m > n`
-  the state-space form would be cheaper; it does not exist, and a large such
-  solve logs a warning.
+  chi-squared allocates one.
+- **The analytic method has two forms and chooses by size, with no option.**
+  With fewer state elements than observations and an `S_z` that is diagonal,
+  sparse or block diagonal (its inverse cheap to apply), it takes the
+  information form (`Information`): `S_0 = R R^T` by the form's own `sqrt`
+  (through the factors for a Kronecker `S_0`), and it eigendecomposes the
+  `n x n` matrix `R^T H^T S_z^-1 H R`, holding `n x n` and nothing `m x m`.
+  Otherwise, or when `S_0` has no Cholesky factor, the whitened form. Both
+  have the same eigenvalues and give the same posterior; the oracle and
+  `tests/test_whitened.py` run every case in both (the `analytic_form`
+  fixture replaces `_choose`). Only a whitened solve with more than
+  `_LARGE_M` observations and more than twice `n` logs a warning, saying
+  why the information form was not used.
 - Other covariance solves (`Covariance.solve`, `KroneckerOperator.solve`,
   `Posterior.leverage`) go through `LinearOperator.solve` or `_solve_psd`, whose dense form is
   `_solve_psd(A, B)` (in `linalg/forms.py`), **not**
