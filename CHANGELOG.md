@@ -190,7 +190,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   one side only. Each input is then held in the order of the prior's and the
   observations' spaces, in its own form (a Kronecker covariance stays
   factors). A problem has no `solve` method and is not changed by a solve.
+  The problem is the question and holds what needs no solve and no `m x m`
+  matrix: `problem.predict(x)` is `H x + c` for any state vector on the
+  prior's labels (the prior, an estimate, a truth). The `Posterior` is the
+  answer and holds what depends on the solve.
   ([#82](https://github.com/jmineau/fips/issues/82))
+- **`Operator.from_blocks` places labeled blocks by their labels.** A block
+  may be a DataFrame (dense or pandas-sparse) or a tuple `(matrix, row_labels,
+  col_labels)` of an array or a SciPy sparse matrix and two pandas Indexes, as
+  well as an `Operator` or an unlabeled matrix. A labeled block may cover part
+  of its blocks' labels: a label it has no entry for is zero, as a block not
+  given is, and a label its block does not have raises and is named. A sparse
+  block stays sparse, and one that covers its labels keeps its form. A
+  transport Jacobian of the cells a footprint touched is put on the whole
+  state with `Operator.from_blocks({("co2", "flux"): J}, rows=obs.space,
+  cols=prior.space)`. ([#82](https://github.com/jmineau/fips/issues/82))
 - **`fips.solve(problem, method="analytic", **options)`** returns a
   `Posterior`. Each method declares its options once, as a dataclass
   (`fips.solve.AnalyticOptions`: `gamma`, which must be positive and finite);
@@ -203,7 +217,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   [#12](https://github.com/jmineau/fips/issues/12))
 - **`Posterior`, from the kept factorization.** `estimate` (and `mean`, the
   same object), `variances`, `cov(W)`, `averaging_kernel(W)`, `kalman_gain`,
-  `modeled_obs`, `prior_modeled_obs`, `prior_obs_cov`, and the scalars `dofs`,
+  `modeled_obs` (`problem.predict(post.estimate)`), `innovation_cov` (`H S_0
+  H^T + S_z / gamma`, the covariance of the innovation `z - H x_0 - c` and the
+  matrix the solve factors: the innovation covariance of Kalman filtering,
+  Rodgers' `S_y`), and the scalars `dofs`,
   `chi2` (the data and state misfits summed), `reduced_chi2` (`chi2` over the
   number of observations), `r2`, `rmse` and `uncertainty_reduction`, each
   labeled with the problem's spaces and built once. New:
@@ -226,20 +243,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   problem from `get_inputs()` (whose keys are now `obs`, `prior`, `forward`,
   `prior_cov`, `obs_cov`, `offset`), and `run(options=None, **kwargs)` returns
   the `Posterior` (kept as `pipeline.posterior`, the problem as
-  `pipeline.problem`). `FluxProblem` is a `Problem` with the same keywords;
-  its `solve(method="analytic", **options)` keeps the posterior as `result`,
-  which the posterior accessors read, and `FluxProblem.jacobian` and the other
-  matrix accessors give the block as an `Operator`. A plot of a `Vector` of one
+  `pipeline.problem`). `FluxProblem` is a `Problem` with the same keywords,
+  solved with `fips.solve`; it keeps the accessors that need no solve
+  (`prior_concentrations` is `predict(prior)`), and `FluxProblem.jacobian` and
+  the other matrix accessors give the block as an `Operator`. `FluxPlotter`
+  plots a `Posterior`: `FluxPlotter(post).fluxes()`. A plot of a `Vector` of one
   block (`plot_comparison`) is on the block's own labels, as a `Block`'s was.
   ([#82](https://github.com/jmineau/fips/issues/82))
 - **A label on one side only raises when a problem is built**, where
   `InverseProblem` filled the labels a matrix lacked within a known block with
   zeros, with a "Partial overlap" warning, and dropped those it had in excess.
   A transport Jacobian that covers only the cells a footprint touched is put
-  on the whole state first: a SciPy sparse one by moving its columns to their
-  positions among the prior's cells (the recipe is in `Problem`'s notes), a
-  DataFrame by `frame.reindex(columns=cells, fill_value=0.0)` (a pandas-sparse
-  frame stays sparse). A covariance that lacks a label's variance (the removed
+  on the whole state first, by `Operator.from_blocks`, which places a labeled
+  block by its labels (see Added). A covariance that lacks a label's variance (the removed
   error components filled it with 0) raises the same way.
   ([#82](https://github.com/jmineau/fips/issues/82),
   [#24](https://github.com/jmineau/fips/issues/24))
@@ -472,21 +488,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   | `prior_error=form` (a `fips.linalg` form) | `prior_cov=Covariance(form, prior.space)` |
   | `constant=` | `offset=` (a `Vector` on the observations, or a number) |
   | `round_index=6` | `round_labels(6)` on the inputs, on purpose |
-  | labels a matrix lacks filled with zeros ("Partial overlap") | the matrix built on the whole space (see `Problem`'s notes) |
+  | labels a matrix lacks filled with zeros ("Partial overlap") | `Operator.from_blocks({("co2", "flux"): J}, rows=obs.space, cols=prior.space)` with the labeled `J` (a label `J` lacks is zero) |
   | `problem.solve("bayesian", gamma=g)`, `problem.result` | `post = fips.solve(problem, gamma=g)` (`"analytic"` by default) |
   | `fips.solve(problem, "bayesian")`, `fips.solve(problem, BayesianSolver)` | `fips.solve(problem)`, `fips.solve(problem, "analytic")` |
   | `available_estimators()` | `available_methods()` |
   | `problem.posterior`, `post.estimate` | `post.estimate` |
   | `problem.posterior_error`, `post.covariance` | `post.cov()` |
-  | `problem.posterior_obs`, `problem.prior_obs` | `post.modeled_obs`, `post.prior_modeled_obs` |
-  | `problem.prior_obs_error`, `post.prior_obs_covariance` | `post.prior_obs_cov` |
+  | `problem.posterior_obs` | `post.modeled_obs` (`problem.predict(post.estimate)`) |
+  | `problem.prior_obs`, `post.prior_modeled_obs` | `problem.predict(problem.prior)` |
+  | `problem.prior_obs_error`, `post.prior_obs_covariance` (`H S_0 H^T`) | `post.innovation_cov` (`H S_0 H^T + S_z / gamma`) |
   | `problem.kalman_gain`, `problem.averaging_kernel` | `post.kalman_gain`, `post.averaging_kernel()` |
   | `problem.desroziers`, `post.desroziers` (an `m x m` covariance) | `post.desroziers(by=None)` (a DataFrame: diagnosed, specified, ratio) |
   | `problem.get_block("prior", "flux")` | `problem.prior["flux"]`; `problem.prior_cov["flux", "flux"]` |
   | `problem.forward_operator`, `problem.prior_error`, `problem.modeldata_mismatch`, `problem.constant` | `problem.forward`, `problem.prior_cov`, `problem.obs_cov`, `problem.offset` |
   | `problem.state_index`, `problem.obs_index`, `post.state_space`, `post.obs_space` | `problem.prior.index`, `problem.obs.index`, `problem.prior.space`, `problem.obs.space` |
   | `post.estimator`, `problem.estimator` | `post.problem`, `post.options` |
-  | `est.x_hat`, `est.S_hat`, `est.S_hat_diagonal`, `est.y_hat`, `est.y_0`, `est.S_y0`, `est.K`, `est.A` | `post.estimate`, `post.cov()`, `post.variances`, `post.modeled_obs`, `post.prior_modeled_obs`, `post.prior_obs_cov`, `post.kalman_gain`, `post.averaging_kernel()` (`.values` / `.dense()` for arrays) |
+  | `est.x_hat`, `est.S_hat`, `est.S_hat_diagonal`, `est.y_hat`, `est.y_0`, `est.S_y0`, `est.K`, `est.A` | `post.estimate`, `post.cov()`, `post.variances`, `post.modeled_obs`, `problem.predict(problem.prior)`, `post.innovation_cov` (with `S_z / gamma` added), `post.kalman_gain`, `post.averaging_kernel()` (`.values` / `.dense()` for arrays) |
   | `est.DOFS`, `est.R2`, `est.RMSE`, `est.reduced_chi2`, `est.uncertainty_reduction` | `post.dofs`, `post.r2`, `post.rmse`, `post.reduced_chi2`, `post.uncertainty_reduction` |
   | `est.U_red` | `100 * (1 - np.sqrt(post.variances.values / problem.prior_cov.variances.values))` |
   | `est.leverage(x)` | `post.leverage(vector)` (an `Operator` on the observations) |
@@ -496,7 +513,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   | `convolve(state, H)` | `H @ vector` (a `Vector`; a label `H` has and the vector lacks raises) |
   | `fips.indexes.round_index`, `overlaps`, `apply_to_index` | `Space.round_labels`; `Space.align` |
   | `InversionPipeline(config, problem, estimator)`, `run(estimator_kwargs=...)` | `InversionPipeline(config, problem, method="analytic")`, `run(options=...)` (returns the `Posterior`) |
-  | `FluxProblem(...).solve().estimator` | `FluxProblem(...).solve().result` |
+  | `FluxProblem(...).solve()`, `.estimator`, `.posterior_fluxes`, `.posterior_concentrations`, `.posterior_flux_error` | `post = fips.solve(flux_problem)`; `post.estimate["flux"]`, `post.modeled_obs["concentration"]`, `post.cov()["flux", "flux"]` |
+  | `flux_problem.plot.fluxes()` | `FluxPlotter(post).fluxes()` |
 
 - `Estimator._output_meta`, the private table `InverseProblem` read to label
   the estimator's outputs: `Posterior` labels them itself.

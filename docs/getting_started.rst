@@ -94,9 +94,9 @@ DataFrame:
    v_hat = post.variances           # its diagonal, without forming it
 
    # Modelled observations for prior and posterior
-   y_0   = post.prior_modeled_obs   # Vector  (on obs.space)
-   y_hat = post.modeled_obs         # Vector  (on obs.space)
-   S_y0  = post.prior_obs_cov       # Covariance: H S_0 H^T, the prior's error on y_0
+   y_0   = problem.predict(prior)   # Vector  (on obs.space): H x_0, no solve needed
+   y_hat = post.modeled_obs         # Vector  (on obs.space): H x_hat
+   S_d   = post.innovation_cov      # Covariance: H S_0 H^T + S_z, of z - H x_0
 
    # Kalman gain and averaging kernel
    K = post.kalman_gain             # Operator  (state × obs)

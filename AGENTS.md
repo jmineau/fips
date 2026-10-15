@@ -57,7 +57,8 @@ src/fips/
   kronecker.py       KroneckerOperator — a covariance kept as its factors
   base.py            Pickleable — to_file / from_file (Problem, Posterior)
   problem.py         Problem — prior, prior_cov, obs, obs_cov, forward,
-                     offset, checked once by exact join; models built there
+                     offset, checked once by exact join; models built there;
+                     predict(x) = H x + c
   solve.py           solve(problem, method, **options), the method registry
                      (_register, available_methods) and each method's options
                      dataclass (AnalyticOptions); the analytic method
@@ -84,10 +85,10 @@ archive/             local-only, not tracked
 
 Specialization for atmospheric flux inversion. Public exports:
 
-- `FluxProblem` — `Problem` subclass with block accessors and a `solve()`
-  that keeps the posterior as `result`
+- `FluxProblem` — `Problem` subclass with block accessors (solved with
+  `fips.solve`, as any problem)
 - `FluxInversionPipeline` — `InversionPipeline` subclass
-- `FluxPlotter` — visualization
+- `FluxPlotter` — visualization of a `Posterior` (`FluxPlotter(post)`)
 
 The `flux` extra pulls in `cartopy`, `h5py`, `matplotlib`. fips does not
 build transport Jacobians: PYSTILT's `project.jacobian()` does, and the
@@ -116,7 +117,10 @@ From `fips.__init__`:
    `Vector.from_blocks({...})` for several). Each block carries its own
    pandas index describing dims (time, lat, lon, site, etc.).
 2. **Express H as an `Operator`.** `Operator.from_blocks({(obs_block,
-   state_block): frame})` stitches a block-structured Jacobian together;
+   state_block): frame})` stitches a block-structured Jacobian together and
+   places each labeled block (a DataFrame, or `(matrix, row_labels,
+   col_labels)`) by its labels: a label it lacks is zero, one its block lacks
+   raises;
    `Operator(matrix, rows, cols)` labels a matrix you have (a SciPy sparse one
    stays sparse); `Operator.from_frame` reads a labeled DataFrame.
 3. **Build covariances from models.** A correlation model and standard
@@ -169,13 +173,21 @@ From `fips.__init__`:
   the offset must have exactly the labels of the observations or the prior (in
   any order), or it raises naming the blocks and labels on one side only
   (`Space._align`, which `Space.align` calls with its own wording). Nothing is
-  zero-filled and nothing is rounded: a Jacobian that covers only the cells a
-  footprint touched is put on the whole state by the caller (the recipe is in
-  `Problem`'s notes). Each input is then held in the order of `prior.space` and
+  zero-filled here and nothing is rounded: a Jacobian that covers only the
+  cells a footprint touched is put on the whole state before, by
+  `Operator.from_blocks`, which places a labeled block by its labels (a label
+  the block lacks is zero, a label the space lacks raises; `operator._placed`
+  keeps a sparse block sparse and a block that covers its labels in its form).
+  Each input is then held in the order of `prior.space` and
   `obs.space`, through `form._select` (which keeps a Kronecker form), and a
   covariance model is built there (`model.build(space, name=...)`). The solve
   and the `Posterior` compute by position on those orders and label every
   output with those two spaces.
+- **The problem is the question, the posterior the answer.** `Problem` holds
+  what needs no solve and no `m x m` matrix (`predict`); `Posterior` holds
+  what depends on the solve or on the `m x m` matrix it factors
+  (`innovation_cov`, the estimate and every diagnostic). `Posterior.modeled_obs` is the one shortcut
+  to a problem method: `problem.predict(post.estimate)`, kept.
 - **A sparse matrix is a SciPy matrix, never a pandas-sparse frame.** The
   one place a pandas-sparse frame enters is `Operator.from_frame` (and
   `ObsAggregator.apply` with a frame), through `operator._frame_matrix`: the

@@ -5,7 +5,10 @@ Solving and Posterior
 .. currentmodule:: fips
 
 :func:`solve` solves a :class:`Problem` with a method and returns a
-:class:`Posterior`. Each method declares its options once (for ``"analytic"``,
+:class:`Posterior`. The problem is the question and holds what needs no solve
+and no :math:`m \times m` matrix (:meth:`Problem.predict`); the posterior is
+the answer and holds what depends on the solve or on the :math:`m \times m`
+matrix it factors (:attr:`Posterior.innovation_cov`). Each method declares its options once (for ``"analytic"``,
 :class:`~fips.solve.AnalyticOptions`), and an unknown method or option raises
 with the names it knows. The posterior keeps the factorization of the solve:
 everything it gives is derived from it and labeled with the problem's spaces,
@@ -66,8 +69,7 @@ Observation space
    :toctree: api/
 
    Posterior.modeled_obs
-   Posterior.prior_modeled_obs
-   Posterior.prior_obs_cov
+   Posterior.innovation_cov
    Posterior.desroziers
    Posterior.leverage
 
