@@ -27,6 +27,19 @@ def test_haversine_matrix_values():
     assert np.isclose(dist[0, 1], 111.19, atol=1.0)  # approx 111 km
 
 
+def test_haversine_antipodal_points_are_half_the_circumference():
+    """Exactly antipodal points are pi times the radius apart, never NaN (#108)."""
+    rng = np.random.default_rng(0)
+    lat = rng.uniform(-80, 80, 300)
+    lon = rng.uniform(-180, 180, 300)
+    lats = np.concatenate([lat, -lat])
+    lons = np.concatenate([lon, np.where(lon > 0, lon - 180, lon + 180)])
+
+    dist = haversine_matrix(lats, lons)
+    assert not np.isnan(dist).any()
+    np.testing.assert_allclose(np.diag(dist[:300, 300:]), np.pi * 6371.0, rtol=1e-6)
+
+
 def test_haversine_input_validation():
     """Test that it raises error for mismatched dimensions."""
     # It requires 1D arrays, so passing 2D should fail if checked, or different lengths?
