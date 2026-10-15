@@ -58,10 +58,10 @@ Testing
 Kronecker factors
 =================
 
-.. currentmodule:: fips.kronecker
-
-.. automodule:: fips.kronecker
+.. automodule:: fips.linalg.kronecker
    :no-members:
+
+.. currentmodule:: fips.linalg
 
 .. autosummary::
    :toctree: api/

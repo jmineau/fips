@@ -76,8 +76,4 @@ is on the :class:`Posterior`.
 
 Serialization
 ~~~~~~~~~~~~~
-.. autosummary::
-   :toctree: api/
-
-   Problem.from_file
-   Problem.to_file
+A problem pickles with the standard library (``pickle.dump(problem, file)``).
