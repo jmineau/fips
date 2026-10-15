@@ -16,9 +16,14 @@ import pandas as pd
 import scipy.sparse as sp
 from scipy.special import gammaln, kve
 
-from fips.correlation import CorrelationModel, _names
-from fips.linalg import _DENSE_FILL, DenseOperator, LinearOperator, _adopt
-from fips.metrics import chordal_matrix, haversine_matrix, time_diff_matrix
+from fips.covariance.distances import (
+    chordal_matrix,
+    haversine_matrix,
+    time_diff_matrix,
+)
+from fips.covariance.models import CorrelationModel, _names
+from fips.linalg import DenseOperator, LinearOperator
+from fips.linalg.base import _DENSE_FILL, _adopt
 
 _METRICS = ("euclidean", "haversine", "chordal")
 """The distances a kernel can measure: a straight line, and two on the Earth (km)."""

@@ -105,7 +105,7 @@ def chordal_matrix(lats, lons, earth_radius: float = 6371.0) -> np.ndarray:
     A quarter of the equator is 10,008 km along the surface and 9,010 km
     through the Earth:
 
-    >>> from fips.metrics import chordal_matrix, haversine_matrix
+    >>> from fips.covariance.distances import chordal_matrix, haversine_matrix
     >>> haversine_matrix([0.0, 0.0], [0.0, 90.0]).round()
     array([[    0., 10008.],
            [10008.,     0.]])

@@ -4,8 +4,8 @@ Covariances: symmetric operators from a space to itself.
 A :class:`Covariance` is a symmetric :class:`~fips.Operator` from a space to
 itself, kept in its cheapest form, with the variances, solves,
 log-determinant, quadratic form and square root a covariance needs. The
-correlation models (:mod:`fips.correlation`, :mod:`fips.kernels`) make one
-from the labels (``model.with_std(std)``).
+correlation models of :mod:`fips.covariance` make one from the labels
+(``model.with_std(std)``).
 """
 
 import logging
@@ -20,15 +20,15 @@ from fips.linalg import (
     DiagonalOperator,
     LinearOperator,
     LinearOperatorLike,
-    _adopt,
     as_linear_operator,
 )
+from fips.linalg.base import _adopt
 from fips.operator import Operator
 from fips.space import Space
 from fips.vector import Vector
 
 if TYPE_CHECKING:
-    from fips.models import CovarianceModel
+    from fips.covariance.models import CovarianceModel
 
 logger = logging.getLogger(__name__)
 
@@ -236,15 +236,15 @@ class Covariance(Operator):
             The covariance's name.
         **blocks : Covariance or CovarianceModel
             Parts named by block, after the positional ones: a covariance on
-            that one block, or a :class:`~fips.models.CovarianceModel` (as
+            that one block, or a :class:`~fips.covariance.CovarianceModel` (as
             ``model.with_std(std)``), which gets the block's labels when built.
 
         Returns
         -------
         Covariance or CovarianceModel
             The covariance on the blocks of every part, one after the other;
-            while a part is a model, a :class:`~fips.models.CovarianceModel`
-            to :meth:`~fips.models.CovarianceModel.build` on a space.
+            while a part is a model, a :class:`~fips.covariance.CovarianceModel`
+            to :meth:`~fips.covariance.CovarianceModel.build` on a space.
 
         Raises
         ------
@@ -272,7 +272,9 @@ class Covariance(Operator):
         parts: list[Covariance] = []
         for part in (*covariances, *blocks.values()):
             if not isinstance(part, Covariance):
-                from fips.models import _block_diagonal  # models.py imports this module
+                from fips.covariance.models import (
+                    _block_diagonal,  # models.py imports this module
+                )
 
                 return _block_diagonal(covariances, blocks, name)
             parts.append(part)

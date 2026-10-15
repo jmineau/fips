@@ -21,9 +21,8 @@ from typing import Any
 import numpy as np
 
 from fips.base import Pickleable
-from fips.covariance import Covariance
+from fips.covariance import Covariance, CovarianceModel
 from fips.linalg import LinearOperator
-from fips.models import CovarianceModel
 from fips.operator import Operator
 from fips.space import Space
 from fips.vector import Vector
@@ -67,7 +66,7 @@ def _covariance(value: Any, space: Space, what: str, of: str) -> Covariance:
     """
     Return `value` as a covariance on `space`.
 
-    A :class:`~fips.models.CovarianceModel` is built there; a
+    A :class:`~fips.covariance.CovarianceModel` is built there; a
     :class:`~fips.Covariance` must have exactly the space's labels.
     """
     if isinstance(value, CovarianceModel):

@@ -4,55 +4,22 @@ Solving an inverse problem: :func:`solve` and the methods it can use.
 Each method is registered under a name with the dataclass of its options,
 declared once: :func:`solve` checks the options a caller passes against it
 before anything is computed, and an unknown method or option raises with the
-names it knows. The one method is ``"analytic"``, the closed-form Gaussian
-posterior, computed from the whitened factorization of :mod:`fips._whitened`.
+names it knows. The one method is ``"analytic"`` (:mod:`fips.methods.analytic`),
+the closed-form Gaussian posterior. A method is a module that defines its
+options dataclass and a function from a :class:`~fips.Problem` and its options
+to a :class:`~fips.Posterior`, listed in ``_METHODS`` below.
 """
 
 import logging
-import math
 from collections.abc import Callable
 from dataclasses import dataclass, fields
 from typing import Any
 
-from fips._whitened import Whitened
+from fips.methods.analytic import AnalyticOptions, _analytic
 from fips.posterior import Posterior
 from fips.problem import Problem
 
 logger = logging.getLogger(__name__)
-
-
-@dataclass(frozen=True)
-class AnalyticOptions:
-    r"""
-    The options of the ``"analytic"`` method.
-
-    Parameters
-    ----------
-    gamma : float, default 1.0
-        The regularization factor :math:`\gamma`, which multiplies the
-        observation term of the cost:
-        :math:`J(x) = (x - x_0)^T S_0^{-1} (x - x_0) + \gamma (z - H x - c)^T S_z^{-1} (z - H x - c)`.
-        It is the same as dividing :math:`S_z` by :math:`\gamma`: above 1 the
-        estimate fits the observations more closely, below 1 it stays closer
-        to the prior. It must be positive and finite.
-
-    Raises
-    ------
-    ValueError
-        If `gamma` is not a positive, finite number.
-    """
-
-    gamma: float = 1.0
-    """The regularization factor: the model-data mismatch is divided by it."""
-
-    def __post_init__(self):
-        try:
-            gamma = float(self.gamma)
-        except (TypeError, ValueError):
-            raise ValueError(f"gamma must be a number, got {self.gamma!r}.") from None
-        if not (math.isfinite(gamma) and gamma > 0):
-            raise ValueError(f"gamma must be positive and finite, got {gamma}.")
-        object.__setattr__(self, "gamma", gamma)
 
 
 @dataclass(frozen=True)
@@ -63,18 +30,8 @@ class _Method:
     solve: Callable[[Problem, Any], Posterior]
 
 
-_METHODS: dict[str, _Method] = {}
-
-
-def _register(name: str, options: type) -> Callable:
-    """Register the decorated function as the method `name`, taking `options`."""
-
-    def decorator(function: Callable[[Problem, Any], Posterior]) -> Callable:
-        """File `function` under `name` and return it unchanged."""
-        _METHODS[name] = _Method(options, function)
-        return function
-
-    return decorator
+_METHODS: dict[str, _Method] = {"analytic": _Method(AnalyticOptions, _analytic)}
+"""The methods by name."""
 
 
 def available_methods() -> list[str]:
@@ -87,31 +44,6 @@ def available_methods() -> list[str]:
         The registered names, such as ``"analytic"``.
     """
     return list(_METHODS)
-
-
-@_register("analytic", AnalyticOptions)
-def _analytic(problem: Problem, options: AnalyticOptions) -> Posterior:
-    r"""
-    Factor the problem's whitened system once; the posterior derives everything from it.
-
-    :math:`H S_0` and :math:`H S_0 H^T` are formed in the cheapest form of
-    their factors (through a Kronecker :math:`S_0`'s factors), then dense.
-    """
-    H = problem.forward.data
-    S_0 = problem.prior_cov.data
-    HS_0 = H @ S_0
-    HS_0H = HS_0 @ H._transpose()
-    innovation = problem.obs.values - (
-        H @ problem.prior.values + problem._offset_values()
-    )
-    factors = Whitened.factor(
-        HS_0.dense(),
-        HS_0H.dense(),
-        problem.obs_cov.data,
-        innovation,
-        S_0.diagonal(),
-    )
-    return Posterior(problem, factors, options)
 
 
 def solve(problem: Problem, method: str = "analytic", **options: Any) -> Posterior:
@@ -129,7 +61,7 @@ def solve(problem: Problem, method: str = "analytic", **options: Any) -> Posteri
         is the closed-form Gaussian posterior.
     **options
         The method's options, by name: for ``"analytic"``, ``gamma`` (see
-        :class:`~fips.solve.AnalyticOptions`).
+        :class:`~fips.methods.analytic.AnalyticOptions`).
 
     Returns
     -------

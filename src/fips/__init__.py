@@ -19,13 +19,19 @@ from importlib.metadata import version as _version
 
 from . import aggregate
 from .aggregate import offset_block
-from .correlation import Independent, Kronecker
-from .covariance import Covariance
-from .kernels import Constant, Exponential, Gaussian, Matern
+from .covariance import (
+    Constant,
+    Covariance,
+    Exponential,
+    Gaussian,
+    Independent,
+    Kronecker,
+    Matern,
+)
+from .methods import available_methods, solve
 from .operator import Operator
 from .posterior import Posterior
 from .problem import Problem
-from .solve import available_methods, solve
 from .space import Space
 from .vector import Vector
 

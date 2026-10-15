@@ -28,9 +28,9 @@ from fips.linalg import (
     LinearOperator,
     LinearOperatorLike,
     SparseOperator,
-    _adopt,
     as_linear_operator,
 )
+from fips.linalg.base import _adopt
 from fips.space import Space, _listed
 from fips.vector import Vector
 
