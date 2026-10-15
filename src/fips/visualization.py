@@ -22,7 +22,7 @@ from fips.vector import Vector
 def _require_matplotlib():
     """Import and return ``matplotlib.pyplot``, with an install hint when missing."""
     try:
-        import matplotlib.pyplot as plt  # type: ignore
+        import matplotlib.pyplot as plt
 
         return plt
     except ImportError as exc:
