@@ -223,11 +223,18 @@ dense :math:`n \times n` matrix, formed only when it is read (see below).
 The Posterior
 -------------
 
-:func:`fips.solve` returns a :class:`~fips.Posterior`. The Bayesian solve
-whitens the problem once: it eigendecomposes an :math:`m \times m` matrix
-built from :math:`H S_0 H^T` and :math:`S_z`, keeps the factors, and derives
-the estimate, the posterior variances, DOFS and the reduced chi-squared from
-them, without forming anything :math:`n \times n`. The full posterior
+:func:`fips.solve` returns a :class:`~fips.Posterior`. The analytic solve
+factors the problem once, in one of two forms that give the same posterior.
+The whitened form eigendecomposes an :math:`m \times m` matrix built from
+:math:`H S_0 H^T` and :math:`S_z`; the information form an :math:`n \times n`
+matrix built from :math:`H`, a square root of :math:`S_0` and
+:math:`S_z^{-1}`. The information form is used when there are fewer state
+elements than observations and :math:`S_z` is diagonal, sparse or block
+diagonal, so that its inverse is cheap to apply; otherwise the whitened form.
+The solve keeps the factors and derives the estimate, the posterior
+variances, DOFS and the reduced chi-squared from them, without forming
+anything :math:`n \times n` in the whitened form or :math:`m \times m` in
+the information form. The full posterior
 covariance (``post.cov()``) and averaging kernel
 (``post.averaging_kernel()``) are formed only when read.
 
