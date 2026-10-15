@@ -4,7 +4,7 @@ Installation
 Requirements
 ------------
 
-- Python 3.10 or higher
+- Python 3.11 or newer
 - `NumPy <https://numpy.org>`_
 - `pandas <https://pandas.pydata.org>`_
 - `xarray <https://xarray.pydata.org>`_
