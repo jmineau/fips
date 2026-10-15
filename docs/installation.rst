@@ -22,7 +22,7 @@ Optional extras
 
 .. code-block:: bash
 
-   # Plotting: matplotlib, and cartopy for maps on background tiles
+   # Plotting (plot_comparison): matplotlib
    pip install "fips[viz]"
 
 Development Installation
