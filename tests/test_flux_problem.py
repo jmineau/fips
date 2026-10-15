@@ -92,12 +92,6 @@ def flux_problem(flux_obs, flux_prior, flux_jacobian, flux_prior_error, flux_mis
     )
 
 
-@pytest.fixture
-def solved_flux_problem(flux_problem):
-    """Solved FluxProblem (in-place)."""
-    return flux_problem.solve()
-
-
 # ---------------------------------------------------------------------------
 # Construction
 # ---------------------------------------------------------------------------
@@ -118,9 +112,11 @@ class TestFluxProblemConstruction:
         """Test n_obs property returns correct count."""
         assert len(flux_problem.obs) == 4
 
-    def test_unsolved_by_default(self, flux_problem):
-        """Test that FluxProblem is unsolved by default."""
-        assert flux_problem.result is None
+    def test_has_no_solve(self, flux_problem):
+        """A flux problem is solved by fips.solve, as any problem."""
+        assert not hasattr(flux_problem, "solve")
+        assert not hasattr(flux_problem, "result")
+        assert isinstance(fips.solve(flux_problem), fips.Posterior)
 
 
 # ---------------------------------------------------------------------------
@@ -248,76 +244,32 @@ class TestFluxProblemStateProperties:
 
 
 # ---------------------------------------------------------------------------
-# solve()
+# What the problem gives without a solve
 # ---------------------------------------------------------------------------
 
 
-class TestFluxProblemSolve:
-    """Tests for FluxProblem.solve()."""
+class TestFluxProblemPriorProperties:
+    """The prior's concentrations and their error, from the problem alone."""
 
-    def test_solve_returns_self(self, flux_problem):
-        """Test that solve returns self for method chaining."""
-        result = flux_problem.solve()
-        assert result is flux_problem
-
-    def test_solve_keeps_the_posterior(self, solved_flux_problem):
-        """Solve keeps the posterior fips.solve returns as ``result``."""
-        assert isinstance(solved_flux_problem.result, fips.Posterior)
-
-    def test_unsolved_raises_on_posterior(self, flux_problem):
-        """Test that accessing posterior before solving raises an error."""
-        with pytest.raises(RuntimeError):
-            _ = flux_problem.posterior_fluxes
-
-
-# ---------------------------------------------------------------------------
-# Posterior properties (after solving)
-# ---------------------------------------------------------------------------
-
-
-class TestFluxProblemPosteriorProperties:
-    """Tests for FluxProblem posterior accessors."""
-
-    def test_posterior_fluxes_is_series(self, solved_flux_problem):
-        """Test posterior_fluxes returns a Series."""
-        result = solved_flux_problem.posterior_fluxes
-        assert isinstance(result, pd.Series)
-        assert len(result) == 4
-
-    def test_posterior_flux_error_is_covariance(self, solved_flux_problem):
-        """Test that posterior_flux_error returns a Covariance."""
-        result = solved_flux_problem.posterior_flux_error
-        assert isinstance(result, Covariance)
-        assert result.shape == (4, 4)
-
-    def test_prior_concentration_error_is_on_the_obs_index(self, solved_flux_problem):
+    def test_prior_concentration_error_is_on_the_obs_index(self, flux_problem):
         """The prior flux error mapped to concentrations, block-indexed like the obs."""
-        S = solved_flux_problem.prior_concentration_error
+        S = flux_problem.prior_concentration_error
         assert isinstance(S, Covariance)
-        n_obs = len(solved_flux_problem.obs)
+        n_obs = len(flux_problem.obs)
         assert S.shape == (n_obs, n_obs)
-        assert S.space == solved_flux_problem.jacobian.rows
-        H = solved_flux_problem.jacobian.dense()
-        S_0 = solved_flux_problem.prior_flux_error.dense()
+        assert S.space == flux_problem.jacobian.rows
+        H = flux_problem.jacobian.dense()
+        S_0 = flux_problem.prior_flux_error.dense()
         np.testing.assert_allclose(S.dense(), H @ S_0 @ H.T)
 
-    def test_prior_concentrations_is_series(self, solved_flux_problem):
-        """Test that prior_concentrations returns a Series."""
-        result = solved_flux_problem.prior_concentrations
+    def test_prior_concentrations_are_the_prediction(self, flux_problem):
+        """``prior_concentrations`` is the concentration block of ``predict(prior)``."""
+        result = flux_problem.prior_concentrations
         assert isinstance(result, pd.Series)
         assert len(result) == 4
-
-    def test_posterior_concentrations_is_series(self, solved_flux_problem):
-        """Test that posterior_concentrations returns a Series."""
-        result = solved_flux_problem.posterior_concentrations
-        assert isinstance(result, pd.Series)
-        assert len(result) == 4
-
-    def test_posterior_reduces_error(self, solved_flux_problem):
-        """Posterior error variance should be less than or equal to prior."""
-        prior_var = np.diag(solved_flux_problem.prior_flux_error.dense())
-        post_var = np.diag(solved_flux_problem.posterior_flux_error.dense())
-        assert np.all(post_var <= prior_var + 1e-10)
+        np.testing.assert_allclose(
+            result.to_numpy(), flux_problem.predict(flux_problem.prior).values
+        )
 
 
 # ---------------------------------------------------------------------------
@@ -328,15 +280,7 @@ class TestFluxProblemPosteriorProperties:
 class TestFluxProblemRepr:
     """Tests for FluxProblem __repr__."""
 
-    def test_repr_unsolved(self, flux_problem):
-        """Test repr for unsolved FluxProblem."""
+    def test_repr(self, flux_problem):
+        """Test repr of a FluxProblem."""
         r = repr(flux_problem)
-        assert "FluxProblem" in r
-        assert "n_flux=4" in r
-        assert "n_obs=4" in r
-        assert "solved=False" in r
-
-    def test_repr_solved(self, solved_flux_problem):
-        """Test repr for solved FluxProblem."""
-        r = repr(solved_flux_problem)
-        assert "solved=True" in r
+        assert r == "FluxProblem(n_obs=4, n_flux=4, n_state=4)"

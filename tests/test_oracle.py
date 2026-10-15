@@ -76,7 +76,7 @@ class ClosedForm:
     DOFS: float
     y_hat: np.ndarray
     y_0: np.ndarray
-    S_y0: np.ndarray
+    G: np.ndarray
     reduced_chi2: float
     scale: dict[str, float]
 
@@ -109,7 +109,7 @@ def closed_form(z, x_0, H, S_0, S_z, c) -> ClosedForm:
         "A": (a(K) @ a(H)).max(),
         "DOFS": np.trace(a(K) @ a(H)),
         "y": (a(H) @ a(x_hat)).max() + a(c).max(),
-        "S_y0": (a(H) @ a(S_0) @ a(H.T)).max(),
+        "G": (a(H) @ a(S_0) @ a(H.T)).max() + a(S_z).max(),
         "chi2": chi2,
     }
     return ClosedForm(
@@ -121,7 +121,7 @@ def closed_form(z, x_0, H, S_0, S_z, c) -> ClosedForm:
         DOFS=float(np.trace(A)),
         y_hat=H @ x_hat + c,
         y_0=H @ x_0 + c,
-        S_y0=H @ S_0 @ H.T,
+        G=H @ S_0 @ H.T + S_z,
         reduced_chi2=float(chi2),
         scale=scale,
     )
@@ -302,16 +302,16 @@ def check_posterior(
         at("modeled_obs"),
     )
     assert_close(
-        vector_on(post.prior_modeled_obs, o, at("prior_modeled_obs")),
+        vector_on(post.problem.predict(post.problem.prior), o, at("predict(prior)")),
         expected.y_0,
         sc["y"],
-        at("prior_modeled_obs"),
+        at("predict(prior)"),
     )
     assert_close(
-        matrix_on(post.prior_obs_cov, o, o, at("prior_obs_cov")),
-        expected.S_y0,
-        sc["S_y0"],
-        at("prior_obs_cov"),
+        matrix_on(post.innovation_cov, o, o, at("innovation_cov")),
+        expected.G,
+        sc["G"],
+        at("innovation_cov"),
     )
     assert_close(
         post.reduced_chi2, expected.reduced_chi2, sc["chi2"], at("reduced_chi2")
@@ -505,6 +505,47 @@ def test_sparse_forward_operator(method):
         )
 
 
+@pytest.mark.parametrize("method", METHODS)
+@pytest.mark.parametrize(
+    "given", ["sparse tuple", "pandas-sparse frame", "dense frame"]
+)
+def test_jacobian_on_part_of_the_state_is_placed(method, given):
+    """
+    A labeled Jacobian of some cells, placed by ``Operator.from_blocks``, gives the closed form.
+
+    The columns it lacks are cells no observation sees: zero columns of the
+    ``H`` the closed form uses. Its rows and columns come in their own order.
+    """
+    rng = np.random.default_rng(7)
+    for seed in range(5):
+        case = Case.random(seed, 7, 10)
+        seen = np.sort(rng.choice(7, 4, replace=False))
+        case.H[:, np.setdiff1d(np.arange(7), seen)] = 0.0
+        expected = closed_form(case.z, case.x_0, case.H, case.S_0, case.S_z, case.c)
+
+        cells = case.state_space.select("flux")
+        obs_ids = case.obs_space.select("conc")
+        rows, cols = rng.permutation(10), seen[rng.permutation(4)]
+        J = case.H[np.ix_(rows, cols)]
+        if given == "sparse tuple":
+            block = (sp.csr_array(J), obs_ids[rows], cells[cols])
+        else:
+            block = pd.DataFrame(J, index=obs_ids[rows], columns=cells[cols])
+            if given == "pandas-sparse frame":
+                block = block.astype(pd.SparseDtype(float, 0.0))
+        forward = Operator.from_blocks(
+            {("conc", "flux"): block}, rows=case.obs_space, cols=case.state_space
+        )
+        assert isinstance(forward.data, SparseOperator) == (given != "dense frame")
+        post = solve(case.problem(forward=forward), method)
+        check_posterior(
+            post, expected, case.state_index, case.obs_index, f"seed {seed}"
+        )
+        # and the placed operator's adjoint is its transpose
+        form, adjoint = forward.data, forward.T.data
+        dot_test(lambda v: form @ v, lambda v: adjoint @ v, 7, 10, rng)  # noqa: B023
+
+
 # ---------------------------------------------------------------------------
 # 2. Several blocks
 # ---------------------------------------------------------------------------
@@ -653,9 +694,9 @@ def test_multi_block(method, seed):
         got = _block_values(post.modeled_obs, o, oidx)
         assert_close(got, expected.y_hat[os_[o]], sc["y"], what)
         for o2, oidx2 in case.obs.items():
-            what = f"seed {seed}: prior_obs_cov[{o}, {o2}]"
-            got = _block_values(post.prior_obs_cov, (o, o2), oidx, oidx2)
-            assert_close(got, expected.S_y0[os_[o], os_[o2]], sc["S_y0"], what)
+            what = f"seed {seed}: innovation_cov[{o}, {o2}]"
+            got = _block_values(post.innovation_cov, (o, o2), oidx, oidx2)
+            assert_close(got, expected.G[os_[o], os_[o2]], sc["G"], what)
 
     assert_close(post.dofs, expected.DOFS, sc["DOFS"], "dofs")
     assert_close(post.reduced_chi2, expected.reduced_chi2, sc["chi2"], "chi2")
@@ -720,7 +761,7 @@ def test_permutation(method, seed):
         ("averaging_kernel()", lambda post: post.averaging_kernel(), s, s, "A"),
         ("kalman_gain", lambda post: post.kalman_gain, s, o, "K"),
         ("modeled_obs", lambda post: post.modeled_obs, o, None, "y"),
-        ("prior_obs_cov", lambda post: post.prior_obs_cov, o, o, "S_y0"),
+        ("innovation_cov", lambda post: post.innovation_cov, o, o, "G"),
     ]
     for name, output, rows, cols, key in outputs:
         want = output(ref)

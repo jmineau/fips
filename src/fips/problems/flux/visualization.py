@@ -8,7 +8,7 @@ import pandas as pd
 if TYPE_CHECKING:
     from matplotlib.artist import Artist
 
-    from fips.problems.flux.problem import FluxProblem
+    from fips.posterior import Posterior
 
 
 def _require_cartopy():
@@ -35,27 +35,34 @@ def _require_matplotlib():
         ) from exc
 
 
+def _block(vector, block: str) -> pd.Series:
+    """Return one block of a vector as a Series on the block's own labels."""
+    return vector[block].to_series().droplevel("block")
+
+
 class FluxPlotter:
     """
-    Plotting interface for FluxInversion results.
+    Plotting interface for a flux inversion's posterior.
 
-    Provides methods for visualizing prior/posterior fluxes and concentration timeseries.
+    Provides methods for visualizing prior/posterior fluxes and concentration
+    timeseries: the state's ``flux`` block and the observations'
+    ``concentration`` block.
 
     Parameters
     ----------
-    inversion : FluxInversion
-        The inverse problem to visualize.
+    posterior : Posterior
+        The posterior :func:`fips.solve` returned for a flux problem.
     """
 
-    inversion: "FluxProblem"
-    """The inverse problem to visualize."""
+    posterior: "Posterior"
+    """The posterior to visualize."""
 
-    def __init__(self, inversion: "FluxProblem"):
-        self.inversion = inversion
+    def __init__(self, posterior: "Posterior"):
+        self.posterior = posterior
 
     def __repr__(self) -> str:
         """Return string representation."""
-        return f"FluxPlotter(inversion={repr(self.inversion)})"
+        return f"FluxPlotter(posterior={repr(self.posterior)})"
 
     def fluxes(
         self,
@@ -98,8 +105,9 @@ class FluxPlotter:
         plt = _require_matplotlib()
 
         # Get xarray representations of fluxes
-        prior = self.inversion.prior_fluxes.to_xarray()
-        posterior = self.inversion.posterior_fluxes.to_xarray()
+        problem = self.posterior.problem
+        prior = _block(problem.prior, "flux").to_xarray()
+        posterior = _block(self.posterior.estimate, "flux").to_xarray()
 
         # Filter/aggregate by time
         if time == "mean":
@@ -369,9 +377,12 @@ class FluxPlotter:
         """
         plt = _require_matplotlib()
 
-        obs = self.inversion.concentrations.rename("observed")
-        prior = self.inversion.prior_concentrations.rename("prior")
-        posterior = self.inversion.posterior_concentrations.rename("posterior")
+        problem = self.posterior.problem
+        obs = _block(problem.obs, "concentration").rename("observed")
+        prior = _block(problem.predict(problem.prior), "concentration").rename("prior")
+        posterior = _block(self.posterior.modeled_obs, "concentration").rename(
+            "posterior"
+        )
 
         data = pd.concat([obs, posterior, prior], axis=1)
 

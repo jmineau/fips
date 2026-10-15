@@ -15,7 +15,7 @@ import pandas as pd
 from fips.filters import select_intervals_with_min_obs
 from fips.pipeline import InversionPipeline
 from fips.posterior import Posterior
-from fips.problems.flux.problem import FluxProblem
+from fips.problems.flux.problem import FluxProblem, _block_series
 from fips.vector import Vector
 
 logger = logging.getLogger(__name__)
@@ -125,11 +125,10 @@ class FluxInversionPipeline(InversionPipeline[FluxProblem], ABC):
         Returns
         -------
         Posterior
-            The posterior. The problem is kept as :attr:`problem`, with the
-            posterior as its ``result``.
+            The posterior, kept as :attr:`posterior`; the problem is kept as
+            :attr:`problem`.
         """
         posterior = super().run(options=options, **kwargs)
-        self.problem.result = posterior
 
         # Print summary report
         self.summarize()
@@ -140,6 +139,8 @@ class FluxInversionPipeline(InversionPipeline[FluxProblem], ABC):
         """
         Print a comprehensive statistical summary of the inversion results.
 
+        It reads :attr:`problem` and :attr:`posterior`, which :meth:`run` sets.
+
         The report ends with the trend of the mean posterior flux when the flux
         has more than two timesteps. The trend is a rate per year, so it is left
         out when the ``time`` level of the flux is not datetimes; the rest of the
@@ -148,18 +149,17 @@ class FluxInversionPipeline(InversionPipeline[FluxProblem], ABC):
         from scipy import stats
 
         problem = self.problem
+        post = self.posterior
 
         # --- Extract Data ---
         obs = problem.concentrations
         enhancement = problem.enhancement
 
         prior_flux = problem.prior_fluxes
-        post_flux = problem.posterior_fluxes
+        post_flux = _block_series(post.estimate, "flux")
 
         prior_obs = problem.prior_concentrations
-        post_obs = problem.posterior_concentrations
-
-        post = problem._posterior()
+        post_obs = _block_series(post.modeled_obs, "concentration")
 
         # --- Calculate Atmospheric Metrics ---
         mean_enhancement = np.mean(enhancement)

@@ -4,7 +4,9 @@ import numpy as np
 import pandas as pd
 import pytest
 
+import fips
 from fips import Covariance, Operator
+from fips.problems.flux import FluxPlotter
 from fips.problems.flux.problem import FluxProblem
 from fips.vector import Vector
 
@@ -21,7 +23,7 @@ def _close_figures(monkeypatch):
 
 @pytest.fixture
 def solved_problem():
-    """Solved flux problem: 2 times x 2 lat x 2 lon of flux, two sites of daily data."""
+    """The plotter of a solved flux problem: 2 times x 2 lat x 2 lon of flux, two sites of daily data."""
     rng = np.random.default_rng(0)
     flux_idx = pd.MultiIndex.from_product(
         [
@@ -77,7 +79,7 @@ def solved_problem():
             block="concentration",
         ),
     )
-    return problem.solve()
+    return FluxPlotter(fips.solve(problem))
 
 
 class TestFluxes:
@@ -96,9 +98,11 @@ class TestFluxes:
     )
     def test_panels(self, solved_problem, time, has_truth, titles):
         """The truth panel comes first and the residual panel last; ``std`` has none."""
-        truth = solved_problem.prior_fluxes * 1.1 if has_truth else None
+        truth = (
+            solved_problem.posterior.problem.prior_fluxes * 1.1 if has_truth else None
+        )
 
-        fig, axes = solved_problem.plot.fluxes(time=time, truth=truth)
+        fig, axes = solved_problem.fluxes(time=time, truth=truth)
 
         assert [ax.get_title() for ax in axes] == titles
         # The panels, plus one colorbar axes for the prior and one for the residual.
@@ -106,21 +110,21 @@ class TestFluxes:
 
     def test_sites(self, solved_problem):
         """Site markers are drawn on every panel."""
-        _, axes = solved_problem.plot.fluxes(sites={"A": (40.7, -111.8)})
+        _, axes = solved_problem.fluxes(sites={"A": (40.7, -111.8)})
 
         assert all(len(ax.collections) >= 2 for ax in axes)
 
     def test_sites_must_be_a_dict(self, solved_problem):
         """Anything but a dict of sites is refused."""
         with pytest.raises(NotImplementedError, match="dict"):
-            solved_problem.plot.fluxes(sites=True)
+            solved_problem.fluxes(sites=True)
 
     def test_tiler(self, solved_problem):
         """With a tiler, every panel is a map with the tiles added."""
         pytest.importorskip("cartopy")
         from cartopy.io.img_tiles import GoogleTiles
 
-        _, axes = solved_problem.plot.fluxes(tiler=GoogleTiles(), tiler_zoom=5)
+        _, axes = solved_problem.fluxes(tiler=GoogleTiles(), tiler_zoom=5)
 
         assert [type(ax).__name__ for ax in axes] == ["GeoAxes"] * 3
         assert [len(ax.img_factories) for ax in axes] == [1] * 3
@@ -138,7 +142,7 @@ class TestFluxes:
             crs = None
 
         with pytest.raises(ImportError, match="cartopy"):
-            solved_problem.plot.fluxes(tiler=Tiler())
+            solved_problem.fluxes(tiler=Tiler())
         assert plt.get_fignums() == []
 
 
@@ -152,7 +156,7 @@ class TestConcentrations:
         pandas 3 deprecates the lowercase alias, ``"30d"``, and the suite turns
         warnings into errors.
         """
-        axes = solved_problem.plot.concentrations()
+        axes = solved_problem.concentrations()
 
         assert axes.shape == (2,)
         # SITE2's 11-day gap is longer than the default 7-day threshold
@@ -160,9 +164,7 @@ class TestConcentrations:
 
     def test_legend_and_gap(self, solved_problem):
         """Each site gets a figure; a site with a data gap adds a "no data" entry."""
-        axes = solved_problem.plot.concentrations(
-            rolling_window="30D", gap_threshold="5D"
-        )
+        axes = solved_problem.concentrations(rolling_window="30D", gap_threshold="5D")
 
         assert axes.shape == (2,)
         legends = [[t.get_text() for t in ax.get_legend().get_texts()] for ax in axes]
@@ -173,7 +175,7 @@ class TestConcentrations:
 
     def test_location(self, solved_problem):
         """Only the requested site is plotted."""
-        axes = solved_problem.plot.concentrations(
+        axes = solved_problem.concentrations(
             location="SITE1", rolling_window="30D", gap_threshold="7D", show_raw=False
         )
 
@@ -184,4 +186,4 @@ class TestConcentrations:
     def test_location_type(self, solved_problem):
         """A location that is not a string or a list is refused."""
         with pytest.raises(ValueError, match="location must be"):
-            solved_problem.plot.concentrations(location=3)
+            solved_problem.concentrations(location=3)

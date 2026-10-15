@@ -9,6 +9,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
+import fips
 from fips import Covariance, Operator
 from fips.problems.flux.pipeline import FluxInversionPipeline
 from fips.problems.flux.problem import FluxProblem
@@ -152,7 +153,7 @@ class TestFilterStateSpace:
 
 
 def _solved_problem(times):
-    """A solved flux problem: ``times`` x 2 cells of flux, one site of daily data."""
+    """The posterior of a flux problem: ``times`` x 2 cells of flux, one site of daily data."""
     rng = np.random.default_rng(0)
     flux_idx = pd.MultiIndex.from_product([times, [0, 1]], names=["time", "cell"])
     obs_idx = pd.MultiIndex.from_arrays(
@@ -160,7 +161,7 @@ def _solved_problem(times):
         names=["obs_location", "obs_time"],
     )
     n_flux, n_obs = len(flux_idx), len(obs_idx)
-    return FluxProblem(
+    problem = FluxProblem(
         obs=Vector.from_series(
             pd.Series(
                 rng.uniform(400, 410, n_obs), index=obs_idx, name="concentration"
@@ -192,12 +193,14 @@ def _solved_problem(times):
             pd.Series(np.full(n_obs, 395.0), index=obs_idx, name="concentration"),
             block="concentration",
         ),
-    ).solve()
+    )
+    return fips.solve(problem)
 
 
 def _summary(pipeline, problem, capsys):
-    """Print ``problem``'s summary through ``pipeline`` and return what it printed."""
-    pipeline.problem = problem
+    """Print the summary of the posterior `problem` through ``pipeline`` and return what it printed."""
+    pipeline.problem = problem.problem
+    pipeline.posterior = problem
     pipeline.summarize()
     return capsys.readouterr().out
 
@@ -222,7 +225,8 @@ class TestSummarize:
         problem = _solved_problem(times)
         out = _summary(_Pipeline(SimpleNamespace()), problem, capsys)
 
-        by_time = problem.posterior_fluxes.groupby(level="time").mean()
+        flux = problem.estimate["flux"].to_series().droplevel("block")
+        by_time = flux.groupby(level="time").mean()
         years = by_time.index.year + (by_time.index.day_of_year - 1) / 365.25
         slope, intercept = np.polyfit(years, by_time.values, 1)
         assert "POSTERIOR FLUX TREND:" in out
