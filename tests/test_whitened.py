@@ -800,18 +800,36 @@ def test_a_prior_without_a_square_root_takes_the_whitened_form(caplog):
     assert post.estimate.values[2] == x_0[2]
 
 
-def test_more_observations_than_state_logs(caplog, monkeypatch):
-    """A large solve with ``m > n`` says that the state-space form would be cheaper."""
+def test_a_large_whitened_solve_warns(caplog, monkeypatch):
+    """Only a whitened solve above ``_LARGE_M`` observations and more than twice ``n`` warns, saying why the information form was not used."""
     monkeypatch.setattr("fips.methods.analytic._LARGE_M", 5)
-    args = _arrays("dense", 0, n_time=1, n_cell=3, m=8)
+    rng = np.random.default_rng(2)
+    z, x_0, H, S_0, S_z, c = _arrays("dense", 0, n_time=1, n_cell=3, m=8)
     with caplog.at_level(logging.WARNING, logger="fips.methods.analytic"):
-        fips.solve(_problem(*args))
-    assert any("state-space (information) form" in r.message for r in caplog.records)
+        fips.solve(_problem(z, x_0, H, S_0, S_z, c))
+    (record,) = caplog.records
+    assert "m = 8 observations, more than twice the n = 3 state elements" in (
+        record.message
+    )
+    assert "the model-data mismatch is a DenseOperator" in record.message
+    quiet = {
+        "information form": (
+            _arrays("dense", 0, 1, 3, 8),
+            _mismatch("diagonal", 8, rng),
+        ),
+        "m = 2 n": (_arrays("dense", 0, 1, 4, 8), None),
+    }
+    for what, ((z, x_0, H, S_0, S_z, c), other) in quiet.items():
+        caplog.clear()
+        with caplog.at_level(logging.WARNING, logger="fips.methods.analytic"):
+            fips.solve(_problem(z, x_0, H, S_0, S_z if other is None else other, c))
+        assert not caplog.records, what
+    monkeypatch.undo()
     caplog.clear()
-    args = _arrays("dense", 0, n_time=2, n_cell=4, m=8)
+    z, x_0, H, S_0, S_z, c = _arrays("dense", 0, n_time=1, n_cell=3, m=8)
     with caplog.at_level(logging.WARNING, logger="fips.methods.analytic"):
-        fips.solve(_problem(*args))
-    assert not caplog.records
+        fips.solve(_problem(z, x_0, H, S_0, S_z, c))
+    assert not caplog.records, "below the default _LARGE_M"
 
 
 def test_the_information_form_allocates_nothing_m_by_m():
