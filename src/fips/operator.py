@@ -639,6 +639,10 @@ class Operator:
 
     def __add__(self, other: "Operator") -> "Operator":
         """Return the sum with an operator on the same labels (in any order)."""
+        if not isinstance(other, Operator):
+            # a covariance model adds itself (CovarianceModel.__radd__); for
+            # anything else Python raises a TypeError
+            return NotImplemented
         return self._combine(other, 1.0)
 
     def __sub__(self, other: "Operator") -> "Operator":
