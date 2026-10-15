@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from fips.metrics import haversine_matrix, time_diff_matrix
+from fips.metrics import chordal_matrix, haversine_matrix, time_diff_matrix
 
 
 def test_haversine_matrix_shape():
@@ -77,3 +77,16 @@ def test_time_diff_matrix_signed():
     assert diffs[0, 1] == -expected_ns
     # t1 - t0 = 12:00 - 10:00 = +2h
     assert diffs[1, 0] == expected_ns
+
+
+def test_chordal_matrix():
+    """The chord through the Earth: shorter than the great circle, equal near zero."""
+    lats, lons = [0.0, 0.0, 40.0, 40.001], [0.0, 90.0, -112.0, -112.0]
+    chord, arc = chordal_matrix(lats, lons), haversine_matrix(lats, lons)
+    assert chord.shape == (4, 4) and np.all(np.diag(chord) == 0.0)
+    np.testing.assert_allclose(chord, chord.T)
+    assert chord[0, 1] == pytest.approx(6371.0 * np.sqrt(2.0))
+    assert chord[2, 3] == pytest.approx(arc[2, 3], rel=1e-9)
+    assert (chord <= arc + 1e-9).all()
+    with pytest.raises(ValueError, match="1D"):
+        chordal_matrix([[0.0]], [[0.0]])

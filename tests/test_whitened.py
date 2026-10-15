@@ -20,10 +20,16 @@ import scipy.sparse as sp
 from numpy.linalg import LinAlgError
 
 import fips
-from fips import Covariance, InverseProblem, Operator, Space, Vector
-from fips.covariance import KroneckerError
+from fips import (
+    Covariance,
+    Exponential,
+    InverseProblem,
+    Kronecker,
+    Operator,
+    Space,
+    Vector,
+)
 from fips.estimators import BayesianSolver, Estimator
-from fips.kernels import GridSpatialDecay, GridTimeDecay
 from fips.kronecker import KroneckerOperator
 from fips.linalg import DiagonalOperator, SparseOperator
 
@@ -462,14 +468,11 @@ def test_nothing_n_by_n_is_allocated(prior):
     obs = pd.MultiIndex.from_product([["conc"], range(m)], names=["block", "obs_id"])
     H = sp.random(m, n, density=0.05, random_state=1, format="csr")
     if prior == "Kronecker":
-        S_0 = KroneckerError(
-            "prior",
-            0.5,
-            [
-                ("time", GridTimeDecay("5D")),
-                (["lat", "lon"], GridSpatialDecay("lat", "lon", 20.0)),
-            ],
-        ).operator(state)
+        model = Kronecker(
+            Exponential("time", "5D"),
+            Exponential(["lat", "lon"], 20.0, metric="haversine"),
+        )
+        S_0 = model.with_std(np.sqrt(0.5)).build(Space.from_index(state)).data
     else:
         S_0 = DiagonalOperator(rng.uniform(0.5, 1.0, n))
     problem = InverseProblem(
