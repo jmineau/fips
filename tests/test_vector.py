@@ -222,3 +222,48 @@ class TestToXarray:
         np.testing.assert_array_equal(dataset["flux"].values, [1.0, 2.0, 3.0])
         assert dataset["bias"].dims == ("site",)
         np.testing.assert_array_equal(dataset["bias"].values, [4.0, 5.0])
+
+
+class TestFromBlocksWithVectors:
+    """``from_blocks`` takes a vector of one block too, as ``offset_block`` gives it."""
+
+    def test_a_vector_beside_a_series(self, vector):
+        """The key names the block; the vector brings its labels and values."""
+        series = pd.Series([7.0, 8.0], index=pd.Index(["x", "y"], name="cell"))
+        both = Vector.from_blocks({"flux": series, "offset": vector["bias"]})
+        assert both.space.names == ("flux", "offset")
+        assert both.space.select("offset").equals(vector.space.select("bias"))
+        np.testing.assert_array_equal(both.values, [7.0, 8.0, 4.0, 5.0])
+
+    def test_a_vector_of_several_blocks_raises(self, vector):
+        """A vector for one block must have one block."""
+        with pytest.raises(ValueError, match="give one block"):
+            Vector.from_blocks({"all": vector})
+
+
+class TestCombineFirst:
+    """``combine_first``: a smaller vector's values on a larger space."""
+
+    def test_values_where_this_vector_has_the_label(self, vector):
+        """The values of this vector at its labels (in any order), the other's elsewhere."""
+        part = Vector(
+            [30.0, 10.0],
+            Space({"flux": pd.Index([3, 1], name="cell")}),
+            name="estimate",
+        )
+        full = part.combine_first(vector)
+        assert full.space == vector.space
+        assert full.name == "estimate"
+        np.testing.assert_array_equal(full.values, [10.0, 2.0, 30.0, 4.0, 5.0])
+        np.testing.assert_array_equal(vector.values, [1.0, 2.0, 3.0, 4.0, 5.0])
+
+    def test_labels_the_other_lacks_raise(self, vector):
+        """A label or a block of this vector that the other lacks is named."""
+        stray = Vector([1.0], Space({"flux": pd.Index([9], name="cell")}))
+        with pytest.raises(
+            ValueError, match="labels of block 'flux' not in the space: 9"
+        ):
+            stray.combine_first(vector)
+        other_block = Vector([1.0], Space({"co2": pd.Index([1], name="cell")}))
+        with pytest.raises(ValueError, match="blocks not in the space: 'co2'"):
+            other_block.combine_first(vector)

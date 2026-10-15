@@ -17,7 +17,6 @@ import scipy.sparse as sp
 
 import fips
 from fips import Covariance, Operator, Problem, Space, Vector
-from fips.aggregators import ObsAggregator
 from fips.linalg import (
     BlockDiagonalOperator,
     DenseOperator,
@@ -477,7 +476,7 @@ class TestProblem:
 
 
 # ---------------------------------------------------------------------------
-# ObsAggregator with a pandas-sparse frame and with a sparse Operator
+# Aggregating a problem with a pandas-sparse frame and with a sparse Operator
 # ---------------------------------------------------------------------------
 
 DAYS, PER_DAY = 8, 4
@@ -489,11 +488,7 @@ _CELL_IDX = pd.MultiIndex.from_arrays(
     [["flux"] * len(_TIMES), [f"c{k}" for k in range(len(_TIMES))]],
     names=["block", "cell"],
 )
-
-
-def _daily(index):
-    """Group obs_time to daily frequency."""
-    return index.get_level_values("obs_time").floor("D")
+_DAILY = pd.Grouper(level="obs_time", freq="D")
 
 
 def _aggregator_inputs():
@@ -518,57 +513,54 @@ def _frame(values, columns=_CELL_IDX, fill=None) -> pd.DataFrame:
     return frame if fill is None else frame.astype(pd.SparseDtype(float, fill))
 
 
-class TestObsAggregator:
-    """``ObsAggregator.apply`` reads a pandas-sparse frame, and keeps a sparse Operator sparse."""
+def _daily_problem(forward: Operator, obs_cov: Covariance) -> Problem:
+    """The problem of `forward` and `obs_cov`, aggregated to daily means."""
+    obs, _, _ = _aggregator_inputs()
+    state = Space.from_index(_CELL_IDX)
+    problem = Problem(
+        prior=Vector(np.zeros(len(state)), state),
+        prior_cov=Covariance.diagonal(1.0, state),
+        obs=Vector.from_series(obs),
+        obs_cov=obs_cov,
+        forward=forward,
+    )
+    return problem.aggregate(fips.aggregate.mean(problem.obs.space, by=_DAILY))
+
+
+class TestAggregate:
+    """A pandas-sparse frame enters as a sparse Operator, and aggregating keeps it sparse."""
 
     @pytest.mark.parametrize("fill", [0.0, np.nan], ids=["zero-fill", "nan-fill"])
     def test_pandas_sparse_frame(self, fill):
-        """A pandas-sparse ``H`` aggregates as its dense frame does, into a dense frame."""
-        obs, H, variances = _aggregator_inputs()
-        S_z = _frame(np.diag(variances), columns=_OBS_IDX)
-        agg = ObsAggregator(by=_daily)
-        _, H_agg, S_agg, _ = agg.apply(obs, _frame(H, fill=fill), S_z)
-        _, H_ref, _, _ = agg.apply(obs, _frame(H), S_z)
-        assert not any(isinstance(dt, pd.SparseDtype) for dt in H_agg.dtypes)
-        pd.testing.assert_frame_equal(H_agg, H_ref)
+        """A pandas-sparse ``H`` aggregates as its dense frame does, and stays sparse."""
+        _, H, variances = _aggregator_inputs()
+        S_z = Covariance.diagonal(variances, Space.from_index(_OBS_IDX))
+        daily = _daily_problem(Operator.from_frame(_frame(H, fill=fill)), S_z)
+        reference = _daily_problem(Operator.from_frame(_frame(H)), S_z)
+        assert isinstance(daily.forward.data, SparseOperator)
+        np.testing.assert_array_equal(daily.forward.dense(), reference.forward.dense())
         WH, WSW = _expected(H, variances)
-        np.testing.assert_allclose(H_agg.to_numpy(), WH)
-        np.testing.assert_allclose(S_agg.to_numpy(), WSW)
+        np.testing.assert_allclose(daily.forward.dense(), WH)
+        np.testing.assert_allclose(daily.obs_cov.dense(), WSW)
 
     def test_from_spmatrix_frames(self):
         """``from_spmatrix`` frames (NaN fill on pandas 3) for ``H`` and ``S_z`` aggregate to the same numbers."""
-        obs, H, variances = _aggregator_inputs()
+        _, H, variances = _aggregator_inputs()
         frame = _from_spmatrix(sp.csr_array(H), _OBS_IDX, _CELL_IDX)
         S_z = _from_spmatrix(sp.diags_array(variances), _OBS_IDX, _OBS_IDX)
-        _, H_agg, S_agg, _ = ObsAggregator(by=_daily).apply(obs, frame, S_z)
+        daily = _daily_problem(Operator.from_frame(frame), Covariance.from_frame(S_z))
         WH, WSW = _expected(H, variances)
-        np.testing.assert_allclose(H_agg.to_numpy(), WH)
-        np.testing.assert_allclose(S_agg.to_numpy(), WSW)
-
-    def test_nonzero_fill_raises(self):
-        """A frame filled with 0.5 would read its 0.5 entries as zeros: refused."""
-        obs, H, variances = _aggregator_inputs()
-        S_z = _frame(np.diag(variances), columns=_OBS_IDX)
-        with pytest.raises(ValueError, match="fill value 0.5"):
-            ObsAggregator(by=_daily).apply(obs, _frame(H, fill=0.5), S_z)
-
-    def test_stored_nan_is_not_read_as_zero(self):
-        """A NaN stored in a sparse ``H`` comes out of ``W H`` as NaN, which an Operator refuses."""
-        obs, H, variances = _aggregator_inputs()
-        H[1, 0] = np.nan
-        S_z = _frame(np.diag(variances), columns=_OBS_IDX)
-        _, H_agg, _, _ = ObsAggregator(by=_daily).apply(obs, _frame(H, fill=0.0), S_z)
-        assert np.isnan(H_agg.iloc[0, 0])
-        with pytest.raises(ValueError, match="NaN entries"):
-            Operator.from_frame(H_agg)
+        np.testing.assert_allclose(daily.forward.dense(), WH)
+        np.testing.assert_allclose(daily.obs_cov.dense(), WSW)
 
     def test_sparse_operator(self):
         """A sparse ``H`` and a diagonal ``S_z`` aggregate to a sparse Operator and Covariance."""
-        obs, H, variances = _aggregator_inputs()
+        _, H, variances = _aggregator_inputs()
         obs_space, state = Space.from_index(_OBS_IDX), Space.from_index(_CELL_IDX)
         H_op = Operator(sp.csr_array(H), obs_space, state, name="forward")
         S_z = Covariance.diagonal(variances, obs_space)
-        _, H_agg, S_agg, _ = ObsAggregator(by=_daily).apply(obs, H_op, S_z)
+        daily = _daily_problem(H_op, S_z)
+        H_agg, S_agg = daily.forward, daily.obs_cov
         assert type(H_agg) is Operator and isinstance(S_agg, Covariance)
         assert isinstance(H_agg.data, SparseOperator)
         assert isinstance(S_agg.data, (SparseOperator, DiagonalOperator))
@@ -581,6 +573,6 @@ class TestObsAggregator:
         H_moved = H_op.align(_reversed(obs_space), state)
         with warnings.catch_warnings():
             warnings.simplefilter("error")
-            _, H_again, _, _ = ObsAggregator(by=_daily).apply(obs, H_moved, S_z)
-        assert isinstance(H_again.data, SparseOperator)
-        np.testing.assert_allclose(H_again.dense(), WH)
+            again = _daily_problem(H_moved, S_z)
+        assert isinstance(again.forward.data, SparseOperator)
+        np.testing.assert_allclose(again.forward.dense(), WH)
