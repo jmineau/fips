@@ -138,7 +138,9 @@ A covariance waiting for its space
 Distances
 ~~~~~~~~~
 The kernels measure distance with these functions of
-:mod:`fips.covariance.distances`.
+:mod:`fips.covariance.distances`. Points on the Earth are latitude and
+longitude in degrees, and their distances are in kilometers on a sphere of
+radius 6371 km.
 
 .. currentmodule:: fips.covariance.distances
 
