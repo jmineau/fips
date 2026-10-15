@@ -1,7 +1,9 @@
 API Reference
 =============
 
-This reference provides detailed documentation for all public classes, functions, and modules in FIPS.
+Every public class, function and attribute of fips, by topic, in the order a
+problem uses them. The words are defined in :doc:`../terminology`; the names
+of fips 0.1 and their replacements are in :doc:`../migration`.
 
 .. toctree::
    :maxdepth: 2
@@ -9,8 +11,8 @@ This reference provides detailed documentation for all public classes, functions
    space
    operator
    covariance
-   linalg
    problem
-   aggregate
    posterior
+   aggregate
    visualization
+   linalg

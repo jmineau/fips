@@ -5,7 +5,7 @@ Covariances
 .. currentmodule:: fips
 
 A :class:`Covariance` is a symmetric :class:`Operator` from a :class:`Space`
-to itself: the prior error or the model-data mismatch of an inverse problem.
+to itself: the prior covariance or the observation covariance of a problem.
 It keeps its matrix in the cheapest form (a diagonal covariance is its
 variances, a Kronecker one its factors, independent blocks each their own
 form) and adds what a covariance needs: its variances, solves, the
