@@ -107,3 +107,28 @@ def random_modeldata_mismatch(random_state):
         index=idx,
         columns=idx,
     )
+
+
+@pytest.fixture
+def constructors(monkeypatch):
+    """
+    The names of the forms whose public constructor is called.
+
+    The public constructors of ``DenseOperator``, ``SparseOperator``,
+    ``DiagonalOperator`` and ``KroneckerOperator`` copy their input. fips builds
+    the forms it computes without them (``_adopt``), so a test that runs fips's
+    own steps expects the list to stay empty.
+    """
+    from fips.kronecker import KroneckerOperator
+    from fips.linalg import DenseOperator, DiagonalOperator, SparseOperator
+
+    calls: list[str] = []
+    for cls in (DenseOperator, SparseOperator, DiagonalOperator, KroneckerOperator):
+        original = cls.__init__
+
+        def spy(self, *args, _original=original, **kwargs):
+            calls.append(type(self).__name__)
+            _original(self, *args, **kwargs)
+
+        monkeypatch.setattr(cls, "__init__", spy)
+    return calls

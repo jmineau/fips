@@ -215,6 +215,56 @@ class TestConstruction:
         assert isinstance(S, Covariance) and S.data is op
 
 
+class TestOwnsItsData:
+    """A covariance copies its matrix and makes the copy read-only, as an Operator does."""
+
+    def test_editing_the_input_changes_nothing(self):
+        """Writing into the matrix handed over leaves the covariance as it was."""
+        A = _spd(np.random.default_rng(1), 6)
+        S = Covariance(A, CELLS)
+        before = S.dense()
+        A.fill(-1.0)
+        np.testing.assert_array_equal(S.dense(), before)
+        buffer = np.asarray(S)
+        assert not buffer.flags.writeable
+        with pytest.raises(ValueError, match="read-only"):
+            buffer[0, 0] = 99.0
+        copy = np.array(S)
+        copy[0, 0] = 99.0
+        np.testing.assert_array_equal(S.dense(), before)
+
+    def test_sparse_input_is_copied(self):
+        """A sparse matrix handed over is copied, and the copy is read-only."""
+        M = sp.diags_array(
+            [np.full(5, 0.4), np.full(6, 2.0), np.full(5, 0.4)],
+            offsets=[-1, 0, 1],
+            format="csr",
+        )
+        S = Covariance(M, CELLS)
+        before = S.dense()
+        M.data.fill(-1.0)
+        np.testing.assert_array_equal(S.dense(), before)
+        assert not S.data.matrix.data.flags.writeable
+
+    def test_diagonal_copies_its_variances(self):
+        """``Covariance.diagonal`` copies an array of variances; a Vector's are read-only already."""
+        variances = np.arange(1.0, 7.0)
+        S = Covariance.diagonal(variances, CELLS)
+        variances.fill(-1.0)
+        np.testing.assert_array_equal(S.variances.values, np.arange(1.0, 7.0))
+        assert not S.data.values.flags.writeable
+
+    def test_block_diag_and_models_hold_read_only_arrays(self):
+        """Covariances put side by side, and a model's build, hold read-only arrays."""
+        flux = Covariance(_spd(np.random.default_rng(2), 6), CELLS)
+        bias = Covariance.diagonal([1.0, 2.0], SITES)
+        both = Covariance.block_diag(flux, bias)
+        assert not both.data.blocks[0].array.flags.writeable
+        assert not both.data.blocks[1].values.flags.writeable
+        assert not Independent().with_std(0.5).build(CELLS).data.values.flags.writeable
+        assert not Constant().with_std(0.5).build(CELLS).data.array.flags.writeable
+
+
 class TestDiagonal:
     """``Covariance.diagonal`` keeps the variances as a diagonal."""
 

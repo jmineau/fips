@@ -469,3 +469,25 @@ class TestPickle:
     def test_pickle_shares_the_spaces(self):
         loaded = pickle.loads(pickle.dumps(Problem(**_inputs())))
         assert loaded.forward.cols is loaded.prior.space
+
+    def test_pickle_keeps_the_operators_read_only(self):
+        loaded = pickle.loads(pickle.dumps(Problem(**_inputs())))
+        assert not loaded.forward.data.array.flags.writeable
+        assert not loaded.prior_cov.data.values.flags.writeable
+
+
+class TestOperatorsAreNotCopiedAgain:
+    def test_the_problem_holds_the_forms_it_was_given(self):
+        """An operator already holds its own copy: the problem takes its form as it is."""
+        inputs = _inputs()
+        problem = Problem(**inputs)
+        assert problem.forward.data is inputs["forward"].data
+        assert problem.prior_cov.data is inputs["prior_cov"].data
+        assert problem.obs_cov.data is inputs["obs_cov"].data
+
+    def test_editing_the_matrix_after_the_operator_leaves_the_problem(self):
+        H = H_VALUES.copy()
+        problem = Problem(**_inputs(forward=Operator(H, OBS, STATE)))
+        before = fips.solve(problem).estimate.values
+        H.fill(-1.0)
+        np.testing.assert_array_equal(fips.solve(problem).estimate.values, before)

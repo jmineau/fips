@@ -1,5 +1,6 @@
 """Tests for fips.linalg: each form against its dense equivalent, and the solve on every form."""
 
+import copy
 import pickle
 
 import numpy as np
@@ -620,13 +621,14 @@ class TestAsLinearOperator:
         with pytest.raises(ValueError, match="DiagonalOperator"):
             as_linear_operator(np.ones(3))
 
-    def test_operator_keeps_a_float_array(self):
-        """A labeled Operator holds a float64 array as it is, not a copy."""
+    def test_operator_copies_a_float_array(self):
+        """A labeled Operator holds its own copy of a float64 array."""
         space = Space({"s": pd.Index([f"c{k}" for k in range(4)], name="cell")})
         array = np.eye(4) * 2.0
         op = Operator(array, space, space)
         assert isinstance(op.data, DenseOperator)
-        assert np.shares_memory(op.data.array, array)
+        assert not np.shares_memory(op.data.array, array)
+        np.testing.assert_array_equal(op.data.array, array)
 
     def test_integer_operator_computes_in_float64(self):
         """Integer matrices give float64 from a sum, ``variances`` and a product with a vector."""
@@ -641,6 +643,158 @@ class TestAsLinearOperator:
         y = H @ Vector(np.array([1, 2]), cells)
         assert y.values.dtype == np.float64
         np.testing.assert_array_equal(y.values, [1.0, 2.0, 3.0])
+
+
+# ---------------------------------------------------------------------------
+# A form owns its data: it copies its input and makes the copy read-only
+# ---------------------------------------------------------------------------
+
+_OWN = np.array([[4.0, 1.0, 0.0], [1.0, 3.0, 1.0], [0.0, 1.0, 2.0]])
+
+# What a caller hands a form, how to change it in place, and the arrays the form holds
+OWN_CASES = {
+    "dense": (lambda: _OWN.copy(), DenseOperator, lambda g: g.fill(-1.0)),
+    "sparse_csr": (lambda: sp.csr_array(_OWN), SparseOperator, lambda g: g.data.fill(-1)),
+    "sparse_csc": (lambda: sp.csc_matrix(_OWN), SparseOperator, lambda g: g.data.fill(-1)),
+    "diagonal": (lambda: np.diag(_OWN).copy(), DiagonalOperator, lambda g: g.fill(-1.0)),
+}  # fmt: skip
+
+
+def _held(op: LinearOperator) -> list[np.ndarray]:
+    """The arrays a form holds."""
+    if isinstance(op, DenseOperator):
+        return [op.array]
+    if isinstance(op, SparseOperator):
+        return [op.matrix.data, op.matrix.indices, op.matrix.indptr]
+    assert isinstance(op, DiagonalOperator)
+    return [op.values]
+
+
+def _arrays(given) -> list[np.ndarray]:
+    """The arrays of what a caller handed over: an array, or a sparse matrix's three."""
+    if sp.issparse(given):
+        return [given.data, given.indices, given.indptr]
+    return [given]
+
+
+@pytest.mark.parametrize("case", OWN_CASES)
+class TestOwnsItsData:
+    """A form copies what it is given and makes the copy read-only, as a Vector does."""
+
+    def test_editing_the_input_changes_nothing(self, case):
+        """Writing into the array or matrix handed over leaves the form as it was."""
+        make_input, kind, edit = OWN_CASES[case]
+        given = make_input()
+        op = kind(given)
+        before = op.dense().copy()
+        edit(given)
+        np.testing.assert_array_equal(op.dense(), before)
+        assert not any(
+            np.shares_memory(a, g) for a in _held(op) for g in _arrays(given)
+        )
+
+    def test_what_it_holds_is_read_only(self, case):
+        """Every array the form holds refuses a write."""
+        make_input, kind, _ = OWN_CASES[case]
+        for array in _held(kind(make_input())):
+            assert not array.flags.writeable
+            with pytest.raises(ValueError, match="read-only"):
+                array[0] = 0
+
+    def test_asarray_is_the_buffer_and_array_a_copy(self, case):
+        """``np.asarray`` gives a dense form's read-only buffer; ``np.array`` a writable, independent copy."""
+        make_input, kind, _ = OWN_CASES[case]
+        op = kind(make_input())
+        before = op.dense().copy()
+        buffer = np.asarray(op)
+        if kind is DenseOperator:
+            assert buffer is op.array and not buffer.flags.writeable
+            with pytest.raises(ValueError, match="read-only"):
+                buffer[0, 0] = 99.0
+        duplicate = np.array(op)
+        assert duplicate.flags.writeable
+        assert not any(np.shares_memory(duplicate, a) for a in _held(op))
+        duplicate[0, 0] = 99.0
+        np.testing.assert_array_equal(op.dense(), before)
+
+    def test_a_pickle_or_copy_is_read_only_too(self, case):
+        """A pickle keeps the values, not the flag: the form sets it again."""
+        make_input, kind, _ = OWN_CASES[case]
+        op = kind(make_input())
+        for again in (
+            pickle.loads(pickle.dumps(op)),
+            copy.copy(op),
+            copy.deepcopy(op),
+        ):
+            assert type(again) is kind
+            np.testing.assert_array_equal(again.dense(), op.dense())
+            assert not any(a.flags.writeable for a in _held(again))
+
+
+@pytest.mark.parametrize("case", ["dense", "sparse_csr", "sparse_csc"])
+def test_as_linear_operator_copies_what_it_wraps(case):
+    """``as_linear_operator`` copies an array or a sparse matrix, and the copy is read-only."""
+    make_input, _, edit = OWN_CASES[case]
+    given = make_input()
+    op = as_linear_operator(given)
+    before = op.dense().copy()
+    edit(given)
+    np.testing.assert_array_equal(op.dense(), before)
+    assert not any(a.flags.writeable for a in _held(op))
+
+
+def test_a_block_diagonal_form_copies_its_arrays():
+    """A block given as an array is copied, as ``as_linear_operator`` does; a form is kept."""
+    first, second = _OWN.copy(), np.array([[2.0]])
+    form = DiagonalOperator([5.0, 6.0])
+    op = BlockDiagonalOperator([first, form, second])
+    before = op.dense().copy()
+    first.fill(-1.0)
+    second.fill(-1.0)
+    np.testing.assert_array_equal(op.dense(), before)
+    assert op.blocks[1] is form
+    assert not op.blocks[0].array.flags.writeable
+
+
+def test_a_form_made_from_a_form_shares_its_arrays():
+    """A transpose, a scalar multiple and a selection hold the parent's read-only arrays, not copies."""
+    dense, sparse = DenseOperator(_OWN), SparseOperator(sp.csr_array(_OWN))
+    assert np.shares_memory(dense.T.array, dense.array)
+    assert np.shares_memory(sparse.T.matrix.data, sparse.matrix.data)
+    assert np.shares_memory(sparse._csr().data, sparse.matrix.data)
+    for derived in (dense.T, sparse.T, dense * 2.0, sparse * 2.0, dense @ dense):
+        assert not any(a.flags.writeable for a in _held(derived))
+
+
+def test_a_product_does_not_copy_its_operands_again(constructors):
+    """
+    Forms built from forms never go through the constructors that copy.
+
+    Products, sums, transposes, scalar multiples, selections, square roots and
+    the solve of every form, and of forms in one another's company, hold the
+    arrays they computed (or their parents' read-only ones). A copy of a 430 MB
+    forward operator at each step would double the memory of a solve.
+    """
+    rng = np.random.default_rng(5)
+    n = 6
+    dense = DenseOperator(spd_dense(rng, n))
+    sparse = SparseOperator(sp.csr_array(spd_banded(rng, n)))
+    diagonal = DiagonalOperator(rng.uniform(1, 2, n))
+    kron = KroneckerOperator([spd_dense(rng, 2) / 8, spd_dense(rng, 3) / 12], std=1.5)
+    block = BlockDiagonalOperator(
+        [DenseOperator(spd_dense(rng, 4)), DiagonalOperator(rng.uniform(1, 2, 2))]
+    )
+    forms = [dense, sparse, diagonal, kron, block]
+    constructors.clear()  # building the inputs copied them, once
+    rows = np.array([3, 0, 5, 1])
+    for a in forms:
+        a.T, 2.0 * a, a / 4.0, -a, a.diagonal(), a.sqrt(), a.solve(np.ones(n))
+        a._select(rows, rows), a._select(rows, rows[::-1]), a._select(rows, rows - 1)
+        a.dense(), np.array(a), np.asarray(a), a.logdet()
+        for b in forms:
+            a @ b, a + b, a - b, a @ b.T
+        as_linear_operator(a)
+    assert constructors == []
 
 
 # ---------------------------------------------------------------------------

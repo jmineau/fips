@@ -73,17 +73,19 @@ def _coords(space: Space, levels: Iterable[str]) -> pd.DataFrame:
 def _scaled(form: LinearOperator, std: np.ndarray) -> LinearOperator:
     """Return ``D C D`` for the correlation `form` and ``D = diag(std)``, keeping the form."""
     if isinstance(form, KroneckerOperator):
-        return KroneckerOperator(
+        return KroneckerOperator._adopt(
             form.factors, std=form.std * std, positions=form.positions
         )
     if isinstance(form, DiagonalOperator):
-        return DiagonalOperator(std * form.values * std)
+        return DiagonalOperator._adopt(std * form.values * std)
     if isinstance(form, SparseOperator):
         coo = sp.coo_array(form.matrix)
         data = std[coo.row] * coo.data * std[coo.col]
-        return SparseOperator(sp.csr_array((data, (coo.row, coo.col)), shape=coo.shape))
+        return SparseOperator._adopt(
+            sp.csr_array((data, (coo.row, coo.col)), shape=coo.shape)
+        )
     if isinstance(form, DenseOperator):
-        return DenseOperator(std[:, None] * form.array * std[None, :])
+        return DenseOperator._adopt(std[:, None] * form.array * std[None, :])
     raise TypeError(f"Cannot scale a {type(form).__name__}.")  # pragma: no cover
 
 

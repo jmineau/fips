@@ -196,7 +196,7 @@ class Independent(CorrelationModel):
 
     def _form(self, coords: pd.DataFrame) -> LinearOperator:
         """Return the identity as a diagonal."""
-        return DiagonalOperator(np.ones(len(coords)))
+        return DiagonalOperator._adopt(np.ones(len(coords)))
 
 
 @dataclass(frozen=True, init=False)
@@ -317,4 +317,4 @@ class Kronecker(CorrelationModel):
                 )
             matrices.append(matrix)
             positions.append(pos)
-        return KroneckerOperator(matrices, positions=positions)
+        return KroneckerOperator._adopt(matrices, positions=positions)

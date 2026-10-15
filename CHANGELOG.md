@@ -274,6 +274,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **An `Operator` copies its input and makes the copy read-only, as a `Vector`
+  does.** `Operator(array, rows, cols)` kept the caller's array, so changing it
+  afterwards silently changed the operator. Now `Operator(data, rows, cols)`,
+  `Covariance(data, space)` and the `fips.linalg` forms (`DenseOperator`,
+  `SparseOperator`, `DiagonalOperator`, `KroneckerOperator`, and
+  `as_linear_operator` and `BlockDiagonalOperator` through them) copy an array
+  or a sparse matrix and freeze the copy: editing the original leaves the
+  operator as it was, and writing into the operator's own array raises
+  `ValueError`. `np.asarray(op)` is the read-only buffer of a dense operator
+  and `np.array(op)` a writable copy of any. A form that fips builds from
+  another (a product, a sum, a transpose, a selection, a covariance model's
+  build, a posterior's matrices) holds the arrays it computed, or its parent's
+  read-only ones, and is not copied again. A pickled form is read-only when it
+  is loaded. `CorrelationModel.correlation(coords)` still returns a writable
+  array of its own. There is no `copy=False` option.
+  ([#82](https://github.com/jmineau/fips/issues/82))
+- **The `flux` extra is renamed `viz`** and installs cartopy and matplotlib
+  (`pip install "fips[viz]"`); it no longer installs `h5py`, which nothing in
+  fips imported. `joblib` is no longer a dependency: nothing imports it since
 - **The `flux` extra is renamed `viz`** and installs matplotlib only
   (`pip install "fips[viz]"`), for `plot_comparison`; it no longer installs
   cartopy, which only the flux maps used, or `h5py`, which nothing in fips

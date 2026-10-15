@@ -285,6 +285,25 @@ def test_scale_given_as_text_or_timedelta():
     assert Exponential("x", 2) == Exponential("x", 2.0)
 
 
+@pytest.mark.parametrize(
+    "model",
+    [
+        Exponential("x", 2.0),
+        Constant(),
+        Exponential("x", 2.0, within="x"),
+        Independent(),
+    ],
+    ids=["dense", "constant", "within", "independent"],
+)
+def test_correlation_is_a_new_writable_array(model):
+    """``correlation`` returns a matrix of its own, not the read-only array of the form it is built in."""
+    first = model.correlation(X)
+    assert first.flags.writeable
+    expected = first.copy()
+    first[0, 0] = 99.0
+    np.testing.assert_array_equal(model.correlation(X), expected)
+
+
 def test_models_are_frozen_and_pickle():
     """A model cannot be changed, and pickles as it is."""
     model = Kronecker(

@@ -190,6 +190,129 @@ class TestConstructor:
         assert "cols: Space(flux: 3 x ['cell'])" in text
 
 
+# What a caller hands an operator, and how to change it in place afterwards
+GIVEN = {
+    "dense": (lambda: np.arange(9.0).reshape(3, 3) + 1.0, lambda g: g.fill(-1.0)),
+    "sparse": (
+        lambda: sp.csr_array(np.triu(np.ones((3, 3)))),
+        lambda g: g.data.fill(-1.0),
+    ),
+    "sparse_diagonal": (lambda: sp.eye_array(3, format="csr"), lambda g: g.data.fill(-1.0)),
+}  # fmt: skip
+
+
+@pytest.mark.parametrize("case", GIVEN)
+class TestOwnsItsData:
+    """An operator copies its matrix and makes the copy read-only, as a Vector does."""
+
+    def test_editing_the_input_changes_nothing(self, case, state):
+        """Writing into the array or matrix handed over leaves the operator as it was."""
+        make, edit = GIVEN[case]
+        given = make()
+        op = Operator(given, state, state)
+        before = op.dense()
+        edit(given)
+        np.testing.assert_array_equal(op.dense(), before)
+        np.testing.assert_array_equal(np.asarray(op), before)
+
+    def test_asarray_is_read_only_and_array_a_copy(self, case, state):
+        """``np.asarray(op)`` cannot be written into (a dense matrix); ``np.array(op)`` and ``dense()`` are independent copies."""
+        make, _ = GIVEN[case]
+        op = Operator(make(), state, state)
+        before = op.dense()
+        if case == "dense":
+            buffer = np.asarray(op)
+            assert not buffer.flags.writeable
+            with pytest.raises(ValueError, match="read-only"):
+                buffer[0, 0] = 99.0
+        for copy in (np.array(op), op.dense(), np.array(op.data)):
+            assert copy.flags.writeable
+            copy[0, 0] = 99.0
+        np.testing.assert_array_equal(op.dense(), before)
+
+    def test_what_comes_from_it_is_read_only_too(self, case, state):
+        """A transpose, a product, a sum, a scalar multiple and a selection hold read-only arrays."""
+        make, _ = GIVEN[case]
+        op = Operator(make(), state, state)
+        for derived in (op.T, op @ op, op + op, 2.0 * op, op["flux", "flux"]):
+            held = derived.data
+            if case == "dense" or isinstance(held, DenseOperator):
+                assert not np.asarray(held).flags.writeable
+            elif isinstance(held, SparseOperator):
+                assert not held.matrix.data.flags.writeable
+            else:
+                assert not held.values.flags.writeable
+
+    def test_a_pickle_is_read_only_too(self, case, state):
+        """A pickle keeps the values, not the flag: the operator sets it again."""
+        make, _ = GIVEN[case]
+        op = Operator(make(), state, state)
+        again = pickle.loads(pickle.dumps(op))
+        held = again.data
+        array = (
+            held.array
+            if isinstance(held, DenseOperator)
+            else held.matrix.data
+            if isinstance(held, SparseOperator)
+            else held.values
+        )
+        assert not array.flags.writeable
+
+
+class TestOwnsItsDataFromOtherWays:
+    """The other ways in copy too: from_frame, from_blocks, and a form handed over."""
+
+    def test_from_frame(self, obs, state):
+        """Changing the frame afterwards leaves the operator as it was."""
+        frame = pd.DataFrame(
+            np.arange(6.0).reshape(2, 3), index=obs.index.droplevel("block"),
+            columns=state.index.droplevel("block"),
+        )  # fmt: skip
+        op = Operator.from_frame(frame, row_block="co2", col_block="flux")
+        before = op.dense()
+        frame.iloc[:, :] = -1.0
+        np.testing.assert_array_equal(op.dense(), before)
+        assert not np.asarray(op).flags.writeable
+
+    def test_from_blocks_unlabeled_and_tuple(self, obs, state):
+        """An array given as a block, bare or with its labels, is copied."""
+        bare = np.arange(6.0).reshape(2, 3)
+        labeled = bare.copy()
+        rows, cols = obs.select("co2"), state.select("flux")
+        one = Operator.from_blocks({("co2", "flux"): bare}, rows=obs, cols=state)
+        two = Operator.from_blocks({("co2", "flux"): (labeled, rows, cols)})
+        before = one.dense()
+        bare.fill(-1.0)
+        labeled.fill(-1.0)
+        np.testing.assert_array_equal(one.dense(), before)
+        np.testing.assert_array_equal(two.dense(), before)
+
+    def test_from_blocks_several_blocks(self, obs, state):
+        """Blocks put together in one matrix: the blocks given can change afterwards."""
+        a, b = np.ones((2, 3)), np.full((2, 1), 2.0)
+        bias = Space({"bias": pd.Index(["x"], name="site")})
+        cols = Space({"flux": state.select("flux"), "bias": bias.select("bias")})
+        op = Operator.from_blocks(
+            {("co2", "flux"): a, ("co2", "bias"): b}, rows=obs, cols=cols
+        )
+        before = op.dense()
+        a.fill(-1.0)
+        b.fill(-1.0)
+        np.testing.assert_array_equal(op.dense(), before)
+        assert not np.asarray(op).flags.writeable
+
+    def test_a_form_is_kept_not_copied(self, state):
+        """A form already holds its own copy, so an operator takes it as it is."""
+        form = DenseOperator(np.eye(3))
+        op = Operator(form, state, state)
+        assert op.data is form and np.asarray(op) is form.array
+
+    def test_a_form_made_from_an_operator_shares_its_array(self, H):
+        """The transpose holds the parent's read-only array, not a copy."""
+        assert np.shares_memory(H.T.data.array, H.data.array)
+        assert H.round_labels(2).data is H.data
+
+
 class TestFromFrame:
     """Reading an operator's labels from a DataFrame."""
 

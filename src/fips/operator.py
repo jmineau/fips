@@ -28,6 +28,7 @@ from fips.linalg import (
     LinearOperator,
     LinearOperatorLike,
     SparseOperator,
+    _adopt,
     as_linear_operator,
 )
 from fips.space import Space, _listed
@@ -193,7 +194,7 @@ def _placed(
     csr = form._csr()
     if csr is not None:
         coo = sp.coo_array(csr)
-        return SparseOperator(
+        return SparseOperator._adopt(
             sp.csr_array(
                 (coo.data, (r_pos[coo.row], c_pos[coo.col])),
                 shape=(len(rows), len(cols)),
@@ -201,7 +202,7 @@ def _placed(
         )
     dense = np.zeros((len(rows), len(cols)))
     dense[np.ix_(r_pos, c_pos)] = form.dense()
-    return DenseOperator(dense)
+    return DenseOperator._adopt(dense)
 
 
 class Operator:
@@ -223,11 +224,12 @@ class Operator:
     ----------
     data : array-like, SciPy sparse matrix or LinearOperator
         The matrix, with rows in the order of `rows` and columns in the
-        order of `cols`. A sparse matrix stays sparse (a diagonal one becomes
-        a :class:`~fips.linalg.DiagonalOperator`); a form of
-        :mod:`fips.linalg` is kept as it is, and so is a float64 array (not
-        copied: do not change it afterwards). A DataFrame is refused, since
-        its labels would be ignored: use :meth:`from_frame`.
+        order of `cols`. An array or a sparse matrix is copied, and the copy
+        is read-only: changing `data` afterwards leaves the operator as it
+        was. A sparse matrix stays sparse (a diagonal one becomes a
+        :class:`~fips.linalg.DiagonalOperator`); a form of :mod:`fips.linalg`
+        already holds its own copy and is kept as it is. A DataFrame is
+        refused, since its labels would be ignored: use :meth:`from_frame`.
     rows : Space
         The labels of the rows.
     cols : Space
@@ -366,9 +368,9 @@ class Operator:
             )
         rows, row_order = _axis_space(frame.index, row_block, "rows")
         cols, col_order = _axis_space(frame.columns, col_block, "columns")
-        return cls._build(
-            _permuted(_frame_matrix(frame), row_order, col_order), rows, cols, name
-        )
+        # the permuted matrix is a new array, not a view of the frame's
+        matrix = _adopt(_permuted(_frame_matrix(frame), row_order, col_order))
+        return cls._build(matrix, rows, cols, name)
 
     @classmethod
     def from_blocks(
@@ -396,7 +398,8 @@ class Operator:
             a row space of the one block ``row_block`` and a column space of
             the one block ``col_block``. Unlabeled: an array, a SciPy sparse
             matrix or a form of :mod:`fips.linalg`, whose rows and columns are
-            in the order of the blocks' labels in `rows` and `cols`.
+            in the order of the blocks' labels in `rows` and `cols`. An array
+            or a sparse matrix is copied, as for :class:`Operator`.
         rows, cols : Space, optional
             The labels of the rows and columns. By default each block's labels
             are those of the first labeled matrix in its row or column; an
@@ -530,11 +533,11 @@ class Operator:
                             (len(row_space.select(r)), len(col_space.select(c)))
                         )
             matrix = sp.csr_array(sp.bmat(grid, format="csr"))
-            return cls._build(matrix, row_space, col_space, name)
+            return cls._build(_adopt(matrix), row_space, col_space, name)
         dense = np.zeros((len(row_space), len(col_space)))
         for (r, c), form in forms.items():
             dense[row_space.slice(r), col_space.slice(c)] = form.dense()
-        return cls._build(dense, row_space, col_space, name)
+        return cls._build(_adopt(dense), row_space, col_space, name)
 
     @property
     def data(self) -> LinearOperator:
@@ -542,7 +545,7 @@ class Operator:
         The matrix, in its form (a :mod:`fips.linalg` operator, without labels).
 
         The rows are in the order of :attr:`rows` and the columns in the
-        order of :attr:`cols`.
+        order of :attr:`cols`. The form's arrays are read-only.
         """
         return self._data
 
@@ -765,7 +768,12 @@ class Operator:
         return np.array(self._data)
 
     def __array__(self, dtype=None, copy=None) -> np.ndarray:
-        """Return the dense matrix, so NumPy functions take an operator as its matrix."""
+        """
+        Return the dense matrix, so NumPy functions take an operator as its matrix.
+
+        ``np.asarray(op)`` is a dense operator's own read-only array (any
+        other form builds a new one); ``np.array(op)`` is a writable copy.
+        """
         return self._data.__array__(dtype=dtype, copy=copy)
 
     def to_frame(self) -> pd.DataFrame:
