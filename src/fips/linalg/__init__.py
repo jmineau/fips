@@ -36,7 +36,8 @@ of their parents, never a second copy.
 The forms are real (float64) and pickle with the standard protocol.
 """
 
-from fips.linalg.base import (
+from fips.linalg.block import BlockDiagonalOperator
+from fips.linalg.forms import (
     DenseOperator,
     DiagonalOperator,
     LinearOperator,
@@ -45,7 +46,6 @@ from fips.linalg.base import (
     as_linear_operator,
     dottest,
 )
-from fips.linalg.block import BlockDiagonalOperator
 from fips.linalg.kronecker import KroneckerOperator
 
 __all__ = [
