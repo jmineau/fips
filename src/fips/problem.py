@@ -305,20 +305,26 @@ class Problem(Pickleable):
 
     def restrict(self, keep: Space) -> "Problem":
         r"""
-        Return the problem on part of the state, the rest held at the prior.
+        Return the problem on part of the state, the rest held at its prior.
 
-        The state elements left out (cells no observation sees well, say) are
-        fixed at their prior values: their contribution to the observations,
-        :math:`H_r x_{0,r}`, is added to the offset, and their rows and
-        columns leave the prior, the prior covariance and the forward
-        operator. Their prior uncertainty is not carried into the
-        model-data mismatch. A covariance keeps its form (Kronecker factors
-        stay factors); a covariance model's submatrix is the model built on
-        the kept labels.
+        Use it to solve for some of the state only, such as the cells the
+        observations see well, and keep every other element at its prior
+        value. Which elements to keep is your choice: for example, the cells
+        whose total sensitivity is above a percentile of all cells'
+        (:func:`fips.aggregate.sum` of the forward operator's absolute column
+        sums, grouped by cell, gives that total).
 
-        This is the other direction of the recipe in the notes, which puts a
-        Jacobian on the whole state: here the state shrinks to what the
-        Jacobian covers.
+        The dropped elements still add to the observations, at their prior
+        values: :math:`H_r x_{0,r}` (the forward operator's columns for them
+        times their prior) is added to the offset. The prior, the prior
+        covariance and the forward operator are cut to the kept labels; the
+        covariance keeps its form, so a Kronecker covariance stays as its
+        factors. The dropped elements' prior uncertainty is not added to the
+        model-data mismatch: they are held exactly at the prior.
+
+        After solving, ``post.estimate.combine_first(problem.prior)`` puts
+        the estimate back on the whole state, with the prior for the dropped
+        elements (:meth:`Vector.combine_first`).
 
         Parameters
         ----------

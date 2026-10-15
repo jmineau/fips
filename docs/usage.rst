@@ -358,17 +358,6 @@ estimate back on the whole state:
    small.offset.to_series().head(3)
    fips.solve(small).estimate.combine_first(hourly.prior).to_series().round(3)
 
-A model-data mismatch that grows with the signal is a fraction of a scale from
-:mod:`fips.scales`: ``footprint`` (how much state each observation sees),
-``modeled`` (:math:`|H x_0|`) or ``observed`` (:math:`|z - c|`):
-
-.. ipython:: python
-
-   scale = fips.scales.modeled(hourly.forward, hourly.prior)
-   obs_cov = fips.Independent().with_std(Vector(0.3 * scale.values, scale.space))
-   obs_cov.variances.to_series().head(3)
-
-
 Domain-Specific Problem: Flux Inversion
 -----------------------------------------
 

@@ -134,33 +134,3 @@ A covariance waiting for its space
    CovarianceModel
    CovarianceModel.build
    CovarianceModel.__add__
-
-.. currentmodule:: fips
-
-Scales for the model-data mismatch
-==================================
-
-A model-data mismatch that grows with the signal is a standard deviation of
-``fraction * scale`` for each observation. :mod:`fips.scales` gives three
-scales, each a :class:`Vector` on the observations: how much state each
-observation sees (:func:`scales.footprint`), the signal the prior models
-(:func:`scales.modeled`) and the signal observed above the offset
-(:func:`scales.observed`).
-
-.. ipython:: python
-
-   import numpy as np
-
-   state = fips.Space({"flux": pd.Index(["a", "b"], name="cell")})
-   sites = fips.Space({"co2": pd.Index(["A", "B", "C"], name="site")})
-   H = fips.Operator(np.array([[1.0, 0.5], [0.2, 0.0], [0.0, 2.0]]), sites, state)
-   scale = fips.scales.modeled(H, fips.Vector([1.0, 3.0], state))
-   scale.values
-   fips.Independent().with_std(fips.Vector(0.3 * scale.values, sites)).variances.values
-
-.. autosummary::
-   :toctree: api/
-
-   scales.footprint
-   scales.modeled
-   scales.observed

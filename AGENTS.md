@@ -33,8 +33,8 @@ PyPI name and import name are both `fips`. Source lives in `src/fips/`.
 src/fips/
   __init__.py        public exports (Space, Vector, Operator, Covariance, the
                      covariance models, Problem, solve, available_methods,
-                     Posterior, the aggregate and scales modules,
-                     offset_block, InversionPipeline)
+                     Posterior, the aggregate module, offset_block,
+                     InversionPipeline)
   space.py           Space — ordered named blocks, the padded MultiIndex,
                      select, from_index, exact align, round_labels
   vector.py          Vector — values on a Space (read-only float array);
@@ -77,8 +77,6 @@ src/fips/
                      Space to groups of its labels (levels, a pandas Grouper,
                      an IntervalIndex, a Series mapping); offset_block, the
                      same groups as a block of offsets in the state
-  scales.py          footprint, modeled, observed: the sizes of each
-                     observation's signal, for a model-data mismatch
   filters.py         Selection helpers (e.g. enough_obs_per_interval)
   metrics.py         haversine_matrix, chordal_matrix, time_diff_matrix
   visualization.py   Generic plotting helpers
@@ -119,7 +117,6 @@ From `fips.__init__`:
 | `Posterior` | the estimate and every diagnostic, labeled, from the kept factorization |
 | `aggregate.sum`, `aggregate.mean` | an aggregation `W` of a space by group: `problem.aggregate(W)` on the observations, `post.cov(W)` on the state |
 | `offset_block` | a block of offsets in the state, one per group of observations, and its forward block |
-| `scales` | `footprint`, `modeled`, `observed`: scales for a model-data mismatch that grows with the signal |
 | `InversionPipeline` | repeatable workflow template |
 
 ## Mental model
