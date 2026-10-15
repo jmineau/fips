@@ -9,7 +9,8 @@ correlation models of :mod:`fips.covariance` make one from the labels
 """
 
 import logging
-from typing import TYPE_CHECKING, Self
+from collections.abc import Callable
+from typing import ClassVar, Protocol, Self
 
 import numpy as np
 import numpy.typing as npt
@@ -27,10 +28,15 @@ from fips.operator import Operator
 from fips.space import Space
 from fips.vector import Vector
 
-if TYPE_CHECKING:
-    from fips.covariance.models import CovarianceModel
-
 logger = logging.getLogger(__name__)
+
+
+class _Model(Protocol):
+    """A covariance model, as :meth:`Covariance.block_diag` sees one: it builds a covariance on a space."""
+
+    def build(self, space: Space, name: str | None = None) -> "Covariance":
+        """Return the covariance on `space`."""
+        ...
 
 
 def _side_by_side(parts: "list[Covariance]") -> tuple[LinearOperator, Space]:
@@ -101,6 +107,9 @@ class Covariance(Operator):
     >>> S.solve(Vector([3.0, 3.0], space)).values
     array([1., 1.])
     """
+
+    _block_diag_models: ClassVar[Callable[[tuple, dict, str | None], _Model]]
+    """Makes the model :meth:`block_diag` gives when a part is a model; :mod:`fips.covariance.models` sets it."""
 
     def __init__(self, data: LinearOperatorLike, space: Space, name: str | None = None):
         super().__init__(data, space, space, name=name)
@@ -220,8 +229,8 @@ class Covariance(Operator):
         cls,
         *covariances: "Covariance",
         name: str | None = None,
-        **blocks: "Covariance | CovarianceModel",
-    ) -> "Self | CovarianceModel":
+        **blocks: "Covariance | _Model",
+    ) -> "Self | _Model":
         """
         Put independent covariances side by side: each on its own blocks, zero between.
 
@@ -272,11 +281,7 @@ class Covariance(Operator):
         parts: list[Covariance] = []
         for part in (*covariances, *blocks.values()):
             if not isinstance(part, Covariance):
-                from fips.covariance.models import (
-                    _block_diagonal,  # models.py imports this module
-                )
-
-                return _block_diagonal(covariances, blocks, name)
+                return cls._block_diag_models(covariances, blocks, name)
             parts.append(part)
         for key, cov in zip(blocks, parts[len(covariances) :], strict=True):
             if cov.space.names != (key,):

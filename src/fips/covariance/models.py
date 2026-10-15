@@ -590,3 +590,8 @@ def _block_diagonal(
     if twice:
         raise ValueError(f"Two parts have a block named {_listed(twice)}.")
     return _BlockDiagonal(tuple(parts), name=name)
+
+
+# ``Covariance`` cannot import this module (this one imports it), so it asks
+# for the block diagonal of parts some of which are models through this hook.
+Covariance._block_diag_models = staticmethod(_block_diagonal)

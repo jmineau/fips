@@ -24,7 +24,6 @@ import pandas as pd
 from numpy.linalg import LinAlgError
 from scipy.linalg import cholesky, eigh, inv, solve, solve_triangular
 
-from fips.base import Pickleable
 from fips.covariance import Covariance
 from fips.linalg import DiagonalOperator, LinearOperator
 from fips.linalg.base import _adopt, _solve_psd
@@ -271,7 +270,7 @@ def _times_pseudo_inverse(XWt: np.ndarray, W: LinearOperator) -> np.ndarray:
         ) from err
 
 
-class Posterior(Pickleable):
+class Posterior:
     r"""
     The solution of an inverse problem, labeled.
 
