@@ -698,6 +698,11 @@ class TestSymmetry:
         model = Independent().with_std(1.0) + dense
         assert isinstance(model.build(CELLS), Covariance)
 
+    def test_a_covariance_is_refused_as_data(self):
+        """``Covariance(cov, space)`` would ignore the labels: it points to align and data."""
+        with pytest.raises(TypeError, match=r"align\(rows, cols\).*\.data"):
+            Covariance(COVS["sparse"], CELLS)
+
 
 # ---------------------------------------------------------------------------
 # The models, pinned to the builders they replaced

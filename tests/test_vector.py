@@ -65,6 +65,12 @@ class TestConstruction:
         with pytest.raises(TypeError, match="Vector.from_series"):
             Vector(series, space)
 
+    def test_a_vector_is_refused(self, vector, space):
+        """A Vector's labels would be ignored: it points to align and values."""
+        reversed_space = Space({name: space.select(name)[::-1] for name in space.names})
+        with pytest.raises(TypeError, match=r"v\.align\(space\).*v\.values"):
+            Vector(vector, reversed_space)
+
     def test_space_must_be_a_space(self, space):
         with pytest.raises(TypeError, match="must be a Space"):
             Vector(np.zeros(5), space.index)

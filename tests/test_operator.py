@@ -130,6 +130,13 @@ class TestConstructor:
         with pytest.raises(TypeError, match="from_frame"):
             Operator(data, state, state)
 
+    def test_operator_refused(self, H, obs, state):
+        """An Operator would be taken by position, its labels ignored: it points to align and data."""
+        with pytest.raises(TypeError, match=r"op\.align\(rows, cols\).*op\.data"):
+            Operator(H, reordered(obs), state)
+        with pytest.raises(TypeError, match="not a labeled Covariance"):
+            Operator(Covariance(np.eye(3), state), state, state)
+
     def test_spaces_must_be_spaces(self, state):
         """An index is not a Space."""
         with pytest.raises(TypeError, match="rows must be a Space"):
