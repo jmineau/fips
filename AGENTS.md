@@ -158,6 +158,11 @@ Plots are in `fips.visualization` (not exported from `fips`): `plot_map`,
   `None` to a string, so a name is one spelling everywhere; an unnamed object
   keeps `None`. A sum of two operators keeps the name when both have the same
   one and is `None` otherwise (pandas' rule for a sum of two Series).
+- **A structure owns its data.** `Vector` and `Operator` (every `linalg.py`
+  form) copy their input and make the copy read-only. Code that builds a form
+  from an array fips just made, or from another form's read-only arrays, uses
+  `_adopt` (no second copy); the public constructors are for what a caller
+  hands over.
 - **MultiIndex preservation.** The whole design hinges on labels surviving.
   Do not silently `.values` or `.to_numpy()` away from Series/DataFrame.
 - **Labels are kept as given.** Nothing converts labels to numbers or rounds
