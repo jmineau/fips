@@ -136,3 +136,29 @@ def constructors(monkeypatch):
 
         monkeypatch.setattr(cls, "__init__", spy)
     return calls
+
+
+@pytest.fixture(params=["whitened", "information"])
+def analytic_form(request, monkeypatch):
+    """
+    Force the analytic method to factor in one form, and return its class.
+
+    The method chooses the form by size (``fips.methods.analytic._choose``);
+    this replaces that choice, so a test holds both forms to the same
+    outputs whatever the size of its problem. The other form's ``factor``
+    raises, so a test cannot pass by falling back to it.
+    """
+    from fips.methods import analytic
+
+    forms = {"whitened": analytic.Whitened, "information": analytic.Information}
+    form = forms[request.param]
+    (other,) = (cls for cls in forms.values() if cls is not form)
+
+    def refuse(problem, gamma):
+        raise AssertionError(
+            f"{other.__name__} factored a problem forced to {form.__name__}"
+        )
+
+    monkeypatch.setattr(analytic, "_choose", lambda problem: (form, "forced by a test"))
+    monkeypatch.setattr(other, "factor", staticmethod(refuse))
+    return form
