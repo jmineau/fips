@@ -23,7 +23,6 @@ from .correlation import Independent, Kronecker
 from .covariance import Covariance
 from .kernels import Constant, Exponential, Gaussian, Matern
 from .operator import Operator
-from .pipeline import InversionPipeline
 from .posterior import Posterior
 from .problem import Problem
 from .solve import available_methods, solve
@@ -55,5 +54,4 @@ __all__ = [
     "Posterior",
     "aggregate",
     "offset_block",
-    "InversionPipeline",
 ]
