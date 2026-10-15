@@ -14,10 +14,24 @@ from functools import cached_property
 import numpy as np
 import pandas as pd
 
-from fips.indexes import round_index
-
 _SHOWN = 5
 """How many labels an error message lists."""
+
+
+def _rounded(index: pd.Index, decimals: int) -> pd.Index:
+    """Return `index` with each float level rounded to `decimals` places; other levels as they are."""
+
+    def level(values: pd.Index) -> pd.Index:
+        if pd.api.types.is_float_dtype(values):
+            return pd.Index(np.round(values.to_numpy(), decimals), name=values.name)
+        return values
+
+    if isinstance(index, pd.MultiIndex):
+        return pd.MultiIndex.from_arrays(
+            [level(index.get_level_values(i)) for i in range(index.nlevels)],
+            names=index.names,
+        )
+    return level(index)
 
 
 def _plain(label):
@@ -89,38 +103,6 @@ def _checked_block(name: str, index: pd.Index) -> pd.Index:
             "Each label must be unique."
         )
     return index
-
-
-def _positions(space: "Space", other: "Space") -> np.ndarray:
-    """
-    Return where each label of `space` is in `other`, or -1 where `other` lacks it.
-
-    A lookup, not a join: `other` may lack a block or labels within one (-1
-    there) and may have labels `space` does not (they are not used). The
-    levels of a block must be the same in both, in any order.
-
-    Raises
-    ------
-    ValueError
-        If a block has other levels in `other` than in `space`.
-    """
-    out = np.full(len(space), -1, dtype=np.intp)
-    for name in space.names:
-        if name not in other:
-            continue
-        mine, theirs = space.select(name), other.select(name)
-        if set(mine.names) != set(theirs.names):
-            raise ValueError(
-                f"Block {name!r} has levels {list(mine.names)} on one side and "
-                f"{list(theirs.names)} on the other."
-            )
-        if isinstance(theirs, pd.MultiIndex) and theirs.names != mine.names:
-            theirs = theirs.reorder_levels(list(mine.names))
-        found = theirs.get_indexer(mine)
-        out[space.slice(name)] = np.where(
-            found >= 0, found + other.slice(name).start, -1
-        )
-    return out
 
 
 class Space:
@@ -479,13 +461,24 @@ class Space:
         >>> a.align(b)
         array([1, 2, 0])
         """
+        return self._align(other, "the other space", "The spaces")
+
+    def _align(self, other: "Space", called: str, pair: str) -> np.ndarray:
+        """
+        Return :meth:`align`'s positions; the message calls `other` `called` and the two `pair`.
+
+        Raises
+        ------
+        ValueError
+            As :meth:`align` does, naming the spaces as given.
+        """
         problems = []
         missing = [b for b in self.names if b not in other]
         extra = [b for b in other.names if b not in self]
         if missing:
-            problems.append(f"blocks missing from the other space: {_listed(missing)}")
+            problems.append(f"blocks missing from {called}: {_listed(missing)}")
         if extra:
-            problems.append(f"blocks only the other space has: {_listed(extra)}")
+            problems.append(f"blocks only in {called}: {_listed(extra)}")
 
         positions = []
         for name in self.names:
@@ -495,7 +488,7 @@ class Space:
             if set(mine.names) != set(theirs.names):
                 problems.append(
                     f"block {name!r} has levels {list(mine.names)} here and "
-                    f"{list(theirs.names)} in the other space"
+                    f"{list(theirs.names)} in {called}"
                 )
                 continue
             if isinstance(theirs, pd.MultiIndex) and theirs.names != mine.names:
@@ -503,20 +496,20 @@ class Space:
             found = theirs.get_indexer(mine)
             if (found < 0).any():
                 problems.append(
-                    f"labels of block {name!r} missing from the other space: "
+                    f"labels of block {name!r} missing from {called}: "
                     f"{_listed(mine[found < 0])}"
                 )
             if len(theirs) > (found >= 0).sum():
                 unmatched = np.ones(len(theirs), dtype=bool)
                 unmatched[found[found >= 0]] = False
                 problems.append(
-                    f"labels of block {name!r} only the other space has: "
+                    f"labels of block {name!r} only in {called}: "
                     f"{_listed(theirs[unmatched])}"
                 )
             positions.append(found + other.slice(name).start)
         if problems:
             raise ValueError(
-                "The spaces do not have the same labels: " + "; ".join(problems) + "."
+                f"{pair} do not have the same labels: " + "; ".join(problems) + "."
             )
         return np.concatenate(positions)
 
@@ -554,7 +547,7 @@ class Space:
         """
         blocks = {}
         for name, index in self._blocks.items():
-            rounded = round_index(index, decimals=decimals)
+            rounded = _rounded(index, decimals)
             firsts = _first_duplicates(rounded)
             if len(firsts):
                 merged = []

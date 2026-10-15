@@ -5,9 +5,9 @@ A Pythonic framework for solving linear inverse problems using Bayesian estimati
 Labels live in a :class:`Space`; values on one are a :class:`Vector`; a matrix
 between two is an :class:`Operator` (a :class:`Covariance` from one to
 itself), kept in its cheapest form. A covariance is written as a correlation
-model with standard deviations: ``Exponential("time", "30D").with_std(std)``. Estimators compute posteriors; there are
-interfaces for serialization, visualization, and specialized applications like
-atmospheric flux inversion.
+model with standard deviations: ``Exponential("time", "30D").with_std(std)``.
+A :class:`Problem` puts the prior, the observations, the forward operator and
+the covariances together, and :func:`solve` returns its :class:`Posterior`.
 """
 
 import logging
@@ -16,12 +16,12 @@ from importlib.metadata import version as _version
 
 from .correlation import Independent, Kronecker
 from .covariance import Covariance
-from .estimators import Estimator, available_estimators
 from .kernels import Constant, Exponential, Gaussian, Matern
-from .operator import Operator, convolve
+from .operator import Operator
 from .pipeline import InversionPipeline
 from .posterior import Posterior
-from .problem import InverseProblem, solve
+from .problem import Problem
+from .solve import available_methods, solve
 from .space import Space
 from .vector import Vector
 
@@ -44,11 +44,9 @@ __all__ = [
     "Constant",
     "Independent",
     "Kronecker",
-    "Estimator",
-    "available_estimators",
-    "InversionPipeline",
-    "InverseProblem",
-    "Posterior",
+    "Problem",
     "solve",
-    "convolve",
+    "available_methods",
+    "Posterior",
+    "InversionPipeline",
 ]

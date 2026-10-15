@@ -14,7 +14,6 @@ A DataFrame is a way in (:meth:`Operator.from_frame`) and a way out
 """
 
 import logging
-import warnings
 from collections.abc import Hashable, Mapping
 from typing import Any, Self
 
@@ -31,7 +30,7 @@ from fips.linalg import (
     SparseOperator,
     as_linear_operator,
 )
-from fips.space import Space, _listed, _positions
+from fips.space import Space
 from fips.vector import Vector
 
 logger = logging.getLogger(__name__)
@@ -703,68 +702,4 @@ class Operator:
             f"{type(self).__name__}(name={self._name!r}, shape={self.shape}, "
             f"form={type(self._data).__name__})\n"
             f"  rows: {self._rows!r}\n  cols: {self._cols!r}"
-        )
-
-
-def convolve(
-    state: Any,
-    forward_operator: "Operator | pd.DataFrame",
-    round_index: int | None = None,
-    verify_overlap: bool = True,
-) -> pd.Series:
-    """
-    Apply a forward operator to a state vector, by label.
-
-    Parameters
-    ----------
-    state : Vector or pd.Series
-        The state; a Series with a ``block`` level in its labels. A state
-        label the operator has no column for is not used.
-    forward_operator : Operator or pd.DataFrame
-        The operator, or a frame with a ``block`` level on both axes
-        (:meth:`Operator.from_frame`).
-    round_index : int, optional
-        Decimal places to round the float labels of both to before matching
-        them. By default the labels are matched as given.
-    verify_overlap : bool, default True
-        If True, raise when no column of the operator has a state value, and
-        warn when some have none; a column without a value takes zero.
-
-    Returns
-    -------
-    pd.Series
-        The modeled observations, labeled by the operator's rows.
-    """
-    H = (
-        forward_operator
-        if isinstance(forward_operator, Operator)
-        else Operator.from_frame(forward_operator)
-    )
-    vector = state if isinstance(state, Vector) else Vector.from_series(state)
-    if round_index is not None:
-        H = H.round_labels(round_index)
-        vector = vector.round_labels(round_index)
-    found = _positions(H.cols, vector.space)
-    if verify_overlap:
-        _check_overlap(found, H.cols, "the state")
-    x = np.where(found >= 0, vector.values[np.maximum(found, 0)], 0.0)
-    name = f"{vector.name}_obs" if vector.name else None
-    return pd.Series(H.data @ x, index=H.rows.index, name=name)
-
-
-def _check_overlap(found: np.ndarray, target: Space, source: str) -> None:
-    """Raise if no label of `target` was found in `source`; warn, naming them, if some were not."""
-    missing = found < 0
-    if missing.all():
-        raise ValueError(
-            f"No label of {source} is among the labels it is placed on "
-            f"({_listed(target.index)})."
-        )
-    if missing.any():
-        warnings.warn(
-            f"Partial overlap: {int(missing.sum())} of {len(found)} labels have "
-            f"no entry in {source}: {_listed(target.index[missing])}. Missing "
-            "entries will be filled with zeros.",
-            UserWarning,
-            stacklevel=3,
         )

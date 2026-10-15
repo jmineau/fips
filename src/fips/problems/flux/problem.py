@@ -19,10 +19,11 @@ from typing import Self
 
 import pandas as pd
 
-from fips.estimators import Estimator
 from fips.operator import Operator
-from fips.problem import InverseProblem
+from fips.posterior import Posterior
+from fips.problem import Problem
 from fips.problems.flux.visualization import FluxPlotter
+from fips.solve import solve
 from fips.vector import Vector
 
 logger = logging.getLogger(__name__)
@@ -37,41 +38,62 @@ def _block_series(vector: Vector, block: str) -> pd.Series:
     return vector[block].to_series().droplevel("block")
 
 
-class FluxProblem(InverseProblem):
+class FluxProblem(Problem):
     """
     Atmospheric flux inversion problem.
 
-    Subclass of InverseProblem specialized for estimating spatial and temporal surface fluxes
-    from observed atmospheric concentrations using a forward transport model.
-    Supports multi-block state composition (e.g., fluxes + bias corrections).
+    A :class:`~fips.Problem` whose state has a ``flux`` block and whose
+    observations have a ``concentration`` block, with accessors for those
+    blocks. Supports multi-block state composition (e.g., fluxes + bias
+    corrections). :meth:`solve` keeps the posterior as :attr:`result`, which
+    the posterior accessors read.
     """
 
-    def solve(self, estimator: str | type[Estimator] = "bayesian", **kwargs) -> Self:
+    result: Posterior | None = None
+    """The posterior from the last :meth:`solve`, or None."""
+
+    def solve(self, method: str = "analytic", **options) -> Self:
         """
-        Solve the flux inversion problem using specified estimator.
+        Solve the flux inversion with :func:`fips.solve` and keep the posterior.
 
         Parameters
         ----------
-        estimator : str or type[Estimator], default 'bayesian'
-            Estimator to use for solving. Can be a registered estimator name or Estimator subclass.
-        **kwargs
-            Additional keyword arguments passed to the estimator.
+        method : str, default 'analytic'
+            The method :func:`fips.solve` uses.
+        **options
+            The method's options (``gamma``).
 
         Returns
         -------
         Self
-            The FluxProblem instance with the fitted estimator.
+            The FluxProblem, its posterior kept as :attr:`result`.
         """
-        return super().solve(estimator=estimator, **kwargs)
+        self.result = solve(self, method, **options)
+        return self
+
+    def _posterior(self) -> Posterior:
+        """Return :attr:`result`, or raise if the problem has not been solved."""
+        if self.result is None:
+            raise RuntimeError("Problem has not been solved. Call .solve() first.")
+        return self.result
 
     def __repr__(self) -> str:
         """Return string representation."""
-        solved = self._estimator is not None
         return (
             f"FluxProblem("
-            f"n_obs={self.n_obs}, n_flux={len(self.prior_fluxes)}, "
-            f"n_state={self.n_state}, solved={solved})"
+            f"n_obs={len(self.obs)}, n_flux={len(self.prior_fluxes)}, "
+            f"n_state={len(self.prior)}, solved={self.result is not None})"
         )
+
+    def __getstate__(self) -> dict:
+        """Return the inputs and the posterior."""
+        return {**super().__getstate__(), "result": self.result}
+
+    def __setstate__(self, state: dict) -> None:
+        """Restore from :meth:`__getstate__`."""
+        state = dict(state)
+        self.result = state.pop("result", None)
+        super().__setstate__(state)
 
     @property
     def concentrations(self) -> pd.Series:
@@ -93,49 +115,49 @@ class FluxProblem(InverseProblem):
     @property
     def jacobian(self) -> Operator:
         """Forward operator (Jacobian) mapping state to observations."""
-        return self.forward_operator["concentration", "flux"]
+        return self.forward["concentration", "flux"]
 
     @property
     def prior_flux_error(self) -> Operator:
         """Inventory error covariance matrix."""
-        return self.prior_error["flux", "flux"]
+        return self.prior_cov["flux", "flux"]
 
     @property
     def concentration_error(self) -> Operator:
         """Model-data mismatch covariance matrix for observations."""
-        return self.modeldata_mismatch["concentration", "concentration"]
+        return self.obs_cov["concentration", "concentration"]
 
     @property
     def background(self) -> pd.Series | None:
         """Background concentration."""
-        if self.constant is None:
+        if self.offset is None:
             return None
-        return _block_series(self.constant, "concentration")
+        return _block_series(self.offset, "concentration")
 
     @property
     def posterior_fluxes(self) -> pd.Series:
         """Posterior flux estimates after inversion."""
-        return _block_series(self.posterior, "flux")
+        return _block_series(self._posterior().estimate, "flux")
 
     @property
     def posterior_flux_error(self) -> Operator:
         """Posterior flux error covariance matrix after inversion."""
-        return self.posterior_error["flux", "flux"]
+        return self._posterior().cov()["flux", "flux"]
 
     @property
     def prior_concentrations(self) -> pd.Series:
         """Modelled concentrations from prior fluxes."""
-        return _block_series(self.prior_obs, "concentration")
+        return _block_series(self._posterior().prior_modeled_obs, "concentration")
 
     @property
     def prior_concentration_error(self) -> Operator:
         """Covariance of the prior modelled concentrations from the prior flux error."""
-        return self.prior_obs_error["concentration", "concentration"]
+        return self._posterior().prior_obs_cov["concentration", "concentration"]
 
     @property
     def posterior_concentrations(self) -> pd.Series:
         """Modelled concentrations from posterior fluxes."""
-        return _block_series(self.posterior_obs, "concentration")
+        return _block_series(self._posterior().modeled_obs, "concentration")
 
     @property
     def plot(self) -> FluxPlotter:

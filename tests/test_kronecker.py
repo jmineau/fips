@@ -821,7 +821,7 @@ class TestCovarianceOnFactors:
         """``align`` is an exact join: a subset of the labels raises."""
         S, _ = _kron_cov()
         subset = Space.from_index(_product()[:20])
-        with pytest.raises(ValueError, match="only the other space has"):
+        with pytest.raises(ValueError, match="only in the other space"):
             S.align(subset, subset)
 
     def test_align_with_levels_in_another_order(self):

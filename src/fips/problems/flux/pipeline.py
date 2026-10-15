@@ -14,6 +14,7 @@ import pandas as pd
 
 from fips.filters import select_intervals_with_min_obs
 from fips.pipeline import InversionPipeline
+from fips.posterior import Posterior
 from fips.problems.flux.problem import FluxProblem
 from fips.vector import Vector
 
@@ -28,11 +29,7 @@ class FluxInversionPipeline(InversionPipeline[FluxProblem], ABC):
     problem: FluxProblem
 
     def __init__(self, config):
-        super().__init__(
-            config=config,
-            problem=FluxProblem,
-            estimator="bayesian",
-        )
+        super().__init__(config=config, problem=FluxProblem)
 
     def filter_state_space(self, obs: Vector, prior: Vector) -> tuple[Vector, Vector]:
         """
@@ -114,28 +111,30 @@ class FluxInversionPipeline(InversionPipeline[FluxProblem], ABC):
 
         return obs, prior
 
-    def run(self, estimator_kwargs: dict | None = None, **kwargs) -> FluxProblem:
+    def run(self, options: dict | None = None, **kwargs) -> Posterior:
         """
         Run the flux inversion pipeline.
 
         Parameters
         ----------
-        estimator_kwargs : dict, optional
-            Additional keyword arguments to pass to the estimator (e.g., gamma for BayesianSolver).
+        options : dict, optional
+            The method's options, passed to :func:`fips.solve` (``gamma``).
         **kwargs
-            Additional keyword arguments passed to the inverse problem initialization.
+            Additional keyword arguments passed to the problem's constructor.
 
         Returns
         -------
-        FluxProblem
-            The solved flux inversion problem.
+        Posterior
+            The posterior. The problem is kept as :attr:`problem`, with the
+            posterior as its ``result``.
         """
-        inversion = super().run(estimator_kwargs=estimator_kwargs, **kwargs)
+        posterior = super().run(options=options, **kwargs)
+        self.problem.result = posterior
 
         # Print summary report
         self.summarize()
 
-        return inversion
+        return posterior
 
     def summarize(self) -> None:
         """
@@ -160,7 +159,7 @@ class FluxInversionPipeline(InversionPipeline[FluxProblem], ABC):
         prior_obs = problem.prior_concentrations
         post_obs = problem.posterior_concentrations
 
-        est = problem.estimator
+        post = problem._posterior()
 
         # --- Calculate Atmospheric Metrics ---
         mean_enhancement = np.mean(enhancement)
@@ -181,11 +180,11 @@ class FluxInversionPipeline(InversionPipeline[FluxProblem], ABC):
 
         n = len(prior_flux)
         m = len(obs)
-        dofs = est.DOFS
-        chi2 = est.reduced_chi2
-        R2 = est.R2
-        RMSE = est.RMSE
-        uncertainty_reduction = est.uncertainty_reduction * 100
+        dofs = post.dofs
+        chi2 = post.reduced_chi2
+        R2 = post.r2
+        RMSE = post.rmse
+        uncertainty_reduction = post.uncertainty_reduction * 100
 
         # --- Negative cells ---
         n_negative = int((post_flux < 0).sum())
