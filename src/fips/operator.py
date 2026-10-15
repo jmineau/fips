@@ -775,14 +775,14 @@ class Operator:
             )
         theirs = other._on(self._rows, self._cols)
         total = self._data + theirs if sign > 0 else self._data - theirs
-        name = self._name if self._name == other.name else None
-        return self._sum_like(other, total, name)
-
-    def _sum_like(
-        self, other: "Operator", total: LinearOperator, name: str | None
-    ) -> "Operator":
-        """Return the sum `total` of this operator and `other`: an operator."""
-        return Operator(total, self._rows, self._cols, name=name)
+        # two covariances sum to a covariance; a covariance and any other operator, to an operator
+        summed = (
+            self._like(total, self._rows, self._cols)
+            if isinstance(other, type(self))
+            else Operator(total, self._rows, self._cols)
+        )
+        summed._name = self._name if self._name == other.name else None
+        return summed
 
     def __add__(self, other: "Operator") -> "Operator":
         """Return the sum with an operator on the same labels (in any order)."""

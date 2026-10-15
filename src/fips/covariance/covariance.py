@@ -187,14 +187,6 @@ class Covariance(Operator):
             data = as_linear_operator(data)._select(np.arange(len(rows)), order)
         return cls(data, rows, name=name)
 
-    def _sum_like(
-        self, other: Operator, total: LinearOperator, name: str | None
-    ) -> Operator:
-        """Return the sum `total`: a covariance when `other` is one too."""
-        if isinstance(other, Covariance):
-            return Covariance._computed(total, self._rows, name=name)
-        return super()._sum_like(other, total, name)
-
     def _like(self, data: LinearOperatorLike, rows: Space, cols: Space) -> Operator:
         """Return a covariance when the two axes are one space, else an operator."""
         if rows is cols or rows == cols:
