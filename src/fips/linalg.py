@@ -26,11 +26,18 @@ Each is a :class:`scipy.sparse.linalg.LinearOperator`, so ``matvec``,
 - ``np.asarray(A)`` is :meth:`~LinearOperator.dense`, so NumPy functions take
   a form as its matrix; ``np.array(A)`` is a copy, as for an array.
 
+A form owns its data, as a :class:`~fips.Vector` does: it copies the array or
+matrix it is given and makes the copy read-only, so changing the original
+afterwards leaves the form as it was, and writing into the form's own array
+raises :class:`ValueError`. The forms fips builds from one another (a product,
+a transpose, a selection) hold the arrays they computed or the read-only ones
+of their parents, never a second copy.
+
 The forms are real (float64) and pickle with the standard protocol.
 """
 
 import logging
-from typing import TypeAlias
+from typing import Self, TypeAlias
 
 import numpy as np
 import numpy.typing as npt
@@ -113,6 +120,18 @@ def _cholesky(A: np.ndarray) -> np.ndarray:
         ) from err
 
 
+def _read_only(array: np.ndarray) -> np.ndarray:
+    """Return `array`, made read-only (a view of a read-only array already is)."""
+    array.flags.writeable = False
+    return array
+
+
+def _sparse_array(matrix, copy: bool) -> "sp.csr_array | sp.csc_array":
+    """Return a SciPy sparse matrix as a float64 CSR array (CSC for a CSC input), copied if `copy`."""
+    kind = sp.csc_array if matrix.format == "csc" else sp.csr_array
+    return kind(matrix, dtype=float, copy=copy)
+
+
 class LinearOperator(_SciPyLinearOperator):
     """
     A real matrix in one of fips's forms, for multiplying, adding, transposing and solving.
@@ -142,6 +161,14 @@ class LinearOperator(_SciPyLinearOperator):
 
     def __init__(self, shape: tuple[int, ...]):
         super().__init__(dtype=np.float64, shape=shape)
+
+    def _freeze(self) -> None:
+        """Make the arrays the form holds read-only; a form that holds none has nothing to do."""
+
+    def __setstate__(self, state: dict) -> None:
+        """Restore from a pickle, with the arrays read-only again (a pickle keeps the values, not the flag)."""
+        self.__dict__.update(state)
+        self._freeze()
 
     # SciPy is not annotated, so pyrefly takes the type of each default it
     # infers (a private SciPy class) as the type an override must return.
@@ -174,7 +201,7 @@ class LinearOperator(_SciPyLinearOperator):
         `func` multiplies by a scalar (``a * c``, ``a / c`` or ``-a``), so it
         maps 0 to 0 and a form can apply it to what it stores.
         """
-        return DenseOperator(func(self.dense()))
+        return DenseOperator._adopt(func(self.dense()))
 
     def _select(self, rows: np.ndarray, cols: np.ndarray) -> "LinearOperator":
         """
@@ -190,7 +217,7 @@ class LinearOperator(_SciPyLinearOperator):
             out = self.dense()[np.ix_(r, c)]
             out[rows < 0] = 0.0
             out[:, cols < 0] = 0.0
-            return DenseOperator(out)
+            return DenseOperator._adopt(out)
         # SciPy is not annotated, so pyrefly finds no __getitem__ on a sparse array
         out = csr[r][:, c]  # pyrefly: ignore[bad-index]
         if (rows < 0).any() or (cols < 0).any():
@@ -198,7 +225,7 @@ class LinearOperator(_SciPyLinearOperator):
             keep_c = sp.diags_array((cols >= 0).astype(float))
             out = sp.csr_array(keep_r @ out @ keep_c)
             out.eliminate_zeros()
-        return _from_sparse(out)
+        return _adopt(out)
 
     def _csr(self) -> "sp.csr_array | None":
         """Return the form as a CSR array, or None if it is not sparse."""
@@ -211,8 +238,8 @@ class LinearOperator(_SciPyLinearOperator):
         Returns
         -------
         np.ndarray
-            The full matrix. For a :class:`DenseOperator`, the array it holds,
-            not a copy.
+            The full matrix. For a :class:`DenseOperator`, the read-only array
+            it holds, not a copy; any other form builds a new array.
         """
         return self.matmat(np.eye(self.shape[1]))
 
@@ -307,16 +334,16 @@ class LinearOperator(_SciPyLinearOperator):
         numpy.linalg.LinAlgError
             If the form is not positive-definite.
         """
-        return DenseOperator(_cholesky(self.dense()))
+        return DenseOperator._adopt(_cholesky(self.dense()))
 
     def __array__(self, dtype=None, copy=None) -> np.ndarray:
         """
         Return :meth:`dense`, so NumPy functions take a form as its matrix.
 
         `copy` follows NumPy's protocol: ``np.array(op)`` (``copy=True``) never
-        shares memory with the form, while ``np.asarray(op)`` gives a
-        :class:`DenseOperator`'s own array. Every other form builds a new
-        array either way.
+        shares memory with the form and is writable, while ``np.asarray(op)``
+        gives a :class:`DenseOperator`'s own read-only array. Every other form
+        builds a new array either way.
         """
         a = self.dense()
         if dtype is not None and np.dtype(dtype) != a.dtype:
@@ -402,7 +429,13 @@ class DenseOperator(LinearOperator):
     Parameters
     ----------
     array : array-like
-        The matrix. A float64 array is kept as it is, not copied.
+        The matrix. It is copied, and the copy is read-only: changing `array`
+        afterwards leaves the form as it was.
+
+    Raises
+    ------
+    ValueError
+        If `array` is not 2D.
 
     Examples
     --------
@@ -416,14 +449,30 @@ class DenseOperator(LinearOperator):
     """
 
     array: np.ndarray
-    """The matrix."""
+    """The matrix, a read-only array."""
 
     def __init__(self, array: npt.ArrayLike):
+        self._hold(np.array(array, dtype=float))
+
+    @classmethod
+    def _adopt(cls, array: np.ndarray) -> Self:
+        """Return the form that holds `array` itself, which fips just made, without copying it."""
+        form = cls.__new__(cls)
+        form._hold(array)
+        return form
+
+    def _hold(self, array: np.ndarray) -> None:
+        """Hold `array`, read-only."""
         array = np.asarray(array, dtype=float)
         if array.ndim != 2:
             raise ValueError(f"A DenseOperator takes a 2D array, got {array.ndim}D.")
         self.array = array
+        self._freeze()
         super().__init__(array.shape)
+
+    def _freeze(self) -> None:
+        """Make the array read-only."""
+        _read_only(self.array)
 
     def _matvec(self, x):
         """Return ``self @ x`` for a vector."""
@@ -439,14 +488,14 @@ class DenseOperator(LinearOperator):
 
     def _transpose(self):
         """Return the transpose, a view of the same array."""
-        return DenseOperator(self.array.T)
+        return DenseOperator._adopt(self.array.T)
 
     def _elementwise(self, func):
         """Return the form with `func` applied to its entries."""
-        return DenseOperator(func(self.array))
+        return DenseOperator._adopt(func(self.array))
 
     def dense(self) -> np.ndarray:
-        """Return the array the form holds, not a copy."""
+        """Return the read-only array the form holds, not a copy."""
         return self.array
 
     def trace(self) -> float:
@@ -465,8 +514,14 @@ class SparseOperator(LinearOperator):
     Parameters
     ----------
     matrix : SciPy sparse matrix or array
-        The matrix. It is kept as a CSR array (CSC for a CSC input), sharing
-        the input's data when that is already float64 in that format.
+        The matrix. It is copied, as a CSR array (CSC for a CSC input), and
+        the copy is read-only: changing `matrix` afterwards leaves the form as
+        it was.
+
+    Raises
+    ------
+    TypeError
+        If `matrix` is not a SciPy sparse matrix.
 
     Examples
     --------
@@ -480,17 +535,31 @@ class SparseOperator(LinearOperator):
     """
 
     matrix: "sp.csr_array | sp.csc_array"
-    """The matrix, as a SciPy sparse array."""
+    """The matrix, as a SciPy sparse array whose arrays are read-only."""
 
     def __init__(self, matrix: "sp.spmatrix | sp.sparray"):
         if not sp.issparse(matrix):
             raise TypeError("A SparseOperator takes a SciPy sparse matrix.")
-        if isinstance(matrix, (sp.csc_matrix, sp.csc_array)):
-            self.matrix = sp.csc_array(matrix, dtype=float)
-        else:
-            self.matrix = sp.csr_array(matrix, dtype=float)
+        self._hold(_sparse_array(matrix, copy=True))
+
+    @classmethod
+    def _adopt(cls, matrix: "sp.spmatrix | sp.sparray") -> Self:
+        """Return the form that holds `matrix`'s own arrays, which fips just made, without copying them."""
+        form = cls.__new__(cls)
+        form._hold(_sparse_array(matrix, copy=False))
+        return form
+
+    def _hold(self, matrix: "sp.csr_array | sp.csc_array") -> None:
+        """Hold `matrix`, read-only."""
+        self.matrix = matrix
+        self._freeze()
         # pyrefly reads SciPy's unannotated `shape` as possibly None (its initial value)
-        super().__init__(self.matrix.shape)  # pyrefly: ignore[bad-argument-type]
+        super().__init__(matrix.shape)  # pyrefly: ignore[bad-argument-type]
+
+    def _freeze(self) -> None:
+        """Make the matrix's data, indices and index pointers read-only."""
+        for array in (self.matrix.data, self.matrix.indices, self.matrix.indptr):
+            _read_only(array)
 
     def _matvec(self, x):
         """Return ``self @ x`` for a vector."""
@@ -506,11 +575,11 @@ class SparseOperator(LinearOperator):
 
     def _transpose(self):
         """Return the transpose (CSC for a CSR matrix, without a copy)."""
-        return SparseOperator(self.matrix.T)
+        return SparseOperator._adopt(self.matrix.T)
 
     def _elementwise(self, func):
         """Return the form with `func` applied to its stored entries."""
-        return SparseOperator(func(self.matrix))
+        return SparseOperator._adopt(func(self.matrix))
 
     def _csr(self):
         """Return the matrix as a CSR array."""
@@ -582,7 +651,12 @@ class DiagonalOperator(LinearOperator):
     Parameters
     ----------
     values : array-like
-        The diagonal, 1D.
+        The diagonal, 1D. It is copied, and the copy is read-only.
+
+    Raises
+    ------
+    ValueError
+        If `values` is not 1D.
 
     Examples
     --------
@@ -595,16 +669,32 @@ class DiagonalOperator(LinearOperator):
     """
 
     values: np.ndarray
-    """The diagonal."""
+    """The diagonal, a read-only array."""
 
     def __init__(self, values: npt.ArrayLike):
+        self._hold(np.array(values, dtype=float))
+
+    @classmethod
+    def _adopt(cls, values: np.ndarray) -> Self:
+        """Return the form that holds `values` itself, which fips just made, without copying it."""
+        form = cls.__new__(cls)
+        form._hold(values)
+        return form
+
+    def _hold(self, values: np.ndarray) -> None:
+        """Hold `values`, read-only."""
         values = np.asarray(values, dtype=float)
         if values.ndim != 1:
             raise ValueError(
                 f"A DiagonalOperator takes its diagonal, 1D; got {values.ndim}D."
             )
         self.values = values
+        self._freeze()
         super().__init__((len(values), len(values)))
+
+    def _freeze(self) -> None:
+        """Make the diagonal read-only."""
+        _read_only(self.values)
 
     def _matvec(self, x):
         """Return ``self @ x`` for a vector."""
@@ -624,7 +714,7 @@ class DiagonalOperator(LinearOperator):
 
     def _elementwise(self, func):
         """Return the form with `func` applied to the diagonal."""
-        return DiagonalOperator(func(self.values))
+        return DiagonalOperator._adopt(func(self.values))
 
     def _csr(self):
         """Return the form as a CSR array that stores its nonzero entries."""
@@ -657,7 +747,7 @@ class DiagonalOperator(LinearOperator):
         """Return the diagonal of square roots."""
         if (self.values < 0).any():
             raise LinAlgError("The diagonal has a negative entry.")
-        return DiagonalOperator(np.sqrt(self.values))
+        return DiagonalOperator._adopt(np.sqrt(self.values))
 
 
 class BlockDiagonalOperator(LinearOperator):
@@ -672,7 +762,9 @@ class BlockDiagonalOperator(LinearOperator):
     Parameters
     ----------
     blocks : sequence of LinearOperator, SciPy sparse matrix or 2D array
-        The diagonal blocks, in order, each square.
+        The diagonal blocks, in order, each square. A form is kept as it is
+        (it holds its own copy); an array or a sparse matrix is copied, as
+        :func:`as_linear_operator` does.
 
     Raises
     ------
@@ -796,29 +888,29 @@ def _product(a: LinearOperator, b: LinearOperator) -> LinearOperator:
             f"Cannot multiply operators of shapes {a.shape} and {b.shape}."
         )
     if isinstance(a, DiagonalOperator) and isinstance(b, DiagonalOperator):
-        return DiagonalOperator(a.values * b.values)
+        return DiagonalOperator._adopt(a.values * b.values)
     if isinstance(a, SparseOperator) and isinstance(b, SparseOperator):
         product = a.matrix @ b.matrix
         if product.nnz > _DENSE_FILL * product.shape[0] * product.shape[1]:
-            return DenseOperator(product.toarray())
-        return SparseOperator(product)
+            return DenseOperator._adopt(product.toarray())
+        return SparseOperator._adopt(product)
     a_csr, b_csr = a._csr(), b._csr()
     if a_csr is not None and b_csr is not None:  # one side diagonal: no fill-in
-        return SparseOperator(a_csr @ b_csr)
+        return SparseOperator._adopt(a_csr @ b_csr)
     if isinstance(b, DenseOperator):
-        return DenseOperator(a.matmat(b.array))
+        return DenseOperator._adopt(a.matmat(b.array))
     if isinstance(a, DenseOperator):
-        return DenseOperator(b._rmatmul_array(a.array))
+        return DenseOperator._adopt(b._rmatmul_array(a.array))
     # Left: a form of its own (Kronecker, block diagonal) on at least one side.
     # A sparse matrix (a Jacobian) goes through that form's own product, never
     # its dense matrix; anything else gives a product as big as the dense one.
     if isinstance(b, SparseOperator):
-        return DenseOperator(a._matmat(b.matrix))
+        return DenseOperator._adopt(a._matmat(b.matrix))
     if isinstance(a, SparseOperator):
-        return DenseOperator(b._transpose()._matmat(a.matrix.T).T)
+        return DenseOperator._adopt(b._transpose()._matmat(a.matrix.T).T)
     if b_csr is not None:  # a diagonal right side scales the columns
-        return DenseOperator(b._rmatmul_array(a.dense()))
-    return DenseOperator(a.matmat(b.dense()))
+        return DenseOperator._adopt(b._rmatmul_array(a.dense()))
+    return DenseOperator._adopt(a.matmat(b.dense()))
 
 
 def _sum(a: LinearOperator, b: LinearOperator) -> LinearOperator:
@@ -826,19 +918,49 @@ def _sum(a: LinearOperator, b: LinearOperator) -> LinearOperator:
     if a.shape != b.shape:
         raise ValueError(f"Cannot add operators of shapes {a.shape} and {b.shape}.")
     if isinstance(a, DiagonalOperator) and isinstance(b, DiagonalOperator):
-        return DiagonalOperator(a.values + b.values)
+        return DiagonalOperator._adopt(a.values + b.values)
     a_csr, b_csr = a._csr(), b._csr()
     if a_csr is not None and b_csr is not None:
-        return SparseOperator(a_csr + b_csr)
-    return DenseOperator(a.dense() + b.dense())
+        return SparseOperator._adopt(a_csr + b_csr)
+    return DenseOperator._adopt(a.dense() + b.dense())
 
 
-def _from_sparse(matrix) -> LinearOperator:
-    """Return a SciPy sparse matrix as a DiagonalOperator if it is one, else a SparseOperator."""
+def _diagonal_of(matrix) -> np.ndarray | None:
+    """Return the diagonal of a square SciPy sparse matrix that stores entries only there, else None."""
     coo = matrix.tocoo()
     if matrix.shape[0] == matrix.shape[1] and np.array_equal(coo.row, coo.col):
-        return DiagonalOperator(matrix.diagonal())
-    return SparseOperator(matrix)
+        return matrix.diagonal()
+    return None
+
+
+def _matrix_2d(x) -> np.ndarray:
+    """Return array-like `x` as a float64 array, raising ValueError unless it is 2D."""
+    array = np.asarray(x, dtype=float)
+    if array.ndim != 2:
+        raise ValueError(
+            f"A matrix takes 2D data, got {array.ndim}D. For a diagonal, "
+            "use DiagonalOperator(values)."
+        )
+    return array
+
+
+def _adopt(x) -> LinearOperator:
+    """
+    Return `x`, an array or SciPy sparse matrix that fips just made, as the form that fits it.
+
+    The form holds `x` itself and makes it read-only: no copy, so only for
+    what nothing else refers to, or what is read-only already (the arrays of
+    another form). What a caller gave fips goes through
+    :func:`as_linear_operator`, which copies it. A form comes back as it is.
+    """
+    if isinstance(x, LinearOperator):
+        return x
+    if sp.issparse(x):
+        diagonal = _diagonal_of(x)
+        if diagonal is None:
+            return SparseOperator._adopt(x)
+        return DiagonalOperator._adopt(diagonal)
+    return DenseOperator._adopt(_matrix_2d(x))
 
 
 def as_linear_operator(x: LinearOperatorLike) -> LinearOperator:
@@ -848,7 +970,8 @@ def as_linear_operator(x: LinearOperatorLike) -> LinearOperator:
     Parameters
     ----------
     x : LinearOperator, SciPy sparse matrix or 2D array-like
-        What to wrap. A form comes back as it is.
+        What to wrap. A form comes back as it is; an array or a sparse matrix
+        is copied, and the form's copy is read-only.
 
     Returns
     -------
@@ -875,15 +998,13 @@ def as_linear_operator(x: LinearOperatorLike) -> LinearOperator:
     """
     if isinstance(x, LinearOperator):
         return x
-    if sp.issparse(x):
-        return _from_sparse(x)
-    array = np.asarray(x, dtype=float)
-    if array.ndim != 2:
-        raise ValueError(
-            f"A matrix takes 2D data, got {array.ndim}D. For a diagonal, "
-            "use DiagonalOperator(values)."
-        )
-    return DenseOperator(array)
+    # isinstance, not issparse: the type checker narrows only this one
+    if isinstance(x, (sp.spmatrix, sp.sparray)):
+        diagonal = _diagonal_of(x)
+        if diagonal is None:
+            return SparseOperator(x)
+        return DiagonalOperator(diagonal)
+    return DenseOperator(_matrix_2d(x))
 
 
 def dottest(

@@ -27,7 +27,7 @@ from scipy.linalg import inv, solve
 from fips._whitened import Whitened
 from fips.base import Pickleable
 from fips.covariance import Covariance
-from fips.linalg import LinearOperator, _solve_psd
+from fips.linalg import LinearOperator, _adopt, _solve_psd
 from fips.operator import Operator
 from fips.problem import Problem
 from fips.vector import Vector
@@ -229,7 +229,9 @@ class Posterior(Pickleable):
         """The full posterior covariance, formed once."""
         S_hat = self._factors.reduction(self._gamma)
         np.subtract(self._problem.prior_cov.data.dense(), S_hat, out=S_hat)
-        return Covariance(S_hat, self._problem.prior.space, name="posterior_cov")
+        return Covariance(
+            _adopt(S_hat), self._problem.prior.space, name="posterior_cov"
+        )
 
     def cov(self, W: Operator | None = None) -> Covariance:
         r"""
@@ -297,7 +299,7 @@ class Posterior(Pickleable):
         prior = np.asarray(W_form @ (self._problem.prior_cov.data @ W_form.T))
         WWf = W_form @ self._factors.W.T  # k x m
         values = prior - (WWf * self._factors.weights(self._gamma)) @ WWf.T
-        return Covariance(values, W.rows, name="posterior_cov")
+        return Covariance(_adopt(values), W.rows, name="posterior_cov")
 
     @cached_property
     def kalman_gain(self) -> Operator:
@@ -307,7 +309,7 @@ class Posterior(Pickleable):
         :math:`\hat{x} = x_0 + K (z - H x_0 - c)`.
         """
         return Operator(
-            self._factors.gain(self._gamma),
+            _adopt(self._factors.gain(self._gamma)),
             self._problem.prior.space,
             self._problem.obs.space,
             name="kalman_gain",
@@ -318,7 +320,7 @@ class Posterior(Pickleable):
         """The full averaging kernel, formed once."""
         A = self.kalman_gain.dense() @ self._problem.forward.data
         space = self._problem.prior.space
-        return Operator(np.asarray(A), space, space, name="averaging_kernel")
+        return Operator(_adopt(A), space, space, name="averaging_kernel")
 
     def averaging_kernel(self, W: Operator | None = None) -> Operator:
         r"""
@@ -363,7 +365,7 @@ class Posterior(Pickleable):
         WK = ((W_form @ f.W.T) * f.weights(self._gamma)) @ f.whitener  # k x m
         HWt = np.asarray(self._problem.forward.data @ W_form.T)  # m x k
         values = _times_pseudo_inverse(WK @ HWt, W_form)
-        return Operator(values, W.rows, W.rows, name="averaging_kernel")
+        return Operator(_adopt(values), W.rows, W.rows, name="averaging_kernel")
 
     # -- the observations ----------------------------------------------------
 
@@ -408,7 +410,9 @@ class Posterior(Pickleable):
         desroziers : The observation error variances the residuals diagnose.
         """
         G = self._HS_0H + self._problem.obs_cov.data / self._gamma
-        return Covariance(G.dense(), self._problem.obs.space, name="innovation_cov")
+        return Covariance(
+            _adopt(G.dense()), self._problem.obs.space, name="innovation_cov"
+        )
 
     def desroziers(self, by: Any = None) -> pd.DataFrame:
         r"""
@@ -521,7 +525,7 @@ class Posterior(Pickleable):
         term = _solve_psd(G, Hx)
         L = Hx @ inv(Hx.T @ term) @ term.T
         space = problem.obs.space
-        return Operator(L, space, space, name="leverage")
+        return Operator(_adopt(L), space, space, name="leverage")
 
     # -- scalars -------------------------------------------------------------
 

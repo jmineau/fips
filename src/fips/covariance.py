@@ -20,6 +20,7 @@ from fips.linalg import (
     DiagonalOperator,
     LinearOperator,
     LinearOperatorLike,
+    _adopt,
     as_linear_operator,
 )
 from fips.operator import Operator
@@ -47,7 +48,7 @@ def _side_by_side(parts: "list[Covariance]") -> tuple[LinearOperator, Space]:
         return forms[0], Space(blocks)
     if all(isinstance(form, DiagonalOperator) for form in forms):
         values = np.concatenate([form.diagonal() for form in forms])
-        return DiagonalOperator(values), Space(blocks)
+        return DiagonalOperator._adopt(values), Space(blocks)
     return BlockDiagonalOperator(forms), Space(blocks)
 
 
@@ -65,7 +66,9 @@ class Covariance(Operator):
     Parameters
     ----------
     data : array-like, SciPy sparse matrix or LinearOperator
-        The matrix, square, rows and columns in the order of `space`.
+        The matrix, square, rows and columns in the order of `space`. An array
+        or a sparse matrix is copied, and the copy is read-only, as for an
+        :class:`~fips.Operator`.
     space : Space
         The labels of both axes.
     name : str, optional
@@ -159,8 +162,8 @@ class Covariance(Operator):
         Parameters
         ----------
         values : float, 1D array-like or Vector
-            The variances. A scalar is the same for every label; a
-            :class:`~fips.Vector` brings its own space.
+            The variances (an array is copied). A scalar is the same for every
+            label; a :class:`~fips.Vector` brings its own space.
         space : Space, optional
             The labels. Required for a scalar or an array; for a Vector it
             must be left out, or have exactly the vector's labels (the
@@ -194,7 +197,7 @@ class Covariance(Operator):
         """
         if isinstance(values, Vector):
             vector = values if space is None else values.align(space)
-            return cls(DiagonalOperator(vector.values), vector.space, name=name)
+            return cls(DiagonalOperator._adopt(vector.values), vector.space, name=name)
         if space is None:
             raise ValueError(
                 "A diagonal from a scalar or an array needs `space`, its labels."
@@ -320,7 +323,7 @@ class Covariance(Operator):
             return Vector(self._data.solve(b.align(self._rows).values), self._rows)
         if isinstance(b, Operator):
             rhs = b._on(self._rows, b.cols)
-            return Operator(self._data.solve(rhs), self._rows, b.cols)
+            return Operator(_adopt(self._data.solve(rhs)), self._rows, b.cols)
         raise TypeError(
             f"Covariance.solve takes a Vector or an Operator, not {type(b).__name__}: "
             "an array has no labels to check. Use cov.data.solve(b) to solve "

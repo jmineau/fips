@@ -9,6 +9,7 @@ against the solve from the dense matrix. The operators come from
 ``Kronecker`` models, as a user builds them.
 """
 
+import copy
 import logging
 import pickle
 from dataclasses import dataclass
@@ -341,6 +342,50 @@ class TestConstructor:
         """Each invalid input raises a ValueError that says what is wrong."""
         with pytest.raises(ValueError, match=match):
             KroneckerOperator(**kwargs)
+
+    def test_copies_and_freezes_what_it_is_given(self):
+        """The factors, the standard deviations and the positions are copies, and read-only."""
+        rng = np.random.default_rng(1)
+        factors = [_spd_factor(rng, 3), _spd_factor(rng, 2)]
+        std = rng.uniform(0.5, 2, 5)
+        positions = [np.array([0, 1, 2, 2, 1]), np.array([0, 0, 1, 0, 1])]
+        op = KroneckerOperator(factors, std=std, positions=positions)
+        before = op.dense().copy()
+        for array in (*factors, std, *positions):
+            array.fill(0)
+        np.testing.assert_array_equal(op.dense(), before)
+        for array in (*op.factors, *op.positions, op.std):
+            assert not array.flags.writeable
+            with pytest.raises(ValueError, match="read-only"):
+                array[0] = 0
+        duplicate = np.array(op)
+        assert duplicate.flags.writeable
+        duplicate[0, 0] = -1.0
+        np.testing.assert_array_equal(op.dense(), before)
+
+    def test_a_scalar_std_is_a_read_only_array(self):
+        """A scalar standard deviation becomes one value per row, read-only."""
+        op = KroneckerOperator([np.eye(2), np.eye(3)], std=2.0)
+        assert op.std.shape == (6,) and not op.std.flags.writeable
+
+    def test_derived_operators_share_the_factors(self):
+        """A transpose, a scalar multiple and a selection hold the parent's factors, not copies."""
+        op = OPS["ragged"]
+        rows = np.array([5, 2, 9])
+        for derived in (op.T, op * 3.0, op._select(rows, rows)):
+            assert isinstance(derived, KroneckerOperator)
+            for mine, theirs in zip(derived.factors, op.factors, strict=True):
+                assert np.shares_memory(mine, theirs)
+                assert not mine.flags.writeable
+            assert not derived.std.flags.writeable
+
+    def test_pickle_and_copy_are_read_only_too(self):
+        """A pickle keeps the values, not the flag: the operator sets it again."""
+        op = OPS["ragged"]
+        for again in (pickle.loads(pickle.dumps(op)), copy.deepcopy(op)):
+            np.testing.assert_array_equal(again.dense(), op.dense())
+            for array in (*again.factors, *again.positions, again.std):
+                assert not array.flags.writeable
 
 
 # ---------------------------------------------------------------------------
@@ -1143,6 +1188,58 @@ def test_solve_never_forms_the_prior_error(no_dense):
     post.cov(Operator.from_frame(pd.DataFrame(1.0, index=rows, columns=state)))
     pickle.loads(pickle.dumps(post.with_gamma(2.0)))
     assert isinstance(problem.prior_cov.data, KroneckerOperator)
+
+
+def test_a_solve_does_not_copy_the_forms_it_makes(constructors):
+    """
+    From a model's build to every posterior output, fips builds its forms without copying them again.
+
+    The prior error is a Kronecker flux block and a diagonal bias block. The
+    steps that build forms from arrays they computed (the model's build, the
+    products of the solve, the aggregation, the restriction, the posterior's
+    matrices) hold those arrays; the constructors that copy are for what a
+    caller hands over.
+    """
+    S_0, prior, inputs = _flux_and_bias()
+    flux, bias = S_0.space.select("flux"), S_0.space.select("bias")
+    H, obs_cov = inputs["forward"], inputs["obs_cov"]
+    constructors.clear()  # building the inputs copied them, once each
+
+    # the models build forms of their own, and a labeled matrix is placed on a space
+    cells = Space({"flux": flux})
+    KERNELS_3.with_std(0.5).build(cells)
+    Exponential("lat", 0.7).with_std(0.5).build(cells)
+    Exponential("lat", 0.7, within=["time"]).with_std(0.5).build(cells)
+    fips.Independent().with_std(0.5).build(cells)
+    obs = H.rows.select("conc")
+    part = pd.DataFrame(1.0, index=obs[:3], columns=flux[:4])
+    Operator.from_blocks({("conc", "flux"): part}, rows=H.rows, cols=prior.space)
+    everything = pd.MultiIndex.from_tuples([("all", "x")], names=["block", "total"])
+    Operator.from_frame(pd.DataFrame(1.0, index=everything, columns=prior.space.index))
+
+    problem = Problem(prior=prior, prior_cov=S_0, **inputs)
+    post = fips.solve(problem, gamma=0.7)
+    for name in (
+        "estimate",
+        "variances",
+        "modeled_obs",
+        "innovation_cov",
+        "kalman_gain",
+    ):
+        getattr(post, name)
+    post.cov()
+    post.averaging_kernel()
+    post.leverage(post.estimate)
+    total = fips.aggregate.sum(prior.space, by="time", blocks="flux")
+    post.cov(total)
+    post.averaging_kernel(total)
+    problem.aggregate(fips.aggregate.sum(H.rows, by="obs"))
+    problem.restrict(Space({"flux": flux[:5], "bias": bias}))
+
+    S_0.solve(H.T)
+    S_0.sqrt()
+    H @ S_0 @ H.T + obs_cov
+    assert constructors == []
 
 
 def test_posterior_on_factors_pickles():

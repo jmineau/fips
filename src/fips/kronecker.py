@@ -13,14 +13,20 @@ import logging
 import math
 from collections.abc import Sequence
 from functools import cached_property
-from typing import Any
+from typing import Any, Self
 
 import numpy as np
 import numpy.typing as npt
 from numpy.linalg import LinAlgError
 from scipy import sparse
 
-from fips.linalg import DenseOperator, LinearOperator, _as_array, _solve_psd
+from fips.linalg import (
+    DenseOperator,
+    LinearOperator,
+    _as_array,
+    _read_only,
+    _solve_psd,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -54,6 +60,10 @@ class KroneckerOperator(LinearOperator):
     where ``N_k`` is the size of factor k and ``N`` their product, and holds
     work arrays of about ``N`` entries per column. That is less than the dense
     matrix as long as the rows fill most of the product.
+
+    The operator copies the factors, the standard deviations and the positions
+    it is given, and the copies are read-only: changing the arrays afterwards
+    leaves the operator as it was.
 
     A :class:`~fips.Kronecker` model builds one from the labels of a
     space, and :class:`~fips.Covariance` puts it behind them.
@@ -100,11 +110,11 @@ class KroneckerOperator(LinearOperator):
     """
 
     factors: tuple[np.ndarray, ...]
-    """The marginal correlation matrices, one per marginal."""
+    """The marginal correlation matrices, one per marginal, read-only."""
     positions: tuple[np.ndarray, ...]
-    """For each factor, the position of each row in it (``pos_k``)."""
+    """For each factor, the position of each row in it (``pos_k``), read-only."""
     std: np.ndarray
-    """The standard deviation of each row."""
+    """The standard deviation of each row, read-only."""
 
     def __init__(
         self,
@@ -112,6 +122,31 @@ class KroneckerOperator(LinearOperator):
         std: npt.ArrayLike = 1.0,
         positions: Sequence[npt.ArrayLike] | None = None,
     ):
+        self._hold(
+            [np.array(C, dtype=float) for C in factors],
+            np.array(std, dtype=float),
+            None if positions is None else [np.array(p) for p in positions],
+        )
+
+    @classmethod
+    def _adopt(
+        cls,
+        factors: Sequence[np.ndarray],
+        std: "float | np.ndarray" = 1.0,
+        positions: Sequence[np.ndarray] | None = None,
+    ) -> Self:
+        """Return the operator that holds these arrays themselves, which fips made or are read-only, without copying them."""
+        form = cls.__new__(cls)
+        form._hold(factors, std, positions)
+        return form
+
+    def _hold(
+        self,
+        factors: Sequence[np.ndarray],
+        std: "float | np.ndarray",
+        positions: Sequence[np.ndarray] | None,
+    ) -> None:
+        """Check the factors, the standard deviations and the positions, and hold them, read-only."""
         mats = tuple(np.asarray(C, dtype=float) for C in factors)
         if not mats:
             raise ValueError("A KroneckerOperator needs at least one factor.")
@@ -159,11 +194,17 @@ class KroneckerOperator(LinearOperator):
         self.factors = mats
         self.positions = tuple(p.astype(np.intp, copy=False) for p in pos)
         self.std = std
+        self._freeze()
         self._sizes = sizes
         # The rows' places in the product grid, or None when they are the
         # whole grid in order (no scatter or gather needed)
         self._rows = None if np.array_equal(rows, np.arange(size)) else rows
         super().__init__((n, n))
+
+    def _freeze(self) -> None:
+        """Make the factors, the positions and the standard deviations read-only."""
+        for array in (*self.factors, *self.positions, self.std):
+            _read_only(array)
 
     @property
     def _size(self) -> int:
@@ -219,7 +260,7 @@ class KroneckerOperator(LinearOperator):
 
     def _transpose(self):
         """Return the transpose: the same rows, each factor transposed."""
-        return KroneckerOperator(
+        return KroneckerOperator._adopt(
             [C.T for C in self.factors], self.std, positions=self.positions
         )
 
@@ -227,16 +268,16 @@ class KroneckerOperator(LinearOperator):
         """Return the operator times a scalar; a positive scalar keeps the factors."""
         scale = float(func(1.0))
         if scale > 0:
-            return KroneckerOperator(
+            return KroneckerOperator._adopt(
                 self.factors, self.std * np.sqrt(scale), positions=self.positions
             )
-        return DenseOperator(func(self.dense()))
+        return DenseOperator._adopt(func(self.dense()))
 
     def _select(self, rows, cols):
         """Return the entries at `rows` and `cols`; the same rows and columns (none of them -1) keep the factors."""
         rows = np.asarray(rows, dtype=np.intp)
         if np.array_equal(rows, cols) and (rows >= 0).all():
-            return KroneckerOperator(
+            return KroneckerOperator._adopt(
                 self.factors,
                 self.std[rows],
                 positions=[p[rows] for p in self.positions],
@@ -308,7 +349,7 @@ class KroneckerOperator(LinearOperator):
             )
         total = 2.0 * float(np.log(self.std).sum())
         for C, n_k in zip(self.factors, self._sizes, strict=True):
-            total += (self._size // n_k) * DenseOperator(C).logdet()
+            total += (self._size // n_k) * DenseOperator._adopt(C).logdet()
         return total
 
     @cached_property

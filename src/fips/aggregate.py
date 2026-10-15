@@ -46,6 +46,7 @@ import numpy as np
 import pandas as pd
 import scipy.sparse as sp
 
+from fips.linalg import _adopt
 from fips.operator import Operator
 from fips.space import Space, _listed, _sorted
 from fips.vector import Vector
@@ -227,7 +228,7 @@ def _aggregation(
         (np.concatenate(weights), (np.concatenate(rows), np.concatenate(cols))),
         shape=(start, len(space)),
     )
-    return Operator(matrix, Space(labels), space)
+    return Operator(_adopt(matrix), Space(labels), space)
 
 
 def sum(space: Space, by: Any, blocks: "str | Sequence[str] | None" = None) -> Operator:
@@ -471,4 +472,4 @@ def offset_block(
         (np.ones(len(rows)), (rows, codes)), shape=(len(obs_space), len(groups))
     )
     prior = Vector(np.zeros(len(groups)), offsets)
-    return prior, Operator(matrix, obs_space, offsets)
+    return prior, Operator(_adopt(matrix), obs_space, offsets)

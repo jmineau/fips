@@ -17,7 +17,7 @@ import scipy.sparse as sp
 from scipy.special import gammaln, kve
 
 from fips.correlation import CorrelationModel, _names
-from fips.linalg import _DENSE_FILL, DenseOperator, LinearOperator, as_linear_operator
+from fips.linalg import _DENSE_FILL, DenseOperator, LinearOperator, _adopt
 from fips.metrics import chordal_matrix, haversine_matrix, time_diff_matrix
 
 _METRICS = ("euclidean", "haversine", "chordal")
@@ -77,12 +77,12 @@ class _Kernel(CorrelationModel):
 
     def correlation(self, coords: pd.DataFrame) -> np.ndarray:
         """Return the correlation between the rows of `coords`, zero between groups (see :meth:`CorrelationModel.correlation`)."""
-        return self._form(coords).dense()
+        return np.array(self._form(coords))
 
     def _form(self, coords: pd.DataFrame) -> LinearOperator:
         """Return the correlation; with ``within``, sparse, one block per group."""
         if not self.within:
-            return DenseOperator(self._unmasked(coords))
+            return DenseOperator._adopt(self._unmasked(coords))
         keys = pd.DataFrame({name: _key(coords, name) for name in self.within})
         groups = keys.groupby(list(self.within), sort=False, dropna=False).ngroup()
         order = np.argsort(groups.to_numpy(), kind="stable")
@@ -99,8 +99,8 @@ class _Kernel(CorrelationModel):
             shape=(n, n),
         )
         if matrix.nnz > _DENSE_FILL * n * n:
-            return DenseOperator(matrix.toarray())
-        return as_linear_operator(matrix)
+            return DenseOperator._adopt(matrix.toarray())
+        return _adopt(matrix)
 
 
 @dataclass(frozen=True, init=False)
