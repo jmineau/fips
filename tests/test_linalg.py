@@ -22,6 +22,7 @@ from fips.linalg import (
     as_linear_operator,
     dottest,
 )
+from fips.linalg.kronecker import _KroneckerRoot
 
 RTOL = 1e-12
 
@@ -524,7 +525,7 @@ class TestBlockDiagonal:
         assert B.logdet() == pytest.approx(np.linalg.slogdet(A)[1], rel=1e-12)
         L = B.sqrt()
         assert isinstance(L, BlockDiagonalOperator)
-        kinds = [DenseOperator, DenseOperator, DiagonalOperator]
+        kinds = [_KroneckerRoot, DenseOperator, DiagonalOperator]  # the factors' roots
         assert [type(b) for b in L.blocks] == kinds
         np.testing.assert_allclose(L.dense() @ L.dense().T, A, rtol=1e-12, atol=1e-14)
 
