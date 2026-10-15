@@ -13,9 +13,11 @@ code produces.
    flux_regional
 
 :doc:`gravity_2d`
-   Density anomalies below the surface from the vertical gravity measured above
-   it: a small, self-contained inverse problem.
+   The density of buried prisms from the gravity measured above them: a small,
+   self-contained problem with a correlated prior kept as Kronecker factors, and
+   a sweep over the regularization factor.
 
 :doc:`flux_regional`
-   Regional methane fluxes on a grid from concentration enhancements at
-   observation sites, with a spatially correlated prior.
+   A year of monthly methane fluxes on a grid from daily concentrations at three
+   sites: a sparse forward operator, a background as the offset, maps from
+   ``to_xarray``, and the posterior of monthly totals.
