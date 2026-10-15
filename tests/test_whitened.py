@@ -30,8 +30,12 @@ from fips import (
     Space,
     Vector,
 )
-from fips.kronecker import KroneckerOperator
-from fips.linalg import DiagonalOperator, SparseOperator, as_linear_operator
+from fips.linalg import (
+    DiagonalOperator,
+    KroneckerOperator,
+    SparseOperator,
+    as_linear_operator,
+)
 
 RTOL = 1e-10
 GAMMAS = [0.1, 0.5, 1.0, 3.0, 20.0]
@@ -587,7 +591,7 @@ def test_negative_eigenvalues_are_clipped_and_logged(caplog):
     """A prior error that is not positive semidefinite gives eigenvalues below zero: clipped, logged."""
     z, x_0, H, _, S_z, c = _arrays("dense", 0, n_time=1, n_cell=3, m=3)
     S_0 = np.diag([1.0, 1.0, -0.5])
-    with caplog.at_level(logging.WARNING, logger="fips._whitened"):
+    with caplog.at_level(logging.WARNING, logger="fips.posterior"):
         post = fips.solve(_problem(z, x_0, np.eye(3), S_0, S_z, c))
     assert any("negative eigenvalue" in r.message for r in caplog.records)
     assert (post._factors.eigenvalues >= 0).all()
@@ -600,7 +604,7 @@ def test_roundoff_is_clipped_quietly(caplog):
     T = np.exp(-((t[:, None] - t[None, :]) ** 2) / 200.0)  # near rank-deficient
     S_0 = np.kron(T, np.eye(3))
     H = rng.uniform(0, 1, (40, 30))
-    with caplog.at_level(logging.WARNING, logger="fips._whitened"):
+    with caplog.at_level(logging.WARNING, logger="fips.posterior"):
         post = fips.solve(
             _problem(
                 rng.normal(size=40), np.zeros(30), H, S_0, np.eye(40), np.zeros(40)
@@ -612,13 +616,13 @@ def test_roundoff_is_clipped_quietly(caplog):
 
 def test_more_observations_than_state_logs(caplog, monkeypatch):
     """A large solve with ``m > n`` says that the state-space form would be cheaper."""
-    monkeypatch.setattr("fips._whitened._LARGE_M", 5)
+    monkeypatch.setattr("fips.posterior._LARGE_M", 5)
     args = _arrays("dense", 0, n_time=1, n_cell=3, m=8)
-    with caplog.at_level(logging.WARNING, logger="fips._whitened"):
+    with caplog.at_level(logging.WARNING, logger="fips.posterior"):
         fips.solve(_problem(*args))
     assert any("state-space (information) form" in r.message for r in caplog.records)
     caplog.clear()
     args = _arrays("dense", 0, n_time=2, n_cell=4, m=8)
-    with caplog.at_level(logging.WARNING, logger="fips._whitened"):
+    with caplog.at_level(logging.WARNING, logger="fips.posterior"):
         fips.solve(_problem(*args))
     assert not caplog.records

@@ -6,7 +6,7 @@ import pytest
 
 import fips
 from fips import Covariance, Operator, Posterior, Problem, Space, Vector
-from fips.solve import AnalyticOptions
+from fips.methods.analytic import AnalyticOptions
 
 
 def _problem(seed: int = 0, n: int = 3, m: int = 4, obs_var: float = 0.01) -> Problem:

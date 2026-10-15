@@ -23,7 +23,7 @@ from fips import (
     Space,
     Vector,
 )
-from fips.kronecker import KroneckerOperator
+from fips.linalg import KroneckerOperator
 
 TIMES = pd.DatetimeIndex(["2020-01-01", "2020-02-01"])
 LATS = [40.5, 40.6]

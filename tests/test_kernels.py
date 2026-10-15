@@ -1,5 +1,5 @@
 """
-Tests for the correlation models (``fips.correlation`` and ``fips.kernels``).
+Tests for the correlation models (``fips.covariance.models`` and ``fips.covariance.kernels``).
 
 Each kernel against its formula written out, on numeric, datetime and
 geographic levels; ``within`` groups (the date cut at midnight, the
@@ -23,10 +23,14 @@ from fips import (
     Matern,
     Space,
 )
-from fips.correlation import CorrelationModel
-from fips.kronecker import KroneckerOperator
-from fips.linalg import DenseOperator, DiagonalOperator, SparseOperator
-from fips.metrics import chordal_matrix, haversine_matrix
+from fips.covariance import CorrelationModel
+from fips.covariance.distances import chordal_matrix, haversine_matrix
+from fips.linalg import (
+    DenseOperator,
+    DiagonalOperator,
+    KroneckerOperator,
+    SparseOperator,
+)
 
 X = pd.DataFrame({"x": [0.0, 0.5, 1.5, 4.0, 9.0]})
 D = np.abs(X["x"].to_numpy()[:, None] - X["x"].to_numpy()[None, :])

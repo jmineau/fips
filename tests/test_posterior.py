@@ -367,10 +367,8 @@ class TestLeverage:
 
 
 class TestPickle:
-    def test_round_trip(self, post, tmp_path):
-        path = tmp_path / "post.pkl"
-        post.to_file(path)
-        loaded = Posterior.from_file(path)
+    def test_round_trip(self, post):
+        loaded = pickle.loads(pickle.dumps(post))
         assert loaded.options == post.options
         assert loaded.problem.prior.space == post.problem.prior.space
         for _, read, _, col, _, _ in OUTPUTS:

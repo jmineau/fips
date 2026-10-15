@@ -19,8 +19,7 @@ from fips import (
     Space,
     Vector,
 )
-from fips.kronecker import KroneckerOperator
-from fips.linalg import DiagonalOperator, SparseOperator
+from fips.linalg import DiagonalOperator, KroneckerOperator, SparseOperator
 
 CELLS = pd.Index([1, 2, 3], name="cell")
 SITES = pd.Index(["A", "B"], name="site")
@@ -447,13 +446,11 @@ class TestStiltShapedForward:
 
 
 class TestPickle:
-    def test_round_trip_keeps_the_forms_and_spaces(self, tmp_path):
+    def test_round_trip_keeps_the_forms_and_spaces(self):
         problem = Problem(
             **_inputs(forward=Operator(sp.csr_array(H_VALUES), OBS, STATE), offset=1.0)
         )
-        path = tmp_path / "problem.pkl"
-        problem.to_file(path)
-        loaded = Problem.from_file(path)
+        loaded = pickle.loads(pickle.dumps(problem))
         assert loaded.prior.space == STATE and loaded.obs.space == OBS
         assert isinstance(loaded.forward.data, SparseOperator)
         np.testing.assert_array_equal(loaded.forward.dense(), H_VALUES)

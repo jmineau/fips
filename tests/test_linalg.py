@@ -12,11 +12,11 @@ from scipy.sparse.linalg import LinearOperator as SciPyLinearOperator
 
 import fips
 from fips import Covariance, Operator, Problem, Space, Vector
-from fips.kronecker import KroneckerOperator
 from fips.linalg import (
     BlockDiagonalOperator,
     DenseOperator,
     DiagonalOperator,
+    KroneckerOperator,
     LinearOperator,
     SparseOperator,
     as_linear_operator,

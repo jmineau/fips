@@ -1,10 +1,10 @@
-"""Tests for fips metrics module."""
+"""Tests for fips.covariance.distances: the distances between coordinates."""
 
 import numpy as np
 import pandas as pd
 import pytest
 
-from fips.metrics import chordal_matrix, haversine_matrix, time_diff_matrix
+from fips.covariance.distances import chordal_matrix, haversine_matrix, time_diff_matrix
 
 
 def test_haversine_matrix_shape():

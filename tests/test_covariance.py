@@ -27,11 +27,11 @@ from fips import (
     Space,
     Vector,
 )
-from fips.kronecker import KroneckerOperator
 from fips.linalg import (
     BlockDiagonalOperator,
     DenseOperator,
     DiagonalOperator,
+    KroneckerOperator,
     SparseOperator,
 )
 
