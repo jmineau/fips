@@ -165,16 +165,18 @@ class Vector:
 
     @classmethod
     def from_blocks(
-        cls, blocks: Mapping[str, pd.Series], name: str | None = None
+        cls, blocks: "Mapping[str, pd.Series | Vector]", name: str | None = None
     ) -> "Vector":
         """
-        Build a vector from one Series for each block.
+        Build a vector from one Series (or vector of one block) for each block.
 
         Parameters
         ----------
-        blocks : mapping of str to pd.Series
-            Each block's name mapped to its values, labeled by the block's own
-            index (no ``block`` level), in the order the blocks should have.
+        blocks : mapping of str to pd.Series or Vector
+            Each block's name mapped to its values, in the order the blocks
+            should have: a Series labeled by the block's own index (no
+            ``block`` level), or a :class:`Vector` of one block (its labels
+            and values; the key names the block).
         name : str, optional
             The vector's name.
 
@@ -183,6 +185,12 @@ class Vector:
         Vector
             The values of every block, on the :class:`Space` of the blocks'
             indexes.
+
+        Raises
+        ------
+        ValueError
+            If a vector given for a block has more than one block, or the
+            labels cannot make a :class:`Space`.
 
         Examples
         --------
@@ -194,11 +202,20 @@ class Vector:
         >>> f.space
         Space(flux: 2 x ['cell'])
         """
-        space = Space({key: series.index for key, series in blocks.items()})
-        values = np.concatenate(
-            [series.to_numpy(dtype=float) for series in blocks.values()]
-        )
-        return cls(values, space, name=name)
+        labels, values = {}, []
+        for key, part in blocks.items():
+            if isinstance(part, Vector):
+                if len(part.space.names) != 1:
+                    raise ValueError(
+                        f"The vector given for block {key!r} has the blocks "
+                        f"{list(part.space.names)}; give one block."
+                    )
+                labels[key] = part.space.select(part.space.names[0])
+                values.append(part.values)
+            else:
+                labels[key] = part.index
+                values.append(part.to_numpy(dtype=float))
+        return cls(np.concatenate(values), Space(labels), name=name)
 
     @property
     def values(self) -> np.ndarray:
