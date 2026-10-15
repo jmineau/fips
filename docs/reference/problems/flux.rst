@@ -21,7 +21,7 @@ Attributes
 
    FluxProblem.prior
    FluxProblem.obs
-   FluxProblem.estimator
+   FluxProblem.result
 
 Methods
 ~~~~~~~
@@ -29,7 +29,6 @@ Methods
    :toctree: ../api/
 
    FluxProblem.solve
-   FluxProblem.get_block
 
 
 FluxInversionPipeline
@@ -50,7 +49,7 @@ Attributes
    :toctree: ../api/
 
    FluxInversionPipeline.problem
-   FluxInversionPipeline.estimator
+   FluxInversionPipeline.method
 
 Methods
 ~~~~~~~

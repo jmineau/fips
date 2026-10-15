@@ -10,11 +10,8 @@ This reference provides detailed documentation for all public classes, functions
    operator
    covariance
    linalg
-   blocks
-   multiblocks
-   inverse
+   problem
    posterior
-   estimators
    pipeline
    base
    utilities/index

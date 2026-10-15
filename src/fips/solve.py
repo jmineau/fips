@@ -70,6 +70,7 @@ def _register(name: str, options: type) -> Callable:
     """Register the decorated function as the method `name`, taking `options`."""
 
     def decorator(function: Callable[[Problem, Any], Posterior]) -> Callable:
+        """File `function` under `name` and return it unchanged."""
         _METHODS[name] = _Method(options, function)
         return function
 

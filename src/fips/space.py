@@ -22,6 +22,7 @@ def _rounded(index: pd.Index, decimals: int) -> pd.Index:
     """Return `index` with each float level rounded to `decimals` places; other levels as they are."""
 
     def level(values: pd.Index) -> pd.Index:
+        """Return one level, rounded if it holds floats."""
         if pd.api.types.is_float_dtype(values):
             return pd.Index(np.round(values.to_numpy(), decimals), name=values.name)
         return values

@@ -21,7 +21,7 @@ PyPI name and import name are both `fips`. Source lives in `src/fips/`.
 
 ## What this package is *not*
 
-- Not a sampler (no MCMC). Estimators are analytical / regularized.
+- Not a sampler (no MCMC). The solve methods are analytical / regularized.
 - Not nonlinear-problem aware. The framework assumes linearity around the
   prior; nonlinear iterations are the caller's responsibility.
 - Not opinionated about file formats. Inputs are pandas/xarray; serialization
@@ -31,16 +31,16 @@ PyPI name and import name are both `fips`. Source lives in `src/fips/`.
 
 ```
 src/fips/
-  __init__.py        public exports (Space, Field, Operator, Covariance, the
-                     covariance models, Block, Vector, Estimator,
-                     InverseProblem, Posterior, solve, InversionPipeline,
-                     convolve)
+  __init__.py        public exports (Space, Vector, Operator, Covariance, the
+                     covariance models, Problem, solve, available_methods,
+                     Posterior, InversionPipeline)
   space.py           Space — ordered named blocks, the padded MultiIndex,
                      select, from_index, exact align, round_labels
-  field.py           Field — values on a Space (read-only float array)
+  vector.py          Vector — values on a Space (read-only float array);
+                     from_series, from_blocks, v[block], to_series, to_xarray
   operator.py        Operator — a matrix (a linalg form) with a Space on each
                      axis: from_frame, from_blocks, op[r, c], @ / + by exact
-                     join, align, to_frame; convolve(state, H)
+                     join, align, to_frame
   covariance.py      Covariance — Operator on one space: diagonal, block_diag
                      (in order, or by block name with models), variances,
                      solve, logdet, quadratic_form, sqrt
@@ -55,24 +55,21 @@ src/fips/
                      Sparse-, Diagonal-, BlockDiagonalOperator;
                      as_linear_operator, dottest, _solve_psd
   kronecker.py       KroneckerOperator — a covariance kept as its factors
-  base.py            Pickleable, Structure/Structure1D, the block mixins —
-                     what the deprecated Block and Vector build on
-  vector.py          Block, Vector — 1D labeled containers (state, obs);
-                     deprecated for Field, and built through Space and Field
-  estimators.py      Estimator ABC, ESTIMATOR_REGISTRY, available_estimators();
-                     BayesianSolver, which factors through _whitened.py
-  _whitened.py       Whitened — the factorization BayesianSolver keeps: the
-                     estimate, variances, gain, DOFS, chi-squared for any gamma
-  problem.py         InverseProblem — top-level orchestrator that combines
-                     obs, prior, H, S_0, S_z; solve(problem) fits an
-                     Estimator and returns a Posterior
-  posterior.py       Posterior — the estimator's outputs, labeled with the
-                     problem's state and obs spaces, each built once
+  base.py            Pickleable — to_file / from_file (Problem, Posterior)
+  problem.py         Problem — prior, prior_cov, obs, obs_cov, forward,
+                     offset, checked once by exact join; models built there
+  solve.py           solve(problem, method, **options), the method registry
+                     (_register, available_methods) and each method's options
+                     dataclass (AnalyticOptions); the analytic method
+  _whitened.py       Whitened — the factorization the analytic method keeps:
+                     the estimate, variances, gain, DOFS, chi-squared for any
+                     gamma
+  posterior.py       Posterior — the problem, the options and the factors;
+                     every output derived from them, labeled, each built once
   pipeline.py        InversionPipeline ABC — workflow template for repeated
                      inversions (load data, build covariances, solve)
   aggregators.py     Time/space binning (e.g. integrate_over_time_bins)
   filters.py         Selection helpers (e.g. enough_obs_per_interval)
-  indexes.py         overlap check and round_index
   metrics.py         haversine_matrix, chordal_matrix, time_diff_matrix
   visualization.py   Generic plotting helpers
   py.typed           ships type hints
@@ -87,7 +84,8 @@ archive/             local-only, not tracked
 
 Specialization for atmospheric flux inversion. Public exports:
 
-- `FluxProblem` — `InverseProblem` subclass with flux-specific defaults
+- `FluxProblem` — `Problem` subclass with block accessors and a `solve()`
+  that keeps the posterior as `result`
 - `FluxInversionPipeline` — `InversionPipeline` subclass
 - `FluxPlotter` — visualization
 
@@ -102,23 +100,21 @@ From `fips.__init__`:
 
 | Symbol | What it is |
 |---|---|
-| `Space`, `Field` | the labels of a vector (named blocks), and values on them |
-| `Block`, `Vector` | 1D labeled data (state vector, observations); deprecated for `Field` |
+| `Space`, `Vector` | the labels of a vector (named blocks), and values on them |
 | `Operator` | a matrix with a `Space` on each axis, in its cheapest form (H, an aggregation) |
 | `Covariance` | an `Operator` from a space to itself (`S_0`, `S_z`), with solve/logdet/sqrt |
 | `Exponential`, `Gaussian`, `Matern`, `Constant`, `Independent`, `Kronecker` | correlation models; `model.with_std(std)` is a covariance |
-| `convolve` | apply H to a state vector given as a Series, by label |
-| `Estimator`, `available_estimators` | swappable solvers via registry |
-| `InverseProblem` | orchestrator; `solve()` keeps a `Posterior` as `result` and returns the problem |
-| `solve`, `Posterior` | `fips.solve(problem)` returns the labeled posterior and diagnostics |
+| `Problem` | the inputs of a solve, their labels checked once by exact join |
+| `solve`, `available_methods` | `fips.solve(problem, method="analytic", **options)` returns a `Posterior` |
+| `Posterior` | the estimate and every diagnostic, labeled, from the kept factorization |
 | `InversionPipeline` | repeatable workflow template |
 
 ## Mental model
 
-1. **Wrap your inputs in Blocks.** Observations and state become `Block`s
-   (or lists of `Block`s for multi-source obs / multi-region state). Each
-   Block carries a `pandas.MultiIndex` describing dims (time, lat, lon,
-   site, etc.).
+1. **Wrap your inputs in Vectors.** Observations and state become `Vector`s
+   (`Vector.from_series(series, block="flux")` for one block,
+   `Vector.from_blocks({...})` for several). Each block carries its own
+   pandas index describing dims (time, lat, lon, site, etc.).
 2. **Express H as an `Operator`.** `Operator.from_blocks({(obs_block,
    state_block): frame})` stitches a block-structured Jacobian together;
    `Operator(matrix, rows, cols)` labels a matrix you have (a SciPy sparse one
@@ -129,35 +125,36 @@ From `fips.__init__`:
    stays as its factors), `Independent().with_std(s) + Exponential("obs_time",
    "2.8h", within=["site", "obs_time.date"]).with_std(t)`, parts by block in
    `Covariance.block_diag(flux=..., bias=...)`; `.build(space)` puts a model on
-   the labels (a `Field` std gives the `Covariance` at once). Or
+   the labels (a `Vector` std gives the `Covariance` at once). Or
    `Covariance.diagonal(variances, space)` and `Covariance.from_frame`. `H`,
    `S_0` and `S_z` may each be dense or sparse, and the solve keeps each in its
    form (see "Sparse paths").
-4. **Hand everything to `InverseProblem`.** It validates index alignment;
-   `fips.solve(problem)` picks an estimator from `ESTIMATOR_REGISTRY` and
-   returns a `Posterior` (estimate, covariance, diagnostics such as
-   `reduced_chi2`), and `problem.solve()` keeps that posterior as
-   `problem.result`, whose outputs `problem.posterior` and friends forward to.
+4. **Hand everything to `Problem`.** `Problem(prior, prior_cov, obs,
+   obs_cov, forward, offset=None)` checks the labels once (exact join) and
+   builds a covariance model on its space. `fips.solve(problem)` returns a
+   `Posterior` (estimate, `cov(W)`, `variances`, diagnostics such as `dofs`
+   and `reduced_chi2`); the problem has no `solve` method and is not changed.
 5. **For repeated inversions, subclass `InversionPipeline`** so loading,
    covariance build, and solve are templated.
 
 ## Invariants to respect
 
-- **Names.** `Structure1D`, `Field` and `Operator` convert a name that is not
+- **Names.** `Vector` and `Operator` convert a name that is not
   `None` to a string, so a name is one spelling everywhere; an unnamed object
   keeps `None`. A sum of two operators keeps the name when both have the same
   one and is `None` otherwise (pandas' rule for a sum of two Series).
 - **MultiIndex preservation.** The whole design hinges on labels surviving.
   Do not silently `.values` or `.to_numpy()` away from Series/DataFrame.
 - **Labels are kept as given.** Nothing converts labels to numbers or rounds
-  them unless the caller asks (`round_index=`, `Space.round_labels`); duplicate,
+  them unless the caller asks (`Space.round_labels`); duplicate,
   missing (NaN) and unnamed labels of a block raise.
 - **NaN-only levels.** Assembling blocks whose indexes have different levels
   fills the missing levels with NaN, and `Space` is the one place that does it
   in both directions: `Space.index` pads (keeping each level's dtype, through
-  the MultiIndex codes) and `Space.from_index` / `Space.select` strip. Vectors,
-  fields and both axes of every operator go through it; `op[r, c]` gives a
-  block on single-block spaces, labeled as the block was given.
+  the MultiIndex codes) and `Space.from_index` / `Space.select` strip. Vectors
+  and both axes of every operator go through it; `v[block]` and `op[r, c]`
+  give a block on single-block spaces, labeled as the block was given. A block
+  labeled by a MultiIndex of one level is held as that level's plain Index.
 - **An operator's labels are beside its matrix.** `Operator.data` is a form of
   `linalg.py` with rows and columns in the order of `rows` and `cols`. Every
   product, sum and placement puts the other side in this side's order with
@@ -167,15 +164,18 @@ From `fips.__init__`:
   one space. Reorder through `form._select(rows, cols)`, which keeps a
   Kronecker or block-diagonal form when the rows and columns are the same
   positions.
-- **Block alignment.** `InverseProblem.__init__` puts the obs and prior in
-  their `Space` order (each block's rows together) and places `H`, `S_0` and
-  `S_z` on those spaces with zero fill (`problem._place`): labels missing within
-  a known block are zeros with a "Partial overlap" warning (a STILT Jacobian
-  covers only the cells a footprint touched, so this must stay). It raises on a
-  matrix block name that matches no block of the space and on duplicate obs or
-  state labels, before and after `round_index`. `Posterior` labels the
-  estimator's arrays with `Space.from_index` of the problem's indexes, and
-  raises if a block's rows are apart.
+- **The exact join of a problem.** `Problem.__init__` is the one place a
+  solve's inputs are checked: `forward`'s rows and columns, each covariance and
+  the offset must have exactly the labels of the observations or the prior (in
+  any order), or it raises naming the blocks and labels on one side only
+  (`Space._align`, which `Space.align` calls with its own wording). Nothing is
+  zero-filled and nothing is rounded: a Jacobian that covers only the cells a
+  footprint touched is put on the whole state by the caller (the recipe is in
+  `Problem`'s notes). Each input is then held in the order of `prior.space` and
+  `obs.space`, through `form._select` (which keeps a Kronecker form), and a
+  covariance model is built there (`model.build(space, name=...)`). The solve
+  and the `Posterior` compute by position on those orders and label every
+  output with those two spaces.
 - **A sparse matrix is a SciPy matrix, never a pandas-sparse frame.** The
   one place a pandas-sparse frame enters is `Operator.from_frame` (and
   `ObsAggregator.apply` with a frame), through `operator._frame_matrix`: the
@@ -191,10 +191,8 @@ From `fips.__init__`:
   with `dense()` or `to_frame()`. Products and sums keep the cheapest exact form
   (the rule is in `linalg.py`'s docstring). The tests are the dense/sparse
   combinations in `tests/test_linalg.py` and the oracle's sparse closed form.
-  The estimator keeps its matrices as forms under private names (`_H_op`,
-  `_S_0_op`, `_S_z_op`, `_S_z_orig_op`) and computes only with those; its
-  public `H`, `S_0` and `S_z` give an array (read-only) or a CSR matrix, so
-  never compute with them inside the estimator.
+  The analytic method and the `Posterior` compute with `problem.forward.data`,
+  `prior_cov.data` and `obs_cov.data`, never with their dense matrices.
 - **Covariance models.** A model is a frozen dataclass whose parameters are
   checked in `__init__`; it reads its levels from the labels of the space it
   is built on (`models._coords`, which raises when a block lacks one) and gives
@@ -209,8 +207,9 @@ From `fips.__init__`:
   the order of the products (`(std_i * C_ij) * std_j`) and the distance
   functions of `metrics.py` when changing a kernel.
 - **`Pickleable` contract.** Anything user-facing should round-trip through
-  pickle. New stateful classes should inherit from `Pickleable` (in `base.py`)
-  or document why not.
+  pickle. `Problem` and `Posterior` inherit `Pickleable` (in `base.py`) for
+  `to_file` / `from_file`; a `Posterior` pickles the problem, the options and
+  the factors (a dict of arrays), never an output, which is rebuilt when read.
 - **Logging, not printing.** Every module uses
   `logger = logging.getLogger(__name__)`; `__init__.py` attaches a
   `NullHandler`. Don't `print()` in library code.
@@ -227,7 +226,7 @@ Driven by `just` + `uv`; CI runs the same recipes.
 | `just quality-check` | `lint` + `type-check` + `docstr` + `test`: what CI checks |
 | `just test` | pytest in parallel (up to 8 workers), skipping `network`/`slow`; extra args go to pytest (`-n 0` for serial) |
 | `just lint` / `just format` | ruff check and format check / fix and format |
-| `just type-check` | pyrefly, against `pyrefly-baseline.json` |
+| `just type-check` | pyrefly on `src/` |
 | `just build-docs` | Sphinx HTML into `docs/_build`, running every example; warnings are errors |
 | `just docs-serve` | live docs preview on port 8000 |
 | `just changelog` | draft CHANGELOG entries from the commits since the last tag |
@@ -254,15 +253,13 @@ The tooling comes from
   ignores `E501, D200, D212, D400`; tests and the example notebooks may use
   numpy's legacy seeded RNG (`NPY002`). The whole repo is linted, tests included
   (see `pyproject.toml`).
-- **Types**: pyrefly on `src/`, checked against `pyrefly-baseline.json`: the
-  errors that predate the switch from pyright. New errors fail the check; prune
-  fixed ones with `uv run pyrefly check --prune-baseline`. `py.typed` is
-  shipped — keep new public API fully typed. Fix a listed error where the type
-  comes from (a correct annotation, a narrower return type), not with
+- **Types**: pyrefly on `src/`, with no baseline: every error fails the check.
+  `py.typed` is shipped — keep new public API fully typed. Fix an error where
+  the type comes from (a correct annotation, a narrower return type), not with
   `typing.cast` or `Any`. Where pandas-stubs are wrong or too narrow (pandas
   takes the call, as with `DataFrame.sparse`, which they leave untyped), put
-  `# pyrefly: ignore[<code>]` on the line above the error, after a comment saying
-  why, and keep it off the baseline. The aim is an empty baseline.
+  `# pyrefly: ignore[<code>]` on the line above the error, after a comment
+  saying why.
 - **Docstrings**: numpy convention, format docstring code blocks
   (`docstring-code-format = true`).
 - **Docs**: `docs/reference/` groups the API by topic, as pandas does. Each
@@ -368,11 +365,11 @@ IMI, FLEXINVERT, LUMIA). None of them provides a labeled
 linear-Gaussian solve with posterior covariance at flux scale, and the ones
 that come close use dense `inv`. So:
 
-- **fips owns the core solve.** The analytic estimator is ~50 lines of
+- **fips owns the core solve.** The analytic method is ~50 lines of
   `scipy.linalg` (Cholesky, triangular solves, `eigh`); the value of fips is
   the labeled/block layer around it, and routing arrays through an external
   solver is exactly where labels get lost. Do not add a dependency to replace
-  `BayesianSolver`; improve it in place.
+  the analytic method (`solve.py`, `_whitened.py`); improve it in place.
 - **Delegate factorizations and operator plumbing to scipy.** `scipy.linalg`
   for dense factorizations, `scipy.sparse` for storage,
   `scipy.sparse.linalg.LinearOperator` as the matvec abstraction when
@@ -390,40 +387,41 @@ that come close use dense `inv`. So:
 - **The reference libraries are test oracles, not dependencies.** Their
   closed-form identities (pyOE's χ² eigenvalue forms, hippylib's `d/(1+d)`
   posterior, pyemu's Schur posterior, the Yadav & Michalak supplement code) are
-  for cross-checking new estimators on small random problems in `tests/`.
+  for cross-checking new methods on small random problems in `tests/`.
 
 ## Common workflows
 
 ### Single-block solve (one obs source, one state block)
-See README "Single-block" example. Pass `obs`, `prior`, `forward_operator`,
-`prior_error`, `modeldata_mismatch` directly to `FluxProblem(...).solve()`.
+See README "Single-block" example: `Problem(prior=..., prior_cov=...,
+obs=..., obs_cov=..., forward=...)`, then `fips.solve(problem)`.
 
 ### Multi-block solve (heterogeneous obs)
-Wrap each obs source in its own `Block`. Build `H` with
+Put each obs source in its own block (`Vector.from_blocks`). Build `H` with
 `Operator.from_blocks`, one entry per (row_block, col_block) pair. A
-block-diagonal `modeldata_mismatch` (`Covariance.block_diag`) is the common
-pattern (no inter-source error covariance). See README "Multi-block" example.
+block-diagonal `obs_cov` (`Covariance.block_diag`) is the common pattern (no
+inter-source error covariance). See README "Multi-block" example.
 
-### Adding a new estimator
-1. Subclass `Estimator` in `estimators.py`.
-2. Implement the abstract solve method.
-3. Register via the `EstimatorRegistry` decorator (`@ESTIMATOR_REGISTRY.register("name")`).
-4. Now available via `available_estimators()` and selectable in `fips.solve`
-   and `InverseProblem.solve`. `Posterior` labels the outputs every estimator
-   has (`x_hat`, `S_hat`, `y_hat`, `y_0`, `S_y0`, `K`, `A`, `desroziers`) and
-   knows which index goes on each axis; an output a new estimator adds is
-   reached unlabeled through `post.estimator` until `Posterior` gets a
-   property for it.
-5. `tests/test_oracle.py` is parametrized over the registry, so the new
-   estimator is held to the closed-form Gaussian posterior and the
-   permutation test at once. An estimator whose answer is not that posterior
-   (bounded, lognormal, sampled) says so there, with its own reference.
+### Adding a new method
+1. Write its options as a frozen dataclass in `solve.py` (the only place they
+   are declared: `solve` checks the caller's keywords against its fields and
+   lists them for an unknown one; check values in `__post_init__`).
+2. Write the method as a function `(problem, options) -> Posterior` and
+   register it with `@_register("name", Options)`; `available_methods()` and
+   `fips.solve(problem, "name")` then find it.
+3. The `Posterior` is the analytic (Gaussian) one: `mean` is its `estimate`.
+   A method whose posterior is not Gaussian (bounded, lognormal, sampled)
+   needs its own class, and a base class extracted from `Posterior`: `mean`
+   exists only where the method gives the mean, `estimate` everywhere.
+4. `tests/test_oracle.py` is parametrized over `available_methods()`, so the
+   new method is held to the closed-form Gaussian posterior and the
+   permutation test at once. A method whose answer is not that posterior says
+   so there, with its own reference.
 
 ### Adding a new problem domain
 1. Create `src/fips/problems/<domain>/` with `__init__.py` re-exporting the
    public surface.
-2. Subclass `InverseProblem` for the domain-specific orchestration; subclass
-   `InversionPipeline` for the workflow template.
+2. Subclass `Problem` for the domain's block names (accessors, no new
+   checks); subclass `InversionPipeline` for the workflow template.
 3. Mirror the `flux` package's layout (`problem.py`, `pipeline.py`,
    `visualization.py`).
 
@@ -433,19 +431,13 @@ pattern (no inter-source error covariance). See README "Multi-block" example.
   `from_frame`.** The constructor refuses a pandas object, since its labels
   would be ignored; a diagonal is `Covariance.diagonal(values, space)` (kept
   as a `DiagonalOperator`). An `Operator` multiplies an `Operator` or a
-  `Field`, never an array (no labels to check): compute by position with
+  `Vector`, never an array (no labels to check): compute by position with
   `op.data`.
 - Check an optional pandas index with `is None`, since evaluating its truth
   value raises an error.
-- **The pyrefly baseline matches an error by file, kind and column**, not by
-  line or message (seen with pyrefly 1.3.2). A new error is therefore hidden
-  when a listed one has the same kind at the same column of that file, and
-  `--prune-baseline` keeps a fixed entry for as long as another error shares
-  its file, kind and column: remove that one by hand. To see every error with
-  its line, the listed ones included, run
-  `uv run pyrefly check --baseline-error-level error --output-format min-text`;
-  add `--min-severity warn` for the warnings, which `pyrefly check` does not
-  show. pyrefly types `DataFrame.columns` as `Index[str]`, so it calls the
+- **pyrefly's warnings** are not shown by `pyrefly check`: run
+  `uv run pyrefly check --min-severity warn --output-format min-text` to see
+  them with their lines. pyrefly types `DataFrame.columns` as `Index[str]`, so it calls the
   `str(col)` in `plot_comparison` an unnecessary conversion, but a column label
   is an integer when a Series has no name: keep the `str()`.
 - **SciPy is not annotated**: pyrefly takes the private class a `LinearOperator`
@@ -457,20 +449,16 @@ pattern (no inter-source error covariance). See README "Multi-block" example.
 - **pyrefly (1.3.2) reads `type[X]` written inside a base class's arguments as
   `type[Any]`**: after `class R(dict[str, type[E]])` a lookup in `R()` is
   `type[Any]`, though `typing.Type[E]` or an alias of `type[E]` gives
-  `type[E]`. `EstimatorRegistry` names its value type through an alias
-  (`_EstimatorClass`) for this reason; do the same where a subclass of a
-  container holds classes.
-- `convolve(state, H)` returns a labeled `pandas.Series`, and `H @ field` a
-  `Field`, not a numpy array. Don't expect raw arrays out of public APIs.
-- `reduced_chi2` lives on the *estimator* and the *posterior*, not the problem
-  (`problem.estimator.reduced_chi2`, `problem.result.reduced_chi2`).
-- `InverseProblem` pickles its estimator under `_estimator`, not the
-  `Posterior`, and rebuilds the posterior on load, so a pickle reads the same
-  with or without `posterior.py`. A `Posterior` pickles the estimator and the
-  two indexes only; its labeled outputs are rebuilt when asked for. A
-  `BayesianSolver` pickles its factorization as a dict of arrays and drops
-  `S_hat`, `A`, `K` and `H S_0`, which the factors give again.
-- **`BayesianSolver` never factors `H S_0 H^T + S_z`.** It whitens with the
+  `type[E]`. Use `typing.Type[E]` or an alias where a subclass of a container
+  holds classes.
+- `H @ vector` is a `Vector`, not a numpy array. Don't expect raw arrays out
+  of public APIs.
+- **`fips.solve` is the function, `fips/solve.py` the module.** `__init__`
+  binds the name `fips.solve` to the function, so reach the module's other
+  names with `from fips.solve import AnalyticOptions` (which reads the module
+  from `sys.modules`), never `fips.solve.AnalyticOptions` or
+  `import fips.solve as m`.
+- **The analytic method never factors `H S_0 H^T + S_z`.** It whitens with the
   Cholesky factor of `S_z` alone (or the square root of its diagonal), so `S_z`
   must be positive-definite (it raises otherwise), and eigendecomposes the
   `m x m` matrix `L^-1 H S_0 H^T L^-T`, which is positive semidefinite: roundoff
@@ -479,12 +467,13 @@ pattern (no inter-source error covariance). See README "Multi-block" example.
   (what used to tip the sum off positive-definite and block sub-yearly
   inversions) therefore cannot stop the solve. Everything is derived from the
   factors (`fips/_whitened.py`'s docstring has the formulas); nothing `n x n`
-  is formed unless `S_hat` or `A` is read, and `tests/test_whitened.py` fails if
-  `fips.solve` with the variances, DOFS or chi-squared allocates one. With `m > n`
+  is formed unless `post.cov()` or `post.averaging_kernel()` is read, and
+  `tests/test_whitened.py` fails if `fips.solve` with the variances, DOFS or
+  chi-squared allocates one. With `m > n`
   the state-space form would be cheaper; it does not exist, and a large such
   solve logs a warning.
-- Other covariance solves (`cost`, `KroneckerOperator.solve`, the base
-  `Estimator`'s gain) go through `LinearOperator.solve`, whose dense form is
+- Other covariance solves (`Covariance.solve`, `KroneckerOperator.solve`,
+  `Posterior.leverage`) go through `LinearOperator.solve` or `_solve_psd`, whose dense form is
   `_solve_psd(A, B)` (in `linalg.py`), **not**
   `scipy.linalg.solve(..., assume_a="pos")` directly: it keeps the fast
   Cholesky path and falls back, with a warning, to a symmetric `LDL^T` solve when

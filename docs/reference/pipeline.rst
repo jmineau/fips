@@ -41,3 +41,6 @@ Running the Inversion
 
    InversionPipeline.get_inputs
    InversionPipeline.run
+   InversionPipeline.problem
+   InversionPipeline.posterior
+   InversionPipeline.method
