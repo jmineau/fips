@@ -101,13 +101,15 @@ class TestGamma:
             forward=problem.forward,
         )
         got, expected = fips.solve(problem, gamma=gamma), fips.solve(scaled)
+        # Two routes to one posterior agree to rounding, and the rounding depends
+        # on the BLAS (1.2e-12 apart on CI's runners): 1e-10, as the oracle uses.
         np.testing.assert_allclose(
-            got.estimate.values, expected.estimate.values, rtol=1e-12
+            got.estimate.values, expected.estimate.values, rtol=1e-10
         )
         np.testing.assert_allclose(
-            got.variances.values, expected.variances.values, rtol=1e-12
+            got.variances.values, expected.variances.values, rtol=1e-10
         )
-        assert got.dofs == pytest.approx(expected.dofs, rel=1e-12)
+        assert got.dofs == pytest.approx(expected.dofs, rel=1e-10)
 
     def test_directions(self):
         """More gamma: smaller variances, more degrees of freedom, a closer fit."""
