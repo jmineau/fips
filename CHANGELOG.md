@@ -735,6 +735,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- `haversine_matrix` gave NaN for some exactly antipodal points: the
+  half-angle term is clipped to [0, 1] against roundoff, as `chordal_matrix`'s
+  already was. ([#108](https://github.com/jmineau/fips/issues/108))
 - **Labels at every door** (the branch review's fixes;
   [#82](https://github.com/jmineau/fips/issues/82)):
   `Covariance` refuses a dense or sparse matrix that is not symmetric (its

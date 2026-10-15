@@ -21,7 +21,8 @@ def _half_angle_term(lats: npt.ArrayLike, lons: npt.ArrayLike) -> np.ndarray:
     Return ``sin(c / 2) ** 2`` for the great-circle angle ``c`` between every two points.
 
     This is the haversine of the angle, which both distances are a function
-    of. The coordinates are in degrees; the diagonal is exactly zero.
+    of. The coordinates are in degrees; the diagonal is exactly zero, and
+    the term is clipped to [0, 1] against roundoff.
     """
     lats = np.radians(np.asarray(lats))
     lons = np.radians(np.asarray(lons))
@@ -34,7 +35,8 @@ def _half_angle_term(lats: npt.ArrayLike, lons: npt.ArrayLike) -> np.ndarray:
         + np.cos(lats) * np.cos(lats.T) * np.sin((lons - lons.T) / 2) ** 2
     )
     np.fill_diagonal(a, 0.0)
-    return a
+    # Roundoff can put a just above 1 for antipodal points, and sqrt(1 - a) is then NaN
+    return np.clip(a, 0.0, 1.0)
 
 
 def haversine_matrix(lats: npt.ArrayLike, lons: npt.ArrayLike) -> np.ndarray:
@@ -105,7 +107,7 @@ def chordal_matrix(lats: npt.ArrayLike, lons: npt.ArrayLike) -> np.ndarray:
            [9010.,    0.]])
     """
     a = _half_angle_term(lats, lons)
-    return 2.0 * _EARTH_RADIUS * np.sqrt(np.clip(a, 0.0, 1.0))
+    return 2.0 * _EARTH_RADIUS * np.sqrt(a)
 
 
 def time_diff_matrix(times: npt.ArrayLike) -> np.ndarray:
