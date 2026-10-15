@@ -54,7 +54,7 @@ src/fips/
                      from them; summary() returns the diagnostics as one row.
                      Solution — the Protocol a method's kept object answers
                      (estimate, variances, cov(W), gain(W), dofs, chi2;
-                     optional with_gamma, with_data, estimate_is_mean);
+                     optional with_gamma, with_data, estimate_is_mean, HS_0H);
                      Options — what it reads from the options (gamma)
   aggregate.py       sum, mean: an aggregation W (sparse Operator) from a
                      Space to groups of its labels (levels, a pandas Grouper,
@@ -82,8 +82,9 @@ src/fips/
     analytic.py      AnalyticOptions, and the analytic method: Whitened —
                      its Solution, the factorization of the whitened system
                      read at one gamma (estimate, variances, gain, DOFS,
-                     chi-squared; with_gamma and with_data share the
-                     factors) — and _analytic, which returns
+                     chi-squared, and the H S_0 H^T it formed; with_gamma
+                     and with_data share the factors; the arrays are
+                     read-only) — and _analytic, which returns
                      Posterior(problem, Whitened.factor(...), options)
   linalg/            the unlabeled forms the solvers compute with (public as
                      `fips.linalg`)
@@ -492,8 +493,11 @@ inter-source error covariance). See README "Multi-block" example.
    `gain(W)`, `dofs()`, `chi2()`, unlabeled arrays in the problem's order).
    Give it `with_gamma` or `with_data` only if it can answer without solving
    again, and `estimate_is_mean = True` only if its estimate is the mean;
-   without them `Posterior` raises for those features. The docstring of
-   `methods/__init__.py` says how a lognormal or an ensemble method would fit.
+   without them `Posterior` raises for those features. An `HS_0H` attribute
+   (H S_0 H^T, if the method formed it) saves the posterior forming it again
+   for `innovation_cov` and `leverage`; without it the posterior forms it. The
+   docstring of `methods/__init__.py` says how a lognormal or an ensemble
+   method would fit.
 3. Write the method as a function `(problem, options) -> Posterior(problem,
    solution, options)` in the same file and list it in `_METHODS` in
    `methods/__init__.py`; `available_methods()` and `fips.solve(problem,

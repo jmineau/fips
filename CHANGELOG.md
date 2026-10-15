@@ -744,6 +744,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   names the mapping; `Exponential("lag", "1h")` and the other decay kernels
   take a timedelta level.
 
+- **Leftovers of the posterior redesign** (the branch review's fixes;
+  [#82](https://github.com/jmineau/fips/issues/82)): the arrays of the
+  analytic method's factors (`Whitened`) are read-only, also after a pickle or
+  a copy (they were writable and shared by `with_gamma` and `with_data`). The
+  posterior takes `H S_0 H^T` from the solution that formed it (an optional
+  `HS_0H` member of `Solution`) instead of forming it again for
+  `innovation_cov` and `leverage`; `with_data` builds its problem with the
+  constructor; one `Operator._on` puts an operator on two spaces. No number
+  changes.
+
 - **A block of a `Vector` keeps the dtype of its labels.** `v["flux"]` (and
   `v.blocks["flux"]`) of a vector whose other blocks lack the `cell` level gave
   the integer cells `1, 2` back as `1.0, 2.0`; it now gives them as the block
