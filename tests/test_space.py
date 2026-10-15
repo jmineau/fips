@@ -105,6 +105,17 @@ class TestConstruction:
         space = Space({2020: pd.Index([1], name="cell")})
         assert space.names == ("2020",)
 
+    def test_a_name_is_looked_up_as_a_string(self):
+        """A name that is not a string finds its block, as the space keeps it."""
+        space = Space(
+            {2020: pd.Index([1], name="cell"), "x": pd.Index([2], name="cell")}
+        )
+        assert 2020 in space and "2020" in space and 2021 not in space
+        assert space.select(2020).equals(pd.Index([1], name="cell"))
+        assert space.slice(2020) == slice(0, 1)
+        with pytest.raises(KeyError, match="No block named 2021"):
+            space.select(2021)
+
     def test_two_blocks_with_one_name_raise(self):
         with pytest.raises(ValueError, match="Two blocks are named '1'"):
             Space({1: pd.Index([1], name="a"), "1": pd.Index([2], name="a")})
