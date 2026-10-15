@@ -72,11 +72,7 @@ def _axis_space(
                 f"The frame's {axis} have a 'block' level, which names their "
                 f"blocks; leave `{argument}` out."
             )
-        space = Space.from_index(index)
-        rank = pd.Index(space.names).get_indexer(
-            index.get_level_values("block").astype(str)
-        )
-        return space, np.argsort(rank, kind="stable")
+        return Space._regroup(index)
     if block is None:
         raise ValueError(
             f"The frame's {axis} have no 'block' level, so `{argument}` must "

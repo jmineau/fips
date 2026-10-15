@@ -154,11 +154,8 @@ class Vector:
                     "The Series has a 'block' level, which names its blocks; "
                     "leave `block` out."
                 )
-            space = Space.from_index(index)
-            rank = pd.Index(space.names).get_indexer(
-                index.get_level_values("block").astype(str)
-            )
-            values = series.to_numpy(dtype=float)[np.argsort(rank, kind="stable")]
+            space, order = Space._regroup(index)
+            values = series.to_numpy(dtype=float)[order]
         else:
             if block is None:
                 raise ValueError(
