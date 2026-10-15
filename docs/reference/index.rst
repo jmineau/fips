@@ -11,6 +11,7 @@ This reference provides detailed documentation for all public classes, functions
    covariance
    linalg
    problem
+   aggregate
    posterior
    pipeline
    base

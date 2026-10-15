@@ -266,23 +266,18 @@ in time and space:
    post.variances.to_series().head()
 
 An aggregation turns the state into a few totals or means: an
-:class:`~fips.Operator` with one row per aggregate and the state's labels as
-its columns (``1`` for a sum, ``1/count`` for a mean). ``post.cov(W)`` is the posterior covariance of
-the aggregates, :math:`W \hat{S} W^T`, and ``post.averaging_kernel(W)`` their
-averaging kernel, :math:`W A W^*` with :math:`W^*` the pseudo-inverse of
-:math:`W`; neither forms the :math:`n \times n` matrices. Here, the total
-flux of each week:
+:class:`~fips.Operator` :math:`W` with one row per aggregate and the state's
+labels as its columns (``1`` for a sum, ``1/count`` for a mean).
+:func:`fips.aggregate.sum` and :func:`fips.aggregate.mean` build one from the
+labels, grouped by levels, time bins or a mapping (see :doc:`reference/aggregate`).
+``post.cov(W)`` is the posterior covariance of the aggregates,
+:math:`W \hat{S} W^T`, and ``post.averaging_kernel(W)`` their averaging kernel,
+:math:`W A W^*` with :math:`W^*` the pseudo-inverse of :math:`W`; neither forms
+the :math:`n \times n` matrices. Here, the total flux of each week:
 
 .. ipython:: python
 
-   weeks = pd.MultiIndex.from_product([["total"], times], names=["block", "week"])
-   W = fips.Operator.from_frame(
-       pd.DataFrame(
-           (state.get_level_values("time").to_numpy() == times.to_numpy()[:, None]).astype(float),
-           index=weeks,
-           columns=state,
-       )
-   )
+   W = fips.aggregate.sum(problem.prior.space, by="time")
    post.cov(W).to_frame().round(4)
    post.averaging_kernel(W).dense().diagonal().round(3)
 
@@ -299,6 +294,80 @@ once:
 
 
 .. _flux-inversion:
+
+Aggregating, Offsets and Restricting
+------------------------------------
+
+The same aggregation works on the observations. ``problem.aggregate(W)`` is the
+problem of the aggregated observations: each input on the observations goes
+through one :math:`W` (:math:`W z`, :math:`W H`, :math:`W S_z W^T`, :math:`W c`).
+Here, hourly observations at two sites become daily means:
+
+.. ipython:: python
+
+   hours = pd.date_range("2024-01-01", periods=48, freq="h")
+   labels = pd.MultiIndex.from_product([["A", "B"], hours], names=["site", "obs_time"])
+   cells = pd.Index(["c0", "c1", "c2"], name="cell")
+   ch4 = Vector.from_series(pd.Series(rng.normal(2.0, 0.1, 96), index=labels), block="ch4")
+   flux = Vector.from_series(pd.Series(1.0, index=cells), block="flux")
+   hourly = Problem(
+       prior=flux,
+       prior_cov=fips.Independent().with_std(0.5),
+       obs=ch4,
+       obs_cov=fips.Independent().with_std(0.05),
+       forward=fips.Operator(rng.uniform(0, 0.1, (96, 3)), ch4.space, flux.space),
+   )
+   daily = hourly.aggregate(
+       fips.aggregate.mean(ch4.space, by=["site", pd.Grouper(level="obs_time", freq="1D")])
+   )
+   daily
+
+An offset the data should decide (a background that drifts, a calibration
+bias) is a block of the state: :func:`fips.offset_block` gives one offset per
+group of observations, zeros as their prior, and the forward block that adds
+each to its observations. Their covariance is any model on their labels; here
+the days of a site are correlated:
+
+.. ipython:: python
+
+   days = pd.interval_range(hours[0], periods=2, freq="1D", closed="left", name="obs_time")
+   offsets, H_offsets = fips.offset_block(ch4.space, by=[days, "site"])
+   offsets.space
+   with_offsets = Problem(
+       prior=Vector.from_blocks({"flux": flux, "offset": offsets}),
+       prior_cov=fips.Covariance.block_diag(
+           flux=fips.Independent().with_std(0.5),
+           offset=Exponential("obs_time", "2D", within="site").with_std(0.1),
+       ),
+       obs=ch4,
+       obs_cov=fips.Independent().with_std(0.05),
+       forward=fips.Operator.from_blocks(
+           {("ch4", "flux"): hourly.forward, ("ch4", "offset"): H_offsets["ch4", "offset"]}
+       ),
+   )
+   fips.solve(with_offsets).estimate["offset"].to_series().round(3)
+
+``problem.restrict(keep)`` goes the other way: the state elements not in
+``keep`` (cells no observation sees well) are held at their prior, their
+contribution :math:`H x_0` added to the offset. ``combine_first`` puts the
+estimate back on the whole state:
+
+.. ipython:: python
+
+   small = hourly.restrict(Space({"flux": cells[:2]}))
+   small.offset.to_series().head(3)
+   fips.solve(small).estimate.combine_first(hourly.prior).to_series().round(3)
+
+A model-data mismatch that grows with the signal is a fraction of a scale from
+:mod:`fips.scales`: ``footprint`` (how much state each observation sees),
+``modeled`` (:math:`|H x_0|`) or ``observed`` (:math:`|z - c|`):
+
+.. ipython:: python
+
+   scale = fips.scales.modeled(hourly.forward, hourly.prior)
+   obs_cov = fips.Independent().with_std(Vector(0.3 * scale.values, scale.space))
+   obs_cov.variances.to_series().head(3)
+
 
 Domain-Specific Problem: Flux Inversion
 -----------------------------------------
