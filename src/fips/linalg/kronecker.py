@@ -20,7 +20,7 @@ import numpy.typing as npt
 from numpy.linalg import LinAlgError
 from scipy import sparse
 
-from fips.linalg import (
+from fips.linalg.base import (
     DenseOperator,
     LinearOperator,
     _as_array,
@@ -96,7 +96,7 @@ class KroneckerOperator(LinearOperator):
     Examples
     --------
     >>> import numpy as np
-    >>> from fips.kronecker import KroneckerOperator
+    >>> from fips.linalg import KroneckerOperator
     >>> C_time = np.array([[1.0, 0.5], [0.5, 1.0]])
     >>> C_space = np.array([[1.0, 0.2, 0.0], [0.2, 1.0, 0.2], [0.0, 0.2, 1.0]])
     >>> S = KroneckerOperator([C_time, C_space], std=2.0)
