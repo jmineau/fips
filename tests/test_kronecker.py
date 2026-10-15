@@ -1,69 +1,84 @@
 """
 Tests for Kronecker covariances kept as factors (#6).
 
-``KroneckerOperator`` against the dense matrix it stands for (``KroneckerError.build``
-on the product, and the formula evaluated pair by pair on any other row order or
-subset), its products and solves, structures built on an operator
-(``from_operator``), and a solve from the factors against the solve from the dense
-matrix.
+``KroneckerOperator`` against the dense matrix it stands for (``np.kron`` of
+the factors on the product, and the formula evaluated pair by pair on any other
+row order or subset), its products, solves and log-determinant, a
+``Covariance`` that holds it behind labels, and a solve from the factors
+against the solve from the dense matrix. The operators come from
+``Kronecker`` models, as a user builds them.
 """
 
+import copy
 import logging
 import pickle
-import warnings
+from dataclasses import dataclass
 from functools import reduce
 
 import numpy as np
 import pandas as pd
 import pytest
+import scipy.linalg
 import scipy.sparse as sp
 
 import fips
 from fips import (
-    CovarianceMatrix,
-    ForwardOperator,
-    InverseProblem,
-    Matrix,
-    MatrixBlock,
-    available_estimators,
+    Covariance,
+    Exponential,
+    Kronecker,
+    Operator,
+    Problem,
+    Space,
+    Vector,
 )
-from fips.covariance import KroneckerError, KroneckerOperator
-from fips.kernels import GridSpatialDecay, GridTimeDecay
-from fips.operator import (
+from fips.covariance import CorrelationModel
+from fips.covariance.distances import haversine_matrix
+from fips.linalg import (
+    BlockDiagonalOperator,
     DenseOperator,
     DiagonalOperator,
-    Operator,
+    KroneckerOperator,
+    LinearOperator,
     SparseOperator,
-    as_operator,
+    as_linear_operator,
     dottest,
 )
 
 TIMES = pd.date_range("2024-01-01", periods=4, freq="D")
 LATS = [40.0, 40.5, 41.0]
 LONS = [-112.0, -111.5]
+DAY = pd.Timedelta("1D")
 
 
-def _line_kernel(dim, scale):
+def _time(a, b):
+    """The time factor's correlation of two rows: ``exp(-|dt| / 1 day)``."""
+    return np.exp(-abs(a["time"] - b["time"]) / DAY)
+
+
+def _cell(a, b):
+    """The space factor's correlation: ``exp(-d / 50 km)``, great-circle."""
+    d = haversine_matrix([a["lat"], b["lat"]], [a["lon"], b["lon"]])[0, 1]
+    return np.exp(-d / 50.0)
+
+
+def _line(level, scale):
     """Exponential decay along one numeric level."""
-
-    def kernel(coords):
-        x = coords[dim].to_numpy(dtype=float)
-        return np.exp(-np.abs(x[:, None] - x[None, :]) / scale)
-
-    return kernel
+    return lambda a, b: np.exp(-abs(a[level] - b[level]) / scale)
 
 
-#: Two marginals: time, and space as one marginal of (lat, lon).
-KERNELS_2 = [
-    ("time", GridTimeDecay("1D")),
-    (["lat", "lon"], GridSpatialDecay("lat", "lon", 50.0)),
-]
-#: Three marginals: time, lat and lon separately.
-KERNELS_3 = [
-    ("time", GridTimeDecay("1D")),
-    ("lat", _line_kernel("lat", 0.7)),
-    ("lon", _line_kernel("lon", 0.4)),
-]
+#: Two factors: time, and space as one factor of (lat, lon). With each factor's
+#: correlation of a pair of rows, written out, for the reference formula.
+KERNELS_2 = Kronecker(
+    Exponential("time", "1D"), Exponential(["lat", "lon"], 50.0, metric="haversine")
+)
+#: Three factors: time, lat and lon separately.
+KERNELS_3 = Kronecker(
+    Exponential("time", "1D"), Exponential("lat", 0.7), Exponential("lon", 0.4)
+)
+PAIRS = {
+    KERNELS_2: [_time, _cell],
+    KERNELS_3: [_time, _line("lat", 0.7), _line("lon", 0.4)],
+}
 KERNELS = pytest.mark.parametrize("kernels", [KERNELS_2, KERNELS_3], ids=["2", "3"])
 
 
@@ -84,21 +99,48 @@ def _variances(index: pd.Index, seed: int = 0) -> pd.Series:
     return pd.Series(rng.uniform(0.5, 2.0, len(index)), index=index)
 
 
-def _direct_formula(kernels, variances: pd.Series, index: pd.Index) -> np.ndarray:
+def _space(index: pd.MultiIndex) -> Space:
+    """The space of `index`: its blocks, or one block ``flux`` without a ``block`` level."""
+    return Space.from_index(index) if "block" in index.names else Space({"flux": index})
+
+
+def _std(variances, index: pd.Index) -> np.ndarray | float:
+    """The standard deviations of `index`'s rows, from variances by label (or one)."""
+    if isinstance(variances, pd.Series):
+        return np.sqrt(variances.reindex(index).to_numpy())
+    return float(np.sqrt(variances))
+
+
+def _operator(model, variances, index: pd.MultiIndex) -> KroneckerOperator:
+    """The form of ``model.with_std(std)`` on `index`."""
+    S = model.with_std(_std(variances, index)).build(_space(index))
+    assert isinstance(S.data, KroneckerOperator)
+    return S.data
+
+
+def _direct_formula(kernels, variances, index: pd.Index) -> np.ndarray:
     """``std_i std_j prod_k C_k(row i, row j)``, one pair of rows at a time."""
     frame = index.to_frame(index=False)
-    std = np.sqrt(variances.reindex(index).to_numpy())
+    std = _std(variances, index) * np.ones(len(index))
     n = len(index)
     expected = np.empty((n, n))
     for i in range(n):
         for j in range(n):
-            corr = 1.0
-            for dims, kernel in kernels:
-                dims = [dims] if isinstance(dims, str) else dims
-                pair = frame.loc[[i, j], dims].reset_index(drop=True)
-                corr *= np.asarray(kernel(pair))[0, 1]
+            a, b = frame.iloc[i], frame.iloc[j]
+            corr = np.prod([pair(a, b) for pair in PAIRS[kernels]])
             expected[i, j] = std[i] * std[j] * corr
     return expected
+
+
+def _kron_formula(kernels, variances, index: pd.Index) -> np.ndarray:
+    """``np.kron`` of the factors' matrices, scaled by std, for an index that is the product."""
+    frame = index.to_frame(index=False)
+    matrices = []
+    for factor in kernels.factors:
+        unique = frame[list(factor.levels)].drop_duplicates().reset_index(drop=True)
+        matrices.append(factor.correlation(unique))
+    std = _std(variances, index) * np.ones(len(index))
+    return std[:, None] * reduce(np.kron, matrices) * std[None, :]
 
 
 def _ragged(index: pd.MultiIndex) -> pd.MultiIndex:
@@ -128,25 +170,37 @@ def _spd_factor(rng, k: int) -> np.ndarray:
     return A / d[:, None] / d[None, :]
 
 
+@dataclass(frozen=True)
+class _WrongSize(CorrelationModel):
+    """A model that returns a matrix of the wrong size."""
+
+    levels: tuple[str, ...] = ("lat", "lon")
+
+    def correlation(self, coords):
+        """Return a 4 x 4 identity whatever the coordinates."""
+        return np.eye(4)
+
+
 # ---------------------------------------------------------------------------
 # The operator against the dense matrix
 # ---------------------------------------------------------------------------
 
 
-class TestAgainstBuild:
-    """``KroneckerError.operator(index).dense()`` is the covariance ``build`` gives."""
+class TestAgainstTheFormula:
+    """A ``Kronecker`` model's operator is the covariance its formula gives."""
 
     @KERNELS
     @pytest.mark.parametrize("variances", ["series", "scalar"])
-    def test_product_order_is_build_exactly(self, kernels, variances):
-        """On the product in the kernels' order, the same numbers as ``build``, bit for bit."""
+    def test_product_order_is_kron(self, kernels, variances):
+        """On the product in the factors' order, ``np.kron`` of the factors, bit for bit."""
         index = _product()
         var = _variances(index) if variances == "series" else 1.7
-        error = KroneckerError("prior", var, kernels)
-        op = error.operator(index)
-        assert isinstance(op, KroneckerOperator)
+        op = _operator(kernels, var, index)
         assert op._rows is None  # the whole grid, in order: no scatter
-        np.testing.assert_array_equal(op.dense(), error.build(index).to_numpy())
+        np.testing.assert_array_equal(op.dense(), _kron_formula(kernels, var, index))
+        np.testing.assert_allclose(
+            op.dense(), _direct_formula(kernels, var, index), rtol=1e-14, atol=0
+        )
 
     @KERNELS
     def test_same_cells_dropped_at_every_time(self, kernels):
@@ -155,11 +209,12 @@ class TestAgainstBuild:
         lat, lon = index.get_level_values("lat"), index.get_level_values("lon")
         subset = index[~((lat == 40.5) & (lon == -112.0))]
         var = _variances(index)
-        error = KroneckerError("prior", var, kernels)
-        op = error.operator(subset)
+        op = _operator(kernels, var, subset)
         if kernels is KERNELS_2:
             assert op._rows is None
-            np.testing.assert_array_equal(op.dense(), error.build(subset).to_numpy())
+            np.testing.assert_array_equal(
+                op.dense(), _kron_formula(kernels, var, subset)
+            )
         np.testing.assert_allclose(
             op.dense(), _direct_formula(kernels, var, subset), rtol=1e-14, atol=0
         )
@@ -170,12 +225,11 @@ class TestAgainstBuild:
         """Shuffled rows give the same entries, label by label."""
         index = _product()
         var = _variances(index)
-        error = KroneckerError("prior", var, kernels)
         expected = pd.DataFrame(
-            error.build(index).to_numpy(), index=index, columns=index
+            _operator(kernels, var, index).dense(), index=index, columns=index
         )
         shuffled = index[np.random.default_rng(seed).permutation(len(index))]
-        op = error.operator(shuffled)
+        op = _operator(kernels, var, shuffled)
         np.testing.assert_allclose(
             op.dense(),
             expected.reindex(index=shuffled, columns=shuffled).to_numpy(),
@@ -191,7 +245,7 @@ class TestAgainstBuild:
         var = _variances(index)
         var.index = var.index.reorder_levels(order)
         other = index.reorder_levels(order).sort_values()
-        op = KroneckerError("prior", var, kernels).operator(other)
+        op = _operator(kernels, var, other)
         np.testing.assert_allclose(
             op.dense(), _direct_formula(kernels, var, other), rtol=1e-14, atol=0
         )
@@ -201,47 +255,56 @@ class TestAgainstBuild:
         """Cells missing at some times only: a strict subset of the product."""
         index = _ragged(_product())
         var = _variances(_product())
-        op = KroneckerError("prior", var, kernels).operator(index)
+        op = _operator(kernels, var, index)
         assert op._rows is not None and op.shape == (len(index), len(index))
         np.testing.assert_allclose(
             op.dense(), _direct_formula(kernels, var, index), rtol=1e-14, atol=0
         )
 
-    def test_variances_on_some_levels(self):
-        """A variance Series indexed by (lat, lon) is aligned onto every time."""
+    def test_std_from_variances_on_some_levels(self):
+        """Variances by (lat, lon), put on every time by the caller, give each row its own."""
         cells = pd.MultiIndex.from_product([LATS, LONS], names=["lat", "lon"])
         cell_var = pd.Series(np.arange(1.0, 7.0), index=cells, name="var")
         index = _product(block=False)
-        error = KroneckerError("prior", cell_var, KERNELS_2)
-        np.testing.assert_array_equal(
-            error.operator(index).dense(), error.build(index).to_numpy()
+        row_var = cell_var.reindex(index.droplevel("time"))
+        row_var.index = index
+        np.testing.assert_allclose(
+            _operator(KERNELS_2, row_var, index).dense(),
+            _direct_formula(KERNELS_2, row_var, index),
+            rtol=1e-14,
+            atol=0,
         )
 
     def test_diagonal_is_the_dense_diagonal(self):
         """``diagonal`` reads the variances without the matrix, the same numbers."""
         index = _ragged(_product())
-        op = KroneckerError("prior", _variances(_product()), KERNELS_3).operator(index)
+        op = _operator(KERNELS_3, _variances(_product()), index)
         np.testing.assert_array_equal(op.diagonal(), np.diag(op.dense()))
         assert op.trace() == pytest.approx(np.trace(op.dense()), rel=1e-15)
+
+    def test_factors_on_unique_coordinates_in_first_appearance_order(self):
+        """Each factor is evaluated once, on its levels' unique coordinates as they first appear."""
+        index = _product(block=False).reorder_levels(["lat", "lon", "time"])
+        op = _operator(KERNELS_2, 1.0, index.sort_values())
+        times = pd.DataFrame({"time": TIMES})
+        np.testing.assert_array_equal(
+            op.factors[0], Exponential("time", "1D").correlation(times)
+        )
+        assert op.factors[1].shape == (len(LATS) * len(LONS),) * 2
 
     def test_repeated_coordinates_raise(self):
         """Two rows on the same coordinates would be perfectly correlated."""
         index = pd.MultiIndex.from_product(
-            [["a", "b"], TIMES, LATS, LONS], names=["block", "time", "lat", "lon"]
+            [["a", "b"], TIMES, LATS, LONS], names=["source", "time", "lat", "lon"]
         )
         with pytest.raises(ValueError, match="repeat"):
-            KroneckerError("prior", 1.0, KERNELS_2).operator(index)
+            KERNELS_2.with_std(1.0).build(Space({"flux": index}))
 
-    def test_kernel_of_wrong_shape_raises(self):
-        """A kernel must return one row per unique coordinate."""
-        kernels = [("time", GridTimeDecay("1D")), (["lat", "lon"], lambda c: np.eye(4))]
+    def test_factor_of_wrong_size_raises(self):
+        """A factor must give one row per unique coordinate."""
+        model = Kronecker(Exponential("time", "1D"), _WrongSize())
         with pytest.raises(ValueError, match="shape"):
-            KroneckerError("prior", 1.0, kernels).operator(_product())
-
-    def test_no_kernel_raises(self):
-        """At least one marginal kernel."""
-        with pytest.raises(ValueError, match="at least one"):
-            KroneckerError("prior", 1.0, []).operator(_product())
+            model.with_std(1.0).build(_space(_product()))
 
 
 class TestConstructor:
@@ -279,6 +342,50 @@ class TestConstructor:
         """Each invalid input raises a ValueError that says what is wrong."""
         with pytest.raises(ValueError, match=match):
             KroneckerOperator(**kwargs)
+
+    def test_copies_and_freezes_what_it_is_given(self):
+        """The factors, the standard deviations and the positions are copies, and read-only."""
+        rng = np.random.default_rng(1)
+        factors = [_spd_factor(rng, 3), _spd_factor(rng, 2)]
+        std = rng.uniform(0.5, 2, 5)
+        positions = [np.array([0, 1, 2, 2, 1]), np.array([0, 0, 1, 0, 1])]
+        op = KroneckerOperator(factors, std=std, positions=positions)
+        before = op.dense().copy()
+        for array in (*factors, std, *positions):
+            array.fill(0)
+        np.testing.assert_array_equal(op.dense(), before)
+        for array in (*op.factors, *op.positions, op.std):
+            assert not array.flags.writeable
+            with pytest.raises(ValueError, match="read-only"):
+                array[0] = 0
+        duplicate = np.array(op)
+        assert duplicate.flags.writeable
+        duplicate[0, 0] = -1.0
+        np.testing.assert_array_equal(op.dense(), before)
+
+    def test_a_scalar_std_is_a_read_only_array(self):
+        """A scalar standard deviation becomes one value per row, read-only."""
+        op = KroneckerOperator([np.eye(2), np.eye(3)], std=2.0)
+        assert op.std.shape == (6,) and not op.std.flags.writeable
+
+    def test_derived_operators_share_the_factors(self):
+        """A transpose, a scalar multiple and a selection hold the parent's factors, not copies."""
+        op = OPS["ragged"]
+        rows = np.array([5, 2, 9])
+        for derived in (op.T, op * 3.0, op._select(rows, rows)):
+            assert isinstance(derived, KroneckerOperator)
+            for mine, theirs in zip(derived.factors, op.factors, strict=True):
+                assert np.shares_memory(mine, theirs)
+                assert not mine.flags.writeable
+            assert not derived.std.flags.writeable
+
+    def test_pickle_and_copy_are_read_only_too(self):
+        """A pickle keeps the values, not the flag: the operator sets it again."""
+        op = OPS["ragged"]
+        for again in (pickle.loads(pickle.dumps(op)), copy.deepcopy(op)):
+            np.testing.assert_array_equal(again.dense(), op.dense())
+            for array in (*again.factors, *again.positions, again.std):
+                assert not array.flags.writeable
 
 
 # ---------------------------------------------------------------------------
@@ -328,7 +435,7 @@ def test_products_with_arrays(which):
 @FORMS
 def test_products_in_column_blocks(which, monkeypatch):
     """A product with more columns than one block holds runs block by block."""
-    monkeypatch.setattr("fips.covariance._CHUNK", 50)  # two columns at a time
+    monkeypatch.setattr("fips.linalg.kronecker._CHUNK", 50)  # two columns at a time
     op = OPS[which]
     X = np.random.default_rng(2).standard_normal((op.shape[0], 7))
     np.testing.assert_allclose(op @ X, op.dense() @ X, rtol=1e-13, atol=1e-13)
@@ -373,7 +480,7 @@ def test_solve_of_a_thin_subset_is_dense(caplog):
     rows = rng.permutation(30)[:10]  # N d = 30 * 20 > n^2 = 100
     op = KroneckerOperator(factors, std=2.0, positions=np.unravel_index(rows, (6, 5)))
     b = rng.standard_normal(10)
-    with caplog.at_level(logging.INFO, logger="fips.covariance"):
+    with caplog.at_level(logging.INFO, logger="fips.linalg.kronecker"):
         x = op.solve(b)
     assert "densely" in caplog.text
     assert "_complement" not in vars(op)
@@ -400,14 +507,14 @@ def test_subset_solve_on_ill_conditioned_factors_falls_back(caplog):
         [_gauss(30, 3.0), _gauss(30, 3.0)], positions=np.unravel_index(keep, (30, 30))
     )
     S, b = op.dense(), rng.standard_normal(700)
-    with caplog.at_level(logging.WARNING, logger="fips.covariance"):
+    with caplog.at_level(logging.WARNING, logger="fips.linalg.kronecker"):
         x = op.solve(b)
     assert "lost accuracy" in caplog.text
     eps = np.finfo(float).eps
     assert _backward_error(S, x, b) < 700 * eps
     # The same factors on the whole grid, and a well-conditioned subset: no fallback
     caplog.clear()
-    with caplog.at_level(logging.WARNING, logger="fips.covariance"):
+    with caplog.at_level(logging.WARNING, logger="fips.linalg.kronecker"):
         KroneckerOperator([_gauss(30, 3.0), _gauss(30, 3.0)]).solve(np.ones(900))
         good = KroneckerOperator(
             [_gauss(30, 1.0), _gauss(30, 1.0)],
@@ -430,7 +537,7 @@ def test_solve_of_a_factor_off_positive_definite_falls_back(caplog):
     C = np.array([[1.0, 1.0 + 1e-9], [1.0 + 1e-9, 1.0]])  # indefinite, invertible
     op = KroneckerOperator([C, np.eye(2)])
     b = np.arange(1.0, 5.0)
-    with caplog.at_level(logging.WARNING, logger="fips.operator"):
+    with caplog.at_level(logging.WARNING, logger="fips.linalg"):
         x = op.solve(b)
     assert "non-positive-definite" in caplog.text
     np.testing.assert_allclose(op @ x, b, rtol=0, atol=1e-5)
@@ -452,22 +559,73 @@ def test_scalar_arithmetic(which):
     np.testing.assert_array_equal((-op).dense(), -S)
 
 
-def test_to_frame_and_pickle():
-    """``to_frame`` is the dense matrix labeled; a pickle keeps the factors, not the caches."""
+def test_pickle_keeps_the_factors_not_the_caches():
+    """A pickle keeps the factors, not the cached inverses."""
     op = OPS["ragged"]
     op.solve(np.ones(op.shape[0]))  # fill the caches
-    idx = pd.RangeIndex(op.shape[0], name="row")
-    frame = op.to_frame(idx)
-    np.testing.assert_array_equal(frame.to_numpy(), op.dense())
-    assert frame.index.equals(idx) and frame.columns.equals(idx)
     state = op.__getstate__()
-    assert "_inverses" not in state and "_complement" not in state
+    assert not {"_inverses", "_complement", "_norm"} & set(state)
     loaded = pickle.loads(pickle.dumps(op))
     assert isinstance(loaded, KroneckerOperator)
     np.testing.assert_array_equal(loaded.dense(), op.dense())
     np.testing.assert_array_equal(
         loaded.solve(np.ones(op.shape[0])), op.solve(np.ones(op.shape[0]))
     )
+
+
+class TestLogdet:
+    """``KroneckerOperator.logdet`` through the factors, against ``np.linalg.slogdet``."""
+
+    @pytest.mark.parametrize("which", ["whole", "permuted"])
+    def test_full_product_in_any_order(self, which, monkeypatch):
+        """The whole product, in any row order, from the factors without the matrix."""
+        op = OPS[which]
+        sign, expected = np.linalg.slogdet(op.dense())
+        assert sign == 1.0
+        monkeypatch.setattr(KroneckerOperator, "dense", _refuse)
+        assert op.logdet() == pytest.approx(expected, rel=1e-12)
+
+    @pytest.mark.parametrize("seed", range(3))
+    def test_random_factors_and_std(self, seed):
+        """Factors of other sizes, a random permutation and random deviations."""
+        rng = np.random.default_rng(seed)
+        sizes = (3, 2, 4)
+        factors = [_spd_factor(rng, k) for k in sizes]
+        rows = rng.permutation(24)
+        op = KroneckerOperator(
+            factors,
+            std=rng.uniform(0.2, 3.0, 24),
+            positions=np.unravel_index(rows, sizes),
+        )
+        assert op.logdet() == pytest.approx(np.linalg.slogdet(op.dense())[1], rel=1e-12)
+
+    def test_strict_subset_falls_back_to_dense(self, monkeypatch):
+        """A strict subset of the product factors the dense matrix."""
+        op = OPS["ragged"]
+        expected = np.linalg.slogdet(op.dense())[1]
+        formed = []
+        dense = KroneckerOperator.dense
+
+        def spy(self):
+            """Record that the dense matrix was formed, and form it."""
+            formed.append(self.shape)
+            return dense(self)
+
+        monkeypatch.setattr(KroneckerOperator, "dense", spy)
+        assert op.logdet() == pytest.approx(expected, rel=1e-12)
+        assert formed == [op.shape]
+
+    def test_zero_std_raises(self):
+        """A zero standard deviation makes the operator singular."""
+        op = KroneckerOperator([np.eye(2), np.eye(2)], std=[1.0, 0.0, 1.0, 1.0])
+        with pytest.raises(np.linalg.LinAlgError, match="zero"):
+            op.logdet()
+
+    def test_indefinite_factor_raises(self):
+        """A factor that is not positive-definite has no log-determinant."""
+        op = KroneckerOperator([np.array([[1.0, 2.0], [2.0, 1.0]]), np.eye(2)])
+        with pytest.raises(np.linalg.LinAlgError):
+            op.logdet()
 
 
 def _others(n: int, m: int = 5):
@@ -574,7 +732,7 @@ def test_select_other_forms(form):
 
 
 # ---------------------------------------------------------------------------
-# A structure built on an operator
+# A covariance that holds the factors behind labels
 # ---------------------------------------------------------------------------
 
 
@@ -585,62 +743,67 @@ def _refuse(*args, **kwargs):
 
 @pytest.fixture
 def no_dense(monkeypatch):
-    """Fail if anything forms a Kronecker operator's dense matrix (or a frame from it)."""
-    for name in ("dense", "to_frame", "__array__"):
+    """Fail if anything forms a Kronecker operator's dense matrix."""
+    for name in ("dense", "__array__"):
         monkeypatch.setattr(KroneckerOperator, name, _refuse)
 
 
 def _kron_cov(index=None, kernels=KERNELS_2, var=None, name="prior_error"):
-    """A covariance built on the operator of a Kronecker error on `index`."""
+    """A covariance on the operator of a Kronecker error on `index`."""
     index = _product() if index is None else index
     var = _variances(_product()) if var is None else var
-    op = KroneckerError(name, var, kernels).operator(index)
-    return CovarianceMatrix.from_operator(op, index, name=name), op
+    op = _operator(kernels, var, index)
+    return Covariance(op, Space.from_index(index), name=name), op
 
 
-class TestFromOperator:
-    """``Structure2D.from_operator`` keeps the operator until the DataFrame is asked for."""
+def _dense_cov(op: KroneckerOperator, index: pd.MultiIndex) -> Covariance:
+    """The same covariance as a dense matrix, read from a labeled frame."""
+    return Covariance.from_frame(pd.DataFrame(op.dense(), index=index, columns=index))
 
-    def test_labels_shape_and_operator(self, no_dense):
-        """The labels, shape, operator and variances, without the matrix."""
+
+def _positions_by_label(source: pd.MultiIndex, target: pd.MultiIndex) -> np.ndarray:
+    """Where each label of `target` is in `source`, matched by level name in a dict."""
+    names = list(source.names)
+    where = {label: i for i, label in enumerate(source)}
+    return np.array([where[label] for label in target.reorder_levels(names)])
+
+
+class TestCovarianceOnFactors:
+    """``Covariance(op, space)`` keeps the factors; only ``dense`` forms the matrix."""
+
+    def test_labels_shape_and_form(self, no_dense):
+        """The labels, shape, form and variances, without the matrix."""
         S, op = _kron_cov()
         idx = _product()
-        assert S.index.equals(idx) and S.columns.equals(idx)
-        assert S.shape == (len(idx), len(idx)) and len(S) == len(idx)
-        assert S.operator is op
-        assert not S.is_sparse
+        assert S.rows.index.equals(idx) and S.cols is S.rows
+        assert S.shape == (len(idx), len(idx))
+        assert S.data is op
         assert S.name == "prior_error"
-        repr(S)
+        text = repr(S)
+        assert "KroneckerOperator" in text and "shape=(24, 24)" in text
         np.testing.assert_array_equal(S.variances.values, op.diagonal())
 
-    def test_data_forms_the_frame_once(self, monkeypatch):
-        """``data`` forms the frame (a warning past the size, once), and the structure then holds it."""
-        S, op = _kron_cov()
-        monkeypatch.setattr("fips.base._FRAME_WARN_SIZE", 10)
-        with pytest.warns(UserWarning, match="Forming the 24 x 24 DataFrame"):
-            frame = S.data
-        np.testing.assert_array_equal(frame.to_numpy(), op.dense())
-        with warnings.catch_warnings():
-            warnings.simplefilter("error")  # no second warning
-            assert S.data is frame  # held
-        assert isinstance(S.operator, DenseOperator)
-        np.testing.assert_array_equal(S.values, op.dense())
-
-    def test_everything_that_reads_data_works(self):
-        """``values``, ``xs``, a block, ``to_frame``, ``force_symmetry``, a sum: as for a frame."""
+    def test_dense_outputs(self):
+        """``dense``, ``np.asarray``, ``to_frame``, a block and a sum, as for a dense matrix."""
         S, op = _kron_cov()
         D = op.dense()
-        ref = CovarianceMatrix(pd.DataFrame(D, index=_product(), columns=_product()))
-        np.testing.assert_array_equal(_kron_cov()[0].values, D)
-        pd.testing.assert_frame_equal(
-            _kron_cov()[0]["flux", "flux"], ref["flux", "flux"]
-        )
-        pd.testing.assert_frame_equal(_kron_cov()[0].to_frame(), ref.to_frame())
-        np.testing.assert_allclose(
-            _kron_cov()[0].force_symmetry().values, ref.force_symmetry().values
-        )
+        ref = _dense_cov(op, _product())
+        assert isinstance(ref.data, DenseOperator)
+        np.testing.assert_array_equal(S.dense(), D)
+        np.testing.assert_array_equal(np.asarray(S), D)
+        pd.testing.assert_frame_equal(S.to_frame(), ref.to_frame())
+        np.testing.assert_array_equal(S["flux", "flux"].dense(), D)
         total = S + ref
-        np.testing.assert_allclose(total.values, 2 * D)
+        assert isinstance(total, Covariance)
+        np.testing.assert_allclose(total.dense(), 2 * D)
+
+    def test_diagonal_block_keeps_the_factors(self, no_dense):
+        """``cov[b, b]`` is a covariance on that block, still factors."""
+        S, op = _kron_cov()
+        block = S["flux", "flux"]
+        assert isinstance(block, Covariance)
+        assert isinstance(block.data, KroneckerOperator)
+        assert block.space == S.space
 
     def test_labels_are_checked(self):
         """An unnamed level, a missing ``block`` level and a shape mismatch raise."""
@@ -649,206 +812,175 @@ class TestFromOperator:
             [["flux"], range(24)], names=["block", None]
         )
         with pytest.raises(ValueError, match="must be named"):
-            CovarianceMatrix.from_operator(op, unnamed)
+            Covariance(op, Space.from_index(unnamed))
         no_block = pd.Index(range(24), name="cell")
         with pytest.raises(ValueError, match="'block' level"):
-            CovarianceMatrix.from_operator(op, no_block)
+            Covariance(op, Space.from_index(no_block))
         short = pd.MultiIndex.from_product([["flux"], range(23)], names=["block", "c"])
-        with pytest.raises(ValueError, match="does not match"):
-            CovarianceMatrix.from_operator(op, short)
+        with pytest.raises(ValueError, match="shape"):
+            Covariance(op, Space.from_index(short))
 
-    def test_constructor_points_to_from_operator(self):
-        """An operator given to a constructor raises and names ``from_operator``."""
-        with pytest.raises(TypeError, match="from_operator"):
-            CovarianceMatrix(OPS["whole"])
+    def test_frame_refused(self):
+        """A DataFrame given to the constructor raises and names ``from_frame``."""
+        S, op = _kron_cov()
+        with pytest.raises(TypeError, match="from_frame"):
+            Covariance(S.to_frame(), S.space)
 
-    def test_labels_are_sanitized(self, no_dense):
-        """The ``block`` level moves first and numeric strings become numbers, as for a frame."""
+    def test_block_level_put_first(self, no_dense):
+        """The ``block`` level comes first in the labels, which are kept as given."""
         idx = pd.MultiIndex.from_product(
             [["1", "2"], ["flux"]], names=["cell", "block"]
         )
-        S = CovarianceMatrix.from_operator(KroneckerOperator([np.eye(2)]), idx)
-        assert list(S.index.names) == ["block", "cell"]
-        assert list(S.index.get_level_values("cell")) == [1, 2]
-        assert S.columns.equals(S.index)
+        S = Covariance(KroneckerOperator([np.eye(2)]), Space.from_index(idx))
+        assert list(S.rows.index.names) == ["block", "cell"]
+        assert list(S.space.select("flux")) == ["1", "2"]
+        assert S.cols is S.rows
 
-    def test_reindex_and_round_keep_the_operator(self, no_dense):
-        """A permutation or a subset of the labels picks rows of the operator, labels rounded."""
+    def test_align_and_round_keep_the_factors(self, no_dense):
+        """A permutation of the labels picks rows of the factors; rounding keeps them."""
         S, op = _kron_cov()
         idx = _product()
-        target = idx[np.random.default_rng(0).permutation(len(idx))][:20]
-        R = S.round_index(6, axis="both").reindex(
-            index=target, columns=target, fill_value=0.0, verify_overlap=True
-        )
-        assert isinstance(R.operator, KroneckerOperator)
-        assert R.index.equals(target) and R.columns.equals(target)
-        same = S.reindex(index=idx, columns=idx)
-        assert same.operator is op
+        target = Space.from_index(idx[np.random.default_rng(0).permutation(len(idx))])
+        R = S.round_labels(6).align(target, target)
+        assert isinstance(R, Covariance) and isinstance(R.data, KroneckerOperator)
+        assert R.space is target
+        assert S.round_labels(6).data is op
+        assert S.align(S.space, S.space).data is op
 
-    def test_reindex_values(self):
-        """The reindexed operator holds the reindexed entries."""
+    def test_align_values(self):
+        """The aligned covariance holds the entries of the labels it is put on."""
         S, op = _kron_cov()
         idx = _product()
-        target = idx[np.random.default_rng(1).permutation(len(idx))][:20]
-        R = S.reindex(index=target, columns=target)
-        expected = pd.DataFrame(op.dense(), index=idx, columns=idx).reindex(
-            index=target, columns=target
+        shuffled = idx[np.random.default_rng(1).permutation(len(idx))]
+        target = Space.from_index(shuffled)
+        R = S.align(target, target)
+        expected = (
+            pd.DataFrame(op.dense(), index=idx, columns=idx)
+            .reindex(index=shuffled, columns=shuffled)
+            .to_numpy()
         )
-        np.testing.assert_array_equal(R.operator.dense(), expected.to_numpy())
+        np.testing.assert_array_equal(R.dense(), expected)
 
-    def test_reindex_with_levels_in_another_order(self):
-        """A target with the levels in another order is matched label by label, overlap checked."""
+    def test_align_to_a_subset_raises(self):
+        """``align`` is an exact join: a subset of the labels raises."""
+        S, _ = _kron_cov()
+        subset = Space.from_index(_product()[:20])
+        with pytest.raises(ValueError, match="only in the other space"):
+            S.align(subset, subset)
+
+    def test_align_with_levels_in_another_order(self):
+        """Labels with the levels in another order are matched label by label."""
         S, op = _kron_cov()
-        target = (
+        target_index = (
             _product().reorder_levels(["block", "lat", "lon", "time"]).sort_values()
         )
-        with warnings.catch_warnings():
-            warnings.simplefilter("error")  # full overlap: no warning
-            R = S.reindex(index=target, columns=target, verify_overlap=True)
-        assert isinstance(R.operator, KroneckerOperator) and R._data is None
-        assert R.index.equals(target)
-        ref = CovarianceMatrix(
-            pd.DataFrame(op.dense(), index=_product(), columns=_product())
+        target = Space.from_index(target_index)
+        R = S.align(target, target)
+        assert isinstance(R.data, KroneckerOperator)
+        assert R.rows.index.equals(target_index)
+        p = _positions_by_label(_product(), target_index)
+        np.testing.assert_array_equal(R.dense(), op.dense()[np.ix_(p, p)])
+
+    def test_align_to_other_levels_raises(self):
+        """A space with other levels raises."""
+        S, _ = _kron_cov()
+        other = Space.from_index(
+            pd.MultiIndex.from_product([["flux"], range(24)], names=["block", "x"])
         )
-        expected = ref.reindex(index=target, columns=target, verify_overlap=True)
-        np.testing.assert_array_equal(R.values, expected.values)
+        with pytest.raises(ValueError, match="levels"):
+            S.align(other, other)
 
     def test_problem_with_levels_in_another_order(self):
-        """``InverseProblem`` takes a factored covariance whose levels are in another order than the prior's."""
-        S, op = _kron_cov()
+        """``Problem`` takes a factored covariance whose levels are in another order than the prior's."""
+        _, op = _kron_cov()
         inputs = _problem_inputs(_product(), sparse_h=True)
         order = ["block", "lat", "lon", "time"]
-        S_other = CovarianceMatrix.from_operator(op, _product().reorder_levels(order))
-        dense = CovarianceMatrix(
-            pd.DataFrame(op.dense(), index=_product(), columns=_product())
-        )
-        post = fips.solve(InverseProblem(prior_error=S_other, **inputs))
-        ref = fips.solve(InverseProblem(prior_error=dense, **inputs))
-        assert isinstance(post.estimator._S_0_op, KroneckerOperator)
+        S_other = Covariance(op, Space.from_index(_product().reorder_levels(order)))
+        problem = Problem(prior_cov=S_other, **inputs)
+        assert isinstance(problem.prior_cov.data, KroneckerOperator)
+        post = fips.solve(problem)
+        ref = fips.solve(Problem(prior_cov=_dense_cov(op, _product()), **inputs))
         _close(post.estimate.values, ref.estimate.values, "estimate")
 
-    def test_reindex_with_a_new_label_forms_the_frame(self):
-        """A label the operator does not have: the DataFrame path, which fills zeros and warns."""
-        S, op = _kron_cov()
+    def test_problem_with_a_new_label_raises(self):
+        """A state label the covariance does not have raises, naming it: no zero fill."""
+        S, _ = _kron_cov()
         idx = _product()
         extra = pd.MultiIndex.from_tuples(
             [("flux", TIMES[0], 39.0, -112.0)], names=idx.names
         )
-        target = idx.append(extra)
-        with pytest.warns(UserWarning, match="Partial overlap"):
-            R = S.reindex(
-                index=target, columns=target, fill_value=0.0, verify_overlap=True
-            )
-        assert isinstance(R.operator, DenseOperator)
-        np.testing.assert_array_equal(R.values[:-1, :-1], op.dense())
-        assert not R.values[-1].any()
+        inputs = _problem_inputs(idx.append(extra), sparse_h=True)
+        with pytest.raises(
+            ValueError,
+            match=r"labels of block 'flux' missing from the rows of prior_cov",
+        ):
+            Problem(prior_cov=S, **inputs)
 
-    def test_reindex_level_mismatch_raises(self):
-        """A target with other levels raises, as for a frame."""
-        S, _ = _kron_cov()
-        other = pd.MultiIndex.from_product([["flux"], range(24)], names=["block", "x"])
-        with pytest.raises(ValueError, match="Cannot reindex"):
-            S.reindex(index=other, columns=other)
-
-    def test_inplace(self, no_dense):
-        """``reindex`` and ``round_index`` in place keep the operator."""
+    def test_scalars_and_relabeling_keep_the_factors(self, no_dense):
+        """A positive scalar, and the form put behind labels again, keep the factors."""
         S, op = _kron_cov()
-        target = _product()[::-1]
-        assert S.reindex(index=target, columns=target, inplace=True) is S
-        assert S.index.equals(target) and isinstance(S.operator, KroneckerOperator)
-        assert S.round_index(3, axis="both", inplace=True) is S
-        assert S._op is not None
+        for scaled in (S * 2.0, 2.0 * S, S / 0.5):
+            assert isinstance(scaled, Covariance)
+            assert isinstance(scaled.data, KroneckerOperator)
+            np.testing.assert_allclose(scaled.variances.values, 2 * op.diagonal())
+        again = Covariance(S.data, S.space, name="again")
+        assert again.data is op and again.name == "again"
+        assert Operator(S.data, S.rows, S.cols).data is op
 
-    def test_copy_scale_and_matrix_of_it(self, no_dense):
-        """``copy``, ``scale`` and ``CovarianceMatrix(S)`` keep the operator."""
-        S, op = _kron_cov()
-        assert isinstance(S.copy().operator, KroneckerOperator)
-        assert S.copy(deep=False).operator is op
-        assert isinstance(S.scale(2.0).operator, KroneckerOperator)
-        np.testing.assert_allclose(S.scale(2.0).variances.values, 2 * op.diagonal())
-        again = CovarianceMatrix(S, name="again")
-        assert again.operator is op and again.name == "again"
-        assert Matrix(S).operator is op
-
-    def test_pickle(self, no_dense, tmp_path):
-        """A pickle keeps the operator and the labels, not a frame."""
+    def test_pickle(self, no_dense):
+        """A pickle keeps the factors, the labels and the name."""
         S, op = _kron_cov()
         loaded = pickle.loads(pickle.dumps(S))
-        assert isinstance(loaded.operator, KroneckerOperator)
-        assert loaded.index.equals(S.index) and loaded.name == S.name
-        path = tmp_path / "S.pkl"
-        S.to_file(path)
-        assert CovarianceMatrix.from_file(path).index.equals(S.index)
+        assert isinstance(loaded, Covariance)
+        assert isinstance(loaded.data, KroneckerOperator)
+        assert loaded.space == S.space and loaded.name == S.name
 
-    def test_pickle_of_a_frame_is_unchanged(self):
-        """A structure that holds a frame pickles as before: data and name only."""
-        S = CovarianceMatrix.diagonal(1.0, index=_product())
-        assert set(S.__getstate__()) == {"data", "name"}
-
-    def test_matrix_block(self, no_dense):
-        """A block is built on an operator too, with its block names."""
+    def test_one_block_without_a_block_level(self, no_dense):
+        """An index without a ``block`` level is one named block; ``from_blocks`` keeps the form."""
         idx = _product(block=False)
-        op = KroneckerError("prior", 1.0, KERNELS_2).operator(idx)
-        B = MatrixBlock.from_operator(op, idx, row_block="flux", col_block="flux")
-        assert B.row_block == "flux" and B.operator is op
-        assert MatrixBlock(B).operator is op
+        op = _operator(KERNELS_2, 1.0, idx)
+        space = Space({"flux": idx})
+        S = Covariance(op, space)
+        assert S.space.names == ("flux",) and S.data is op
+        B = Covariance.from_blocks({("flux", "flux"): op}, rows=space, cols=space)
+        assert isinstance(B, Covariance) and B.data is op
         loaded = pickle.loads(pickle.dumps(B))
-        assert loaded.row_block == "flux" and loaded.operator is not None
-        with pytest.raises(ValueError, match="'block' level"):
-            MatrixBlock.from_operator(
-                OPS["whole"], _product()[:24], row_block="flux", col_block="flux"
-            )
-
-    def test_repr_does_not_form_the_frame(self, no_dense):
-        """``repr`` of a block or a matrix built on an operator shows the operator, not a frame."""
-        idx = _product(block=False)
-        op = KroneckerError("prior", 1.0, KERNELS_2).operator(idx)
-        B = MatrixBlock.from_operator(op, idx, row_block="flux", col_block="flux")
-        text = repr(B)
-        assert "KroneckerOperator" in text and "shape=(24, 24)" in text
-        assert B._data is None and B.operator is op
-        S, _ = _kron_cov()
-        repr(S)
-        assert S._data is None
+        assert isinstance(loaded.data, KroneckerOperator)
 
     @pytest.mark.parametrize("form", ["array", "dense", "sparse", "diagonal"])
     def test_nan_raises_as_for_a_frame(self, form):
-        """An operator that stores a NaN is refused, as a frame with one is."""
+        """A form that stores a NaN is refused, as a frame with one is."""
         idx = pd.MultiIndex.from_product([["flux"], [0, 1]], names=["block", "cell"])
         A = np.array([[1.0, np.nan], [np.nan, 1.0]])
-        op = {
+        data = {
             "array": A,
             "dense": DenseOperator(A),
             "sparse": SparseOperator(sp.csr_matrix(A)),
             "diagonal": DiagonalOperator([1.0, np.nan]),
         }[form]
         with pytest.raises(ValueError, match="NaN"):
-            CovarianceMatrix.from_operator(op, idx)
+            Covariance(data, Space.from_index(idx))
         with pytest.raises(ValueError, match="NaN"):
-            CovarianceMatrix(pd.DataFrame(A, index=idx, columns=idx))
+            Covariance.from_frame(pd.DataFrame(A, index=idx, columns=idx))
 
-    def test_sparse_operator_behind_labels(self):
-        """A sparse operator stays sparse, and its frame is a sparse frame."""
+    def test_diagonal_form_behind_labels(self):
+        """A diagonal form stays diagonal behind labels."""
         idx = _product()
         D = DiagonalOperator(np.arange(1.0, 25.0))
-        S = CovarianceMatrix.from_operator(D, idx)
-        assert S.is_sparse and S.operator is D
-        assert S.data.dtypes.map(lambda d: isinstance(d, pd.SparseDtype)).all()
-        np.testing.assert_array_equal(S.values.toarray(), np.diag(np.arange(1.0, 25.0)))
+        S = Covariance(D, Space.from_index(idx))
+        assert S.data is D
+        np.testing.assert_array_equal(np.asarray(S), np.diag(np.arange(1.0, 25.0)))
+        np.testing.assert_array_equal(S.variances.values, np.arange(1.0, 25.0))
 
 
 # ---------------------------------------------------------------------------
 # The solve, from the factors against the dense matrix
 # ---------------------------------------------------------------------------
 
-ESTIMATOR_OUTPUTS = [
-    "x_hat", "S_hat", "K", "A", "y_hat", "y_0", "S_y0", "desroziers", "U_red",
-    "DOFS", "reduced_chi2", "R2", "RMSE", "uncertainty_reduction",
-]  # fmt: skip
 POSTERIOR_OUTPUTS = [
-    "estimate", "mean", "covariance", "variances", "modeled_obs", "prior_modeled_obs",
-    "prior_obs_covariance", "kalman_gain", "averaging_kernel", "desroziers",
-    "dofs", "reduced_chi2", "r2", "rmse", "uncertainty_reduction",
+    "estimate", "mean", "cov", "variances", "modeled_obs",
+    "innovation_cov", "kalman_gain", "averaging_kernel", "desroziers", "dofs", "chi2",
+    "reduced_chi2", "r2", "rmse", "uncertainty_reduction",
 ]  # fmt: skip
 
 
@@ -862,70 +994,65 @@ def _close(actual, expected, what):
 
 
 def _problem_inputs(state_index, sparse_h: bool, seed: int = 11):
-    """The obs, prior, H, S_z and constant of a small problem on `state_index`."""
+    """The obs, prior, H, S_z and offset of a small problem on `state_index`."""
     rng = np.random.default_rng(seed)
     n, m = len(state_index), 15
     obs_index = pd.MultiIndex.from_product(
         [["conc"], [f"o{k}" for k in range(m)]], names=["block", "obs"]
     )
+    obs_space = Space.from_index(obs_index)
     H = np.zeros((m, n))
     for i in range(m):
         H[i, rng.choice(n, 4, replace=False)] = rng.uniform(0.5, 2.0, 4)
     x_0 = rng.normal(5.0, 1.0, n)
     z = H @ x_0 + rng.normal(0, 1.0, m)
+    state_space = Space.from_index(state_index)
     return {
-        "obs": pd.Series(z, index=obs_index),
-        "prior": pd.Series(x_0, index=state_index),
-        "forward_operator": ForwardOperator(
-            pd.DataFrame(H, index=obs_index, columns=state_index), sparse=sparse_h
-        ),
-        "modeldata_mismatch": CovarianceMatrix.diagonal(
-            rng.uniform(0.1, 0.4, m), index=obs_index
-        ),
-        "constant": pd.Series(rng.normal(0.5, 0.1, m), index=obs_index),
+        "obs": Vector(z, obs_space),
+        "prior": Vector(x_0, state_space),
+        "forward": Operator(sp.csr_array(H) if sparse_h else H, obs_space, state_space),
+        "obs_cov": Covariance.diagonal(rng.uniform(0.1, 0.4, m), obs_space),
+        "offset": Vector(rng.normal(0.5, 0.1, m), obs_space),
     }
 
 
 def _compare(post, ref):
-    """Every estimator and Posterior output of `post` against `ref`, at 1e-10."""
-    for name in ESTIMATOR_OUTPUTS:
-        _close(getattr(post.estimator, name), getattr(ref.estimator, name), name)
+    """Every Posterior output of `post` against `ref`, at 1e-10."""
     for name in POSTERIOR_OUTPUTS:
         value, expected = getattr(post, name), getattr(ref, name)
-        if callable(value):  # averaging_kernel, with no aggregation
+        if callable(value):  # cov, averaging_kernel, desroziers: with no argument
             value, expected = value(), expected()
-        if hasattr(value, "to_dense"):  # a labeled structure
+        if isinstance(value, pd.DataFrame):  # desroziers
             assert value.index.equals(expected.index), name
-            value, expected = value.to_dense().values, expected.to_dense().values
+            value, expected = value.to_numpy(), expected.to_numpy()
+        if isinstance(value, Operator):  # a labeled matrix
+            assert value.rows == expected.rows and value.cols == expected.cols, name
+            value, expected = value.dense(), expected.dense()
         elif hasattr(value, "index"):
             assert value.index.equals(expected.index), name
             value, expected = value.values, expected.values
         _close(value, expected, f"posterior {name}")
-    x = np.linspace(1.0, 2.0, post.estimator.n_x)
-    _close(post.estimator.cost(x), ref.estimator.cost(x), "cost")
 
 
-@pytest.mark.parametrize("estimator", available_estimators())
 @pytest.mark.parametrize("sparse_h", [False, True], ids=["dense H", "sparse H"])
 @pytest.mark.parametrize("shape", ["product", "permuted", "ragged"])
 @KERNELS
-def test_solve_matches_the_dense_build(estimator, sparse_h, shape, kernels):
+def test_solve_matches_the_dense_build(sparse_h, shape, kernels):
     """
     A problem whose prior error is built on the factors solves as the dense one does.
 
-    ``product``: the prior error from ``build`` is the reference. ``permuted``: the
+    ``product``: ``np.kron`` of the factors is the reference. ``permuted``: the
     covariance is built on the product but the prior comes in a shuffled order, so
     the problem reorders the operator. ``ragged``: cells missing at some times
-    (the dense reference is the operator's own matrix, which ``build`` cannot
+    (the dense reference is the operator's own matrix, which ``np.kron`` cannot
     give on this index).
     """
     index = _product()
     var = _variances(index)
-    error = KroneckerError("prior_error", var, kernels)
     if shape == "ragged":
         index = _ragged(index)
-    op = error.operator(index)
-    dense = op.dense() if shape == "ragged" else error.build(index).to_numpy()
+    op = _operator(kernels, var, index)
+    dense = op.dense() if shape == "ragged" else _kron_formula(kernels, var, index)
     if shape == "product":
         np.testing.assert_array_equal(op.dense(), dense)
     state = index
@@ -933,32 +1060,103 @@ def test_solve_matches_the_dense_build(estimator, sparse_h, shape, kernels):
         state = index[np.random.default_rng(5).permutation(len(index))]
     inputs = _problem_inputs(state, sparse_h)
 
-    S_factored = CovarianceMatrix.from_operator(op, index)
-    S_dense = CovarianceMatrix(pd.DataFrame(dense, index=index, columns=index))
-    options = {"gamma": 0.7} if estimator == "bayesian" else {}
-    post = fips.solve(
-        InverseProblem(prior_error=S_factored, **inputs), estimator, **options
-    )
-    ref = fips.solve(
-        InverseProblem(prior_error=S_dense, **inputs), estimator, **options
-    )
-    assert isinstance(post.estimator._S_0_op, KroneckerOperator)
+    S_factored = Covariance(op, Space.from_index(index))
+    S_dense = Covariance.from_frame(pd.DataFrame(dense, index=index, columns=index))
+    problem = Problem(prior_cov=S_factored, **inputs)
+    assert isinstance(problem.prior_cov.data, KroneckerOperator)
+    post = fips.solve(problem, gamma=0.7)
+    ref = fips.solve(Problem(prior_cov=S_dense, **inputs), gamma=0.7)
     _compare(post, ref)
 
 
-def test_operator_given_to_the_problem():
-    """An operator as ``prior_error`` is labeled by the prior's index."""
-    index = _product()
-    op = KroneckerError("prior_error", _variances(index), KERNELS_2).operator(index)
-    inputs = _problem_inputs(index, sparse_h=True)
-    problem = InverseProblem(prior_error=op, **inputs)
-    assert problem.prior_error.operator is op
-    assert problem.prior_error.index.equals(problem.prior.index)
-    ref = InverseProblem(
-        prior_error=CovarianceMatrix.from_operator(op, index), **inputs
+def _flux_and_bias(seed: int = 3):
+    """A state of a Kronecker flux block and a diagonal bias block, its covariance, and the problem's other inputs."""
+    rng = np.random.default_rng(seed)
+    cells = _ragged(_product(block=False))
+    op = _operator(KERNELS_3, _variances(cells), cells)
+    sites = pd.Index(["A", "B", "C"], name="site")
+    S_0 = Covariance.block_diag(
+        Covariance(op, Space({"flux": cells})),
+        Covariance.diagonal(rng.uniform(0.5, 2.0, 3), Space({"bias": sites})),
+        name="prior_error",
     )
+    prior = Vector(rng.normal(5.0, 1.0, len(S_0.space)), S_0.space, name="prior")
+    m = 12
+    obs_space = Space({"conc": pd.Index([f"o{k}" for k in range(m)], name="obs")})
+    H = np.zeros((m, len(S_0.space)))
+    for i in range(m):
+        H[i, rng.choice(len(cells), 4, replace=False)] = rng.uniform(0.5, 2.0, 4)
+        H[i, len(cells) + i % 3] = 1.0  # each observation sees one site's bias
+    z = H @ prior.values + rng.normal(0, 1.0, m)
+    inputs = {
+        "obs": Vector(z, obs_space, name="obs"),
+        "forward": Operator(sp.csr_array(H), obs_space, S_0.space),
+        "obs_cov": Covariance.diagonal(rng.uniform(0.1, 0.4, m), obs_space),
+    }
+    return S_0, prior, inputs
+
+
+def test_block_diagonal_prior_error_solves_as_the_dense_one():
+    """
+    A Kronecker flux block and a diagonal bias block, kept as forms, solve as the dense matrix does.
+
+    The prior error is ``Covariance.block_diag`` of the two; the reference is
+    the same covariance as one dense matrix.
+    """
+    S_0, prior, inputs = _flux_and_bias()
+    assert isinstance(S_0.data, BlockDiagonalOperator)
+    flux, bias = S_0.data.blocks
+    assert isinstance(flux, KroneckerOperator) and isinstance(bias, DiagonalOperator)
     np.testing.assert_array_equal(
-        fips.solve(problem).estimate.values, fips.solve(ref).estimate.values
+        S_0.dense(), scipy.linalg.block_diag(flux.dense(), bias.dense())
+    )
+    S_dense = Covariance(S_0.dense(), S_0.space)
+    problem = Problem(prior=prior, prior_cov=S_0, **inputs)
+    post = fips.solve(problem, gamma=0.7)
+    ref = fips.solve(Problem(prior=prior, prior_cov=S_dense, **inputs), gamma=0.7)
+    assert isinstance(problem.prior_cov.data, BlockDiagonalOperator)
+    assert isinstance(problem.prior_cov.data.blocks[0], KroneckerOperator)
+    _compare(post, ref)
+    flux_cov = problem.prior_cov["flux", "flux"]
+    assert isinstance(flux_cov, Covariance)
+    np.testing.assert_array_equal(flux_cov.dense(), flux.dense())
+
+
+def test_block_of_a_block_diagonal_keeps_the_factors(no_dense):
+    """The flux block of a block diagonal covariance is a covariance that still solves through the factors."""
+    S_0, _, _ = _flux_and_bias()
+    flux = S_0["flux", "flux"]
+    assert isinstance(flux, Covariance)
+    assert flux.space.select("flux").equals(S_0.space.select("flux"))
+    b = np.random.default_rng(0).standard_normal(len(flux.space))
+    x = flux.solve(Vector(b, flux.space))
+    np.testing.assert_allclose(S_0.data.blocks[0] @ x.values, b, rtol=1e-10, atol=1e-10)
+
+
+def test_block_diagonal_in_another_block_order_keeps_the_factors():
+    """Putting a block diagonal covariance on its blocks in another order keeps each block's form."""
+    S_0, _, _ = _flux_and_bias()
+    other = Space({"bias": S_0.space.select("bias"), "flux": S_0.space.select("flux")})
+    R = S_0.align(other, other)
+    np.testing.assert_array_equal(
+        R["flux", "flux"].dense(), S_0["flux", "flux"].dense()
+    )
+    assert isinstance(R.data, BlockDiagonalOperator)
+    assert isinstance(R.data.blocks[1], KroneckerOperator)
+
+
+def test_a_model_given_to_the_problem_is_kept_as_factors():
+    """A Kronecker covariance model is built on the prior's space as a ``KroneckerOperator``."""
+    index = _product()
+    model = Kronecker(
+        Exponential("time", "30D"),
+        Exponential(["lat", "lon"], 50.0, metric="haversine"),
+    ).with_std(0.5)
+    problem = Problem(prior_cov=model, **_problem_inputs(index, sparse_h=True))
+    assert isinstance(problem.prior_cov.data, KroneckerOperator)
+    assert problem.prior_cov.space is problem.prior.space
+    np.testing.assert_array_equal(
+        problem.prior_cov.dense(), model.build(Space.from_index(index)).dense()
     )
 
 
@@ -966,49 +1164,94 @@ def test_solve_never_forms_the_prior_error(no_dense):
     """
     Building the problem and solving it never forms the ``n x n`` prior error.
 
-    The prior comes in another row order with float labels, so the problem
-    rounds and reorders the covariance. Every output but the full posterior
-    covariance is read, the variances and an aggregated covariance included:
-    the whitened solve gives them from its factors.
+    The prior comes in another row order, so the problem reorders the
+    covariance. Every output but the full posterior covariance is read, the
+    variances and an aggregated covariance included: the whitened solve gives
+    them from its factors.
     """
     index = _product()
     S, op = _kron_cov(index)
     state = index[np.random.default_rng(2).permutation(len(index))]
-    problem = InverseProblem(prior_error=S, **_problem_inputs(state, sparse_h=True))
-    assert isinstance(problem.prior_error.operator, KroneckerOperator)
-    assert problem.prior_error._data is None
+    problem = Problem(prior_cov=S, **_problem_inputs(state, sparse_h=True))
+    assert isinstance(problem.prior_cov.data, KroneckerOperator)
     post = fips.solve(problem)
     for name in (
-        "estimate", "modeled_obs", "prior_modeled_obs", "prior_obs_covariance",
-        "kalman_gain", "dofs", "reduced_chi2", "r2", "rmse", "desroziers",
+        "estimate", "modeled_obs", "innovation_cov",
+        "kalman_gain", "dofs", "chi2", "reduced_chi2", "r2", "rmse",
         "variances", "uncertainty_reduction",
     ):  # fmt: skip
         getattr(post, name)
     post.averaging_kernel()
+    post.desroziers()
+    post.leverage(post.estimate)
     rows = pd.MultiIndex.from_tuples([("total", "all")], names=["block", "region"])
-    post.cov(Matrix(pd.DataFrame(1.0, index=rows, columns=state)))
-    post.estimator.cost(np.ones(len(index)))
-    pickle.loads(pickle.dumps(problem.solve("bayesian")))
-    assert problem.prior_error._data is None
+    post.cov(Operator.from_frame(pd.DataFrame(1.0, index=rows, columns=state)))
+    pickle.loads(pickle.dumps(post.with_gamma(2.0)))
+    assert isinstance(problem.prior_cov.data, KroneckerOperator)
 
 
-def test_solved_problem_pickles():
-    """A solved problem on factors pickles, and its posterior reads back."""
+def test_a_solve_does_not_copy_the_forms_it_makes(constructors):
+    """
+    From a model's build to every posterior output, fips builds its forms without copying them again.
+
+    The prior error is a Kronecker flux block and a diagonal bias block. The
+    steps that build forms from arrays they computed (the model's build, the
+    products of the solve, the aggregation, the restriction, the posterior's
+    matrices) hold those arrays; the constructors that copy are for what a
+    caller hands over.
+    """
+    S_0, prior, inputs = _flux_and_bias()
+    flux, bias = S_0.space.select("flux"), S_0.space.select("bias")
+    H, obs_cov = inputs["forward"], inputs["obs_cov"]
+    constructors.clear()  # building the inputs copied them, once each
+
+    # the models build forms of their own, and a labeled matrix is placed on a space
+    cells = Space({"flux": flux})
+    KERNELS_3.with_std(0.5).build(cells)
+    Exponential("lat", 0.7).with_std(0.5).build(cells)
+    Exponential("lat", 0.7, within=["time"]).with_std(0.5).build(cells)
+    fips.Independent().with_std(0.5).build(cells)
+    obs = H.rows.select("conc")
+    part = pd.DataFrame(1.0, index=obs[:3], columns=flux[:4])
+    Operator.from_blocks({("conc", "flux"): part}, rows=H.rows, cols=prior.space)
+    everything = pd.MultiIndex.from_tuples([("all", "x")], names=["block", "total"])
+    Operator.from_frame(pd.DataFrame(1.0, index=everything, columns=prior.space.index))
+
+    problem = Problem(prior=prior, prior_cov=S_0, **inputs)
+    post = fips.solve(problem, gamma=0.7)
+    for name in (
+        "estimate",
+        "variances",
+        "modeled_obs",
+        "innovation_cov",
+        "kalman_gain",
+    ):
+        getattr(post, name)
+    post.cov()
+    post.averaging_kernel()
+    post.leverage(post.estimate)
+    total = fips.aggregate.sum(prior.space, by="time", blocks="flux")
+    post.cov(total)
+    post.averaging_kernel(total)
+    problem.aggregate(fips.aggregate.sum(H.rows, by="obs"))
+    problem.restrict(Space({"flux": flux[:5], "bias": bias}))
+
+    S_0.solve(H.T)
+    S_0.sqrt()
+    H @ S_0 @ H.T + obs_cov
+    assert constructors == []
+
+
+def test_posterior_on_factors_pickles():
+    """A posterior whose prior error is factors pickles, and keeps the factors."""
     index = _product()
-    S, op = _kron_cov(index)
-    problem = InverseProblem(prior_error=S, **_problem_inputs(index, sparse_h=True))
-    problem.solve("bayesian")
-    loaded = pickle.loads(pickle.dumps(problem))
-    assert isinstance(loaded.prior_error.operator, KroneckerOperator)
-    assert isinstance(loaded.estimator._S_0_op, KroneckerOperator)
-    np.testing.assert_array_equal(loaded.posterior.values, problem.posterior.values)
-    # The public attribute is the dense matrix, formed when read
-    S_0 = problem.estimator.S_0
-    assert type(S_0) is np.ndarray
-    np.testing.assert_array_equal(S_0, op.dense())
-    np.testing.assert_array_equal(
-        loaded.estimator.reduced_chi2, problem.estimator.reduced_chi2
-    )
+    S, _ = _kron_cov(index)
+    post = fips.solve(Problem(prior_cov=S, **_problem_inputs(index, sparse_h=True)))
+    loaded = pickle.loads(pickle.dumps(post))
+    assert isinstance(loaded.problem.prior_cov, Covariance)
+    assert isinstance(loaded.problem.prior_cov.data, KroneckerOperator)
+    np.testing.assert_array_equal(loaded.estimate.values, post.estimate.values)
+    assert loaded.reduced_chi2 == post.reduced_chi2
 
 
 def test_kron_reduce_matches_product_order():
@@ -1018,4 +1261,5 @@ def test_kron_reduce_matches_product_order():
     np.testing.assert_allclose(
         KroneckerOperator(factors).dense(), reduce(np.kron, factors), rtol=1e-15
     )
-    assert isinstance(as_operator(KroneckerOperator(factors)), Operator)
+    op = KroneckerOperator(factors)
+    assert as_linear_operator(op) is op and isinstance(op, LinearOperator)

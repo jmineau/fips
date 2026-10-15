@@ -9,129 +9,179 @@ User Guide
 Data Model
 ----------
 
-*fips* uses a two-level hierarchy for all inputs:
+*fips* keeps labels beside the numbers, never inside them:
 
 .. list-table::
    :header-rows: 1
-   :widths: 20 20 60
+   :widths: 25 75
 
-   * - 1-D class
-     - 2-D class
+   * - Class
      - Role
-   * - :class:`~fips.Block`
-     - :class:`~fips.MatrixBlock`
-     - Single named component — the fundamental unit
+   * - :class:`~fips.Space`
+     - The labels of a state, of the observations, or of one axis of a
+       matrix: named blocks, each labeled by its own pandas index, together
+       one :class:`pandas.MultiIndex` with a ``"block"`` level first
    * - :class:`~fips.Vector`
-     - :class:`~fips.Matrix`
-     - Multi-block composite used directly by :class:`~fips.InverseProblem`
-   * - —
-     - :class:`~fips.CovarianceMatrix`
-     - Semantic subclass of :class:`~fips.Matrix` for error covariances
-   * - —
-     - :class:`~fips.ForwardOperator`
-     - Semantic subclass of :class:`~fips.Matrix` for the Jacobian / :math:`H`
+     - Values on a space: a prior, the observations, an estimate
+   * - :class:`~fips.Operator`
+     - A matrix from one space (its columns) to another (its rows), kept in
+       its cheapest form: the forward operator :math:`H`, an aggregation
+   * - :class:`~fips.Covariance`
+     - A symmetric operator from a space to itself: :math:`S_0`, :math:`S_z`
+   * - :class:`~fips.Problem`
+     - The inputs of a solve: prior, observations, forward operator,
+       covariances and an offset, their labels checked once
+   * - :class:`~fips.Posterior`
+     - What :func:`fips.solve` returns: the estimate and its diagnostics,
+       labeled, from the factorization it keeps
 
-A :class:`~fips.Vector` concatenates :class:`~fips.Block` objects along a
-hierarchical index that adds a ``"block"`` level identifying each component.
-The same pattern applies in 2-D.  Index alignment across components is handled
-automatically: :class:`~fips.InverseProblem` places each matrix on the
-observation and state labels, and fills the labels a matrix lacks within a
-block with zeros (with a warning). A block name that matches no block of the
-state or the observations raises a :class:`ValueError`, and so does a label
-that appears twice in the state or the observations, including two labels
-that ``round_index`` rounds to the same value.
+Blocks may have different index levels: a level one block has and another
+lacks is missing (NaN) on the other's rows, and :class:`~fips.Space` is the
+one place that pads and strips those levels, so a block comes back with the
+labels (and dtypes) it was given. A :class:`~fips.Problem` puts each input on
+the observation and state labels by an exact join: the labels may come in any
+order, but a block or a label that one side has and the other lacks raises a
+:class:`ValueError` that names it, and so does a label that appears twice in a
+block. Labels are kept as given: fips does not convert them to numbers, and
+rounds float labels only when asked (:meth:`Space.round_labels
+<fips.Space.round_labels>`).
 
 .. tip::
 
-   Plain :class:`pandas.Series` and :class:`pandas.DataFrame` are accepted
-   everywhere — *fips* will promote them to :class:`~fips.Block` /
-   :class:`~fips.MatrixBlock` automatically.
+   pandas objects come in through constructors that read their labels:
+   :meth:`Vector.from_series <fips.Vector.from_series>` for the prior and the
+   observations, :meth:`Operator.from_frame <fips.Operator.from_frame>` and
+   :meth:`Covariance.from_frame <fips.Operator.from_frame>` for matrices.
 
 
-Constructing Covariance Matrices
----------------------------------
+Building Operators and Covariances
+----------------------------------
 
-:class:`~fips.CovarianceMatrix` takes a full :class:`pandas.DataFrame` (or a 2D
-array with an ``index``), or a list of :class:`~fips.MatrixBlock` objects. The
-index needs a ``"block"`` level.
-
-A diagonal covariance (independent errors) has its own constructor,
-:meth:`~fips.CovarianceMatrix.diagonal`. It takes the variances and the index
-that labels both axes: a scalar is the same variance for every element, and a
-1D array or list gives one for each. A :class:`pandas.Series` or a
-:class:`~fips.Vector` brings its own index.
+An :class:`~fips.Operator` is built from its matrix and the two spaces, from
+a labeled :class:`pandas.DataFrame` (:meth:`~fips.Operator.from_frame`), or
+from its blocks (:meth:`~fips.Operator.from_blocks`), one per pair of a row
+block and a column block; a pair left out is zero. ``op.to_frame()`` gives the
+DataFrame back, and ``op["co2", "flux"]`` one block.
 
 .. ipython:: python
 
    import pandas as pd, numpy as np
-   from fips import CovarianceMatrix
+   import fips
 
-   idx = pd.MultiIndex.from_product([["obs"], ["a", "b", "c"]], names=["block", "id"])
+   obs = pd.Index(["o1", "o2", "o3"], name="obs_id")
+   cells = pd.Index(["a", "b"], name="cell")
+   H = fips.Operator.from_blocks(
+       {
+           ("co2", "flux"): pd.DataFrame(np.ones((3, 2)), index=obs, columns=cells),
+           ("co2", "bias"): pd.DataFrame(1.0, index=obs, columns=pd.Index(["A"], name="site")),
+       }
+   )
+   H.cols
+   H.to_frame()
+
+A diagonal covariance (independent errors) has its own constructor,
+:meth:`~fips.Covariance.diagonal`. It takes the variances and the space that
+labels both axes: a scalar is the same variance for every element, and a 1D
+array or list gives one for each. A :class:`~fips.Vector` brings its own space.
+The covariance is kept as its diagonal, so it costs one number per element:
+
+.. ipython:: python
+
+   space = fips.Space({"obs": pd.Index(["a", "b", "c"], name="id")})
 
    # Diagonal: independent errors with the same variance
-   CovarianceMatrix.diagonal(0.25, index=idx).values
+   fips.Covariance.diagonal(0.25, space).dense()
 
    # Diagonal: a variance for each element
-   CovarianceMatrix.diagonal(pd.Series([0.5, 0.5, 1.0], index=idx)).values
+   S = fips.Covariance.diagonal([0.5, 0.5, 1.0], space)
+   S.data
 
    # Full dense matrix
-   S = CovarianceMatrix(pd.DataFrame(np.eye(3) * 0.25, index=idx, columns=idx))
-   S.shape
+   fips.Covariance(np.eye(3) * 0.25, space).shape
 
-With ``sparse=True`` the diagonal is stored sparse and the dense matrix is never
-formed, which matters once the index is long:
+Independent covariances go side by side with
+:meth:`~fips.Covariance.block_diag`, each keeping its form. A covariance also
+gives its :attr:`~fips.Covariance.variances`, :meth:`~fips.Covariance.solve`,
+:meth:`~fips.Covariance.logdet`, :meth:`~fips.Covariance.quadratic_form` (of
+its inverse) and :meth:`~fips.Covariance.sqrt`.
+
+.. _covariance-models:
+
+Covariance models
+-----------------
+
+A covariance is usually written as a correlation model and the standard
+deviations. A model says how correlated two labels are from their
+coordinates: :class:`~fips.Exponential`, :class:`~fips.Gaussian` and
+:class:`~fips.Matern` decay with the distance along some levels (a time, a
+straight line, or a distance on the Earth), :class:`~fips.Constant` is one,
+:class:`~fips.Independent` is the identity, and :class:`~fips.Kronecker`
+multiplies models on separate levels. ``model.with_std(std)`` is the
+covariance: given the standard deviations as a :class:`~fips.Vector`, it is a
+:class:`~fips.Covariance` at once; given a scalar or an array, it is a
+:class:`~fips.covariance.CovarianceModel`, which ``build(space)`` puts on a space.
+Models add (``a + b``), and :meth:`~fips.Covariance.block_diag` takes them by
+block name.
+
+``within=`` keeps a model inside groups of labels and makes it zero between
+them: ``within=["site", "obs_time.date"]`` correlates the observations of one
+site on one day only (``"obs_time.date"`` is the date of the ``obs_time``
+level), and ``within="time.hour"`` correlates only the same hour of day. The
+matrix is then sparse.
 
 .. ipython:: python
 
-   CovarianceMatrix.diagonal(0.25, index=idx, sparse=True).is_sparse
+   obs = pd.MultiIndex.from_product(
+       [["A", "B"], pd.date_range("2024-01-01 21:00", periods=4, freq="h")],
+       names=["site", "obs_time"],
+   )
+   obs_space = fips.Space({"co2": obs})
+   S_z = fips.Independent().with_std(0.1) + fips.Exponential(
+       "obs_time", "2h", within=["site", "obs_time.date"]
+   ).with_std(0.5)
+   S_z
+   S_z.build(obs_space).dense().round(3)
 
-:class:`~fips.Matrix`, :class:`~fips.ForwardOperator` and
-:class:`~fips.MatrixBlock` have the same ``diagonal`` constructor; a block also
-takes its ``row_block`` and ``col_block``. The constructors themselves take 2D
-data only: a scalar or 1D input raises an error that points to ``diagonal``.
-
-A covariance that is a product of correlations along the levels (time, and
-space), as :class:`~fips.covariance.KroneckerError` builds, can be kept as its
-factors: :meth:`~fips.covariance.KroneckerError.operator` gives a
-:class:`~fips.covariance.KroneckerOperator`, which never forms the
-:math:`n \times n` matrix, and :meth:`~fips.CovarianceMatrix.from_operator`
-labels it. The rows can be any subset of the product, in any order. The solve
-computes :math:`H S_0` and :math:`H S_0 H^T` from the factors, and ``data`` or
-``values`` still give the matrix, formed the first time one is read:
+A :class:`~fips.Kronecker` model is kept as its factors: its covariance holds
+a :class:`~fips.linalg.KroneckerOperator`, which never forms the
+:math:`n \times n` matrix. Each factor is evaluated once, on the unique
+coordinates of its levels; the rows can be any subset of the product, in any
+order. The solve computes :math:`H S_0` and :math:`H S_0 H^T` from the
+factors, and ``dense()`` gives the matrix:
 
 .. ipython:: python
-
-   from fips.covariance import KroneckerError
-   from fips.kernels import GridSpatialDecay, GridTimeDecay
 
    times = pd.date_range("2024-01-01", periods=4, freq="7D")
    state = pd.MultiIndex.from_product(
        [["flux"], times, [40.5, 40.6], [-112.0, -111.9]],
        names=["block", "time", "lat", "lon"],
    )
-   error = KroneckerError(
-       "prior_error",
-       0.25,
-       [("time", GridTimeDecay("14D")), (["lat", "lon"], GridSpatialDecay("lat", "lon", 10.0))],
+   model = fips.Kronecker(
+       fips.Exponential("time", "14D"),
+       fips.Exponential(["lat", "lon"], 10.0, metric="haversine"),
    )
-   S_0 = CovarianceMatrix.from_operator(error.operator(state), state)
-   [C.shape for C in S_0.operator.factors]
-   np.allclose(S_0.values, error.build(state).values)
+   S_0 = model.with_std(0.5).build(fips.Space.from_index(state))
+   [C.shape for C in S_0.data.factors]
+   S_0.dense().shape
 
-An :class:`~fips.InverseProblem` holds the indexes already, so its
-``prior_error`` and ``modeldata_mismatch`` can be given as a scalar variance, or
-as a Series or Vector of variances with a ``"block"`` level, or as an operator
-(such as ``error.operator(state)``), which it labels with the prior's or the
-observations' index.
+``metric="haversine"`` measures latitude and longitude along the great
+circle, in km; ``metric="chordal"`` through the Earth, which a
+:class:`~fips.Gaussian` or :class:`~fips.Matern` needs to stay
+positive-definite.
+
+A :class:`~fips.Problem` holds the spaces already, so its ``prior_cov`` and
+``obs_cov`` can be given as a model, which it builds on the prior's or the
+observations' space: ``prior_cov=model.with_std(0.5)``.
 
 
 Sparse Matrices
 ---------------
 
 For large transport Jacobians (e.g. from STILT) with many structural zeros,
-sparse storage gives significant memory and speed savings.  Pass
-``sparse=True`` to :class:`~fips.MatrixBlock` at construction time, or convert
-an existing operator:
+sparse storage gives significant memory and speed savings. An operator built
+from a :mod:`scipy.sparse` matrix keeps it, never forming the dense one; so
+does one read from a DataFrame with pandas-sparse columns, whose entries a
+column does not store are zeros.
 
 .. note::
 
@@ -140,27 +190,24 @@ an existing operator:
 
 .. code-block:: python
 
-   from fips import MatrixBlock
+   import scipy.sparse as sp
+   from fips import Operator, Space
 
-   # Sparse at construction (recommended for large Jacobians)
-   H_block = MatrixBlock(df, row_block="obs", col_block="flux", sparse=True)
-
-   # Or convert an existing operator in-place
-   H_sparse = problem.forward_operator.to_sparse(threshold=1e-10)
+   H = Operator(sp.csr_matrix(values), rows=obs_space, cols=state_space)
 
 The same holds for the covariances: the forward operator, the prior error and
-the model-data mismatch can each be dense or sparse, in any combination. The
-solve computes with each matrix's ``operator``
-(:attr:`~fips.base.Structure2D.operator`), which holds a sparse matrix as a
-:mod:`scipy.sparse` matrix, never as the dense one, and a sparse matrix whose
-entries are all on its diagonal as that diagonal alone
-(:mod:`fips.operator`):
+the model-data mismatch can each be dense or sparse, in any combination. Each
+operator's ``data`` is its form (:mod:`fips.linalg`): a sparse matrix as a
+:class:`~fips.linalg.SparseOperator`, and a sparse matrix whose entries are
+all on its diagonal as that diagonal alone:
 
 .. ipython:: python
 
-   S = CovarianceMatrix.diagonal([0.5, 1.0, 2.0], index=idx, sparse=True)
-   S.operator
-   S.operator.solve(np.ones(3))
+   import scipy.sparse as sp
+
+   S = fips.Covariance(sp.diags([0.5, 1.0, 2.0]), space)
+   S.data
+   S.data.solve(np.ones(3))
 
 A product keeps the cheapest exact form: a diagonal times a sparse matrix is
 sparse, and anything times a dense matrix is dense. :math:`H S_0 H^T` stays
@@ -181,7 +228,7 @@ whitens the problem once: it eigendecomposes an :math:`m \times m` matrix
 built from :math:`H S_0 H^T` and :math:`S_z`, keeps the factors, and derives
 the estimate, the posterior variances, DOFS and the reduced chi-squared from
 them, without forming anything :math:`n \times n`. The full posterior
-covariance (``post.covariance``) and averaging kernel
+covariance (``post.cov()``) and averaging kernel
 (``post.averaging_kernel()``) are formed only when read.
 
 .. ipython:: python
@@ -189,9 +236,12 @@ covariance (``post.covariance``) and averaging kernel
    import numpy as np
    import pandas as pd
    import fips
-   from fips import ForwardOperator, InverseProblem, Matrix
-   from fips.covariance import KroneckerError
-   from fips.kernels import GridSpatialDecay, GridTimeDecay
+   from fips import Exponential, Kronecker, Problem, Space, Vector
+
+The state is six weeks of fluxes on four cells, with a prior error correlated
+in time and space:
+
+.. ipython:: python
 
    rng = np.random.default_rng(0)
    times = pd.date_range("2024-01-01", periods=6, freq="7D")
@@ -201,41 +251,35 @@ covariance (``post.covariance``) and averaging kernel
    )
    obs = pd.MultiIndex.from_product([["conc"], range(15)], names=["block", "obs_id"])
    H = pd.DataFrame(rng.uniform(0, 1, (15, len(state))), index=obs, columns=state)
-   prior_error = KroneckerError(
-       "prior_error",
-       0.25,
-       [("time", GridTimeDecay("14D")), (["lat", "lon"], GridSpatialDecay("lat", "lon", 10.0))],
-   ).operator(state)
-   problem = InverseProblem(
-       obs=pd.Series(rng.normal(3.0, 1.0, 15), index=obs),
-       prior=pd.Series(1.0, index=state),
-       forward_operator=H,
-       prior_error=prior_error,
-       modeldata_mismatch=0.5,
+   prior_cov = Kronecker(
+       Exponential("time", "14D"),
+       Exponential(["lat", "lon"], 10.0, metric="haversine"),
+   ).with_std(0.5)
+   problem = Problem(
+       prior=Vector.from_series(pd.Series(1.0, index=state)),
+       prior_cov=prior_cov,
+       obs=Vector.from_series(pd.Series(rng.normal(3.0, 1.0, 15), index=obs)),
+       obs_cov=fips.Independent().with_std(np.sqrt(0.5)),
+       forward=fips.Operator.from_frame(H),
    )
    post = fips.solve(problem)
    post.variances.to_series().head()
 
-An aggregation turns the state into a few totals or means: a :class:`~fips.Matrix`
-with one row per aggregate and the state index as its columns (``1`` for a
-sum, ``1/count`` for a mean). ``post.cov(W)`` is the posterior covariance of
-the aggregates, :math:`W \hat{S} W^T`, and ``post.averaging_kernel(W)`` their
-averaging kernel, :math:`W A W^*` with :math:`W^*` the pseudo-inverse of
-:math:`W`; neither forms the :math:`n \times n` matrices. Here, the total
-flux of each week:
+An aggregation turns the state into a few totals or means: an
+:class:`~fips.Operator` :math:`W` with one row per aggregate and the state's
+labels as its columns (``1`` for a sum, ``1/count`` for a mean).
+:func:`fips.aggregate.sum` and :func:`fips.aggregate.mean` build one from the
+labels, grouped by levels, time bins or a mapping (see :doc:`reference/aggregate`).
+``post.cov(W)`` is the posterior covariance of the aggregates,
+:math:`W \hat{S} W^T`, and ``post.averaging_kernel(W)`` their averaging kernel,
+:math:`W A W^*` with :math:`W^*` the pseudo-inverse of :math:`W`; neither forms
+the :math:`n \times n` matrices. Here, the total flux of each week:
 
 .. ipython:: python
 
-   weeks = pd.MultiIndex.from_product([["total"], times], names=["block", "week"])
-   W = Matrix(
-       pd.DataFrame(
-           (state.get_level_values("time").to_numpy() == times.to_numpy()[:, None]).astype(float),
-           index=weeks,
-           columns=state,
-       )
-   )
-   post.cov(W).data.round(4)
-   post.averaging_kernel(W).to_numpy().diagonal().round(3)
+   W = fips.aggregate.sum(problem.prior.space, by="time")
+   post.cov(W).to_frame().round(4)
+   post.averaging_kernel(W).dense().diagonal().round(3)
 
 The factors do not depend on the regularization factor ``gamma``, so
 ``post.with_gamma(0.5)`` is the posterior of ``fips.solve(problem, gamma=0.5)``
@@ -249,175 +293,219 @@ once:
        print(f"gamma {gamma}: DOFS {p.dofs:.2f}, reduced chi2 {p.reduced_chi2:.2f}")
 
 
+Aggregating, Offsets and Restricting
+------------------------------------
+
+The same aggregation works on the observations. ``problem.aggregate(W)`` is the
+problem of the aggregated observations: each input on the observations goes
+through one :math:`W` (:math:`W z`, :math:`W H`, :math:`W S_z W^T`, :math:`W c`).
+Here, hourly observations at two sites become daily means:
+
+.. ipython:: python
+
+   hours = pd.date_range("2024-01-01", periods=48, freq="h")
+   labels = pd.MultiIndex.from_product([["A", "B"], hours], names=["site", "obs_time"])
+   cells = pd.Index(["c0", "c1", "c2"], name="cell")
+   ch4 = Vector.from_series(pd.Series(rng.normal(2.0, 0.1, 96), index=labels), block="ch4")
+   flux = Vector.from_series(pd.Series(1.0, index=cells), block="flux")
+   hourly = Problem(
+       prior=flux,
+       prior_cov=fips.Independent().with_std(0.5),
+       obs=ch4,
+       obs_cov=fips.Independent().with_std(0.05),
+       forward=fips.Operator(rng.uniform(0, 0.1, (96, 3)), ch4.space, flux.space),
+   )
+   daily = hourly.aggregate(
+       fips.aggregate.mean(ch4.space, by=["site", pd.Grouper(level="obs_time", freq="1D")])
+   )
+   daily
+
+An offset the data should decide (a background that drifts, a calibration
+bias) is a block of the state: :func:`fips.offset_block` gives one offset per
+group of observations, zeros as their prior, and the forward block that adds
+each to its observations. Their covariance is any model on their labels; here
+the days of a site are correlated:
+
+.. ipython:: python
+
+   days = pd.interval_range(hours[0], periods=2, freq="1D", closed="left", name="obs_time")
+   offsets, H_offsets = fips.offset_block(ch4.space, by=[days, "site"])
+   offsets.space
+   with_offsets = Problem(
+       prior=Vector.from_blocks({"flux": flux, "offset": offsets}),
+       prior_cov=fips.Covariance.block_diag(
+           flux=fips.Independent().with_std(0.5),
+           offset=Exponential("obs_time", "2D", within="site").with_std(0.1),
+       ),
+       obs=ch4,
+       obs_cov=fips.Independent().with_std(0.05),
+       forward=fips.Operator.from_blocks(
+           {("ch4", "flux"): hourly.forward, ("ch4", "offset"): H_offsets["ch4", "offset"]}
+       ),
+   )
+   fips.solve(with_offsets).estimate["offset"].to_series().round(3)
+
+``problem.restrict(keep)`` goes the other way: the state elements not in
+``keep`` (cells no observation sees well) are held at their prior, their
+contribution :math:`H x_0` added to the offset. ``combine_first`` puts the
+estimate back on the whole state:
+
+.. ipython:: python
+
+   small = hourly.restrict(Space({"flux": cells[:2]}))
+   small.offset.to_series().head(3)
+   fips.solve(small).estimate.combine_first(hourly.prior).to_series().round(3)
+
 .. _flux-inversion:
 
-Domain-Specific Problem: Flux Inversion
------------------------------------------
+Example: Flux Inversion
+-----------------------
 
-:class:`~fips.problems.flux.FluxProblem` is a ready-made subclass of
-:class:`~fips.InverseProblem` for atmospheric flux estimation using STILT
-transport footprints.  It adds named accessors that speak the language of the
-application:
+An atmospheric flux inversion is a :class:`~fips.Problem` whose state has a
+``flux`` block and whose observations a ``concentration`` block (any names
+will do); it is solved with :func:`fips.solve`, as any problem, and its
+blocks are read by name:
 
 .. code-block:: python
 
-   import pandas as pd
-   from fips.problems.flux import FluxProblem
+   import fips
+   from fips import Problem, Vector
+   from fips.visualization import plot_comparison
 
-   inversion = FluxProblem(
-       obs=concentrations,        # pd.Series  — measured concentrations
-       prior=prior_fluxes,        # pd.Series  — prior flux inventory
-       forward_operator=jacobian, # pd.DataFrame — transport Jacobian
-       modeldata_mismatch=S_z,    # concentration error covariance
-       prior_error=S_0,           # flux error covariance
+   problem = Problem(
+       obs=Vector.from_series(concentrations, block="concentration"),
+       prior=Vector.from_series(prior_fluxes, block="flux"),
+       forward=jacobian,  # an Operator: the transport Jacobian
+       obs_cov=S_z,       # concentration error covariance (or a model)
+       prior_cov=S_0,     # flux error covariance (or a model)
    )
-   inversion.solve()
+   post = fips.solve(problem)
 
-   # Domain-aware accessors
-   inversion.concentrations        # observed concentrations
-   inversion.prior_fluxes          # prior flux pd.Series
-   inversion.posterior_fluxes      # posterior flux pd.Series
-   inversion.posterior_flux_error  # posterior flux error pd.DataFrame
-   inversion.prior_concentrations  # H @ prior
-   inversion.posterior_concentrations  # H @ posterior
+   # The problem's blocks
+   problem.obs["concentration"]                      # observed concentrations, a Vector
+   problem.prior["flux"]                             # prior fluxes (.to_series() for pandas)
+   problem.predict(problem.prior)["concentration"]   # H @ prior + c
 
-   # Built-in plots (requires cartopy)
-   inversion.plot.fluxes()
-   inversion.plot.concentrations()
+   # The posterior's blocks
+   post.estimate["flux"]              # posterior fluxes, a Vector
+   post.cov()["flux", "flux"]         # posterior flux error, a Covariance
+   post.modeled_obs["concentration"]  # H @ posterior + c
+   post.summary()                     # DOFS, chi-squared, R², RMSE, ... as one row
+
+   # Plots of a posterior: pandas and xarray objects, or plot_comparison
+   flux = post.estimate["flux"].to_xarray()  # a DataArray on (time, lat, lon)
+   flux.mean("time").plot(x="lon", y="lat")  # the mean posterior flux, as a map
+
+   def at_site(vector, name, site="SITE1"):
+       """One site's concentrations over time, as a Series named `name`."""
+       series = vector["concentration"].to_series().droplevel("block")
+       return series.xs(site, level="obs_location").rename(name)
+
+   plot_comparison(                          # observed, prior and posterior at one site
+       at_site(problem.obs, "observed"),
+       at_site(problem.predict(problem.prior), "prior"),
+       at_site(post.modeled_obs, "posterior"),
+   )
 
 For a STILT Jacobian, `PYSTILT <https://jmineau.github.io/PYSTILT>`_ sums the
-footprints onto your flux grid and time bins. Wrap its matrix in a
-:class:`~fips.MatrixBlock`:
+footprints onto your flux grid and time bins, as a sparse matrix with its
+labels. Its rows are receptor ids and its columns ``(time, lon, lat)``, so
+label the observations and the prior to match. The Jacobian has columns only
+for the cells a footprint touched, while a :class:`~fips.Problem` needs the
+forward operator on exactly the prior's labels. :meth:`Operator.from_blocks
+<fips.Operator.from_blocks>` places a labeled block by its labels: a cell the
+Jacobian lacks is a column of zeros, and a label the state lacks raises. The
+matrix stays sparse:
 
 .. code-block:: python
 
    import stilt
-   from fips import MatrixBlock
+   from fips import Operator
 
    project = stilt.Project("my_project")
    sims = project.simulations
    H = project.jacobian(sims[sims.variant == "hrrr"], grid, time_bins)
-   jacobian = MatrixBlock(
-       H.to_frame(sparse=True), row_block="concentration", col_block="flux", sparse=True
+   J = (H.data, H.receptors.rename("receptor"), H.columns)  # matrix, row and column labels
+   jacobian = Operator.from_blocks(
+       {("concentration", "flux"): J}, rows=obs.space, cols=prior.space
    )
 
-Its rows are receptor ids and its columns ``(time, lon, lat)``, so label the
-observations and the prior to match.
+A Jacobian given as a DataFrame, dense or pandas-sparse, is placed the same
+way: ``Operator.from_blocks({("concentration", "flux"): frame}, rows=obs.space,
+cols=prior.space)``.
 
-Background subtraction is supported via the ``constant`` argument to
-:class:`~fips.InverseProblem`:
+Background subtraction is supported via the ``offset`` argument to
+:class:`~fips.Problem`:
 
 .. code-block:: python
 
-   inversion = FluxProblem(
+   problem = Problem(
        ...
-       constant=background_series,  # subtracted from obs before inversion
+       offset=background,  # a Vector on the observations, subtracted from them
    )
-   inversion.background             # returns the background pd.Series
+   problem.offset["concentration"]  # the background, a Vector
+   problem.obs.values - problem.offset.values  # the enhancement
 
 
-Advanced: Subclassing InverseProblem
--------------------------------------
+Advanced: Reading Blocks of the Results
+---------------------------------------
 
-For full control, subclass :class:`~fips.InverseProblem` directly to add
-domain-specific accessors, pre- or post-processing, or alternative solve
-strategies:
-
-.. code-block:: python
-
-   from fips import InverseProblem
-
-   class GravityInversion(InverseProblem):
-       """Bayesian inversion for subsurface density from gravity data."""
-
-       def solve(self, estimator="bayesian", **kwargs):
-           return super().solve(estimator=estimator, **kwargs)
-
-       @property
-       def density(self):
-           """Posterior density anomaly [g cm⁻³]."""
-           return self.posterior["density"]
-
-       @property
-       def gravity_residual(self):
-           """Observed minus prior-modelled gravity."""
-           return self.obs["gravity"] - self.prior_obs["gravity"]
-
-All :class:`~fips.InverseProblem` results are lazily evaluated so you only pay
-for what you access.
-
-
-Advanced: Inversion Pipelines
-------------------------------
-
-:class:`~fips.pipeline.InversionPipeline` provides a structured, reproducible
-workflow.  Subclass it, implement the abstract hooks, then call
-:meth:`~fips.pipeline.InversionPipeline.run`:
+A problem is solved with :func:`fips.solve`, which returns the posterior. The
+problem is the question and holds what needs no solve
+(:meth:`~fips.Problem.predict`); the posterior is the answer and holds what
+depends on the solve. Domain-specific names are functions of their blocks:
 
 .. code-block:: python
 
-   from fips.pipeline import InversionPipeline
-   from fips.covariance import CovarianceMatrix
-   from fips.operators import ForwardOperator
-   from fips.vector import Vector
+   import fips
 
-   class MyPipeline(InversionPipeline):
+   post = fips.solve(problem)
 
-       def __init__(self, config):
-           super().__init__(
-               config=config,
-               problem=MyInversion,
-               estimator="bayesian",
-           )
+   def density(post):
+       """Posterior density anomaly [g cm⁻³]."""
+       return post.estimate["density"]
 
-       # --- Required hooks ---
+   def gravity_residual(post):
+       """Observed minus prior-modelled gravity."""
+       problem = post.problem
+       prior_modeled = problem.predict(problem.prior)
+       return problem.obs["gravity"].values - prior_modeled["gravity"].values
 
-       def get_obs(self) -> Vector:
-           """Load observations from config / disk / API."""
-           ...
+All :class:`~fips.Posterior` results are computed when first read, so you only
+pay for what you access.
 
-       def get_prior(self) -> Vector:
-           """Load prior from inventory / model output."""
-           ...
 
-       def get_forward_operator(self, obs, prior) -> ForwardOperator:
-           """Build or load the Jacobian."""
-           ...
+Advanced: Repeated Inversions
+-----------------------------
 
-       def get_prior_error(self, prior) -> CovarianceMatrix:
-           ...
+A workflow run many times (one inversion per month, a sweep over settings) is
+a few functions in your own code: one that builds the :class:`~fips.Problem`
+from your settings, then :func:`fips.solve`. :meth:`Posterior.summary
+<fips.Posterior.summary>` returns the diagnostics of a solve as one row, so
+the rows of many solves stack into one table:
 
-       def get_modeldata_mismatch(self, obs) -> CovarianceMatrix:
-           ...
+.. code-block:: python
 
-   solved = MyPipeline(config).run()
+   import pandas as pd
 
-``run`` logs each step, with its elapsed time, at ``INFO`` level through the
-``fips.pipeline`` logger, and prints nothing. Python shows only warnings until
-logging is configured, so to follow a long run, or to keep the steps in a batch
-job's output, configure it before the call:
+   import fips
+
+   def build_problem(config) -> fips.Problem:
+       """Load the observations and the prior, build H and the covariances."""
+       ...
+
+   post = fips.solve(build_problem(config))
+   table = pd.concat(
+       [post.with_gamma(g).summary() for g in (0.25, 0.5, 1.0, 2.0)],
+       ignore_index=True,
+   )
+
+:func:`fips.solve` logs at ``INFO`` level through the ``fips.methods`` logger,
+and prints nothing. Python shows only warnings until logging is configured, so
+to keep the steps in a batch job's output, configure it before the call:
 
 .. code-block:: python
 
    import logging
 
    logging.basicConfig(level=logging.INFO)
-
-Optional hooks let you customise the workflow without touching its core:
-
-.. list-table::
-   :header-rows: 1
-   :widths: 35 65
-
-   * - Hook
-     - Purpose
-   * - :meth:`~fips.pipeline.InversionPipeline.filter_state_space`
-     - Trim or align obs / state space before building operators
-   * - :meth:`~fips.pipeline.InversionPipeline.aggregate_obs_space`
-     - Aggregate observations (e.g. hourly → daily) after building operators
-   * - :meth:`~fips.pipeline.InversionPipeline.get_constant`
-     - Provide a background or offset to subtract from observations
-
-For atmospheric flux inversion, :class:`~fips.problems.flux.pipeline.FluxInversionPipeline`
-pre-implements several of these hooks (interval filtering, minimum-obs thresholds,
-summary reporting) so you only need to supply your data loaders.

@@ -1,254 +1,417 @@
 """
-Vector data structures for inverse problems.
+Vectors: values on a space.
 
-This module provides the `Vector` and `Block` classes for representing
-state vectors, observations, and other 1D data structures with automatic
-index management and serialization support.
+A :class:`Vector` holds one value for each label of a :class:`~fips.Space`:
+a prior state, the observations, an offset, a posterior estimate or its
+variances. The values are a NumPy array and the labels are the space's; a
+:class:`pandas.Series` is what :meth:`Vector.to_series` gives.
 """
 
-import logging
-from collections.abc import Sequence
-from typing import Any, TypeAlias
+from collections.abc import Mapping
 
+import numpy as np
+import numpy.typing as npt
 import pandas as pd
 import xarray as xr
 
-from fips.base import (
-    ArrayLike,
-    MultiBlockMixin,
-    SingleBlockMixin,
-    Structure1D,
-    xselect,
-)
-
-logger = logging.getLogger(__name__)
-
-# Type Aliases
-BlockLike: TypeAlias = "ArrayLike | Block"
-VectorLike: TypeAlias = "BlockLike | Sequence[pd.Series | Block] | Vector"
+from fips.space import Space, _listed
 
 
-class Block(SingleBlockMixin, Structure1D):
+class Vector:
     """
-    Single data block with a named Series and consistent index.
+    Values on a :class:`~fips.Space`, one for each label.
 
-    A Block wraps a pandas Series and can be initialized
-    from an existing Series or from raw values.
-
-    Blocks are the fundamental building units of `fips`.
-    Inverse problems can be customized by creating Blocks
-    with specific indices and names to represent different state or
-    observation components relevant to the application.
+    A vector is read-only: its values cannot be changed in place, and every
+    method returns a new vector. Labels are kept as given: they are not
+    converted to numbers and not rounded unless :meth:`round_labels` is
+    called. A vector of one block is what a single state or observation
+    component is (``Vector.from_series(series, block="flux")``); several
+    blocks are put together with :meth:`from_blocks`.
 
     Parameters
     ----------
-    data : pd.Series, Block, or array-like
-        Data for the block. If Block, creates a copy.
+    values : array-like
+        One number for each label of `space`, in the space's order. A
+        :class:`pandas.Series` is refused here, since its own labels would be
+        ignored: use :meth:`from_series`.
+    space : Space
+        The labels.
     name : str, optional
-        Name for the block. If None, uses data.name.
-    index : pd.Index, optional
-        Index for the block. If None, uses data.index.
-    dtype : dtype, optional
-        Data type to force.
-    copy : bool, default False
-        Whether to copy the underlying data.
+        What the values are ("prior", "obs", ...). A name that is not a
+        string is converted to one.
+
+    Raises
+    ------
+    TypeError
+        If `values` is a pandas object.
+    ValueError
+        If `values` is not one-dimensional, its length differs from the
+        space's, or a value is NaN (the message names its labels).
+
+    See Also
+    --------
+    Vector.from_series : A vector from a Series, with or without a ``block`` level.
+    Vector.from_blocks : A vector from one Series for each block.
+
+    Examples
+    --------
+    >>> import pandas as pd
+    >>> from fips import Vector
+    >>> prior = Vector.from_blocks(
+    ...     {
+    ...         "flux": pd.Series([1.0, 2.0], index=pd.Index([1, 2], name="cell")),
+    ...         "bias": pd.Series([0.0], index=pd.Index(["A"], name="site")),
+    ...     },
+    ...     name="prior",
+    ... )
+    >>> prior.values
+    array([1., 2., 0.])
+    >>> prior["flux"].values
+    array([1., 2.])
+    >>> prior["flux"].space.select("flux")
+    Index([1, 2], dtype='int64', name='cell')
     """
 
-    data: pd.Series  # type: ignore[override]
-    name: str  # type: ignore[override]
+    def __init__(self, values: npt.ArrayLike, space: Space, name: str | None = None):
+        if isinstance(values, (pd.Series, pd.DataFrame, pd.Index)):
+            raise TypeError(
+                "Vector takes the values as an array, in the space's order. "
+                "Build a vector from a Series with Vector.from_series, which "
+                "reads its labels."
+            )
+        if not isinstance(space, Space):
+            raise TypeError(f"space must be a Space, got {type(space).__name__}.")
+        array = np.array(values, dtype=float)
+        if array.ndim != 1:
+            raise ValueError(f"A vector's values are 1D, got shape {array.shape}.")
+        if len(array) != len(space):
+            raise ValueError(
+                f"Got {len(array)} values for a space of {len(space)} labels."
+            )
+        nan = np.isnan(array)
+        if nan.any():
+            raise ValueError(
+                f"The values are NaN at {int(nan.sum())} labels: "
+                f"{_listed(space.index[nan])}."
+            )
+        array.flags.writeable = False
+        self._values = array
+        self._space = space
+        self._name = None if name is None else str(name)
 
-    def __init__(
-        self,
-        data: BlockLike,
-        name: str | None = None,
-        index: pd.Index | None = None,
-        dtype: Any = None,
-        copy: bool = False,
-    ):
-        # Accept Block - extract Series
-        if isinstance(data, Block):
-            if name is None:
-                name = data.name
-            data = data.data
-            index = data.index  # Use the index from the original Block
-            copy = True  # Always copy when passed a Block
-
-        super().__init__(data, name=name, index=index, dtype=dtype, copy=copy)
-
-    def _validate(self):
-        """Raise unless the underlying Series has a name."""
-        super()._validate()
-
-        if self.data.name is None:
-            raise ValueError("Series must have a name or 'name' must be provided.")
-
-        if "block" in self.data.index.names:
-            raise ValueError("""Block data should not have a 'block' level in the index.
-                             The Series name should be used for the block name instead.""")
-
-    def __repr__(self):
-        """Return string representation."""
-        header = f"Block(name='{self.name}')\n"
-        return header + repr(self.data)
-
-    def to_series(self, add_block_level=False) -> pd.Series:
+    @classmethod
+    def from_series(cls, series: pd.Series, block: str | None = None) -> "Vector":
         """
-        Return the underlying Series data.
+        Build a vector from a Series, reading its labels.
 
         Parameters
         ----------
-        add_block_level : bool, default False
-            Whether to add a 'block' level to the index with the block name.
+        series : pd.Series
+            Numeric values. With a ``block`` level in its index, the vector has
+            those blocks (see :meth:`Space.from_index`); without one, it has
+            one block, named by `block`. The Series' name is the vector's.
+        block : str, optional
+            The name of the one block, for a Series without a ``block``
+            level.
 
         Returns
         -------
-        pd.Series
-            The underlying Series data, optionally with a 'block' level added to the index.
+        Vector
+            The values on the Series' labels. With a ``block`` level, the rows
+            of each block are put together, in the order the blocks first
+            appear.
+
+        Raises
+        ------
+        ValueError
+            If a Series with a ``block`` level is given `block` too, one
+            without is given no `block`, or its labels cannot make a
+            :class:`Space`.
+
+        Examples
+        --------
+        >>> import pandas as pd
+        >>> from fips import Vector
+        >>> obs = pd.Series(
+        ...     [410.2, 412.8], index=pd.Index(["A", "B"], name="site"), name="obs"
+        ... )
+        >>> Vector.from_series(obs, block="co2").index
+        MultiIndex([('co2', 'A'),
+                    ('co2', 'B')],
+                   names=['block', 'site'])
         """
-        if add_block_level:
-            # The block name moves from the Series name to the first index level.
-            s = pd.concat({self.name: self.data}, names=["block"]).rename(None)
-        else:
-            s = self.data.copy()
-        return s
-
-    def to_xarray(self) -> xr.DataArray:
-        """Convert the Block to an xarray DataArray."""
-        return self.to_series().to_xarray()
-
-
-class _BlockAccessor:
-    """Accessor for retrieving Block instances from a Vector."""
-
-    def __init__(self, vector: "Vector"):
-        self._vector = vector
-
-    def __getitem__(self, block_name: str) -> Block:
-        return Block(self._vector[block_name], name=block_name)
-
-
-class Vector(MultiBlockMixin, Structure1D):
-    """
-    State or observation vector composed of one or more Block objects.
-
-    A Vector organizes one or more Blocks (prior, posterior, observations, etc.)
-    into a single hierarchical structure.
-
-    Vectors are used to represent the full state or observation space and are the
-    1D matrix components in the inversion framework.
-
-    Parameters
-    ----------
-    data : pd.Series, Vector, Block, Sequence[Block | pd.Series], or array-like
-        Data for the vector.
-    name : str, optional
-        Name for the Vector.
-    index : pd.Index, optional
-        Index for the Vector. If None, uses data.index.
-        Index must have a 'block' level if data is a Series.
-    dtype : dtype, optional
-        Data type to force.
-    copy : bool, default False
-        Whether to copy the underlying data.
-    """
-
-    data: pd.Series  # type: ignore[override]
-    """The underlying data, which must be numeric and non-NaN. Can be stored in sparse format."""
-
-    def __init__(
-        self,
-        data: VectorLike,
-        name: str | None = None,
-        index: pd.Index | None = None,
-        dtype: Any = None,
-        copy: bool = False,
-    ):
-        # There are two main paths to build a Vector:
-        # 1) From a single Series or Block
-        # 2) From a sequence of Blocks or Series (which are combined into one Series with a 'block' level)
-        blocks = None
-
-        # Accept Vector - extract Series
-        if isinstance(data, Vector):
-            data = data.data
-            index = data.index  # Use the index from the original Vector
-            copy = True  # Always copy when passed a Vector
-
-        # Pre-built Series with block level - use directly
-        elif isinstance(data, pd.Series) and "block" in data.index.names:
-            index = data.index  # Use the index from the Series
-
-        # Single Block
-        elif isinstance(data, (Block, pd.Series)):
-            blocks = [data]
-
-        # Sequence - check if it's blocks or numeric data
-        elif isinstance(data, Sequence) and not isinstance(data, str):
-            # Check if sequence contains Block/Series objects
-            if any(isinstance(item, (Block, pd.Series)) for item in data):
-                blocks = data
-
-        if blocks:  # Build from blocks
-            seen_blocks = set()
-            dfs: list[pd.DataFrame] = []
-            dims = {}
-
-            for b in blocks:
-                # Convert to Block
-                block = Block(b)
-                if block.name in seen_blocks:
-                    raise ValueError(f"Duplicate block name '{block.name}' found")
-                seen_blocks.add(block.name)
-
-                # Collect unique dimensions in order
-                for dim in block.data.index.names:
-                    dims[dim] = True
-
-                # Format for concatenation
-                dfs.append(
-                    block.to_series(add_block_level=True).rename(name).reset_index()
+        index = series.index
+        if "block" in index.names:
+            if block is not None:
+                raise ValueError(
+                    "The Series has a 'block' level, which names its blocks; "
+                    "leave `block` out."
                 )
-
-            combined = pd.concat(dfs, ignore_index=True)
-
-            # Handle Ragged Hierarchies (Fill integers with -1)
-            # combined[list(dims.keys())] = combined[list(dims.keys())].fillna(-1)
-
-            levels = ["block"] + list(dims.keys())
-            data = combined.set_index(levels)[name or 0].rename(name)
+            space = Space.from_index(index)
+            rank = pd.Index(space.names).get_indexer(
+                index.get_level_values("block").astype(str)
+            )
+            values = series.to_numpy(dtype=float)[np.argsort(rank, kind="stable")]
         else:
-            # If we get here, data should be array-like and we can let the parent class handle it
-            if name is None:
-                name = getattr(data, "name", None)
+            if block is None:
+                raise ValueError(
+                    "A Series without a 'block' level needs `block`, the name "
+                    "of its one block."
+                )
+            space = Space({block: index})
+            values = series.to_numpy(dtype=float)
+        name = None if series.name is None else str(series.name)
+        return cls(values, space, name=name)
 
-        super().__init__(data, name=name, index=index, dtype=dtype, copy=copy)
+    @classmethod
+    def from_blocks(
+        cls, blocks: "Mapping[str, pd.Series | Vector]", name: str | None = None
+    ) -> "Vector":
+        """
+        Build a vector from one Series (or vector of one block) for each block.
 
-    def __repr__(self) -> str:
-        """Return string representation."""
-        header = f"Vector(name='{self.name}', shape={self.shape})\n"
-        return header + repr(self.data)
+        Parameters
+        ----------
+        blocks : mapping of str to pd.Series or Vector
+            Each block's name mapped to its values, in the order the blocks
+            should have: a Series labeled by the block's own index (no
+            ``block`` level), or a :class:`Vector` of one block (its labels
+            and values; the key names the block).
+        name : str, optional
+            The vector's name.
 
-    def __getitem__(self, block) -> pd.Series:
-        """Get block by name."""
-        return xselect(self.data, block, level="block")
+        Returns
+        -------
+        Vector
+            The values of every block, on the :class:`Space` of the blocks'
+            indexes.
+
+        Raises
+        ------
+        ValueError
+            If a vector given for a block has more than one block, or the
+            labels cannot make a :class:`Space`.
+
+        Examples
+        --------
+        >>> import pandas as pd
+        >>> from fips import Vector
+        >>> f = Vector.from_blocks(
+        ...     {"flux": pd.Series([1.0, 2.0], index=pd.Index([1, 2], name="cell"))}
+        ... )
+        >>> f.space
+        Space(flux: 2 x ['cell'])
+        """
+        labels, values = {}, []
+        for key, part in blocks.items():
+            if isinstance(part, Vector):
+                if len(part.space.names) != 1:
+                    raise ValueError(
+                        f"The vector given for block {key!r} has the blocks "
+                        f"{list(part.space.names)}; give one block."
+                    )
+                labels[key] = part.space.select(part.space.names[0])
+                values.append(part.values)
+            else:
+                labels[key] = part.index
+                values.append(part.to_numpy(dtype=float))
+        return cls(np.concatenate(values), Space(labels), name=name)
 
     @property
-    def blocks(self) -> _BlockAccessor:  # type: ignore[override]
-        """Accessor for retrieving Block instances from the Vector."""
-        return _BlockAccessor(self)
+    def values(self) -> np.ndarray:
+        """The values, one for each label, in the space's order (read-only)."""
+        return self._values
+
+    @property
+    def space(self) -> Space:
+        """The labels of the values."""
+        return self._space
+
+    @property
+    def name(self) -> str | None:
+        """What the values are: a string, or None."""
+        return self._name
+
+    @property
+    def index(self) -> pd.MultiIndex:
+        """The labels as one MultiIndex with the ``block`` level first (:attr:`Space.index`)."""
+        return self._space.index
+
+    def __len__(self) -> int:
+        """Return the number of values."""
+        return len(self._values)
+
+    def __getitem__(self, block: str) -> "Vector":
+        """
+        Return the vector of one block.
+
+        Parameters
+        ----------
+        block : str
+            The block's name.
+
+        Returns
+        -------
+        Vector
+            The block's values on a space of that one block, labeled as the
+            block was given.
+
+        Raises
+        ------
+        KeyError
+            If the vector has no block of that name.
+        """
+        labels = self._space.select(block)
+        values = self._values[self._space.slice(block)]
+        return Vector(values, Space({block: labels}), name=self._name)
+
+    def to_series(self) -> pd.Series:
+        """
+        Return the values as a Series, labeled by :attr:`index`.
+
+        The index has the ``block`` level first, and the Series holds a copy
+        of the values.
+        """
+        return pd.Series(np.array(self._values), index=self.index, name=self._name)
 
     def to_xarray(self) -> xr.DataArray | xr.Dataset:
         """
-        Convert the Vector to xarray.
+        Return the values as xarray, each block on its own levels.
 
-        If the Vector contains multiple blocks, returns an xarray Dataset with each block as a separate DataArray.
-        If the Vector contains a single block, returns an xarray DataArray.
+        Returns
+        -------
+        xarray.DataArray or xarray.Dataset
+            For a vector of one block, a DataArray with a dimension for each
+            of the block's levels (and no ``block`` dimension), named after
+            the block. For several blocks, a Dataset with one such variable
+            per block.
+
+        Examples
+        --------
+        >>> import pandas as pd
+        >>> from fips import Vector
+        >>> flux = pd.Series(
+        ...     [1.0, 2.0, 3.0, 4.0],
+        ...     index=pd.MultiIndex.from_product(
+        ...         [[40.0, 41.0], [-112.0, -111.0]], names=["lat", "lon"]
+        ...     ),
+        ... )
+        >>> Vector.from_series(flux, block="flux").to_xarray().dims
+        ('lat', 'lon')
         """
-        ds = xr.Dataset()
+        arrays = {
+            block: pd.Series(
+                self._values[self._space.slice(block)],
+                index=self._space.select(block),
+                name=block,
+            ).to_xarray()
+            for block in self._space.names
+        }
+        if len(arrays) == 1:
+            return next(iter(arrays.values()))
+        return xr.Dataset(arrays)
 
-        blocks = self.index.get_level_values("block").unique()
-        for block in blocks:
-            # Extract subset for this block & convert to DataArray
-            ds[block] = self[block].to_xarray()
+    def align(self, space: Space) -> "Vector":
+        """
+        Return the values on `space`, which must have exactly the same labels.
 
-        return ds if len(blocks) > 1 else ds[blocks[0]]
+        Parameters
+        ----------
+        space : Space
+            The labels to put the values on, in any order (see
+            :meth:`Space.align`).
+
+        Returns
+        -------
+        Vector
+            The same values, reordered to `space`.
+
+        Raises
+        ------
+        ValueError
+            If `space` and the vector's space do not have the same labels; the
+            message names those missing from either.
+        """
+        return Vector(self._values[space.align(self._space)], space, name=self._name)
+
+    def combine_first(self, other: "Vector") -> "Vector":
+        """
+        Return `other` with this vector's values where this vector has the label.
+
+        The values of a smaller vector put back on a larger space: the
+        estimate of a problem restricted to some of the state
+        (:meth:`Problem.restrict <fips.Problem.restrict>`), on the whole state,
+        with the prior where the state was held at it.
+
+        Parameters
+        ----------
+        other : Vector
+            The values for the labels this vector lacks. Every label of this
+            vector must be one of `other`'s.
+
+        Returns
+        -------
+        Vector
+            On `other`'s space, named as this vector.
+
+        Raises
+        ------
+        ValueError
+            If this vector has a block or a label `other` lacks.
+
+        Examples
+        --------
+        >>> import pandas as pd
+        >>> from fips import Vector
+        >>> cells = pd.Index(["a", "b", "c"], name="cell")
+        >>> prior = Vector.from_series(
+        ...     pd.Series([1.0, 2.0, 3.0], index=cells), block="flux"
+        ... )
+        >>> part = Vector.from_series(
+        ...     pd.Series([20.0], index=cells[[1]], name="estimate"), block="flux"
+        ... )
+        >>> part.combine_first(prior).values
+        array([ 1., 20.,  3.])
+        """
+        positions = other.space._subset(self._space, "This vector")
+        values = np.array(other.values)
+        values[positions] = self._values
+        return Vector(values, other.space, name=self._name)
+
+    def round_labels(self, decimals: int) -> "Vector":
+        """
+        Return the vector with its float labels rounded (:meth:`Space.round_labels`).
+
+        Parameters
+        ----------
+        decimals : int
+            Number of decimal places.
+
+        Returns
+        -------
+        Vector
+            The same values on the rounded labels.
+
+        Raises
+        ------
+        ValueError
+            If rounding makes two labels of a block equal.
+        """
+        return Vector(self._values, self._space.round_labels(decimals), name=self._name)
+
+    def __repr__(self) -> str:
+        """Return the name and space, then the values as a Series."""
+        header = f"Vector(name={self._name!r}, {self._space!r})\n"
+        return header + repr(self.to_series())
+
+    def __getstate__(self) -> dict:
+        """Pickle the values, the space and the name."""
+        return {"values": self._values, "space": self._space, "name": self._name}
+
+    def __setstate__(self, state: dict) -> None:
+        """Restore from :meth:`__getstate__`, read-only again."""
+        values = np.array(state["values"], dtype=float)
+        values.flags.writeable = False
+        self._values = values
+        self._space = state["space"]
+        self._name = state["name"]

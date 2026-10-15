@@ -1,563 +1,526 @@
 """
-Inverse problem framework for state estimation.
+Inverse problems: the inputs of a solve, on their labels.
 
-This module provides the core InverseProblem class which combines observations,
-prior estimates, forward operators, and error covariances into a unified framework
-for state estimation.
+A :class:`Problem` holds the prior, the observations, the forward operator,
+the two covariances and an optional offset of a linear inverse problem,
+``obs = forward @ state + offset + error``. It checks their labels once,
+when it is built, and puts every input on the prior's and the observations'
+spaces: :func:`fips.solve` then computes by position.
+
+The problem is the question, and the :class:`~fips.Posterior` that
+:func:`fips.solve` returns is the answer. The problem holds what needs no
+solve and no ``m x m`` matrix (:meth:`Problem.predict`), and makes other
+problems from itself (:meth:`Problem.aggregate`, :meth:`Problem.restrict`);
+the posterior holds what depends on the solve or on the ``m x m`` matrix it
+factors.
 """
 
 import logging
-from typing import Self
+from typing import Any
 
 import numpy as np
-import pandas as pd
 
-from fips.base import Pickleable, Structure1D
-from fips.covariance import CovarianceMatrix
-from fips.estimators import ESTIMATOR_REGISTRY, Estimator
-from fips.matrix import Matrix, MatrixBlock, MatrixLike
+from fips.covariance import Covariance, CovarianceModel
+from fips.linalg import LinearOperator
 from fips.operator import Operator
-from fips.operators import ForwardOperator
-from fips.posterior import Posterior
-from fips.vector import Vector, VectorLike
+from fips.space import Space
+from fips.vector import Vector
 
 logger = logging.getLogger(__name__)
 
-_SHOWN = 5  # how many labels an error message lists
 
-
-def _plain(label):
-    """Return ``label`` with NumPy scalars as Python ones, so it prints as typed."""
-    if isinstance(label, tuple):
-        return tuple(_plain(part) for part in label)
-    return label.item() if isinstance(label, np.generic) else label
-
-
-def _listed(labels: list) -> str:
-    """Return the first few of ``labels`` as text, saying how many were left out."""
-    text = ", ".join(repr(_plain(label)) for label in labels[:_SHOWN])
-    if len(labels) > _SHOWN:
-        text += f" and {len(labels) - _SHOWN} more"
-    return text
-
-
-def _check_unique_labels(
-    index: pd.Index,
-    space: str,
-    unrounded: pd.Index | None = None,
-    decimals: int | None = None,
-) -> None:
-    """
-    Raise a ValueError naming the duplicate labels of ``index``.
-
-    Parameters
-    ----------
-    index : pd.Index
-        The state or observation index.
-    space : str
-        What the index labels ("state" or "observation"), for the message.
-    unrounded : pd.Index, optional
-        ``index`` before ``round_index`` rounded it. When given, the message
-        names the distinct labels that rounding merged.
-    decimals : int, optional
-        The ``round_index`` that was used, for the message.
-    """
-    # The first position of each label that appears more than once
-    firsts = np.flatnonzero(
-        index.duplicated(keep=False) & ~index.duplicated(keep="first")
-    )
-    if len(firsts) == 0:
-        return
-    if unrounded is None:
-        raise ValueError(
-            f"The {space} index has duplicate labels: "
-            f"{_listed(list(index[firsts]))}. Each label must be unique."
+def _vector(value: Any, what: str) -> Vector:
+    """Return `value` if it is a Vector; raise a TypeError naming the way in otherwise."""
+    if not isinstance(value, Vector):
+        raise TypeError(
+            f"{what} must be a Vector, got {type(value).__name__}. Build one with "
+            "Vector.from_series(series, block=...) or Vector.from_blocks({...})."
         )
-    merged = []
-    for first in firsts[:_SHOWN]:
-        label = index[[first]]
-        sources = unrounded[index.get_indexer_for(label)]
-        merged.append(f"{_listed(list(sources))} become {_listed(list(label))}")
-    more = f"; {len(firsts) - _SHOWN} more labels" if len(firsts) > _SHOWN else ""
-    raise ValueError(
-        f"round_index={decimals} merges distinct labels of the {space} index: "
-        f"{'; '.join(merged)}{more}. Pass round_index=None, or more decimals, "
-        "to keep them apart."
-    )
+    return value
 
 
-def _check_block_names(
-    name: str, matrix: Matrix, rows: pd.Index, columns: pd.Index
-) -> None:
+def _on(
+    op: Operator, rows: Space, cols: Space, what: str, of: tuple[str, str]
+) -> LinearOperator:
     """
-    Raise a ValueError if a block of ``matrix`` matches no block of its space.
+    Return the form of `op` with its rows on `rows` and its columns on `cols`.
 
-    ``rows`` and ``columns`` are the indexes ``matrix`` is placed on. A block
-    they have that ``matrix`` lacks is fine (it is filled with zeros), as are
-    labels missing within a block; a block name they do not have is a typo or
-    a stale name, and reindexing would silently drop that block's values.
+    Both are exact joins: a label on one side and not the other raises, and
+    the message names it (:meth:`Space.align <fips.Space.align>`). `of` names
+    what `rows` and `cols` are the labels of, for the message.
     """
-    for axis, labels, target, argument in (
-        ("row", matrix.index, rows, "row_block"),
-        ("column", matrix.columns, columns, "col_block"),
-    ):
-        known = list(target.unique(level="block"))
-        unknown = [b for b in labels.unique(level="block") if b not in known]
-        if unknown:
-            raise ValueError(
-                f"{name} has {axis} blocks that match no block of the space "
-                f"it is placed on: {_listed(unknown)}. The known blocks are "
-                f"{_listed(known)}. Check the {argument} of each MatrixBlock."
-            )
+    r = rows._align(op.rows, f"the rows of {what}", f"The rows of {what} and {of[0]}")
+    if cols is rows and op.cols is op.rows:
+        c = r
+    else:
+        c = cols._align(
+            op.cols, f"the columns of {what}", f"The columns of {what} and {of[1]}"
+        )
+    if np.array_equal(r, np.arange(len(r))) and np.array_equal(c, np.arange(len(c))):
+        return op.data
+    return op.data._select(r, c)
 
 
-class InverseProblem(Pickleable):
+def _covariance(value: Any, space: Space, what: str, of: str) -> Covariance:
     """
-    Inverse problem combining observations, priors, and forward model.
+    Return `value` as a covariance on `space`.
 
-    Organizes state vectors, observations, forward operators, and error covariances
-    into a unified framework for solving inverse problems via different estimators.
+    A :class:`~fips.covariance.CovarianceModel` is built there; a
+    :class:`~fips.Covariance` must have exactly the space's labels.
+    """
+    if isinstance(value, CovarianceModel):
+        return value.build(space, name=what)
+    if not isinstance(value, Covariance):
+        raise TypeError(
+            f"{what} must be a Covariance or a covariance model, got "
+            f"{type(value).__name__}. Make one with a model "
+            "(Independent().with_std(std)), Covariance.diagonal(variances, space) "
+            "or Covariance.from_frame(frame)."
+        )
+    return Covariance(_on(value, space, space, what, (of, of)), space, name=value.name)
+
+
+class Problem:
+    r"""
+    A linear inverse problem: what is known before the observations, and the observations.
+
+    The state is :math:`x \sim N(x_0, S_0)` (the prior), and the observations
+    are :math:`z = H x + c + e` with :math:`e \sim N(0, S_z)`. Every input is
+    labeled, and the labels are checked once, here, by an exact join: the
+    forward operator, the covariances and the offset must have exactly the
+    labels of the prior or of the observations, in any order. Each is then put
+    in the order of the prior's and the observations' spaces. A problem is not
+    changed after it is built; :func:`fips.solve` solves it.
+
+    The problem is the question: it holds what needs no solve and no
+    ``m x m`` matrix, such as :meth:`predict`, and it makes other questions
+    from itself (:meth:`aggregate`, :meth:`restrict`). What depends on the
+    solve, or on the ``m x m`` matrix the solve factors, is on the
+    :class:`~fips.Posterior`.
 
     Parameters
     ----------
-    obs : VectorLike
-        Observation vector.
-    prior : VectorLike
-        Prior state vector.
-    forward_operator : MatrixLike
-        Forward operator mapping state space to observation space.
-    modeldata_mismatch : MatrixLike or Vector or float or Operator
-        Covariance matrix representing model-data mismatch (observation error).
-        A scalar is one variance for every observation, and a Series or Vector
-        (with a ``block`` level) gives a variance for each: both build a
-        diagonal covariance.
-    prior_error : MatrixLike or Vector or float or Operator
-        Covariance matrix representing prior error. A scalar, a Series or a
-        Vector builds a diagonal covariance, as for `modeldata_mismatch`. An
-        :class:`~fips.operator.Operator` (such as the
-        :class:`~fips.covariance.KroneckerOperator` of
-        :meth:`KroneckerError.operator(prior_index)
-        <fips.covariance.KroneckerError.operator>`) is labeled by the prior's
-        index, in its order, without forming the matrix; so is one for
-        `modeldata_mismatch`, by the observations' index.
-    constant : VectorLike or float, optional
-        Optional constant term added to the forward model (e.g., background or bias).
-    round_index : int, optional
-        Number of decimal places to round float labels to. If None, no
-        rounding is performed. Labels that rounding makes equal raise a
-        ValueError rather than being merged.
+    prior : Vector
+        The prior state :math:`x_0`. Its space labels the state.
+    prior_cov : Covariance or CovarianceModel
+        The prior error covariance :math:`S_0`. A covariance model (such as
+        ``Kronecker(...).with_std(std)``) is built on the prior's space.
+    obs : Vector
+        The observations :math:`z`. Its space labels the observations.
+    obs_cov : Covariance or CovarianceModel
+        The model-data mismatch :math:`S_z`, the covariance of the
+        observation error; a model is built on the observations' space. It
+        must be positive-definite.
+    forward : Operator
+        The forward operator :math:`H`, from the state (its columns) to the
+        observations (its rows).
+    offset : Vector or float, optional
+        The part of the observations the state does not explain, :math:`c`
+        (a background): a vector on the observations' labels, or one value
+        for all of them. None (the default) is no offset.
 
     Raises
     ------
-    ValueError
-        If the state or observation index has duplicate labels, before or
-        after rounding, or if a block name of `forward_operator`,
-        `prior_error` or `modeldata_mismatch` (a MatrixBlock's `row_block` or
-        `col_block`) matches no block of the space it is placed on. Labels
-        missing within a known block are filled with zeros, with a warning.
-    """
-
-    obs: Vector
-    """Observation vector."""
-    prior: Vector
-    """Prior state vector."""
-    forward_operator: ForwardOperator
-    """Forward operator mapping state space to observation space."""
-    prior_error: CovarianceMatrix
-    """Covariance matrix representing prior error."""
-    modeldata_mismatch: CovarianceMatrix
-    """Covariance matrix representing model-data mismatch (observation error)."""
-    constant: Vector | None
-    """Optional constant term added to the forward model (e.g., background or bias)."""
-
-    def __init__(
-        self,
-        obs: VectorLike,
-        prior: VectorLike,
-        forward_operator: MatrixLike,
-        modeldata_mismatch: "MatrixLike | Vector | Operator",
-        prior_error: "MatrixLike | Vector | Operator",
-        constant: "VectorLike | float | None" = None,
-        round_index: int | None = 6,
-    ):
-        obs = Vector(obs)
-        prior = Vector(prior)
-
-        def promote_2d(
-            data, target_index: pd.MultiIndex, target_columns: pd.MultiIndex
-        ):
-            """Promote 2D DataFrame to MatrixBlock, using block levels from target index/columns if needed."""
-            if isinstance(data, pd.DataFrame):
-                has_row = "block" in data.axes[0].names
-                has_col = "block" in data.axes[1].names
-
-                if not has_row:
-                    row_blks = target_index.get_level_values("block").unique()
-                    if len(row_blks) > 1:
-                        raise ValueError(
-                            "Data has no row 'block' level but target index has multiple blocks."
-                        )
-                    row_block = str(row_blks[0]) if len(row_blks) == 1 else None
-                else:
-                    row_block = None
-
-                if not has_col:
-                    col_blks = target_columns.get_level_values("block").unique()
-                    if len(col_blks) > 1:
-                        raise ValueError(
-                            "Data has no col 'block' level but target columns has multiple blocks."
-                        )
-                    col_block = str(col_blks[0]) if len(col_blks) == 1 else None
-                else:
-                    col_block = None
-
-                if not has_row or not has_col:
-                    # Wrap naked DataFrame in a MatrixBlock
-                    return MatrixBlock(data, row_block=row_block, col_block=col_block)
-            return data
-
-        forward_operator = ForwardOperator(
-            promote_2d(
-                forward_operator, target_index=obs.index, target_columns=prior.index
-            )
-        )
-
-        def covariance(data, target_index: pd.MultiIndex) -> CovarianceMatrix:
-            """Build a covariance; a scalar, Series or Vector is its diagonal."""
-            if isinstance(data, Operator):
-                return CovarianceMatrix.from_operator(data, target_index)
-            if isinstance(data, (pd.Series, Structure1D)):
-                return CovarianceMatrix.diagonal(data)
-            if isinstance(data, (int, float, np.number)):
-                return CovarianceMatrix.diagonal(data, index=target_index)
-            return CovarianceMatrix(
-                promote_2d(data, target_index=target_index, target_columns=target_index)
-            )
-
-        prior_error = covariance(prior_error, prior.index)
-        modeldata_mismatch = covariance(modeldata_mismatch, obs.index)
-
-        if constant is not None:
-            constant_index = obs.index if isinstance(constant, (int, float)) else None
-            constant = Vector(constant, index=constant_index)
-
-        _check_unique_labels(obs.index, "observation")
-        _check_unique_labels(prior.index, "state")
-
-        # Round to specified precision if provided
-        if round_index is not None:
-            unrounded_obs, unrounded_prior = obs.index, prior.index
-            obs = obs.round_index(round_index)
-            prior = prior.round_index(round_index)
-            _check_unique_labels(obs.index, "observation", unrounded_obs, round_index)
-            _check_unique_labels(prior.index, "state", unrounded_prior, round_index)
-            forward_operator = forward_operator.round_index(round_index, axis="both")
-            modeldata_mismatch = modeldata_mismatch.round_index(
-                round_index, axis="both"
-            )
-            prior_error = prior_error.round_index(round_index, axis="both")
-            if constant is not None:
-                constant = constant.round_index(round_index)
-
-        # A block name that matches no block would be dropped by the reindex
-        _check_block_names("forward_operator", forward_operator, obs.index, prior.index)
-        _check_block_names(
-            "modeldata_mismatch", modeldata_mismatch, obs.index, obs.index
-        )
-        _check_block_names("prior_error", prior_error, prior.index, prior.index)
-
-        # Reindex matrices to obs and prior (state) indices
-        def reindex(matrix, row_idx, col_idx):
-            """Reindex ``matrix`` onto the given labels, filling gaps with zeros."""
-            return matrix.reindex(
-                index=row_idx, columns=col_idx, fill_value=0.0, verify_overlap=True
-            )
-
-        forward_operator = reindex(
-            forward_operator, row_idx=obs.index, col_idx=prior.index
-        )
-        modeldata_mismatch = reindex(
-            modeldata_mismatch, row_idx=obs.index, col_idx=obs.index
-        )
-        prior_error = reindex(prior_error, row_idx=prior.index, col_idx=prior.index)
-        if constant is not None:
-            constant = constant.reindex(
-                index=obs.index, fill_value=0.0, verify_overlap=True
-            )
-
-        self.obs = obs
-        self.prior = prior
-        self.forward_operator = forward_operator
-        self.modeldata_mismatch = modeldata_mismatch
-        self.prior_error = prior_error
-        self.constant = constant
-        self._result: Posterior | None = None  # set by solve
-
-    @property
-    def state_index(self) -> pd.Index:
-        """Return the state space index."""
-        return self.prior.index
-
-    @property
-    def obs_index(self) -> pd.Index:
-        """Return the observation space index."""
-        return self.obs.index
-
-    @property
-    def n_state(self) -> int:
-        """Return number of state variables."""
-        return len(self.state_index)
-
-    @property
-    def n_obs(self) -> int:
-        """Return number of observations."""
-        return len(self.obs_index)
-
-    @property
-    def result(self) -> Posterior:
-        """
-        The posterior from the last :meth:`solve` (raises if not solved).
-
-        ``posterior``, ``posterior_error``, ``posterior_obs``, ``prior_obs``,
-        ``prior_obs_error``, ``kalman_gain``, ``averaging_kernel`` and
-        ``desroziers`` are its outputs, under the names they have on the
-        problem: ``problem.posterior`` is ``problem.result.estimate``.
-
-        See Also
-        --------
-        fips.solve : Solve a problem and return its posterior.
-        """
-        if self._result is None:
-            raise RuntimeError("Problem has not been solved. Call .solve() first.")
-        return self._result
-
-    @property
-    def estimator(self) -> Estimator:
-        """Return the fitted estimator (raises if not solved)."""
-        return self.result.estimator
-
-    @property
-    def _estimator(self) -> Estimator | None:
-        """The fitted estimator, or None before :meth:`solve`."""
-        return None if self._result is None else self._result.estimator
-
-    def get_block(
-        self, component: str, block: str, crossblock: str | None = None
-    ) -> pd.DataFrame | pd.Series:
-        """
-        Get block from a component (Vector or Matrix).
-
-        Parameters
-        ----------
-        component : str
-            Name of the component ('obs', 'prior', 'forward_operator', 'modeldata_mismatch', 'prior_error', or 'constant').
-        block : str
-            Name of the block to retrieve.
-        crossblock : str, optional
-            For matrices, the name of the cross block (e.g., 'state' for forward_operator). If None, defaults to the same as 'block'.
-
-        Returns
-        -------
-        pd.Series or pd.DataFrame
-            The requested block of data.
-        """
-        obj = getattr(self, component)
-
-        if isinstance(obj, Vector):
-            return obj[block]
-        elif isinstance(obj, Matrix):
-            if crossblock is None:
-                crossblock = block
-            return obj[block, crossblock]
-        else:
-            raise TypeError(f"Object '{component}' is neither a Vector nor a Matrix.")
-
-    def solve(self, estimator: str | type[Estimator], **kwargs) -> Self:
-        """
-        Solve the inverse problem using the specified estimator.
-
-        Calls :func:`fips.solve` and keeps the :class:`~fips.Posterior` it
-        returns as :attr:`result`.
-
-        Parameters
-        ----------
-        estimator : str or type[Estimator]
-            Estimator to use for solving the inverse problem. Can be a string key for registered estimators or a subclass of Estimator.
-        **kwargs
-            Additional keyword arguments to pass to the estimator.
-
-        Returns
-        -------
-        Self
-            The InverseProblem instance with the estimator fitted.
-        """
-        # The module's solve function, not this method.
-        self._result = solve(self, estimator, **kwargs)
-        return self
-
-    def __getstate__(self):
-        """Explicit pickle support: return state as dict."""
-        return {
-            "prior": self.prior,
-            "obs": self.obs,
-            "forward_operator": self.forward_operator,
-            "prior_error": self.prior_error,
-            "modeldata_mismatch": self.modeldata_mismatch,
-            "constant": self.constant,
-            # The estimator, not the posterior, so a pickle reads as it did
-            # before the posterior existed; the posterior is rebuilt from it.
-            "_estimator": self._estimator,
-        }
-
-    def __setstate__(self, state):
-        """Explicit pickle support: restore state from dict."""
-        self.prior = state["prior"]
-        self.obs = state["obs"]
-        self.forward_operator = state["forward_operator"]
-        self.prior_error = state["prior_error"]
-        self.modeldata_mismatch = state["modeldata_mismatch"]
-        self.constant = state["constant"]
-        estimator = state.get("_estimator", None)
-        self._result = (
-            None
-            if estimator is None
-            else Posterior(estimator, self.state_index, self.obs_index)
-        )
-
-    def __repr__(self) -> str:
-        """Return string representation."""
-        solved = self._estimator is not None
-        return (
-            f"{self.__class__.__name__}("
-            f"n_obs={self.n_obs}, n_state={self.n_state}, solved={solved})"
-        )
-
-    @property
-    def posterior(self) -> Vector:
-        """Posterior state estimate (:attr:`~fips.Posterior.estimate`)."""
-        return self.result.estimate
-
-    @property
-    def posterior_error(self) -> CovarianceMatrix:
-        """Posterior error covariance (:attr:`~fips.Posterior.covariance`)."""
-        return self.result.covariance
-
-    @property
-    def posterior_obs(self) -> Vector:
-        """Modeled observations, H @ posterior + c (:attr:`~fips.Posterior.modeled_obs`)."""
-        return self.result.modeled_obs
-
-    @property
-    def prior_obs(self) -> Vector:
-        """Modeled observations, H @ prior + c (:attr:`~fips.Posterior.prior_modeled_obs`)."""
-        return self.result.prior_modeled_obs
-
-    @property
-    def prior_obs_error(self) -> CovarianceMatrix:
-        """
-        Prior error covariance in observation space (H @ S_0 @ H.T).
-
-        The uncertainty of ``prior_obs`` that the prior error implies, on the
-        observation index. Its diagonal, square-rooted, is the prior's share
-        of each observation's error budget; add the model-data mismatch in
-        quadrature for the total the solve expects
-        (:attr:`~fips.Posterior.prior_obs_covariance`).
-        """
-        return self.result.prior_obs_covariance
-
-    @property
-    def kalman_gain(self) -> Matrix:
-        """Kalman gain matrix, K (:attr:`~fips.Posterior.kalman_gain`)."""
-        return self.result.kalman_gain
-
-    @property
-    def averaging_kernel(self) -> Matrix:
-        """Averaging kernel matrix, A (:meth:`~fips.Posterior.averaging_kernel`)."""
-        return self.result.averaging_kernel()
-
-    @property
-    def desroziers(self) -> CovarianceMatrix:
-        """Desroziers et al. (2005) diagnosed observation error covariance (:attr:`~fips.Posterior.desroziers`)."""
-        return self.result.desroziers
-
-
-def solve(
-    problem: InverseProblem,
-    estimator: str | type[Estimator] = "bayesian",
-    **options,
-) -> Posterior:
-    """
-    Solve an inverse problem and return its posterior.
-
-    Fits the estimator to the problem's inputs and labels what it computes
-    with the problem's indexes. The problem is not changed;
-    :meth:`~fips.InverseProblem.solve` calls this and keeps the result.
-
-    Parameters
-    ----------
-    problem : InverseProblem
-        The problem to solve.
-    estimator : str or type[Estimator], default "bayesian"
-        A registered estimator's name (see :func:`~fips.available_estimators`) or
-        an :class:`~fips.Estimator` subclass.
-    **options
-        Passed to the estimator, such as ``gamma`` for ``"bayesian"``.
-
-    Returns
-    -------
-    Posterior
-        The labeled solution. Its estimate is computed before it returns.
-
-    Raises
-    ------
-    ValueError
-        If ``estimator`` is a name that is not registered.
     TypeError
-        If ``estimator`` is neither a name nor an Estimator subclass.
+        If an input is not of a type named above.
+    ValueError
+        If the forward operator, a covariance or the offset does not have
+        exactly the labels of the space it is put on: a block or a label on
+        one side and not the other. The message names them.
 
     See Also
     --------
-    fips.Posterior : What it returns.
-    fips.InverseProblem.solve : Solve in place and keep the posterior.
+    fips.solve : Solve a problem; it returns a :class:`~fips.Posterior`.
+
+    Notes
+    -----
+    A forward operator that covers only part of the state (a transport
+    Jacobian has columns only for the cells a footprint touched) is placed on
+    the whole state by :meth:`Operator.from_blocks <fips.Operator.from_blocks>`,
+    which puts a labeled block by its labels: a cell the Jacobian lacks is a
+    column of zeros, and a label the space lacks raises. With ``J`` the
+    labeled Jacobian (a DataFrame, dense or pandas-sparse, or a tuple
+    ``(matrix, row_labels, col_labels)``)::
+
+        forward = Operator.from_blocks(
+            {("co2", "flux"): J}, rows=obs.space, cols=prior.space
+        )
 
     Examples
     --------
+    >>> import numpy as np
     >>> import pandas as pd
     >>> import fips
-    >>> state = pd.Index(["a", "b"], name="cell")
-    >>> obs = pd.Index(["o1", "o2", "o3"], name="obs_id")
-    >>> problem = fips.InverseProblem(
-    ...     obs=pd.Series([1.0, 2.0, 3.0], index=obs, name="obs"),
-    ...     prior=pd.Series([0.0, 0.0], index=state, name="prior"),
-    ...     forward_operator=pd.DataFrame(
-    ...         [[1.0, 0.0], [0.0, 1.0], [1.0, 1.0]], index=obs, columns=state
-    ...     ),
-    ...     prior_error=1.0,
-    ...     modeldata_mismatch=0.1,
+    >>> cells = pd.Index(["a", "b"], name="cell")
+    >>> obs_id = pd.Index(["o1", "o2", "o3"], name="obs_id")
+    >>> prior = fips.Vector.from_series(pd.Series(0.0, index=cells), block="flux")
+    >>> obs = fips.Vector.from_series(
+    ...     pd.Series([1.0, 2.0, 3.0], index=obs_id), block="co2"
     ... )
-    >>> post = fips.solve(problem, gamma=0.5)
-    >>> post.estimator.gamma
-    0.5
+    >>> problem = fips.Problem(
+    ...     prior=prior,
+    ...     prior_cov=fips.Independent().with_std(1.0),
+    ...     obs=obs,
+    ...     obs_cov=fips.Independent().with_std(np.sqrt(0.1)),
+    ...     forward=fips.Operator(
+    ...         np.array([[1.0, 0.0], [0.0, 1.0], [1.0, 1.0]]), obs.space, prior.space
+    ...     ),
+    ... )
+    >>> problem
+    Problem(state: Space(flux: 2 x ['cell']), obs: Space(co2: 3 x ['obs_id']))
+    >>> fips.solve(problem).estimate.values.round(3)
+    array([0.997, 1.906])
     """
-    if isinstance(estimator, str):
-        if estimator not in ESTIMATOR_REGISTRY:
-            raise ValueError(f"Estimator '{estimator}' is not registered.")
-        estimator_cls = ESTIMATOR_REGISTRY[estimator]
-    elif isinstance(estimator, type) and issubclass(estimator, Estimator):
-        estimator_cls = estimator
-    else:
-        raise TypeError("Estimator must be a string or a subclass of Estimator.")
 
-    logger.info(f"Solving using {estimator_cls.__name__}...")
-    fitted = estimator_cls(
-        z=problem.obs.values,
-        x_0=problem.prior.values,
-        H=problem.forward_operator.operator,
-        S_0=problem.prior_error.operator,
-        S_z=problem.modeldata_mismatch.operator,
-        c=getattr(problem.constant, "values", None),
-        **options,
-    )
-    posterior = Posterior(fitted, problem.state_index, problem.obs_index)
-    _ = posterior.estimate  # solve now, as InverseProblem.solve always has
-    return posterior
+    def __init__(
+        self,
+        prior: Vector,
+        prior_cov: "Covariance | CovarianceModel",
+        obs: Vector,
+        obs_cov: "Covariance | CovarianceModel",
+        forward: Operator,
+        offset: "Vector | float | None" = None,
+    ):
+        self._prior = _vector(prior, "prior")
+        self._obs = _vector(obs, "obs")
+        state, observed = self._prior.space, self._obs.space
+
+        if not isinstance(forward, Operator):
+            raise TypeError(
+                f"forward must be an Operator, got {type(forward).__name__}. Build "
+                "one with Operator(matrix, rows, cols), Operator.from_blocks or "
+                "Operator.from_frame."
+            )
+        self._forward = Operator(
+            _on(forward, observed, state, "forward", ("the observations", "the prior")),
+            observed,
+            state,
+            name=forward.name,
+        )
+        self._prior_cov = _covariance(prior_cov, state, "prior_cov", "the prior")
+        self._obs_cov = _covariance(obs_cov, observed, "obs_cov", "the observations")
+
+        if offset is None:
+            self._offset = None
+        elif isinstance(offset, Vector):
+            positions = observed._align(
+                offset.space, "the offset", "The offset and the observations"
+            )
+            self._offset = Vector(offset.values[positions], observed, name=offset.name)
+        elif isinstance(offset, (int, float, np.integer, np.floating)):
+            self._offset = Vector(np.full(len(observed), float(offset)), observed)
+        else:
+            raise TypeError(
+                f"offset must be a Vector, a number or None, got {type(offset).__name__}."
+            )
+
+    @property
+    def prior(self) -> Vector:
+        """The prior state, :math:`x_0`; its space labels the state."""
+        return self._prior
+
+    @property
+    def prior_cov(self) -> Covariance:
+        """The prior error covariance, :math:`S_0`, on the prior's space."""
+        return self._prior_cov
+
+    @property
+    def obs(self) -> Vector:
+        """The observations, :math:`z`; their space labels the observations."""
+        return self._obs
+
+    @property
+    def obs_cov(self) -> Covariance:
+        """The model-data mismatch, :math:`S_z`, on the observations' space."""
+        return self._obs_cov
+
+    @property
+    def forward(self) -> Operator:
+        """The forward operator, :math:`H`: rows on the observations, columns on the prior."""
+        return self._forward
+
+    @property
+    def offset(self) -> Vector | None:
+        """The offset, :math:`c`, on the observations' space, or None."""
+        return self._offset
+
+    def predict(self, x: Vector) -> Vector:
+        r"""
+        Return the observations the state `x` models, :math:`H x + c`.
+
+        Parameters
+        ----------
+        x : Vector
+            A state on the prior's labels, in any order: the prior, a
+            posterior estimate, a truth to test with.
+
+        Returns
+        -------
+        Vector
+            :math:`H x + c` (with the offset :math:`c`, if any) on the
+            observations' space.
+
+        Raises
+        ------
+        TypeError
+            If `x` is not a Vector.
+        ValueError
+            If `x` does not have exactly the prior's labels; the message names
+            those on one side only.
+
+        Examples
+        --------
+        >>> import numpy as np
+        >>> import pandas as pd
+        >>> import fips
+        >>> cells = pd.Index(["a", "b"], name="cell")
+        >>> obs_id = pd.Index(["o1", "o2", "o3"], name="obs_id")
+        >>> prior = fips.Vector.from_series(pd.Series(1.0, index=cells), block="flux")
+        >>> obs = fips.Vector.from_series(
+        ...     pd.Series([1.0, 2.0, 3.0], index=obs_id), block="co2"
+        ... )
+        >>> problem = fips.Problem(
+        ...     prior=prior,
+        ...     prior_cov=fips.Independent().with_std(1.0),
+        ...     obs=obs,
+        ...     obs_cov=fips.Independent().with_std(0.3),
+        ...     forward=fips.Operator(
+        ...         np.array([[1.0, 0.0], [0.0, 1.0], [1.0, 1.0]]),
+        ...         obs.space,
+        ...         prior.space,
+        ...     ),
+        ...     offset=0.5,
+        ... )
+        >>> problem.predict(problem.prior).values
+        array([1.5, 1.5, 2.5])
+        """
+        state = self._prior.space
+        values = _vector(x, "x").values
+        if x.space is not state:
+            values = values[state._align(x.space, "x", "x and the prior")]
+        predicted = self._forward.data @ values + self._offset_values()
+        return Vector(predicted, self._obs.space)
+
+    def restrict(self, keep: Space) -> "Problem":
+        r"""
+        Return the problem on part of the state, the rest held at its prior.
+
+        Use it to solve for some of the state only, such as the cells the
+        observations see well, and keep every other element at its prior
+        value. Which elements to keep is your choice: for example, the cells
+        whose total sensitivity is above a percentile of all cells'
+        (:func:`fips.aggregate.sum` of the forward operator's absolute column
+        sums, grouped by cell, gives that total).
+
+        The dropped elements still add to the observations, at their prior
+        values: :math:`H_r x_{0,r}` (the forward operator's columns for them
+        times their prior) is added to the offset. The prior, the prior
+        covariance and the forward operator are cut to the kept labels; the
+        covariance keeps its form, so a Kronecker covariance stays as its
+        factors. The dropped elements' prior uncertainty is not added to the
+        model-data mismatch: they are held exactly at the prior.
+
+        After solving, ``post.estimate.combine_first(problem.prior)`` puts
+        the estimate back on the whole state, with the prior for the dropped
+        elements (:meth:`Vector.combine_first`).
+
+        Parameters
+        ----------
+        keep : Space
+            The state of the new problem: blocks of the prior's space, each
+            with some of its labels (in any order; the new problem has them
+            in this order). A block of the prior not in `keep` is held at the
+            prior whole.
+
+        Returns
+        -------
+        Problem
+            The restricted problem (of the same class). The observations and
+            their covariance are unchanged; its offset is this problem's
+            offset (zero if none) plus the contribution of the elements left
+            out.
+
+        Raises
+        ------
+        ValueError
+            If `keep` has a block or a label that the prior lacks.
+
+        See Also
+        --------
+        Vector.combine_first : The estimate put back on the whole state.
+
+        Examples
+        --------
+        >>> import numpy as np
+        >>> import pandas as pd
+        >>> import fips
+        >>> cells = pd.Index(["a", "b", "c"], name="cell")
+        >>> obs_id = pd.Index(["o1", "o2"], name="obs_id")
+        >>> prior = fips.Vector.from_series(
+        ...     pd.Series([1.0, 2.0, 3.0], index=cells), block="flux"
+        ... )
+        >>> obs = fips.Vector.from_series(
+        ...     pd.Series([4.0, 5.0], index=obs_id), block="co2"
+        ... )
+        >>> H = np.array([[1.0, 1.0, 1e-6], [0.0, 1.0, 1e-6]])
+        >>> problem = fips.Problem(
+        ...     prior=prior,
+        ...     prior_cov=fips.Independent().with_std(1.0),
+        ...     obs=obs,
+        ...     obs_cov=fips.Independent().with_std(0.5),
+        ...     forward=fips.Operator(H, obs.space, prior.space),
+        ... )
+        >>> small = problem.restrict(fips.Space({"flux": cells[:2]}))
+        >>> small.offset.values
+        array([3.e-06, 3.e-06])
+        >>> post = fips.solve(small)
+        >>> post.estimate.combine_first(problem.prior).values.round(3)
+        array([0.034, 4.207, 3.   ])
+        """
+        if not isinstance(keep, Space):
+            raise TypeError(f"keep must be a Space, got {type(keep).__name__}.")
+        state = self._prior.space
+        kept = state._subset(keep, "The space to keep")
+        left_out = np.ones(len(state), dtype=bool)
+        left_out[kept] = False
+        H = self._forward.data
+        rows = np.arange(H.shape[0])
+
+        offset = self._offset
+        if left_out.any():
+            removed = np.flatnonzero(left_out)
+            contribution = H._select(rows, removed) @ self._prior.values[removed]
+            name = None if offset is None else offset.name
+            values = self._offset_values() + contribution
+            offset = Vector(values, self._obs.space, name=name)
+
+        prior_cov = self._prior_cov
+        return type(self)(
+            prior=Vector(self._prior.values[kept], keep, name=self._prior.name),
+            prior_cov=Covariance(
+                prior_cov.data._select(kept, kept), keep, name=prior_cov.name
+            ),
+            obs=self._obs,
+            obs_cov=self._obs_cov,
+            forward=Operator(
+                H._select(rows, kept), self._obs.space, keep, name=self._forward.name
+            ),
+            offset=offset,
+        )
+
+    def aggregate(self, W: Operator) -> "Problem":
+        r"""
+        Return the problem of aggregated observations.
+
+        Each input on the observations goes through the same aggregation
+        :math:`W`: the observations :math:`W z`, the forward operator
+        :math:`W H`, the model-data mismatch :math:`W S_z W^T` and the offset
+        :math:`W c`. Each keeps the cheapest form (a sparse :math:`W` and a
+        diagonal :math:`S_z` give a sparse mismatch).
+
+        Parameters
+        ----------
+        W : Operator
+            The aggregation, such as :func:`fips.aggregate.mean`'s: its
+            columns the observations' labels (in any order), its rows the
+            aggregated observations.
+
+        Returns
+        -------
+        Problem
+            The problem (of the same class) on the aggregated observations,
+            with the same prior and prior covariance.
+
+        Raises
+        ------
+        TypeError
+            If `W` is not an Operator.
+        ValueError
+            If the columns of `W` do not have exactly the observations'
+            labels.
+
+        Examples
+        --------
+        >>> import numpy as np
+        >>> import pandas as pd
+        >>> import fips
+        >>> times = pd.date_range("2020-01-01", periods=4, freq="12h", name="obs_time")
+        >>> obs = fips.Vector.from_series(
+        ...     pd.Series([1.0, 2.0, 3.0, 4.0], index=times), block="co2"
+        ... )
+        >>> prior = fips.Vector.from_series(
+        ...     pd.Series(0.0, index=pd.Index(["a"], name="cell")), block="flux"
+        ... )
+        >>> problem = fips.Problem(
+        ...     prior=prior,
+        ...     prior_cov=fips.Independent().with_std(1.0),
+        ...     obs=obs,
+        ...     obs_cov=fips.Independent().with_std(1.0),
+        ...     forward=fips.Operator(np.ones((4, 1)), obs.space, prior.space),
+        ... )
+        >>> W = fips.aggregate.mean(
+        ...     obs.space, by=pd.Grouper(level="obs_time", freq="1D")
+        ... )
+        >>> daily = problem.aggregate(W)
+        >>> daily.obs.values, daily.obs_cov.variances.values
+        (array([1.5, 3.5]), array([0.5, 0.5]))
+        """
+        if not isinstance(W, Operator):
+            raise TypeError(
+                f"An aggregation is an Operator, not {type(W).__name__}: build one "
+                "with fips.aggregate.mean or fips.aggregate.sum."
+            )
+        observed = self._obs.space
+        form = _on(
+            W, W.rows, observed, "the aggregation", ("its rows", "the observations")
+        )
+        rows = W.rows
+        offset = self._offset
+        if offset is not None:
+            offset = Vector(form @ offset.values, rows, name=offset.name)
+        obs_cov = self._obs_cov
+        return type(self)(
+            prior=self._prior,
+            prior_cov=self._prior_cov,
+            obs=Vector(form @ self._obs.values, rows, name=self._obs.name),
+            obs_cov=Covariance(
+                (form @ obs_cov.data) @ form._transpose(), rows, name=obs_cov.name
+            ),
+            forward=Operator(
+                form @ self._forward.data,
+                rows,
+                self._prior.space,
+                name=self._forward.name,
+            ),
+            offset=offset,
+        )
+
+    def _offset_values(self) -> np.ndarray:
+        """Return the offset's values, zeros where there is none."""
+        if self._offset is None:
+            return np.zeros(len(self._obs))
+        return self._offset.values
+
+    def __repr__(self) -> str:
+        """Return the two spaces."""
+        return f"Problem(state: {self._prior.space!r}, obs: {self._obs.space!r})"
+
+    def __getstate__(self) -> dict[str, Any]:
+        """Return the inputs, already on their spaces."""
+        return {
+            "prior": self._prior,
+            "prior_cov": self._prior_cov,
+            "obs": self._obs,
+            "obs_cov": self._obs_cov,
+            "forward": self._forward,
+            "offset": self._offset,
+        }
+
+    def __setstate__(self, state: dict[str, Any]) -> None:
+        """Restore from :meth:`__getstate__`; the labels were checked when it was built."""
+        self._prior = state["prior"]
+        self._prior_cov = state["prior_cov"]
+        self._obs = state["obs"]
+        self._obs_cov = state["obs_cov"]
+        self._forward = state["forward"]
+        self._offset = state["offset"]

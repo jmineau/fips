@@ -24,11 +24,11 @@ Inverse problems in geophysics and atmospheric science are incredibly complex, o
 
 - **Native N-Dimensional Alignment**: FIPS natively utilizes `pandas.MultiIndex` to smoothly align heterogeneous datasets across any dimension. Whether you are mixing temporal, spatial, spectral, or sensor-specific data, your coordinates are never dropped or misaligned.
 
-- **Modular Block Architecture**: Avoid wrangling monolithic arrays. Construct massive, multi-source state spaces and observation networks piece-by-piece using specialized `Block` and `MatrixBlock` objects.
+- **Modular Block Architecture**: Avoid wrangling monolithic arrays. Construct massive, multi-source state spaces and observation networks piece-by-piece from named blocks: a `Space` of labels, and an `Operator` built block by block.
 
 - **Speak Your Domain's Language**: Built explicitly around the standard `y = Hx + error` paradigm. Directly plug in your pre-computed forward operators ($H$), prior covariances ($S_0$), and model-data mismatches ($S_z$).
 
-- **Analytical Speed & Sparse Support**: FIPS is built for scale. By leveraging optimized sparse data structures and direct linear algebra rather than expensive sampling algorithms, it computes exact analytical Maximum A Posteriori (MAP) estimates for massive state spaces in seconds.
+- **Analytical Speed & Sparse Support**: FIPS is built for scale. Each matrix is kept in its cheapest form (dense, sparse, diagonal, or Kronecker factors), and by using direct linear algebra rather than expensive sampling algorithms, it computes exact analytical Maximum A Posteriori (MAP) estimates for massive state spaces in seconds.
 
 ## Installation
 
@@ -52,35 +52,33 @@ uv sync --dev
 ```python
 import numpy as np
 import pandas as pd
-from fips import Block, CovarianceMatrix
-from fips.problems.flux import FluxProblem
+import fips
+from fips import Covariance, Operator, Problem, Vector
 
-# State: gridded prior fluxes (time × lat × lon)
+# State: gridded prior fluxes (time × lat × lon), one block named "flux"
 flux_idx = pd.MultiIndex.from_product(
     [pd.date_range("2023-01", periods=3, freq="MS"), [37.0, 38.0], [-112.0, -111.0]],
     names=["time", "lat", "lon"],
 )
-prior = pd.Series(np.ones(12) * 1.5, index=flux_idx, name="flux")
+prior = Vector.from_series(pd.Series(np.ones(12) * 1.5, index=flux_idx), block="flux")
 
 # Observations: tower concentration measurements
 obs_idx = pd.MultiIndex.from_product(
     [pd.date_range("2023-01", periods=8, freq="2W"), ["UOU"]],
     names=["time", "site"],
 )
-obs = pd.Series(np.ones(8) * 400.0, index=obs_idx, name="concentration")
+obs = Vector.from_series(pd.Series(np.ones(8) * 400.0, index=obs_idx), block="concentration")
 
 # Forward operator (Jacobian), flux error covariance, obs error covariance
-H   = pd.DataFrame(np.random.rand(8, 12), index=obs_idx,  columns=flux_idx)
-S_0 = pd.DataFrame(np.eye(12) * 0.5,  index=flux_idx, columns=flux_idx)
-S_z = pd.DataFrame(np.eye(8)  * 0.1,  index=obs_idx,  columns=obs_idx)
+H   = Operator(np.random.rand(8, 12), obs.space, prior.space)
+S_0 = Covariance.diagonal(0.5, prior.space)
+S_z = Covariance.diagonal(0.1, obs.space)
 
-problem = FluxProblem(
-    obs=obs, prior=prior,
-    forward_operator=H, prior_error=S_0, modeldata_mismatch=S_z,
-).solve()
+problem = Problem(prior=prior, prior_cov=S_0, obs=obs, obs_cov=S_z, forward=H)
+post = fips.solve(problem)
 
-print(problem.posterior_fluxes)        # posterior pd.Series indexed by (time, lat, lon)
-print(problem.estimator.reduced_chi2)  # reduced chi-squared statistic
+print(post.estimate["flux"].to_series())  # posterior fluxes, labeled by (time, lat, lon)
+print(post.reduced_chi2)                  # reduced chi-squared statistic
 ```
 
 ### Multi-block — combined station + satellite observations
@@ -88,7 +86,8 @@ print(problem.estimator.reduced_chi2)  # reduced chi-squared statistic
 ```python
 import numpy as np
 import pandas as pd
-from fips import Block, Vector, Matrix, MatrixBlock, CovarianceMatrix, InverseProblem
+import fips
+from fips import Covariance, Operator, Problem, Space, Vector
 
 # State: same gridded prior fluxes (from above)
 N_f = 12
@@ -98,50 +97,42 @@ station_idx = pd.MultiIndex.from_product(
     [pd.date_range("2023-01", periods=8, freq="2W"), ["UOU"]],
     names=["time", "site"],
 )
-station_obs = Block(pd.Series(np.ones(8) * 400.0,
-                              index=station_idx, name="station"))
 
 # Obs block 2: satellite column-average concentrations
 satellite_idx = pd.MultiIndex.from_product(
     [pd.date_range("2023-01", periods=3, freq="MS"), [37.5], [-111.5]],
     names=["time", "lat", "lon"],
 )
-satellite_obs = Block(pd.Series(np.ones(3) * 0.00400,
-                                index=satellite_idx, name="satellite"))
 
-# Combine obs blocks into a list
-obs_blks = [station_obs, satellite_obs]
+# The observations: one vector of two blocks
+obs = Vector.from_blocks({
+    "station": pd.Series(np.ones(8) * 400.0, index=station_idx),
+    "satellite": pd.Series(np.ones(3) * 0.00400, index=satellite_idx),
+})
 
-# Jacobian: one MatrixBlock per obs type, both mapping to the "flux" state block
-H_blks = [
-    MatrixBlock(
-        pd.DataFrame(np.random.rand(8, N_f),
-        index=station_idx, columns=flux_idx),
-        row_block="station", col_block="flux",
-    ),
-    MatrixBlock(
-        pd.DataFrame(np.random.rand(3, N_f),
-        index=satellite_idx, columns=flux_idx),
-        row_block="satellite", col_block="flux",
-    ),]
+# Jacobian: one block per obs type, both mapping from the "flux" state block
+H = Operator.from_blocks({
+    ("station", "flux"): pd.DataFrame(np.random.rand(8, N_f),
+                                      index=station_idx, columns=flux_idx),
+    ("satellite", "flux"): pd.DataFrame(np.random.rand(3, N_f),
+                                        index=satellite_idx, columns=flux_idx),
+})
 
-# Prior error covariance: only flux errors, no cross-block covariances
-S_0 = CovarianceMatrix(np.eye(N_f) * 0.5, index=flux_idx, columns=flux_idx)
+# Prior error covariance: independent flux errors
+S_0 = Covariance.diagonal(0.5, Space({"flux": flux_idx}))
 
 # Model-data mismatch covariance: block-diagonal with separate error levels for stations vs. satellite
-S_z_blks = [
-    CovarianceMatrix(np.eye(8) * 0.1, index=station_idx, columns=station_idx),
-    CovarianceMatrix(np.eye(3) * 0.2, index=satellite_idx, columns=satellite_idx),
-]
+S_z = Covariance.block_diag(
+    Covariance.diagonal(0.1, Space({"station": station_idx})),
+    Covariance.diagonal(0.2, Space({"satellite": satellite_idx})),
+)
 
-# Pass blocks to the InverseProblem and solve
-problem = InverseProblem(
-    obs=obs_blks, prior=prior,
-    forward_operator=H_blks, prior_error=S_0, modeldata_mismatch=S_z_blks,
-).solve()
+# Put everything in a Problem, which checks the labels, and solve it
+problem = Problem(prior=prior, prior_cov=S_0, obs=obs, obs_cov=S_z, forward=H)
+post = fips.solve(problem)
 
-print(problem.posterior['flux'])       # posterior pd.Series indexed by (time, lat, lon)
-print(problem.estimator.reduced_chi2)  # reduced chi-squared statistic
+print(post.estimate["flux"].to_series())  # posterior fluxes, labeled by (time, lat, lon)
+print(post.reduced_chi2)                  # reduced chi-squared statistic
 ```
 
 ## Documentation

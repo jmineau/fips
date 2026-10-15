@@ -24,7 +24,6 @@ classifiers = [
     "Typing :: Typed",
 ]
 dependencies = [
-    "joblib>=1.4.0",
     "numpy>=1.22.0",
     "pandas>=2.0.0",  # need pandas 2.0 for upgraded Index object
     "scipy>=1.8.0",
@@ -32,9 +31,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-flux = [
-    "cartopy>=0.24.0",  # numpy 2.0 support
-    "h5py>=3.11.0",  # numpy 2.0 support
+viz = [
     "matplotlib>=3.6.0",
 ]
 
@@ -48,7 +45,7 @@ Changelog = "https://github.com/jmineau/fips/blob/main/CHANGELOG.md"
 [dependency-groups]
 # Dev tooling and docs together; `uv sync` installs it by default.
 dev = [
-    "fips[flux]",
+    "fips[viz]",
     "docstr-coverage>=2.3",
     "git-cliff>=2.10",  # `just changelog`
     "ipython>=9.0",  # `.. ipython::` in the docs
@@ -87,10 +84,6 @@ exclude_also = [
 [tool.pyrefly]
 project-includes = ["src"]
 python-version = "3.11"  # as CI checks, against the oldest supported Python
-# The errors that existed when fips moved from pyright to pyrefly (2026-10). New
-# errors fail the check; fix the listed ones over time, then run
-# `uv run pyrefly check --update-baseline` (or `--prune-baseline`) to shrink it.
-baseline = "pyrefly-baseline.json"
 
 [tool.pytest]
 minversion = "9.0"

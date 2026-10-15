@@ -6,15 +6,11 @@ This reference provides detailed documentation for all public classes, functions
 .. toctree::
    :maxdepth: 2
 
-   blocks
-   multiblocks
-   operators
-   covariance
+   space
    operator
-   inverse
+   covariance
+   linalg
+   problem
+   aggregate
    posterior
-   estimators
-   pipeline
-   base
-   utilities/index
-   problems/index
+   visualization
