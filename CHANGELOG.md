@@ -545,6 +545,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   10,003 observations 2.8 s instead of 25 s; the whole solve takes 17.4 s
   instead of 20.7 s and, with the 10,003, 87 s instead of 92 to 97 s. Nothing in
   the API changes.
+- **The distance functions drop the options nothing used and are typed.**
+  `haversine_matrix(lats, lons)` takes degrees and gives kilometers on a sphere
+  of radius 6371 km: its `deg=` and `earth_radius=` are gone (for radians, pass
+  `np.degrees(lats)`), and `time_diff_matrix(times)` always gives the absolute
+  differences: its `absolute=` is gone. The fips kernels passed none of them.
+  `haversine_matrix` and `chordal_matrix` share the one half-angle term they
+  both write, and every distance function has annotations. No distance
+  changes. ([#82](https://github.com/jmineau/fips/issues/82))
 
 ### Removed
 
