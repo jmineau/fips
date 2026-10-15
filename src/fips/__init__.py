@@ -9,14 +9,17 @@ model with standard deviations: ``Exponential("time", "30D").with_std(std)``.
 A :class:`Problem` puts the prior, the observations, the forward operator and
 the covariances together, and :func:`solve` returns its :class:`Posterior`.
 :mod:`fips.aggregate` sums or averages a space by group (the observations to
-daily means, the state to monthly totals).
+daily means, the state to monthly totals), :func:`offset_block` adds a block
+of offsets to the state, and :mod:`fips.scales` sizes a model-data mismatch
+that grows with the signal.
 """
 
 import logging
 from importlib.metadata import PackageNotFoundError
 from importlib.metadata import version as _version
 
-from . import aggregate
+from . import aggregate, scales
+from .aggregate import offset_block
 from .correlation import Independent, Kronecker
 from .covariance import Covariance
 from .kernels import Constant, Exponential, Gaussian, Matern
@@ -52,5 +55,7 @@ __all__ = [
     "available_methods",
     "Posterior",
     "aggregate",
+    "offset_block",
+    "scales",
     "InversionPipeline",
 ]

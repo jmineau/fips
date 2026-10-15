@@ -17,6 +17,10 @@ fluxes per area to a total mass, is the sum times a diagonal of the weights:
 ``fips.aggregate.sum(space, by="time") @ Operator(scipy.sparse.diags(w),
 space, space)``.
 
+:func:`offset_block` uses the same groups for a block of offsets in the state:
+one unknown offset per group of observations (a site's background in a month),
+with the forward block that adds each to its observations.
+
 The groups are given by ``by``, one key or a list of keys, each of which gives
 every label of a block a group label on one level:
 
@@ -44,8 +48,9 @@ import scipy.sparse as sp
 
 from fips.operator import Operator
 from fips.space import Space, _listed, _sorted
+from fips.vector import Vector
 
-__all__ = ["sum", "mean"]
+__all__ = ["sum", "mean", "offset_block"]
 
 
 def _level(index: pd.Index, level: Hashable, block: str) -> pd.Index:
@@ -351,3 +356,119 @@ def mean(
     array([0.5, 2.5, 4.5, 6.5])
     """
     return _aggregation(space, by, blocks, average=True)
+
+
+def offset_block(
+    obs_space: Space,
+    by: Any,
+    block: str = "offset",
+    blocks: "str | Sequence[str] | None" = None,
+) -> tuple[Vector, Operator]:
+    """
+    Return a block of offsets for the state: one per group of observations, and the map to them.
+
+    An offset is an unknown that adds to each observation of its group (the
+    background at a site in a month, a calibration bias of a network): it is
+    solved for with the state, as a block of its own, instead of being fixed
+    (the problem's ``offset``) or left in the model-data mismatch. Its prior
+    and its covariance are the caller's: the offsets' labels are the groups,
+    so a covariance model on their levels correlates them (an
+    ``Exponential("obs_time", "30D")`` between the months of one site).
+
+    Parameters
+    ----------
+    obs_space : Space
+        The observations.
+    by : key or list of keys
+        The groups, as :func:`sum` takes them: one offset for each group of
+        observations that has any (``[bins, "site"]`` for one per interval and
+        site, with ``bins`` an IntervalIndex named after the time level).
+    block : str, default "offset"
+        The name of the offsets' block in the state.
+    blocks : str or list of str, optional
+        The blocks of observations the offsets apply to, every block by
+        default; their observations share an offset when their groups have
+        the same labels. Observations of another block get none. For separate
+        offsets per block, call this once per block with another `block`
+        name.
+
+    Returns
+    -------
+    prior : Vector
+        Zeros on the offsets' space: one block, `block`, labeled by the
+        groups (sorted) on the levels the keys name.
+    forward : Operator
+        The forward block, from the offsets (its columns) to `obs_space` (its
+        rows): 1 where an observation has that offset, 0 elsewhere. Sparse.
+        It is the transpose of :func:`sum`'s operator on the same groups.
+
+    Raises
+    ------
+    TypeError
+        If `obs_space` is not a Space, or a key is of another kind.
+    ValueError
+        As :func:`sum`.
+
+    See Also
+    --------
+    sum : The aggregation on the same groups.
+
+    Examples
+    --------
+    One offset per site and month, for hourly observations at two sites:
+
+    >>> import numpy as np
+    >>> import pandas as pd
+    >>> import fips
+    >>> labels = pd.MultiIndex.from_product(
+    ...     [["A", "B"], pd.to_datetime(["2020-01-10", "2020-01-20", "2020-02-05"])],
+    ...     names=["site", "obs_time"],
+    ... )
+    >>> obs = fips.Vector.from_series(pd.Series(400.0, index=labels), block="co2")
+    >>> months = pd.interval_range(
+    ...     pd.Timestamp("2020-01-01"),
+    ...     periods=2,
+    ...     freq="MS",
+    ...     closed="left",
+    ...     name="obs_time",
+    ... )
+    >>> prior, forward = fips.offset_block(obs.space, by=[months, "site"])
+    >>> prior.space
+    Space(offset: 4 x ['obs_time', 'site'])
+    >>> forward.dense()
+    array([[1., 0., 0., 0.],
+           [1., 0., 0., 0.],
+           [0., 0., 1., 0.],
+           [0., 1., 0., 0.],
+           [0., 1., 0., 0.],
+           [0., 0., 0., 1.]])
+
+    The offsets go in the state beside the fluxes, with a prior covariance of
+    their own:
+
+    .. code-block:: python
+
+        prior = fips.Vector.from_blocks({"flux": flux_prior, "offset": prior})
+        H = fips.Operator.from_blocks(
+            {("co2", "flux"): H_flux, ("co2", "offset"): forward["co2", "offset"]}
+        )
+        prior_cov = fips.Covariance.block_diag(
+            flux=flux_cov, offset=fips.Independent().with_std(0.5)
+        )
+    """
+    if not isinstance(obs_space, Space):
+        raise TypeError(f"obs_space must be a Space, got {type(obs_space).__name__}.")
+    chosen = _chosen(obs_space, blocks)
+    codes, groups = _groups([(name, obs_space.select(name)) for name in chosen], by)
+    rows = np.concatenate(
+        [
+            obs_space.slice(name).start + np.arange(len(obs_space.select(name)))
+            for name in chosen
+        ]
+    )
+    offsets = Space({block: groups})
+    matrix = sp.csr_array(
+        (np.ones(len(rows)), (rows, codes)), shape=(len(obs_space), len(groups))
+    )
+    prior = Vector(np.zeros(len(groups)), offsets)
+    return prior, Operator(matrix, obs_space, offsets)
