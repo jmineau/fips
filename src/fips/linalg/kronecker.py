@@ -25,6 +25,7 @@ from fips.linalg.forms import (
     LinearOperator,
     _as_array,
     _asymmetry,
+    _cholesky,
     _read_only,
     _solve_psd,
 )
@@ -361,6 +362,36 @@ class KroneckerOperator(LinearOperator):
             total += (self._size // n_k) * DenseOperator._adopt(C).logdet()
         return total
 
+    def sqrt(self) -> LinearOperator:
+        r"""
+        Return a square root :math:`R` with :math:`R R^T` equal to the operator, through the factors.
+
+        When the rows are the whole product, in any order,
+        :math:`R = D P (L_1 \otimes \dots \otimes L_K) P^T`, where
+        :math:`L_k` is the lower Cholesky factor of :math:`C_k`: since
+        :math:`P` is then a permutation, :math:`R R^T = S`. It is applied
+        through the factors, as the operator is, and never formed. For a
+        strict subset of the product, :math:`P^T P` is not the identity, so
+        the dense matrix is factored (:meth:`LinearOperator.sqrt`).
+
+        Returns
+        -------
+        LinearOperator
+            :math:`R`, square.
+
+        Raises
+        ------
+        numpy.linalg.LinAlgError
+            If a factor is not positive-definite or a standard deviation is zero.
+        """
+        if self.shape[0] < self._size:
+            return super().sqrt()
+        if not np.all(self.std):
+            raise LinAlgError(
+                "A standard deviation is zero, so the operator is singular."
+            )
+        return _KroneckerRoot(self, tuple(_cholesky(C) for C in self.factors))
+
     @cached_property
     def _inverses(self) -> tuple[np.ndarray, ...]:
         """The inverse of each factor, each factored once (Cholesky, or ``LDL^T`` with a warning)."""
@@ -483,3 +514,47 @@ class KroneckerOperator(LinearOperator):
         state.pop("_complement", None)
         state.pop("_norm", None)
         return state
+
+
+class _KroneckerRoot(LinearOperator):
+    r"""
+    The square root :math:`R = D P (L_1 \otimes \dots \otimes L_K) P^T` of a :class:`KroneckerOperator` (:meth:`KroneckerOperator.sqrt`).
+
+    It is applied through the Cholesky factors :math:`L_k` with the
+    operator's own grid (its rows are the whole product, in any order). Its
+    transpose, :math:`P (L_1^T \otimes \dots \otimes L_K^T) P^T D`, is the
+    same root applied the other way.
+    """
+
+    def __init__(
+        self,
+        of: KroneckerOperator,
+        roots: tuple[np.ndarray, ...],
+        transposed: bool = False,
+    ):
+        self._of = of
+        self._roots = tuple(_read_only(L) for L in roots)
+        self._transposed = transposed
+        super().__init__(of.shape)
+
+    def _matmat(self, X):
+        """Return ``R @ X``, or ``R^T @ X`` for the transpose, through the factors."""
+        of, s = self._of, self._of.std[:, None]
+        if self._transposed:
+            roots = tuple(L.T for L in self._roots)
+
+            def apply(Y):
+                """Return ``R^T Y`` for a block of columns."""
+                return of._gather(of._through(of._scatter(s * Y), roots))
+
+        else:
+
+            def apply(Y):
+                """Return ``R Y`` for a block of columns."""
+                return s * of._gather(of._through(of._scatter(Y), self._roots))
+
+        return of._by_columns(X, apply)
+
+    def _transpose(self):
+        """Return the transpose, the same factors applied the other way."""
+        return _KroneckerRoot(self._of, self._roots, not self._transposed)
