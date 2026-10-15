@@ -36,6 +36,7 @@ the prior's or the observations' space. :func:`solve` solves a problem.
        forward=H,
    )
    problem
+   problem.predict(problem.prior)
 
 Constructor
 ~~~~~~~~~~~
@@ -55,6 +56,16 @@ Inputs
    Problem.obs_cov
    Problem.forward
    Problem.offset
+
+Without a solve
+~~~~~~~~~~~~~~~
+What needs no solve and no :math:`m \times m` matrix is on the problem; what
+depends on the solve is on the :class:`Posterior`.
+
+.. autosummary::
+   :toctree: api/
+
+   Problem.predict
 
 Serialization
 ~~~~~~~~~~~~~

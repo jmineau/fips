@@ -21,14 +21,10 @@ Attributes
 
    FluxProblem.prior
    FluxProblem.obs
-   FluxProblem.result
-
-Methods
-~~~~~~~
-.. autosummary::
-   :toctree: ../api/
-
-   FluxProblem.solve
+   FluxProblem.concentrations
+   FluxProblem.prior_fluxes
+   FluxProblem.prior_concentrations
+   FluxProblem.prior_concentration_error
 
 
 FluxInversionPipeline
@@ -75,6 +71,13 @@ Constructor
 
 Attributes
 ~~~~~~~~~~
+.. autosummary::
+   :toctree: ../api/
+
+   FluxPlotter.posterior
+
+Methods
+~~~~~~~
 .. autosummary::
    :toctree: ../api/
 

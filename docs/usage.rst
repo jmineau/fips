@@ -306,12 +306,13 @@ Domain-Specific Problem: Flux Inversion
 :class:`~fips.problems.flux.FluxProblem` is a ready-made subclass of
 :class:`~fips.Problem` for atmospheric flux estimation using STILT
 transport footprints.  It adds named accessors that speak the language of the
-application, and a ``solve`` that keeps the posterior as ``result``:
+application; it is solved with :func:`fips.solve`, as any problem:
 
 .. code-block:: python
 
+   import fips
    from fips import Vector
-   from fips.problems.flux import FluxProblem
+   from fips.problems.flux import FluxPlotter, FluxProblem
 
    inversion = FluxProblem(
        obs=Vector.from_series(concentrations, block="concentration"),
@@ -320,64 +321,49 @@ application, and a ``solve`` that keeps the posterior as ``result``:
        obs_cov=S_z,       # concentration error covariance (or a model)
        prior_cov=S_0,     # flux error covariance (or a model)
    )
-   inversion.solve()
+   post = fips.solve(inversion)
 
-   # Domain-aware accessors
+   # Domain-aware accessors of the problem
    inversion.concentrations        # observed concentrations
    inversion.prior_fluxes          # prior flux pd.Series
-   inversion.posterior_fluxes      # posterior flux pd.Series
-   inversion.posterior_flux_error  # posterior flux error, a Covariance
-   inversion.prior_concentrations  # H @ prior
-   inversion.posterior_concentrations  # H @ posterior
+   inversion.prior_concentrations  # H @ prior + c, inversion.predict(inversion.prior)
 
-   # Built-in plots (requires cartopy)
-   inversion.plot.fluxes()
-   inversion.plot.concentrations()
+   # The posterior's blocks
+   post.estimate["flux"]           # posterior fluxes, a Vector (.to_series())
+   post.cov()["flux", "flux"]      # posterior flux error, a Covariance
+   post.modeled_obs["concentration"]  # H @ posterior + c
+
+   # Built-in plots of a posterior (requires cartopy)
+   plot = FluxPlotter(post)
+   plot.fluxes()
+   plot.concentrations()
 
 For a STILT Jacobian, `PYSTILT <https://jmineau.github.io/PYSTILT>`_ sums the
 footprints onto your flux grid and time bins, as a sparse matrix with its
-labels. Put a space on each axis; the matrix stays sparse:
+labels. Its rows are receptor ids and its columns ``(time, lon, lat)``, so
+label the observations and the prior to match. The Jacobian has columns only
+for the cells a footprint touched, while a :class:`~fips.Problem` needs the
+forward operator on exactly the prior's labels. :meth:`Operator.from_blocks
+<fips.Operator.from_blocks>` places a labeled block by its labels: a cell the
+Jacobian lacks is a column of zeros, and a label the state lacks raises. The
+matrix stays sparse:
 
 .. code-block:: python
 
    import stilt
-   from fips import Operator, Space
+   from fips import Operator
 
    project = stilt.Project("my_project")
    sims = project.simulations
    H = project.jacobian(sims[sims.variant == "hrrr"], grid, time_bins)
-   jacobian = Operator(
-       H.data,
-       rows=Space({"concentration": H.receptors.rename("receptor")}),
-       cols=Space({"flux": H.columns}),
-   )
-
-Its rows are receptor ids and its columns ``(time, lon, lat)``, so label the
-observations and the prior to match.
-
-A Jacobian has columns only for the cells a footprint touched, while a
-:class:`~fips.Problem` needs the forward operator on exactly the prior's
-labels: a cell the Jacobian lacks raises, it is not filled with zeros. Put the
-Jacobian on the whole state first, its columns moved to their positions among
-the prior's cells (a cell no observation sees is a column of zeros):
-
-.. code-block:: python
-
-   import scipy.sparse as sp
-
-   cells = prior.space.select("flux")
-   J = sp.coo_array(H.data)
-   full = sp.csr_array(
-       (J.data, (J.row, cells.get_indexer(H.columns)[J.col])),
-       shape=(J.shape[0], len(cells)),
-   )
+   J = (H.data, H.receptors.rename("receptor"), H.columns)  # matrix, row and column labels
    jacobian = Operator.from_blocks(
-       {("concentration", "flux"): full}, rows=obs.space, cols=prior.space
+       {("concentration", "flux"): J}, rows=obs.space, cols=prior.space
    )
 
-A Jacobian given as a DataFrame is put on the whole state with
-``frame.reindex(columns=cells, fill_value=0.0)`` before
-:meth:`~fips.Operator.from_frame` (a pandas-sparse frame stays sparse).
+A Jacobian given as a DataFrame, dense or pandas-sparse, is placed the same
+way: ``Operator.from_blocks({("concentration", "flux"): frame}, rows=obs.space,
+cols=prior.space)``.
 
 Background subtraction is supported via the ``offset`` argument to
 :class:`~fips.Problem`:
@@ -394,8 +380,10 @@ Background subtraction is supported via the ``offset`` argument to
 Advanced: Reading Blocks of the Results
 ---------------------------------------
 
-A problem is solved with :func:`fips.solve`, which returns the posterior;
-domain-specific names are a function of the posterior's blocks:
+A problem is solved with :func:`fips.solve`, which returns the posterior. The
+problem is the question and holds what needs no solve
+(:meth:`~fips.Problem.predict`); the posterior is the answer and holds what
+depends on the solve. Domain-specific names are functions of their blocks:
 
 .. code-block:: python
 
@@ -409,8 +397,9 @@ domain-specific names are a function of the posterior's blocks:
 
    def gravity_residual(post):
        """Observed minus prior-modelled gravity."""
-       obs = post.problem.obs["gravity"].values
-       return obs - post.prior_modeled_obs["gravity"].values
+       problem = post.problem
+       prior_modeled = problem.predict(problem.prior)
+       return problem.obs["gravity"].values - prior_modeled["gravity"].values
 
 All :class:`~fips.Posterior` results are computed when first read, so you only
 pay for what you access.
