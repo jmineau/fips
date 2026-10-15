@@ -24,6 +24,7 @@ from fips.linalg.forms import (
     DenseOperator,
     LinearOperator,
     _as_array,
+    _asymmetry,
     _read_only,
     _solve_psd,
 )
@@ -83,10 +84,11 @@ class KroneckerOperator(LinearOperator):
     Raises
     ------
     ValueError
-        If there is no factor, a factor is not square or not finite, the
-        positions do not match the factors (one array per factor, all the same
-        length, each within its factor), two rows have the same positions, or
-        a standard deviation is negative or not finite.
+        If there is no factor, a factor is not square, not finite or not
+        symmetric (to 1e-10 of its largest entry), the positions do not match
+        the factors (one array per factor, all the same length, each within
+        its factor), two rows have the same positions, or a standard deviation
+        is negative or not finite.
 
     See Also
     --------
@@ -150,11 +152,18 @@ class KroneckerOperator(LinearOperator):
         mats = tuple(np.asarray(C, dtype=float) for C in factors)
         if not mats:
             raise ValueError("A KroneckerOperator needs at least one factor.")
-        for C in mats:
+        for k, C in enumerate(mats):
             if C.ndim != 2 or C.shape[0] != C.shape[1]:
                 raise ValueError(f"Each factor must be square; got shape {C.shape}.")
             if not np.isfinite(C).all():
                 raise ValueError("The factors must be finite.")
+            found = _asymmetry(C)
+            if found is not None:
+                i, j, a_ij, a_ji, _ = found
+                raise ValueError(
+                    f"Factor {k} is not symmetric: its entry ({i}, {j}) is "
+                    f"{a_ij:.6g} and ({j}, {i}) is {a_ji:.6g}."
+                )
         sizes = tuple(len(C) for C in mats)
         size = math.prod(sizes)
 

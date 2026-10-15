@@ -77,7 +77,9 @@ def _covariance(value: Any, space: Space, what: str, of: str) -> Covariance:
             "(Independent().with_std(std)), Covariance.diagonal(variances, space) "
             "or Covariance.from_frame(frame)."
         )
-    return Covariance(_on(value, space, space, what, (of, of)), space, name=value.name)
+    return Covariance._computed(
+        _on(value, space, space, what, (of, of)), space, name=value.name
+    )
 
 
 class Problem:
@@ -397,7 +399,7 @@ class Problem:
         prior_cov = self._prior_cov
         return type(self)(
             prior=Vector(self._prior.values[kept], keep, name=self._prior.name),
-            prior_cov=Covariance(
+            prior_cov=Covariance._computed(
                 prior_cov.data._select(kept, kept), keep, name=prior_cov.name
             ),
             obs=self._obs,
@@ -483,7 +485,7 @@ class Problem:
             prior=self._prior,
             prior_cov=self._prior_cov,
             obs=Vector(form @ self._obs.values, rows, name=self._obs.name),
-            obs_cov=Covariance(
+            obs_cov=Covariance._computed(
                 (form @ obs_cov.data) @ form._transpose(), rows, name=obs_cov.name
             ),
             forward=Operator(
