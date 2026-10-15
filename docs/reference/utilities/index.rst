@@ -9,7 +9,6 @@ Utilities are functions and classes that are not specific to a particular proble
 .. toctree::
    :maxdepth: 1
 
-   aggregators
    filters
    metrics
    visualization

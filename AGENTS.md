@@ -33,11 +33,13 @@ PyPI name and import name are both `fips`. Source lives in `src/fips/`.
 src/fips/
   __init__.py        public exports (Space, Vector, Operator, Covariance, the
                      covariance models, Problem, solve, available_methods,
-                     Posterior, InversionPipeline)
+                     Posterior, the aggregate and scales modules,
+                     offset_block, InversionPipeline)
   space.py           Space — ordered named blocks, the padded MultiIndex,
                      select, from_index, exact align, round_labels
   vector.py          Vector — values on a Space (read-only float array);
-                     from_series, from_blocks, v[block], to_series, to_xarray
+                     from_series, from_blocks, v[block], to_series, to_xarray,
+                     combine_first
   operator.py        Operator — a matrix (a linalg form) with a Space on each
                      axis: from_frame, from_blocks, op[r, c], @ / + by exact
                      join, align, to_frame
@@ -58,7 +60,9 @@ src/fips/
   base.py            Pickleable — to_file / from_file (Problem, Posterior)
   problem.py         Problem — prior, prior_cov, obs, obs_cov, forward,
                      offset, checked once by exact join; models built there;
-                     predict(x) = H x + c
+                     predict(x) = H x + c; restrict (part of the state
+                     held at the prior) and aggregate (the observations
+                     through one W)
   solve.py           solve(problem, method, **options), the method registry
                      (_register, available_methods) and each method's options
                      dataclass (AnalyticOptions); the analytic method
@@ -69,7 +73,12 @@ src/fips/
                      every output derived from them, labeled, each built once
   pipeline.py        InversionPipeline ABC — workflow template for repeated
                      inversions (load data, build covariances, solve)
-  aggregators.py     Time/space binning (e.g. integrate_over_time_bins)
+  aggregate.py       sum, mean: an aggregation W (sparse Operator) from a
+                     Space to groups of its labels (levels, a pandas Grouper,
+                     an IntervalIndex, a Series mapping); offset_block, the
+                     same groups as a block of offsets in the state
+  scales.py          footprint, modeled, observed: the sizes of each
+                     observation's signal, for a model-data mismatch
   filters.py         Selection helpers (e.g. enough_obs_per_interval)
   metrics.py         haversine_matrix, chordal_matrix, time_diff_matrix
   visualization.py   Generic plotting helpers
@@ -108,6 +117,9 @@ From `fips.__init__`:
 | `Problem` | the inputs of a solve, their labels checked once by exact join |
 | `solve`, `available_methods` | `fips.solve(problem, method="analytic", **options)` returns a `Posterior` |
 | `Posterior` | the estimate and every diagnostic, labeled, from the kept factorization |
+| `aggregate.sum`, `aggregate.mean` | an aggregation `W` of a space by group: `problem.aggregate(W)` on the observations, `post.cov(W)` on the state |
+| `offset_block` | a block of offsets in the state, one per group of observations, and its forward block |
+| `scales` | `footprint`, `modeled`, `observed`: scales for a model-data mismatch that grows with the signal |
 | `InversionPipeline` | repeatable workflow template |
 
 ## Mental model
@@ -178,19 +190,22 @@ From `fips.__init__`:
   `Operator.from_blocks`, which places a labeled block by its labels (a label
   the block lacks is zero, a label the space lacks raises; `operator._placed`
   keeps a sparse block sparse and a block that covers its labels in its form).
+  Or the state is restricted to what the Jacobian covers (`Problem.restrict`,
+  which holds the rest at the prior through the offset).
   Each input is then held in the order of `prior.space` and
   `obs.space`, through `form._select` (which keeps a Kronecker form), and a
   covariance model is built there (`model.build(space, name=...)`). The solve
   and the `Posterior` compute by position on those orders and label every
   output with those two spaces.
 - **The problem is the question, the posterior the answer.** `Problem` holds
-  what needs no solve and no `m x m` matrix (`predict`); `Posterior` holds
-  what depends on the solve or on the `m x m` matrix it factors
-  (`innovation_cov`, the estimate and every diagnostic). `Posterior.modeled_obs` is the one shortcut
-  to a problem method: `problem.predict(post.estimate)`, kept.
+  what needs no solve and no `m x m` matrix (`predict`), and makes other
+  problems from itself (`aggregate`, `restrict`); `Posterior` holds what
+  depends on the solve or on the `m x m` matrix it factors (`innovation_cov`,
+  the estimate and every diagnostic). `Posterior.modeled_obs` is the one
+  shortcut to a problem method: `problem.predict(post.estimate)`, kept.
 - **A sparse matrix is a SciPy matrix, never a pandas-sparse frame.** The
-  one place a pandas-sparse frame enters is `Operator.from_frame` (and
-  `ObsAggregator.apply` with a frame), through `operator._frame_matrix`: the
+  one place a pandas-sparse frame enters is `Operator.from_frame`, through
+  `operator._frame_matrix`: the
   entries a sparse column does not store are zeros, so its fill value must be
   0 or NaN (pandas 3's `DataFrame.sparse.from_spmatrix` fills with NaN,
   pandas-dev/pandas#59212); any other fill raises, and a NaN stored in a sparse
@@ -218,6 +233,15 @@ From `fips.__init__`:
   differences are in nanoseconds): keep
   the order of the products (`(std_i * C_ij) * std_j`) and the distance
   functions of `metrics.py` when changing a kernel.
+- **Aggregations.** `fips.aggregate.sum` and `mean` build `W` block by
+  block: each aggregated block's groups are its rows, sorted, and a block not
+  named in `blocks=` passes through (one row per label); `offset_block` forms
+  its groups over the named blocks together and gives other blocks zero rows.
+  A group exists only if a label falls in it, so `W` has no empty row (`mean`
+  divides by the count, and `averaging_kernel(W)` needs `W W^T` invertible). A
+  label a key cannot place raises. `Problem.aggregate` and `restrict` return a
+  new problem of the same class, built through `__init__` (the exact join
+  runs again); `restrict` keeps each covariance's form (`form._select`).
 - **`Pickleable` contract.** Anything user-facing should round-trip through
   pickle. `Problem` and `Posterior` inherit `Pickleable` (in `base.py`) for
   `to_file` / `from_file`; a `Posterior` pickles the problem, the options and
@@ -463,6 +487,12 @@ inter-source error covariance). See README "Multi-block" example.
   `type[Any]`, though `typing.Type[E]` or an alias of `type[E]` gives
   `type[E]`. Use `typing.Type[E]` or an alias where a subclass of a container
   holds classes.
+- **A `groupby` on one `pd.Grouper(freq=...)` numbers its bins in time order,
+  empty bins included**: `ngroup()` skips the number of an empty bin, and on
+  labels that are not in time order it does not follow the labels' order (seen
+  with pandas 2.0.3 and 3.0.6). `aggregate._key_labels` bins the labels sorted
+  and reads each label's bin from `size().index`; do the same anywhere a single
+  frequency key is grouped.
 - `H @ vector` is a `Vector`, not a numpy array. Don't expect raw arrays out
   of public APIs.
 - **`fips.solve` is the function, `fips/solve.py` the module.** `__init__`

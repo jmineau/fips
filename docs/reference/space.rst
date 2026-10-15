@@ -103,4 +103,5 @@ Alignment and labels
    :toctree: api/
 
    Vector.align
+   Vector.combine_first
    Vector.round_labels

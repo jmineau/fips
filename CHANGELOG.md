@@ -233,13 +233,48 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   with other observations from the same factors (one `m x m` product). A
   posterior pickles its problem, its options and its factors.
   ([#82](https://github.com/jmineau/fips/issues/82))
+- **Aggregation operators** (`fips.aggregate`): `fips.aggregate.sum(space,
+  by)` and `fips.aggregate.mean(space, by)` build `W`, a sparse `Operator` from
+  a space to the groups of its labels, block by block (`blocks=` names the
+  blocks to aggregate; the others pass through). `by` is one key or a list:
+  a level name, a `pandas.Grouper` with a `level` and a `freq` (time bins at a
+  frequency), an `IntervalIndex` named after a level (time bins given; each
+  group is labeled by its bin's left edge), or a `Series` that maps a level's
+  values to groups (sites to networks, cells to regions). A label a key cannot
+  place raises, and a group exists only if a label falls in it. On the state,
+  `post.cov(W)` and `post.averaging_kernel(W)` take it (a weighted total is
+  `W @ Operator(scipy.sparse.diags(w), space, space)`); on the observations,
+  **`Problem.aggregate(W)`** is the problem of `W z`, `W H`, `W S_z W^T` and
+  `W c`, each in its cheapest form.
+  ([#82](https://github.com/jmineau/fips/issues/82))
+- **`fips.offset_block(obs_space, by, block="offset")`**: a block of offsets
+  for the state, one per group of observations (a site's background in a
+  month), as a prior of zeros (a `Vector`) and the forward block that adds
+  each offset to its observations (a sparse `Operator`, the transpose of the
+  sum on the same groups). Its prior covariance is the caller's: a model on the
+  offsets' labels, such as `Exponential("obs_time", "30D", within="site")`,
+  correlates them. `Vector.from_blocks` takes a vector of one block beside
+  Series to put it in the state.
+  ([#28](https://github.com/jmineau/fips/issues/28),
+  [#82](https://github.com/jmineau/fips/issues/82))
+- **`fips.scales`**: `footprint(forward, prior)` (`|H| 1 mean(x_0)`),
+  `modeled(forward, prior)` (`|H x_0|`) and `observed(obs, offset)`
+  (`|z - c|`), each a `Vector` on the observations: the size of each
+  observation's signal, for a model-data mismatch that grows with it
+  (`Independent().with_std(Vector(0.3 * scale.values, scale.space))`).
+  ([#82](https://github.com/jmineau/fips/issues/82))
+- **`Problem.restrict(keep)`**: the problem on part of the state (a `Space`
+  of some of the prior's labels), the rest held at its prior: their
+  contribution `H_r x_0r` is added to the offset, and they leave the prior, the
+  prior covariance (which keeps its form: Kronecker factors stay factors) and
+  the forward operator. **`Vector.combine_first(other)`** puts the estimate
+  back on the whole state, with the prior where the state was held.
+  ([#82](https://github.com/jmineau/fips/issues/82))
 
 ### Changed
 
-- **`ObsAggregator`, the pipelines and the flux problem take and give
-  operators and vectors.** `ObsAggregator.apply` gives an `Operator` (or
-  `Covariance`) for one, a dense DataFrame for a DataFrame, and a `Vector` for
-  a `Vector`. `InversionPipeline(config, problem, method="analytic")` builds the
+- **The pipelines and the flux problem take and give operators and
+  vectors.** `InversionPipeline(config, problem, method="analytic")` builds the
   problem from `get_inputs()` (whose keys are now `obs`, `prior`, `forward`,
   `prior_cov`, `obs_cov`, `offset`), and `run(options=None, **kwargs)` returns
   the `Posterior` (kept as `pipeline.posterior`, the problem as
@@ -515,6 +550,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   | `InversionPipeline(config, problem, estimator)`, `run(estimator_kwargs=...)` | `InversionPipeline(config, problem, method="analytic")`, `run(options=...)` (returns the `Posterior`) |
   | `FluxProblem(...).solve()`, `.estimator`, `.posterior_fluxes`, `.posterior_concentrations`, `.posterior_flux_error` | `post = fips.solve(flux_problem)`; `post.estimate["flux"]`, `post.modeled_obs["concentration"]`, `post.cov()["flux", "flux"]` |
   | `flux_problem.plot.fluxes()` | `FluxPlotter(post).fluxes()` |
+
+- **`ObsAggregator` and `integrate_over_time_bins`**, with the module
+  `fips.aggregators`: an aggregation is an `Operator` from `fips.aggregate`,
+  and `Problem.aggregate(W)` applies it to the observations, the forward
+  operator, the mismatch and the offset at once. `W` is the same matrix
+  (`apply`'s outputs and `Problem.aggregate`'s are equal bit for bit). A
+  `DataFrame` or `Series` goes in through `Operator.from_frame` or
+  `Vector.from_series` first. A label outside every time bin raises where
+  `integrate_over_time_bins` dropped it, and a single frequency key no longer
+  gives a row of zeros for an empty bin or mixes up the bins of labels out of
+  time order ([#98](https://github.com/jmineau/fips/issues/98)).
+  ([#82](https://github.com/jmineau/fips/issues/82))
+
+  **Migration**:
+
+  | Removed | Use |
+  |---|---|
+  | `ObsAggregator(level="obs_time", freq="D")` | `fips.aggregate.mean(obs.space, by=[<each other level>, pd.Grouper(level="obs_time", freq="D")])` |
+  | `ObsAggregator(by="site", func="sum")` | `fips.aggregate.sum(obs.space, by="site")` |
+  | `ObsAggregator(by=callable)` | a `Series` mapping a level's values to groups, or a `Grouper` |
+  | `ObsAggregator(..., blocks="co2")` | `fips.aggregate.mean(..., blocks="co2")` (other blocks pass through, as before) |
+  | `agg.apply(obs, forward_operator, modeldata_mismatch, constant)` | `problem.aggregate(W)` (a `Problem`), or `W @ obs`, `W @ H`, `W @ S_z @ W.T` |
+  | `agg._build_operator(index)` | `fips.aggregate.mean(Space.from_index(index), by=...)` (`.data` for the matrix) |
+  | `integrate_over_time_bins(series, bins, time_dim="time")` | `fips.aggregate.sum(v.space, by=[bins.rename("time"), <other levels>]) @ v` |
 
 - `Estimator._output_meta`, the private table `InverseProblem` read to label
   the estimator's outputs: `Posterior` labels them itself.
