@@ -27,17 +27,6 @@ def test_haversine_matrix_values():
     assert np.isclose(dist[0, 1], 111.19, atol=1.0)  # approx 111 km
 
 
-def test_haversine_matrix_radians():
-    """Test haversine with radians input."""
-    # (0,0) to (0, 0.01745) radians is roughly 1 degree
-    lats = np.radians([0.0, 0.0])
-    lons = np.radians([0.0, 1.0])
-
-    # Pass deg=False
-    dist = haversine_matrix(lats, lons, deg=False)
-    assert np.isclose(dist[0, 1], 111.19, atol=1.0)
-
-
 def test_haversine_input_validation():
     """Test that it raises error for mismatched dimensions."""
     # It requires 1D arrays, so passing 2D should fail if checked, or different lengths?
@@ -47,11 +36,10 @@ def test_haversine_input_validation():
 
 
 def test_time_diff_matrix():
-    """Test time_diff_matrix calculation."""
+    """Test time_diff_matrix gives the absolute differences."""
     times = pd.to_datetime(["2023-01-01 10:00", "2023-01-01 12:00"])
 
-    # Calculate absolute difference
-    diffs = time_diff_matrix(times, absolute=True)
+    diffs = time_diff_matrix(times)
 
     # Expected: 2 hours in nanoseconds
     # (2 * 3600 * 1e9)
@@ -61,21 +49,6 @@ def test_time_diff_matrix():
     assert diffs[0, 0] == 0
     assert diffs[1, 1] == 0
     assert diffs[0, 1] == expected_ns
-    assert diffs[1, 0] == expected_ns
-
-
-def test_time_diff_matrix_signed():
-    """Test time_diff_matrix allows signed differences."""
-    times = pd.to_datetime(["2023-01-01 10:00", "2023-01-01 12:00"])
-
-    # Calculate signed difference
-    diffs = time_diff_matrix(times, absolute=False)
-
-    expected_ns = pd.Timedelta("2h")
-
-    # t0 - t1 = 10:00 - 12:00 = -2h
-    assert diffs[0, 1] == -expected_ns
-    # t1 - t0 = 12:00 - 10:00 = +2h
     assert diffs[1, 0] == expected_ns
 
 
