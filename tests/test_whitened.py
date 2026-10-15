@@ -272,6 +272,51 @@ def test_with_data_needs_the_same_labels():
         post.with_data(other)
 
 
+@pytest.mark.parametrize("form", FORMS)
+def test_the_posterior_takes_HS_0H_from_the_factors(form):
+    """The factors keep H S_0 H^T as they formed it; the posterior, ``with_gamma`` and ``with_data`` share it."""
+    z, x_0, H, S_0, S_z, c = _arrays(form, 5)
+    post = fips.solve(_problem(z, x_0, H, S_0, S_z, c))
+    kept = post._solution.HS_0H
+    _close(kept.dense(), _dense(H) @ _dense(S_0) @ _dense(H).T, "H S_0 H^T")
+    assert post._HS_0H is kept
+    assert post.with_gamma(2.0)._HS_0H is kept
+    assert post.with_data(post.problem.obs)._HS_0H is kept
+    _close(post.innovation_cov.dense(), kept.dense() + _dense(S_z), "innovation_cov")
+
+
+class _Asked(Problem):
+    """A problem that counts how often it is asked for a prediction."""
+
+    asked = 0
+
+    def predict(self, x):
+        self.asked += 1
+        return super().predict(x)
+
+
+def test_the_innovation_is_read_through_predict():
+    """The whitened innovation is built from ``problem.predict(prior)``, with its offset, not around it."""
+    z, x_0, H, S_0, S_z, c = _arrays("dense", 2)
+    p = _problem(z, x_0, H, S_0, S_z, c)
+    problem = _Asked(
+        prior=p.prior,
+        prior_cov=p.prior_cov,
+        obs=p.obs,
+        obs_cov=p.obs_cov,
+        forward=p.forward,
+        offset=p.offset,
+    )
+    post = fips.solve(problem)
+    assert problem.asked == 1
+    whitener = post._solution.whitener
+    np.testing.assert_array_equal(
+        post._solution.innovation,
+        whitener @ (z - problem.predict(problem.prior).values),
+    )
+    assert not np.array_equal(post._solution.innovation, whitener @ (z - H @ x_0))
+
+
 # ---------------------------------------------------------------------------
 # The labeled posterior
 # ---------------------------------------------------------------------------
