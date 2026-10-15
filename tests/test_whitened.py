@@ -327,17 +327,21 @@ def test_with_data_needs_the_same_labels():
         post.with_data(other)
 
 
-@pytest.mark.parametrize("form", FORMS)
-def test_the_posterior_takes_HS_0H_from_the_factors(form):
-    """The factors keep H S_0 H^T as they formed it; the posterior, ``with_gamma`` and ``with_data`` share it."""
-    z, x_0, H, S_0, S_z, c = _arrays(form, 5)
+def test_the_factors_hold_no_m_by_m_matrix_beyond_the_whitener():
+    """H S_0 H^T is formed when ``innovation_cov`` or ``leverage`` asks, not held after a solve (and not pickled)."""
+    z, x_0, H, S_0, S_z, c = _arrays("dense", 5)
     post = fips.solve(_problem(z, x_0, H, S_0, S_z, c))
-    kept = post._solution.HS_0H
-    _close(kept.dense(), _dense(H) @ _dense(S_0) @ _dense(H).T, "H S_0 H^T")
-    assert post._HS_0H is kept
-    assert post.with_gamma(2.0)._HS_0H is kept
-    assert post.with_data(post.problem.obs)._HS_0H is kept
-    _close(post.innovation_cov.dense(), kept.dense() + _dense(S_z), "innovation_cov")
+    m = len(z)
+    assert "_HS_0H" not in vars(post)
+    assert not hasattr(post._solution, "HS_0H")
+    assert not [
+        k
+        for k, v in vars(post._solution).items()
+        if getattr(v, "shape", ()) == (m, m) and k != "whitener"
+    ]
+    assert "_HS_0H" not in vars(pickle.loads(pickle.dumps(post)))
+    _ = post.innovation_cov
+    assert "_HS_0H" in vars(post)
 
 
 class _Asked(Problem):
