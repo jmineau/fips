@@ -8,12 +8,15 @@ itself), kept in its cheapest form. A covariance is written as a correlation
 model with standard deviations: ``Exponential("time", "30D").with_std(std)``.
 A :class:`Problem` puts the prior, the observations, the forward operator and
 the covariances together, and :func:`solve` returns its :class:`Posterior`.
+:mod:`fips.aggregate` sums or averages a space by group (the observations to
+daily means, the state to monthly totals).
 """
 
 import logging
 from importlib.metadata import PackageNotFoundError
 from importlib.metadata import version as _version
 
+from . import aggregate
 from .correlation import Independent, Kronecker
 from .covariance import Covariance
 from .kernels import Constant, Exponential, Gaussian, Matern
@@ -48,5 +51,6 @@ __all__ = [
     "solve",
     "available_methods",
     "Posterior",
+    "aggregate",
     "InversionPipeline",
 ]

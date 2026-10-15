@@ -9,7 +9,8 @@ spaces: :func:`fips.solve` then computes by position.
 
 The problem is the question, and the :class:`~fips.Posterior` that
 :func:`fips.solve` returns is the answer. The problem holds what needs no
-solve and no ``m x m`` matrix (:meth:`Problem.predict`); the posterior holds
+solve and no ``m x m`` matrix (:meth:`Problem.predict`), and makes other
+problems from itself (:meth:`Problem.aggregate`); the posterior holds
 what depends on the solve or on the ``m x m`` matrix it factors.
 """
 
@@ -93,9 +94,9 @@ class Problem(Pickleable):
     changed after it is built; :func:`fips.solve` solves it.
 
     The problem is the question: it holds what needs no solve and no
-    ``m x m`` matrix, such as :meth:`predict`. What depends on the solve, or
-    on the ``m x m`` matrix the solve factors, is on the
-    :class:`~fips.Posterior`.
+    ``m x m`` matrix, such as :meth:`predict`, and it makes other questions
+    from itself (:meth:`aggregate`). What depends on the solve, or on the
+    ``m x m`` matrix the solve factors, is on the :class:`~fips.Posterior`.
 
     Parameters
     ----------
@@ -299,6 +300,93 @@ class Problem(Pickleable):
             values = values[state._align(x.space, "x", "x and the prior")]
         predicted = self._forward.data @ values + self._offset_values()
         return Vector(predicted, self._obs.space)
+
+    def aggregate(self, W: Operator) -> "Problem":
+        r"""
+        Return the problem of aggregated observations.
+
+        Each input on the observations goes through the same aggregation
+        :math:`W`: the observations :math:`W z`, the forward operator
+        :math:`W H`, the model-data mismatch :math:`W S_z W^T` and the offset
+        :math:`W c`. Each keeps the cheapest form (a sparse :math:`W` and a
+        diagonal :math:`S_z` give a sparse mismatch).
+
+        Parameters
+        ----------
+        W : Operator
+            The aggregation, such as :func:`fips.aggregate.mean`'s: its
+            columns the observations' labels (in any order), its rows the
+            aggregated observations.
+
+        Returns
+        -------
+        Problem
+            The problem (of the same class) on the aggregated observations,
+            with the same prior and prior covariance.
+
+        Raises
+        ------
+        TypeError
+            If `W` is not an Operator.
+        ValueError
+            If the columns of `W` do not have exactly the observations'
+            labels.
+
+        Examples
+        --------
+        >>> import numpy as np
+        >>> import pandas as pd
+        >>> import fips
+        >>> times = pd.date_range("2020-01-01", periods=4, freq="12h", name="obs_time")
+        >>> obs = fips.Vector.from_series(
+        ...     pd.Series([1.0, 2.0, 3.0, 4.0], index=times), block="co2"
+        ... )
+        >>> prior = fips.Vector.from_series(
+        ...     pd.Series(0.0, index=pd.Index(["a"], name="cell")), block="flux"
+        ... )
+        >>> problem = fips.Problem(
+        ...     prior=prior,
+        ...     prior_cov=fips.Independent().with_std(1.0),
+        ...     obs=obs,
+        ...     obs_cov=fips.Independent().with_std(1.0),
+        ...     forward=fips.Operator(np.ones((4, 1)), obs.space, prior.space),
+        ... )
+        >>> W = fips.aggregate.mean(
+        ...     obs.space, by=pd.Grouper(level="obs_time", freq="1D")
+        ... )
+        >>> daily = problem.aggregate(W)
+        >>> daily.obs.values, daily.obs_cov.variances.values
+        (array([1.5, 3.5]), array([0.5, 0.5]))
+        """
+        if not isinstance(W, Operator):
+            raise TypeError(
+                f"An aggregation is an Operator, not {type(W).__name__}: build one "
+                "with fips.aggregate.mean or fips.aggregate.sum."
+            )
+        observed = self._obs.space
+        form = _on(
+            W, W.rows, observed, "the aggregation", ("its rows", "the observations")
+        )
+        rows = W.rows
+        offset = self._offset
+        if offset is not None:
+            offset = Vector(form @ offset.values, rows, name=offset.name)
+        obs_cov = self._obs_cov
+        return type(self)(
+            prior=self._prior,
+            prior_cov=self._prior_cov,
+            obs=Vector(form @ self._obs.values, rows, name=self._obs.name),
+            obs_cov=Covariance(
+                (form @ obs_cov.data) @ form._transpose(), rows, name=obs_cov.name
+            ),
+            forward=Operator(
+                form @ self._forward.data,
+                rows,
+                self._prior.space,
+                name=self._forward.name,
+            ),
+            offset=offset,
+        )
 
     def _offset_values(self) -> np.ndarray:
         """Return the offset's values, zeros where there is none."""
