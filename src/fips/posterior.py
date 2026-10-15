@@ -8,8 +8,8 @@ the solution for unlabeled arrays (the estimate, the variances, the
 covariance of aggregates, the gain, DOFS, chi-squared), puts the problem's
 labels on them and keeps each one once computed. Everything else it gives is
 written from those and the problem, so it holds for every method. The
-analytic method's solution is the factorization of its whitened system
-(:mod:`fips.methods.analytic`).
+analytic method's solution is the factorization of its whitened system, or of
+its information system when that is smaller (:mod:`fips.methods.analytic`).
 
 The :class:`~fips.Problem` is the question and the posterior the answer: the
 posterior holds what depends on the solve or on the ``m x m`` matrix it
@@ -42,9 +42,8 @@ class Solution(Protocol):
     What a :class:`Posterior` asks of the object a method keeps from its solve.
 
     A method solves a :class:`~fips.Problem` and keeps whatever it needs to
-    answer these questions (the analytic method keeps the factorization of
-    its whitened system; a sampling method would keep its samples). Each
-    answer is an unlabeled NumPy array (or a float), in the order of the
+    answer these questions (the analytic method keeps a factorization of
+    its system; a sampling method would keep its samples). Each answer is an unlabeled NumPy array (or a float), in the order of the
     problem's spaces: ``n`` the state elements (``problem.prior``), ``m`` the
     observations (``problem.obs``). The posterior labels them, and computes
     each one once.
@@ -187,8 +186,8 @@ class Posterior:
         The problem that was solved.
     solution : Solution
         What the method kept from the solve, which gives the unlabeled
-        arrays (for the analytic method, the factorization of its whitened
-        system, ``fips.methods.analytic.Whitened``).
+        arrays (for the analytic method, a factorization:
+        ``fips.methods.analytic.Whitened`` or ``Information``).
     options : Options
         The options of the method, such as
         :class:`fips.methods.analytic.AnalyticOptions`.
@@ -667,8 +666,8 @@ class Posterior:
 
         The analytic method reads it from its factors,
         :math:`\sum_k \gamma\lambda_k / (\gamma\lambda_k + 1)` over the
-        eigenvalues :math:`\lambda_k` of the whitened system, without the
-        kernel.
+        eigenvalues :math:`\lambda_k` of its factorization (the same in
+        both of its forms), without the kernel.
         """
         return self._solution.dofs()
 
@@ -798,8 +797,8 @@ class Posterior:
         Return the posterior of the same problem with another regularization factor.
 
         The analytic method's factorization does not depend on gamma, so
-        this costs :math:`O(m n)` instead of a new solve: a sweep over gamma
-        factors once.
+        this costs :math:`O(m n)` at most instead of a new solve: a sweep over
+        gamma factors once.
 
         Parameters
         ----------
@@ -857,8 +856,10 @@ class Posterior:
 
         The analytic method's factorization depends on where the
         observations are and how uncertain they are, not on their values, so
-        this costs one :math:`m \times m` product instead of a new solve (a
-        bootstrap, or synthetic observations of a known truth).
+        this costs a product with the factors instead of a new solve (a
+        bootstrap, or synthetic observations of a known truth): one
+        :math:`m \times m` product in the whitened form, a solve with the
+        model-data mismatch and :math:`O(n^2)` in the information form.
 
         Parameters
         ----------
