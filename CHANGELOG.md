@@ -727,6 +727,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **Labels at every door** (the branch review's fixes;
+  [#82](https://github.com/jmineau/fips/issues/82)):
+  `Covariance` refuses a dense or sparse matrix that is not symmetric (its
+  largest `|A - A^T|` past 1e-10 of its largest entry; the message names the
+  two entries), and `KroneckerOperator` a factor that is not: an upper
+  triangle used to solve silently to a wrong answer. `Operator(op, rows,
+  cols)`, `Covariance(cov, space)` and `Vector(v, space)` refuse a labeled
+  object, whose labels they ignored, and point to `align` or `.data` /
+  `.values`. `plot_comparison` draws `truth` by label, as it does `errors`
+  (it drew it by position). `Operator.from_blocks` without `rows`/`cols`
+  raises when two labeled matrices of a block have different labels, in
+  either order of the keys (the first one's labels won). `v[0]` finds a
+  block named `0` (kept as `"0"`); `Covariance.block_diag(name=model)` raises
+  that `name` is the covariance's name; a mapping to NaN in `aggregate`
+  names the mapping; `Exponential("lag", "1h")` and the other decay kernels
+  take a timedelta level.
+
 - **A block of a `Vector` keeps the dtype of its labels.** `v["flux"]` (and
   `v.blocks["flux"]`) of a vector whose other blocks lack the `cell` level gave
   the integer cells `1, 2` back as `1.0, 2.0`; it now gives them as the block
