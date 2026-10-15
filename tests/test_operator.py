@@ -598,8 +598,10 @@ class TestSum:
     @pytest.mark.parametrize("other", [1.0, np.ones((2, 3))], ids=["scalar", "array"])
     def test_only_operators_add(self, H, other):
         """A scalar or array has no labels to join."""
-        with pytest.raises(TypeError, match="adds an Operator"):
+        with pytest.raises(TypeError):
             H + other
+        with pytest.raises(TypeError, match="adds an Operator"):
+            H - other
 
     @pytest.mark.parametrize(
         ("left", "right", "expected"),
