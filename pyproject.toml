@@ -87,10 +87,6 @@ exclude_also = [
 [tool.pyrefly]
 project-includes = ["src"]
 python-version = "3.11"  # as CI checks, against the oldest supported Python
-# The errors that existed when fips moved from pyright to pyrefly (2026-10). New
-# errors fail the check; fix the listed ones over time, then run
-# `uv run pyrefly check --update-baseline` (or `--prune-baseline`) to shrink it.
-baseline = "pyrefly-baseline.json"
 
 [tool.pytest]
 minversion = "9.0"

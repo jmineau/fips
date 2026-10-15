@@ -13,15 +13,14 @@ import numpy as np
 import pandas as pd
 
 from fips import indexes
-from fips.base import Pickleable, Structure1D
+from fips.base import Pickleable
 from fips.covariance import Covariance
 from fips.estimators import ESTIMATOR_REGISTRY, Estimator
-from fips.field import Field
 from fips.linalg import LinearOperator
 from fips.operator import Operator, _check_overlap
 from fips.posterior import Posterior
 from fips.space import _SHOWN, Space, _first_duplicates, _listed, _positions
-from fips.vector import Vector, VectorLike
+from fips.vector import Vector
 
 logger = logging.getLogger(__name__)
 
@@ -84,10 +83,24 @@ def _place(op: Operator, rows: Space, cols: Space, what: str) -> Operator:
     return op._like(data, rows, cols)
 
 
-def _in_space_order(vector: Vector) -> Vector:
-    """Return `vector` with each block's rows together, in the order its Space has them."""
-    field = Field.from_series(vector.data)
-    return Vector(field.to_series(), name=vector.name)
+def _as_vector(data: "Vector | pd.Series", what: str) -> Vector:
+    """
+    Return `data` as a Vector.
+
+    A Series with a ``block`` level has those blocks; one without is one
+    block, named by the Series' name.
+    """
+    if isinstance(data, Vector):
+        return data
+    if isinstance(data, pd.Series):
+        if "block" in data.index.names:
+            return Vector.from_series(data)
+        if data.name is None:
+            raise ValueError(
+                f"{what} has no 'block' level and no name to name its one block."
+            )
+        return Vector.from_series(data, block=str(data.name))
+    raise TypeError(f"{what} must be a Vector or a Series, got {type(data).__name__}.")
 
 
 class InverseProblem(Pickleable):
@@ -99,10 +112,11 @@ class InverseProblem(Pickleable):
 
     Parameters
     ----------
-    obs : VectorLike
-        Observation vector.
-    prior : VectorLike
-        Prior state vector.
+    obs : Vector or pd.Series
+        Observation vector. A Series with a ``block`` level has those blocks;
+        one without is one block, named by the Series' name.
+    prior : Vector or pd.Series
+        Prior state vector, given as `obs` is.
     forward_operator : Operator or pd.DataFrame
         Forward operator mapping state space to observation space. A
         DataFrame is read by :meth:`Operator.from_frame
@@ -111,7 +125,7 @@ class InverseProblem(Pickleable):
     modeldata_mismatch : Covariance, Operator, pd.DataFrame, Vector, float or LinearOperator
         Covariance matrix representing model-data mismatch (observation
         error). A scalar is one variance for every observation, and a Series
-        or Vector (with a ``block`` level) gives a variance for each: both
+        (with a ``block`` level) or a Vector gives a variance for each: both
         build a diagonal covariance. A form of :mod:`fips.linalg` (such as a
         :class:`~fips.kronecker.KroneckerOperator`) is labeled by the
         observations, in their order, without forming the matrix.
@@ -119,7 +133,7 @@ class InverseProblem(Pickleable):
         Covariance matrix representing prior error, given in any of the ways
         `modeldata_mismatch` is; a form of :mod:`fips.linalg` is labeled by
         the prior, in its order.
-    constant : VectorLike or float, optional
+    constant : Vector, pd.Series or float, optional
         Optional constant term added to the forward model (e.g., background or bias).
     round_index : int, optional
         Number of decimal places to round every float label of every input
@@ -158,16 +172,16 @@ class InverseProblem(Pickleable):
 
     def __init__(
         self,
-        obs: VectorLike,
-        prior: VectorLike,
+        obs: "Vector | pd.Series",
+        prior: "Vector | pd.Series",
         forward_operator: "Operator | pd.DataFrame",
         modeldata_mismatch: "Operator | pd.DataFrame | Vector | float | LinearOperator",
         prior_error: "Operator | pd.DataFrame | Vector | float | LinearOperator",
-        constant: "VectorLike | float | None" = None,
+        constant: "Vector | pd.Series | float | None" = None,
         round_index: int | None = None,
     ):
-        obs = _in_space_order(Vector(obs))
-        prior = _in_space_order(Vector(prior))
+        obs = _as_vector(obs, "obs")
+        prior = _as_vector(prior, "prior")
 
         # Duplicate labels raised when obs and prior became vectors. Rounding is
         # opt-in; the rounded labels are checked before the vectors are rebuilt
@@ -185,10 +199,10 @@ class InverseProblem(Pickleable):
                 "state",
                 round_index,
             )
-            obs = obs.round_index(round_index)
-            prior = prior.round_index(round_index)
-        obs_space = Space.from_index(obs.index)
-        state_space = Space.from_index(prior.index)
+            obs = obs.round_labels(round_index)
+            prior = prior.round_labels(round_index)
+        obs_space = obs.space
+        state_space = prior.space
 
         def operator(data, rows: Space, cols: Space, what: str) -> Operator:
             """Return `data` as an operator; a frame's axis without blocks takes the space's one block."""
@@ -227,18 +241,19 @@ class InverseProblem(Pickleable):
             """Return `data` as a covariance; a scalar, Series or Vector is its diagonal."""
             if isinstance(data, LinearOperator):
                 return Covariance(data, space)
-            if isinstance(data, (pd.Series, Structure1D)):
-                series = data.data if isinstance(data, Structure1D) else data
-                if "block" in series.index.names:
-                    field = Field.from_series(series)
+            if isinstance(data, Vector):
+                return Covariance.diagonal(data)
+            if isinstance(data, pd.Series):
+                if "block" in data.index.names:
+                    variances = Vector.from_series(data)
                 elif len(space.names) == 1:
-                    field = Field.from_series(series, block=space.names[0])
+                    variances = Vector.from_series(data, block=space.names[0])
                 else:
                     raise ValueError(
                         f"The variances of {what} have no 'block' level, but the "
                         f"space they are placed on has blocks {_listed(space.names)}."
                     )
-                return Covariance.diagonal(field)
+                return Covariance.diagonal(variances)
             if isinstance(data, (int, float, np.number)):
                 return Covariance.diagonal(float(data), space)
             return operator(data, space, space, what)
@@ -269,14 +284,16 @@ class InverseProblem(Pickleable):
                 modeldata_mismatch.data, obs_space, modeldata_mismatch.name
             )
 
-        if constant is not None:
-            constant_index = obs.index if isinstance(constant, (int, float)) else None
-            constant = Vector(constant, index=constant_index)
+        if isinstance(constant, (int, float)):
+            constant = Vector(np.full(len(obs_space), float(constant)), obs_space)
+        elif constant is not None:
+            constant = _as_vector(constant, "constant")
             if round_index is not None:
-                constant = constant.round_index(round_index)
-            constant = constant.reindex(
-                index=obs.index, fill_value=0.0, verify_overlap=True
-            )
+                constant = constant.round_labels(round_index)
+            found = _positions(obs_space, constant.space)
+            _check_overlap(found, obs_space, "constant")
+            values = np.where(found >= 0, constant.values[np.maximum(found, 0)], 0.0)
+            constant = Vector(values, obs_space, name=constant.name)
 
         self.obs = obs
         self.prior = prior
@@ -336,7 +353,7 @@ class InverseProblem(Pickleable):
 
     def get_block(
         self, component: str, block: str, crossblock: str | None = None
-    ) -> "Operator | pd.Series":
+    ) -> "Operator | Vector":
         """
         Get block from a component (Vector or Operator).
 
@@ -351,9 +368,10 @@ class InverseProblem(Pickleable):
 
         Returns
         -------
-        pd.Series or Operator
-            The requested block: a Series for a vector, an
-            :class:`~fips.Operator` (on the two blocks) for a matrix.
+        Vector or Operator
+            The requested block: a :class:`~fips.Vector` of that block for a
+            vector, an :class:`~fips.Operator` (on the two blocks) for a
+            matrix.
         """
         obj = getattr(self, component)
 

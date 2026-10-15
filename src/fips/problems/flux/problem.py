@@ -23,12 +23,18 @@ from fips.estimators import Estimator
 from fips.operator import Operator
 from fips.problem import InverseProblem
 from fips.problems.flux.visualization import FluxPlotter
+from fips.vector import Vector
 
 logger = logging.getLogger(__name__)
 
 # TODO:
 # - Support multiple flux sources (farfield/bio/etc)
 # - Enable regridding
+
+
+def _block_series(vector: Vector, block: str) -> pd.Series:
+    """Return one block of `vector` as a Series on the block's own labels."""
+    return vector[block].to_series().droplevel("block")
 
 
 class FluxProblem(InverseProblem):
@@ -70,7 +76,7 @@ class FluxProblem(InverseProblem):
     @property
     def concentrations(self) -> pd.Series:
         """Observed concentrations."""
-        return self.obs["concentration"]
+        return _block_series(self.obs, "concentration")
 
     @property
     def enhancement(self) -> pd.Series:
@@ -82,7 +88,7 @@ class FluxProblem(InverseProblem):
     @property
     def prior_fluxes(self) -> pd.Series:
         """Prior flux inventory."""
-        return self.prior["flux"]
+        return _block_series(self.prior, "flux")
 
     @property
     def jacobian(self) -> Operator:
@@ -102,12 +108,14 @@ class FluxProblem(InverseProblem):
     @property
     def background(self) -> pd.Series | None:
         """Background concentration."""
-        return None if self.constant is None else self.constant["concentration"]
+        if self.constant is None:
+            return None
+        return _block_series(self.constant, "concentration")
 
     @property
     def posterior_fluxes(self) -> pd.Series:
         """Posterior flux estimates after inversion."""
-        return self.posterior["flux"]
+        return _block_series(self.posterior, "flux")
 
     @property
     def posterior_flux_error(self) -> Operator:
@@ -117,7 +125,7 @@ class FluxProblem(InverseProblem):
     @property
     def prior_concentrations(self) -> pd.Series:
         """Modelled concentrations from prior fluxes."""
-        return self.prior_obs["concentration"]
+        return _block_series(self.prior_obs, "concentration")
 
     @property
     def prior_concentration_error(self) -> Operator:
@@ -127,7 +135,7 @@ class FluxProblem(InverseProblem):
     @property
     def posterior_concentrations(self) -> pd.Series:
         """Modelled concentrations from posterior fluxes."""
-        return self.posterior_obs["concentration"]
+        return _block_series(self.posterior_obs, "concentration")
 
     @property
     def plot(self) -> FluxPlotter:

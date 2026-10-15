@@ -93,6 +93,14 @@ class TestConstruction:
         assert list(ragged) == ["flux", "bias"]
         assert "bias" in ragged and "conc" not in ragged
 
+    def test_a_one_level_multiindex_is_a_plain_index(self):
+        """A block labeled by a MultiIndex of one level is that level, as from_index gives it."""
+        labels = pd.MultiIndex.from_arrays([[1, 2]], names=["cell"])
+        space = Space({"flux": labels})
+        assert not isinstance(space.select("flux"), pd.MultiIndex)
+        assert space.select("flux").equals(pd.Index([1, 2], name="cell"))
+        assert space == Space.from_index(space.index)
+
     def test_block_names_become_strings(self):
         space = Space({2020: pd.Index([1], name="cell")})
         assert space.names == ("2020",)

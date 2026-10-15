@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from fips.vector import Block, Vector
+from fips.vector import Vector
 from fips.visualization import (
     compute_credible_interval,
     plot_comparison,
@@ -12,9 +12,14 @@ from fips.visualization import (
 )
 
 
+def _block(series):
+    """A vector of one block, named after the Series."""
+    return Vector.from_series(series, block=series.name)
+
+
 def _unwrapped_name(x):
-    """The name of the Series ``x`` is or holds."""
-    return x.data.name if isinstance(x, Block) else x.name
+    """The name of the Series or vector ``x``."""
+    return x.name
 
 
 class TestPlotErrorNorm:
@@ -202,12 +207,12 @@ class TestPlotComparison:
         """A named Series over a float index called ``x``."""
         return pd.Series(values, index=pd.Index(labels, name="x"), name=name)
 
-    def test_blocks_are_plotted_by_their_data(self):
-        """A Block is plotted as the Series it holds, next to a Series."""
+    def test_one_block_is_plotted_on_its_own_labels(self):
+        """A vector of one block is plotted as its Series without the block level, next to a Series."""
         a = self._series("a", [1.0, 2.0, 3.0])
         b = self._series("b", [1.5, 2.5, 3.5])
 
-        _, ax = plot_comparison(Block(a), b)
+        _, ax = plot_comparison(_block(a), b)
 
         lines = self._lines(ax)
         assert list(lines) == ["a", "b"]
@@ -215,10 +220,10 @@ class TestPlotComparison:
         np.testing.assert_array_equal(lines["b"], b.values)
 
     def test_vectors_are_plotted_by_their_data(self):
-        """A Vector is plotted as the Series it holds, over the level named by ``x``."""
+        """A Vector is plotted as its Series, over the level named by ``x``."""
         a = self._series("a", [1.0, 2.0, 3.0])
 
-        _, ax = plot_comparison(Vector(Block(a)), x="x")
+        _, ax = plot_comparison(_block(a), x="x")
 
         np.testing.assert_array_equal(next(iter(self._lines(ax).values())), a.values)
 
@@ -254,7 +259,7 @@ class TestPlotComparison:
         """With a MultiIndex, ``x`` names the level to plot against, and the label."""
         a = self._series("a", [1.0, 2.0, 3.0])
 
-        _, ax = plot_comparison(Vector(Block(a)), x="x")
+        _, ax = plot_comparison(_block(a).to_series(), x="x")
 
         assert ax.get_xlabel() == "x"
 
@@ -263,7 +268,7 @@ class TestPlotComparison:
         a = self._series("a", [1.0, 2.0, 3.0])
         truth = self._series("t", [1.1, 2.1, 3.1])
 
-        _, ax = plot_comparison(a, truth=Block(truth))
+        _, ax = plot_comparison(a, truth=_block(truth))
 
         line = ax.lines[-1]
         assert line.get_label() == "truth"
@@ -286,7 +291,7 @@ class TestPlotComparison:
         "wrap",
         [
             pytest.param(lambda e: e, id="series"),
-            pytest.param(Block, id="block"),
+            pytest.param(_block, id="vector"),
             pytest.param(lambda e: e.to_frame(), id="dataframe"),
         ],
     )
@@ -306,7 +311,7 @@ class TestPlotComparison:
         "wrap",
         [
             pytest.param(lambda e: e, id="series"),
-            pytest.param(Block, id="block"),
+            pytest.param(_block, id="vector"),
             pytest.param(lambda e: e.to_frame(), id="dataframe"),
         ],
     )
@@ -439,7 +444,7 @@ class TestPlotComparison:
 
     @pytest.mark.parametrize(
         "wrap",
-        [pytest.param(lambda e: e, id="series"), pytest.param(Block, id="block")],
+        [pytest.param(lambda e: e, id="series"), pytest.param(_block, id="vector")],
     )
     def test_errors_keep_their_name(self, wrap):
         """The error is renamed for plotting, but the one the caller passed is not."""

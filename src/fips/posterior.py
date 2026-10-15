@@ -129,12 +129,12 @@ class Posterior(Pickleable):
     # ``post.estimate`` are one object with one name.
 
     def _state_vector(self, values: np.ndarray, name: str) -> Vector:
-        """Label ``values`` with the state index."""
-        return Vector(values, index=self.state_index, name=name)
+        """Label ``values`` with the state space."""
+        return Vector(values, self.state_space, name=name)
 
     def _obs_vector(self, values: np.ndarray, name: str) -> Vector:
-        """Label ``values`` with the observation index."""
-        return Vector(values, index=self.obs_index, name=name)
+        """Label ``values`` with the observation space."""
+        return Vector(values, self.obs_space, name=name)
 
     @cached_property
     def estimate(self) -> Vector:

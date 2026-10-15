@@ -10,7 +10,7 @@ on separate levels, kept as factors, and the kernels of :mod:`fips.kernels`
 labels by their distance.
 
 A model becomes a covariance with :meth:`~CorrelationModel.with_std`: given
-the standard deviations as a :class:`~fips.Field`, it is a
+the standard deviations as a :class:`~fips.Vector`, it is a
 :class:`~fips.Covariance` at once; given a scalar or an array, it is a
 :class:`~fips.models.CovarianceModel`, which
 :meth:`~fips.models.CovarianceModel.build` puts on a space.
@@ -26,10 +26,10 @@ import numpy as np
 import numpy.typing as npt
 import pandas as pd
 
-from fips.field import Field
 from fips.kronecker import KroneckerOperator
 from fips.linalg import DenseOperator, DiagonalOperator, LinearOperator
 from fips.models import CovarianceModel, _Scaled
+from fips.vector import Vector
 
 if TYPE_CHECKING:
     from fips.covariance import Covariance
@@ -96,15 +96,15 @@ class CorrelationModel(ABC):
         return DenseOperator(np.asarray(self.correlation(coords), dtype=float))
 
     @overload
-    def with_std(self, std: Field) -> "Covariance":  # noqa: D418
-        """With a Field: the covariance on its space."""
+    def with_std(self, std: Vector) -> "Covariance":  # noqa: D418
+        """With a Vector: the covariance on its space."""
 
     @overload
     def with_std(self, std: "float | npt.ArrayLike") -> CovarianceModel:  # noqa: D418
         """With a scalar or an array: a model to build on a space."""
 
     def with_std(
-        self, std: "float | npt.ArrayLike | Field"
+        self, std: "float | npt.ArrayLike | Vector"
     ) -> "Covariance | CovarianceModel":
         r"""
         Return the covariance of this correlation with standard deviations `std`.
@@ -114,16 +114,16 @@ class CorrelationModel(ABC):
 
         Parameters
         ----------
-        std : float, 1D array-like or Field
+        std : float, 1D array-like or Vector
             The standard deviation of each label, not negative. A scalar is
             the same for every label, an array is in the order of the space
-            the covariance is built on, and a :class:`~fips.Field` brings its
+            the covariance is built on, and a :class:`~fips.Vector` brings its
             own space.
 
         Returns
         -------
         Covariance or CovarianceModel
-            For a Field, the :class:`~fips.Covariance` on its space. For a
+            For a Vector, the :class:`~fips.Covariance` on its space. For a
             scalar or an array, a :class:`~fips.models.CovarianceModel`, which
             :meth:`~fips.models.CovarianceModel.build` puts on a space.
 
@@ -136,18 +136,18 @@ class CorrelationModel(ABC):
         Examples
         --------
         >>> import pandas as pd
-        >>> from fips import Exponential, Field, Space
+        >>> from fips import Exponential, Space, Vector
         >>> space = Space({"flux": pd.Index([0.0, 1.0, 2.0], name="x")})
         >>> S = Exponential("x", 1.0).with_std(2.0).build(space)
         >>> S.dense().round(3)
         array([[4.   , 1.472, 0.541],
                [1.472, 4.   , 1.472],
                [0.541, 1.472, 4.   ]])
-        >>> std = Field([1.0, 1.0, 2.0], space)
+        >>> std = Vector([1.0, 1.0, 2.0], space)
         >>> Exponential("x", 1.0).with_std(std).variances.values
         array([1., 1., 4.])
         """
-        if isinstance(std, Field):
+        if isinstance(std, Vector):
             return _Scaled(self, std.values).build(std.space)
         return _Scaled(self, std)
 

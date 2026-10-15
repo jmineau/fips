@@ -12,7 +12,7 @@ import pytest
 from fips import Covariance, Operator
 from fips.problems.flux.pipeline import FluxInversionPipeline
 from fips.problems.flux.problem import FluxProblem
-from fips.vector import Block, Vector
+from fips.vector import Vector
 
 
 class _Pipeline(FluxInversionPipeline):
@@ -37,15 +37,16 @@ class _Pipeline(FluxInversionPipeline):
 def _vectors(times):
     """A prior with the given ``time`` level, and six observations 12 hours apart."""
     prior_idx = pd.MultiIndex.from_product([times, [0, 1]], names=["time", "cell"])
-    prior = Vector(
-        Block(pd.Series(np.ones(len(prior_idx)), index=prior_idx, name="flux"))
+    prior = Vector.from_series(
+        pd.Series(np.ones(len(prior_idx)), index=prior_idx, name="flux"), block="flux"
     )
     obs_idx = pd.MultiIndex.from_arrays(
         [["A"] * 6, pd.date_range("2023-01-01", periods=6, freq="12h")],
         names=["obs_location", "obs_time"],
     )
-    obs = Vector(
-        Block(pd.Series(np.arange(6.0) + 400, index=obs_idx, name="concentration"))
+    obs = Vector.from_series(
+        pd.Series(np.arange(6.0) + 400, index=obs_idx, name="concentration"),
+        block="concentration",
     )
     return obs, prior
 
@@ -160,10 +161,16 @@ def _solved_problem(times):
     )
     n_flux, n_obs = len(flux_idx), len(obs_idx)
     return FluxProblem(
-        obs=Block(
-            pd.Series(rng.uniform(400, 410, n_obs), index=obs_idx, name="concentration")
+        obs=Vector.from_series(
+            pd.Series(
+                rng.uniform(400, 410, n_obs), index=obs_idx, name="concentration"
+            ),
+            block="concentration",
         ),
-        prior=Block(pd.Series(rng.uniform(1, 2, n_flux), index=flux_idx, name="flux")),
+        prior=Vector.from_series(
+            pd.Series(rng.uniform(1, 2, n_flux), index=flux_idx, name="flux"),
+            block="flux",
+        ),
         forward_operator=Operator.from_frame(
             pd.DataFrame(
                 rng.uniform(0, 1, (n_obs, n_flux)), index=obs_idx, columns=flux_idx
@@ -181,8 +188,9 @@ def _solved_problem(times):
             row_block="concentration",
             col_block="concentration",
         ),
-        constant=Block(
-            pd.Series(np.full(n_obs, 395.0), index=obs_idx, name="concentration")
+        constant=Vector.from_series(
+            pd.Series(np.full(n_obs, 395.0), index=obs_idx, name="concentration"),
+            block="concentration",
         ),
     ).solve()
 

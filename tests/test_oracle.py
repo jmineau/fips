@@ -24,7 +24,6 @@ import pytest
 import scipy.sparse as sp
 
 from fips import (
-    Block,
     Covariance,
     InverseProblem,
     Operator,
@@ -381,7 +380,10 @@ def _diagonal_inputs(case: Case, form: str, v_0: np.ndarray, v_z: np.ndarray):
     if form == "series":
         return pd.Series(v_0, index=s), pd.Series(v_z, index=o)
     if form == "vector":
-        return Vector(pd.Series(v_0, index=s)), Vector(pd.Series(v_z, index=o))
+        return (
+            Vector.from_series(pd.Series(v_0, index=s)),
+            Vector.from_series(pd.Series(v_z, index=o)),
+        )
     if form == "scalar":
         return float(v_0[0]), float(v_z[0])
     if form == "diagonal":
@@ -548,11 +550,11 @@ class MultiBlockCase:
         ss, os_ = self.state_slices, self.obs_slices
 
         def vector(values, blocks, slices):
-            return Vector(
-                [
-                    Block(pd.Series(values[slices[b]], index=idx), name=b)
+            return Vector.from_blocks(
+                {
+                    b: pd.Series(values[slices[b]], index=idx)
                     for b, idx in blocks.items()
-                ]
+                }
             )
 
         def blocks_2d(values, rows, cols, rs, cs, skip=()):
@@ -580,10 +582,11 @@ class MultiBlockCase:
 def _block_values(structure, key, index, columns=None) -> np.ndarray:
     """Read one block of a solved output by its name(s), checking its labels."""
     if columns is None:
-        series = structure[key]
-        assert series.index.equals(index), f"{key}: wrong index"
-        assert list(series.index.names) == list(index.names), f"{key}: level names"
-        return series.to_numpy()
+        vector = structure[key]
+        labels = vector.space.select(key)
+        assert labels.equals(index), f"{key}: wrong index"
+        assert list(labels.names) == list(index.names), f"{key}: level names"
+        return vector.values
     op = structure[key]
     rows, cols = op.rows.select(key[0]), op.cols.select(key[1])
     assert rows.equals(index), f"{key}: wrong row index"
@@ -647,7 +650,11 @@ def _shuffled(obj, rng: np.random.Generator):
 
 def _aligned(structure, index, columns=None) -> np.ndarray:
     """Return a structure's values in the order of `index` (and `columns`), by label."""
-    data = structure.to_frame() if isinstance(structure, Operator) else structure.data
+    data = (
+        structure.to_frame()
+        if isinstance(structure, Operator)
+        else structure.to_series()
+    )
     assert data.index.sort_values().equals(index.sort_values()), "row labels differ"
     if columns is None:
         return data.reindex(index).to_numpy()
@@ -667,12 +674,12 @@ def test_permutation(estimator, seed):
 
     # The assembled inputs, with block levels, each shuffled on its own
     shuffled = InverseProblem(
-        obs=_shuffled(ref.obs.data, rng),
-        prior=_shuffled(ref.prior.data, rng),
+        obs=_shuffled(ref.obs.to_series(), rng),
+        prior=_shuffled(ref.prior.to_series(), rng),
         forward_operator=_shuffled(ref.forward_operator.to_frame(), rng),
         prior_error=_shuffled(ref.prior_error.to_frame(), rng),
         modeldata_mismatch=_shuffled(ref.modeldata_mismatch.to_frame(), rng),
-        constant=_shuffled(ref.constant.data, rng),
+        constant=_shuffled(ref.constant.to_series(), rng),
     ).solve(estimator)
 
     s, o = ref.state_index, ref.obs_index

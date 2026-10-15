@@ -22,7 +22,6 @@ import numpy as np
 import pandas as pd
 import scipy.sparse as sp
 
-from fips.field import Field
 from fips.linalg import (
     BlockDiagonalOperator,
     DenseOperator,
@@ -189,13 +188,13 @@ class Operator:
     --------
     >>> import numpy as np
     >>> import pandas as pd
-    >>> from fips import Field, Operator, Space
+    >>> from fips import Operator, Space, Vector
     >>> state = Space({"flux": pd.Index(["a", "b"], name="cell")})
     >>> obs = Space({"co2": pd.Index([1, 2, 3], name="obs_id")})
     >>> H = Operator(np.array([[1.0, 0.0], [0.0, 1.0], [1.0, 1.0]]), obs, state)
     >>> H.shape
     (3, 2)
-    >>> x = Field([2.0, 3.0], state)
+    >>> x = Vector([2.0, 3.0], state)
     >>> (H @ x).values
     array([2., 3., 5.])
     """
@@ -581,21 +580,21 @@ class Operator:
         cols = rows if self._cols is self._rows else self._cols.round_labels(decimals)
         return self._like(self._data, rows, cols)
 
-    def __matmul__(self, other: "Operator | Field") -> "Operator | Field":
+    def __matmul__(self, other: "Operator | Vector") -> "Operator | Vector":
         """
-        Return the product with an operator or a field, aligned by label.
+        Return the product with an operator or a vector, aligned by label.
 
         Parameters
         ----------
-        other : Operator or Field
-            An operator whose rows, or a field whose space, have exactly the
+        other : Operator or Vector
+            An operator whose rows, or a vector whose space, have exactly the
             labels of this operator's columns, in any order.
 
         Returns
         -------
-        Operator or Field
+        Operator or Vector
             An operator on this one's rows and `other`'s columns, in the
-            cheapest form that is exact (:mod:`fips.linalg`), or a field on
+            cheapest form that is exact (:mod:`fips.linalg`), or a vector on
             this one's rows.
 
         Raises
@@ -606,16 +605,16 @@ class Operator:
         ValueError
             If the labels do not match exactly.
         """
-        if isinstance(other, Field):
+        if isinstance(other, Vector):
             values = self._data @ other.align(self._cols).values
-            return Field(values, self._rows)
+            return Vector(values, self._rows)
         if isinstance(other, Operator):
             # Put this operator's columns in the order of the other's rows:
             # the other may be a form (Kronecker) that a reordering would densify
             left = self._on(self._rows, other.rows)
             return Operator(left @ other.data, self._rows, other.cols)
         raise TypeError(
-            f"An Operator multiplies an Operator or a Field, not "
+            f"An Operator multiplies an Operator or a Vector, not "
             f"{type(other).__name__}: an array has no labels to check. Use "
             "op.data @ x to compute by position."
         )
@@ -718,9 +717,9 @@ def convolve(
 
     Parameters
     ----------
-    state : Field, Vector, pd.Series or np.ndarray
-        The state, with a ``block`` level in its labels (a Field's space has
-        one). A state label the operator has no column for is not used.
+    state : Vector or pd.Series
+        The state; a Series with a ``block`` level in its labels. A state
+        label the operator has no column for is not used.
     forward_operator : Operator or pd.DataFrame
         The operator, or a frame with a ``block`` level on both axes
         (:meth:`Operator.from_frame`).
@@ -741,17 +740,14 @@ def convolve(
         if isinstance(forward_operator, Operator)
         else Operator.from_frame(forward_operator)
     )
-    if isinstance(state, Field):
-        state = state.to_series()
-    vector = Vector(state)
+    vector = state if isinstance(state, Vector) else Vector.from_series(state)
     if round_index is not None:
         H = H.round_labels(round_index)
-        vector = vector.round_index(round_index)
-    field = Field.from_series(vector.data)
-    found = _positions(H.cols, field.space)
+        vector = vector.round_labels(round_index)
+    found = _positions(H.cols, vector.space)
     if verify_overlap:
         _check_overlap(found, H.cols, "the state")
-    x = np.where(found >= 0, field.values[np.maximum(found, 0)], 0.0)
+    x = np.where(found >= 0, vector.values[np.maximum(found, 0)], 0.0)
     name = f"{vector.name}_obs" if vector.name else None
     return pd.Series(H.data @ x, index=H.rows.index, name=name)
 

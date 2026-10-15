@@ -16,7 +16,7 @@ from fips.covariance import Covariance
 from fips.linalg import as_linear_operator
 from fips.operator import Operator, _axis_space, _frame_matrix
 from fips.space import Space
-from fips.vector import Block, Vector
+from fips.vector import Vector
 
 
 def integrate_over_time_bins(
@@ -279,10 +279,10 @@ class ObsAggregator:
 
     def apply(
         self,
-        obs: pd.Series | Block | Vector,
+        obs: pd.Series | Vector,
         forward_operator: "pd.DataFrame | Operator",
         modeldata_mismatch: "pd.DataFrame | Operator",
-        constant: float | pd.Series | Block | Vector | None = None,
+        constant: float | pd.Series | Vector | None = None,
     ):
         """
         Apply W to the inverse problem components.
@@ -299,13 +299,13 @@ class ObsAggregator:
 
         Parameters
         ----------
-        obs : pd.Series | Block | Vector
+        obs : pd.Series | Vector
             Observation vector to be aggregated.
         forward_operator : pd.DataFrame | Operator
             Forward operator matrix to be aggregated.
         modeldata_mismatch : pd.DataFrame | Operator
             Model-data mismatch covariance matrix to be aggregated.
-        constant : float | pd.Series | Block | Vector | None, optional
+        constant : float | pd.Series | Vector | None, optional
             Optional constant offset vector to be aggregated. Scalars are invariant to aggregation. Default is None.
 
         Returns
@@ -321,7 +321,7 @@ class ObsAggregator:
             not 0.0 or NaN: its implicit entries are not zeros, which is how
             the aggregation reads them.
         """
-        z = obs.data if isinstance(obs, (Block, Vector)) else obs
+        z = obs.to_series() if isinstance(obs, Vector) else obs
         if len(z) == 0:
             raise ValueError("Input data contains empty dimensions, cannot aggregate.")
         W, agg_idx = self._build_operator(z.index)
@@ -358,16 +358,16 @@ class ObsAggregator:
             return pd.DataFrame(values, index=agg_idx, columns=columns)
 
         def repack(orig_obj, new_series):
-            """Re-wrap a Series in the type of `orig_obj` if it is a fips vector."""
-            if isinstance(orig_obj, (Block, Vector)):
-                return type(orig_obj)(new_series, name=orig_obj.name)
+            """Re-wrap a Series as a Vector if `orig_obj` is one."""
+            if isinstance(orig_obj, Vector):
+                return Vector.from_series(new_series.rename(orig_obj.name))
             return new_series
 
         # c_agg = W @ c. A scalar constant (or none) is unchanged by aggregation.
         if constant is None or isinstance(constant, (int, float, np.number)):
             c_agg = constant
         else:
-            c = constant.data if isinstance(constant, (Block, Vector)) else constant
+            c = constant.to_series() if isinstance(constant, Vector) else constant
             c = c.reindex(index=z.index, fill_value=0.0)
             c_vals = pd.Series(W @ c.to_numpy(dtype=float), index=agg_idx, name=c.name)
             c_agg = repack(constant, c_vals)

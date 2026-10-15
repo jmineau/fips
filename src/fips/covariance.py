@@ -15,7 +15,6 @@ import numpy as np
 import numpy.typing as npt
 import pandas as pd
 
-from fips.field import Field
 from fips.linalg import (
     BlockDiagonalOperator,
     DiagonalOperator,
@@ -25,6 +24,7 @@ from fips.linalg import (
 )
 from fips.operator import Operator
 from fips.space import Space
+from fips.vector import Vector
 
 if TYPE_CHECKING:
     from fips.models import CovarianceModel
@@ -90,12 +90,12 @@ class Covariance(Operator):
     --------
     >>> import numpy as np
     >>> import pandas as pd
-    >>> from fips import Covariance, Field, Space
+    >>> from fips import Covariance, Space, Vector
     >>> space = Space({"flux": pd.Index(["a", "b"], name="cell")})
     >>> S = Covariance(np.array([[2.0, 1.0], [1.0, 2.0]]), space)
     >>> S.variances.values
     array([2., 2.])
-    >>> S.solve(Field([3.0, 3.0], space)).values
+    >>> S.solve(Vector([3.0, 3.0], space)).values
     array([1., 1.])
     """
 
@@ -146,7 +146,7 @@ class Covariance(Operator):
     @classmethod
     def diagonal(
         cls,
-        values: "float | npt.ArrayLike | Field",
+        values: "float | npt.ArrayLike | Vector",
         space: Space | None = None,
         name: str | None = None,
     ) -> Self:
@@ -158,12 +158,12 @@ class Covariance(Operator):
 
         Parameters
         ----------
-        values : float, 1D array-like or Field
+        values : float, 1D array-like or Vector
             The variances. A scalar is the same for every label; a
-            :class:`~fips.Field` brings its own space.
+            :class:`~fips.Vector` brings its own space.
         space : Space, optional
-            The labels. Required for a scalar or an array; for a Field it
-            must be left out, or have exactly the field's labels (the
+            The labels. Required for a scalar or an array; for a Vector it
+            must be left out, or have exactly the vector's labels (the
             variances are put in its order).
         name : str, optional
             The covariance's name.
@@ -192,9 +192,9 @@ class Covariance(Operator):
         >>> Covariance.diagonal(S.variances).variances.values
         array([0.25, 0.25, 0.25])
         """
-        if isinstance(values, Field):
-            field = values if space is None else values.align(space)
-            return cls(DiagonalOperator(field.values), field.space, name=name)
+        if isinstance(values, Vector):
+            vector = values if space is None else values.align(space)
+            return cls(DiagonalOperator(vector.values), vector.space, name=name)
         if space is None:
             raise ValueError(
                 "A diagonal from a scalar or an array needs `space`, its labels."
@@ -279,28 +279,28 @@ class Covariance(Operator):
         return cls(*_side_by_side(parts), name=name)
 
     @property
-    def variances(self) -> Field:
+    def variances(self) -> Vector:
         """
-        The variances: the diagonal, as a field on the covariance's space.
+        The variances: the diagonal, as a vector on the covariance's space.
 
         Read from the form without forming the matrix (from the variances of
         a diagonal covariance, the factors of a Kronecker one).
         """
-        return Field(self._data.diagonal(), self._rows, name="variance")
+        return Vector(self._data.diagonal(), self._rows, name="variance")
 
-    def solve(self, b: "Field | Operator") -> "Field | Operator":
+    def solve(self, b: "Vector | Operator") -> "Vector | Operator":
         r"""
         Return :math:`S^{-1} b`, for a positive-definite covariance :math:`S`.
 
         Parameters
         ----------
-        b : Field or Operator
-            A field on the covariance's space, or an operator whose rows are
+        b : Vector or Operator
+            A vector on the covariance's space, or an operator whose rows are
             on it (both in any order).
 
         Returns
         -------
-        Field or Operator
+        Vector or Operator
             The solution, on the covariance's space (and `b`'s columns).
 
         Raises
@@ -316,13 +316,13 @@ class Covariance(Operator):
         --------
         fips.linalg.LinearOperator.solve : How each form solves.
         """
-        if isinstance(b, Field):
-            return Field(self._data.solve(b.align(self._rows).values), self._rows)
+        if isinstance(b, Vector):
+            return Vector(self._data.solve(b.align(self._rows).values), self._rows)
         if isinstance(b, Operator):
             rhs = b._on(self._rows, b.cols)
             return Operator(self._data.solve(rhs), self._rows, b.cols)
         raise TypeError(
-            f"Covariance.solve takes a Field or an Operator, not {type(b).__name__}: "
+            f"Covariance.solve takes a Vector or an Operator, not {type(b).__name__}: "
             "an array has no labels to check. Use cov.data.solve(b) to solve "
             "by position."
         )
@@ -338,14 +338,14 @@ class Covariance(Operator):
         """
         return self._data.logdet()
 
-    def quadratic_form(self, x: Field) -> float:
+    def quadratic_form(self, x: Vector) -> float:
         r"""
         Return :math:`x^T S^{-1} x`, the squared Mahalanobis length of `x`.
 
         Parameters
         ----------
-        x : Field
-            A field on the covariance's space, in any order.
+        x : Vector
+            A vector on the covariance's space, in any order.
 
         Returns
         -------
@@ -362,10 +362,10 @@ class Covariance(Operator):
         Examples
         --------
         >>> import pandas as pd
-        >>> from fips import Covariance, Field, Space
+        >>> from fips import Covariance, Space, Vector
         >>> space = Space({"co2": pd.Index(["a", "b"], name="site")})
         >>> S = Covariance.diagonal([4.0, 1.0], space)
-        >>> S.quadratic_form(Field([2.0, 1.0], space))
+        >>> S.quadratic_form(Vector([2.0, 1.0], space))
         2.0
         """
         values = x.align(self._rows).values

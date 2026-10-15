@@ -24,11 +24,11 @@ import fips
 from fips import (
     Covariance,
     Exponential,
-    Field,
     InverseProblem,
     Kronecker,
     Operator,
     Space,
+    Vector,
     available_estimators,
 )
 from fips.correlation import CorrelationModel
@@ -1054,7 +1054,7 @@ def _flux_and_bias(seed: int = 3):
         Covariance.diagonal(rng.uniform(0.5, 2.0, 3), Space({"bias": sites})),
         name="prior_error",
     )
-    prior = Field(rng.normal(5.0, 1.0, len(S_0.space)), S_0.space, name="prior")
+    prior = Vector(rng.normal(5.0, 1.0, len(S_0.space)), S_0.space, name="prior")
     m = 12
     obs_space = Space({"conc": pd.Index([f"o{k}" for k in range(m)], name="obs")})
     H = np.zeros((m, len(S_0.space)))
@@ -1063,7 +1063,7 @@ def _flux_and_bias(seed: int = 3):
         H[i, len(cells) + i % 3] = 1.0  # each observation sees one site's bias
     z = H @ prior.values + rng.normal(0, 1.0, m)
     inputs = {
-        "obs": Field(z, obs_space, name="obs").to_series(),
+        "obs": Vector(z, obs_space, name="obs").to_series(),
         "forward_operator": Operator(sp.csr_array(H), obs_space, S_0.space),
         "modeldata_mismatch": Covariance.diagonal(rng.uniform(0.1, 0.4, m), obs_space),
     }
@@ -1110,7 +1110,7 @@ def test_block_of_a_block_diagonal_keeps_the_factors(no_dense):
     assert isinstance(flux, Covariance)
     assert flux.space.select("flux").equals(S_0.space.select("flux"))
     b = np.random.default_rng(0).standard_normal(len(flux.space))
-    x = flux.solve(Field(b, flux.space))
+    x = flux.solve(Vector(b, flux.space))
     np.testing.assert_allclose(S_0.data.blocks[0] @ x.values, b, rtol=1e-10, atol=1e-10)
 
 
