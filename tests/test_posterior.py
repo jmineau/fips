@@ -8,6 +8,7 @@ factorization (variances, aggregations, ``with_gamma``, ``with_data``,
 memory) in ``test_whitened.py``.
 """
 
+import importlib.util
 import pickle
 
 import numpy as np
@@ -203,6 +204,49 @@ class TestOutputs:
         assert repr(post) == "Posterior(AnalyticOptions(gamma=1.0), n_state=8, n_obs=8)"
 
 
+class TestSummary:
+    """``summary()`` returns the diagnostics as one row, and prints nothing."""
+
+    COLUMNS = [
+        "gamma",
+        "n_state",
+        "n_obs",
+        "dofs",
+        "chi2",
+        "reduced_chi2",
+        "r2",
+        "rmse",
+        "uncertainty_reduction",
+    ]
+
+    def test_one_row_of_the_scalars(self, problem, post, capsys):
+        table = post.summary()
+        assert capsys.readouterr().out == ""
+        assert isinstance(table, pd.DataFrame)
+        assert list(table.columns) == self.COLUMNS
+        assert list(table.index) == [0]
+        row = table.iloc[0]
+        assert row["gamma"] == 1.0
+        assert (row["n_state"], row["n_obs"]) == (len(problem.prior), len(problem.obs))
+        for name in self.COLUMNS[3:]:
+            assert row[name] == getattr(post, name)
+
+    def test_sizes_are_integers(self, post):
+        dtypes = post.summary().dtypes
+        assert pd.api.types.is_integer_dtype(dtypes["n_state"])
+        assert pd.api.types.is_integer_dtype(dtypes["n_obs"])
+
+    def test_rows_stack_over_gamma(self, post):
+        gammas = [0.5, 1.0, 4.0]
+        table = pd.concat(
+            [post.with_gamma(g).summary() for g in gammas], ignore_index=True
+        )
+        assert list(table["gamma"]) == gammas
+        np.testing.assert_allclose(
+            table["reduced_chi2"], [post.with_gamma(g).reduced_chi2 for g in gammas]
+        )
+
+
 class TestDesroziers:
     def test_per_observation(self, problem, post):
         table = post.desroziers()
@@ -349,5 +393,13 @@ def test_exported():
     assert fips.Problem is Problem
     assert fips.Posterior is Posterior
     assert callable(fips.solve)
-    for gone in ("InverseProblem", "Estimator", "available_estimators", "convolve"):
+    for gone in (
+        "InverseProblem",
+        "Estimator",
+        "available_estimators",
+        "convolve",
+        "InversionPipeline",
+    ):
         assert not hasattr(fips, gone)
+    for module in ("fips.pipeline", "fips.problems"):
+        assert importlib.util.find_spec(module) is None

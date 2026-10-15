@@ -4,11 +4,15 @@ import numpy as np
 import pandas as pd
 import pytest
 
+import fips
+from fips import Covariance, Operator, Problem
 from fips.vector import Vector
 from fips.visualization import (
     compute_credible_interval,
     plot_comparison,
     plot_error_norm,
+    plot_map,
+    plot_obs,
 )
 
 
@@ -548,3 +552,268 @@ class TestComputeCredibleInterval:
         assert upper.shape == (5,)
         # Lower quantiles should be lower than upper quantiles
         assert np.all(lower < upper)
+
+
+# ---------------------------------------------------------------------------
+# plot_map and plot_obs: a block of the state on a map, the observations over time
+# ---------------------------------------------------------------------------
+
+
+def _solved(levels=("time", "lat", "lon"), obs_levels=("obs_location", "obs_time")):
+    """
+    The posterior of a small problem: 2 times x 2 lat x 2 lon in the state, two sites of daily data.
+
+    The state's block is ``flux`` and the observations' ``ch4``; the level
+    names are `levels` and `obs_levels`.
+    """
+    rng = np.random.default_rng(0)
+    state_idx = pd.MultiIndex.from_product(
+        [
+            pd.date_range("2023-01", periods=2, freq="MS"),
+            [40.5, 40.9],
+            [-112.0, -111.6],
+        ],
+        names=list(levels),
+    )
+    days = pd.date_range("2023-01-01", periods=40, freq="D")
+    # SITE2 has a 10-day gap in its data, which plot_obs shades.
+    obs_idx = pd.MultiIndex.from_tuples(
+        [
+            (site, day)
+            for site in ["SITE1", "SITE2"]
+            for i, day in enumerate(days)
+            if not (site == "SITE2" and 15 <= i < 25)
+        ],
+        names=list(obs_levels),
+    )
+    n, m = len(state_idx), len(obs_idx)
+    prior = Vector.from_series(
+        pd.Series(rng.uniform(1, 2, n), index=state_idx), block="flux"
+    )
+    obs = Vector.from_series(
+        pd.Series(rng.uniform(400, 410, m), index=obs_idx), block="ch4"
+    )
+    problem = Problem(
+        prior=prior,
+        prior_cov=Covariance.diagonal(0.5, prior.space),
+        obs=obs,
+        obs_cov=Covariance.diagonal(0.1, obs.space),
+        forward=Operator(rng.uniform(0, 1, (m, n)), obs.space, prior.space),
+        offset=Vector(np.full(m, 395.0), obs.space),
+    )
+    return fips.solve(problem)
+
+
+@pytest.fixture(scope="module")
+def solved():
+    """The posterior of the small map problem."""
+    return _solved()
+
+
+class TestPlotMap:
+    """Tests for plot_map."""
+
+    @pytest.fixture(autouse=True)
+    def _close_figures(self):
+        """Close every figure after a test."""
+        plt = pytest.importorskip("matplotlib.pyplot")
+        yield
+        plt.close("all")
+
+    @pytest.mark.parametrize(
+        ("time", "has_truth", "titles"),
+        [
+            ("mean", False, ["Prior", "Posterior", "Residual"]),
+            ("mean", True, ["Truth", "Prior", "Posterior", "Residual"]),
+            (1, False, ["Prior", "Posterior", "Residual"]),
+            (pd.Timestamp("2023-02-01"), False, ["Prior", "Posterior", "Residual"]),
+            ("std", False, ["Prior", "Posterior"]),
+            ("std", True, ["Truth", "Prior", "Posterior"]),
+        ],
+        ids=["mean", "mean-truth", "int", "label", "std", "std-truth"],
+    )
+    def test_panels(self, solved, time, has_truth, titles):
+        """The truth panel comes first and the residual panel last; ``std`` has none."""
+        truth = solved.problem.prior["flux"].to_series().droplevel("block") * 1.1
+        fig, axes = plot_map(solved, time=time, truth=truth if has_truth else None)
+
+        assert [ax.get_title() for ax in axes] == titles
+        # The panels, plus one colorbar axes for the prior and one for the residual.
+        assert len(fig.axes) == len(titles) + (1 if time == "std" else 2)
+
+    def test_panels_hold_the_prior_and_the_estimate(self, solved):
+        """The prior and posterior panels are the block's values at the time asked for."""
+        _, axes = plot_map(solved, time=0)
+        first = pd.Timestamp("2023-01-01")
+        for ax, vector in zip(
+            axes[:2], [solved.problem.prior, solved.estimate], strict=True
+        ):
+            expected = vector["flux"].to_xarray().sel(time=first)
+            mesh = ax.collections[0].get_array()
+            np.testing.assert_allclose(
+                np.sort(np.ravel(mesh)), np.sort(expected.values.ravel())
+            )
+
+    def test_block_is_the_colorbar_label_and_the_title(self, solved):
+        """The block's name labels the map: nothing in it names a science."""
+        fig, _ = plot_map(solved)
+        assert fig._suptitle.get_text() == "flux"
+        assert fig.axes[-2].get_xlabel() == "flux"
+
+    def test_truth_as_a_vector(self, solved):
+        """A truth given as a Vector is read at the block."""
+        _, axes = plot_map(solved, truth=solved.problem.prior)
+        assert axes[0].get_title() == "Truth"
+
+    def test_other_level_names(self):
+        """The level names are arguments."""
+        post = _solved(levels=("month", "y", "x"))
+        _, axes = plot_map(post, x="x", y="y", time_level="month")
+        assert [ax.get_title() for ax in axes] == ["Prior", "Posterior", "Residual"]
+
+    def test_a_state_of_several_blocks_needs_block(self):
+        """With several blocks the block is named; a block the state lacks raises."""
+        post = _solved()
+        problem = post.problem
+        bias = Vector.from_series(
+            pd.Series([0.0], index=pd.Index(["b"], name="b")), block="bias"
+        )
+        prior = Vector.from_blocks({"flux": problem.prior, "bias": bias})
+        two = fips.solve(
+            Problem(
+                prior=prior,
+                prior_cov=Covariance.diagonal(0.5, prior.space),
+                obs=problem.obs,
+                obs_cov=problem.obs_cov,
+                forward=Operator.from_blocks(
+                    {("ch4", "flux"): problem.forward},
+                    rows=problem.obs.space,
+                    cols=prior.space,
+                ),
+            )
+        )
+        with pytest.raises(ValueError, match="name one with block="):
+            plot_map(two)
+        with pytest.raises(KeyError, match="no block 'sink'"):
+            plot_map(two, block="sink")
+        _, axes = plot_map(two, block="flux")
+        assert len(axes) == 3
+
+    def test_sites(self, solved):
+        """Site markers are drawn on every panel."""
+        _, axes = plot_map(solved, sites={"A": (40.7, -111.8)})
+
+        assert all(len(ax.collections) >= 2 for ax in axes)
+
+    def test_sites_must_be_a_dict(self, solved):
+        """Anything but a dict of sites is refused."""
+        with pytest.raises(TypeError, match="dict"):
+            plot_map(solved, sites=[(40.7, -111.8)])
+
+    def test_tiler(self, solved):
+        """With a tiler, every panel is a map with the tiles added."""
+        pytest.importorskip("cartopy")
+        from cartopy.io.img_tiles import GoogleTiles
+
+        _, axes = plot_map(solved, tiler=GoogleTiles(), tiler_zoom=5)
+
+        assert [type(ax).__name__ for ax in axes] == ["GeoAxes"] * 3
+        assert [len(ax.img_factories) for ax in axes] == [1] * 3
+
+    def test_tiler_without_cartopy(self, solved, monkeypatch):
+        """A missing cartopy raises its install hint before a figure is made."""
+        import fips.visualization as viz
+
+        plt = pytest.importorskip("matplotlib.pyplot")
+
+        def missing():
+            raise ImportError("cartopy is required for map tiles")
+
+        monkeypatch.setattr(viz, "_require_cartopy", missing)
+
+        class Tiler:
+            crs = None
+
+        with pytest.raises(ImportError, match="cartopy"):
+            plot_map(solved, tiler=Tiler())
+        assert plt.get_fignums() == []
+
+
+class TestPlotObs:
+    """Tests for plot_obs."""
+
+    @pytest.fixture(autouse=True)
+    def _close_figures(self):
+        """Close every figure after a test."""
+        plt = pytest.importorskip("matplotlib.pyplot")
+        yield
+        plt.close("all")
+
+    def test_defaults(self, solved):
+        """
+        The default windows raise no warning.
+
+        pandas 3 deprecates the lowercase alias, ``"30d"``, and the suite turns
+        warnings into errors.
+        """
+        axes = plot_obs(solved)
+
+        assert axes.shape == (2,)
+        # SITE2's 11-day gap is longer than the default 7-day threshold
+        assert [len(ax.patches) for ax in axes] == [0, 1]
+
+    def test_legend_and_gap(self, solved):
+        """Each location gets a figure; one with a data gap adds a "no data" entry."""
+        axes = plot_obs(solved, rolling_window="30D", gap_threshold="5D")
+
+        assert axes.shape == (2,)
+        legends = [[t.get_text() for t in ax.get_legend().get_texts()] for ax in axes]
+        assert legends[0] == ["observed", "posterior", "prior"]
+        assert legends[1] == ["observed", "posterior", "prior", "no data"]
+        # the shaded gap is one patch
+        assert [len(ax.patches) for ax in axes] == [0, 1]
+
+    def test_location(self, solved):
+        """Only the requested location is plotted, titled with the block."""
+        axes = plot_obs(solved, location="SITE1", show_raw=False)
+
+        assert axes.shape == (1,)
+        assert axes[0].get_title() == "ch4 at SITE1"
+        assert axes[0].get_ylabel() == "ch4"
+        assert len(axes[0].lines) == 3
+
+    def test_lines_are_the_observations_and_the_predictions(self, solved):
+        """The raw points are the observations, the posterior's and the prior's modeled observations."""
+        axes = plot_obs(solved, location=["SITE1"])
+        problem = solved.problem
+        expected = [
+            problem.obs,
+            solved.modeled_obs,
+            problem.predict(problem.prior),
+        ]
+        for line, vector in zip(axes[0].lines[:3], expected, strict=True):
+            site = vector["ch4"].to_series().droplevel("block").xs("SITE1")
+            np.testing.assert_allclose(line.get_ydata(), site.values)
+
+    def test_other_level_names_and_labels(self):
+        """The levels are arguments, and a location label need not be a string."""
+        post = _solved(obs_levels=("site_idx", "time"))
+        problem = post.problem
+        # relabel the sites as integers
+        obs = problem.obs["ch4"].to_series().droplevel("block")
+        obs.index = obs.index.set_levels([0, 1], level="site_idx")
+        obs = Vector.from_series(obs, block="ch4")
+        problem = Problem(
+            prior=problem.prior,
+            prior_cov=problem.prior_cov,
+            obs=obs,
+            obs_cov=Covariance.diagonal(0.1, obs.space),
+            forward=Operator(problem.forward.dense(), obs.space, problem.prior.space),
+        )
+        axes = plot_obs(
+            fips.solve(problem),
+            location=1,
+            location_level="site_idx",
+            time_level="time",
+        )
+        assert axes[0].get_title() == "ch4 at 1"
