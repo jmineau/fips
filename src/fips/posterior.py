@@ -894,10 +894,14 @@ class Posterior:
         positions = space._align(
             obs.space, "the new observations", "The new observations and the problem's"
         )
-        state = problem.__getstate__()
-        state["obs"] = Vector(obs.values[positions], space, name=obs.name)
-        new = type(problem).__new__(type(problem))
-        new.__setstate__(state)
+        new = type(problem)(
+            prior=problem.prior,
+            prior_cov=problem.prior_cov,
+            obs=Vector(obs.values[positions], space, name=obs.name),
+            obs_cov=problem.obs_cov,
+            forward=problem.forward,
+            offset=problem.offset,
+        )
         post = type(self)(new, resolve(new), self._options)
         _ = post.estimate
         return post
