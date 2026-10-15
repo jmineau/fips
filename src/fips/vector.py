@@ -33,7 +33,8 @@ class Vector:
     values : array-like
         One number for each label of `space`, in the space's order. A
         :class:`pandas.Series` is refused here, since its own labels would be
-        ignored: use :meth:`from_series`.
+        ignored: use :meth:`from_series`. So is a :class:`Vector`: use
+        :meth:`align` to put it on other labels, or its :attr:`values`.
     space : Space
         The labels.
     name : str, optional
@@ -43,7 +44,7 @@ class Vector:
     Raises
     ------
     TypeError
-        If `values` is a pandas object.
+        If `values` is a pandas object or a Vector.
     ValueError
         If `values` is not one-dimensional, its length differs from the
         space's, or a value is NaN (the message names its labels).
@@ -78,6 +79,12 @@ class Vector:
                 "Vector takes the values as an array, in the space's order. "
                 "Build a vector from a Series with Vector.from_series, which "
                 "reads its labels."
+            )
+        if isinstance(values, Vector):
+            raise TypeError(
+                "Vector takes the values, not a Vector, whose labels would be "
+                "ignored. To put a vector on other labels (in any order), use "
+                "v.align(space); for its values by position, v.values."
             )
         if not isinstance(space, Space):
             raise TypeError(f"space must be a Space, got {type(space).__name__}.")
