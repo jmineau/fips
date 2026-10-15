@@ -514,6 +514,51 @@ class Space:
             )
         return np.concatenate(positions)
 
+    def _subset(self, sub: "Space", called: str) -> np.ndarray:
+        """
+        Return where each label of `sub` is in this space; `sub` must hold some of its labels.
+
+        Every block of `sub` must be a block here, with the same levels (in
+        any order), and every label of it must be among that block's. The
+        message calls `sub` `called`.
+
+        Raises
+        ------
+        ValueError
+            If a block or a label of `sub` is not here, naming them.
+        """
+        problems, positions = [], []
+        unknown = [b for b in sub.names if b not in self]
+        if unknown:
+            problems.append(
+                f"blocks not in the space: {_listed(unknown)} "
+                f"(its blocks are {_listed(self.names)})"
+            )
+        for name in sub.names:
+            if name not in self:
+                continue
+            mine, theirs = self._blocks[name], sub._blocks[name]
+            if set(mine.names) != set(theirs.names):
+                problems.append(
+                    f"block {name!r} has levels {list(theirs.names)} there and "
+                    f"{list(mine.names)} in the space"
+                )
+                continue
+            if isinstance(mine, pd.MultiIndex) and mine.names != theirs.names:
+                mine = mine.reorder_levels(list(theirs.names))
+            found = mine.get_indexer(theirs)
+            if (found < 0).any():
+                problems.append(
+                    f"labels of block {name!r} not in the space: "
+                    f"{_listed(theirs[found < 0])}"
+                )
+            positions.append(found + self.slice(name).start)
+        if problems:
+            raise ValueError(
+                f"{called} is not part of the space: " + "; ".join(problems) + "."
+            )
+        return np.concatenate(positions)
+
     def round_labels(self, decimals: int) -> "Space":
         """
         Return the space with every float level rounded to `decimals` places.

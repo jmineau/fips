@@ -10,8 +10,9 @@ spaces: :func:`fips.solve` then computes by position.
 The problem is the question, and the :class:`~fips.Posterior` that
 :func:`fips.solve` returns is the answer. The problem holds what needs no
 solve and no ``m x m`` matrix (:meth:`Problem.predict`), and makes other
-problems from itself (:meth:`Problem.aggregate`); the posterior holds
-what depends on the solve or on the ``m x m`` matrix it factors.
+problems from itself (:meth:`Problem.aggregate`, :meth:`Problem.restrict`);
+the posterior holds what depends on the solve or on the ``m x m`` matrix it
+factors.
 """
 
 import logging
@@ -95,8 +96,9 @@ class Problem(Pickleable):
 
     The problem is the question: it holds what needs no solve and no
     ``m x m`` matrix, such as :meth:`predict`, and it makes other questions
-    from itself (:meth:`aggregate`). What depends on the solve, or on the
-    ``m x m`` matrix the solve factors, is on the :class:`~fips.Posterior`.
+    from itself (:meth:`aggregate`, :meth:`restrict`). What depends on the
+    solve, or on the ``m x m`` matrix the solve factors, is on the
+    :class:`~fips.Posterior`.
 
     Parameters
     ----------
@@ -300,6 +302,107 @@ class Problem(Pickleable):
             values = values[state._align(x.space, "x", "x and the prior")]
         predicted = self._forward.data @ values + self._offset_values()
         return Vector(predicted, self._obs.space)
+
+    def restrict(self, keep: Space) -> "Problem":
+        r"""
+        Return the problem on part of the state, the rest held at the prior.
+
+        The state elements left out (cells no observation sees well, say) are
+        fixed at their prior values: their contribution to the observations,
+        :math:`H_r x_{0,r}`, is added to the offset, and their rows and
+        columns leave the prior, the prior covariance and the forward
+        operator. Their prior uncertainty is not carried into the
+        model-data mismatch. A covariance keeps its form (Kronecker factors
+        stay factors); a covariance model's submatrix is the model built on
+        the kept labels.
+
+        This is the other direction of the recipe in the notes, which puts a
+        Jacobian on the whole state: here the state shrinks to what the
+        Jacobian covers.
+
+        Parameters
+        ----------
+        keep : Space
+            The state of the new problem: blocks of the prior's space, each
+            with some of its labels (in any order; the new problem has them
+            in this order). A block of the prior not in `keep` is held at the
+            prior whole.
+
+        Returns
+        -------
+        Problem
+            The restricted problem (of the same class). The observations and
+            their covariance are unchanged; its offset is this problem's
+            offset (zero if none) plus the contribution of the elements left
+            out.
+
+        Raises
+        ------
+        ValueError
+            If `keep` has a block or a label that the prior lacks.
+
+        See Also
+        --------
+        Vector.combine_first : The estimate put back on the whole state.
+
+        Examples
+        --------
+        >>> import numpy as np
+        >>> import pandas as pd
+        >>> import fips
+        >>> cells = pd.Index(["a", "b", "c"], name="cell")
+        >>> obs_id = pd.Index(["o1", "o2"], name="obs_id")
+        >>> prior = fips.Vector.from_series(
+        ...     pd.Series([1.0, 2.0, 3.0], index=cells), block="flux"
+        ... )
+        >>> obs = fips.Vector.from_series(
+        ...     pd.Series([4.0, 5.0], index=obs_id), block="co2"
+        ... )
+        >>> H = np.array([[1.0, 1.0, 1e-6], [0.0, 1.0, 1e-6]])
+        >>> problem = fips.Problem(
+        ...     prior=prior,
+        ...     prior_cov=fips.Independent().with_std(1.0),
+        ...     obs=obs,
+        ...     obs_cov=fips.Independent().with_std(0.5),
+        ...     forward=fips.Operator(H, obs.space, prior.space),
+        ... )
+        >>> small = problem.restrict(fips.Space({"flux": cells[:2]}))
+        >>> small.offset.values
+        array([3.e-06, 3.e-06])
+        >>> post = fips.solve(small)
+        >>> post.estimate.combine_first(problem.prior).values.round(3)
+        array([0.034, 4.207, 3.   ])
+        """
+        if not isinstance(keep, Space):
+            raise TypeError(f"keep must be a Space, got {type(keep).__name__}.")
+        state = self._prior.space
+        kept = state._subset(keep, "The space to keep")
+        left_out = np.ones(len(state), dtype=bool)
+        left_out[kept] = False
+        H = self._forward.data
+        rows = np.arange(H.shape[0])
+
+        offset = self._offset
+        if left_out.any():
+            removed = np.flatnonzero(left_out)
+            contribution = H._select(rows, removed) @ self._prior.values[removed]
+            name = None if offset is None else offset.name
+            values = self._offset_values() + contribution
+            offset = Vector(values, self._obs.space, name=name)
+
+        prior_cov = self._prior_cov
+        return type(self)(
+            prior=Vector(self._prior.values[kept], keep, name=self._prior.name),
+            prior_cov=Covariance(
+                prior_cov.data._select(kept, kept), keep, name=prior_cov.name
+            ),
+            obs=self._obs,
+            obs_cov=self._obs_cov,
+            forward=Operator(
+                H._select(rows, kept), self._obs.space, keep, name=self._forward.name
+            ),
+            offset=offset,
+        )
 
     def aggregate(self, W: Operator) -> "Problem":
         r"""
