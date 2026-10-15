@@ -273,6 +273,13 @@ class Space:
         levels = [index.names[i] for i in others if index.names[i] in used]
         return cls(blocks, levels=levels)
 
+    @classmethod
+    def _regroup(cls, index: pd.Index) -> tuple["Space", np.ndarray]:
+        """Return the space of `index` (:meth:`from_index`), and the order that puts the rows of each block together."""
+        space = cls.from_index(index)
+        rank, _ = pd.factorize(index.get_level_values("block").astype(str))
+        return space, np.argsort(rank, kind="stable")
+
     @property
     def names(self) -> tuple[str, ...]:
         """The names of the blocks, in order."""
