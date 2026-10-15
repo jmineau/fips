@@ -933,8 +933,8 @@ class TestCovarianceOnFactors:
 # ---------------------------------------------------------------------------
 
 POSTERIOR_OUTPUTS = [
-    "estimate", "mean", "cov", "variances", "modeled_obs", "prior_modeled_obs",
-    "prior_obs_cov", "kalman_gain", "averaging_kernel", "desroziers", "dofs", "chi2",
+    "estimate", "mean", "cov", "variances", "modeled_obs",
+    "innovation_cov", "kalman_gain", "averaging_kernel", "desroziers", "dofs", "chi2",
     "reduced_chi2", "r2", "rmse", "uncertainty_reduction",
 ]  # fmt: skip
 
@@ -1131,7 +1131,7 @@ def test_solve_never_forms_the_prior_error(no_dense):
     assert isinstance(problem.prior_cov.data, KroneckerOperator)
     post = fips.solve(problem)
     for name in (
-        "estimate", "modeled_obs", "prior_modeled_obs", "prior_obs_cov",
+        "estimate", "modeled_obs", "innovation_cov",
         "kalman_gain", "dofs", "chi2", "reduced_chi2", "r2", "rmse",
         "variances", "uncertainty_reduction",
     ):  # fmt: skip

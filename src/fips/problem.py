@@ -6,6 +6,11 @@ the two covariances and an optional offset of a linear inverse problem,
 ``obs = forward @ state + offset + error``. It checks their labels once,
 when it is built, and puts every input on the prior's and the observations'
 spaces: :func:`fips.solve` then computes by position.
+
+The problem is the question, and the :class:`~fips.Posterior` that
+:func:`fips.solve` returns is the answer. The problem holds what needs no
+solve and no ``m x m`` matrix (:meth:`Problem.predict`); the posterior holds
+what depends on the solve or on the ``m x m`` matrix it factors.
 """
 
 import logging
@@ -87,6 +92,11 @@ class Problem(Pickleable):
     in the order of the prior's and the observations' spaces. A problem is not
     changed after it is built; :func:`fips.solve` solves it.
 
+    The problem is the question: it holds what needs no solve and no
+    ``m x m`` matrix, such as :meth:`predict`. What depends on the solve, or
+    on the ``m x m`` matrix the solve factors, is on the
+    :class:`~fips.Posterior`.
+
     Parameters
     ----------
     prior : Vector
@@ -124,21 +134,15 @@ class Problem(Pickleable):
     Notes
     -----
     A forward operator that covers only part of the state (a transport
-    Jacobian has columns only for the cells a footprint touched) is built on
-    the whole state: its columns are the prior's labels, and a column of
-    zeros is a cell no observation sees. With a SciPy sparse Jacobian ``J``
-    whose columns are labeled by ``cells`` (a pandas Index) and whose rows are
-    the observations of block ``"co2"``, in order, on the prior's block
-    ``"flux"``::
+    Jacobian has columns only for the cells a footprint touched) is placed on
+    the whole state by :meth:`Operator.from_blocks <fips.Operator.from_blocks>`,
+    which puts a labeled block by its labels: a cell the Jacobian lacks is a
+    column of zeros, and a label the space lacks raises. With ``J`` the
+    labeled Jacobian (a DataFrame, dense or pandas-sparse, or a tuple
+    ``(matrix, row_labels, col_labels)``)::
 
-        state = prior.space.select("flux")
-        J = scipy.sparse.coo_array(J)
-        full = scipy.sparse.csr_array(
-            (J.data, (J.row, state.get_indexer(cells)[J.col])),
-            shape=(J.shape[0], len(state)),
-        )
         forward = Operator.from_blocks(
-            {("co2", "flux"): full}, rows=obs.space, cols=prior.space
+            {("co2", "flux"): J}, rows=obs.space, cols=prior.space
         )
 
     Examples
@@ -238,6 +242,63 @@ class Problem(Pickleable):
     def offset(self) -> Vector | None:
         """The offset, :math:`c`, on the observations' space, or None."""
         return self._offset
+
+    def predict(self, x: Vector) -> Vector:
+        r"""
+        Return the observations the state `x` models, :math:`H x + c`.
+
+        Parameters
+        ----------
+        x : Vector
+            A state on the prior's labels, in any order: the prior, a
+            posterior estimate, a truth to test with.
+
+        Returns
+        -------
+        Vector
+            :math:`H x + c` (with the offset :math:`c`, if any) on the
+            observations' space.
+
+        Raises
+        ------
+        TypeError
+            If `x` is not a Vector.
+        ValueError
+            If `x` does not have exactly the prior's labels; the message names
+            those on one side only.
+
+        Examples
+        --------
+        >>> import numpy as np
+        >>> import pandas as pd
+        >>> import fips
+        >>> cells = pd.Index(["a", "b"], name="cell")
+        >>> obs_id = pd.Index(["o1", "o2", "o3"], name="obs_id")
+        >>> prior = fips.Vector.from_series(pd.Series(1.0, index=cells), block="flux")
+        >>> obs = fips.Vector.from_series(
+        ...     pd.Series([1.0, 2.0, 3.0], index=obs_id), block="co2"
+        ... )
+        >>> problem = fips.Problem(
+        ...     prior=prior,
+        ...     prior_cov=fips.Independent().with_std(1.0),
+        ...     obs=obs,
+        ...     obs_cov=fips.Independent().with_std(0.3),
+        ...     forward=fips.Operator(
+        ...         np.array([[1.0, 0.0], [0.0, 1.0], [1.0, 1.0]]),
+        ...         obs.space,
+        ...         prior.space,
+        ...     ),
+        ...     offset=0.5,
+        ... )
+        >>> problem.predict(problem.prior).values
+        array([1.5, 1.5, 2.5])
+        """
+        state = self._prior.space
+        values = _vector(x, "x").values
+        if x.space is not state:
+            values = values[state._align(x.space, "x", "x and the prior")]
+        predicted = self._forward.data @ values + self._offset_values()
+        return Vector(predicted, self._obs.space)
 
     def _offset_values(self) -> np.ndarray:
         """Return the offset's values, zeros where there is none."""

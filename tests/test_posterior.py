@@ -106,20 +106,12 @@ OUTPUTS = [
     ),
     ("modeled_obs", lambda p: p.modeled_obs, "obs", None, Vector, "modeled_obs"),
     (
-        "prior_modeled_obs",
-        lambda p: p.prior_modeled_obs,
-        "obs",
-        None,
-        Vector,
-        "prior_modeled_obs",
-    ),
-    (
-        "prior_obs_cov",
-        lambda p: p.prior_obs_cov,
+        "innovation_cov",
+        lambda p: p.innovation_cov,
         "obs",
         "obs",
         Covariance,
-        "prior_obs_cov",
+        "innovation_cov",
     ),
 ]
 OUTPUT_IDS = [o[0] for o in OUTPUTS]
@@ -162,7 +154,7 @@ class TestOutputs:
             post.modeled_obs.values, H @ post.estimate.values + 399.0
         )
         np.testing.assert_allclose(
-            post.prior_modeled_obs.values, H @ problem.prior.values + 399.0
+            problem.predict(problem.prior).values, H @ problem.prior.values + 399.0
         )
 
     @pytest.mark.parametrize(
@@ -216,7 +208,7 @@ class TestDesroziers:
         table = post.desroziers()
         assert list(table.columns) == ["diagnosed", "specified", "ratio"]
         assert table.index.equals(problem.obs.index)
-        before = problem.obs.values - post.prior_modeled_obs.values
+        before = problem.obs.values - problem.predict(problem.prior).values
         after = problem.obs.values - post.modeled_obs.values
         np.testing.assert_allclose(table["diagnosed"], after * before)
         np.testing.assert_allclose(table["specified"], np.diag(problem.obs_cov.dense()))

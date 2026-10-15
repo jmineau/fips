@@ -437,6 +437,41 @@ class TestFromBlocks:
         expected[:3, :3], expected[3, 3] = np.triu(np.ones((3, 3))), 2.0
         np.testing.assert_array_equal(op.dense(), expected)
 
+    def test_a_labeled_block_on_part_of_its_labels_is_placed(self, obs, state):
+        """A frame or tuple with some of a block's labels: the others are zero."""
+        values = np.array([[1.0, 2.0], [3.0, 4.0]])
+        part = pd.Index(["b", "c"], name="cell")
+        for block, sparse in (
+            (pd.DataFrame(values, index=obs.select("co2"), columns=part), False),
+            ((sp.csr_array(values), obs.select("co2"), part), True),
+            ((values, obs.select("co2"), part), False),
+        ):
+            op = Operator.from_blocks({("co2", "flux"): block}, rows=obs, cols=state)
+            expected = np.zeros((2, 3))
+            expected[:, [2, 0]] = values  # the state is c, a, b
+            np.testing.assert_array_equal(op.dense(), expected)
+            assert isinstance(op.data, SparseOperator) == sparse
+
+    def test_a_label_the_space_lacks_raises(self, obs, state):
+        """A labeled block may cover part of its block, never more: the extra label is named."""
+        block = (np.ones((2, 1)), obs.select("co2"), pd.Index(["z"], name="cell"))
+        with pytest.raises(ValueError, match="labels the block does not have: 'z'"):
+            Operator.from_blocks({("co2", "flux"): block}, rows=obs, cols=state)
+
+    def test_a_tuple_of_another_length_raises(self, obs, state):
+        with pytest.raises(ValueError, match=r"\(matrix, row_labels, col_labels\)"):
+            Operator.from_blocks(
+                {("co2", "flux"): (np.ones((2, 3)),)}, rows=obs, cols=state
+            )
+
+    def test_a_reordered_block_keeps_its_form(self, state):
+        """A labeled block that covers its labels in another order keeps its form."""
+        form = DiagonalOperator([1.0, 2.0, 3.0])
+        given = Operator(form, reordered(state), reordered(state))
+        op = Operator.from_blocks({("flux", "flux"): given}, rows=state, cols=state)
+        assert isinstance(op.data, DiagonalOperator)
+        np.testing.assert_array_equal(op.dense(), np.diag([3.0, 2.0, 1.0]))
+
     def test_one_block_keeps_its_form(self, state):
         """A single block that covers both spaces is the operator's form, as given."""
         form = DiagonalOperator([1.0, 2.0, 3.0])

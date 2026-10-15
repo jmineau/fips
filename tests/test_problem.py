@@ -336,21 +336,53 @@ class TestOffset:
 
     def test_an_offset_enters_the_modeled_observations(self):
         offset = Vector([1.0, 2.0, 3.0], OBS, name="background")
-        with_offset = fips.solve(Problem(**_inputs(offset=offset)))
-        without = fips.solve(Problem(**_inputs()))
+        with_offset = Problem(**_inputs(offset=offset))
+        without = Problem(**_inputs())
         np.testing.assert_allclose(
-            with_offset.prior_modeled_obs.values - without.prior_modeled_obs.values,
+            with_offset.predict(with_offset.prior).values
+            - without.predict(without.prior).values,
             [1.0, 2.0, 3.0],
         )
-        assert with_offset.problem.offset is not None
-        assert with_offset.problem.offset.name == "background"
+        assert with_offset.offset is not None
+        assert with_offset.offset.name == "background"
+
+
+class TestPredict:
+    def test_is_forward_times_the_state_plus_the_offset(self):
+        problem = Problem(**_inputs(offset=0.5))
+        x = Vector([1.0, -1.0, 2.0, 0.5, 0.0], STATE)
+        predicted = problem.predict(x)
+        assert isinstance(predicted, Vector) and predicted.space is OBS
+        np.testing.assert_allclose(predicted.values, H_VALUES @ x.values + 0.5)
+
+    def test_the_state_is_matched_by_label(self):
+        problem = Problem(**_inputs())
+        x = Vector([1.0, -1.0, 2.0, 0.5, 0.0], STATE)
+        reordered = Vector(x.values[_reversed(STATE).align(STATE)], _reversed(STATE))
+        np.testing.assert_array_equal(
+            problem.predict(reordered).values, problem.predict(x).values
+        )
+
+    def test_a_state_on_other_labels_raises(self):
+        problem = Problem(**_inputs())
+        short = Space({"flux": CELLS[:2], "bias": SITES})
+        with pytest.raises(
+            ValueError,
+            match=r"x and the prior do not have the same labels: "
+            r"labels of block 'flux' missing from x: 3",
+        ):
+            problem.predict(Vector(np.ones(4), short))
+
+    def test_refuses_an_array(self):
+        with pytest.raises(TypeError, match="x must be a Vector"):
+            Problem(**_inputs()).predict(np.ones(5))  # type: ignore[arg-type]
 
 
 class TestStiltShapedForward:
-    """The recipe in Problem's notes: a Jacobian on the cells a footprint touched, put on the whole state."""
+    """A Jacobian of the cells a footprint touched, placed on the whole state by ``Operator.from_blocks``."""
 
-    def test_recipe_gives_the_dense_answer(self):
-        rng = np.random.default_rng(0)
+    @staticmethod
+    def _inputs(rng):
         cells = pd.Index(range(10), name="cell")
         prior = Vector.from_series(
             pd.Series(rng.uniform(1, 2, 10), index=cells), block="flux"
@@ -359,17 +391,26 @@ class TestStiltShapedForward:
         obs = Vector.from_series(
             pd.Series(rng.uniform(0, 5, 4), index=obs_ids), block="co2"
         )
-        touched = pd.Index([7, 2, 5], name="cell")  # in the Jacobian's own order
-        J = sp.csr_array(rng.uniform(0, 1, (4, 3)))
+        return prior, obs, obs_ids
 
-        state = prior.space.select("flux")
-        coo = sp.coo_array(J)
-        full = sp.csr_array(
-            (coo.data, (coo.row, state.get_indexer(touched)[coo.col])),
-            shape=(J.shape[0], len(state)),
-        )
+    @pytest.mark.parametrize(
+        "given", ["sparse tuple", "pandas-sparse frame", "dense frame"]
+    )
+    def test_placed_by_label(self, given):
+        rng = np.random.default_rng(0)
+        prior, obs, obs_ids = self._inputs(rng)
+        touched = pd.Index([7, 2, 5], name="cell")  # in the Jacobian's own order
+        values = rng.uniform(0, 1, (4, 3))
+        rows = obs_ids[::-1]  # and its rows in theirs
+        if given == "sparse tuple":
+            J = (sp.csr_array(values), rows, touched)
+        else:
+            J = pd.DataFrame(values, index=rows, columns=touched)
+            if given == "pandas-sparse frame":
+                J = J.astype(pd.SparseDtype(float, 0.0))
+
         forward = Operator.from_blocks(
-            {("co2", "flux"): full}, rows=obs.space, cols=prior.space
+            {("co2", "flux"): J}, rows=obs.space, cols=prior.space
         )
         problem = Problem(
             prior=prior,
@@ -378,15 +419,31 @@ class TestStiltShapedForward:
             obs_cov=Independent().with_std(0.1),
             forward=forward,
         )
-        assert isinstance(problem.forward.data, SparseOperator)
+
+        assert isinstance(problem.forward.data, SparseOperator) == (
+            given != "dense frame"
+        )
         dense = np.zeros((4, 10))
-        dense[:, [7, 2, 5]] = J.toarray()
+        dense[:, [7, 2, 5]] = values[::-1]
         np.testing.assert_array_equal(problem.forward.dense(), dense)
         post = fips.solve(problem)
         untouched = [c for c in range(10) if c not in (7, 2, 5)]
         np.testing.assert_array_equal(
             post.estimate.values[untouched], prior.values[untouched]
         )
+
+    def test_a_label_not_in_the_state_raises(self):
+        rng = np.random.default_rng(1)
+        prior, obs, obs_ids = self._inputs(rng)
+        J = pd.DataFrame(
+            np.ones((4, 2)), index=obs_ids, columns=pd.Index([3, 12], name="cell")
+        )
+        with pytest.raises(
+            ValueError,
+            match=r"The columns of the matrix of \('co2', 'flux'\) of block 'flux' "
+            r"have labels the block does not have: 12\.",
+        ):
+            Operator.from_blocks({("co2", "flux"): J}, rows=obs.space, cols=prior.space)
 
 
 class TestPickle:

@@ -7,6 +7,11 @@ the method, and the factorization of the whitened system
 labeled with the problem's spaces, and nothing :math:`n \times n` is formed
 unless the full covariance or averaging kernel is asked for. A new
 regularization factor or new observations reuse the factors.
+
+The :class:`~fips.Problem` is the question and the posterior the answer: the
+posterior holds what depends on the solve or on the ``m x m`` matrix it
+factors; what needs neither (:meth:`Problem.predict <fips.Problem.predict>`)
+is on the problem.
 """
 
 import dataclasses
@@ -63,7 +68,10 @@ class Posterior(Pickleable):
     posterior is Gaussian: :attr:`estimate` is its mean (so :attr:`mean` is
     the same object), and the posterior covariance is
     :math:`\hat{S} = (H^T S_z^{-1} H + S_0^{-1})^{-1}`, with :math:`S_z`
-    divided by the regularization factor :math:`\gamma`.
+    divided by the regularization factor :math:`\gamma`. It holds what depends
+    on the solve or on the ``m x m`` matrix the solve factors
+    (:attr:`innovation_cov`); what needs neither is on the
+    :class:`~fips.Problem` (:meth:`~fips.Problem.predict`).
 
     Parameters
     ----------
@@ -359,34 +367,21 @@ class Posterior(Pickleable):
 
     # -- the observations ----------------------------------------------------
 
-    def _modeled(self, x: np.ndarray) -> np.ndarray:
-        """Return ``H x + c``."""
-        return self._problem.forward.data @ x + self._problem._offset_values()
-
     @cached_property
     def modeled_obs(self) -> Vector:
         r"""
         The observations the estimate models, :math:`H \hat{x} + c`.
 
+        ``problem.predict(post.estimate)``, kept. The observations another
+        state models are :meth:`Problem.predict <fips.Problem.predict>` of it
+        (the prior's: ``problem.predict(problem.prior)``).
+
         See Also
         --------
-        prior_modeled_obs : The observations the prior models.
+        fips.Problem.predict : The observations any state models.
         """
-        values = self._modeled(self.estimate.values)
+        values = self._problem.predict(self.estimate).values
         return Vector(values, self._problem.obs.space, name="modeled_obs")
-
-    @cached_property
-    def prior_modeled_obs(self) -> Vector:
-        r"""
-        The observations the prior models, :math:`H x_0 + c`.
-
-        See Also
-        --------
-        modeled_obs : The observations the estimate models.
-        prior_obs_cov : Their covariance from the prior error.
-        """
-        values = self._modeled(self._problem.prior.values)
-        return Vector(values, self._problem.obs.space, name="prior_modeled_obs")
 
     @cached_property
     def _HS_0H(self) -> LinearOperator:
@@ -395,18 +390,25 @@ class Posterior(Pickleable):
         return (H @ self._problem.prior_cov.data) @ H._transpose()
 
     @cached_property
-    def prior_obs_cov(self) -> Covariance:
+    def innovation_cov(self) -> Covariance:
         r"""
-        The prior error in observation space, :math:`H S_0 H^T`, dense.
+        The covariance of the innovation, :math:`H S_0 H^T + S_z / \gamma`, dense.
 
-        The uncertainty of :attr:`prior_modeled_obs` that the prior error
-        implies. Its diagonal, square-rooted, is the prior's share of each
-        observation's error budget; add the model-data mismatch for the
-        total the solve expects.
+        The innovation is :math:`z - H x_0 - c`, the observations minus what
+        the prior models; this is its covariance when the prior error and the
+        model-data mismatch are right, and the ``m x m`` matrix the solve
+        factors. Kalman filtering calls it the innovation covariance; Rodgers
+        (2000) writes it :math:`S_y`. It includes the regularization factor:
+        the mismatch is divided by :math:`\gamma`. Its diagonal, square-rooted,
+        is the spread expected for each observation's innovation, of which
+        :math:`H S_0 H^T` is the prior's share.
+
+        See Also
+        --------
+        desroziers : The observation error variances the residuals diagnose.
         """
-        return Covariance(
-            self._HS_0H.dense(), self._problem.obs.space, name="prior_obs_cov"
-        )
+        G = self._HS_0H + self._problem.obs_cov.data / self._gamma
+        return Covariance(G.dense(), self._problem.obs.space, name="innovation_cov")
 
     def desroziers(self, by: Any = None) -> pd.DataFrame:
         r"""
@@ -469,7 +471,7 @@ class Posterior(Pickleable):
         1    B      2.321        1.0  2.321
         """
         problem = self._problem
-        before = problem.obs.values - self.prior_modeled_obs.values
+        before = problem.obs.values - problem.predict(problem.prior).values
         after = problem.obs.values - self.modeled_obs.values
         frame = pd.DataFrame(
             {
@@ -514,9 +516,8 @@ class Posterior(Pickleable):
             If `x` does not have exactly the state's labels.
         """
         problem = self._problem
-        values = x.align(problem.prior.space).values
-        Hx = np.asarray(self._modeled(values), dtype=float)[:, None]
-        G = (self._HS_0H + problem.obs_cov.data / self._gamma).dense()
+        Hx = problem.predict(x).values[:, None]
+        G = self.innovation_cov.dense()
         term = _solve_psd(G, Hx)
         L = Hx @ inv(Hx.T @ term) @ term.T
         space = problem.obs.space
@@ -672,7 +673,7 @@ class Posterior(Pickleable):
         state["obs"] = Vector(obs.values[positions], space, name=obs.name)
         new = type(problem).__new__(type(problem))
         new.__setstate__(state)
-        d = new.obs.values - self.prior_modeled_obs.values
+        d = new.obs.values - new.predict(new.prior).values
         factors = dataclasses.replace(
             self._factors, innovation=self._factors.whitener @ d
         )

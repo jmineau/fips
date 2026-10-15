@@ -30,7 +30,7 @@ from fips.linalg import (
     SparseOperator,
     as_linear_operator,
 )
-from fips.space import Space
+from fips.space import Space, _listed
 from fips.vector import Vector
 
 logger = logging.getLogger(__name__)
@@ -136,6 +136,72 @@ def _permuted(
     return sp.csr_array(
         (coo.data, (new_row[coo.row], new_col[coo.col])), shape=matrix.shape
     )
+
+
+def _where(target: pd.Index, given: pd.Index, block: str, what: str) -> np.ndarray:
+    """
+    Return where each label of `given` is among the labels `target` of `block`.
+
+    Raises
+    ------
+    ValueError
+        If `given` has other levels than `target`, or a label `target` does
+        not have; the message names them.
+    """
+    if set(given.names) != set(target.names):
+        raise ValueError(
+            f"The {what} of block {block!r} have levels {list(given.names)}; the "
+            f"block has {list(target.names)}."
+        )
+    if isinstance(given, pd.MultiIndex) and given.names != target.names:
+        given = given.reorder_levels(list(target.names))
+    found = target.get_indexer(given)
+    if (found < 0).any():
+        raise ValueError(
+            f"The {what} of block {block!r} have labels the block does not "
+            f"have: {_listed(given[found < 0])}."
+        )
+    return found
+
+
+def _placed(
+    op: "Operator", rows: pd.Index, cols: pd.Index, key: tuple[str, str]
+) -> LinearOperator:
+    """
+    Return the form of `op` (on one row and one column block) placed on the labels `rows` and `cols`.
+
+    A label `op` has no entry for is a zero row or column. When `op` covers
+    every label, its form is kept (reordered); otherwise it is sparse if it
+    was (or is diagonal), dense if not.
+    """
+    r, c = key
+    where = f"matrix of ({r!r}, {c!r})"
+    r_pos = _where(rows, op.rows.select(r), r, f"rows of the {where}")
+    c_pos = _where(cols, op.cols.select(c), c, f"columns of the {where}")
+    form = op.data
+    if len(r_pos) == len(rows) and len(c_pos) == len(cols):
+        if np.array_equal(r_pos, np.arange(len(rows))) and np.array_equal(
+            c_pos, np.arange(len(cols))
+        ):
+            return form
+        inverse_r, inverse_c = np.empty_like(r_pos), np.empty_like(c_pos)
+        inverse_r[r_pos], inverse_c[c_pos] = (
+            np.arange(len(r_pos)),
+            np.arange(len(c_pos)),
+        )
+        return form._select(inverse_r, inverse_c)
+    csr = form._csr()
+    if csr is not None:
+        coo = sp.coo_array(csr)
+        return SparseOperator(
+            sp.csr_array(
+                (coo.data, (r_pos[coo.row], c_pos[coo.col])),
+                shape=(len(rows), len(cols)),
+            )
+        )
+    dense = np.zeros((len(rows), len(cols)))
+    dense[np.ix_(r_pos, c_pos)] = form.dense()
+    return DenseOperator(dense)
 
 
 class Operator:
@@ -315,24 +381,27 @@ class Operator:
         """
         Build an operator from its blocks, each named by its row and its column block.
 
-        A pair of blocks that is not given is zero.
+        A pair of blocks that is not given is zero. A labeled block is placed
+        by its labels: it may cover part of its blocks' labels (the rest is
+        zero), as a transport Jacobian covers the cells a footprint touched.
 
         Parameters
         ----------
         blocks : mapping of (str, str) to a matrix
-            Each ``(row_block, col_block)`` pair mapped to its matrix: a
-            DataFrame labeled by the blocks' own labels (no ``block`` level),
-            an :class:`Operator` on a row space of the one block
-            ``row_block`` and a column space of the one block ``col_block``,
-            or an array, a SciPy sparse matrix or a form of
-            :mod:`fips.linalg`, whose rows and columns are in the order of
-            the blocks' labels in `rows` and `cols`.
+            Each ``(row_block, col_block)`` pair mapped to its matrix, labeled
+            or not. Labeled: a DataFrame (dense or pandas-sparse) whose index
+            and columns are the blocks' own labels (no ``block`` level); a
+            tuple ``(matrix, row_labels, col_labels)`` of an array or a SciPy
+            sparse matrix and two pandas Indexes; or an :class:`Operator` on
+            a row space of the one block ``row_block`` and a column space of
+            the one block ``col_block``. Unlabeled: an array, a SciPy sparse
+            matrix or a form of :mod:`fips.linalg`, whose rows and columns are
+            in the order of the blocks' labels in `rows` and `cols`.
         rows, cols : Space, optional
-            The labels of the rows and columns. By default the blocks of the
-            labeled matrices, in the order they first appear; an unlabeled
-            matrix needs its blocks' labels from here or from a labeled
-            matrix in the same row or column block. A labeled matrix is put
-            in the order of these labels, which it must match exactly.
+            The labels of the rows and columns. By default each block's labels
+            are those of the first labeled matrix in its row or column; an
+            unlabeled matrix needs its blocks' labels from here or from a
+            labeled matrix in the same row or column block.
         name : str, optional
             The operator's name.
 
@@ -340,21 +409,23 @@ class Operator:
         -------
         Operator
             The assembled matrix: sparse if every block is sparse (or
-            diagonal), dense otherwise. A single block that covers both
-            spaces keeps its form.
+            diagonal), dense otherwise. A labeled block keeps its form
+            when it covers its blocks' labels (a pandas-sparse frame is
+            sparse); a single block that covers both spaces keeps its form.
 
         Raises
         ------
         ValueError
-            If a pair is given twice, a block's labels are found nowhere, two
-            matrices give one block different labels, a labeled matrix is on
-            other blocks than its key names, or a matrix has the wrong shape.
+            If a pair is given twice, a block's labels are found nowhere, a
+            labeled matrix has a label its block does not have (the message
+            names it), a labeled matrix is on other blocks than its key
+            names, or an unlabeled matrix has the wrong shape.
 
         Examples
         --------
         >>> import numpy as np
         >>> import pandas as pd
-        >>> from fips import Operator
+        >>> from fips import Operator, Space
         >>> obs = pd.Index(["o1", "o2"], name="obs_id")
         >>> H = Operator.from_blocks(
         ...     {
@@ -373,6 +444,16 @@ class Operator:
         >>> H.dense()
         array([[1. , 0.5, 1. ],
                [0. , 2. , 1. ]])
+
+        A Jacobian of the cells a footprint touched, placed on every cell:
+
+        >>> cells = Space({"flux": pd.Index(["a", "b", "c"], name="cell")})
+        >>> J = pd.DataFrame(
+        ...     [[0.5], [0.2]], index=obs, columns=pd.Index(["c"], name="cell")
+        ... )
+        >>> Operator.from_blocks({("co2", "flux"): J}, cols=cells).dense()
+        array([[0. , 0. , 0.5],
+               [0. , 0. , 0.2]])
         """
         labeled: dict[tuple[str, str], Operator] = {}
         unlabeled: dict[tuple[str, str], LinearOperator] = {}
@@ -382,6 +463,14 @@ class Operator:
                 raise ValueError(f"The pair ({r!r}, {c!r}) is given twice.")
             if isinstance(block, pd.DataFrame):
                 block = Operator.from_frame(block, row_block=r, col_block=c)
+            elif isinstance(block, tuple):
+                if len(block) != 3:
+                    raise ValueError(
+                        f"The matrix of ({r!r}, {c!r}) is a tuple of {len(block)}; a "
+                        "labeled matrix is (matrix, row_labels, col_labels)."
+                    )
+                matrix, row_labels, col_labels = block
+                block = Operator(matrix, Space({r: row_labels}), Space({c: col_labels}))
             if isinstance(block, Operator):
                 if block.rows.names != (r,) or block.cols.names != (c,):
                     raise ValueError(
@@ -414,8 +503,8 @@ class Operator:
         row_space, col_space = labels(rows, 0), labels(cols, 1)
         forms: dict[tuple[str, str], LinearOperator] = {}
         for (r, c), op in labeled.items():
-            forms[(r, c)] = op._on(
-                Space({r: row_space.select(r)}), Space({c: col_space.select(c)})
+            forms[(r, c)] = _placed(
+                op, row_space.select(r), col_space.select(c), (r, c)
             )
         for (r, c), form in unlabeled.items():
             shape = (len(row_space.select(r)), len(col_space.select(c)))
