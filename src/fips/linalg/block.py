@@ -10,7 +10,7 @@ import numpy as np
 import scipy.sparse as sp
 from scipy.linalg import block_diag
 
-from fips.linalg.base import LinearOperator, _as_array, as_linear_operator
+from fips.linalg.forms import LinearOperator, _as_array, as_linear_operator
 
 
 class BlockDiagonalOperator(LinearOperator):

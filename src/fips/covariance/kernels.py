@@ -23,7 +23,7 @@ from fips.covariance.distances import (
 )
 from fips.covariance.models import CorrelationModel, _names
 from fips.linalg import DenseOperator, LinearOperator
-from fips.linalg.base import _DENSE_FILL, _adopt
+from fips.linalg.forms import _DENSE_FILL, _adopt
 
 _METRICS = ("euclidean", "haversine", "chordal")
 """The distances a kernel can measure: a straight line, and two on the Earth (km)."""

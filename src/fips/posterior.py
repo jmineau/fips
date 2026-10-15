@@ -26,7 +26,7 @@ from scipy.linalg import cholesky, eigh, inv, solve, solve_triangular
 
 from fips.covariance import Covariance
 from fips.linalg import DiagonalOperator, LinearOperator
-from fips.linalg.base import _adopt, _solve_psd
+from fips.linalg.forms import _adopt, _solve_psd
 from fips.operator import Operator
 from fips.problem import Problem
 from fips.vector import Vector
