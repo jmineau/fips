@@ -9,7 +9,9 @@ to itself: the prior error or the model-data mismatch of an inverse problem.
 It keeps its matrix in the cheapest form (a diagonal covariance is its
 variances, a Kronecker one its factors, independent blocks each their own
 form) and adds what a covariance needs: its variances, solves, the
-log-determinant, the quadratic form of its inverse and a square root.
+log-determinant, the quadratic form of its inverse and a square root. A dense
+or sparse matrix must be symmetric, to 1e-10 of its largest entry; one that is
+not (an upper triangle, say) raises, naming the two entries.
 
 .. ipython:: python
 

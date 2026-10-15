@@ -326,6 +326,10 @@ class TestConstructor:
             ({"factors": []}, "at least one factor"),
             ({"factors": [np.ones((2, 3))]}, "square"),
             ({"factors": [np.array([[1.0, np.nan], [np.nan, 1.0]])]}, "finite"),
+            (
+                {"factors": [np.eye(2), np.array([[1.0, 0.5], [0.0, 1.0]])]},
+                r"Factor 1 is not symmetric: its entry \(0, 1\) is 0.5",
+            ),
             ({"factors": [np.eye(2)], "std": [1.0, 2.0, 3.0]}, "entries"),
             ({"factors": [np.eye(2)], "std": -1.0}, "not negative"),
             ({"factors": [np.eye(2)], "positions": [[0], [1]]}, "positions for"),

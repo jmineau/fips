@@ -367,7 +367,7 @@ class Posterior:
     def _cov(self) -> Covariance:
         """The full posterior covariance, formed once."""
         S_hat = self._solution.cov()
-        return Covariance(
+        return Covariance._computed(
             _adopt(S_hat), self._problem.prior.space, name="posterior_cov"
         )
 
@@ -434,7 +434,7 @@ class Posterior:
         if W is None:
             return self._cov
         values = self._solution.cov(self._aggregation(W))
-        return Covariance(_adopt(values), W.rows, name="posterior_cov")
+        return Covariance._computed(_adopt(values), W.rows, name="posterior_cov")
 
     @cached_property
     def kalman_gain(self) -> Operator:
@@ -544,7 +544,7 @@ class Posterior:
         desroziers : The observation error variances the residuals diagnose.
         """
         G = self._HS_0H + self._problem.obs_cov.data / self._gamma
-        return Covariance(
+        return Covariance._computed(
             _adopt(G.dense()), self._problem.obs.space, name="innovation_cov"
         )
 
