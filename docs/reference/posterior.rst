@@ -1,13 +1,17 @@
-=========
-Posterior
-=========
+=====================
+Solving and Posterior
+=====================
 
 .. currentmodule:: fips
 
-:func:`solve` fits an estimator to an :class:`InverseProblem` and returns a
-:class:`Posterior`, which labels what the estimator computed with the
-problem's state and observation indexes. :meth:`InverseProblem.solve` calls it
-and keeps the posterior as :attr:`InverseProblem.result`.
+:func:`solve` solves a :class:`Problem` with a method and returns a
+:class:`Posterior`. Each method declares its options once (for ``"analytic"``,
+:class:`~fips.solve.AnalyticOptions`), and an unknown method or option raises
+with the names it knows. The posterior keeps the factorization of the solve:
+everything it gives is derived from it and labeled with the problem's spaces,
+nothing :math:`n \times n` is formed unless the full covariance or averaging
+kernel is asked for, and :meth:`Posterior.with_gamma` and
+:meth:`Posterior.with_data` reuse it.
 
 .. seealso::
 
@@ -20,6 +24,16 @@ Solving
    :toctree: api/
 
    solve
+   available_methods
+
+.. currentmodule:: fips.solve
+
+.. autosummary::
+   :toctree: api/
+
+   AnalyticOptions
+
+.. currentmodule:: fips
 
 Constructor
 ~~~~~~~~~~~
@@ -28,6 +42,14 @@ Constructor
 
    Posterior
 
+Inputs
+~~~~~~
+.. autosummary::
+   :toctree: api/
+
+   Posterior.problem
+   Posterior.options
+
 State estimate
 ~~~~~~~~~~~~~~
 .. autosummary::
@@ -35,7 +57,6 @@ State estimate
 
    Posterior.estimate
    Posterior.mean
-   Posterior.covariance
    Posterior.variances
    Posterior.cov
 
@@ -46,8 +67,9 @@ Observation space
 
    Posterior.modeled_obs
    Posterior.prior_modeled_obs
-   Posterior.prior_obs_covariance
+   Posterior.prior_obs_cov
    Posterior.desroziers
+   Posterior.leverage
 
 Operators
 ~~~~~~~~~
@@ -63,28 +85,19 @@ Diagnostics
    :toctree: api/
 
    Posterior.dofs
+   Posterior.chi2
    Posterior.reduced_chi2
    Posterior.r2
    Posterior.rmse
    Posterior.uncertainty_reduction
 
-Regularization
-~~~~~~~~~~~~~~
+Reusing the factorization
+~~~~~~~~~~~~~~~~~~~~~~~~~
 .. autosummary::
    :toctree: api/
 
    Posterior.with_gamma
-
-Inputs
-~~~~~~
-.. autosummary::
-   :toctree: api/
-
-   Posterior.estimator
-   Posterior.state_index
-   Posterior.obs_index
-   Posterior.state_space
-   Posterior.obs_space
+   Posterior.with_data
 
 Serialization
 ~~~~~~~~~~~~~

@@ -4,15 +4,11 @@ Base Classes
 
 .. currentmodule:: fips.base
 
-The deprecated 1D structures, :class:`~fips.Block` and :class:`~fips.Vector`,
-inherit most of their attributes and methods from these classes. A class page
-lists only what the class defines itself, and links to the rest here.
+:class:`~fips.Problem` and :class:`~fips.Posterior` save to and load from
+pickle files with the methods of this class. A class page lists only what the
+class defines itself, and links to the rest here.
 
 .. autosummary::
    :toctree: api/
 
    Pickleable
-   Structure
-   Structure1D
-   SingleBlockMixin
-   MultiBlockMixin

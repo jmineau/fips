@@ -35,7 +35,7 @@ out (:meth:`Operator.to_frame`).
    )
    H
    H["co2", "flux"].to_frame()
-   x = fips.Field(np.array([2.0, 1.0, 0.5]), H.cols)
+   x = fips.Vector(np.array([2.0, 1.0, 0.5]), H.cols)
    (H @ x).to_series()
 
 Operator
@@ -90,13 +90,3 @@ Conversion
 
    Operator.dense
    Operator.to_frame
-
-Convolution
-===========
-
-The forward model applied to a state given as a Series or a vector, by label.
-
-.. autosummary::
-   :toctree: api/
-
-   convolve

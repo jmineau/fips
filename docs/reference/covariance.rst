@@ -63,7 +63,7 @@ Covariance models
 
 A correlation model says how correlated two labels are, from the coordinates
 on some levels of their space; ``model.with_std(std)`` makes it a covariance.
-With the standard deviations as a :class:`Field`, that is a :class:`Covariance`
+With the standard deviations as a :class:`Vector`, that is a :class:`Covariance`
 at once; with a scalar or an array, a :class:`~fips.models.CovarianceModel`,
 which :meth:`~fips.models.CovarianceModel.build` puts on a space. Models add,
 and :meth:`Covariance.block_diag` takes them by block name.

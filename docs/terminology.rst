@@ -38,7 +38,7 @@ where:
 
 - :math:`x` = **state vector** (the unknowns we're solving for)
 - :math:`z` = **observations** (measured data)
-- :math:`c` = **constant** (background or offset)
+- :math:`c` = **offset** (a background; ``offset`` in :class:`~fips.Problem`)
 - :math:`y` = **modeled observations** (what the forward model predicts)
 - :math:`H` = **forward operator** (maps state space → observation space)
 
@@ -186,4 +186,4 @@ Inverse Problem Terminology
 
    - :doc:`getting_started` — Quick introduction to FIPS with minimal example
    - :doc:`usage` — Detailed guide to data structures and workflows
-   - :doc:`reference/estimators` — Full mathematical details of estimators
+   - :doc:`reference/posterior` — The solve and the posterior it returns
