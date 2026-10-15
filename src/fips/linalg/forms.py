@@ -348,8 +348,10 @@ class LinearOperator(_SciPyLinearOperator):
         Return a square root :math:`L` with :math:`L L^T` equal to this symmetric positive-definite form.
 
         A diagonal form gives the diagonal of square roots, a block diagonal
-        one the root of each block; every other form the lower Cholesky
-        factor of its dense matrix, as a :class:`DenseOperator`.
+        one the root of each block, and a Kronecker one whose rows are the
+        whole product a root through its factors' Cholesky factors; every
+        other form the lower Cholesky factor of its dense matrix, as a
+        :class:`DenseOperator`.
 
         Returns
         -------
