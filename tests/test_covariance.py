@@ -626,6 +626,22 @@ class TestBlockDiagByName:
         with pytest.raises(ValueError, match="block named 'flux'"):
             Covariance.block_diag(COVS["dense"], flux=Independent().with_std(1.0))
 
+    def test_a_part_given_as_name_raises(self):
+        """``name=`` is the covariance's name: a part for a block called 'name' raises and says how."""
+        with pytest.raises(TypeError, match="block called 'name'"):
+            Covariance.block_diag(
+                name=Independent().with_std(1.0), x=Independent().with_std(2.0)
+            )
+        with pytest.raises(TypeError, match="block called 'name'"):
+            Covariance.block_diag(COVS["dense"], name=COVS["diagonal"])
+
+    def test_a_block_called_name_given_in_order(self):
+        """The way the message gives: build the part on its block, give it in order."""
+        space = Space({"name": pd.Index([1], name="i"), "x": pd.Index([2], name="i")})
+        part = Independent().with_std(1.0).build(Space({"name": space.select("name")}))
+        S = Covariance.block_diag(part, x=Independent().with_std(2.0)).build(space)
+        np.testing.assert_array_equal(S.variances.values, [1.0, 4.0])
+
 
 class TestSymmetry:
     """A covariance refuses a matrix that is not symmetric, in every way in."""

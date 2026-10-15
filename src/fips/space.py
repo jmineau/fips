@@ -300,7 +300,8 @@ class Space:
         Parameters
         ----------
         block : str
-            The name of a block.
+            The name of a block; a name that is not a string is compared as
+            one, as the space keeps it (``0`` is block ``"0"``).
 
         Returns
         -------
@@ -317,7 +318,8 @@ class Space:
         Parameters
         ----------
         block : str
-            The name of a block.
+            The name of a block; a name that is not a string is compared as
+            one (``0`` is block ``"0"``).
 
         Returns
         -------
@@ -330,8 +332,7 @@ class Space:
         KeyError
             If the space has no block of that name.
         """
-        self._position(block)
-        return self._blocks[block]
+        return self._blocks[self.names[self._position(block)]]
 
     @cached_property
     def index(self) -> pd.MultiIndex:
@@ -388,8 +389,8 @@ class Space:
         return iter(self._blocks)
 
     def __contains__(self, block: object) -> bool:
-        """Return True if the space has a block of that name."""
-        return block in self._blocks
+        """Return True if the space has a block of that name (compared as a string, as the names are kept)."""
+        return str(block) in self._blocks
 
     def __eq__(self, other: object) -> bool:
         """Return True if `other` has the same blocks, in the same order, with equal labels."""
@@ -417,10 +418,15 @@ class Space:
         self._blocks = state["blocks"]
         self._levels = state["levels"]
 
-    def _position(self, block: str) -> int:
-        """Return the position of `block` among the blocks, or raise a KeyError naming them."""
+    def _position(self, block: Hashable) -> int:
+        """
+        Return the position of `block` among the blocks, or raise a KeyError naming them.
+
+        The name is compared as a string, as the space keeps it: block ``0``
+        is block ``"0"``.
+        """
         try:
-            return self.names.index(block)
+            return self.names.index(str(block))
         except ValueError:
             raise KeyError(
                 f"No block named {block!r}; the blocks are {_listed(self.names)}."

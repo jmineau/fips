@@ -98,6 +98,23 @@ class TestFormulas:
             Exponential("t", "3h").correlation(_coords(t=HOURS)), expected, rtol=1e-15
         )
 
+    def test_timedelta(self):
+        """A timedelta level (lags) is a time, as a datetime level is."""
+        lags = pd.to_timedelta([0.0, 1.5, 3.0, 10.0], unit="h")
+        hours = np.array([0.0, 1.5, 3.0, 10.0])
+        expected = np.exp(-np.abs(hours[:, None] - hours[None, :]) / 2)
+        np.testing.assert_allclose(
+            Exponential("lag", "2h").correlation(_coords(lag=lags)),
+            expected,
+            rtol=1e-15,
+        )
+        space = Space({"co2": pd.TimedeltaIndex(["0h", "1h", "2h"], name="lag")})
+        C = Exponential("lag", "1h").with_std(1.0).build(space).dense()
+        k = np.arange(3.0)
+        np.testing.assert_allclose(
+            C, np.exp(-np.abs(k[:, None] - k[None, :])), rtol=1e-15
+        )
+
     def test_euclidean_along_two_levels(self):
         """Two numeric levels: the straight-line distance."""
         c = _coords(x=[0.0, 3.0, 0.0], y=[0.0, 4.0, 1.0])
@@ -270,7 +287,12 @@ def test_matern_of_half_on_the_great_circle():
     ("model", "coords", "match"),
     [
         (Exponential("t", 1.0), _coords(t=HOURS), "scale that is a time"),
-        (Exponential("x", "1D"), X, "do not hold datetimes"),
+        (Exponential("x", "1D"), X, "do not hold datetimes or timedeltas"),
+        (
+            Exponential("t", 1.0),
+            _coords(t=pd.to_timedelta([0, 1], unit="h")),
+            "holds timedeltas",
+        ),
         (Exponential(["t", "u"], "1D"), _coords(t=HOURS, u=HOURS), "one level"),
     ],
 )
