@@ -353,15 +353,12 @@ class Posterior:
                 f"An aggregation is an Operator, not {type(W).__name__}: build one "
                 "with Operator.from_frame or Operator.from_blocks."
             )
-        state = self._problem.prior.space
-        c = state._align(
-            W.cols,
-            "the columns of the aggregation",
-            "The columns of the aggregation and the state",
+        return W._on(
+            W.rows,
+            self._problem.prior.space,
+            "the aggregation",
+            ("its rows", "the state"),
         )
-        if np.array_equal(c, np.arange(len(c))):
-            return W.data
-        return W.data._select(np.arange(W.shape[0]), c)
 
     @cached_property
     def _cov(self) -> Covariance:
