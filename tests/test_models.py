@@ -1,5 +1,5 @@
 """
-Tests for the covariance models (``fips.models``).
+Tests for the covariance models (``fips.covariance.models``).
 
 ``with_std`` (a Vector gives a Covariance at once, a scalar or an array a model),
 ``build`` on a space (the levels read, the order of the space, the form kept),
@@ -21,9 +21,13 @@ from fips import (
     Space,
     Vector,
 )
-from fips.kronecker import KroneckerOperator
-from fips.linalg import DenseOperator, DiagonalOperator, SparseOperator
-from fips.models import CovarianceModel
+from fips.covariance import CovarianceModel
+from fips.linalg import (
+    DenseOperator,
+    DiagonalOperator,
+    KroneckerOperator,
+    SparseOperator,
+)
 
 X = pd.Index([0.0, 1.0, 2.0, 4.0], name="x")
 SPACE = Space({"flux": X})

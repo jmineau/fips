@@ -34,9 +34,8 @@ from fips import (
     available_methods,
     solve,
 )
-from fips.kronecker import KroneckerOperator
-from fips.linalg import DiagonalOperator, SparseOperator
-from fips.solve import _METHODS
+from fips.linalg import DiagonalOperator, KroneckerOperator, SparseOperator
+from fips.methods import _METHODS
 
 METHODS = available_methods()
 

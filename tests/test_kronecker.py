@@ -31,18 +31,18 @@ from fips import (
     Space,
     Vector,
 )
-from fips.correlation import CorrelationModel
-from fips.kronecker import KroneckerOperator
+from fips.covariance import CorrelationModel
+from fips.covariance.distances import haversine_matrix
 from fips.linalg import (
     BlockDiagonalOperator,
     DenseOperator,
     DiagonalOperator,
+    KroneckerOperator,
     LinearOperator,
     SparseOperator,
     as_linear_operator,
     dottest,
 )
-from fips.metrics import haversine_matrix
 
 TIMES = pd.date_range("2024-01-01", periods=4, freq="D")
 LATS = [40.0, 40.5, 41.0]
@@ -435,7 +435,7 @@ def test_products_with_arrays(which):
 @FORMS
 def test_products_in_column_blocks(which, monkeypatch):
     """A product with more columns than one block holds runs block by block."""
-    monkeypatch.setattr("fips.kronecker._CHUNK", 50)  # two columns at a time
+    monkeypatch.setattr("fips.linalg.kronecker._CHUNK", 50)  # two columns at a time
     op = OPS[which]
     X = np.random.default_rng(2).standard_normal((op.shape[0], 7))
     np.testing.assert_allclose(op @ X, op.dense() @ X, rtol=1e-13, atol=1e-13)
@@ -480,7 +480,7 @@ def test_solve_of_a_thin_subset_is_dense(caplog):
     rows = rng.permutation(30)[:10]  # N d = 30 * 20 > n^2 = 100
     op = KroneckerOperator(factors, std=2.0, positions=np.unravel_index(rows, (6, 5)))
     b = rng.standard_normal(10)
-    with caplog.at_level(logging.INFO, logger="fips.kronecker"):
+    with caplog.at_level(logging.INFO, logger="fips.linalg.kronecker"):
         x = op.solve(b)
     assert "densely" in caplog.text
     assert "_complement" not in vars(op)
@@ -507,14 +507,14 @@ def test_subset_solve_on_ill_conditioned_factors_falls_back(caplog):
         [_gauss(30, 3.0), _gauss(30, 3.0)], positions=np.unravel_index(keep, (30, 30))
     )
     S, b = op.dense(), rng.standard_normal(700)
-    with caplog.at_level(logging.WARNING, logger="fips.kronecker"):
+    with caplog.at_level(logging.WARNING, logger="fips.linalg.kronecker"):
         x = op.solve(b)
     assert "lost accuracy" in caplog.text
     eps = np.finfo(float).eps
     assert _backward_error(S, x, b) < 700 * eps
     # The same factors on the whole grid, and a well-conditioned subset: no fallback
     caplog.clear()
-    with caplog.at_level(logging.WARNING, logger="fips.kronecker"):
+    with caplog.at_level(logging.WARNING, logger="fips.linalg.kronecker"):
         KroneckerOperator([_gauss(30, 3.0), _gauss(30, 3.0)]).solve(np.ones(900))
         good = KroneckerOperator(
             [_gauss(30, 1.0), _gauss(30, 1.0)],

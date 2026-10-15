@@ -119,8 +119,12 @@ def constructors(monkeypatch):
     the forms it computes without them (``_adopt``), so a test that runs fips's
     own steps expects the list to stay empty.
     """
-    from fips.kronecker import KroneckerOperator
-    from fips.linalg import DenseOperator, DiagonalOperator, SparseOperator
+    from fips.linalg import (
+        DenseOperator,
+        DiagonalOperator,
+        KroneckerOperator,
+        SparseOperator,
+    )
 
     calls: list[str] = []
     for cls in (DenseOperator, SparseOperator, DiagonalOperator, KroneckerOperator):
