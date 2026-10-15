@@ -92,6 +92,7 @@ Diagnostics
    Posterior.r2
    Posterior.rmse
    Posterior.uncertainty_reduction
+   Posterior.summary
 
 Reusing the factorization
 ~~~~~~~~~~~~~~~~~~~~~~~~~

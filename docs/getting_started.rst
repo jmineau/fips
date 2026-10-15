@@ -194,9 +194,10 @@ builds a model given as ``prior_cov`` on the prior's space itself):
 What's Next
 -----------
 
-- **Domain-specific problems** — see :ref:`flux-inversion` in the User Guide for
-  the ready-made :class:`~fips.problems.flux.FluxProblem` subclass and its
-  :class:`~fips.problems.flux.pipeline.FluxInversionPipeline`.
-- **Pipelines** — learn how to build your own
-  :class:`~fips.pipeline.InversionPipeline` subclasses in :doc:`usage`.
+- **A flux inversion** — see :ref:`flux-inversion` in the User Guide: the
+  blocks of a problem and of its posterior read by name, and their plots
+  (:func:`~fips.visualization.plot_map`, :func:`~fips.visualization.plot_obs`).
+- **Repeated inversions** — a workflow as functions, and
+  :meth:`~fips.Posterior.summary` to stack the diagnostics of many solves, in
+  :doc:`usage`.
 - **Full API** — every class and method is documented in :doc:`reference/index`.

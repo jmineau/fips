@@ -13,7 +13,5 @@ This reference provides detailed documentation for all public classes, functions
    problem
    aggregate
    posterior
-   pipeline
    base
    utilities/index
-   problems/index

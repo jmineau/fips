@@ -22,7 +22,7 @@ the orientation file it should read.
 4. Install dependencies:
    ```bash
    # Using uv (recommended - faster):
-   uv sync  # fips, its flux extra, and the dev tools
+   uv sync  # fips, its viz extra, and the dev tools
 
    # OR using pip:
    pip install --group dev -e .
