@@ -230,6 +230,8 @@ class Operator:
         :class:`~fips.linalg.DiagonalOperator`); a form of :mod:`fips.linalg`
         already holds its own copy and is kept as it is. A DataFrame is
         refused, since its labels would be ignored: use :meth:`from_frame`.
+        So is an :class:`Operator`: use :meth:`align` to put it on other
+        labels, or its :attr:`data` for the matrix by position.
     rows : Space
         The labels of the rows.
     cols : Space
@@ -241,7 +243,8 @@ class Operator:
     Raises
     ------
     TypeError
-        If `data` is a pandas object, or `rows` or `cols` is not a Space.
+        If `data` is a pandas object or an :class:`Operator`, or `rows` or
+        `cols` is not a Space.
     ValueError
         If the shape of `data` does not match the spaces, or it stores a NaN.
 
@@ -281,6 +284,13 @@ class Operator:
                 f"{type(self).__name__} takes the matrix as an array, in the "
                 "spaces' order. Build one from a DataFrame with "
                 f"{type(self).__name__}.from_frame, which reads its labels."
+            )
+        if isinstance(data, Operator):
+            raise TypeError(
+                f"{type(self).__name__} takes a matrix, not a labeled "
+                f"{type(data).__name__}, whose labels would be ignored. To put an "
+                "operator on other labels (in any order), use op.align(rows, "
+                "cols); for its matrix by position, op.data."
             )
         for space, what in ((rows, "rows"), (cols, "cols")):
             if not isinstance(space, Space):

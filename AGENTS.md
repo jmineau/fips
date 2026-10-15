@@ -512,8 +512,8 @@ stay there too. A statistic that any problem could use goes on `Posterior`.
 ## Gotchas
 
 - **An `Operator` takes its matrix by position, a DataFrame by
-  `from_frame`.** The constructor refuses a pandas object, since its labels
-  would be ignored; a diagonal is `Covariance.diagonal(values, space)` (kept
+  `from_frame`.** The constructor refuses a pandas object or an `Operator`
+  (and `Vector` a `Vector`), since its labels would be ignored; a diagonal is `Covariance.diagonal(values, space)` (kept
   as a `DiagonalOperator`). An `Operator` multiplies an `Operator` or a
   `Vector`, never an array (no labels to check): compute by position with
   `op.data`.

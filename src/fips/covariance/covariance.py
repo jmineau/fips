@@ -118,7 +118,9 @@ class Covariance(Operator):
     Raises
     ------
     TypeError
-        If `data` is a pandas object or `space` is not a Space.
+        If `data` is a pandas object or an :class:`~fips.Operator` (its
+        labels would be ignored: use ``cov.align(space, space)``, or
+        ``cov.data`` for the matrix), or `space` is not a Space.
     ValueError
         If the matrix does not have one row and one column per label, it
         stores a NaN, or a dense or sparse matrix is not symmetric: its
