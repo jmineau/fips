@@ -104,38 +104,75 @@ gives its :attr:`~fips.Covariance.variances`, :meth:`~fips.Covariance.solve`,
 :meth:`~fips.Covariance.logdet`, :meth:`~fips.Covariance.quadratic_form` (of
 its inverse) and :meth:`~fips.Covariance.sqrt`.
 
-A covariance that is a product of correlations along the levels (time, and
-space), as :class:`~fips.covariance.KroneckerError` builds, can be kept as its
-factors: :meth:`~fips.covariance.KroneckerError.operator` gives a
-:class:`~fips.kronecker.KroneckerOperator`, which never forms the
-:math:`n \times n` matrix, and :class:`~fips.Covariance` labels it. The rows can
-be any subset of the product, in any order. The solve computes :math:`H S_0`
-and :math:`H S_0 H^T` from the factors, and ``dense()`` gives the matrix:
+.. _covariance-models:
+
+Covariance models
+-----------------
+
+A covariance is usually written as a correlation model and the standard
+deviations. A model says how correlated two labels are from their
+coordinates: :class:`~fips.Exponential`, :class:`~fips.Gaussian` and
+:class:`~fips.Matern` decay with the distance along some levels (a time, a
+straight line, or a distance on the Earth), :class:`~fips.Constant` is one,
+:class:`~fips.Independent` is the identity, and :class:`~fips.Kronecker`
+multiplies models on separate levels. ``model.with_std(std)`` is the
+covariance: given the standard deviations as a :class:`~fips.Field`, it is a
+:class:`~fips.Covariance` at once; given a scalar or an array, it is a
+:class:`~fips.models.CovarianceModel`, which ``build(space)`` puts on a space.
+Models add (``a + b``), and :meth:`~fips.Covariance.block_diag` takes them by
+block name.
+
+``within=`` keeps a model inside groups of labels and makes it zero between
+them: ``within=["site", "obs_time.date"]`` correlates the observations of one
+site on one day only (``"obs_time.date"`` is the date of the ``obs_time``
+level), and ``within="time.hour"`` correlates only the same hour of day. The
+matrix is then sparse.
 
 .. ipython:: python
 
-   from fips.covariance import KroneckerError
-   from fips.kernels import GridSpatialDecay, GridTimeDecay
+   obs = pd.MultiIndex.from_product(
+       [["A", "B"], pd.date_range("2024-01-01 21:00", periods=4, freq="h")],
+       names=["site", "obs_time"],
+   )
+   obs_space = fips.Space({"co2": obs})
+   S_z = fips.Independent().with_std(0.1) + fips.Exponential(
+       "obs_time", "2h", within=["site", "obs_time.date"]
+   ).with_std(0.5)
+   S_z
+   S_z.build(obs_space).dense().round(3)
+
+A :class:`~fips.Kronecker` model is kept as its factors: its covariance holds
+a :class:`~fips.kronecker.KroneckerOperator`, which never forms the
+:math:`n \times n` matrix. Each factor is evaluated once, on the unique
+coordinates of its levels; the rows can be any subset of the product, in any
+order. The solve computes :math:`H S_0` and :math:`H S_0 H^T` from the
+factors, and ``dense()`` gives the matrix:
+
+.. ipython:: python
 
    times = pd.date_range("2024-01-01", periods=4, freq="7D")
    state = pd.MultiIndex.from_product(
        [["flux"], times, [40.5, 40.6], [-112.0, -111.9]],
        names=["block", "time", "lat", "lon"],
    )
-   error = KroneckerError(
-       "prior_error",
-       0.25,
-       [("time", GridTimeDecay("14D")), (["lat", "lon"], GridSpatialDecay("lat", "lon", 10.0))],
+   model = fips.Kronecker(
+       fips.Exponential("time", "14D"),
+       fips.Exponential(["lat", "lon"], 10.0, metric="haversine"),
    )
-   S_0 = fips.Covariance(error.operator(state), fips.Space.from_index(state))
+   S_0 = model.with_std(0.5).build(fips.Space.from_index(state))
    [C.shape for C in S_0.data.factors]
-   np.allclose(S_0.dense(), error.build(state).to_numpy())
+   S_0.dense().shape
+
+``metric="haversine"`` measures latitude and longitude along the great
+circle, in km; ``metric="chordal"`` through the Earth, which a
+:class:`~fips.Gaussian` or :class:`~fips.Matern` needs to stay
+positive-definite.
 
 An :class:`~fips.InverseProblem` holds the spaces already, so its
 ``prior_error`` and ``modeldata_mismatch`` can be given as a scalar variance,
 as a Series or Vector of variances, or as a form of :mod:`fips.linalg` (such
-as ``error.operator(state)``), which it labels with the prior's or the
-observations' labels.
+as ``S_0.data``), which it labels with the prior's or the observations'
+labels.
 
 
 Sparse Matrices
@@ -200,9 +237,12 @@ covariance (``post.covariance``) and averaging kernel
    import numpy as np
    import pandas as pd
    import fips
-   from fips import InverseProblem
-   from fips.covariance import KroneckerError
-   from fips.kernels import GridSpatialDecay, GridTimeDecay
+   from fips import Exponential, InverseProblem, Kronecker, Space
+
+The state is six weeks of fluxes on four cells, with a prior error correlated
+in time and space:
+
+.. ipython:: python
 
    rng = np.random.default_rng(0)
    times = pd.date_range("2024-01-01", periods=6, freq="7D")
@@ -212,11 +252,10 @@ covariance (``post.covariance``) and averaging kernel
    )
    obs = pd.MultiIndex.from_product([["conc"], range(15)], names=["block", "obs_id"])
    H = pd.DataFrame(rng.uniform(0, 1, (15, len(state))), index=obs, columns=state)
-   prior_error = KroneckerError(
-       "prior_error",
-       0.25,
-       [("time", GridTimeDecay("14D")), (["lat", "lon"], GridSpatialDecay("lat", "lon", 10.0))],
-   ).operator(state)
+   prior_error = Kronecker(
+       Exponential("time", "14D"),
+       Exponential(["lat", "lon"], 10.0, metric="haversine"),
+   ).with_std(0.5).build(Space.from_index(state))
    problem = InverseProblem(
        obs=pd.Series(rng.normal(3.0, 1.0, 15), index=obs),
        prior=pd.Series(1.0, index=state),

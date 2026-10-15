@@ -173,6 +173,23 @@ everything to :class:`~fips.InverseProblem` as before:
    )
    S_0.variances.to_series()
 
+Correlated errors are written as a correlation model with standard deviations
+(:ref:`covariance-models` in the User Guide has them all). Here the flux errors
+of neighboring cells are correlated over 1.5 cells, and the parts are named by
+block and put on the prior's space with ``build``:
+
+.. ipython:: python
+
+   from fips import Exponential, Independent
+
+   cells = pd.Index([0.0, 1.0], name="cell_x")
+   flux_space = Space({"flux": cells, "bias": bias_idx})
+   model = Covariance.block_diag(
+       flux=Exponential("cell_x", 1.5).with_std(1.0),
+       bias=Independent().with_std(0.1),
+   )
+   model.build(flux_space).dense().round(3)
+
 
 What's Next
 -----------

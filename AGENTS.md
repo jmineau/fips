@@ -31,19 +31,25 @@ PyPI name and import name are both `fips`. Source lives in `src/fips/`.
 
 ```
 src/fips/
-  __init__.py        public exports (Space, Field, Operator, Covariance,
-                     Block, Vector, Estimator, InverseProblem, Posterior,
-                     solve, InversionPipeline, convolve)
+  __init__.py        public exports (Space, Field, Operator, Covariance, the
+                     covariance models, Block, Vector, Estimator,
+                     InverseProblem, Posterior, solve, InversionPipeline,
+                     convolve)
   space.py           Space — ordered named blocks, the padded MultiIndex,
                      select, from_index, exact align, round_labels
   field.py           Field — values on a Space (read-only float array)
   operator.py        Operator — a matrix (a linalg form) with a Space on each
                      axis: from_frame, from_blocks, op[r, c], @ / + by exact
                      join, align, to_frame; convolve(state, H)
-  covariance.py      Covariance — Operator on one space: diagonal, block_diag,
-                     variances, solve, logdet, quadratic_form, sqrt; and the
-                     error-component builders (DiagonalError, BlockDecayError,
-                     KroneckerError, CovarianceBuilder) until plan step 2.3
+  covariance.py      Covariance — Operator on one space: diagonal, block_diag
+                     (in order, or by block name with models), variances,
+                     solve, logdet, quadratic_form, sqrt
+  correlation.py     CorrelationModel (base; with_std), Independent, Kronecker
+  kernels.py         the kernels: Exponential, Gaussian, Matern, Constant, and
+                     within= (zero between groups of labels, sparse)
+  models.py          CovarianceModel — a covariance waiting for its space
+                     (with_std of a scalar or array, sums, block_diag with a
+                     model); build(space) gives the Covariance
   linalg.py          the unlabeled forms the solvers compute with:
                      LinearOperator (scipy LinearOperator) and Dense-,
                      Sparse-, Diagonal-, BlockDiagonalOperator;
@@ -67,8 +73,7 @@ src/fips/
   aggregators.py     Time/space binning (e.g. integrate_over_time_bins)
   filters.py         Selection helpers (e.g. enough_obs_per_interval)
   indexes.py         overlap check and round_index
-  kernels.py         Covariance kernels (exponential decay, time decay, ...)
-  metrics.py         haversine_matrix, time_diff_matrix
+  metrics.py         haversine_matrix, chordal_matrix, time_diff_matrix
   visualization.py   Generic plotting helpers
   py.typed           ships type hints
   problems/          domain-specific problem subpackages
@@ -101,6 +106,7 @@ From `fips.__init__`:
 | `Block`, `Vector` | 1D labeled data (state vector, observations); deprecated for `Field` |
 | `Operator` | a matrix with a `Space` on each axis, in its cheapest form (H, an aggregation) |
 | `Covariance` | an `Operator` from a space to itself (`S_0`, `S_z`), with solve/logdet/sqrt |
+| `Exponential`, `Gaussian`, `Matern`, `Constant`, `Independent`, `Kronecker` | correlation models; `model.with_std(std)` is a covariance |
 | `convolve` | apply H to a state vector given as a Series, by label |
 | `Estimator`, `available_estimators` | swappable solvers via registry |
 | `InverseProblem` | orchestrator; `solve()` keeps a `Posterior` as `result` and returns the problem |
@@ -117,12 +123,16 @@ From `fips.__init__`:
    state_block): frame})` stitches a block-structured Jacobian together;
    `Operator(matrix, rows, cols)` labels a matrix you have (a SciPy sparse one
    stays sparse); `Operator.from_frame` reads a labeled DataFrame.
-3. **Build covariances.** `Covariance.diagonal(variances, space)`,
-   `Covariance.block_diag(...)`, or a frame from the builders in
-   `covariance.py` (`Covariance.from_frame`). `H`, `S_0` and `S_z` may each be
-   dense or sparse, and the solve keeps each in its form (see "Sparse paths").
-   A Kronecker prior error stays as its factors:
-   `Covariance(KroneckerError(...).operator(index), Space.from_index(index))`.
+3. **Build covariances from models.** A correlation model and standard
+   deviations: `Kronecker(Exponential("time", "30D"), Exponential(["lat",
+   "lon"], 20.0, metric="haversine")).with_std(std)` (a Kronecker prior error
+   stays as its factors), `Independent().with_std(s) + Exponential("obs_time",
+   "2.8h", within=["site", "obs_time.date"]).with_std(t)`, parts by block in
+   `Covariance.block_diag(flux=..., bias=...)`; `.build(space)` puts a model on
+   the labels (a `Field` std gives the `Covariance` at once). Or
+   `Covariance.diagonal(variances, space)` and `Covariance.from_frame`. `H`,
+   `S_0` and `S_z` may each be dense or sparse, and the solve keeps each in its
+   form (see "Sparse paths").
 4. **Hand everything to `InverseProblem`.** It validates index alignment;
    `fips.solve(problem)` picks an estimator from `ESTIMATOR_REGISTRY` and
    returns a `Posterior` (estimate, covariance, diagnostics such as
@@ -184,9 +194,20 @@ From `fips.__init__`:
   The estimator keeps its matrices as forms under private names (`_H_op`,
   `_S_0_op`, `_S_z_op`, `_S_z_orig_op`) and computes only with those; its
   public `H`, `S_0` and `S_z` give an array (read-only) or a CSR matrix, so
-  never compute with them inside the estimator. A `KroneckerOperator`'s
-  `dense()` is the same number for number as `KroneckerError.build` (the
-  position mapping in `_kronecker_marginals`).
+  never compute with them inside the estimator.
+- **Covariance models.** A model is a frozen dataclass whose parameters are
+  checked in `__init__`; it reads its levels from the labels of the space it
+  is built on (`models._coords`, which raises when a block lacks one) and gives
+  its correlation in its cheapest form (`_form`: `Independent` a diagonal, a
+  kernel `within` groups sparse, `Kronecker` a `KroneckerOperator` with each
+  factor evaluated once on the unique coordinates of its levels, in first
+  appearance order). `with_std` scales that form without forming the matrix
+  (`models._scaled`). Each covariance the removed builders made is pinned in
+  `tests/test_covariance.py` (`tests/data/old_builders.npz`, written on pandas
+  3; bit for bit there, and to the last bit on pandas 2, whose time
+  differences are in nanoseconds): keep
+  the order of the products (`(std_i * C_ij) * std_j`) and the distance
+  functions of `metrics.py` when changing a kernel.
 - **`Pickleable` contract.** Anything user-facing should round-trip through
   pickle. New stateful classes should inherit from `Pickleable` (in `base.py`)
   or document why not.
@@ -361,7 +382,7 @@ that come close use dense `inv`. So:
 - **pylops is read, not installed or copied** (LGPL; decided 2026-10-14): fips
   writes the few operators it needs on `LinearOperator`, as `KroneckerOperator`.
 - **Optional, not required:** `GSTools` (covariance models, only if
-  `kernels.py` outgrows exponential decay). If adopted, it goes in an extra,
+  `kernels.py` outgrows its exponential, Gaussian and Matérn kernels). If adopted, it goes in an extra,
   never in `[project]` dependencies.
 - **Never write a sampler.** If MCMC lands, use PyMC or CUQIpy for
   sampling and ArviZ for diagnostics, as `openghg_inversions` does. Same for a

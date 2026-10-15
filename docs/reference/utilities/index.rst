@@ -12,6 +12,5 @@ Utilities are functions and classes that are not specific to a particular proble
    aggregators
    filters
    indexes
-   kernels
    metrics
    visualization

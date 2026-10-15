@@ -58,55 +58,79 @@ Linear algebra
    Covariance.sqrt
 
 
-.. currentmodule:: fips.covariance
-
-ErrorComponents
-===============
-
-.. autosummary::
-   :toctree: api/
-
-   ErrorComponent
-   DiagonalError
-   BlockDecayError
-   KroneckerError
-
-Build covariance matrix
-~~~~~~~~~~~~~~~~~~~~~~~
-.. autosummary::
-   :toctree: api/
-
-   ErrorComponent.build
-
-Binary operations
-~~~~~~~~~~~~~~~~~
-.. autosummary::
-   :toctree: api/
-
-    ErrorComponent.__add__
-
-
-CovarianceBuilder
+Covariance models
 =================
 
-Constructor
-~~~~~~~~~~~
+A correlation model says how correlated two labels are, from the coordinates
+on some levels of their space; ``model.with_std(std)`` makes it a covariance.
+With the standard deviations as a :class:`Field`, that is a :class:`Covariance`
+at once; with a scalar or an array, a :class:`~fips.models.CovarianceModel`,
+which :meth:`~fips.models.CovarianceModel.build` puts on a space. Models add,
+and :meth:`Covariance.block_diag` takes them by block name.
+
+.. ipython:: python
+
+   prior = fips.Kronecker(
+       fips.Exponential("time", "30D"),
+       fips.Exponential(["lat", "lon"], 20.0, metric="haversine"),
+   )
+   prior
+   mdm = fips.Independent().with_std(0.01) + fips.Exponential(
+       "obs_time", "2.8h", within=["site", "obs_time.date"]
+   ).with_std(0.02)
+   mdm
+
+Kernels
+~~~~~~~
 .. autosummary::
-    :toctree: api/
+   :toctree: api/
 
-    CovarianceBuilder
+   Exponential
+   Gaussian
+   Matern
+   Constant
 
-Build covariance matrix
+Combinations
+~~~~~~~~~~~~
+.. autosummary::
+   :toctree: api/
+
+   Independent
+   Kronecker
+
+Parameters
+~~~~~~~~~~
+.. autosummary::
+   :toctree: api/
+
+   Exponential.levels
+   Exponential.scale
+   Exponential.metric
+   Exponential.within
+   Matern.nu
+   Constant.within
+   Kronecker.factors
+   Kronecker.levels
+
+.. currentmodule:: fips.correlation
+
+The base of every model
 ~~~~~~~~~~~~~~~~~~~~~~~
 .. autosummary::
-    :toctree: api/
+   :toctree: api/
 
-    CovarianceBuilder.build
+   CorrelationModel
+   CorrelationModel.levels
+   CorrelationModel.correlation
+   CorrelationModel.with_std
 
-Binary operations
-~~~~~~~~~~~~~~~~~
+.. currentmodule:: fips.models
+
+A covariance waiting for its space
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 .. autosummary::
-    :toctree: api/
+   :toctree: api/
 
-    CovarianceBuilder.__add__
-    CovarianceBuilder.__radd__
+   CovarianceModel
+   CovarianceModel.build
+   CovarianceModel.__add__

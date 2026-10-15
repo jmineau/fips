@@ -148,6 +148,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   form of `fips.linalg` (a Kronecker covariance that holds its whole product
   gives its log-determinant from the factors).
   ([#82](https://github.com/jmineau/fips/issues/82))
+- **Covariance models**, exported from `fips`: a correlation model says how
+  correlated two labels are from their coordinates, and `model.with_std(std)`
+  is the covariance. `Exponential`, `Gaussian` and `Matern` decay with the
+  distance along some levels: one datetime level with a time scale (`"30D"`),
+  numeric levels (a straight line), or latitude and longitude with
+  `metric="haversine"` (great-circle) or `metric="chordal"` (through the Earth,
+  which `Gaussian` and `Matern` need to stay positive-definite); `Constant` is
+  one, `Independent` the identity (by label, so a nugget is
+  `+ Independent().with_std(s)`), and `Kronecker(a, b, ...)` the product of
+  models on separate levels, kept as a `KroneckerOperator` for any row order
+  and subset. `within=` keeps a model inside groups of labels and makes it
+  zero between them, as a sparse matrix: `within=["site", "obs_time.date"]`
+  (the same site and day; `"level.attribute"` is an attribute of a datetime
+  level) or `within="time.hour"` (the same hour of day). Parameters are checked
+  when a model is made (a scale that is not positive, a Gaussian on the great
+  circle, `nu` outside (0, 50] raise). `with_std` takes the standard deviations
+  as a `Field` (the `Covariance` on its space, at once) or as a scalar or an
+  array in the space's order (a `fips.models.CovarianceModel`, which
+  `build(space)` puts on a space). Covariance models and covariances add, and
+  `Covariance.block_diag` takes parts by block name as well as in order:
+  `Covariance.block_diag(flux=Kronecker(...).with_std(std),
+  bias=Independent().with_std(0.1)).build(state_space)`. A new model is a
+  frozen dataclass subclass of `fips.correlation.CorrelationModel` with
+  `levels` and `correlation(coords)`. Each covariance the removed builders
+  made comes out of a model with the same numbers, bit for bit.
+  ([#82](https://github.com/jmineau/fips/issues/82))
+- `fips.metrics.chordal_matrix`, the pairwise chordal distance between points
+  on the Earth, in km. ([#82](https://github.com/jmineau/fips/issues/82))
 
 ### Changed
 
@@ -166,6 +194,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   (or `Covariance`) for one, and a dense DataFrame for a DataFrame.
   `FluxProblem.jacobian` and the other matrix accessors give the block as an
   `Operator`. ([#82](https://github.com/jmineau/fips/issues/82))
+- `Operator + x` for an `x` that is not an `Operator` raises Python's own
+  `TypeError` ("unsupported operand"), so that a covariance model can be added
+  to a `Covariance` from either side. ([#82](https://github.com/jmineau/fips/issues/82))
 - **Phase 1's unlabeled operators moved to `fips.linalg`**, and `Operator` now
   names the labeled class: `fips.operator.Operator` is
   `fips.linalg.LinearOperator`, `as_operator` is `as_linear_operator`, and
@@ -338,6 +369,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   | `S.variances` (a `Vector`) | `S.variances` (a `Field`) |
   | `S.force_symmetry()` | `(S + S.T) * 0.5` |
   | `H.convolve(x)` | `fips.convolve(x, H)`, or `H @ field` |
+
+- **The error components and the kernel factories**: `ErrorComponent`,
+  `DiagonalError`, `BlockDecayError`, `KroneckerError` and `CovarianceBuilder`
+  (`fips.covariance`), and `ConstantCorrelation`, `RaggedTimeDecay`,
+  `GridTimeDecay` and `GridSpatialDecay` (`fips.kernels`). The covariance
+  models replace them; each gives the matrix the builder did, bit for bit. A
+  model takes standard deviations where a component took variances, and an
+  array of them in the space's order where a component joined a Series of
+  variances on some of the index's levels (filling the rest with zeros): join
+  it yourself, `np.sqrt(variances.reindex(...).to_numpy())`. A kernel that was
+  any function of the coordinates is a subclass of `CorrelationModel`.
+  ([#82](https://github.com/jmineau/fips/issues/82))
+
+  **Migration** (`v` variances, `s = np.sqrt(v)`, `space` the labels):
+
+  | Removed | Use |
+  |---|---|
+  | `DiagonalError(name, v).build(index)` | `Independent().with_std(s).build(space)` (or `Covariance.diagonal(v, space)`) |
+  | `BlockDecayError(name, v, groupers, ConstantCorrelation())` | `Constant(within=groupers).with_std(s)` |
+  | `BlockDecayError(name, v, groupers, RaggedTimeDecay("obs_time", "2.8h"))` | `Exponential("obs_time", "2.8h", within=groupers).with_std(s)` |
+  | a grouper `index.get_level_values("obs_time").date` | `"obs_time.date"` in `within` |
+  | `KroneckerError(name, v, [("time", GridTimeDecay("30D")), (["lat", "lon"], GridSpatialDecay("lat", "lon", 20.0))])` | `Kronecker(Exponential("time", "30D"), Exponential(["lat", "lon"], 20.0, metric="haversine")).with_std(s)` |
+  | `KroneckerError(...).build(index)` | `model.with_std(s).build(space).dense()` |
+  | `KroneckerError(...).operator(index)` | `model.with_std(s).build(space).data` |
+  | `CovarianceBuilder([a, b, c]).build(index)`, `a + b` | `(a + b + c).build(space)` |
+  | `ConstantCorrelation()` | `Constant()` |
+  | `GridTimeDecay(scale)`, `RaggedTimeDecay(level, scale)` | `Exponential(level, scale)` |
+  | `GridSpatialDecay("lat", "lon", scale)` | `Exponential(["lat", "lon"], scale, metric="haversine")` |
+  | a `decay_func` | `Gaussian`, `Matern`, or a `CorrelationModel` subclass |
+  | `BlockDecayError.build(index, n_jobs=...)` | (none: `build` is sequential and sparse) |
   | `m.to_file(path)`, `Matrix.from_file(path)` | `pickle` |
   | `fips.operator.Operator`, `as_operator` | `fips.linalg.LinearOperator`, `as_linear_operator` |
   | `fips.covariance.KroneckerOperator` | `fips.kronecker.KroneckerOperator` |
