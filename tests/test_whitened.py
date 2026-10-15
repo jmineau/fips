@@ -10,6 +10,7 @@ nothing ``n x n`` is allocated unless the full covariance or averaging kernel
 is read.
 """
 
+import copy
 import logging
 import pickle
 import tracemalloc
@@ -257,6 +258,26 @@ def test_with_data_is_a_fresh_solve(form, gamma):
     for name, value in _outputs(swept).items():
         _close(value, fresh[name], f"{name}, with_data")
     np.testing.assert_array_equal(post.problem.obs.values, z)
+
+
+@pytest.mark.parametrize("form", FORMS)
+def test_the_factors_are_read_only(form):
+    """No array of the factors can be written to, however the solution was made: a solve, a sweep, new data, a pickle, a copy."""
+    post = fips.solve(_problem(*_arrays(form, 6)))
+    solutions = {
+        "factor": post._solution,
+        "with_gamma": post.with_gamma(2.0)._solution,
+        "with_data": post.with_data(post.problem.obs)._solution,
+        "pickle": pickle.loads(pickle.dumps(post))._solution,
+        "deepcopy": copy.deepcopy(post._solution),
+    }
+    for how, solution in solutions.items():
+        assert isinstance(solution, Whitened)
+        for name in ("eigenvalues", "whitener", "W", "innovation", "prior_variances"):
+            array = getattr(solution, name)
+            assert not array.flags.writeable, f"{name} after {how}"
+            with pytest.raises(ValueError, match="read-only"):
+                array.fill(0.0)
 
 
 class _Counted(Problem):
