@@ -71,6 +71,14 @@ class TestConstruction:
         with pytest.raises(TypeError, match=r"v\.align\(space\).*v\.values"):
             Vector(vector, reversed_space)
 
+    def test_an_integer_block_name_reads_back(self):
+        """A block named 0 is kept as "0", and ``v[0]`` finds it."""
+        v = Vector.from_blocks(
+            {0: pd.Series([1.0, 2.0], index=pd.Index(["a", "b"], name="i"))}
+        )
+        np.testing.assert_array_equal(v[0].values, [1.0, 2.0])
+        assert v[0].space == v["0"].space
+
     def test_space_must_be_a_space(self, space):
         with pytest.raises(TypeError, match="must be a Space"):
             Vector(np.zeros(5), space.index)

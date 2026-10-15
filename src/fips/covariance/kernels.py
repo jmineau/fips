@@ -153,7 +153,7 @@ class _Decay(_Kernel):
     """A correlation that decays with the distance along some levels."""
 
     scale: "float | pd.Timedelta"
-    """The length scale, a time for a datetime level, else in the levels' units (km on the Earth)."""
+    """The length scale, a time for a datetime or timedelta level, else in the levels' units (km on the Earth)."""
     metric: str
     """How the distance is measured, ``"euclidean"``, ``"haversine"`` or ``"chordal"``."""
 
@@ -206,18 +206,23 @@ class _Decay(_Kernel):
             measure = haversine_matrix if self.metric == "haversine" else chordal_matrix
             return measure(lat, lon) / self.scale
         first = coords[self.levels[0]]
-        if pd.api.types.is_datetime64_any_dtype(first):
+        lags = pd.api.types.is_timedelta64_dtype(first)
+        if lags or pd.api.types.is_datetime64_any_dtype(first):
             if len(self.levels) != 1 or not isinstance(self.scale, pd.Timedelta):
                 raise ValueError(
-                    f"Level {self.levels[0]!r} holds datetimes: a model measures "
+                    f"Level {self.levels[0]!r} holds "
+                    f"{'timedeltas' if lags else 'datetimes'}: a model measures "
                     "time along that one level, with a scale that is a time "
                     "(as '30D')."
                 )
+            if lags:
+                t = first.to_numpy()
+                return np.abs(np.subtract.outer(t, t)) / self.scale.to_timedelta64()
             return time_diff_matrix(first) / self.scale
         if isinstance(self.scale, pd.Timedelta):
             raise ValueError(
                 f"The scale is a time, but the levels {list(self.levels)} do not "
-                "hold datetimes."
+                "hold datetimes or timedeltas."
             )
         x = coords[list(self.levels)].to_numpy(dtype=float)
         if x.shape[1] == 1:
@@ -235,12 +240,13 @@ class Exponential(_Decay):
     Parameters
     ----------
     levels : str or sequence of str
-        The levels the distance is measured along: one datetime level (a
-        time), numeric levels (a straight line), or latitude and longitude
-        with ``metric="haversine"`` or ``"chordal"``.
+        The levels the distance is measured along: one datetime or timedelta
+        level (a time), numeric levels (a straight line), or latitude and
+        longitude with ``metric="haversine"`` or ``"chordal"``.
     scale : float, str or pd.Timedelta
         The length scale :math:`\ell`, positive: a time (``"30D"``) for a
-        datetime level, else a number in the levels' units (km on the Earth).
+        datetime or timedelta level, else a number in the levels' units (km
+        on the Earth).
     within : str or sequence of str, optional
         Correlate only labels that are the same on these levels (the matrix
         is then sparse). ``"level.attribute"`` is an attribute of a datetime

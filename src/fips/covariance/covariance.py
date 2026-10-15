@@ -300,7 +300,9 @@ class Covariance(Operator):
         *covariances : Covariance
             Covariances that know their blocks, in order.
         name : str, optional
-            The covariance's name.
+            The covariance's name. So a block called ``"name"`` cannot be
+            given by keyword: build its part on the block and give the
+            Covariance in order.
         **blocks : Covariance or CovarianceModel
             Parts named by block, after the positional ones: a covariance on
             that one block, or a :class:`~fips.covariance.CovarianceModel` (as
@@ -315,6 +317,9 @@ class Covariance(Operator):
 
         Raises
         ------
+        TypeError
+            If `name` is a covariance or a model: a part for a block called
+            ``"name"``, which the keyword cannot take.
         ValueError
             If no part is given, two have a block of one name, or a covariance
             given as `block=` is on another block.
@@ -336,6 +341,13 @@ class Covariance(Operator):
         >>> model.build(S.space).variances.values
         array([4., 4., 4.])
         """
+        if isinstance(name, Covariance) or hasattr(name, "build"):
+            raise TypeError(
+                "block_diag's `name` is the covariance's name, so it cannot "
+                "take the part of a block called 'name'. Build that part on its "
+                "block (model.build(Space({'name': labels}))) and give the "
+                "Covariance in order, before the parts named by block."
+            )
         parts: list[Covariance] = []
         for part in (*covariances, *blocks.values()):
             if not isinstance(part, Covariance):
