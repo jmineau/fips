@@ -257,12 +257,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Series to put it in the state.
   ([#28](https://github.com/jmineau/fips/issues/28),
   [#82](https://github.com/jmineau/fips/issues/82))
-- **`fips.scales`**: `footprint(forward, prior)` (`|H| 1 mean(x_0)`),
-  `modeled(forward, prior)` (`|H x_0|`) and `observed(obs, offset)`
-  (`|z - c|`), each a `Vector` on the observations: the size of each
-  observation's signal, for a model-data mismatch that grows with it
-  (`Independent().with_std(Vector(0.3 * scale.values, scale.space))`).
-  ([#82](https://github.com/jmineau/fips/issues/82))
 - **`Problem.restrict(keep)`**: the problem on part of the state (a `Space`
   of some of the prior's labels), the rest held at its prior: their
   contribution `H_r x_0r` is added to the offset, and they leave the prior, the
