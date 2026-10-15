@@ -586,6 +586,74 @@ class Posterior(Pickleable):
         prior = self._problem.prior_cov.data.trace()
         return float(1 - np.sqrt(self.variances.values.sum()) / np.sqrt(prior))
 
+    def summary(self) -> pd.DataFrame:
+        """
+        Return the diagnostics of the solve as a table of one row.
+
+        Nothing is printed: the numbers are returned, and the row of one
+        posterior stacks with those of others (``pd.concat``), as in a sweep
+        over the regularization factor.
+
+        Returns
+        -------
+        pandas.DataFrame
+            One row: ``gamma`` (the regularization factor), ``n_state`` and
+            ``n_obs`` (the sizes of the state and of the observations), then
+            :attr:`dofs`, :attr:`chi2`, :attr:`reduced_chi2`, :attr:`r2`,
+            :attr:`rmse` and :attr:`uncertainty_reduction`.
+
+        See Also
+        --------
+        desroziers : The observation error variances the residuals diagnose.
+        with_gamma : The posterior with another regularization factor.
+
+        Examples
+        --------
+        >>> import numpy as np
+        >>> import pandas as pd
+        >>> import fips
+        >>> cells = pd.Index(["a", "b"], name="cell")
+        >>> obs_id = pd.Index(["o1", "o2", "o3"], name="obs_id")
+        >>> prior = fips.Vector.from_series(pd.Series(0.0, index=cells), block="flux")
+        >>> obs = fips.Vector.from_series(
+        ...     pd.Series([1.0, 2.0, 3.0], index=obs_id), block="co2"
+        ... )
+        >>> problem = fips.Problem(
+        ...     prior=prior,
+        ...     prior_cov=fips.Independent().with_std(1.0),
+        ...     obs=obs,
+        ...     obs_cov=fips.Independent().with_std(np.sqrt(0.1)),
+        ...     forward=fips.Operator(
+        ...         np.array([[1.0, 0.0], [0.0, 1.0], [1.0, 1.0]]),
+        ...         obs.space,
+        ...         prior.space,
+        ...     ),
+        ... )
+        >>> post = fips.solve(problem)
+        >>> table = pd.concat(
+        ...     [post.with_gamma(g).summary() for g in (0.1, 1.0, 10.0)],
+        ...     ignore_index=True,
+        ... )
+        >>> table[["gamma", "dofs", "reduced_chi2"]].round(3)
+           gamma   dofs  reduced_chi2
+        0    0.1  1.250         1.208
+        1    1.0  1.877         1.603
+        2   10.0  1.987         1.660
+        """
+        problem = self._problem
+        row = {
+            "gamma": self._gamma,
+            "n_state": len(problem.prior),
+            "n_obs": len(problem.obs),
+            "dofs": self.dofs,
+            "chi2": self.chi2,
+            "reduced_chi2": self.reduced_chi2,
+            "r2": self.r2,
+            "rmse": self.rmse,
+            "uncertainty_reduction": self.uncertainty_reduction,
+        }
+        return pd.DataFrame([row])
+
     # -- reusing the factorization --------------------------------------------
 
     def with_gamma(self, gamma: float) -> "Posterior":
