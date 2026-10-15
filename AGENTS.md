@@ -47,11 +47,15 @@ src/fips/
                      predict(x) = H x + c; restrict (part of the state
                      held at the prior) and aggregate (the observations
                      through one W)
-  posterior.py       Posterior — the problem, the options and the factors;
-                     every output derived from them, labeled, each built once;
-                     summary() returns the diagnostics as one row. Whitened —
-                     the factorization the analytic method keeps: the estimate,
-                     variances, gain, DOFS, chi-squared for any gamma
+  posterior.py       Posterior — the problem, the options and the method's
+                     solution; asks the solution for unlabeled arrays, labels
+                     them, builds each once, and writes the rest (averaging
+                     kernel, innovation_cov, desroziers, leverage, scalars)
+                     from them; summary() returns the diagnostics as one row.
+                     Solution — the Protocol a method's kept object answers
+                     (estimate, variances, cov(W), gain(W), dofs, chi2;
+                     optional with_gamma, with_data, estimate_is_mean);
+                     Options — what it reads from the options (gamma)
   aggregate.py       sum, mean: an aggregation W (sparse Operator) from a
                      Space to groups of its labels (levels, a pandas Grouper,
                      an IntervalIndex, a Series mapping); offset_block, the
@@ -75,12 +79,16 @@ src/fips/
   methods/           how a Problem is solved (`fips.solve` is the function)
     __init__.py      solve(problem, method, **options), the method registry
                      (_METHODS, available_methods)
-    analytic.py      AnalyticOptions, and the analytic method: the whitened
-                     solve, a Posterior holding a Whitened
+    analytic.py      AnalyticOptions, and the analytic method: Whitened —
+                     its Solution, the factorization of the whitened system
+                     read at one gamma (estimate, variances, gain, DOFS,
+                     chi-squared; with_gamma and with_data share the
+                     factors) — and _analytic, which returns
+                     Posterior(problem, Whitened.factor(...), options)
   linalg/            the unlabeled forms the solvers compute with (public as
                      `fips.linalg`)
     __init__.py      re-exports the forms; its docstring says what a form does
-    base.py          LinearOperator (scipy LinearOperator) and the Dense-,
+    forms.py         LinearOperator (scipy LinearOperator) and the Dense-,
                      Sparse- and DiagonalOperator it builds, products and sums
                      (_product, _sum), as_linear_operator, dottest, _adopt,
                      _solve_psd
@@ -96,13 +104,17 @@ Imports run one way: `space` < `vector` and `linalg` < `operator` <
 `covariance` < `problem` < `posterior` < `methods`, with `aggregate` and
 `visualization` on top of `operator` and `covariance`, and no module imports
 one to its right (no import inside a function to avoid a cycle, and none under
-`TYPE_CHECKING` except `posterior`'s annotation of its options). `Covariance`
+`TYPE_CHECKING`). `Covariance`
 does not import the models: `models.py` hands `Covariance.block_diag` the
 function that makes the block diagonal of parts some of which are models
 (`Covariance._block_diag_models`), so `import fips.covariance` always sets it.
-`Whitened` is in `posterior.py`, not in `methods/analytic.py`, because
-`Posterior.__setstate__` builds it from the pickled dict and the analytic
-method builds a `Posterior`. `linalg/base.py` holds `LinearOperator` and the
+`posterior.py` imports nothing from `fips.methods`: a method's solution and
+options are typed by the `Solution` and `Options` protocols defined beside
+`Posterior`, and a method imports `posterior` to build one. Whatever only one
+method can do (the analytic factorization, `Whitened`) lives in that method's
+module; `Posterior` reaches it only through the protocol, and through
+`with_gamma`, `with_data` and `mean`, which raise for a solution without them.
+`linalg/forms.py` holds `LinearOperator` and the
 three forms it builds in one module, since the base class names its
 subclasses.
 
@@ -132,7 +144,7 @@ From `fips.__init__`:
 | `Exponential`, `Gaussian`, `Matern`, `Constant`, `Independent`, `Kronecker` | correlation models; `model.with_std(std)` is a covariance |
 | `Problem` | the inputs of a solve, their labels checked once by exact join |
 | `solve`, `available_methods` | `fips.solve(problem, method="analytic", **options)` returns a `Posterior` |
-| `Posterior` | the estimate and every diagnostic, labeled, from the kept factorization |
+| `Posterior` | the estimate and every diagnostic, labeled, from what the method kept (the analytic method: its factorization) |
 | `aggregate.sum`, `aggregate.mean` | an aggregation `W` of a space by group: `problem.aggregate(W)` on the observations, `post.cov(W)` on the state |
 | `offset_block` | a block of offsets in the state, one per group of observations, and its forward block |
 
@@ -268,8 +280,9 @@ The one plot is `fips.visualization.plot_comparison` (not exported from
   runs again); `restrict` keeps each covariance's form (`form._select`).
 - **Pickling.** Anything user-facing should round-trip through plain
   `pickle`: `Problem` and `Posterior` define `__getstate__` and `__setstate__`
-  for it. A `Posterior` pickles the problem, the options and the factors (a
-  dict of arrays), never an output, which is rebuilt when read.
+  for it. A `Posterior` pickles the problem, the options and the method's
+  solution (the analytic method's `Whitened` refers to the same problem, which
+  pickle stores once), never an output, which is rebuilt when read.
 - **Logging, not printing.** Every module uses
   `logger = logging.getLogger(__name__)`; `__init__.py` attaches a
   `NullHandler`. Don't `print()` in library code: a report is returned
@@ -431,7 +444,7 @@ that come close use dense `inv`. So:
   `scipy.linalg` (Cholesky, triangular solves, `eigh`); the value of fips is
   the labeled/block layer around it, and routing arrays through an external
   solver is exactly where labels get lost. Do not add a dependency to replace
-  the analytic method (`methods/analytic.py`, `Whitened` in `posterior.py`); improve it in place.
+  the analytic method (`methods/analytic.py`, with `Whitened`); improve it in place.
 - **Delegate factorizations and operator plumbing to scipy.** `scipy.linalg`
   for dense factorizations, `scipy.sparse` for storage,
   `scipy.sparse.linalg.LinearOperator` as the matvec abstraction when
@@ -467,15 +480,19 @@ inter-source error covariance). See README "Multi-block" example.
 1. Write its options as a frozen dataclass in a new `methods/<name>.py` (the
    only place they are declared: `solve` checks the caller's keywords against
    its fields and lists them for an unknown one; check values in
-   `__post_init__`).
-2. Write the method as a function `(problem, options) -> Posterior` in the same
-   file and list it in `_METHODS` in `methods/__init__.py`;
-   `available_methods()` and `fips.solve(problem, "name")` then find it.
-3. The `Posterior` is the analytic (Gaussian) one: `mean` is its `estimate`.
-   A method whose posterior is not Gaussian (bounded, lognormal, sampled)
-   needs its own class, and a base class extracted from `Posterior`: `mean`
-   exists only where the method gives the mean, `estimate` everywhere.
-4. `tests/test_oracle.py` is parametrized over `available_methods()`, so the
+   `__post_init__`). It has a `gamma` field (`posterior.Options`).
+2. Write its solution in the same file: the object it keeps from a solve,
+   answering `posterior.Solution` (`estimate()`, `variances()`, `cov(W)`,
+   `gain(W)`, `dofs()`, `chi2()`, unlabeled arrays in the problem's order).
+   Give it `with_gamma` or `with_data` only if it can answer without solving
+   again, and `estimate_is_mean = True` only if its estimate is the mean;
+   without them `Posterior` raises for those features. The docstring of
+   `methods/__init__.py` says how a lognormal or an ensemble method would fit.
+3. Write the method as a function `(problem, options) -> Posterior(problem,
+   solution, options)` in the same file and list it in `_METHODS` in
+   `methods/__init__.py`; `available_methods()` and `fips.solve(problem,
+   "name")` then find it. The one `Posterior` labels every method's answer.
+5. `tests/test_oracle.py` is parametrized over `available_methods()`, so the
    new method is held to the closed-form Gaussian posterior and the
    permutation test at once. A method whose answer is not that posterior says
    so there, with its own reference.
@@ -503,7 +520,7 @@ stay there too. A statistic that any problem could use goes on `Posterior`.
   is an integer when a Series has no name: keep the `str()`.
 - **SciPy is not annotated**: pyrefly takes the private class a `LinearOperator`
   default returns as the type an override must return, and a sparse `shape` as
-  possibly `None`, and finds no `__getitem__` on a sparse array. `linalg/base.py`
+  possibly `None`, and finds no `__getitem__` on a sparse array. `linalg/forms.py`
   marks those lines with an ignore and the reason; a new form that
   overrides only `_transpose` needs none. `form.T` is typed as SciPy's private
   transposed class: call `form._transpose()` to keep a fips form.
@@ -528,7 +545,7 @@ stay there too. A statistic that any problem could use goes on `Posterior`.
   beyond roundoff is logged). A smooth temporal prior that makes `S_0` near-low-rank
   (what used to tip the sum off positive-definite and block sub-yearly
   inversions) therefore cannot stop the solve. Everything is derived from the
-  factors (`Whitened`'s docstring in `fips/posterior.py` has the formulas); nothing `n x n`
+  factors (`Whitened`'s docstring in `fips/methods/analytic.py` has the formulas); nothing `n x n`
   is formed unless `post.cov()` or `post.averaging_kernel()` is read, and
   `tests/test_whitened.py` fails if `fips.solve` with the variances, DOFS or
   chi-squared allocates one. With `m > n`
@@ -536,7 +553,7 @@ stay there too. A statistic that any problem could use goes on `Posterior`.
   solve logs a warning.
 - Other covariance solves (`Covariance.solve`, `KroneckerOperator.solve`,
   `Posterior.leverage`) go through `LinearOperator.solve` or `_solve_psd`, whose dense form is
-  `_solve_psd(A, B)` (in `linalg/base.py`), **not**
+  `_solve_psd(A, B)` (in `linalg/forms.py`), **not**
   `scipy.linalg.solve(..., assume_a="pos")` directly: it keeps the fast
   Cholesky path and falls back, with a warning, to a symmetric `LDL^T` solve when
   roundoff has tipped a matrix that is PD in exact arithmetic off-PD. Use it for

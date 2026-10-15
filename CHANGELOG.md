@@ -274,6 +274,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **`Posterior` labels the answer; the method keeps its own machinery.** A
+  `Posterior` is built from the problem, the options and what the method kept
+  from the solve, its solution, and asks the solution for unlabeled arrays
+  through a small interface, `fips.posterior.Solution`: `estimate()`,
+  `variances()`, `cov(W)`, `gain(W)`, `dofs()` and `chi2()`. It labels them
+  with the problem's spaces and writes the rest from them (the averaging
+  kernel, `innovation_cov`, `desroziers`, `leverage`, the scalars,
+  `summary()`), so a later method (lognormal, ensemble) plugs in with its own
+  solution. The analytic method's factorization (`Whitened`) moved from
+  `fips.posterior` to `fips.methods.analytic` and is its solution; it now
+  holds the regularization factor and the problem it factored. Three members
+  need more than the interface: `with_gamma` and `with_data` ask the solution
+  for its own, and `mean` exists where the solution says its estimate is the
+  mean; for a solution without them, `with_gamma` and `with_data` raise
+  `TypeError` and `mean` raises `AttributeError`. For the analytic method
+  every number, name, default and message is as before. `fips.posterior`
+  imports nothing from `fips.methods`, so the last import cycle (a type-only
+  one) is gone. A pickled `Posterior` now holds the solution object instead
+  of a dict of its arrays; pickles of earlier `Posterior`s do not load (none
+  was released). `fips.linalg`'s module `base` is renamed `forms`.
+  ([#82](https://github.com/jmineau/fips/issues/82))
 - **The source is grouped by idea, in three subpackages.** Nothing changes in
   what the code does: no number, name of a public class or function, default or
   message differs. `fips.covariance` holds `Covariance` and the models that
@@ -301,9 +322,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   | `fips.metrics.haversine_matrix`, `chordal_matrix`, `time_diff_matrix` | `fips.covariance.distances.haversine_matrix`, `chordal_matrix`, `time_diff_matrix` |
   | `from fips.solve import AnalyticOptions` | `from fips.methods.analytic import AnalyticOptions` |
   | `fips.solve` the module (`_METHODS`) | `fips.methods` (the function is still `fips.solve`) |
-  | `fips._whitened.Whitened` (private) | `fips.posterior.Whitened` |
-  | the `fips.solve` logger | `fips.methods` (the whitened solve's warnings: `fips.posterior`) |
-  | the `fips.kronecker` and `fips.linalg` loggers | `fips.linalg.kronecker` and `fips.linalg.base` |
+  | `fips._whitened.Whitened` (private) | `fips.methods.analytic.Whitened` (private: no reference page) |
+  | the `fips.solve` logger | `fips.methods` (the whitened solve's warnings: `fips.methods.analytic`) |
+  | the `fips.kronecker` and `fips.linalg` loggers | `fips.linalg.kronecker` and `fips.linalg.forms` |
   | `fips.base`, `fips.filters` | removed (see Removed) |
 
   `fips.covariance.Covariance`, `fips.linalg.LinearOperator`, `DenseOperator`,
