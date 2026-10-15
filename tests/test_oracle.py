@@ -7,7 +7,9 @@ equation. The tests here pin the numbers. Each output of the
 :class:`fips.Posterior` that :func:`fips.solve` returns is compared with the
 closed-form Gaussian posterior, written below with ``numpy.linalg`` and
 nothing from fips. They are parametrized over the registered methods, so a
-method registered later is held to them too.
+method registered later is held to them too, and over the two forms the
+analytic method factors in (the ``analytic_form`` fixture: whitened and
+information), whatever the size of the problem.
 
 Also here: a permutation test (the labeled posterior does not depend on the
 order in which any input is given) and dot tests (the adjoint of each linear
@@ -34,7 +36,12 @@ from fips import (
     available_methods,
     solve,
 )
-from fips.linalg import DiagonalOperator, KroneckerOperator, SparseOperator
+from fips.linalg import (
+    BlockDiagonalOperator,
+    DiagonalOperator,
+    KroneckerOperator,
+    SparseOperator,
+)
 from fips.methods import _METHODS
 
 METHODS = available_methods()
@@ -334,6 +341,7 @@ def takes_gamma(method: str) -> bool:
 
 
 @pytest.mark.parametrize("sparse", [False, True], ids=["dense", "sparse"])
+@pytest.mark.usefixtures("analytic_form")
 @pytest.mark.parametrize("method", METHODS)
 @pytest.mark.parametrize("n, m", SIZES)
 def test_closed_form(method, n, m, sparse):
@@ -364,6 +372,7 @@ def test_closed_form(method, n, m, sparse):
         )
 
 
+@pytest.mark.usefixtures("analytic_form")
 @pytest.mark.parametrize("method", [m for m in METHODS if takes_gamma(m)])
 @pytest.mark.parametrize("gamma", [0.25, 3.0])
 @pytest.mark.parametrize("n, m", [(3, 10), (7, 2)])
@@ -425,6 +434,7 @@ def _diagonal_inputs(case: Case, form: str, v_0: np.ndarray, v_z: np.ndarray):
     raise ValueError(form)
 
 
+@pytest.mark.usefixtures("analytic_form")
 @pytest.mark.parametrize("method", METHODS)
 @pytest.mark.parametrize(
     "form",
@@ -455,6 +465,7 @@ def test_diagonal_given_as_variances(method, form):
         )
 
 
+@pytest.mark.usefixtures("analytic_form")
 @pytest.mark.parametrize("method", METHODS)
 @pytest.mark.parametrize("rows", ["product", "permuted", "ragged"])
 def test_kronecker_prior_error(method, rows):
@@ -489,6 +500,7 @@ def test_kronecker_prior_error(method, rows):
         )
 
 
+@pytest.mark.usefixtures("analytic_form")
 @pytest.mark.parametrize("method", METHODS)
 def test_sparse_forward_operator(method):
     """A sparse forward operator gives the closed form, as the dense one does."""
@@ -504,6 +516,29 @@ def test_sparse_forward_operator(method):
         )
 
 
+@pytest.mark.usefixtures("analytic_form")
+@pytest.mark.parametrize("method", METHODS)
+@pytest.mark.parametrize("n, m", [(3, 10), (7, 4)])
+def test_block_diagonal_mismatch(method, n, m):
+    """A model-data mismatch kept as diagonal blocks (a dense block and a diagonal one) gives the closed form of its matrix."""
+    for seed in range(5):
+        case = Case.random(seed, n, m)
+        rng = np.random.default_rng(200 + seed)
+        k = m // 2
+        dense, variances = random_spd(rng, k), rng.uniform(0.1, 2.0, m - k)
+        S_z = np.zeros((m, m))
+        S_z[:k, :k], S_z[k:, k:] = dense, np.diag(variances)
+        expected = closed_form(case.z, case.x_0, case.H, case.S_0, S_z, case.c)
+        form = BlockDiagonalOperator([dense, DiagonalOperator(variances)])
+        problem = case.problem(obs_cov=Covariance(form, case.obs_space))
+        assert isinstance(problem.obs_cov.data, BlockDiagonalOperator)
+        post = solve(problem, method)
+        check_posterior(
+            post, expected, case.state_index, case.obs_index, f"seed {seed}"
+        )
+
+
+@pytest.mark.usefixtures("analytic_form")
 @pytest.mark.parametrize("method", METHODS)
 @pytest.mark.parametrize(
     "given", ["sparse tuple", "pandas-sparse frame", "dense frame"]
@@ -663,6 +698,7 @@ def _block_values(structure, key, index, columns=None) -> np.ndarray:
     return op.dense()
 
 
+@pytest.mark.usefixtures("analytic_form")
 @pytest.mark.parametrize("method", METHODS)
 @pytest.mark.parametrize("seed", range(5))
 def test_multi_block(method, seed):
@@ -729,6 +765,7 @@ def _aligned(structure, index, columns=None) -> np.ndarray:
     return data.reindex(index=index, columns=columns).to_numpy()
 
 
+@pytest.mark.usefixtures("analytic_form")
 @pytest.mark.parametrize("method", METHODS)
 @pytest.mark.parametrize("seed", range(5))
 def test_permutation(method, seed):
@@ -1094,6 +1131,7 @@ def test_problem_aggregate_is_one_map(name, sparse):
     )
 
 
+@pytest.mark.usefixtures("analytic_form")
 @pytest.mark.parametrize("method", METHODS)
 @pytest.mark.parametrize("average", [False, True], ids=["sum", "mean"])
 def test_posterior_of_state_aggregates(method, average):
