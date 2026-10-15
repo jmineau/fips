@@ -30,7 +30,7 @@ from fips.linalg import (
     SparseOperator,
     as_linear_operator,
 )
-from fips.linalg.base import _adopt
+from fips.linalg.forms import _adopt
 from fips.space import Space, _listed
 from fips.vector import Vector
 

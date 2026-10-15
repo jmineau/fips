@@ -2,11 +2,14 @@ r"""
 The posterior of a solved inverse problem.
 
 :func:`fips.solve` returns a :class:`Posterior`: the problem, the options of
-the method, and the factorization of the whitened system
-(:class:`Whitened`). Everything it gives is derived from the factors,
-labeled with the problem's spaces, and nothing :math:`n \times n` is formed
-unless the full covariance or averaging kernel is asked for. A new
-regularization factor or new observations reuse the factors.
+the method, and what the method kept from its solve (a :class:`Solution`).
+The posterior labels the answer; the method keeps its own machinery. It asks
+the solution for unlabeled arrays (the estimate, the variances, the
+covariance of aggregates, the gain, DOFS, chi-squared), puts the problem's
+labels on them and keeps each one once computed. Everything else it gives is
+written from those and the problem, so it holds for every method. The
+analytic method's solution is the factorization of its whitened system
+(:mod:`fips.methods.analytic`).
 
 The :class:`~fips.Problem` is the question and the posterior the answer: the
 posterior holds what depends on the solve or on the ``m x m`` matrix it
@@ -17,237 +20,124 @@ is on the problem.
 import dataclasses
 import logging
 from functools import cached_property
-from typing import TYPE_CHECKING, Any
+from typing import Any, ClassVar, Protocol
 
 import numpy as np
 import pandas as pd
 from numpy.linalg import LinAlgError
-from scipy.linalg import cholesky, eigh, inv, solve, solve_triangular
+from scipy.linalg import inv, solve
 
 from fips.covariance import Covariance
-from fips.linalg import DiagonalOperator, LinearOperator
-from fips.linalg.base import _adopt, _solve_psd
+from fips.linalg import LinearOperator
+from fips.linalg.forms import _adopt, _solve_psd
 from fips.operator import Operator
 from fips.problem import Problem
 from fips.vector import Vector
 
-if TYPE_CHECKING:
-    from fips.methods.analytic import AnalyticOptions
-
 logger = logging.getLogger(__name__)
 
-_LARGE_M = 1000
-"""
-The number of observations from which a solve with more observations than state elements logs a warning.
 
-The whitened solve eigendecomposes an ``m x m`` matrix. When ``m > n`` the
-state-space (information) form, ``n x n``, would be cheaper; below this size
-the difference is too small to mention.
-"""
-
-
-@dataclasses.dataclass(frozen=True, eq=False)
-class Whitened:
+class Solution(Protocol):
     r"""
-    The factors of one problem, which do not depend on gamma.
+    What a :class:`Posterior` asks of the object a method keeps from its solve.
 
-    The analytic method factors its problem into this once, and the
-    :class:`Posterior` derives everything it reports from the factors, for
-    any regularization factor :math:`\gamma`. Nothing :math:`n \times n` is
-    formed unless the full posterior covariance or averaging kernel is asked
-    for. Build it with :meth:`factor`. The arrays are read-only by
-    convention: :meth:`Posterior.with_gamma` shares them.
+    A method solves a :class:`~fips.Problem` and keeps whatever it needs to
+    answer these questions (the analytic method keeps the factorization of
+    its whitened system; a sampling method would keep its samples). Each
+    answer is an unlabeled NumPy array (or a float), in the order of the
+    problem's spaces: ``n`` the state elements (``problem.prior``), ``m`` the
+    observations (``problem.obs``). The posterior labels them, and computes
+    each one once.
 
-    With :math:`Q = S_0` the prior error covariance (:math:`n \times n`),
-    :math:`S_z = L L^T` the model-data mismatch (:math:`m \times m`; :math:`L` its
-    Cholesky factor, or the square root of its diagonal) and :math:`S_z / \gamma`
-    the mismatch the solve uses:
+    Two members are optional, and a posterior whose solution lacks one says
+    so when it is asked for the feature:
 
-    .. math::
+    - ``with_gamma(gamma) -> Solution``: the solution at another
+      regularization factor, without solving again (:meth:`Posterior.with_gamma`).
+    - ``with_data(problem) -> Solution``: the solution of `problem`, the same
+      problem with other values of the observations, without solving again
+      (:meth:`Posterior.with_data`).
 
-        M = L^{-1} H Q H^T L^{-T} = V \Lambda V^T, \qquad
-        H Q H^T + S_z / \gamma = L V (\Lambda + I / \gamma) V^T L^T.
+    And a solution whose :meth:`estimate` is the posterior mean says so with a
+    class attribute ``estimate_is_mean = True``; without it, a posterior has
+    no :attr:`~Posterior.mean`.
 
-    :math:`M` is symmetric positive semidefinite, so its eigenvalues are clipped at
-    zero (roundoff can make a few slightly negative). With the whitener
-    :math:`B = V^T L^{-1}`, :math:`W = B H Q` (:math:`m \times n`), the whitened
-    innovation :math:`e = B d` with :math:`d = z - H x_0 - c`, and the weights
-    :math:`w_k = \gamma / (\gamma \lambda_k + 1)`:
-
-    .. math::
-
-        \hat{x} - x_0 = W^T (w \circ e), \qquad
-        \hat{S} = Q - W^T \operatorname{diag}(w) W, \qquad
-        \operatorname{diag}(\hat{S}) = \operatorname{diag}(Q) - \textstyle\sum_k w_k W_{k\cdot}^2,
-
-    .. math::
-
-        K = W^T \operatorname{diag}(w) B, \qquad
-        \mathrm{DOFS} = \operatorname{tr}(K H) = \textstyle\sum_k \gamma\lambda_k / (\gamma\lambda_k + 1), \qquad
-        d^T (H Q H^T + S_z/\gamma)^{-1} d = \textstyle\sum_k w_k e_k^2.
-
-    The last is the minimum of the cost, the sum of the data and model misfits of
-    the reduced chi-squared. Only :math:`w` depends on :math:`\gamma`, so a new
-    :math:`\gamma` costs :math:`O(m n)`.
+    See Also
+    --------
+    Posterior : The labeled answer built on it.
+    fips.methods : How a method is added.
     """
 
-    eigenvalues: np.ndarray
-    r"""The eigenvalues :math:`\lambda_k` of the whitened :math:`M`, clipped at zero (``m``)."""
-    whitener: np.ndarray
-    """:math:`B = V^T L^{-1}`, which whitens an observation-space vector (``m x m``)."""
-    W: np.ndarray
-    """:math:`W = B H Q` (``m x n``)."""
-    innovation: np.ndarray
-    """The whitened innovation :math:`e = B (z - H x_0 - c)` (``m``)."""
-    prior_variances: np.ndarray
-    """The diagonal of :math:`Q` (``n``)."""
+    def estimate(self) -> np.ndarray:
+        r"""Return the point estimate of the state, :math:`\hat{x}` (``n``)."""
+        ...
 
-    @classmethod
-    def factor(
-        cls,
-        HQ: np.ndarray,
-        HQH: np.ndarray,
-        S_z: LinearOperator,
-        d: np.ndarray,
-        prior_variances: np.ndarray,
-    ) -> "Whitened":
-        """
-        Factor a problem.
+    def variances(self) -> np.ndarray:
+        r"""Return the posterior error variances, the diagonal of :math:`\hat{S}` (``n``)."""
+        ...
+
+    def cov(self, W: LinearOperator | None = None) -> np.ndarray:
+        r"""
+        Return the posterior error covariance of the state, or of aggregates of it.
 
         Parameters
         ----------
-        HQ : np.ndarray
-            :math:`H Q`, dense, ``m x n``.
-        HQH : np.ndarray
-            :math:`H Q H^T`, dense, ``m x m``.
-        S_z : LinearOperator
-            The model-data mismatch, before gamma divides it.
-        d : np.ndarray
-            The innovation :math:`z - H x_0 - c`.
-        prior_variances : np.ndarray
-            The diagonal of :math:`Q`.
+        W : LinearOperator, optional
+            An aggregation, ``k x n``, its columns in the state's order.
 
         Returns
         -------
-        Whitened
-            The factors.
-
-        Raises
-        ------
-        numpy.linalg.LinAlgError
-            If ``S_z`` is not positive-definite.
+        np.ndarray
+            Without `W`, :math:`\hat{S}` (``n x n``); with it,
+            :math:`W \hat{S} W^T` (``k x k``). The posterior writes into
+            neither, and keeps the first.
         """
-        m, n = HQ.shape
-        if m > n and m >= _LARGE_M:
-            logger.warning(
-                "The whitened solve eigendecomposes an m x m matrix, with m = %d "
-                "observations, more than the n = %d state elements: its time grows "
-                "as m^3. The state-space (information) form, n x n, would be "
-                "cheaper; fips does not have it yet. Aggregating the observations "
-                "makes m smaller.",
-                m,
-                n,
-            )
-        if isinstance(S_z, DiagonalOperator):
-            if not np.all(S_z.values > 0):
-                raise LinAlgError(
-                    "The model-data mismatch has a variance that is not positive, "
-                    "so it cannot whiten the observations."
-                )
-            s = np.sqrt(S_z.values)
-            M = HQH / s[:, None] / s[None, :]
+        ...
 
-            def whiten(V):
-                """Return ``V^T L^{-1}`` for the diagonal ``L``."""
-                return V.T / s[None, :]
+    def gain(self, W: LinearOperator | None = None) -> np.ndarray:
+        r"""
+        Return the gain :math:`K`, or :math:`W K` for an aggregation.
 
-        else:
-            try:
-                L = cholesky(S_z.dense(), lower=True)
-            except LinAlgError as err:
-                raise LinAlgError(
-                    "The model-data mismatch is not positive-definite, so it "
-                    "cannot whiten the observations."
-                ) from err
-            # np.asarray: SciPy is not annotated, and gives no array type
-            X = np.asarray(solve_triangular(L, HQH, lower=True))
-            M = np.asarray(solve_triangular(L, X.T, lower=True))
+        Parameters
+        ----------
+        W : LinearOperator, optional
+            An aggregation, ``k x n``, its columns in the state's order.
 
-            def whiten(V):
-                """Return ``V^T L^{-1}``, as the transpose of ``L^{-T} V``."""
-                return np.asarray(solve_triangular(L, V, lower=True, trans="T")).T
+        Returns
+        -------
+        np.ndarray
+            Without `W`, :math:`K` (``n x m``), with
+            :math:`\hat{x} = x_0 + K (z - H x_0 - c)` for a linear method;
+            with it, :math:`W K` (``k x m``). The averaging kernel is
+            written from it: :math:`A = K H`.
+        """
+        ...
 
-        M = 0.5 * (M + M.T)
-        w, V = eigh(
-            M, overwrite_a=True
-        )  # driver "evr": less memory than "evd", as fast
-        eigenvalues = np.asarray(w)
-        _clip(eigenvalues)
-        B = whiten(V)
-        return cls(
-            eigenvalues=eigenvalues,
-            whitener=B,
-            W=B @ HQ,
-            innovation=B @ d,
-            prior_variances=np.asarray(prior_variances, dtype=float),
-        )
+    def dofs(self) -> float:
+        r"""Return the degrees of freedom for signal, :math:`\operatorname{tr}(K H)`."""
+        ...
 
-    def weights(self, gamma: float) -> np.ndarray:
-        r"""Return :math:`w_k = \gamma / (\gamma \lambda_k + 1)`."""
-        return gamma / (gamma * self.eigenvalues + 1.0)
-
-    def increment(self, gamma: float) -> np.ndarray:
-        r"""Return :math:`\hat{x} - x_0 = W^T (w \circ e)`."""
-        return self.W.T @ (self.weights(gamma) * self.innovation)
-
-    def variances(self, gamma: float) -> np.ndarray:
-        r"""Return the diagonal of :math:`\hat{S}`, :math:`O(m n)`."""
-        w = self.weights(gamma)
-        return self.prior_variances - np.einsum("k,kj,kj->j", w, self.W, self.W)
-
-    def reduction(self, gamma: float) -> np.ndarray:
-        r"""Return :math:`Q - \hat{S} = W^T \operatorname{diag}(w) W`, ``n x n``."""
-        Y = np.sqrt(self.weights(gamma))[:, None] * self.W
-        return Y.T @ Y
-
-    def gain(self, gamma: float) -> np.ndarray:
-        r"""Return the gain :math:`K = W^T \operatorname{diag}(w) B`, ``n x m``."""
-        return self.W.T @ (self.weights(gamma)[:, None] * self.whitener)
-
-    def dofs(self, gamma: float) -> float:
-        r"""Return :math:`\sum_k \gamma \lambda_k / (\gamma \lambda_k + 1)`."""
-        return float(np.sum(self.weights(gamma) * self.eigenvalues))
-
-    def chi2(self, gamma: float) -> float:
-        r"""Return :math:`d^T (H Q H^T + S_z/\gamma)^{-1} d = \sum_k w_k e_k^2`."""
-        return float(np.sum(self.weights(gamma) * self.innovation**2))
-
-    def to_dict(self) -> dict[str, Any]:
-        """Return the arrays by name, for a pickle that any fips can read."""
-        return {f.name: getattr(self, f.name) for f in dataclasses.fields(self)}
+    def chi2(self) -> float:
+        r"""Return the chi-squared of the solution: the sum of the data and the state misfits."""
+        ...
 
 
-def _clip(eigenvalues: np.ndarray) -> None:
+class Options(Protocol):
     """
-    Set the negative eigenvalues of a positive semidefinite matrix to zero, in place.
+    What a :class:`Posterior` reads from the options of a method.
 
-    Roundoff leaves eigenvalues of order ``m * eps * max|lambda|`` that should
-    be zero, some negative. One beyond that is logged: the inputs are not what
-    they should be (a covariance that is not positive semidefinite).
+    A method's options are a frozen dataclass of its own
+    (:class:`~fips.methods.analytic.AnalyticOptions`); the posterior keeps them
+    as :attr:`Posterior.options`, reads only the regularization factor, and
+    makes another gamma's with :func:`dataclasses.replace`.
     """
-    low = eigenvalues.min(initial=0.0)
-    if low < 0:
-        roundoff = len(eigenvalues) * np.finfo(float).eps * np.abs(eigenvalues).max()
-        if -low > roundoff:
-            logger.warning(
-                "The whitened prior in observation space has a negative eigenvalue, "
-                "%.3g, larger than roundoff (%.3g); it and the other negative "
-                "eigenvalues are set to zero. Check that the prior error covariance "
-                "is positive semidefinite.",
-                low,
-                roundoff,
-            )
-        np.maximum(eigenvalues, 0.0, out=eigenvalues)
+
+    __dataclass_fields__: ClassVar[dict[str, dataclasses.Field[Any]]]
+
+    @property
+    def gamma(self) -> float:
+        r"""The regularization factor :math:`\gamma`: the solve divided the model-data mismatch by it."""
+        ...
 
 
 def _times_pseudo_inverse(XWt: np.ndarray, W: LinearOperator) -> np.ndarray:
@@ -275,24 +165,33 @@ class Posterior:
     The solution of an inverse problem, labeled.
 
     :func:`fips.solve` builds it; there is no need to build one by hand. It
-    keeps the factorization of the solve, and each output is computed from it
-    when first asked for, then kept. For the ``"analytic"`` method the
-    posterior is Gaussian: :attr:`estimate` is its mean (so :attr:`mean` is
-    the same object), and the posterior covariance is
+    keeps what the method kept from the solve (its :class:`Solution`), and
+    each output is computed from it when first asked for, labeled with the
+    problem's spaces, then kept. For the ``"analytic"`` method the posterior
+    is Gaussian: :attr:`estimate` is its mean (so :attr:`mean` is the same
+    object), and the posterior covariance is
     :math:`\hat{S} = (H^T S_z^{-1} H + S_0^{-1})^{-1}`, with :math:`S_z`
     divided by the regularization factor :math:`\gamma`. It holds what depends
     on the solve or on the ``m x m`` matrix the solve factors
     (:attr:`innovation_cov`); what needs neither is on the
     :class:`~fips.Problem` (:meth:`~fips.Problem.predict`).
 
+    Every member works for every method, except three that need more of the
+    method than a :class:`Solution` gives: :attr:`mean` (where the estimate is
+    the mean), :meth:`with_gamma` and :meth:`with_data` (where the method can
+    answer without solving again). The analytic method has all three.
+
     Parameters
     ----------
     problem : Problem
         The problem that was solved.
-    factors : Whitened
-        The factorization of its whitened system.
-    options : fips.methods.analytic.AnalyticOptions
-        The options of the method.
+    solution : Solution
+        What the method kept from the solve, which gives the unlabeled
+        arrays (for the analytic method, the factorization of its whitened
+        system, ``fips.methods.analytic.Whitened``).
+    options : Options
+        The options of the method, such as
+        :class:`fips.methods.analytic.AnalyticOptions`.
 
     See Also
     --------
@@ -325,9 +224,9 @@ class Posterior:
     1.877
     """
 
-    def __init__(self, problem: Problem, factors: Whitened, options: "AnalyticOptions"):
+    def __init__(self, problem: Problem, solution: Solution, options: Options):
         self._problem = problem
-        self._factors = factors
+        self._solution = solution
         self._options = options
 
     @property
@@ -336,7 +235,7 @@ class Posterior:
         return self._problem
 
     @property
-    def options(self) -> "AnalyticOptions":
+    def options(self) -> Options:
         """The options the method solved with (``gamma``)."""
         return self._options
 
@@ -353,18 +252,36 @@ class Posterior:
         )
 
     def __getstate__(self) -> dict[str, Any]:
-        """Return the problem, the options and the factors; the outputs are rebuilt."""
+        """Return the problem, the options and the solution; the outputs are rebuilt."""
         return {
             "problem": self._problem,
             "options": self._options,
-            "factors": self._factors.to_dict(),
+            "solution": self._solution,
         }
 
     def __setstate__(self, state: dict[str, Any]) -> None:
         """Restore from :meth:`__getstate__`."""
         self._problem = state["problem"]
         self._options = state["options"]
-        self._factors = Whitened(**state["factors"])
+        self._solution = state["solution"]
+
+    def _optional(self, name: str, feature: str) -> Any:
+        """
+        Return the solution's optional member `name`.
+
+        Raises
+        ------
+        TypeError
+            If the solution does not have it: the method cannot give `feature`.
+        """
+        member = getattr(self._solution, name, None)
+        if member is None:
+            raise TypeError(
+                f"The method that solved this problem cannot give {feature} "
+                f"({type(self._solution).__name__} has no {name}); solve the "
+                "problem again with fips.solve."
+            )
+        return member
 
     # -- the state -----------------------------------------------------------
 
@@ -381,9 +298,8 @@ class Posterior:
         mean : The posterior mean.
         variances : The posterior error variances.
         """
-        x_0 = self._problem.prior
-        values = x_0.values + self._factors.increment(self._gamma)
-        return Vector(values, x_0.space, name="estimate")
+        values = self._solution.estimate()
+        return Vector(values, self._problem.prior.space, name="estimate")
 
     @property
     def mean(self) -> Vector:
@@ -391,8 +307,19 @@ class Posterior:
         The posterior mean, :attr:`estimate` itself.
 
         The analytic method's posterior is Gaussian, so its estimate is its
-        mean.
+        mean. A posterior whose method gives another point estimate (a mode)
+        has no mean.
+
+        Raises
+        ------
+        AttributeError
+            If the method's estimate is not the posterior mean.
         """
+        if not getattr(self._solution, "estimate_is_mean", False):
+            raise AttributeError(
+                "The method that solved this problem does not give the posterior "
+                "mean; its point estimate is `estimate`."
+            )
         return self.estimate
 
     @cached_property
@@ -400,14 +327,14 @@ class Posterior:
         r"""
         The posterior error variances, the diagonal of :math:`\hat{S}`.
 
-        Computed from the factors in :math:`O(m n)`, without the
-        :math:`n \times n` covariance.
+        The analytic method computes them from its factors in
+        :math:`O(m n)`, without the :math:`n \times n` covariance.
 
         See Also
         --------
         cov : The posterior error covariance, of the state or of aggregates.
         """
-        values = self._factors.variances(self._gamma)
+        values = self._solution.variances()
         return Vector(values, self._problem.prior.space, name="variance")
 
     def _aggregation(self, W: Operator) -> LinearOperator:
@@ -439,8 +366,7 @@ class Posterior:
     @cached_property
     def _cov(self) -> Covariance:
         """The full posterior covariance, formed once."""
-        S_hat = self._factors.reduction(self._gamma)
-        np.subtract(self._problem.prior_cov.data.dense(), S_hat, out=S_hat)
+        S_hat = self._solution.cov()
         return Covariance(
             _adopt(S_hat), self._problem.prior.space, name="posterior_cov"
         )
@@ -507,10 +433,7 @@ class Posterior:
         """
         if W is None:
             return self._cov
-        W_form = self._aggregation(W)
-        prior = np.asarray(W_form @ (self._problem.prior_cov.data @ W_form.T))
-        WWf = W_form @ self._factors.W.T  # k x m
-        values = prior - (WWf * self._factors.weights(self._gamma)) @ WWf.T
+        values = self._solution.cov(self._aggregation(W))
         return Covariance(_adopt(values), W.rows, name="posterior_cov")
 
     @cached_property
@@ -521,7 +444,7 @@ class Posterior:
         :math:`\hat{x} = x_0 + K (z - H x_0 - c)`.
         """
         return Operator(
-            _adopt(self._factors.gain(self._gamma)),
+            _adopt(self._solution.gain()),
             self._problem.prior.space,
             self._problem.obs.space,
             name="kalman_gain",
@@ -573,8 +496,7 @@ class Posterior:
         if W is None:
             return self._averaging_kernel
         W_form = self._aggregation(W)
-        f = self._factors
-        WK = ((W_form @ f.W.T) * f.weights(self._gamma)) @ f.whitener  # k x m
+        WK = self._solution.gain(W_form)  # k x m
         HWt = np.asarray(self._problem.forward.data @ W_form.T)  # m x k
         values = _times_pseudo_inverse(WK @ HWt, W_form)
         return Operator(_adopt(values), W.rows, W.rows, name="averaging_kernel")
@@ -746,11 +668,12 @@ class Posterior:
         r"""
         Degrees of freedom for signal, the trace of :meth:`averaging_kernel`.
 
+        The analytic method reads it from its factors,
         :math:`\sum_k \gamma\lambda_k / (\gamma\lambda_k + 1)` over the
         eigenvalues :math:`\lambda_k` of the whitened system, without the
         kernel.
         """
-        return self._factors.dofs(self._gamma)
+        return self._solution.dofs()
 
     @property
     def chi2(self) -> float:
@@ -762,13 +685,14 @@ class Posterior:
                 + (\hat{x} - x_0)^T S_0^{-1} (\hat{x} - x_0)
 
         which equals :math:`d^T (H S_0 H^T + S_z/\gamma)^{-1} d` with
-        :math:`d = z - H x_0 - c`, and is read from the factors.
+        :math:`d = z - H x_0 - c`; the analytic method reads it from its
+        factors.
 
         See Also
         --------
         reduced_chi2 : It, divided by the number of observations.
         """
-        return self._factors.chi2(self._gamma)
+        return self._solution.chi2()
 
     @property
     def reduced_chi2(self) -> float:
@@ -876,9 +800,9 @@ class Posterior:
         r"""
         Return the posterior of the same problem with another regularization factor.
 
-        The factorization does not depend on gamma, so this costs
-        :math:`O(m n)` instead of a new solve: a sweep over gamma factors
-        once.
+        The analytic method's factorization does not depend on gamma, so
+        this costs :math:`O(m n)` instead of a new solve: a sweep over gamma
+        factors once.
 
         Parameters
         ----------
@@ -891,6 +815,12 @@ class Posterior:
         Posterior
             The posterior ``fips.solve(problem, gamma=gamma)`` would give, its
             estimate computed.
+
+        Raises
+        ------
+        TypeError
+            If the method cannot change gamma without solving again (its
+            solution has no ``with_gamma``).
 
         Examples
         --------
@@ -918,8 +848,9 @@ class Posterior:
         >>> [round(post.with_gamma(g).dofs, 3) for g in (0.1, 1.0, 10.0)]
         [1.25, 1.877, 1.987]
         """
+        sweep = self._optional("with_gamma", "another gamma's posterior")
         options = dataclasses.replace(self._options, gamma=gamma)
-        post = type(self)(self._problem, self._factors, options)
+        post = type(self)(self._problem, sweep(options.gamma), options)
         _ = post.estimate
         return post
 
@@ -927,10 +858,10 @@ class Posterior:
         r"""
         Return the posterior of the same problem with other observations.
 
-        The factorization depends on where the observations are and how
-        uncertain they are, not on their values, so this costs one
-        :math:`m \times m` product instead of a new solve (a bootstrap, or
-        synthetic observations of a known truth).
+        The analytic method's factorization depends on where the
+        observations are and how uncertain they are, not on their values, so
+        this costs one :math:`m \times m` product instead of a new solve (a
+        bootstrap, or synthetic observations of a known truth).
 
         Parameters
         ----------
@@ -947,7 +878,11 @@ class Posterior:
         ------
         ValueError
             If `obs` does not have exactly the observations' labels.
+        TypeError
+            If the method cannot take new observations without solving again
+            (its solution has no ``with_data``).
         """
+        resolve = self._optional("with_data", "the posterior of other observations")
         problem = self._problem
         space = problem.obs.space
         positions = space._align(
@@ -957,10 +892,6 @@ class Posterior:
         state["obs"] = Vector(obs.values[positions], space, name=obs.name)
         new = type(problem).__new__(type(problem))
         new.__setstate__(state)
-        d = new.obs.values - new.predict(new.prior).values
-        factors = dataclasses.replace(
-            self._factors, innovation=self._factors.whitener @ d
-        )
-        post = type(self)(new, factors, self._options)
+        post = type(self)(new, resolve(new), self._options)
         _ = post.estimate
         return post

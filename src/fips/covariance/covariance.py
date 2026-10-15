@@ -23,7 +23,7 @@ from fips.linalg import (
     LinearOperatorLike,
     as_linear_operator,
 )
-from fips.linalg.base import _adopt
+from fips.linalg.forms import _adopt
 from fips.operator import Operator
 from fips.space import Space
 from fips.vector import Vector

@@ -20,7 +20,7 @@ import numpy.typing as npt
 from numpy.linalg import LinAlgError
 from scipy import sparse
 
-from fips.linalg.base import (
+from fips.linalg.forms import (
     DenseOperator,
     LinearOperator,
     _as_array,

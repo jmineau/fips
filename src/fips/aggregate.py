@@ -46,7 +46,7 @@ import numpy as np
 import pandas as pd
 import scipy.sparse as sp
 
-from fips.linalg.base import _adopt
+from fips.linalg.forms import _adopt
 from fips.operator import Operator
 from fips.space import Space, _listed, _sorted
 from fips.vector import Vector

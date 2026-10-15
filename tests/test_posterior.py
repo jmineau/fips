@@ -1,15 +1,19 @@
 """
 Tests for the Posterior fips.solve returns.
 
-Labels, types, names, caching, the diagnostics, the leverage and pickling.
+Labels, types, names, caching, the diagnostics, the leverage, pickling, and
+the boundary with a method (a solution that is not the analytic one).
 
 The numbers are held to the closed form in ``test_oracle.py``; the
 factorization (variances, aggregations, ``with_gamma``, ``with_data``,
 memory) in ``test_whitened.py``.
 """
 
+import ast
+import dataclasses
 import importlib.util
 import pickle
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -382,7 +386,7 @@ class TestPickle:
     def test_outputs_are_not_pickled(self, post):
         _ = post.cov(), post.variances, post.kalman_gain
         state = post.__getstate__()
-        assert set(state) == {"problem", "options", "factors"}
+        assert set(state) == {"problem", "options", "solution"}
         loaded = pickle.loads(pickle.dumps(post))
         assert not {"_cov", "variances", "kalman_gain", "estimate"} & set(vars(loaded))
 
@@ -401,3 +405,138 @@ def test_exported():
         assert not hasattr(fips, gone)
     for module in ("fips.pipeline", "fips.problems"):
         assert importlib.util.find_spec(module) is None
+
+
+# ---------------------------------------------------------------------------
+# The boundary between the Posterior and a method
+# ---------------------------------------------------------------------------
+
+
+@dataclasses.dataclass(frozen=True)
+class _Options:
+    """The options of a method that is not fips's."""
+
+    gamma: float = 1.0
+
+
+class _DenseSolution:
+    """
+    A solution that is not the analytic one: the closed form, written with NumPy.
+
+    It has the members of ``fips.posterior.Solution`` and none of the optional
+    ones (``with_gamma``, ``with_data``, ``estimate_is_mean``).
+    """
+
+    def __init__(self, problem: Problem, gamma: float):
+        S_0 = problem.prior_cov.dense()
+        H = problem.forward.dense()
+        G = H @ S_0 @ H.T + problem.obs_cov.dense() / gamma
+        d = problem.obs.values - problem.predict(problem.prior).values
+        self.K = S_0 @ H.T @ np.linalg.inv(G)
+        self.x = problem.prior.values + self.K @ d
+        self.S = S_0 - self.K @ H @ S_0
+        self.H = H
+        self.chi = float(d @ np.linalg.solve(G, d))
+
+    def estimate(self):
+        return self.x
+
+    def variances(self):
+        return np.diag(self.S).copy()
+
+    def cov(self, W=None):
+        if W is None:
+            return self.S.copy()
+        W = W.dense()
+        return W @ self.S @ W.T
+
+    def gain(self, W=None):
+        return self.K.copy() if W is None else W.dense() @ self.K
+
+    def dofs(self):
+        return float(np.trace(self.K @ self.H))
+
+    def chi2(self):
+        return self.chi
+
+
+class TestAnotherMethod:
+    """A posterior on a solution that is not the analytic one: the general members work, the analytic ones say they cannot."""
+
+    @pytest.fixture
+    def other(self, problem):
+        return Posterior(problem, _DenseSolution(problem, 1.0), _Options())
+
+    @staticmethod
+    def _aggregation(problem):
+        """Two rows, the flux total and the bias total, linearly independent."""
+        rows = Space({"total": pd.Index(["flux", "bias"], name="part")})
+        blocks = problem.prior.space.index.get_level_values("block")
+        values = np.vstack([blocks == "flux", blocks == "bias"]).astype(float)
+        return Operator(values, rows, problem.prior.space)
+
+    def test_general_members_match_the_analytic_method(self, problem, post, other):
+        W = self._aggregation(problem)
+        pairs = {
+            "estimate": (other.estimate, post.estimate),
+            "variances": (other.variances, post.variances),
+            "modeled_obs": (other.modeled_obs, post.modeled_obs),
+        }
+        for name, (got, want) in pairs.items():
+            assert got.space is want.space, name
+            np.testing.assert_allclose(
+                got.values, want.values, rtol=1e-10, err_msg=name
+            )
+        operators = {
+            "cov()": (other.cov(), post.cov()),
+            "cov(W)": (other.cov(W), post.cov(W)),
+            "kalman_gain": (other.kalman_gain, post.kalman_gain),
+            "averaging_kernel()": (other.averaging_kernel(), post.averaging_kernel()),
+            "averaging_kernel(W)": (
+                other.averaging_kernel(W),
+                post.averaging_kernel(W),
+            ),
+            "innovation_cov": (other.innovation_cov, post.innovation_cov),
+            "leverage": (other.leverage(other.estimate), post.leverage(post.estimate)),
+        }
+        for name, (got, want) in operators.items():
+            assert type(got) is type(want) and got.name == want.name, name
+            assert got.rows is want.rows and got.cols is want.cols, name
+            np.testing.assert_allclose(
+                got.dense(), want.dense(), rtol=1e-10, atol=1e-12, err_msg=name
+            )
+        pd.testing.assert_frame_equal(
+            other.desroziers(by="site"), post.desroziers(by="site"), rtol=1e-10
+        )
+        pd.testing.assert_frame_equal(other.summary(), post.summary(), rtol=1e-10)
+        assert other.options == _Options() and other.problem is problem
+
+    def test_analytic_only_members_say_so(self, problem, other):
+        with pytest.raises(TypeError, match="cannot give another gamma's posterior"):
+            other.with_gamma(2.0)
+        with pytest.raises(TypeError, match="_DenseSolution has no with_data"):
+            other.with_data(problem.obs)
+        with pytest.raises(AttributeError, match="does not give the posterior mean"):
+            _ = other.mean
+        assert not hasattr(other, "mean")
+
+    def test_pickles(self, other):
+        loaded = pickle.loads(pickle.dumps(other))
+        np.testing.assert_array_equal(loaded.estimate.values, other.estimate.values)
+        assert loaded.options == other.options
+
+
+def test_posterior_imports_no_method():
+    """Methods import the posterior, never the reverse (not even for a type)."""
+    source = Path(fips.posterior.__file__).read_text()
+    imported = [
+        node.module or ""
+        for node in ast.walk(ast.parse(source))
+        if isinstance(node, ast.ImportFrom)
+    ] + [
+        alias.name
+        for node in ast.walk(ast.parse(source))
+        if isinstance(node, ast.Import)
+        for alias in node.names
+    ]
+    assert not [name for name in imported if name.startswith("fips.methods")]

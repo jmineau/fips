@@ -10,11 +10,13 @@ and no :math:`m \times m` matrix (:meth:`Problem.predict`); the posterior is
 the answer and holds what depends on the solve or on the :math:`m \times m`
 matrix it factors (:attr:`Posterior.innovation_cov`). Each method declares its options once (for ``"analytic"``,
 :class:`~fips.methods.analytic.AnalyticOptions`), and an unknown method or option raises
-with the names it knows. The posterior keeps the factorization of the solve:
-everything it gives is derived from it and labeled with the problem's spaces,
-nothing :math:`n \times n` is formed unless the full covariance or averaging
-kernel is asked for, and :meth:`Posterior.with_gamma` and
-:meth:`Posterior.with_data` reuse it.
+with the names it knows. The posterior labels the answer and the method keeps
+its own machinery: the posterior asks what the method kept from the solve (a
+:class:`~fips.posterior.Solution`) for unlabeled arrays and labels them with
+the problem's spaces. The analytic method keeps the factorization of its
+whitened system, so nothing :math:`n \times n` is formed unless the full
+covariance or averaging kernel is asked for, and :meth:`Posterior.with_gamma`
+and :meth:`Posterior.with_data` reuse it.
 
 .. seealso::
 
@@ -105,5 +107,27 @@ Reusing the factorization
 Serialization
 ~~~~~~~~~~~~~
 A posterior pickles with the standard library (``pickle.dump(post, file)``):
-it keeps the problem, the options and the factorization, and rebuilds every
-output when it is read.
+it keeps the problem, the options and the method's solution (for the analytic
+method, the factorization), and rebuilds every output when it is read.
+
+Writing a method
+~~~~~~~~~~~~~~~~
+What a :class:`Posterior` asks of a method: its solution answers the
+questions of :class:`~fips.posterior.Solution`, and its options have the
+regularization factor (:class:`~fips.posterior.Options`). How a method is
+added is in the docstring of :mod:`fips.methods`.
+
+.. currentmodule:: fips.posterior
+
+.. autosummary::
+   :toctree: api/
+
+   Solution
+   Solution.estimate
+   Solution.variances
+   Solution.cov
+   Solution.gain
+   Solution.dofs
+   Solution.chi2
+   Options
+   Options.gamma
