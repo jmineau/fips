@@ -334,6 +334,50 @@ class Vector:
         """
         return Vector(self._values[space.align(self._space)], space, name=self._name)
 
+    def combine_first(self, other: "Vector") -> "Vector":
+        """
+        Return `other` with this vector's values where this vector has the label.
+
+        The values of a smaller vector put back on a larger space: the
+        estimate of a problem restricted to some of the state
+        (:meth:`Problem.restrict <fips.Problem.restrict>`), on the whole state,
+        with the prior where the state was held at it.
+
+        Parameters
+        ----------
+        other : Vector
+            The values for the labels this vector lacks. Every label of this
+            vector must be one of `other`'s.
+
+        Returns
+        -------
+        Vector
+            On `other`'s space, named as this vector.
+
+        Raises
+        ------
+        ValueError
+            If this vector has a block or a label `other` lacks.
+
+        Examples
+        --------
+        >>> import pandas as pd
+        >>> from fips import Vector
+        >>> cells = pd.Index(["a", "b", "c"], name="cell")
+        >>> prior = Vector.from_series(
+        ...     pd.Series([1.0, 2.0, 3.0], index=cells), block="flux"
+        ... )
+        >>> part = Vector.from_series(
+        ...     pd.Series([20.0], index=cells[[1]], name="estimate"), block="flux"
+        ... )
+        >>> part.combine_first(prior).values
+        array([ 1., 20.,  3.])
+        """
+        positions = other.space._subset(self._space, "This vector")
+        values = np.array(other.values)
+        values[positions] = self._values
+        return Vector(values, other.space, name=self._name)
+
     def round_labels(self, decimals: int) -> "Vector":
         """
         Return the vector with its float labels rounded (:meth:`Space.round_labels`).
