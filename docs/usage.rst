@@ -370,7 +370,7 @@ blocks are read by name:
 
    import fips
    from fips import Problem, Vector
-   from fips.visualization import plot_map, plot_obs
+   from fips.visualization import plot_comparison
 
    problem = Problem(
        obs=Vector.from_series(concentrations, block="concentration"),
@@ -392,9 +392,20 @@ blocks are read by name:
    post.modeled_obs["concentration"]  # H @ posterior + c
    post.summary()                     # DOFS, chi-squared, R², RMSE, ... as one row
 
-   # Plots of a posterior (the viz extra: matplotlib, and cartopy for tiles)
-   plot_map(post, block="flux")              # prior, posterior and their difference
-   plot_obs(post, block="concentration")     # observed, prior and posterior over time
+   # Plots of a posterior: pandas and xarray objects, or plot_comparison
+   flux = post.estimate["flux"].to_xarray()  # a DataArray on (time, lat, lon)
+   flux.mean("time").plot(x="lon", y="lat")  # the mean posterior flux, as a map
+
+   def at_site(vector, name, site="SITE1"):
+       """One site's concentrations over time, as a Series named `name`."""
+       series = vector["concentration"].to_series().droplevel("block")
+       return series.xs(site, level="obs_location").rename(name)
+
+   plot_comparison(                          # observed, prior and posterior at one site
+       at_site(problem.obs, "observed"),
+       at_site(problem.predict(problem.prior), "prior"),
+       at_site(post.modeled_obs, "posterior"),
+   )
 
 For a STILT Jacobian, `PYSTILT <https://jmineau.github.io/PYSTILT>`_ sums the
 footprints onto your flux grid and time bins, as a sparse matrix with its

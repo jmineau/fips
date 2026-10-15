@@ -77,10 +77,8 @@ src/fips/
                      same groups as a block of offsets in the state
   filters.py         Selection helpers (e.g. enough_obs_per_interval)
   metrics.py         haversine_matrix, chordal_matrix, time_diff_matrix
-  visualization.py   Plotting (the `viz` extra): plot_map (a block of the
-                     state on x/y levels), plot_obs (the observations
-                     against the prior's and the posterior's predictions),
-                     plot_comparison, plot_error_norm
+  visualization.py   plot_comparison (the `viz` extra: matplotlib): several
+                     series on one axes, with error bands or bars
   py.typed           ships type hints
 tests/               pytest suite (no integration markers in use)
 docs/                Sphinx (pydata-sphinx-theme + numpy-style docstrings)
@@ -91,11 +89,12 @@ archive/             local-only, not tracked
 
 fips knows no science domain: a flux inversion is a `Problem` whose blocks
 are named `flux` and `concentration`, read by name (`post.estimate["flux"]`),
-and its workflow lives in its user's package as functions. The plots in
-`visualization.py` take the block and the level names as arguments; nothing
-in fips's public names, defaults or docstrings (beyond an example) is flux
-science. The `viz` extra pulls in `cartopy` and
-`matplotlib`. fips does not build transport Jacobians: PYSTILT's
+and its workflow and its plots live in its user's package as functions.
+fips is grid-agnostic: nothing in its public names, defaults or docstrings
+(beyond an example) is flux science or geography (no maps, no lat/lon
+defaults, no cartopy). Its one plot is `plot_comparison`; anything else is
+drawn from `Vector.to_series()` or `to_xarray()` with pandas or xarray. The
+`viz` extra pulls in `matplotlib`. fips does not build transport Jacobians: PYSTILT's
 `project.jacobian()` does, and the caller places its sparse matrix with its
 labels (`Operator.from_blocks({("concentration", "flux"): (J.data, rows,
 cols)}, rows=obs.space, cols=prior.space)`).
@@ -116,8 +115,8 @@ From `fips.__init__`:
 | `aggregate.sum`, `aggregate.mean` | an aggregation `W` of a space by group: `problem.aggregate(W)` on the observations, `post.cov(W)` on the state |
 | `offset_block` | a block of offsets in the state, one per group of observations, and its forward block |
 
-Plots are in `fips.visualization` (not exported from `fips`): `plot_map`,
-`plot_obs`, `plot_comparison`, `plot_error_norm`.
+The one plot is `fips.visualization.plot_comparison` (not exported from
+`fips`).
 
 ## Mental model
 
@@ -311,7 +310,7 @@ The tooling comes from
   testpath. `coverage.exclude_also` skips `__repr__`, abstract methods,
   `if __name__ == "__main__":`, etc.
 - **Dependency groups**: runtime deps in `[project]`; the `viz` extra adds
-  cartopy/matplotlib; the `dev` group is what `just sync`
+  matplotlib; the `dev` group is what `just sync`
   syncs.
 
 ## Examples in the docs
@@ -386,8 +385,8 @@ when one breaks.
 - **Data:** the docs build on GitHub Actions, so an example uses synthetic data,
   a small file in the repository, or a public download, never a machine-specific
   path. Seed random numbers so the figures don't change from build to build.
-- **Optional dependencies:** the `dev` group already lists `fips[viz]` (cartopy,
-  matplotlib), so `uv sync` installs them here and in CI. If an example
+- **Optional dependencies:** the `dev` group already lists `fips[viz]`
+  (matplotlib), so `uv sync` installs them here and in CI. If an example
   needs another extra, add `fips[extra]` the same way.
 - **A notebook that can't run in CI** (it needs data only one machine has) is
   committed with its outputs and `"mystnb": {"execution_mode": "off"}` in its
@@ -457,9 +456,8 @@ inter-source error covariance). See README "Multi-block" example.
 ### A new problem domain
 fips gets no subpackage, `Problem` subclass or pipeline for it (see "No
 domain subpackages"): the domain names its blocks, writes its workflow as
-functions in its own package, and reads the outputs by block name. A plot or
-statistic that any problem could use goes in `visualization.py` or on
-`Posterior`, with the block and level names as arguments.
+functions in its own package, and reads the outputs by block name; its plots
+stay there too. A statistic that any problem could use goes on `Posterior`.
 
 ## Gotchas
 
