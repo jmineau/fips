@@ -189,7 +189,10 @@ The one plot is `fips.visualization.plot_comparison` (not exported from
 - **Names.** `Vector` and `Operator` convert a name that is not
   `None` to a string, so a name is one spelling everywhere; an unnamed object
   keeps `None`. A sum of two operators keeps the name when both have the same
-  one and is `None` otherwise (pandas' rule for a sum of two Series).
+  one and is `None` otherwise (pandas' rule for a sum of two Series). A
+  `Problem` names its covariances `"prior_cov"` and `"obs_cov"` whether it was
+  given a model or a `Covariance` (a renamed copy sharing the form: the
+  caller's object keeps its name).
 - **A structure owns its data.** `Vector` and `Operator` (every `fips.linalg`
   form) copy their input and make the copy read-only. Code that builds a form
   from an array fips just made, or from another form's read-only arrays, uses

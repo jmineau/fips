@@ -326,6 +326,51 @@ class TestModels:
         )
 
 
+class TestCovarianceNames:
+    """A problem names its covariances "prior_cov" and "obs_cov", however they were given."""
+
+    GIVEN = {
+        "model": lambda space: Independent().with_std(1.0),
+        "unnamed": lambda space: Covariance.diagonal(1.0, space),
+        "named": lambda space: Covariance.diagonal(1.0, space, name="S"),
+        "reordered": lambda space: Covariance.diagonal(1.0, _reversed(space)),
+    }
+
+    @pytest.mark.parametrize("given", GIVEN)
+    def test_the_name_does_not_depend_on_how_it_was_given(self, given):
+        make = self.GIVEN[given]
+        problem = Problem(**_inputs(prior_cov=make(STATE), obs_cov=make(OBS)))
+        assert problem.prior_cov.name == "prior_cov"
+        assert problem.obs_cov.name == "obs_cov"
+
+    def test_the_callers_covariance_keeps_its_name_and_its_form_is_shared(self):
+        S_0 = Covariance.diagonal(1.0, STATE, name="S_0")
+        S_z = Covariance.diagonal(1.0, OBS)
+        problem = Problem(**_inputs(prior_cov=S_0, obs_cov=S_z))
+        assert (S_0.name, S_z.name) == ("S_0", None)
+        assert problem.prior_cov is not S_0 and problem.obs_cov is not S_z
+        assert problem.prior_cov.data is S_0.data and problem.obs_cov.data is S_z.data
+
+    def test_the_problems_made_from_a_problem_name_them_too(self):
+        problem = Problem(
+            **_inputs(
+                prior_cov=Covariance.diagonal(1.0, STATE, name="S_0"),
+                obs_cov=Covariance.diagonal(1.0, OBS, name="S_z"),
+            )
+        )
+        total = Operator(
+            np.ones((1, 3)), Space({"all": pd.Index([0], name="group")}), OBS
+        )
+        made = {
+            "restrict": problem.restrict(Space({"flux": CELLS[:2]})),
+            "aggregate": problem.aggregate(total),
+            "with_data": fips.solve(problem).with_data(problem.obs).problem,
+        }
+        for how, new in made.items():
+            assert new.prior_cov.name == "prior_cov", how
+            assert new.obs_cov.name == "obs_cov", how
+
+
 class TestOffset:
     def test_a_number_is_the_same_for_every_observation(self):
         problem = Problem(**_inputs(offset=2.5))
