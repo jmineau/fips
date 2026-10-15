@@ -498,13 +498,19 @@ class SparseOperator(LinearOperator):
 
     Examples
     --------
+    A product of sparse forms stays sparse while at most a quarter of its
+    entries are stored, and is dense past that:
+
     >>> import scipy.sparse as sp
     >>> from fips.linalg import SparseOperator
-    >>> A = SparseOperator(sp.csr_matrix([[4.0, 1.0], [1.0, 3.0]]))
+    >>> A = SparseOperator(sp.diags([4.0, 3.0, 2.0, 2.0, 1.0, 1.0], format="csr"))
     >>> A.diagonal()
-    array([4., 3.])
+    array([4., 3., 2., 2., 1., 1.])
     >>> type(A @ A).__name__
     'SparseOperator'
+    >>> B = SparseOperator(sp.csr_matrix([[4.0, 1.0], [1.0, 3.0]]))
+    >>> type(B @ B).__name__
+    'DenseOperator'
     """
 
     matrix: "sp.csr_array | sp.csc_array"

@@ -25,6 +25,11 @@ Building
 
    as_linear_operator
 
+.. py:data:: LinearOperatorLike
+
+   The type of what :func:`as_linear_operator` takes: a form, a SciPy sparse
+   matrix or array, or a 2D array-like.
+
 Linear algebra
 ~~~~~~~~~~~~~~
 .. autosummary::
@@ -37,6 +42,9 @@ Linear algebra
    LinearOperator.dense
    LinearOperator.diagonal
    LinearOperator.trace
+
+Each form's page lists its own way of doing these, where it has one (a
+diagonal solves by division, a sparse form with a sparse LU).
 
 Stored data
 ~~~~~~~~~~~
