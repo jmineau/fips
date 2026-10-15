@@ -55,8 +55,8 @@ class KroneckerOperator(LinearOperator):
     work arrays of about ``N`` entries per column. That is less than the dense
     matrix as long as the rows fill most of the product.
 
-    :meth:`~fips.covariance.KroneckerError.operator` builds one from marginal
-    kernels and an index, and :class:`~fips.Covariance` puts it behind labels.
+    A :class:`~fips.Kronecker` model builds one from the labels of a
+    space, and :class:`~fips.Covariance` puts it behind them.
 
     Parameters
     ----------
@@ -80,7 +80,7 @@ class KroneckerOperator(LinearOperator):
 
     See Also
     --------
-    fips.covariance.KroneckerError.operator : The form of a Kronecker error component on an index.
+    fips.Kronecker : The correlation model whose covariance this is.
     fips.Covariance : A labeled covariance, which holds a form.
 
     Examples
@@ -248,8 +248,8 @@ class KroneckerOperator(LinearOperator):
         Return the operator as a dense NumPy array.
 
         Entry ``(i, j)`` is ``std[i] * std[j] * prod_k C_k[pos_k[i], pos_k[j]]``,
-        computed as :meth:`KroneckerError.build` computes it, so the two give the
-        same numbers. This forms the ``n x n`` matrix.
+        computed factor by factor, then scaled by the standard deviations.
+        This forms the ``n x n`` matrix.
 
         Returns
         -------

@@ -4,7 +4,8 @@ Flexible Inverse Problem Solver (FIPS).
 A Pythonic framework for solving linear inverse problems using Bayesian estimation.
 Labels live in a :class:`Space`; values on one are a :class:`Field`; a matrix
 between two is an :class:`Operator` (a :class:`Covariance` from one to
-itself), kept in its cheapest form. Estimators compute posteriors; there are
+itself), kept in its cheapest form. A covariance is written as a correlation
+model with standard deviations: ``Exponential("time", "30D").with_std(std)``. Estimators compute posteriors; there are
 interfaces for serialization, visualization, and specialized applications like
 atmospheric flux inversion.
 """
@@ -13,9 +14,11 @@ import logging
 from importlib.metadata import PackageNotFoundError
 from importlib.metadata import version as _version
 
+from .correlation import Independent, Kronecker
 from .covariance import Covariance
 from .estimators import Estimator, available_estimators
 from .field import Field
+from .kernels import Constant, Exponential, Gaussian, Matern
 from .operator import Operator, convolve
 from .pipeline import InversionPipeline
 from .posterior import Posterior
@@ -36,6 +39,12 @@ __all__ = [
     "Field",
     "Operator",
     "Covariance",
+    "Exponential",
+    "Gaussian",
+    "Matern",
+    "Constant",
+    "Independent",
+    "Kronecker",
     "Block",
     "Vector",
     "Estimator",

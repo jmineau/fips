@@ -112,10 +112,8 @@ class InverseProblem(Pickleable):
         Covariance matrix representing model-data mismatch (observation
         error). A scalar is one variance for every observation, and a Series
         or Vector (with a ``block`` level) gives a variance for each: both
-        build a diagonal covariance. A form of :mod:`fips.linalg` (such as
-        the :class:`~fips.kronecker.KroneckerOperator` of
-        :meth:`KroneckerError.operator(index)
-        <fips.covariance.KroneckerError.operator>`) is labeled by the
+        build a diagonal covariance. A form of :mod:`fips.linalg` (such as a
+        :class:`~fips.kronecker.KroneckerOperator`) is labeled by the
         observations, in their order, without forming the matrix.
     prior_error : Covariance, Operator, pd.DataFrame, Vector, float or LinearOperator
         Covariance matrix representing prior error, given in any of the ways
