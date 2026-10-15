@@ -5,9 +5,35 @@ Each method is registered under a name with the dataclass of its options,
 declared once: :func:`solve` checks the options a caller passes against it
 before anything is computed, and an unknown method or option raises with the
 names it knows. The one method is ``"analytic"`` (:mod:`fips.methods.analytic`),
-the closed-form Gaussian posterior. A method is a module that defines its
-options dataclass and a function from a :class:`~fips.Problem` and its options
-to a :class:`~fips.Posterior`, listed in ``_METHODS`` below.
+the closed-form Gaussian posterior.
+
+A method is a module here with three things, and a line in ``_METHODS``
+below:
+
+- its options, a frozen dataclass with a ``gamma`` field (the regularization
+  factor; :class:`~fips.posterior.Options`) and any others it needs;
+- its solution, the object it keeps from a solve, which answers the questions
+  of :class:`~fips.posterior.Solution` with unlabeled arrays in the order of
+  the problem's spaces: ``estimate()``, ``variances()``, ``cov(W)``,
+  ``gain(W)``, ``dofs()`` and ``chi2()``. It may also have
+  ``with_gamma(gamma)`` and ``with_data(problem)``, which give another
+  solution without solving again, and ``estimate_is_mean = True`` when its
+  estimate is the posterior mean; a posterior whose solution lacks one of
+  them raises when that feature is asked for;
+- a function from a :class:`~fips.Problem` and the options to
+  ``Posterior(problem, solution, options)``.
+
+The :class:`~fips.Posterior` puts the labels on, keeps each output, and
+writes everything else (the averaging kernel, the innovation covariance,
+Desroziers, leverage, the scalars, the summary) from those answers and the
+problem, so a new method gets them all. The analytic method's solution is
+``Whitened``, the factorization of its whitened system. A lognormal method
+would keep its estimate (the mode) and the Gaussian of the log state around
+it, and answer from those carried back to the state (the gain of the problem
+linearized at the mode; no ``estimate_is_mean``); an ensemble method would keep its posterior ensemble and answer from the
+sample mean and covariance (``estimate_is_mean = True``). Neither can change
+gamma without solving again, so neither has ``with_gamma``. A method imports
+:mod:`fips.posterior`; :mod:`fips.posterior` never imports a method.
 """
 
 import logging

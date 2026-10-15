@@ -36,6 +36,7 @@ from fips.linalg import (
     SparseOperator,
     as_linear_operator,
 )
+from fips.methods.analytic import Whitened
 
 RTOL = 1e-10
 GAMMAS = [0.1, 0.5, 1.0, 3.0, 20.0]
@@ -224,7 +225,7 @@ def test_with_gamma_is_a_fresh_solve(form):
     post = fips.solve(problem)
     for gamma in GAMMAS:
         swept = post.with_gamma(gamma)
-        assert swept._factors is post._factors
+        assert swept._solution.W is post._solution.W
         assert swept.options.gamma == gamma
         assert "estimate" in vars(swept)  # computed, as fips.solve does
         fresh = _outputs(fips.solve(problem, gamma=gamma))
@@ -249,7 +250,7 @@ def test_with_data_is_a_fresh_solve(form, gamma):
         name="bootstrap",
     )
     swept = post.with_data(new)
-    assert swept._factors.whitener is post._factors.whitener
+    assert swept._solution.whitener is post._solution.whitener
     assert swept.problem.obs.space == post.problem.obs.space
     np.testing.assert_array_equal(swept.problem.obs.values, z2)
     fresh = _outputs(fips.solve(_problem(z2, x_0, H, S_0, S_z, c), gamma=gamma))
@@ -459,7 +460,7 @@ def test_posterior_with_gamma(gamma):
     swept = post.with_gamma(gamma)
     fresh = fips.solve(problem, gamma=gamma)
     assert "estimate" in vars(swept)
-    assert swept._factors is post._factors
+    assert swept._solution.W is post._solution.W
     assert post.options.gamma == 1.0
     W, _ = _aggregation(state)
     pairs = [
@@ -545,7 +546,7 @@ def test_nothing_n_by_n_is_allocated(prior):
     assert peak < n_by_n / 2, (
         f"peak {peak / 1e6:.1f} MB; one n x n is {n_by_n / 1e6:.1f} MB"
     )
-    held = {**vars(post), **vars(post._factors)}
+    held = {**vars(post), **vars(post._solution)}
     big = [k for k, v in held.items() if getattr(v, "size", 0) >= n * n]
     assert not big, big
 
@@ -561,14 +562,15 @@ def test_pickle_keeps_the_factors_and_drops_n_by_n():
     post = fips.solve(problem)
     _ = post.cov(), post.averaging_kernel(), post.kalman_gain, post.variances
     state = post.__getstate__()
-    assert set(state) == {"problem", "options", "factors"}
-    assert isinstance(state["factors"], dict)
+    assert set(state) == {"problem", "options", "solution"}
+    assert isinstance(state["solution"], Whitened)
     loaded = pickle.loads(pickle.dumps(post))
     assert not {"_cov", "_averaging_kernel", "kalman_gain"} & set(vars(loaded))
     np.testing.assert_array_equal(loaded.variances.values, post.variances.values)
     np.testing.assert_array_equal(loaded.cov().dense(), post.cov().dense())
     assert loaded.problem.prior.space == problem.prior.space
     assert isinstance(loaded.problem.prior_cov.data, KroneckerOperator)
+    assert loaded._solution.problem is loaded.problem  # stored once
     _close(
         loaded.with_gamma(3.0).estimate.values,
         fips.solve(problem, gamma=3.0).estimate.values,
@@ -591,10 +593,10 @@ def test_negative_eigenvalues_are_clipped_and_logged(caplog):
     """A prior error that is not positive semidefinite gives eigenvalues below zero: clipped, logged."""
     z, x_0, H, _, S_z, c = _arrays("dense", 0, n_time=1, n_cell=3, m=3)
     S_0 = np.diag([1.0, 1.0, -0.5])
-    with caplog.at_level(logging.WARNING, logger="fips.posterior"):
+    with caplog.at_level(logging.WARNING, logger="fips.methods.analytic"):
         post = fips.solve(_problem(z, x_0, np.eye(3), S_0, S_z, c))
     assert any("negative eigenvalue" in r.message for r in caplog.records)
-    assert (post._factors.eigenvalues >= 0).all()
+    assert (post._solution.eigenvalues >= 0).all()
 
 
 def test_roundoff_is_clipped_quietly(caplog):
@@ -604,7 +606,7 @@ def test_roundoff_is_clipped_quietly(caplog):
     T = np.exp(-((t[:, None] - t[None, :]) ** 2) / 200.0)  # near rank-deficient
     S_0 = np.kron(T, np.eye(3))
     H = rng.uniform(0, 1, (40, 30))
-    with caplog.at_level(logging.WARNING, logger="fips.posterior"):
+    with caplog.at_level(logging.WARNING, logger="fips.methods.analytic"):
         post = fips.solve(
             _problem(
                 rng.normal(size=40), np.zeros(30), H, S_0, np.eye(40), np.zeros(40)
@@ -616,13 +618,13 @@ def test_roundoff_is_clipped_quietly(caplog):
 
 def test_more_observations_than_state_logs(caplog, monkeypatch):
     """A large solve with ``m > n`` says that the state-space form would be cheaper."""
-    monkeypatch.setattr("fips.posterior._LARGE_M", 5)
+    monkeypatch.setattr("fips.methods.analytic._LARGE_M", 5)
     args = _arrays("dense", 0, n_time=1, n_cell=3, m=8)
-    with caplog.at_level(logging.WARNING, logger="fips.posterior"):
+    with caplog.at_level(logging.WARNING, logger="fips.methods.analytic"):
         fips.solve(_problem(*args))
     assert any("state-space (information) form" in r.message for r in caplog.records)
     caplog.clear()
     args = _arrays("dense", 0, n_time=2, n_cell=4, m=8)
-    with caplog.at_level(logging.WARNING, logger="fips.posterior"):
+    with caplog.at_level(logging.WARNING, logger="fips.methods.analytic"):
         fips.solve(_problem(*args))
     assert not caplog.records
