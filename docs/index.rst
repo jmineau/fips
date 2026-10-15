@@ -30,6 +30,7 @@ fips |release|
    usage
    terminology
    examples/index
+   migration
    reference/index
 
 ----
