@@ -1,189 +1,204 @@
-Terminology & Notation
-======================
+Terminology
+===========
 
-This page defines common abbreviations and the mathematical notation used throughout the FIPS documentation and code. Different scientific fields often use different conventions — this guide helps bridge those gaps.
+Each field that solves inverse problems has its own words and letters for the
+same things. This page defines the words fips uses, once each, with the
+symbol, the name in the code, and the other names you may know them by. The
+rest of the documentation uses these words and no others.
 
-Mathematical Notation
----------------------
+.. _the-linear-model:
 
-.. _notation-framework:
+The linear model
+----------------
 
-Notation Framework
-~~~~~~~~~~~~~~~~~~
-
-FIPS uses a consistent notation system throughout:
-
-**Dimensionality Convention**
-
-- **Lowercase letters** (:math:`x`, :math:`z`, :math:`y`) represent **1-D vectors**
-- **Uppercase letters** (:math:`H`, :math:`S`, :math:`K`, :math:`A`) represent **2-D matrices**
-
-**Hat Notation**
-
-- **Hat** :math:`\hat{\ }` = **posterior** (*a posteriori* estimate after incorporating observations)
-
-  - :math:`\hat{x}` = posterior state
-  - :math:`\hat{S}` = posterior covariance
-  - :math:`\hat{y}` = posterior modeled observations
-
-**The Forward Model**
-
-The fundamental relationship is:
+fips solves the linear model
 
 .. math::
 
-   z - c = y = Hx
+   z = H x + c + \varepsilon
 
-where:
+for the state :math:`x`, given the observations :math:`z`, the forward
+operator :math:`H`, the offset :math:`c`, a prior :math:`x_0` with its prior
+covariance :math:`S_0`, and the observation covariance :math:`S_z` (the
+covariance of the error :math:`\varepsilon`). With :math:`n` state elements and
+:math:`m` observations, the answer is the posterior
 
-- :math:`x` = **state vector** (the unknowns we're solving for)
-- :math:`z` = **observations** (measured data)
-- :math:`c` = **offset** (a background; ``offset`` in :class:`~fips.Problem`)
-- :math:`y` = **modeled observations** (what the forward model predicts)
-- :math:`H` = **forward operator** (maps state space → observation space)
+.. math::
 
-**Subscript Conventions**
+   \hat{x} = x_0 + K (z - H x_0 - c), \qquad
+   \hat{S} = S_0 - K H S_0, \qquad
+   K = S_0 H^T \left(H S_0 H^T + S_z / \gamma\right)^{-1}.
 
-The subscript system indicates which space or time a variable belongs to:
-
-- **Subscript** :math:`_0` = **prior information** / *a priori* (before incorporating observations)
-
-  - :math:`x_0` = prior state vector
-  - :math:`S_0` = prior error covariance matrix
-
-- **Subscript** :math:`_z` = **observation space** (associated with :math:`z`)
-
-  - :math:`S_z` = observation/model-data mismatch error covariance matrix
-
-**Covariance Matrices**
-
-Following the uppercase convention for matrices, covariance matrices are denoted with :math:`S`:
-
-- :math:`S` = any covariance matrix (uppercase because 2-D)
-- :math:`S_0` = **prior** error covariance (subscript _0 for *a priori*)
-- :math:`S_z` = **observation** error covariance (subscript _z because it's in observation space)
-- :math:`\hat{S}` = **posterior** error covariance (hat for *a posteriori*)
-
-This framework applies consistently: any variable with subscript :math:`_0` refers to the prior,
-any variable in observation space gets subscript :math:`_z`, and posterior quantities get a hat.
-
-.. _notation-reference:
-
-Quick Reference
-~~~~~~~~~~~~~~~
-
-.. list-table::
-   :header-rows: 1
-   :widths: 15 30 55
-
-   * - Symbol
-     - Name
-     - Description
-   * - :math:`x`
-     - State vector
-     - The unknown quantities being estimated (e.g., fluxes, densities)
-   * - :math:`x_0`
-     - Prior state
-     - *A priori* estimate before incorporating observations
-   * - :math:`\hat{x}`
-     - Posterior state
-     - *A posteriori* optimized state estimate after inversion
-   * - :math:`z`
-     - Observations
-     - Measured data (e.g., concentrations, gravity anomalies)
-   * - :math:`c`
-     - Constant / Background
-     - Additive offset or background field
-   * - :math:`y`
-     - Modeled observations
-     - Forward model output :math:`y = Hx + c`
-   * - :math:`y_0`
-     - Prior observations
-     - :math:`y_0 = Hx_0 + c`
-   * - :math:`\hat{y}`
-     - Posterior observations
-     - :math:`\hat{y} = H\hat{x} + c`
-   * - :math:`H`
-     - Forward operator / Jacobian
-     - Operator mapping state space to observation space
-   * - :math:`S_0`
-     - Prior error covariance
-     - Uncertainty in the prior state estimate
-   * - :math:`S_z`
-     - Observation error covariance
-     - Combined measurement error and model representation error
-   * - :math:`\hat{S}`
-     - Posterior error covariance
-     - Reduced uncertainty after incorporating observations
-   * - :math:`K`
-     - Kalman gain
-     - Weighting matrix that determines how observations update the prior
-   * - :math:`A`
-     - Averaging kernel
-     - Shows which states are constrained by observations: :math:`A = KH`
-
-.. _diagnostic-metrics:
-
-Diagnostic Metrics
-~~~~~~~~~~~~~~~~~~
-
-.. list-table::
-   :header-rows: 1
-   :widths: 15 30 55
-
-   * - Symbol
-     - Name
-     - Description
-   * - DOFS
-     - Degrees of Freedom for Signal
-     - Number of independent pieces of information from observations. Equal to :math:`\text{Tr}(A)`
-   * - :math:`\chi^2`
-     - Chi-squared statistic
-     - Goodness-of-fit metric comparing observations to model predictions
-   * - :math:`R^2`
-     - Coefficient of determination
-     - Fraction of variance explained by the model (0 to 1)
-
+The letters follow one convention: lowercase for vectors, uppercase for
+matrices, a subscript :math:`0` for the prior, a subscript :math:`z` for the
+observations, and a hat for the posterior.
 
 .. _inverse-problem-terms:
 
-Inverse Problem Terminology
-----------------------------
+The words
+---------
 
-.. glossary::
+.. list-table::
+   :header-rows: 1
+   :widths: 18 9 23 50
 
-   **Prior**
-      The initial estimate of the state (and its uncertainty) before incorporating observations. Often comes from inventory data, climatology, or a process model.
+   * - Word
+     - Symbol
+     - In fips
+     - What it is
+   * - **state**
+     - :math:`x`
+     - the prior's labels (``problem.prior.space``)
+     - The unknowns the problem solves for (fluxes, densities, slownesses),
+       :math:`n` of them. Also called the control vector or the parameters.
+   * - **observation**
+     - :math:`z`
+     - ``obs``
+     - The measured data, :math:`m` of them. Also called the data or the
+       measurement vector (Rodgers writes :math:`y`).
+   * - **forward operator**
+     - :math:`H`
+     - ``forward``
+     - The matrix that maps a state to the observations it would produce,
+       :math:`m \times n`. Also called the Jacobian (of a nonlinear model,
+       linearized), the observation operator, the sensitivity matrix or, in
+       atmospheric transport, the footprints. :meth:`Problem.predict
+       <fips.Problem.predict>` gives :math:`H x + c` for any state.
+   * - **offset**
+     - :math:`c`
+     - ``offset``
+     - The part of the observations the state does not explain, added to
+       :math:`H x`: a background concentration, a known bias. Optional. An
+       offset the data should decide is a block of the state instead
+       (:func:`~fips.offset_block`).
+   * - **prior**
+     - :math:`x_0`
+     - ``prior``
+     - What is known of the state before the observations: an inventory, a
+       climatology, a first guess. Also called the *a priori* or the
+       background state.
+   * - **prior covariance**
+     - :math:`S_0`
+     - ``prior_cov``
+     - The covariance of the prior's error, :math:`n \times n`. Also called
+       the prior error covariance (:math:`B` in data assimilation,
+       :math:`S_a` in Rodgers, :math:`C_M` in Tarantola).
+   * - **observation covariance**
+     - :math:`S_z`
+     - ``obs_cov``
+     - The covariance of the error :math:`\varepsilon` between the
+       observations and what the forward operator models, :math:`m \times m`:
+       measurement error plus the errors of the model and of representing the
+       state. Also called the model-data mismatch or the observation error
+       covariance (:math:`R` in data assimilation, :math:`S_\epsilon` in
+       Rodgers, :math:`C_D` in Tarantola).
+   * - **innovation**
+     - :math:`d`
+     - ``post.innovation_cov``
+     - The observations minus what the prior models,
+       :math:`d = z - H x_0 - c`. Its covariance,
+       :math:`H S_0 H^T + S_z / \gamma`, is the :math:`m \times m` matrix the
+       solve factors.
+   * - **posterior**
+     - :math:`\hat{x}`, :math:`\hat{S}`
+     - ``fips.solve(problem)``, a :class:`~fips.Posterior`
+     - The answer: the state estimate :math:`\hat{x}` (``post.estimate``) and
+       its posterior covariance :math:`\hat{S}` (``post.cov()``, whose
+       diagonal is ``post.variances``). Also called the *a posteriori*, the
+       analysis or the retrieval. ``post.modeled_obs`` is
+       :math:`H \hat{x} + c`.
+   * - **gain**
+     - :math:`K`
+     - ``post.kalman_gain``
+     - The :math:`n \times m` matrix that weighs how much each observation
+       moves the estimate (the Kalman gain, the contribution function).
+   * - **averaging kernel**
+     - :math:`A`
+     - ``post.averaging_kernel()``
+     - :math:`A = K H`, how the estimate responds to the true state: a
+       diagonal near 1 is a state element the observations constrain, near 0
+       one left at its prior.
+   * - **DOFS**
+     - :math:`\operatorname{tr}(A)`
+     - ``post.dofs``
+     - Degrees of freedom for signal: the number of independent pieces of
+       information the observations give about the state.
+   * - **gamma**
+     - :math:`\gamma`
+     - ``gamma``, ``post.with_gamma(g)``
+     - The regularization factor: the solve uses :math:`S_z / \gamma`, so a
+       gamma above 1 trusts the observations more and below 1 the prior
+       more. 1 by default.
 
-   **Posterior**
-      The updated estimate of the state (and its uncertainty) after incorporating observations through Bayesian inference.
+The posterior also has these statistics:
 
-   **Forward Model / Forward Operator**
-      The mathematical operator :math:`H` that predicts observations from a given state: :math:`y = Hx + c`. Sometimes called the Jacobian, observation operator, or sensitivity matrix.
+.. list-table::
+   :header-rows: 1
+   :widths: 27 23 50
 
-   **Jacobian**
-      In the linear case, identical to the forward operator :math:`H`. For nonlinear problems, the Jacobian is the local linearization of the forward model.
+   * - Statistic
+     - In fips
+     - What it is
+   * - chi-squared
+     - ``post.chi2``
+     - The misfit of the estimate to the observations and to the prior, each
+       weighed by its covariance; ``post.reduced_chi2`` divides it by
+       :math:`m`, and is near 1 when the covariances are right.
+   * - :math:`R^2`, RMSE
+     - ``post.r2``, ``post.rmse``
+     - The squared correlation, and the root mean square difference, of the
+       observations and :math:`H \hat{x} + c`.
+   * - uncertainty reduction
+     - ``post.uncertainty_reduction``
+     - :math:`1 - \sqrt{\operatorname{tr}(\hat{S})} / \sqrt{\operatorname{tr}(S_0)}`.
+   * - Desroziers diagnostic
+     - ``post.desroziers(by=...)``
+     - The observation error variances the residuals :math:`z - H \hat{x} - c`
+       and the innovation diagnose, beside those the solve used.
 
-   **Observation Operator**
-      Another name for the forward operator, emphasizing its role in mapping state space to observation space.
+.. _fips-words:
 
-   **Kalman Gain**
-      The matrix :math:`K` that optimally weights how much each observation updates the prior state. Derived from minimizing posterior uncertainty.
+fips's own words
+----------------
 
-   **Averaging Kernel**
-      Matrix :math:`A = KH` showing which true state variables are constrained by the observations. Diagonal elements near 1 indicate strong constraint; near 0 indicates weak constraint.
+**label**
+   What names one element of a vector or one row or column of a matrix: a
+   time, a cell, a site and a time. A label is a row of a pandas index.
 
-   **Model-Data Mismatch**
-      The combined error in observations and forward model representation, captured in the covariance matrix :math:`S_z`. Includes measurement error, transport error, aggregation error, etc.
+**block**
+   A named part of a state or of the observations whose elements share their
+   kind of label: the ``flux`` cells and the ``bias`` sites of a state, the
+   ``station`` and ``satellite`` blocks of the observations.
 
-   **Covariance Matrix**
-      A symmetric positive-definite matrix encoding uncertainties and their correlations. Diagonal elements are variances; off-diagonal elements are covariances.
+**space** (:class:`~fips.Space`)
+   The labels of a state, of the observations, or of one axis of a matrix: an
+   ordered set of blocks, each with its own pandas index.
 
-   **Posterior Error Reduction**
-      The decrease in uncertainty from prior to posterior, often expressed as :math:`1 - \text{diag}(\hat{S}) / \text{diag}(S_0)`.
+**vector** (:class:`~fips.Vector`)
+   Values on a space: a prior, the observations, an estimate.
+
+**operator** (:class:`~fips.Operator`)
+   A matrix with a space on each axis: the forward operator, an aggregation, a
+   gain. A covariance (:class:`~fips.Covariance`) is an operator from a space to
+   itself.
+
+**covariance model**
+   A covariance written down before its labels exist: a correlation model
+   (:class:`~fips.Exponential`, :class:`~fips.Kronecker`, ...) with standard
+   deviations, which a :class:`~fips.Problem` puts on the prior's or the
+   observations' space.
+
+**aggregation** (:math:`W`)
+   An operator from a space to groups of its labels (sums or means): hourly
+   observations to daily means, the state to monthly totals
+   (:mod:`fips.aggregate`).
+
+**method**
+   How :func:`fips.solve` solves a problem. The one method is ``"analytic"``,
+   the closed-form Gaussian posterior.
 
 .. seealso::
 
-   - :doc:`getting_started` — Quick introduction to FIPS with minimal example
-   - :doc:`usage` — Detailed guide to data structures and workflows
-   - :doc:`reference/posterior` — The solve and the posterior it returns
+   - :doc:`getting_started`: a first problem, step by step
+   - :doc:`usage`: each object in more depth
+   - :doc:`reference/posterior`: the solve and the posterior it returns
