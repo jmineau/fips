@@ -58,12 +58,6 @@ class Solution(Protocol):
       problem with other values of the observations, without solving again
       (:meth:`Posterior.with_data`).
 
-    A third is optional because the posterior can do without it: ``HS_0H``,
-    the attribute holding :math:`H S_0 H^T` (``m x m``, a ``LinearOperator``)
-    for a method that formed it. :attr:`Posterior.innovation_cov` and
-    :meth:`Posterior.leverage` use it instead of forming it again, and form it
-    themselves when the solution has none.
-
     And a solution whose :meth:`estimate` is the posterior mean says so with a
     class attribute ``estimate_is_mean = True``; without it, a posterior has
     no :attr:`~Posterior.mean`.
@@ -524,10 +518,7 @@ class Posterior:
 
     @cached_property
     def _HS_0H(self) -> LinearOperator:
-        r""":math:`H S_0 H^T`, in the cheapest form of its factors: the solution's, or formed here."""
-        kept = getattr(self._solution, "HS_0H", None)
-        if kept is not None:
-            return kept
+        r""":math:`H S_0 H^T`, in the cheapest form of its factors."""
         H = self._problem.forward.data
         return (H @ self._problem.prior_cov.data) @ H._transpose()
 
