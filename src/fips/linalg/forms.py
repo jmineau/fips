@@ -173,7 +173,9 @@ class LinearOperator(_SciPyLinearOperator):
     ``_transpose``. Every other method has a default that is right for any
     form, which the subclass overrides where its form has a cheaper way. A
     form that is neither dense nor sparse also gets a SciPy sparse matrix in
-    ``_matmat``, from a product with a :class:`SparseOperator`.
+    ``_matmat``, from a product with a :class:`SparseOperator`. A form that
+    keeps something out of its pickle (a cache) overrides ``__getstate__``
+    starting from this class's, which leaves out SciPy's own attributes.
 
     Parameters
     ----------
@@ -192,9 +194,21 @@ class LinearOperator(_SciPyLinearOperator):
     def _freeze(self) -> None:
         """Make the arrays the form holds read-only; a form that holds none has nothing to do."""
 
+    # A pickle holds the form's attributes, not SciPy's array namespace: SciPy
+    # 1.18 keeps that module on each operator, and its own pickle hooks (which
+    # 1.17 does not have) cannot read a pickle written without it. Loading runs
+    # SciPy's constructor again instead, so a pickle written on any SciPy
+    # version loads on any other.
+    def __getstate__(self) -> dict:
+        """Return the state for pickling, without SciPy's array namespace (a module)."""
+        state = self.__dict__.copy()
+        state.pop("_xp", None)
+        return state
+
     def __setstate__(self, state: dict) -> None:
-        """Restore from a pickle, with the arrays read-only again (a pickle keeps the values, not the flag)."""
+        """Restore from a pickle, with SciPy's attributes set again and the arrays read-only again (a pickle keeps the values, not the flag)."""
         self.__dict__.update(state)
+        LinearOperator.__init__(self, self.shape)
         self._freeze()
 
     # SciPy is not annotated, so pyrefly takes the type of each default it
