@@ -492,6 +492,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   you captured it. `FluxInversionPipeline.summarize` still prints its report, and
   so does a subclass that prints in its own `run`.
   ([#8](https://github.com/jmineau/fips/issues/8))
+- **The distance functions drop the options nothing used and are typed.**
+  `haversine_matrix(lats, lons)` takes degrees and gives kilometers on a sphere
+  of radius 6371 km: its `deg=` and `earth_radius=` are gone (for radians, pass
+  `np.degrees(lats)`), and `time_diff_matrix(times)` always gives the absolute
+  differences: its `absolute=` is gone. The fips kernels passed none of them.
+  `haversine_matrix` and `chordal_matrix` share the one half-angle term they
+  both write, and every distance function has annotations. No distance
+  changes. ([#82](https://github.com/jmineau/fips/issues/82))
 
 ### Removed
 
@@ -727,6 +735,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- `haversine_matrix` gave NaN for some exactly antipodal points: the
+  half-angle term is clipped to [0, 1] against roundoff, as `chordal_matrix`'s
+  already was. ([#108](https://github.com/jmineau/fips/issues/108))
 - **Labels at every door** (the branch review's fixes;
   [#82](https://github.com/jmineau/fips/issues/82)):
   `Covariance` refuses a dense or sparse matrix that is not symmetric (its

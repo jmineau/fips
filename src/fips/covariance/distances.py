@@ -1,85 +1,49 @@
 """
-Distance and similarity metrics.
+Distances between points: on the Earth, and in time.
 
-This module provides functions for calculating distances and similarities
-between data points, such as Haversine distance for geographic coordinates
-and time differences for temporal data, and the chordal distance through the
-Earth that the covariance models use with Gaussian and Matérn kernels.
+The functions give the haversine (great-circle) distance and the chordal
+distance through the Earth between points given by latitude and longitude in
+degrees, in kilometers on a sphere of radius 6371 km, and the time difference
+between datetimes. The covariance kernels measure with them; the chordal
+distance goes with the Gaussian and Matérn kernels.
 """
 
 import numpy as np
+import numpy.typing as npt
 import pandas as pd
 
+_EARTH_RADIUS = 6371.0
+"""The Earth's radius, in km."""
 
-def haversine_matrix(lats, lons, earth_radius=None, deg=True):
+
+def _half_angle_term(lats: npt.ArrayLike, lons: npt.ArrayLike) -> np.ndarray:
     """
-    Calculate the pairwise Haversine distance matrix between a set of coordinates.
+    Return ``sin(c / 2) ** 2`` for the great-circle angle ``c`` between every two points.
 
-    Parameters
-    ----------
-    lats : array-like
-        1D array-like of latitude coordinates in degrees (if deg=True) else in radians.
-    lons : array-like
-        1D array-like of longitude coordinates in degrees (if deg=True) else in radians.
-    earth_radius : float, optional
-        Radius of the Earth in kilometers, by default 6371.0 km.
-    deg : bool, optional
-        If True, input coordinates are in degrees and will be converted to radians.
-        If False, input coordinates are assumed to be in radians, by default True.
-
-    Returns
-    -------
-    np.ndarray
-        A 2D NumPy array (matrix) where the element at (i, j) is the
-        Haversine distance between the i-th and j-th coordinate.
-        The diagonal of the matrix will be zero.
+    This is the haversine of the angle, which both distances are a function
+    of. The coordinates are in degrees; the diagonal is exactly zero, and
+    the term is clipped to [0, 1] against roundoff.
     """
-    if earth_radius is None:
-        earth_radius = 6371.0  # Earth's radius in kilometers
-
-    # Convert to numpy
-    lats = np.asarray(lats)
-    lons = np.asarray(lons)
-
+    lats = np.radians(np.asarray(lats))
+    lons = np.radians(np.asarray(lons))
     if not (lats.ndim == 1 and lons.ndim == 1):
         raise ValueError("lats and lons must be 1D sequences")
-
-    if deg:
-        # Convert degrees to radians
-        lats = np.radians(lats)
-        lons = np.radians(lons)
-
-    # Reshape for broadcasting to column vectors
-    lats = lats[:, np.newaxis]
-    lons = lons[:, np.newaxis]
-
-    # Calculate pairwise differences in latitude and longitude
-    # Broadcasting (n, 1) with (1, n) results in an (n, n) matrix
-    dlat = lats - lats.T
-    dlon = lons - lons.T
-
-    # Apply the Haversine formula
-    a = np.sin(dlat / 2) ** 2 + np.cos(lats) * np.cos(lats.T) * np.sin(dlon / 2) ** 2
-    c = 2 * np.arctan2(np.sqrt(a), np.sqrt(1 - a))
-
-    distance_matrix = earth_radius * c
-
-    # The diagonal is already ~0 due to the calculation, but this ensures it's exactly 0.
-    np.fill_diagonal(
-        distance_matrix, 0
-    )  # This line is often not needed but ensures precision.
-
-    return distance_matrix
+    # (n, 1) against (1, n) makes an (n, n) matrix
+    lats, lons = lats[:, np.newaxis], lons[:, np.newaxis]
+    a = (
+        np.sin((lats - lats.T) / 2) ** 2
+        + np.cos(lats) * np.cos(lats.T) * np.sin((lons - lons.T) / 2) ** 2
+    )
+    np.fill_diagonal(a, 0.0)
+    # Roundoff can put a just above 1 for antipodal points, and sqrt(1 - a) is then NaN
+    return np.clip(a, 0.0, 1.0)
 
 
-def chordal_matrix(lats, lons, earth_radius: float = 6371.0) -> np.ndarray:
+def haversine_matrix(lats: npt.ArrayLike, lons: npt.ArrayLike) -> np.ndarray:
     """
-    Calculate the pairwise chordal distance matrix between points on the Earth.
+    Calculate the pairwise great-circle (haversine) distance matrix between points.
 
-    The chordal distance is the length of the straight line through the Earth
-    between two points, ``2 R sin(c / 2)`` for a great-circle angle ``c``. A
-    Gaussian or Matérn correlation of it is positive-definite on the sphere,
-    which one of the great-circle distance is not (Gneiting 2013).
+    The Earth is a sphere of radius 6371 km.
 
     Parameters
     ----------
@@ -87,8 +51,37 @@ def chordal_matrix(lats, lons, earth_radius: float = 6371.0) -> np.ndarray:
         1D array-like of latitudes in degrees.
     lons : array-like
         1D array-like of longitudes in degrees.
-    earth_radius : float, default 6371.0
-        Radius of the Earth, in kilometers.
+
+    Returns
+    -------
+    np.ndarray
+        The matrix of distances in kilometers, zero on the diagonal.
+
+    Raises
+    ------
+    ValueError
+        If `lats` or `lons` is not 1D.
+    """
+    a = _half_angle_term(lats, lons)
+    return 2.0 * _EARTH_RADIUS * np.arctan2(np.sqrt(a), np.sqrt(1 - a))
+
+
+def chordal_matrix(lats: npt.ArrayLike, lons: npt.ArrayLike) -> np.ndarray:
+    """
+    Calculate the pairwise chordal distance matrix between points on the Earth.
+
+    The chordal distance is the length of the straight line through the Earth
+    (a sphere of radius ``R`` = 6371 km) between two points, ``2 R sin(c / 2)``
+    for a great-circle angle ``c``. A Gaussian or Matérn correlation of it is
+    positive-definite on the sphere, which one of the great-circle distance is
+    not (Gneiting 2013).
+
+    Parameters
+    ----------
+    lats : array-like
+        1D array-like of latitudes in degrees.
+    lons : array-like
+        1D array-like of longitudes in degrees.
 
     Returns
     -------
@@ -113,42 +106,27 @@ def chordal_matrix(lats, lons, earth_radius: float = 6371.0) -> np.ndarray:
     array([[   0., 9010.],
            [9010.,    0.]])
     """
-    lats = np.radians(np.asarray(lats, dtype=float))
-    lons = np.radians(np.asarray(lons, dtype=float))
-    if not (lats.ndim == 1 and lons.ndim == 1):
-        raise ValueError("lats and lons must be 1D sequences")
-    lats, lons = lats[:, np.newaxis], lons[:, np.newaxis]
-    # sin(c / 2) is the square root of the haversine of the angle
-    a = (
-        np.sin((lats - lats.T) / 2) ** 2
-        + np.cos(lats) * np.cos(lats.T) * np.sin((lons - lons.T) / 2) ** 2
-    )
-    distance = 2.0 * earth_radius * np.sqrt(np.clip(a, 0.0, 1.0))
-    np.fill_diagonal(distance, 0.0)
-    return distance
+    a = _half_angle_term(lats, lons)
+    return 2.0 * _EARTH_RADIUS * np.sqrt(a)
 
 
-def time_diff_matrix(times, absolute: bool = True) -> np.ndarray:
+def time_diff_matrix(times: npt.ArrayLike) -> np.ndarray:
     """
-    Calculate the time differences between each pair of times.
+    Calculate the absolute time difference between each pair of times.
 
     Parameters
     ----------
-    times : list[dt.datetime]
-        The list of times to calculate the differences between.
-    absolute : bool, optional
-        If True, return the absolute differences. Default is True.
+    times : array-like
+        The datetimes to calculate the differences between (a list, array,
+        Series or DatetimeIndex).
 
     Returns
     -------
     np.ndarray
-        The matrix of time differences.
+        The matrix of time differences, as ``timedelta64``.
     """
     # Normalize inputs (Series, DataFrame, ndarray) to a flat 1D sequence of datetimes.
     times = np.asarray(times).reshape(-1)
     # wrap in pandas DatetimeIndex as np.subtract.outer doesn't like pd.Series
     times = pd.DatetimeIndex(times)
-    diffs = np.subtract.outer(times, times)
-    if absolute:
-        diffs = np.abs(diffs)
-    return diffs
+    return np.abs(np.subtract.outer(times, times))
