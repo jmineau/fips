@@ -1247,7 +1247,7 @@ def test_a_solve_does_not_copy_the_forms_it_makes(constructors):
 
 
 def test_posterior_on_factors_pickles():
-    """A posterior whose prior error is factors pickles, and keeps the factors."""
+    """A posterior whose prior error is factors pickles, keeps the factors, and its problem solves again."""
     index = _product()
     S, _ = _kron_cov(index)
     post = fips.solve(Problem(prior_cov=S, **_problem_inputs(index, sparse_h=True)))
@@ -1256,6 +1256,9 @@ def test_posterior_on_factors_pickles():
     assert isinstance(loaded.problem.prior_cov.data, KroneckerOperator)
     np.testing.assert_array_equal(loaded.estimate.values, post.estimate.values)
     assert loaded.reduced_chi2 == post.reduced_chi2
+    again = fips.solve(loaded.problem)
+    np.testing.assert_array_equal(again.estimate.values, post.estimate.values)
+    np.testing.assert_array_equal(again.variances.values, post.variances.values)
 
 
 def test_kron_reduce_matches_product_order():
