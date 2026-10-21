@@ -854,6 +854,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   (one bias for one site, one region) now builds, from a Series or from a
   one-row, one-column DataFrame.
   ([#38](https://github.com/jmineau/fips/issues/38))
+- **`Posterior.r2` is the R² of the enhancement**, `corr(z - c, H x_hat)²`:
+  the observations less the offset `c`, against `H x_hat`. 0.1.0b9's
+  `Estimator.R2`, documented as `corr(z, H x_hat)²`, computed
+  `corr(z, H x_hat + c)²`, the offset included, so a background that varies
+  from day to day raised it whatever the fit of the state: with 200 synthetic
+  observations and a background of standard deviation 1, it gave 0.78 for a
+  fit whose enhancement R² is 0.27. Without an offset, or with a constant one,
+  the number is the same as before.
+  ([#116](https://github.com/jmineau/fips/issues/116))
 
 ## [0.1.0b9] - 2026-10-09
 
