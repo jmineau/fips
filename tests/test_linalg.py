@@ -1,7 +1,9 @@
 """Tests for fips.linalg: each form against its dense equivalent, and the solve on every form."""
 
 import copy
+import os
 import pickle
+from concurrent.futures import ThreadPoolExecutor
 
 import numpy as np
 import pandas as pd
@@ -21,6 +23,7 @@ from fips.linalg import (
     SparseOperator,
     as_linear_operator,
     dottest,
+    forms,
 )
 from fips.linalg.kronecker import _KroneckerRoot
 
@@ -331,6 +334,128 @@ def test_sparse_product_that_fills_in_is_dense():
     product = SparseOperator(sp.csr_matrix(A)) @ SparseOperator(sp.csr_matrix(A.T))
     assert isinstance(product, DenseOperator)
     np.testing.assert_allclose(product.dense(), A @ A.T, rtol=RTOL, atol=1e-12)
+
+
+# ---------------------------------------------------------------------------
+# A sparse matrix times a dense one, on threads
+# ---------------------------------------------------------------------------
+
+
+@pytest.fixture
+def threaded(monkeypatch):
+    """Run every sparse-times-dense product on four threads, however small."""
+    monkeypatch.setattr(forms, "_THREADED_WORK", 0)
+    monkeypatch.setattr(forms, "_threads", lambda: 4)
+
+
+class TestThreadedProducts:
+    """The product in row blocks on threads is SciPy's own, bit for bit."""
+
+    SHAPES = [(57, 40, 13), (3, 20, 7), (200, 31, 1), (1, 5, 5), (64, 64, 64)]
+    """(rows of the sparse matrix, its columns, columns of the dense one)."""
+
+    @pytest.mark.parametrize(("m", "n", "c"), SHAPES)
+    def test_sparse_times_dense(self, threaded, m, n, c):
+        """``H @ X`` for a CSR ``H``: more blocks than rows, one column, one row."""
+        rng = np.random.default_rng(m)
+        H = sp.csr_array(sparse_random(rng, m, n, 0.2))
+        X = rng.standard_normal((n, c))
+        product = SparseOperator(H).matmat(X)
+        np.testing.assert_array_equal(product, H @ X)
+
+    @pytest.mark.parametrize(("m", "n", "c"), SHAPES)
+    @pytest.mark.parametrize("order", ["C", "F"])
+    def test_dense_times_sparse(self, threaded, m, n, c, order):
+        """``X @ H^T`` (what ``H S_0 H^T`` is): the values and the layout are SciPy's."""
+        rng = np.random.default_rng(n)
+        H = sp.csr_array(sparse_random(rng, m, n, 0.2))
+        X = np.asarray(rng.standard_normal((c, n)), order=order)
+        product = (DenseOperator(X) @ SparseOperator(H)._transpose()).dense()
+        expected = X @ H.T
+        np.testing.assert_array_equal(product, expected)
+        assert product.flags.f_contiguous == expected.flags.f_contiguous
+
+    @pytest.mark.parametrize("threads", [1, 2, 3, 7, 64])
+    def test_any_number_of_threads(self, monkeypatch, threads):
+        """The blocks differ with the threads; the product does not."""
+        monkeypatch.setattr(forms, "_THREADED_WORK", 0)
+        monkeypatch.setattr(forms, "_threads", lambda: threads)
+        rng = np.random.default_rng(3)
+        H = sp.csr_array(sparse_random(rng, 100, 50, 0.3))
+        X = rng.standard_normal((50, 20))
+        np.testing.assert_array_equal(SparseOperator(H).matmat(X), H @ X)
+
+    def test_other_arrays_are_scipys_call(self, threaded):
+        """An integer or a 1D array goes to SciPy, which gives what it always did."""
+        rng = np.random.default_rng(4)
+        H = sp.csr_array(sparse_random(rng, 30, 20, 0.3))
+        X = rng.integers(0, 5, (20, 4))
+        np.testing.assert_array_equal(forms._csr_times(H, X), H @ X)
+        x = rng.standard_normal(20)
+        np.testing.assert_array_equal(forms._csr_times(H, x), H @ x)
+
+    def test_a_small_product_or_one_thread_starts_no_pool(self, monkeypatch):
+        """Below the work threshold, or on one thread, the pool is not made."""
+
+        def refuse(*args):
+            raise AssertionError("a thread pool was made")
+
+        monkeypatch.setattr(forms, "ThreadPoolExecutor", refuse)
+        rng = np.random.default_rng(5)
+        H = sp.csr_array(sparse_random(rng, 30, 20, 0.3))
+        X = rng.standard_normal((20, 4))
+        monkeypatch.setattr(forms, "_threads", lambda: 4)
+        forms._csr_times(H, X)  # 600 multiply-adds: below the threshold
+        monkeypatch.setattr(forms, "_THREADED_WORK", 0)
+        monkeypatch.setattr(forms, "_threads", lambda: 1)
+        forms._csr_times(H, X)
+
+    def test_a_failing_block_raises(self, threaded, monkeypatch):
+        """An error in a block comes out of the product."""
+        rng = np.random.default_rng(6)
+        H = sp.csr_array(sparse_random(rng, 30, 20, 0.3))
+        with pytest.raises(ValueError):
+            forms._csr_times(H, rng.standard_normal((19, 4)))
+
+    @pytest.mark.usefixtures("analytic_form")
+    @pytest.mark.parametrize("dense_prior", [True, False])
+    def test_a_solve_is_the_same(self, monkeypatch, dense_prior):
+        """The posterior of a sparse Jacobian is the same on one thread and on four."""
+        z, x_0, H, S_0, S_z, c = _inputs("banded")
+        S_0 = S_0 if dense_prior else sp.csr_array(S_0)
+        problem = _labeled(z, x_0, sp.csr_array(H), S_0, S_z, c)
+        monkeypatch.setattr(forms, "_threads", lambda: 1)
+        one = fips.solve(problem, gamma=0.5)
+        monkeypatch.setattr(forms, "_THREADED_WORK", 0)
+        monkeypatch.setattr(forms, "_threads", lambda: 4)
+        pools = []
+        monkeypatch.setattr(
+            forms,
+            "ThreadPoolExecutor",
+            lambda n: pools.append(n) or ThreadPoolExecutor(n),
+        )
+        four = fips.solve(problem, gamma=0.5)
+        assert pools or not dense_prior  # a dense S_0 makes dense-times-sparse products
+        for name in ("estimate", "variances", "innovation_cov", "kalman_gain"):
+            a, b = (
+                x.dense() if isinstance(x, Operator) else x.values
+                for x in (getattr(four, name), getattr(one, name))
+            )
+            np.testing.assert_array_equal(a, b, name)
+
+
+def test_threads_are_the_cpus_the_process_may_use(monkeypatch):
+    """A Slurm job's CPUs (not the node's), at most ``OMP_NUM_THREADS`` when that is a number."""
+    cpus = (
+        len(os.sched_getaffinity(0))
+        if hasattr(os, "sched_getaffinity")
+        else os.cpu_count()
+    )
+    monkeypatch.delenv("OMP_NUM_THREADS", raising=False)
+    assert forms._threads() == cpus
+    for asked, expected in [("1", 1), ("0", 1), (str(cpus + 5), cpus), ("many", cpus)]:
+        monkeypatch.setenv("OMP_NUM_THREADS", asked)
+        assert forms._threads() == expected, asked
 
 
 @pytest.mark.parametrize("left", FORMS)

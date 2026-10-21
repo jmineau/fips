@@ -10,6 +10,8 @@ made of other forms are in :mod:`fips.linalg.block` and
 """
 
 import logging
+import os
+from concurrent.futures import ThreadPoolExecutor
 from typing import Self, TypeAlias
 
 import numpy as np
@@ -157,6 +159,64 @@ def _sparse_array(matrix, copy: bool) -> "sp.csr_array | sp.csc_array":
     """Return a SciPy sparse matrix as a float64 CSR array (CSC for a CSC input), copied if `copy`."""
     kind = sp.csc_array if matrix.format == "csc" else sp.csr_array
     return kind(matrix, dtype=float, copy=copy)
+
+
+_THREADED_WORK = 10_000_000
+"""
+The multiply-adds in a sparse-times-dense product above which it runs on threads.
+
+SciPy's takes about a nanosecond for each, so this is about 10 ms: below it a
+pool of threads costs more than it saves.
+"""
+
+
+def _threads() -> int:
+    """
+    Return how many threads a product may use.
+
+    The CPUs this process may run on, so a Slurm job's and not the node's, and
+    no more than ``OMP_NUM_THREADS`` when that is set to a number, as for NumPy's
+    BLAS: a run that asks for one thread gets one.
+    """
+    try:
+        cpus = len(os.sched_getaffinity(0))
+    except AttributeError:  # macOS and Windows have no affinity
+        cpus = os.cpu_count() or 1
+    asked = os.environ.get("OMP_NUM_THREADS", "")
+    return max(1, min(cpus, int(asked))) if asked.isdigit() else cpus
+
+
+def _csr_times(matrix: "sp.csr_array", X: np.ndarray) -> np.ndarray:
+    """
+    Return ``matrix @ X`` for a CSR array and a 2D float64 array, over threads when it is large.
+
+    SciPy multiplies a sparse matrix by a dense one on a single thread, row by
+    row, and releases the GIL while it does. Here the rows of `matrix` go in
+    blocks, one block to a thread, each written to its rows of the result. Row
+    ``i`` of the product is a sum over the stored entries of row ``i``, taken in
+    the same order whichever rows share the call, so the result is SciPy's bit
+    for bit. A small product, one thread, or an array that is not 2D float64 is
+    SciPy's own call.
+    """
+    if type(X) is not np.ndarray or X.ndim != 2 or X.dtype != np.float64:
+        return matrix @ X
+    threads = _threads()
+    if threads == 1 or matrix.nnz * X.shape[1] < _THREADED_WORK:
+        return matrix @ X
+    X = np.ascontiguousarray(X)  # once for every block, not in each call
+    # the rows from the index pointer: pyrefly reads SciPy's `shape` as possibly None
+    rows = matrix.indptr.size - 1
+    out = np.empty((rows, X.shape[1]))
+    # more blocks than threads, so that dense rows do not leave the others idle
+    cuts = np.linspace(0, rows, min(4 * threads, rows) + 1).astype(int)
+
+    def block(first: int, last: int) -> None:
+        """Write rows `first` to `last` of the product."""
+        out[first:last] = matrix[first:last] @ X
+
+    with ThreadPoolExecutor(threads) as pool:
+        list(pool.map(block, cuts[:-1], cuts[1:]))  # list() raises a block's error
+    return out
 
 
 class LinearOperator(_SciPyLinearOperator):
@@ -610,10 +670,15 @@ class SparseOperator(LinearOperator):
 
     def _matmat(self, X):
         """Return ``self @ X``."""
+        if isinstance(self.matrix, sp.csr_array):
+            return _csr_times(self.matrix, X)
         return self.matrix @ X
 
     def _rmatmul_array(self, X):
         """Return ``X @ self``."""
+        if isinstance(self.matrix, sp.csc_array) and X.ndim == 2:
+            # SciPy computes it as (self.T @ X.T).T, with self.T a CSR array
+            return _csr_times(self.matrix.T, X.T).T
         return X @ self.matrix
 
     def _transpose(self):
