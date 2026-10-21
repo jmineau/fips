@@ -162,7 +162,7 @@ def _direct(z, x_0, H, S_0, S_z, c, gamma):
         "modeled_obs": y_hat,
         "predict(prior)": y_0,
         "innovation_cov": (HS_0H + S_z).dense(),
-        "r2": np.corrcoef(z, y_hat)[0, 1] ** 2,
+        "r2": np.corrcoef(z - c, H @ x_hat)[0, 1] ** 2,
         "rmse": np.sqrt((r**2).sum() / len(z)),
         "desroziers": r * (z - y_0),
     }

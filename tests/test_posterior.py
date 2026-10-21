@@ -208,6 +208,85 @@ class TestOutputs:
         assert repr(post) == "Posterior(AnalyticOptions(gamma=1.0), n_state=8, n_obs=8)"
 
 
+def _background_problem(c_sd, seed=0, offset="vector") -> tuple[Problem, np.ndarray]:
+    """
+    200 observations of five fluxes over a background of standard deviation `c_sd`.
+
+    The case of issue #116: the background is the offset, given, not fitted.
+    `offset` is ``"vector"`` (the background as a `Vector`), ``"scalar"`` (its
+    mean as a number, when `c_sd` is 0) or ``None`` (no offset; the
+    observations then hold no background).
+    """
+    rng = np.random.default_rng(seed)
+    m, n = 200, 5
+    H = rng.random((m, n))
+    x = rng.random(n)
+    c = 2.0 + c_sd * rng.standard_normal(m)
+    if offset is None:
+        c = np.zeros(m)
+    z = H @ x + c + 0.5 * rng.standard_normal(m)
+    state = Space({"flux": pd.RangeIndex(n, name="cell")})
+    obs = Space({"conc": pd.RangeIndex(m, name="obs_id")})
+    given = {"vector": Vector(c, obs), "scalar": 2.0, None: None}[offset]
+    problem = Problem(
+        prior=Vector(np.zeros(n), state),
+        prior_cov=Covariance.diagonal(1.0, state),
+        obs=Vector(z, obs),
+        obs_cov=Covariance.diagonal(0.25, obs),
+        forward=Operator(H, obs, state),
+        offset=given,
+    )
+    return problem, c
+
+
+class TestR2:
+    """``r2`` is the R² of the enhancement: corr(z - c, H x_hat)² (#116)."""
+
+    @staticmethod
+    def _with_offset(problem, post):
+        """The squared correlation of the observations and the modeled observations."""
+        z, y = problem.obs.values, post.modeled_obs.values
+        return np.corrcoef(z, y)[0, 1] ** 2
+
+    @pytest.mark.parametrize("offset", [None, "scalar", "vector"])
+    def test_no_or_a_constant_offset_changes_nothing(self, offset):
+        """Without an offset or with a constant one, r2 is what it was."""
+        problem, _ = _background_problem(0.0, offset=offset)
+        post = fips.solve(problem)
+        assert post.r2 == pytest.approx(self._with_offset(problem, post), rel=1e-12)
+
+    @pytest.mark.parametrize("c_sd", [0.0, 1.0, 5.0])
+    def test_the_definition(self, c_sd):
+        problem, c = _background_problem(c_sd)
+        post = fips.solve(problem)
+        H = problem.forward.dense()
+        want = np.corrcoef(problem.obs.values - c, H @ post.estimate.values)[0, 1] ** 2
+        assert post.r2 == pytest.approx(want, rel=1e-12)
+
+    def test_a_varying_background_does_not_raise_it(self):
+        """
+        A background that varies raises corr(z, H x_hat + c)², not r2.
+
+        Only the background changes from case to case (sd 0, 1 and 5; the
+        state, H and the noise are the same), so the enhancement and its fit
+        do not change, and neither does r2 (0.28). The squared correlation
+        with the background left in rises from 0.28 to 0.84 and 0.99, as in
+        the issue (0.28, 0.78, 0.99).
+        """
+        r2, with_offset = [], []
+        for c_sd in (0.0, 1.0, 5.0):
+            problem, _ = _background_problem(c_sd)
+            post = fips.solve(problem)
+            r2.append(post.r2)
+            with_offset.append(self._with_offset(problem, post))
+        assert r2[1] == pytest.approx(r2[0], rel=1e-10)
+        assert r2[2] == pytest.approx(r2[0], rel=1e-10)
+        assert with_offset[0] == pytest.approx(r2[0], rel=1e-12)
+        assert with_offset[0] < with_offset[1] < with_offset[2]
+        assert with_offset[1] > r2[1] + 0.3
+        assert with_offset[2] > 0.95
+
+
 class TestSummary:
     """``summary()`` returns the diagnostics as one row, and prints nothing."""
 
