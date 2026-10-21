@@ -298,6 +298,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **A kernel's `within=` is built for all its groups at once.** `Exponential`,
+  `Gaussian`, `Matern` and `Constant` with `within=` (the correlated part of a
+  model-data mismatch, as errors shared by a site's observations on one day)
+  used to select each group's rows with pandas and evaluate the kernel on a
+  small matrix, group by group. They now list every pair of labels in the same
+  group, all groups together, and evaluate the kernel once on the distances of
+  those pairs. The matrix is the same bit for bit, for every kernel, metric and
+  kind of level. With 11,000 hourly observations in 2,752 groups of a site and a
+  day, an `Exponential` builds in 0.009 s instead of 1.1 s and a `Constant` in
+  0.008 s instead of 0.45 s; with 40,000 observations in 0.03 s instead of
+  4.1 s and 1.6 s. `Problem()` for such a problem takes 0.04 s instead of 1.6 s.
+  A few very large groups take about as long as before (an `Exponential` of 7
+  groups of 1,570 observations 1.6 s instead of 1.2 s) in a fifth less memory.
+  Nothing in the API changes.
 - **`Posterior` labels the answer; the method keeps its own machinery.** A
   `Posterior` is built from the problem, the options and what the method kept
   from the solve, its solution, and asks the solution for unlabeled arrays
