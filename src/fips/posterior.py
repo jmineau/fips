@@ -702,9 +702,68 @@ class Posterior:
 
     @property
     def r2(self) -> float:
-        """The squared correlation of the observations and :attr:`modeled_obs`."""
+        r"""
+        The R² of the enhancement, :math:`\operatorname{corr}(z - c, H\hat{x})^2`.
+
+        How well the estimate fits the part of the observations the state
+        explains: the observations :math:`z` less the offset :math:`c` (in a
+        flux inversion, the enhancement over the background), against
+        :math:`H\hat{x}`, which is :attr:`modeled_obs` less the offset.
+
+        The offset is taken out because it is given, not fitted. One that
+        varies from observation to observation, as a background does from
+        day to day, would otherwise raise the correlation by how well it
+        follows the observations, whatever the fit of the state. A constant
+        offset, or none, changes no correlation: then this is the squared
+        correlation of the observations and :attr:`modeled_obs`.
+
+        It is a squared correlation, not :math:`1 - SS_{res} / SS_{tot}`: a
+        fit that is off by a constant or a factor scores as well as an exact
+        one. :attr:`rmse` measures the misfit itself.
+
+        See Also
+        --------
+        modeled_obs : :math:`H\hat{x} + c`.
+        rmse : The root mean square of the residuals.
+
+        Examples
+        --------
+        Four days of one flux over a background that rises from day to day,
+        given as the offset:
+
+        >>> import numpy as np
+        >>> import pandas as pd
+        >>> import fips
+        >>> state = fips.Space({"flux": pd.Index(["a"], name="cell")})
+        >>> days = fips.Space({"co2": pd.RangeIndex(4, name="day")})
+        >>> background = np.array([400.0, 402.0, 404.0, 406.0])
+        >>> problem = fips.Problem(
+        ...     prior=fips.Vector(np.zeros(1), state),
+        ...     prior_cov=fips.Covariance.diagonal(1.0, state),
+        ...     obs=fips.Vector(background + [1.0, 0.0, 2.0, 1.0], days),
+        ...     obs_cov=fips.Covariance.diagonal(0.5, days),
+        ...     forward=fips.Operator(
+        ...         np.array([[1.0], [0.5], [1.5], [0.0]]), days, state
+        ...     ),
+        ...     offset=fips.Vector(background, days),
+        ... )
+        >>> post = fips.solve(problem)
+        >>> round(post.r2, 3)
+        0.4
+
+        With the background left in, its rise alone would make the fit look
+        nearly perfect:
+
+        >>> z, modeled = problem.obs.values, post.modeled_obs.values
+        >>> round(float(np.corrcoef(z, modeled)[0, 1] ** 2), 3)
+        0.983
+        """
         z = self._problem.obs.values
-        return float(np.corrcoef(z, self.modeled_obs.values)[0, 1] ** 2)
+        offset = self._problem.offset
+        if offset is not None:
+            z = z - offset.values
+        fit = self._problem.forward.data @ self.estimate.values
+        return float(np.corrcoef(z, fit)[0, 1] ** 2)
 
     @property
     def rmse(self) -> float:
