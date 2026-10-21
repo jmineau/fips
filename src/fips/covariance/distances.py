@@ -16,6 +16,19 @@ _EARTH_RADIUS = 6371.0
 """The Earth's radius, in km."""
 
 
+def _hav(lat, lon, other_lat, other_lon):
+    """
+    Return the haversine of the angle between points, from coordinates in radians.
+
+    The arguments broadcast: a column against a row gives every two points, equal
+    length vectors give each pair. It is the one place the formula is written.
+    """
+    return (
+        np.sin((lat - other_lat) / 2) ** 2
+        + np.cos(lat) * np.cos(other_lat) * np.sin((lon - other_lon) / 2) ** 2
+    )
+
+
 def _half_angle_term(lats: npt.ArrayLike, lons: npt.ArrayLike) -> np.ndarray:
     """
     Return ``sin(c / 2) ** 2`` for the great-circle angle ``c`` between every two points.
@@ -30,13 +43,28 @@ def _half_angle_term(lats: npt.ArrayLike, lons: npt.ArrayLike) -> np.ndarray:
         raise ValueError("lats and lons must be 1D sequences")
     # (n, 1) against (1, n) makes an (n, n) matrix
     lats, lons = lats[:, np.newaxis], lons[:, np.newaxis]
-    a = (
-        np.sin((lats - lats.T) / 2) ** 2
-        + np.cos(lats) * np.cos(lats.T) * np.sin((lons - lons.T) / 2) ** 2
-    )
+    a = _hav(lats, lons, lats.T, lons.T)
     np.fill_diagonal(a, 0.0)
     # Roundoff can put a just above 1 for antipodal points, and sqrt(1 - a) is then NaN
     return np.clip(a, 0.0, 1.0)
+
+
+def _half_angle_pairs(lats, lons, rows, cols) -> np.ndarray:
+    """Return the term of :func:`_half_angle_term` for the pairs of point ``rows[p]`` and point ``cols[p]``, in degrees."""
+    lats, lons = np.radians(lats), np.radians(lons)
+    a = _hav(lats[rows], lons[rows], lats[cols], lons[cols])
+    a[rows == cols] = 0.0
+    return np.clip(a, 0.0, 1.0)
+
+
+def _great_circle(a: np.ndarray) -> np.ndarray:
+    """Return the great-circle distance in km at the term `a`."""
+    return 2.0 * _EARTH_RADIUS * np.arctan2(np.sqrt(a), np.sqrt(1 - a))
+
+
+def _chord(a: np.ndarray) -> np.ndarray:
+    """Return the chordal distance in km at the term `a`."""
+    return 2.0 * _EARTH_RADIUS * np.sqrt(a)
 
 
 def haversine_matrix(lats: npt.ArrayLike, lons: npt.ArrayLike) -> np.ndarray:
@@ -62,8 +90,7 @@ def haversine_matrix(lats: npt.ArrayLike, lons: npt.ArrayLike) -> np.ndarray:
     ValueError
         If `lats` or `lons` is not 1D.
     """
-    a = _half_angle_term(lats, lons)
-    return 2.0 * _EARTH_RADIUS * np.arctan2(np.sqrt(a), np.sqrt(1 - a))
+    return _great_circle(_half_angle_term(lats, lons))
 
 
 def chordal_matrix(lats: npt.ArrayLike, lons: npt.ArrayLike) -> np.ndarray:
@@ -106,8 +133,7 @@ def chordal_matrix(lats: npt.ArrayLike, lons: npt.ArrayLike) -> np.ndarray:
     array([[   0., 9010.],
            [9010.,    0.]])
     """
-    a = _half_angle_term(lats, lons)
-    return 2.0 * _EARTH_RADIUS * np.sqrt(a)
+    return _chord(_half_angle_term(lats, lons))
 
 
 def time_diff_matrix(times: npt.ArrayLike) -> np.ndarray:

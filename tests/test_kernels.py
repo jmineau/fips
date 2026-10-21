@@ -222,6 +222,86 @@ class TestWithin:
         with pytest.raises(ValueError, match="does not hold datetimes"):
             Exponential("x", 1.0, within="x.date").correlation(X)
 
+    def test_missing_key_is_a_group(self):
+        """Labels that all lack the key are one group, as any other value is."""
+        c = _coords(site=["A", None, "A", None], x=[0.0, 1.0, 2.0, 3.0])
+        C = Exponential("x", 1.0, within="site").correlation(c)
+        np.testing.assert_array_equal(C == 0, [[0, 1, 0, 1], [1, 0, 1, 0]] * 2)
+
+    @pytest.mark.parametrize("n", [0, 1])
+    def test_no_label_and_one_label(self, n):
+        """No labels give an empty matrix, one label its own variance."""
+        c = _coords(site=["A"] * n, x=np.zeros(n))
+        np.testing.assert_array_equal(
+            Exponential("x", 1.0, within="site").correlation(c), np.ones((n, n))
+        )
+
+
+def _shuffled_times(tz) -> pd.DatetimeIndex:
+    """Times 37 minutes apart in a time zone, in a random order."""
+    t = pd.date_range("2024-03-01", periods=300, freq="37min", tz=tz)
+    return t[np.random.default_rng(1).permutation(len(t))]
+
+
+def _within_data() -> pd.DataFrame:
+    """Coordinates of 300 labels on every kind of level, three sites over eight days."""
+    rng = np.random.default_rng(0)
+    n = 300
+    return _coords(
+        site=rng.choice(["A", "B", "C"], size=n),
+        t=_shuffled_times(None),
+        utc=_shuffled_times("UTC"),
+        denver=_shuffled_times("America/Denver"),
+        lag=pd.to_timedelta(rng.integers(0, 10**5, n), unit="s"),
+        x=rng.uniform(0, 10, n),
+        y=rng.uniform(0, 10, n),
+        lat=rng.uniform(40, 41, n),
+        lon=rng.uniform(-112, -111, n),
+    )
+
+
+WITHIN_COORDS = _within_data()
+
+
+def _within_cases():
+    """Yield each kernel with ``within`` (site and day) and the same one without."""
+    by = ["site", "t.date"]
+    yield pytest.param(Constant(within=by), Constant(), id="Constant")
+    for levels, scale, extra in [
+        ("t", "2.8h", {}),
+        ("utc", "2.8h", {}),
+        ("denver", "2.8h", {}),
+        ("lag", "3h", {}),
+        ("x", 2.0, {}),
+        (["x", "y"], 2.0, {}),
+        (["lat", "lon"], 20.0, {"metric": "haversine"}),
+        (["lat", "lon"], 20.0, {"metric": "chordal"}),
+    ]:
+        for cls, args in [(Exponential, ()), (Matern, (1.5,)), (Gaussian, ())]:
+            if cls is not Exponential and extra.get("metric") == "haversine":
+                continue  # not positive-definite, so refused
+            name = f"{cls.__name__}-{'-'.join(np.atleast_1d(levels))}-{extra.get('metric', '')}"
+            yield pytest.param(
+                cls(levels, scale, *args, within=by, **extra),
+                cls(levels, scale, *args, **extra),
+                id=name,
+            )
+
+
+class TestWithinBlocks:
+    """The ``within`` matrix is, bit for bit, the kernel on each group alone."""
+
+    @pytest.mark.parametrize(("grouped", "plain"), list(_within_cases()))
+    def test_each_group_alone(self, grouped, plain):
+        """Every block is the plain kernel on that group's rows, the rest zero."""
+        c = WITHIN_COORDS
+        days = c["t"].dt.date
+        groups = c.groupby([c["site"], days]).indices.values()
+        expected = np.zeros((len(c), len(c)))
+        for members in groups:
+            expected[np.ix_(members, members)] = plain.correlation(c.iloc[members])
+        np.testing.assert_array_equal(grouped.correlation(c), expected)
+
 
 # ---------------------------------------------------------------------------
 # Parameters
