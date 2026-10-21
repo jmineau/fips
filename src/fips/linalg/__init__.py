@@ -19,6 +19,11 @@ Each is a :class:`scipy.sparse.linalg.LinearOperator`, so ``matvec``,
   array is an array, as in SciPy.
 - ``A + B`` and ``A - B`` follow the same rule (an array counts as dense), and
   a scalar ``*`` or ``/`` keeps the form.
+- A product of a sparse form and a dense array (``H @ X``, ``X @ H.T``) runs
+  on threads when it is large, one block of the sparse matrix's rows to a
+  thread, and is the same bit for bit as on one. The threads are the CPUs the
+  process may run on (a Slurm job's, not the node's), at most
+  ``OMP_NUM_THREADS`` when that is set.
 - :meth:`~LinearOperator.dense`, :meth:`~LinearOperator.diagonal`,
   :meth:`~LinearOperator.trace`, and for a symmetric positive-definite form
   :meth:`~LinearOperator.solve`, :meth:`~LinearOperator.logdet` and

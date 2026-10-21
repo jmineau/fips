@@ -219,6 +219,13 @@ solves through each factor's Cholesky factorization. The gain is a dense
 :math:`n \times m` array whatever the inputs; the full posterior covariance is a
 dense :math:`n \times n` matrix, formed only when it is read (see below).
 
+A large product of a sparse matrix and a dense one (:math:`H S_0 H^T` with a
+dense :math:`S_0` has one) runs on threads, each multiplying a block of the
+sparse matrix's rows, and gives the same numbers as one thread, bit for bit. It
+uses the CPUs the process may run on (a Slurm job's ``--cpus-per-task``, not the
+node's), and no more than ``OMP_NUM_THREADS`` when that is set, as NumPy's BLAS
+does: ``OMP_NUM_THREADS=1`` keeps it on one thread.
+
 
 The Posterior
 -------------
