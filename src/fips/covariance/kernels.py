@@ -17,9 +17,10 @@ import scipy.sparse as sp
 from scipy.special import gammaln, kve
 
 from fips.covariance.distances import (
-    chordal_matrix,
-    haversine_matrix,
-    time_diff_matrix,
+    _chord,
+    _great_circle,
+    _half_angle_pairs,
+    _half_angle_term,
 )
 from fips.covariance.models import CorrelationModel, _names
 from fips.linalg import DenseOperator, LinearOperator
@@ -47,6 +48,38 @@ def _key(coords: pd.DataFrame, name: str) -> np.ndarray:
             f"which does not hold datetimes ({values.dtype})."
         )
     return np.asarray(getattr(pd.DatetimeIndex(values), attribute))
+
+
+def _ends(values: np.ndarray, rows: np.ndarray | None, cols: np.ndarray | None):
+    """Return the two sides of the differences between rows: every two rows (as a column and a row), or the pairs `rows` and `cols` name."""
+    if rows is None or cols is None:
+        return values[:, None], values[None, :]
+    return values[rows], values[cols]
+
+
+def _within_pairs(
+    coords: pd.DataFrame, within: Sequence[str]
+) -> tuple[np.ndarray, np.ndarray]:
+    """
+    Return the positions of every pair of rows in the same group, as rows and columns.
+
+    A group is the rows that agree on every `within` entry. The pairs come group
+    by group (groups in order of first appearance), and in each group row by row:
+    the entries of one dense block of the group's members, in order.
+    """
+    keys = pd.DataFrame({name: _key(coords, name) for name in within})
+    groups = keys.groupby(list(within), sort=False, dropna=False).ngroup().to_numpy()
+    order = np.argsort(groups, kind="stable")  # the members of each group, together
+    sizes = np.bincount(groups)
+    size = np.repeat(sizes, sizes)  # the size of each member's group
+    begin = np.repeat(
+        np.cumsum(sizes) - sizes, sizes
+    )  # where its group begins in `order`
+    start = np.cumsum(size) - size  # where each member's run of pairs begins
+    rows = np.repeat(order, size)  # each member, once for each member of its group
+    # in each run, the group's members in order: the position within the run, from the group's begin
+    cols = order[np.arange(len(rows)) - np.repeat(start - begin, size)]
+    return rows, cols
 
 
 @dataclass(frozen=True, init=False)
@@ -78,30 +111,26 @@ class _Kernel(CorrelationModel):
 
     @abstractmethod
     def _unmasked(self, coords: pd.DataFrame) -> np.ndarray:
-        """Return the correlation between the rows of `coords`, ignoring ``within``."""
+        """Return the correlation between every two rows of `coords`, ignoring ``within``."""
+
+    @abstractmethod
+    def _paired(
+        self, coords: pd.DataFrame, rows: np.ndarray, cols: np.ndarray
+    ) -> np.ndarray:
+        """Return the correlation between row ``rows[p]`` and row ``cols[p]`` of `coords` for each p, ignoring ``within``."""
 
     def correlation(self, coords: pd.DataFrame) -> np.ndarray:
         """Return the correlation between the rows of `coords`, zero between groups (see :meth:`CorrelationModel.correlation`)."""
         return np.array(self._form(coords))
 
     def _form(self, coords: pd.DataFrame) -> LinearOperator:
-        """Return the correlation; with ``within``, sparse, one block per group."""
+        """Return the correlation; with ``within``, sparse, with every pair of a group built at once."""
         if not self.within:
             return DenseOperator._adopt(self._unmasked(coords))
-        keys = pd.DataFrame({name: _key(coords, name) for name in self.within})
-        groups = keys.groupby(list(self.within), sort=False, dropna=False).ngroup()
-        order = np.argsort(groups.to_numpy(), kind="stable")
-        cuts = np.flatnonzero(np.diff(groups.to_numpy()[order])) + 1
-        rows, cols, values = [], [], []
-        for members in np.split(order, cuts):
-            block = self._unmasked(coords.iloc[members])
-            rows.append(np.repeat(members, len(members)))
-            cols.append(np.tile(members, len(members)))
-            values.append(block.ravel())
+        rows, cols = _within_pairs(coords, self.within)
         n = len(coords)
         matrix = sp.csr_array(
-            (np.concatenate(values), (np.concatenate(rows), np.concatenate(cols))),
-            shape=(n, n),
+            (self._paired(coords, rows, cols), (rows, cols)), shape=(n, n)
         )
         if matrix.nnz > _DENSE_FILL * n * n:
             return DenseOperator._adopt(matrix.toarray())
@@ -146,6 +175,12 @@ class Constant(_Kernel):
     def _unmasked(self, coords: pd.DataFrame) -> np.ndarray:
         """Return a matrix of ones."""
         return np.ones((len(coords), len(coords)))
+
+    def _paired(
+        self, coords: pd.DataFrame, rows: np.ndarray, cols: np.ndarray
+    ) -> np.ndarray:
+        """Return a one for each pair."""
+        return np.ones(len(rows))
 
 
 @dataclass(frozen=True, init=False)
@@ -199,12 +234,26 @@ class _Decay(_Kernel):
         """Return whether a correlation of the great-circle distance is positive-definite."""
         return True
 
-    def _distance(self, coords: pd.DataFrame) -> np.ndarray:
-        """Return the distance between every two rows, divided by the scale."""
+    def _distance(
+        self,
+        coords: pd.DataFrame,
+        rows: np.ndarray | None = None,
+        cols: np.ndarray | None = None,
+    ) -> np.ndarray:
+        """
+        Return the distance between rows, divided by the scale.
+
+        A matrix between every two rows of `coords`; with `rows` and `cols`, a
+        vector with the distance from row ``rows[p]`` to row ``cols[p]``.
+        """
         if self.metric != "euclidean":
             lat, lon = (coords[level].to_numpy(dtype=float) for level in self.levels)
-            measure = haversine_matrix if self.metric == "haversine" else chordal_matrix
-            return measure(lat, lon) / self.scale
+            if rows is None or cols is None:
+                term = _half_angle_term(lat, lon)
+            else:
+                term = _half_angle_pairs(lat, lon, rows, cols)
+            measure = _great_circle if self.metric == "haversine" else _chord
+            return measure(term) / self.scale
         first = coords[self.levels[0]]
         lags = pd.api.types.is_timedelta64_dtype(first)
         if lags or pd.api.types.is_datetime64_any_dtype(first):
@@ -217,8 +266,11 @@ class _Decay(_Kernel):
                 )
             if lags:
                 t = first.to_numpy()
-                return np.abs(np.subtract.outer(t, t)) / self.scale.to_timedelta64()
-            return time_diff_matrix(first) / self.scale
+            else:  # an instant is the same instant in any time zone
+                times = pd.DatetimeIndex(first)
+                t = (times.tz_convert(None) if times.tz else times).to_numpy()
+            a, b = _ends(t, rows, cols)
+            return np.abs(a - b) / self.scale.to_timedelta64()
         if isinstance(self.scale, pd.Timedelta):
             raise ValueError(
                 f"The scale is a time, but the levels {list(self.levels)} do not "
@@ -226,10 +278,26 @@ class _Decay(_Kernel):
             )
         x = coords[list(self.levels)].to_numpy(dtype=float)
         if x.shape[1] == 1:
-            distance = np.abs(x[:, 0, None] - x[None, :, 0])
+            a, b = _ends(x[:, 0], rows, cols)
+            distance = np.abs(a - b)
         else:
-            distance = np.sqrt(((x[:, None, :] - x[None, :, :]) ** 2).sum(axis=2))
+            a, b = _ends(x, rows, cols)
+            distance = np.sqrt(((a - b) ** 2).sum(axis=-1))
         return distance / self.scale
+
+    @abstractmethod
+    def _decay(self, distance: np.ndarray) -> np.ndarray:
+        """Return the correlation at a distance (divided by the scale), for any shape of array."""
+
+    def _unmasked(self, coords: pd.DataFrame) -> np.ndarray:
+        """Return the correlation between every two rows of `coords`, ignoring ``within``."""
+        return self._decay(self._distance(coords))
+
+    def _paired(
+        self, coords: pd.DataFrame, rows: np.ndarray, cols: np.ndarray
+    ) -> np.ndarray:
+        """Return the correlation of each pair of rows, ignoring ``within``."""
+        return self._decay(self._distance(coords, rows, cols))
 
 
 @dataclass(frozen=True, init=False)
@@ -279,9 +347,9 @@ class Exponential(_Decay):
     >>> mdm = Exponential("obs_time", "2.8h", within=["site", "obs_time.date"])
     """
 
-    def _unmasked(self, coords: pd.DataFrame) -> np.ndarray:
+    def _decay(self, distance: np.ndarray) -> np.ndarray:
         """Return ``exp(-d / scale)``."""
-        return np.exp(-self._distance(coords))
+        return np.exp(-distance)
 
 
 @dataclass(frozen=True, init=False)
@@ -322,9 +390,9 @@ class Gaussian(_Decay):
         """Return False: not positive-definite on the great-circle distance."""
         return False
 
-    def _unmasked(self, coords: pd.DataFrame) -> np.ndarray:
+    def _decay(self, distance: np.ndarray) -> np.ndarray:
         """Return ``exp(-d**2 / (2 scale**2))``."""
-        return np.exp(-0.5 * self._distance(coords) ** 2)
+        return np.exp(-0.5 * distance**2)
 
 
 @dataclass(frozen=True, init=False)
@@ -394,9 +462,9 @@ class Matern(_Decay):
         """Return whether nu <= 1/2, where the great-circle distance is allowed."""
         return self.nu <= 0.5
 
-    def _unmasked(self, coords: pd.DataFrame) -> np.ndarray:
+    def _decay(self, distance: np.ndarray) -> np.ndarray:
         """Return the Matérn correlation, through logarithms so that no term overflows."""
-        r = np.sqrt(2.0 * self.nu) * self._distance(coords)
+        r = np.sqrt(2.0 * self.nu) * distance
         out = np.ones_like(r)
         apart = r > 0
         x = r[apart]
