@@ -798,6 +798,89 @@ def test_a_product_does_not_copy_its_operands_again(constructors):
 
 
 # ---------------------------------------------------------------------------
+# A pickle or a copy of every form computes as the form did
+# ---------------------------------------------------------------------------
+
+
+def _every_form() -> dict[str, LinearOperator]:
+    """One of each form in ``fips.linalg``, with a Kronecker form on part of its grid too."""
+    rng = np.random.default_rng(40)
+    kron = kronecker_block()
+    return {
+        "dense": DenseOperator(spd_dense(rng, 6)),
+        "sparse_csr": SparseOperator(sp.csr_array(spd_banded(rng, 6))),
+        "sparse_csc": SparseOperator(sp.csc_array(spd_banded(rng, 6))),
+        "diagonal": DiagonalOperator(rng.uniform(0.5, 2.0, 6)),
+        "block": block_operator()[0],
+        "kronecker": kron,
+        "kronecker_subset": KroneckerOperator(
+            kron.factors,
+            std=[1.0, 2.0, 0.5, 1.5],
+            positions=[[0, 0, 1, 1], [0, 2, 1, 2]],
+        ),
+    }
+
+
+_REMAKE = {
+    "pickle": lambda op: pickle.loads(pickle.dumps(op)),
+    "pickle_twice": lambda op: pickle.loads(
+        pickle.dumps(pickle.loads(pickle.dumps(op)))
+    ),
+    "copy": copy.copy,
+    "deepcopy": copy.deepcopy,
+}
+
+
+def test_every_form_is_in_the_pickle_test():
+    """Each form ``fips.linalg`` exports is among the forms pickled below."""
+    exported = {
+        obj
+        for name in fips.linalg.__all__
+        if isinstance(obj := getattr(fips.linalg, name), type)
+        and issubclass(obj, LinearOperator)
+        and obj is not LinearOperator
+    }
+    assert exported == {type(op) for op in _every_form().values()}
+
+
+@pytest.mark.parametrize("remake", _REMAKE)
+@pytest.mark.parametrize("form", _every_form())
+def test_a_pickled_or_copied_form_computes(form, remake):
+    """
+    A form that went through a pickle or a copy multiplies, adds and solves as before.
+
+    SciPy's ``LinearOperator`` keeps attributes of its own (SciPy 1.18 its array
+    namespace, a module), which a form's pickle must leave out and loading must
+    set again; reading ``dense()`` alone would not notice they are missing.
+    """
+    op = _every_form()[form]
+    again = _REMAKE[remake](op)
+    assert type(again) is type(op)
+    assert again.shape == op.shape and again.dtype == np.float64
+    rng = np.random.default_rng(41)
+    n = op.shape[0]
+    x, X = rng.standard_normal(n), rng.standard_normal((n, 3))
+    A = op.dense()
+    np.testing.assert_array_equal(again.dense(), A)
+    for result, expected in [
+        (again @ x, A @ x),
+        (again @ X, A @ X),
+        (x @ again, x @ A),
+        (again.T @ x, A.T @ x),
+        (again.matvec(x), A @ x),
+        (again.rmatvec(x), A.T @ x),
+        (again.matmat(X), A @ X),
+        ((again @ again).dense(), A @ A),
+        ((again @ op).dense(), A @ A),
+        ((again + op).dense(), A + A),
+        ((2.0 * again).dense(), 2.0 * A),
+        (again.solve(x), np.linalg.solve(A, x)),
+    ]:
+        np.testing.assert_allclose(result, expected, rtol=RTOL, atol=1e-12)
+    np.testing.assert_allclose(again.logdet(), np.linalg.slogdet(A)[1], rtol=RTOL)
+
+
+# ---------------------------------------------------------------------------
 # The solve on every combination of dense and sparse inputs (#79)
 # ---------------------------------------------------------------------------
 

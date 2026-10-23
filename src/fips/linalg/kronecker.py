@@ -478,7 +478,7 @@ class KroneckerOperator(LinearOperator):
 
     def __getstate__(self) -> dict[str, Any]:
         """Return the state for pickling, without the cached inverses."""
-        state = self.__dict__.copy()
+        state = super().__getstate__()
         state.pop("_inverses", None)
         state.pop("_complement", None)
         state.pop("_norm", None)

@@ -751,6 +751,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `with_data` builds its problem with the constructor, and one `Operator._on`
   puts an operator on two spaces. No number changes.
 
+- **The `fips.linalg` forms pickle and copy on SciPy 1.18.** A
+  `KroneckerOperator` (and so a `Covariance`, `Problem` or `Posterior` holding
+  one) failed to pickle with "cannot pickle 'module' object", and a dense,
+  sparse, diagonal or block diagonal form that had been through a pickle or a
+  copy raised on its first product. SciPy 1.18 keeps its array namespace in
+  each operator; a form's pickle now leaves SciPy's own attributes out and
+  loading sets them again, so a pickle written on any SciPy version loads on
+  any other. The lock's SciPy is 1.18.1 on Python 3.12 and newer (1.17.1 on
+  3.11), so CI runs both. ([#113](https://github.com/jmineau/fips/issues/113))
+
 - **A block of a `Vector` keeps the dtype of its labels.** `v["flux"]` (and
   `v.blocks["flux"]`) of a vector whose other blocks lack the `cell` level gave
   the integer cells `1, 2` back as `1.0, 2.0`; it now gives them as the block
