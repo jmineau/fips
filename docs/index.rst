@@ -16,9 +16,13 @@ fips |release|
    :width: 600px
    :alt: fips logo
 
+.. image:: https://zenodo.org/badge/DOI/10.5281/zenodo.22258484.svg
+   :target: https://doi.org/10.5281/zenodo.22258484
+   :alt: DOI
+
 .. include:: ../README.md
    :parser: myst_parser.sphinx_
-   :start-line: 16
+   :start-after: (https://pyrefly.org)
    :end-before: ## Documentation
 
 .. toctree::
