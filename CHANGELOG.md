@@ -513,6 +513,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   you captured it. `FluxInversionPipeline.summarize` still prints its report, and
   so does a subclass that prints in its own `run`.
   ([#8](https://github.com/jmineau/fips/issues/8))
+- **A large product of a sparse matrix and a dense one runs on threads.**
+  SciPy multiplies a sparse matrix by a dense one on a single thread, and the
+  solve does it with `H S_0 H^T` (a dense matrix times `H^T`) and, for a sparse
+  `H`, with `H @ X`. Above about ten million multiply-adds, `SparseOperator`
+  now gives each thread a block of the sparse matrix's rows; the result is
+  SciPy's bit for bit (every row's sum is the same, in the same order), in the
+  same memory layout. The threads are the CPUs the process may run on (a Slurm
+  job's, not the node's), and no more than `OMP_NUM_THREADS` when that is
+  set, as for NumPy's BLAS: `OMP_NUM_THREADS=1` keeps a run on one thread, as
+  before. On 8 threads, `H S_0 H^T` with 96,000 state elements and 2,751
+  observations takes 1.6 s instead of 10.4 s, and with 18,720 state elements and
+  10,003 observations 2.8 s instead of 25 s; the whole solve takes 17.4 s
+  instead of 20.7 s and, with the 10,003, 87 s instead of 92 to 97 s. Nothing in
+  the API changes.
 
 ### Removed
 
