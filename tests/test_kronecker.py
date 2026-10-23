@@ -43,6 +43,7 @@ from fips.linalg import (
     as_linear_operator,
     dottest,
 )
+from fips.linalg.kronecker import _KroneckerRoot
 
 TIMES = pd.date_range("2024-01-01", periods=4, freq="D")
 LATS = [40.0, 40.5, 41.0]
@@ -630,6 +631,55 @@ class TestLogdet:
         op = KroneckerOperator([np.array([[1.0, 2.0], [2.0, 1.0]]), np.eye(2)])
         with pytest.raises(np.linalg.LinAlgError):
             op.logdet()
+
+
+class TestSqrt:
+    """``KroneckerOperator.sqrt``: a root through the factors' Cholesky factors when the rows are the whole product."""
+
+    @pytest.mark.parametrize("which", ["whole", "permuted"])
+    def test_full_product_in_any_order(self, which, monkeypatch):
+        """``R R^T = S`` without forming ``S``; ``R``, ``R^T`` and products with a sparse matrix match its dense matrix."""
+        op = OPS[which]
+        S = op.dense()
+        monkeypatch.setattr(KroneckerOperator, "dense", _refuse)
+        R = op.sqrt()
+        assert isinstance(R, _KroneckerRoot) and R.shape == op.shape
+        Rd = R.dense()  # through matmat on the identity, not the operator's dense
+        np.testing.assert_allclose(Rd @ Rd.T, S, rtol=1e-12, atol=1e-13)
+        rng = np.random.default_rng(8)
+        X = rng.standard_normal((op.shape[0], 4))
+        Xs = sp.random(op.shape[0], 3, density=0.3, random_state=9, format="csr")
+        np.testing.assert_allclose(R @ X, Rd @ X, rtol=1e-13, atol=1e-13)
+        np.testing.assert_allclose(R.T @ X, Rd.T @ X, rtol=1e-13, atol=1e-13)
+        np.testing.assert_allclose(X.T @ R, X.T @ Rd, rtol=1e-13, atol=1e-13)
+        H = SparseOperator(sp.csr_array(Xs.T))
+        np.testing.assert_allclose((H @ R).dense(), Xs.T @ Rd, rtol=1e-13, atol=1e-13)
+        assert dottest(R)
+
+    def test_in_order_it_is_the_kronecker_product_of_the_roots(self):
+        """On the whole product in order, ``R = D (L_1 kron L_2 kron L_3)``: lower triangular."""
+        op = OPS["whole"]
+        roots = [np.linalg.cholesky(C) for C in op.factors]
+        expected = op.std[:, None] * np.kron(np.kron(roots[0], roots[1]), roots[2])
+        np.testing.assert_allclose(op.sqrt().dense(), expected, rtol=1e-13, atol=1e-15)
+
+    def test_strict_subset_is_the_dense_cholesky_factor(self):
+        """A strict subset of the product factors the dense matrix (``P^T P`` is not the identity)."""
+        op = OPS["ragged"]
+        R = op.sqrt()
+        assert isinstance(R, DenseOperator)
+        np.testing.assert_allclose(
+            R.dense(), np.linalg.cholesky(op.dense()), rtol=1e-12
+        )
+
+    def test_zero_std_and_indefinite_factor_raise(self):
+        """A zero standard deviation or a factor that is not positive-definite has no root."""
+        op = KroneckerOperator([np.eye(2), np.eye(2)], std=[1.0, 0.0, 1.0, 1.0])
+        with pytest.raises(np.linalg.LinAlgError, match="zero"):
+            op.sqrt()
+        op = KroneckerOperator([np.array([[1.0, 2.0], [2.0, 1.0]]), np.eye(2)])
+        with pytest.raises(np.linalg.LinAlgError, match="not positive-definite"):
+            op.sqrt()
 
 
 def _others(n: int, m: int = 5):

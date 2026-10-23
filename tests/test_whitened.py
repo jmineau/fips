@@ -1,5 +1,5 @@
 """
-Tests for the whitened solve: the factorization a ``Posterior`` keeps.
+Tests for the analytic method's factorization, in its two forms: what a ``Posterior`` keeps.
 
 The oracle (``test_oracle.py``) holds the estimate, the full posterior
 covariance, the gain, the averaging kernel, DOFS and the reduced chi-squared to
@@ -7,10 +7,14 @@ the closed form. Here: what the factorization adds (the variances, aggregated
 covariances and averaging kernels, ``with_gamma``, ``with_data``), the direct
 solve the factorization replaced, the inputs it refuses, its pickle, and that
 nothing ``n x n`` is allocated unless the full covariance or averaging kernel
-is read.
+is read. Most tests run in both forms (the ``analytic_form`` fixture forces
+one); the last section tests how the method chooses between the whitened form
+(``Whitened``, ``m x m``) and the information form (``Information``,
+``n x n``), and what each holds.
 """
 
 import copy
+import dataclasses
 import logging
 import pickle
 import tracemalloc
@@ -32,12 +36,13 @@ from fips import (
     Vector,
 )
 from fips.linalg import (
+    BlockDiagonalOperator,
     DiagonalOperator,
     KroneckerOperator,
     SparseOperator,
     as_linear_operator,
 )
-from fips.methods.analytic import Whitened
+from fips.methods.analytic import Information, Whitened
 
 RTOL = 1e-10
 GAMMAS = [0.1, 0.5, 1.0, 3.0, 20.0]
@@ -200,7 +205,7 @@ def _outputs(post) -> dict:
 @pytest.mark.parametrize("form", FORMS)
 @pytest.mark.parametrize("gamma", GAMMAS)
 @pytest.mark.parametrize("seed", range(5))
-def test_outputs_match_the_closed_form(form, gamma, seed):
+def test_outputs_match_the_closed_form(form, gamma, seed, analytic_form):
     """Every output the factors give, at 1e-10 of the closed form."""
     z, x_0, H, S_0, S_z, c = _arrays(form, seed)
     outputs = _outputs(fips.solve(_problem(z, x_0, H, S_0, S_z, c), gamma=gamma))
@@ -211,7 +216,7 @@ def test_outputs_match_the_closed_form(form, gamma, seed):
 @pytest.mark.parametrize("form", FORMS)
 @pytest.mark.parametrize("gamma", [0.5, 1.0, 4.0])
 @pytest.mark.parametrize("shape", [(3, 4, 7), (2, 2, 9), (4, 5, 2)], ids=str)
-def test_outputs_match_the_direct_solve(form, gamma, shape):
+def test_outputs_match_the_direct_solve(form, gamma, shape, analytic_form):
     """Every output agrees with the direct solve (the code before the factorization) at 1e-10."""
     args = _arrays(form, 3, *shape)
     outputs = _outputs(fips.solve(_problem(*args), gamma=gamma))
@@ -220,13 +225,13 @@ def test_outputs_match_the_direct_solve(form, gamma, shape):
 
 
 @pytest.mark.parametrize("form", FORMS)
-def test_with_gamma_is_a_fresh_solve(form):
+def test_with_gamma_is_a_fresh_solve(form, analytic_form):
     """``with_gamma`` gives what a new solve with that gamma gives, from the same factors."""
     problem = _problem(*_arrays(form, 7))
     post = fips.solve(problem)
     for gamma in GAMMAS:
         swept = post.with_gamma(gamma)
-        assert swept._solution.W is post._solution.W
+        assert swept._solution.eigenvalues is post._solution.eigenvalues
         assert swept.options.gamma == gamma
         assert "estimate" in vars(swept)  # computed, as fips.solve does
         fresh = _outputs(fips.solve(problem, gamma=gamma))
@@ -237,7 +242,7 @@ def test_with_gamma_is_a_fresh_solve(form):
 
 @pytest.mark.parametrize("form", FORMS)
 @pytest.mark.parametrize("gamma", [0.5, 2.0])
-def test_with_data_is_a_fresh_solve(form, gamma):
+def test_with_data_is_a_fresh_solve(form, gamma, analytic_form):
     """``with_data`` gives what a solve of the problem with those observations gives."""
     z, x_0, H, S_0, S_z, c = _arrays(form, 11)
     post = fips.solve(_problem(z, x_0, H, S_0, S_z, c), gamma=gamma)
@@ -251,7 +256,7 @@ def test_with_data_is_a_fresh_solve(form, gamma):
         name="bootstrap",
     )
     swept = post.with_data(new)
-    assert swept._solution.whitener is post._solution.whitener
+    assert swept._solution.eigenvalues is post._solution.eigenvalues
     assert swept.problem.obs.space == post.problem.obs.space
     np.testing.assert_array_equal(swept.problem.obs.values, z2)
     fresh = _outputs(fips.solve(_problem(z2, x_0, H, S_0, S_z, c), gamma=gamma))
@@ -261,7 +266,7 @@ def test_with_data_is_a_fresh_solve(form, gamma):
 
 
 @pytest.mark.parametrize("form", FORMS)
-def test_the_factors_are_read_only(form):
+def test_the_factors_are_read_only(form, analytic_form):
     """No array of the factors can be written to, however the solution was made: a solve, a sweep, new data, a pickle, a copy."""
     post = fips.solve(_problem(*_arrays(form, 6)))
     solutions = {
@@ -272,8 +277,10 @@ def test_the_factors_are_read_only(form):
         "deepcopy": copy.deepcopy(post._solution),
     }
     for how, solution in solutions.items():
-        assert isinstance(solution, Whitened)
-        for name in ("eigenvalues", "whitener", "W", "innovation", "prior_variances"):
+        assert isinstance(solution, analytic_form)
+        arrays = [f.name for f in dataclasses.fields(solution) if f.type is np.ndarray]
+        assert len(arrays) == (5 if analytic_form is Whitened else 3)
+        for name in arrays:
             array = getattr(solution, name)
             assert not array.flags.writeable, f"{name} after {how}"
             with pytest.raises(ValueError, match="read-only"):
@@ -354,8 +361,8 @@ class _Asked(Problem):
         return super().predict(x)
 
 
-def test_the_innovation_is_read_through_predict():
-    """The whitened innovation is built from ``problem.predict(prior)``, with its offset, not around it."""
+def test_the_innovation_is_read_through_predict(analytic_form):
+    """The innovation each form keeps is built from ``problem.predict(prior)``, with its offset, not around it."""
     z, x_0, H, S_0, S_z, c = _arrays("dense", 2)
     p = _problem(z, x_0, H, S_0, S_z, c)
     problem = _Asked(
@@ -368,12 +375,16 @@ def test_the_innovation_is_read_through_predict():
     )
     post = fips.solve(problem)
     assert problem.asked == 1
-    whitener = post._solution.whitener
-    np.testing.assert_array_equal(
-        post._solution.innovation,
-        whitener @ (z - problem.predict(problem.prior).values),
-    )
-    assert not np.array_equal(post._solution.innovation, whitener @ (z - H @ x_0))
+    solution, d = post._solution, z - problem.predict(problem.prior).values
+    if analytic_form is Whitened:  # e = B d
+        B = solution.whitener
+        np.testing.assert_array_equal(solution.innovation, B @ d)
+        assert not np.array_equal(solution.innovation, B @ (z - H @ x_0))
+    else:  # b = G^T H^T S_z^-1 d
+        G = solution.G
+        _close(solution.innovation, G.T @ (H.T @ np.linalg.solve(S_z, d)), "b")
+        without_c = G.T @ (H.T @ np.linalg.solve(S_z, z - H @ x_0))
+        assert not np.allclose(solution.innovation, without_c)
 
 
 # ---------------------------------------------------------------------------
@@ -429,7 +440,7 @@ def _aggregation(state, sparse=False, shuffle=False):
 
 @pytest.mark.parametrize("sparse", [False, True], ids=["dense W", "sparse W"])
 @pytest.mark.parametrize("shuffle", [False, True], ids=["in order", "shuffled"])
-def test_cov_and_averaging_kernel_of_an_aggregation(sparse, shuffle):
+def test_cov_and_averaging_kernel_of_an_aggregation(sparse, shuffle, analytic_form):
     """``cov(W)`` is ``W S_hat W^T`` and ``averaging_kernel(W)`` is ``W A W*``, labeled."""
     problem, state = _labeled()
     post = fips.solve(problem, gamma=0.8)
@@ -463,7 +474,7 @@ def test_full_outputs_without_an_aggregation():
     assert post.averaging_kernel() is post.averaging_kernel()
 
 
-def test_variances_without_the_covariance():
+def test_variances_without_the_covariance(analytic_form):
     """``variances`` is the diagonal of ``covariance``, read without forming it."""
     problem, state = _labeled()
     post = fips.solve(problem)
@@ -517,7 +528,7 @@ def test_dependent_aggregation_rows_raise():
         post.averaging_kernel(Operator.from_frame(twice))
 
 
-def test_aggregation_across_blocks():
+def test_aggregation_across_blocks(analytic_form):
     """A multi-block state (NaN-padded levels) aggregates with an exact join."""
     rng = np.random.default_rng(4)
     flux = pd.MultiIndex.from_product(
@@ -557,14 +568,14 @@ def test_aggregation_across_blocks():
 
 
 @pytest.mark.parametrize("gamma", [0.25, 2.0, 7.5])
-def test_posterior_with_gamma(gamma):
+def test_posterior_with_gamma(gamma, analytic_form):
     """``Posterior.with_gamma`` is the posterior of a fresh solve with that gamma."""
     problem, state = _labeled(seed=3)
     post = fips.solve(problem)
     swept = post.with_gamma(gamma)
     fresh = fips.solve(problem, gamma=gamma)
     assert "estimate" in vars(swept)
-    assert swept._solution.W is post._solution.W
+    assert swept._solution.eigenvalues is post._solution.eigenvalues
     assert post.options.gamma == 1.0
     W, _ = _aggregation(state)
     pairs = [
@@ -660,14 +671,14 @@ def test_nothing_n_by_n_is_allocated(prior):
 # ---------------------------------------------------------------------------
 
 
-def test_pickle_keeps_the_factors_and_drops_n_by_n():
+def test_pickle_keeps_the_factors_and_drops_n_by_n(analytic_form):
     """A posterior pickles its problem, options and factors, not ``S_hat``, ``A`` or ``K``, and sweeps gamma after loading."""
     problem, _ = _labeled()
     post = fips.solve(problem)
     _ = post.cov(), post.averaging_kernel(), post.kalman_gain, post.variances
     state = post.__getstate__()
     assert set(state) == {"problem", "options", "solution"}
-    assert isinstance(state["solution"], Whitened)
+    assert isinstance(state["solution"], analytic_form)
     loaded = pickle.loads(pickle.dumps(post))
     assert not {"_cov", "_averaging_kernel", "kalman_gain"} & set(vars(loaded))
     np.testing.assert_array_equal(loaded.variances.values, post.variances.values)
@@ -682,7 +693,7 @@ def test_pickle_keeps_the_factors_and_drops_n_by_n():
     )
 
 
-def test_singular_mismatch_raises():
+def test_singular_mismatch_raises(analytic_form):
     """``S_z`` whitens the observations, so it must be positive-definite."""
     z, x_0, H, S_0, _, c = _arrays("dense", 0)
     m = len(z)
@@ -720,15 +731,144 @@ def test_roundoff_is_clipped_quietly(caplog):
     assert np.isfinite(post.variances.values).all()
 
 
-def test_more_observations_than_state_logs(caplog, monkeypatch):
-    """A large solve with ``m > n`` says that the state-space form would be cheaper."""
+# ---------------------------------------------------------------------------
+# The two forms: which one factors, and what each holds
+# ---------------------------------------------------------------------------
+
+
+def _mismatch(kind: str, m: int, rng) -> object:
+    """A model-data mismatch of ``m`` observations in one form."""
+    if kind == "diagonal":
+        return sp.diags(rng.uniform(0.5, 2.0, m)).tocsr()
+    if kind == "sparse":
+        return sp.csr_matrix(
+            np.diag(rng.uniform(1, 3, m))
+            + np.diag(np.full(m - 1, 0.2), 1)
+            + np.diag(np.full(m - 1, 0.2), -1)
+        )
+    if kind == "block diagonal":
+        k = m // 2
+        return BlockDiagonalOperator([_spd(rng, k), DiagonalOperator(np.ones(m - k))])
+    if kind == "Kronecker":
+        return KroneckerOperator([_spd(rng, 2), _spd(rng, m // 2)])
+    return _spd(rng, m)  # dense
+
+
+@pytest.mark.parametrize(
+    "n_time, n_cell, m, mismatch, chosen",
+    [
+        (1, 3, 8, "diagonal", Information),
+        (1, 3, 8, "sparse", Information),
+        (1, 3, 8, "block diagonal", Information),
+        (1, 3, 8, "dense", Whitened),
+        (1, 3, 8, "Kronecker", Whitened),
+        (2, 4, 8, "diagonal", Whitened),  # n = m
+        (3, 4, 7, "diagonal", Whitened),  # n > m
+    ],
+)
+def test_the_form_is_chosen_by_size(n_time, n_cell, m, mismatch, chosen, caplog):
+    """The information form when ``n < m`` and ``S_z`` is cheap to invert; else the whitened form. Logged at DEBUG."""
+    z, x_0, H, S_0, _, c = _arrays("dense", 0, n_time=n_time, n_cell=n_cell, m=m)
+    S_z = _mismatch(mismatch, m, np.random.default_rng(1))
+    with caplog.at_level(logging.DEBUG, logger="fips.methods.analytic"):
+        post = fips.solve(_problem(z, x_0, H, S_0, S_z, c), gamma=0.7)
+    assert type(post._solution) is chosen
+    name = "information" if chosen is Information else "whitened"
+    assert any(
+        r.levelno == logging.DEBUG and f"uses the {name} form: " in r.message
+        for r in caplog.records
+    )
+    assert not [r for r in caplog.records if r.levelno >= logging.WARNING]
+    expected = _closed_form(z, x_0, H, S_0, _dense(S_z), c, 0.7)
+    for name, value in _outputs(post).items():
+        if name in expected:
+            _close(value, expected[name], name)
+
+
+def test_a_prior_without_a_square_root_takes_the_whitened_form(caplog):
+    """A prior error that is only semidefinite has no Cholesky factor: the whitened form, which needs none, solves."""
+    z, x_0, H, _, _, c = _arrays("dense", 0, n_time=1, n_cell=3, m=8)
+    S_0 = np.diag([1.0, 2.0, 0.0])  # the third element is known exactly
+    S_z = sp.diags(np.linspace(0.5, 1.5, 8)).tocsr()
+    with caplog.at_level(logging.DEBUG, logger="fips.methods.analytic"):
+        post = fips.solve(_problem(z, x_0, H, S_0, S_z, c))
+    assert type(post._solution) is Whitened
+    assert any("has no square root" in r.message for r in caplog.records)
+    # The gain form of the posterior, which needs no inverse of S_0
+    K = S_0 @ H.T @ np.linalg.inv(H @ S_0 @ H.T + S_z.toarray())
+    _close(post.estimate.values, x_0 + K @ (z - H @ x_0 - c), "estimate")
+    assert post.estimate.values[2] == x_0[2]
+
+
+def test_a_large_whitened_solve_warns(caplog, monkeypatch):
+    """Only a whitened solve above ``_LARGE_M`` observations and more than twice ``n`` warns, saying why the information form was not used."""
     monkeypatch.setattr("fips.methods.analytic._LARGE_M", 5)
-    args = _arrays("dense", 0, n_time=1, n_cell=3, m=8)
+    rng = np.random.default_rng(2)
+    z, x_0, H, S_0, S_z, c = _arrays("dense", 0, n_time=1, n_cell=3, m=8)
     with caplog.at_level(logging.WARNING, logger="fips.methods.analytic"):
-        fips.solve(_problem(*args))
-    assert any("state-space (information) form" in r.message for r in caplog.records)
+        fips.solve(_problem(z, x_0, H, S_0, S_z, c))
+    (record,) = caplog.records
+    assert "m = 8 observations, more than twice the n = 3 state elements" in (
+        record.message
+    )
+    assert "the model-data mismatch is a DenseOperator" in record.message
+    quiet = {
+        "information form": (
+            _arrays("dense", 0, 1, 3, 8),
+            _mismatch("diagonal", 8, rng),
+        ),
+        "m = 2 n": (_arrays("dense", 0, 1, 4, 8), None),
+    }
+    for what, ((z, x_0, H, S_0, S_z, c), other) in quiet.items():
+        caplog.clear()
+        with caplog.at_level(logging.WARNING, logger="fips.methods.analytic"):
+            fips.solve(_problem(z, x_0, H, S_0, S_z if other is None else other, c))
+        assert not caplog.records, what
+    monkeypatch.undo()
     caplog.clear()
-    args = _arrays("dense", 0, n_time=2, n_cell=4, m=8)
+    z, x_0, H, S_0, S_z, c = _arrays("dense", 0, n_time=1, n_cell=3, m=8)
     with caplog.at_level(logging.WARNING, logger="fips.methods.analytic"):
-        fips.solve(_problem(*args))
-    assert not caplog.records
+        fips.solve(_problem(z, x_0, H, S_0, S_z, c))
+    assert not caplog.records, "below the default _LARGE_M"
+
+
+def test_the_information_form_allocates_nothing_m_by_m():
+    """
+    With ``n = 30`` and ``m = 2,400``, the information form is chosen, and solving and reading every output but the gain never allocates ``m x m``.
+
+    One ``m x m`` array is 46 MB; the information form needs ``m x n`` (0.6
+    MB for ``H R``) and holds ``n x n``. The traced peak must stay under half
+    of one ``m x m`` array.
+    """
+    rng = np.random.default_rng(0)
+    n, m = 30, 2400
+    state = Space({"flux": pd.Index(range(n), name="cell")})
+    obs = Space({"conc": pd.Index(range(m), name="obs_id")})
+    problem = Problem(
+        obs=Vector(rng.normal(size=m), obs),
+        prior=Vector(rng.normal(size=n), state),
+        forward=Operator(
+            sp.random(m, n, density=0.2, random_state=1, format="csr"), obs, state
+        ),
+        prior_cov=Covariance(_spd(rng, n), state),
+        obs_cov=Covariance.diagonal(rng.uniform(0.1, 0.5, m), obs),
+    )
+    m_by_m = m * m * 8
+    tracemalloc.start()
+    try:
+        post = fips.solve(problem)
+        _ = post.variances, post.dofs, post.reduced_chi2, post.cov()
+        _ = post.with_gamma(2.0).variances, post.with_data(problem.obs).estimate
+        _, peak = tracemalloc.get_traced_memory()
+    finally:
+        tracemalloc.stop()
+    assert type(post._solution) is Information
+    assert peak < m_by_m / 2, (
+        f"peak {peak / 1e6:.1f} MB; one m x m is {m_by_m / 1e6:.1f} MB"
+    )
+    held = {k: v for k, v in vars(post._solution).items() if isinstance(v, np.ndarray)}
+    assert {k: v.shape for k, v in held.items()} == {
+        "eigenvalues": (n,),
+        "G": (n, n),
+        "innovation": (n,),
+    }

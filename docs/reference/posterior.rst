@@ -14,9 +14,12 @@ with the names it knows. The posterior labels the answer and the method keeps
 its own machinery: the posterior asks what the method kept from the solve (a
 :class:`~fips.posterior.Solution`) for unlabeled arrays and labels them with
 the problem's spaces. The analytic method keeps the factorization of its
-whitened system, so nothing :math:`n \times n` is formed unless the full
-covariance or averaging kernel is asked for, and :meth:`Posterior.with_gamma`
-and :meth:`Posterior.with_data` reuse it.
+whitened system (:math:`m \times m`), or of its information system
+(:math:`n \times n`) when there are fewer state elements than observations
+and the model-data mismatch is diagonal, sparse or block diagonal. In the
+whitened form nothing :math:`n \times n` is formed unless the full covariance
+or averaging kernel is asked for, and :meth:`Posterior.with_gamma` and
+:meth:`Posterior.with_data` reuse the factorization in either form.
 
 .. seealso::
 
