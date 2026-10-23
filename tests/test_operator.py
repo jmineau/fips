@@ -15,8 +15,13 @@ import pandas as pd
 import pytest
 import scipy.sparse as sp
 
-from fips import Covariance, Operator, Space, Vector
-from fips.linalg import DenseOperator, DiagonalOperator, SparseOperator
+from fips import Covariance, Exponential, Kronecker, Operator, Space, Vector
+from fips.linalg import (
+    DenseOperator,
+    DiagonalOperator,
+    KroneckerOperator,
+    SparseOperator,
+)
 
 # A scalar in each form a caller might pass: Python float and int, a NumPy scalar, a 0-d array
 SCALARS = [5.0, 5, np.float64(5.0), np.array(5.0)]
@@ -687,6 +692,148 @@ class TestBlockSelection:
 
         assert type(cov["flux", "flux"]) is Covariance
         assert type(cov["flux", "bias"]) is Operator
+
+
+class TestRestrict:
+    """``op.restrict(rows=, cols=)`` keeps part of each space, by label, in the order given."""
+
+    def test_rows_by_label_in_the_order_given(self, H, obs):
+        """The rows kept are found by label, and come in the order of `rows`."""
+        keep = Space({"co2": pd.Index([2], name="obs_id")})
+        kept = H.restrict(rows=keep)
+        assert kept.rows is keep and kept.cols is H.cols and kept.name == "H"
+        np.testing.assert_array_equal(kept.dense(), H.dense()[[1]])
+        both = H.restrict(rows=reordered(obs))
+        np.testing.assert_array_equal(both.dense(), H.dense()[::-1])
+
+    def test_cols_and_both(self, H, state):
+        """Columns are kept the same way, and rows and columns together."""
+        cols = Space({"flux": pd.Index(["b", "c"], name="cell")})
+        rows = Space({"co2": pd.Index([1], name="obs_id")})
+        np.testing.assert_array_equal(
+            H.restrict(cols=cols).dense(), H.dense()[:, [2, 0]]
+        )
+        np.testing.assert_array_equal(
+            H.restrict(rows=rows, cols=cols).dense(), H.dense()[[0]][:, [2, 0]]
+        )
+        pd.testing.assert_frame_equal(
+            by_label(H.restrict(cols=cols)),
+            by_label(H).loc[:, by_label(H.restrict(cols=cols)).columns],
+        )
+
+    def test_nothing_given_is_the_operator(self, H):
+        """With no rows and no columns, every label is kept."""
+        same = H.restrict()
+        assert same.rows is H.rows and same.cols is H.cols
+        np.testing.assert_array_equal(same.dense(), H.dense())
+
+    def test_a_block_left_out_is_dropped(self):
+        """Only the blocks named are kept."""
+        op = Operator.from_blocks(ragged_blocks())
+        r = op.rows.names[0]
+        kept = op.restrict(rows=Space({r: op.rows.select(r)}))
+        assert kept.rows.names == (r,)
+        np.testing.assert_array_equal(kept.dense(), op.dense()[op.rows.slice(r)])
+
+    def test_sparse_stays_sparse(self, obs, state):
+        """The form is kept: a sparse operator gives a sparse one."""
+        op = Operator(sp.csr_array(np.eye(2, 3)), obs, state)
+        kept = op.restrict(cols=Space({"flux": pd.Index(["a", "c"], name="cell")}))
+        assert isinstance(kept.data, SparseOperator)
+        np.testing.assert_array_equal(kept.dense(), np.eye(2, 3)[:, [1, 0]])
+
+    def test_a_covariance_on_one_space_stays_a_covariance(self, state):
+        """Kept on the same labels on both axes, a covariance is a Covariance; otherwise an Operator."""
+        cov = Covariance(np.diag([1.0, 2.0, 3.0]), state, name="S")
+        keep = Space({"flux": pd.Index(["b", "c"], name="cell")})
+        both = cov.restrict(rows=keep, cols=keep)
+        assert type(both) is Covariance and both.name == "S"
+        np.testing.assert_array_equal(both.dense(), np.diag([3.0, 1.0]))
+        assert type(cov.restrict(rows=keep)) is Operator
+
+    def test_a_kronecker_covariance_keeps_its_factors(self):
+        """Part of a Kronecker covariance's space is still its factors, with the same numbers."""
+        cells = pd.MultiIndex.from_product(
+            [[0.0, 1.0, 2.0], [10.0, 11.0]], names=["x", "y"]
+        )
+        cov = (
+            Kronecker(Exponential("x", 1.0), Exponential("y", 2.0))
+            .with_std(1.5)
+            .build(Space({"flux": cells}))
+        )
+        keep = Space({"flux": cells[[4, 0, 3]]})
+        kept = cov.restrict(rows=keep, cols=keep)
+        assert isinstance(kept.data, KroneckerOperator)
+        np.testing.assert_array_equal(
+            kept.dense(), cov.dense()[np.ix_([4, 0, 3], [4, 0, 3])]
+        )
+
+    @pytest.mark.parametrize(
+        ("rows", "match"),
+        [
+            (
+                Space({"co2": pd.Index([3], name="obs_id")}),
+                "labels of block 'co2' not in the space: 3",
+            ),
+            (
+                Space({"ch4": pd.Index([1], name="obs_id")}),
+                "blocks not in the space: 'ch4'",
+            ),
+            (Space({"co2": pd.Index([1], name="site")}), "has levels"),
+        ],
+        ids=["label", "block", "level"],
+    )
+    def test_labels_it_lacks_raise(self, H, rows, match):
+        """A block, a label or a level the operator lacks raises, naming it."""
+        with pytest.raises(ValueError, match=match) as raised:
+            H.restrict(rows=rows)
+        assert str(raised.value).startswith("The row space to keep")
+
+    def test_not_a_space_raises(self, H):
+        with pytest.raises(TypeError, match="cols must be a Space"):
+            H.restrict(cols=pd.Index(["a"], name="cell"))  # pyrefly: ignore[bad-argument-type]
+
+
+class TestSparse:
+    """``op.sparse()`` is the matrix as a new CSR array, in the spaces' order."""
+
+    def test_sparse_form_gives_its_entries(self, obs, state):
+        m = sp.csr_array(np.array([[1.0, 0.0, 0.0], [0.0, 0.0, 2.0]]))
+        op = Operator(m, obs, state)
+        out = op.sparse()
+        assert isinstance(out, sp.csr_array) and out.nnz == 2
+        np.testing.assert_array_equal(out.toarray(), m.toarray())
+
+    def test_dense_and_diagonal_forms(self, H, state):
+        """A dense form is converted (zeros left out); a diagonal one stores its diagonal."""
+        out = H.sparse()
+        assert isinstance(out, sp.csr_array)
+        np.testing.assert_array_equal(out.toarray(), H.dense())
+        assert out.nnz == np.count_nonzero(H.dense())
+        cov = Covariance.diagonal(np.array([1.0, 0.0, 3.0]), state)
+        assert isinstance(cov.data, DiagonalOperator)
+        assert cov.sparse().nnz == 2
+        np.testing.assert_array_equal(cov.sparse().toarray(), np.diag([1.0, 0.0, 3.0]))
+
+    def test_a_new_writable_copy(self, obs, state):
+        """Changing the array leaves the operator as it was."""
+        op = Operator(sp.csr_array(np.eye(2, 3)), obs, state)
+        out = op.sparse()
+        out.data[:] = 7.0
+        np.testing.assert_array_equal(op.dense(), np.eye(2, 3))
+
+    def test_kronecker_covariance(self):
+        """A Kronecker covariance is formed, as ``dense`` does."""
+        cells = pd.MultiIndex.from_product(
+            [[0.0, 1.0], [10.0, 11.0, 12.0]], names=["x", "y"]
+        )
+        space = Space({"flux": cells})
+        cov = (
+            Kronecker(Exponential("x", 1.0), Exponential("y", 1.0))
+            .with_std(1.0)
+            .build(space)
+        )
+        np.testing.assert_allclose(cov.sparse().toarray(), cov.dense(), rtol=0, atol=0)
 
 
 class TestToFrame:

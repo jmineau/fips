@@ -166,6 +166,37 @@ class TestSelectAndConvert:
         series.iloc[0] = 100.0
         assert vector.values[0] == 1.0
 
+    def test_to_series_of_a_block_is_on_its_own_labels(self, vector, space):
+        """``to_series(block)`` is the block's values on its labels, as given, with no ``block`` level."""
+        for block, values in (("flux", [1.0, 2.0, 3.0]), ("bias", [4.0, 5.0])):
+            series = vector.to_series(block)
+            pd.testing.assert_index_equal(series.index, space.select(block))
+            np.testing.assert_array_equal(series.to_numpy(), values)
+            assert series.name == "prior"
+        assert vector.to_series("flux").index.dtype == np.int64
+
+    def test_to_series_of_a_block_is_what_a_block_vector_gives(self, vector):
+        """``v.to_series(b)`` equals ``v[b].to_series()`` without its ``block`` level."""
+        pd.testing.assert_series_equal(
+            vector.to_series("bias"),
+            vector["bias"].to_series().droplevel("block"),
+        )
+
+    def test_to_series_of_a_block_round_trips(self, vector):
+        """``Vector.from_series(v.to_series(b), block=b)`` is ``v[b]``."""
+        back = Vector.from_series(vector.to_series("flux"), block="flux")
+        assert back.space == vector["flux"].space
+        np.testing.assert_array_equal(back.values, vector["flux"].values)
+
+    def test_to_series_of_a_block_is_a_copy(self, vector):
+        series = vector.to_series("flux")
+        series.iloc[0] = 100.0
+        assert vector.values[0] == 1.0
+
+    def test_to_series_of_an_unknown_block_raises(self, vector):
+        with pytest.raises(KeyError, match="No block named 'flx'"):
+            vector.to_series("flx")
+
     def test_align_reorders_to_a_space_with_the_same_labels(self, vector):
         rng = np.random.default_rng(1)
         shuffled = Space.from_index(vector.index[rng.permutation(len(vector))])

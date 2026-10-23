@@ -686,6 +686,87 @@ class Operator:
         c = np.arange(self.shape[1]) if c is None else c
         return self._data._select(r, c)
 
+    def restrict(
+        self, rows: Space | None = None, cols: Space | None = None
+    ) -> "Operator":
+        """
+        Return the operator on part of its rows, part of its columns, or both.
+
+        The word :meth:`Problem.restrict <fips.Problem.restrict>` uses for
+        keeping part of a space. The matrix keeps its form: a sparse operator
+        stays sparse, a diagonal block of a Kronecker covariance stays as its
+        factors.
+
+        Parameters
+        ----------
+        rows : Space, optional
+            The rows to keep: blocks of :attr:`rows`, each with some of its
+            labels, in any order (the result has them in this order). A block
+            not in `rows` is left out. By default every row is kept.
+        cols : Space, optional
+            The columns to keep, in the same way. By default every column is
+            kept.
+
+        Returns
+        -------
+        Operator
+            The operator on `rows` and `cols`, named as this one. A
+            :class:`~fips.Covariance` kept on one space for both axes is a
+            Covariance.
+
+        Raises
+        ------
+        ValueError
+            If `rows` or `cols` has a block or a label this operator's rows or
+            columns lack; the message names them.
+
+        See Also
+        --------
+        Operator.__getitem__ : One block of rows and one block of columns, whole.
+        Operator.align : The operator on exactly its labels, in another order.
+
+        Examples
+        --------
+        The rows of a Jacobian for the observations kept:
+
+        >>> import numpy as np
+        >>> import pandas as pd
+        >>> from fips import Operator, Space
+        >>> receptors = pd.Index(["r1", "r2", "r3"], name="receptor")
+        >>> cells = Space({"flux": pd.Index(["a", "b"], name="cell")})
+        >>> H = Operator(
+        ...     np.array([[1.0, 0.0], [0.0, 2.0], [3.0, 0.0]]),
+        ...     Space({"co2": receptors}),
+        ...     cells,
+        ... )
+        >>> kept = H.restrict(rows=Space({"co2": receptors[[2, 0]]}))
+        >>> list(kept.rows.select("co2"))
+        ['r3', 'r1']
+        >>> kept.dense()
+        array([[3., 0.],
+               [1., 0.]])
+        """
+        for space, what in ((rows, "rows"), (cols, "cols")):
+            if space is not None and not isinstance(space, Space):
+                raise TypeError(f"{what} must be a Space, got {type(space).__name__}.")
+        if rows is None and cols is None:
+            return self._like(self._data, self._rows, self._cols)
+        r = (
+            np.arange(self.shape[0])
+            if rows is None
+            else self._rows._subset(rows, "The row space to keep")
+        )
+        c = (
+            np.arange(self.shape[1])
+            if cols is None
+            else self._cols._subset(cols, "The column space to keep")
+        )
+        return self._like(
+            self._data._select(r, c),
+            self._rows if rows is None else rows,
+            self._cols if cols is None else cols,
+        )
+
     def align(self, rows: Space, cols: Space) -> "Operator":
         """
         Return the operator on `rows` and `cols`, which must have exactly its labels.
@@ -827,6 +908,44 @@ class Operator:
         This forms the full matrix, whatever its form.
         """
         return np.array(self._data)
+
+    def sparse(self) -> sp.csr_array:
+        """
+        Return the matrix as a new SciPy CSR array, rows and columns in the spaces' order.
+
+        A sparse or diagonal operator (or a block diagonal one of those) gives
+        its stored entries without forming the dense matrix. Any other form
+        (a dense array, Kronecker factors) forms the full matrix, as
+        :meth:`dense` does, and keeps its nonzero entries.
+
+        Returns
+        -------
+        scipy.sparse.csr_array
+            A writable copy of the matrix, by position: the labels are in
+            :attr:`rows` and :attr:`cols`.
+
+        See Also
+        --------
+        Operator.dense : The matrix as a dense array.
+
+        Examples
+        --------
+        >>> import numpy as np
+        >>> import pandas as pd
+        >>> import scipy.sparse as sp
+        >>> from fips import Operator, Space
+        >>> obs = Space({"co2": pd.Index([1, 2], name="obs_id")})
+        >>> state = Space({"flux": pd.Index(["a", "b", "c"], name="cell")})
+        >>> H = Operator(sp.csr_array([[1.0, 0.0, 0.0], [0.0, 0.0, 2.0]]), obs, state)
+        >>> H.sparse().nnz
+        2
+        >>> abs(H.sparse()).sum(axis=0)
+        array([1., 0., 2.])
+        """
+        stored = self._data._csr()
+        if stored is None:
+            return sp.csr_array(self.dense())
+        return stored.copy()
 
     def __array__(self, dtype=None, copy=None) -> np.ndarray:
         """

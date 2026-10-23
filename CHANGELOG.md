@@ -9,6 +9,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Three helpers for code that moves from the old API.** `Vector.to_series(block)`
+  gives one block's values on its own labels, without the `block` level
+  (`post.estimate.to_series("flux")`; with no block it is the whole vector, as
+  before). `Operator.restrict(rows=None, cols=None)` keeps part of an
+  operator's rows, columns or both, by label and in the order given, the
+  word `Problem.restrict` uses; the form is kept (sparse stays sparse, a
+  Kronecker covariance stays as its factors), and a block or label the
+  operator lacks raises. `Operator.sparse()` gives the matrix as a new SciPy
+  CSR array, from the stored entries of a sparse or diagonal form, as
+  `dense()` gives a dense one. ([#82](https://github.com/jmineau/fips/issues/82))
+
 - **The analytic method's information form, chosen by size.** With fewer
   state elements than observations (`n < m`) and a model-data mismatch that
   is diagonal, sparse or block diagonal, `fips.solve` factors the prior

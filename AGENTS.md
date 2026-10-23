@@ -37,11 +37,13 @@ src/fips/
   space.py           Space — ordered named blocks, the padded MultiIndex,
                      select, from_index, exact align, round_labels
   vector.py          Vector — values on a Space (read-only float array);
-                     from_series, from_blocks, v[block], to_series, to_xarray,
+                     from_series, from_blocks, v[block], to_series (one
+                     block on its own labels with block=), to_xarray,
                      combine_first
   operator.py        Operator — a matrix (a linalg form) with a Space on each
                      axis: from_frame, from_blocks, op[r, c], @ / + by exact
-                     join, align, to_frame
+                     join, align, restrict (part of each space), to_frame,
+                     dense, sparse (a new CSR array)
   problem.py         Problem — prior, prior_cov, obs, obs_cov, forward,
                      offset, checked once by exact join; models built there;
                      predict(x) = H x + c; restrict (part of the state
