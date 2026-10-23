@@ -20,6 +20,10 @@ prior error covariance has a square root); otherwise the whitened form
 another :math:`\gamma` (``post.with_gamma``) or of other observations
 (``post.with_data``) shares them instead of solving again.
 :class:`AnalyticOptions` holds :math:`\gamma`.
+
+Either form's eigendecomposition uses LAPACK's ``evd`` driver, and redoes it
+with ``evr`` when there is not enough memory for ``evd``'s workspace
+(``_eigh``).
 """
 
 import dataclasses
@@ -221,10 +225,7 @@ class Whitened:
                 return np.asarray(solve_triangular(L, V, lower=True, trans="T")).T
 
         M = 0.5 * (M + M.T)
-        w, V = eigh(
-            M, overwrite_a=True
-        )  # driver "evr": less memory than "evd", as fast
-        eigenvalues = np.asarray(w)
+        eigenvalues, V = _eigh(M)
         _clip(
             eigenvalues,
             "The whitened prior in observation space",
@@ -426,8 +427,7 @@ class Information:
         HR = (H @ R).dense()
         N = HR.T @ S_z.solve(HR)
         N = 0.5 * (N + N.T)
-        w, U = eigh(N, overwrite_a=True)
-        eigenvalues = np.asarray(w)
+        eigenvalues, U = _eigh(N)
         _clip(
             eigenvalues,
             "The observations' information on the whitened state",
@@ -526,6 +526,32 @@ def _carried(problem: Problem, G: np.ndarray) -> np.ndarray:
     r"""Return :math:`b = G^T H^T S_z^{-1} d`, the innovation carried into the information form's eigenvectors."""
     y = problem.obs_cov.data.solve(_innovation(problem))
     return G.T @ (problem.forward.data._transpose() @ y)
+
+
+def _eigh(a: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+    """
+    Return the eigenvalues and eigenvectors of the symmetric matrix `a`, which it may overwrite.
+
+    LAPACK's divide-and-conquer driver (``evd``) is fast whatever the
+    eigenvalues are, but needs a workspace of about ``m^2`` more numbers than
+    the default driver (``evr``), which slows down when many eigenvalues are
+    equal. When the workspace cannot be allocated, SciPy raises
+    ``MemoryError`` before the decomposition starts, `a` is untouched, and the
+    same decomposition is redone with ``evr``, logged at INFO.
+    """
+    try:
+        w, V = eigh(a, overwrite_a=True, driver="evd")
+    except MemoryError:
+        logger.info(
+            "There is not enough memory to eigendecompose the %d x %d matrix with "
+            "the 'evd' driver; using 'evr', which needs less memory and is slower "
+            "when many eigenvalues are equal.",
+            len(a),
+            len(a),
+        )
+        w, V = eigh(a, overwrite_a=True, driver="evr")
+    # np.asarray: SciPy is not annotated, and gives no array type
+    return np.asarray(w), np.asarray(V)
 
 
 def _clip(eigenvalues: np.ndarray, matrix: str, covariance: str) -> None:
