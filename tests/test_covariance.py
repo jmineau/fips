@@ -754,7 +754,7 @@ def _pinned_inputs():
 
 
 OBS, COVERAGE, RAGGED = _pinned_inputs()
-STD = np.linspace(0.1, 0.6, len(OBS))
+STD = pd.Series(np.linspace(0.1, 0.6, len(OBS)), index=OBS.droplevel("block"))
 SAME_DAY = ["site", "obs_time.date"]
 MDM = {
     "diagonal_scalar": Independent().with_std(0.3),
@@ -801,7 +801,9 @@ class TestPinnedToTheOldBuilders:
         """``KroneckerError`` is ``Kronecker``, kept as factors, on any row order and subset."""
         index = COVERAGE if case == "kronecker_coverage" else RAGGED
         std = np.linspace(0.5, 1.5, len(index))
-        S = PRIOR.with_std(std).build(Space.from_index(index))
+        S = PRIOR.with_std(pd.Series(std, index=index.droplevel("block"))).build(
+            Space.from_index(index)
+        )
         assert isinstance(S.data, KroneckerOperator)
         _same(S.dense(), OLD[case])
 

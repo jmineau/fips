@@ -114,7 +114,10 @@ def _std(variances, index: pd.Index) -> np.ndarray | float:
 
 def _operator(model, variances, index: pd.MultiIndex) -> KroneckerOperator:
     """The form of ``model.with_std(std)`` on `index`."""
-    S = model.with_std(_std(variances, index)).build(_space(index))
+    space, std = _space(index), _std(variances, index)
+    if isinstance(std, np.ndarray):  # a Series on the one block's labels
+        std = pd.Series(std, index=space.select(space.names[0]))
+    S = model.with_std(std).build(space)
     assert isinstance(S.data, KroneckerOperator)
     return S.data
 

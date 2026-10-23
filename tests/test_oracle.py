@@ -404,8 +404,8 @@ def _diagonal_inputs(case: Case, form: str, v_0: np.ndarray, v_z: np.ndarray):
         )
     if form == "model":
         return (
-            Independent().with_std(np.sqrt(v_0)),
-            Independent().with_std(np.sqrt(v_z)),
+            Independent().with_std(pd.Series(np.sqrt(v_0), index=s.droplevel("block"))),
+            Independent().with_std(pd.Series(np.sqrt(v_z), index=o.droplevel("block"))),
         )
     if form == "std_vector":
         return (
