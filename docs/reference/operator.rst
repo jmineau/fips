@@ -68,6 +68,7 @@ Selection and labels
    :toctree: api/
 
    Operator.__getitem__
+   Operator.restrict
    Operator.align
    Operator.round_labels
 
@@ -89,4 +90,5 @@ Conversion
    :toctree: api/
 
    Operator.dense
+   Operator.sparse
    Operator.to_frame
