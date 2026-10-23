@@ -24,6 +24,7 @@ import pandas as pd
 import pytest
 import scipy.sparse as sp
 from numpy.linalg import LinAlgError
+from scipy.linalg import eigh as scipy_eigh
 
 import fips
 from fips import (
@@ -729,6 +730,62 @@ def test_roundoff_is_clipped_quietly(caplog):
         )
     assert not caplog.records
     assert np.isfinite(post.variances.values).all()
+
+
+def _spy_eigh(monkeypatch, *, force=None, no_memory_for=None):
+    """
+    Replace the method's ``eigh`` with one that records the drivers it is called with.
+
+    `force` makes every call use that driver. A call whose driver is
+    `no_memory_for` raises ``MemoryError``, as SciPy does when LAPACK's
+    workspace cannot be allocated, before it touches the matrix.
+    """
+    from fips.methods import analytic
+
+    drivers = []
+
+    def eigh(a, **kwargs):
+        drivers.append(kwargs["driver"])
+        if force is not None:
+            kwargs["driver"] = force
+        if kwargs["driver"] == no_memory_for:
+            raise MemoryError
+        return scipy_eigh(a, **kwargs)
+
+    monkeypatch.setattr(analytic, "eigh", eigh)
+    return drivers
+
+
+def _logged(caplog):
+    """The records the analytic method logged (``fips.solve`` logs its own start)."""
+    return [r for r in caplog.records if r.name == "fips.methods.analytic"]
+
+
+def test_the_eigendecomposition_uses_evd(analytic_form, monkeypatch, caplog):
+    """Each solve eigendecomposes once, with the ``evd`` driver, and logs nothing about memory."""
+    drivers = _spy_eigh(monkeypatch)
+    with caplog.at_level(logging.INFO, logger="fips.methods.analytic"):
+        fips.solve(_problem(*_arrays("dense", 0)))
+    assert drivers == ["evd"]
+    assert not _logged(caplog)
+
+
+def test_no_memory_for_evd_redoes_the_eigendecomposition_with_evr(
+    analytic_form, monkeypatch, caplog
+):
+    """A ``MemoryError`` from ``evd`` is met with ``evr`` on the same matrix: the same result, and one INFO line."""
+    args = _arrays("dense", 0)
+    _spy_eigh(monkeypatch, force="evr")
+    expected = _outputs(fips.solve(_problem(*args)))
+    drivers = _spy_eigh(monkeypatch, no_memory_for="evd")
+    with caplog.at_level(logging.INFO, logger="fips.methods.analytic"):
+        post = fips.solve(_problem(*args))
+    assert drivers == ["evd", "evr"]
+    (record,) = _logged(caplog)
+    assert record.levelno == logging.INFO
+    assert "'evd'" in record.message and "'evr'" in record.message
+    for name, value in _outputs(post).items():
+        np.testing.assert_array_equal(value, expected[name], err_msg=name)
 
 
 # ---------------------------------------------------------------------------

@@ -316,6 +316,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   of a dict of its arrays; pickles of earlier `Posterior`s do not load (none
   was released). `fips.linalg`'s module `base` is renamed `forms`.
   ([#82](https://github.com/jmineau/fips/issues/82))
+- **The analytic solve's eigendecomposition uses LAPACK's `evd` driver, and
+  redoes it with `evr` when there is not enough memory.** Both forms of the
+  solve eigendecompose one symmetric matrix (`m x m` or `n x n`) with SciPy's
+  `eigh`, whose default driver (`evr`) slows down when many eigenvalues are
+  equal, as they are in the whitened form's `m x m` matrix when there are
+  fewer state elements than observations (it has rank `n`, so `m - n`
+  eigenvalues are zero). `evd` is not slowed by that: with `m = 6,000` on 8
+  cores, a matrix with three quarters of its eigenvalues zero took 235.7 s with
+  `evr` and 17.9 s with `evd`, and one with all distinct eigenvalues 20.0 s and
+  19.2 s. `evd` needs more workspace: at `m = 10,000` the peak above the matrix
+  itself is 1.52 GB with `evr` and 2.30 GB with `evd`. When SciPy cannot
+  allocate it, it raises `MemoryError` before the decomposition starts, and
+  the solve redoes it with `evr`, as before, logging one INFO line. There is
+  no option. The estimates of the two drivers agree to 1.8e-13, not bit for
+  bit: the eigenvectors are rounded differently.
 - **The source is grouped by idea, in three subpackages.** Nothing changes in
   what the code does: no number, name of a public class or function, default or
   message differs. `fips.covariance` holds `Covariance` and the models that
