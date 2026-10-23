@@ -188,9 +188,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   level) or `within="time.hour"` (the same hour of day). Parameters are checked
   when a model is made (a scale that is not positive, a Gaussian on the great
   circle, `nu` outside (0, 50] raise). `with_std` takes the standard deviations
-  as a `Vector` (the `Covariance` on its space, at once) or as a scalar or an
-  array in the space's order (a `fips.covariance.CovarianceModel`, which
-  `build(space)` puts on a space). Covariance models and covariances add, and
+  as a `Vector` (the `Covariance` on its space, at once), a number, or a pandas
+  Series on the labels of the block it is built on (a
+  `fips.covariance.CovarianceModel`, which `build(space)` puts on a space; the
+  Series is lined up by label there, and a missing or extra label raises). A
+  plain array raises: it has no labels, so nothing says which value is whose.
+  Covariance models and covariances add, and
   `Covariance.block_diag` takes parts by block name as well as in order:
   `Covariance.block_diag(flux=Kronecker(...).with_std(std),
   bias=Independent().with_std(0.1)).build(state_space)`. A new model is a

@@ -71,7 +71,8 @@ src/fips/
                      quadratic_form, sqrt
     models.py        CorrelationModel (base; with_std), Independent, Kronecker;
                      CovarianceModel — a covariance waiting for its space
-                     (with_std of a scalar or array, sums, block_diag with a
+                     (with_std of a number or a Series on one block's
+                     labels, never a plain array; sums, block_diag with a
                      model); build(space) gives the Covariance
     kernels.py       the kernels: Exponential, Gaussian, Matern, Constant, and
                      within= (zero between groups of labels, sparse)

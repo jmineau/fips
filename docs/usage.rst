@@ -118,8 +118,10 @@ straight line, or a distance on the Earth), :class:`~fips.Constant` is one,
 :class:`~fips.Independent` is the identity, and :class:`~fips.Kronecker`
 multiplies models on separate levels. ``model.with_std(std)`` is the
 covariance: given the standard deviations as a :class:`~fips.Vector`, it is a
-:class:`~fips.Covariance` at once; given a scalar or an array, it is a
+:class:`~fips.Covariance` at once; given a number, or a pandas Series on the
+block's labels (lined up by label), it is a
 :class:`~fips.covariance.CovarianceModel`, which ``build(space)`` puts on a space.
+A plain array is refused, since it has no labels.
 Models add (``a + b``), and :meth:`~fips.Covariance.block_diag` takes them by
 block name.
 

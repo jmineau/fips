@@ -10,9 +10,9 @@ correlate labels by their distance.
 
 A model becomes a covariance with :meth:`~CorrelationModel.with_std`: given the
 standard deviations as a :class:`~fips.Vector`, it is a
-:class:`~fips.Covariance` at once; given a scalar or an array, it is a
-:class:`CovarianceModel`: everything a covariance needs except the
-:class:`~fips.Space` it lives on. A sum of them, or
+:class:`~fips.Covariance` at once; given a number, or a pandas Series on a
+block's labels, it is a :class:`CovarianceModel`: everything a covariance needs
+except the :class:`~fips.Space` it lives on. A sum of them, or
 :meth:`Covariance.block_diag <fips.Covariance.block_diag>` of parts some of
 which are models, is one too. :meth:`CovarianceModel.build` puts it on a space
 and gives the :class:`~fips.Covariance`, in its cheapest form (Kronecker
@@ -24,10 +24,10 @@ import logging
 from abc import ABC, abstractmethod
 from collections.abc import Iterable, Sequence
 from dataclasses import dataclass, field
+from numbers import Real
 from typing import overload
 
 import numpy as np
-import numpy.typing as npt
 import pandas as pd
 import scipy.sparse as sp
 
@@ -108,11 +108,11 @@ class CorrelationModel(ABC):
         """With a Vector: the covariance on its space."""
 
     @overload
-    def with_std(self, std: "float | npt.ArrayLike") -> "CovarianceModel":  # noqa: D418
-        """With a scalar or an array: a model to build on a space."""
+    def with_std(self, std: "float | pd.Series") -> "CovarianceModel":  # noqa: D418
+        """With a number or a Series: a model to build on a space."""
 
     def with_std(
-        self, std: "float | npt.ArrayLike | Vector"
+        self, std: "float | pd.Series | Vector"
     ) -> "Covariance | CovarianceModel":
         r"""
         Return the covariance of this correlation with standard deviations `std`.
@@ -122,41 +122,66 @@ class CorrelationModel(ABC):
 
         Parameters
         ----------
-        std : float, 1D array-like or Vector
-            The standard deviation of each label, not negative. A scalar is
-            the same for every label, an array is in the order of the space
-            the covariance is built on, and a :class:`~fips.Vector` brings its
-            own space.
+        std : float, pd.Series or Vector
+            The standard deviation of each label, not negative. A number is
+            the same for every label. A Series is indexed by the labels of
+            the one block the covariance is built on, without a ``block``
+            level (``vector["flux"]``'s labels, ``space.select("flux")``),
+            and is lined up with them by label when the model is built. A
+            :class:`~fips.Vector` brings its own space. A plain array is
+            refused: it has no labels, so nothing would say which value is
+            whose.
 
         Returns
         -------
         Covariance or CovarianceModel
             For a Vector, the :class:`~fips.Covariance` on its space. For a
-            scalar or an array, a :class:`~fips.covariance.CovarianceModel`, which
-            :meth:`~fips.covariance.CovarianceModel.build` puts on a space.
+            number or a Series, a :class:`~fips.covariance.CovarianceModel`,
+            which :meth:`~fips.covariance.CovarianceModel.build` puts on a
+            space.
 
         Raises
         ------
+        TypeError
+            If `std` is an array, a list or anything else that is not a
+            number, a Series or a Vector.
         ValueError
-            If a standard deviation is negative or not finite, or `std` is
-            not a scalar or 1D.
+            If a standard deviation is negative or not finite, or the
+            Series' index has a ``block`` level, an unnamed level or a label
+            twice.
+
+        See Also
+        --------
+        fips.covariance.CovarianceModel.build : Put the model on a space.
 
         Examples
         --------
         >>> import pandas as pd
         >>> from fips import Exponential, Space, Vector
-        >>> space = Space({"flux": pd.Index([0.0, 1.0, 2.0], name="x")})
+        >>> x = pd.Index([0.0, 1.0, 2.0], name="x")
+        >>> space = Space({"flux": x})
         >>> S = Exponential("x", 1.0).with_std(2.0).build(space)
         >>> S.dense().round(3)
         array([[4.   , 1.472, 0.541],
                [1.472, 4.   , 1.472],
                [0.541, 1.472, 4.   ]])
+
+        A Series is read by label, whatever its order:
+
+        >>> std = pd.Series([2.0, 1.0, 1.0], index=x[::-1])
+        >>> Exponential("x", 1.0).with_std(std).build(space).variances.values
+        array([1., 1., 4.])
+
+        A Vector is a covariance at once:
+
         >>> std = Vector([1.0, 1.0, 2.0], space)
         >>> Exponential("x", 1.0).with_std(std).variances.values
         array([1., 1., 4.])
         """
         if isinstance(std, Vector):
-            return _Scaled(self, std.values).build(std.space)
+            return Covariance._computed(
+                _scaled_form(self, std.space, _checked_std(std.values)), std.space
+            )
         return _Scaled(self, std)
 
 
@@ -382,8 +407,8 @@ class CovarianceModel(ABC):
     """
     A covariance without its labels: it becomes a Covariance on a space.
 
-    What :meth:`~fips.covariance.CorrelationModel.with_std` gives for a scalar
-    or an array, a sum of covariance models (``a + b``), and
+    What :meth:`~fips.covariance.CorrelationModel.with_std` gives for a number
+    or a Series, a sum of covariance models (``a + b``), and
     :meth:`Covariance.block_diag <fips.Covariance.block_diag>` of parts
     some of which are models. A :class:`~fips.Covariance` may be added to a
     model, or be a part of one: it is aligned to the space by an exact join.
@@ -436,9 +461,10 @@ class CovarianceModel(ABC):
             If a model reads a level the space does not have, or a block
             the model names is not in the space.
         ValueError
-            If a block lacks a level a model reads, an array of standard
-            deviations is not as long as the space, or the labels of a
-            covariance given as a part do not match the space's.
+            If a block lacks a level a model reads, the labels of a Series
+            of standard deviations are not the space's (or the space has
+            more than one block), or the labels of a covariance given as a
+            part do not match the space's.
         """
 
     def __add__(self, other: "CovarianceModel | Covariance") -> "CovarianceModel":
@@ -465,42 +491,113 @@ def _check_space(space: Space) -> None:
         raise TypeError(f"build takes a Space, got {type(space).__name__}.")
 
 
+def _checked_std(values: np.ndarray) -> np.ndarray:
+    """Return `values` as a read-only float array, after checking they are finite and not negative."""
+    values = np.array(values, dtype=float)
+    if not np.isfinite(values).all() or (values < 0).any():
+        raise ValueError("The standard deviations must be finite and not negative.")
+    values.flags.writeable = False
+    return values
+
+
+def _scaled_form(
+    model: "CorrelationModel", space: Space, std: np.ndarray
+) -> LinearOperator:
+    """Return the form of ``D C D`` on `space`, for the standard deviations `std` in its order."""
+    return _scaled(model._form(_coords(space, model._reads())), std)
+
+
 @dataclass(frozen=True, eq=False)
 class _Scaled(CovarianceModel):
     """A correlation model times its standard deviations: ``D C D``."""
 
     model: "CorrelationModel"
-    std: "float | npt.ArrayLike"
+    std: "float | pd.Series"
 
     def __post_init__(self):
-        std = np.asarray(self.std, dtype=float)
-        if std.ndim > 1:
-            raise ValueError(f"std must be a scalar or 1D, got shape {std.shape}.")
-        if not np.isfinite(std).all() or (std < 0).any():
-            raise ValueError("The standard deviations must be finite and not negative.")
-        if std.ndim == 1:
-            std = std.copy()
-            std.flags.writeable = False
+        std = self.std
+        if isinstance(std, pd.Series):
+            index = std.index
+            if "block" in index.names:
+                raise ValueError(
+                    "The Series of standard deviations has a 'block' level, which "
+                    "names its blocks: pass Vector.from_series(std) to with_std, "
+                    "or a Series on one block's labels."
+                )
+            if None in index.names:
+                raise ValueError(
+                    "Every level of the Series of standard deviations must be "
+                    "named, as the block's levels are."
+                )
+            if index.has_duplicates:
+                raise ValueError(
+                    "The Series of standard deviations has a label twice: "
+                    f"{_listed(index[index.duplicated()].unique())}."
+                )
+            std = pd.Series(_checked_std(std.to_numpy()), index=index, name=std.name)
+        elif isinstance(std, Real) or (isinstance(std, np.ndarray) and std.ndim == 0):
+            std = float(_checked_std(np.asarray(std)))
+        elif np.ndim(std) > 0:
+            raise TypeError(
+                "with_std takes a number, a pandas Series on the block's labels, "
+                f"or a Vector, not a {type(std).__name__}: an array has no labels, "
+                "so nothing says which standard deviation is whose. Pass a Series "
+                "indexed by the block's labels (pd.Series(std, index=labels)) or "
+                "a Vector."
+            )
+        else:
+            raise TypeError(
+                "with_std takes a number, a pandas Series on the block's labels, "
+                f"or a Vector, got {type(std).__name__}."
+            )
         object.__setattr__(self, "std", std)
 
     def build(self, space: Space, name: str | None = None) -> Covariance:
         """Return the covariance on `space` (see :meth:`CovarianceModel.build`)."""
         _check_space(space)
-        std = np.asarray(self.std)
-        if std.ndim == 0:
-            std = np.full(len(space), float(std))
-        elif len(std) != len(space):
-            raise ValueError(
-                f"Got {len(std)} standard deviations for a space of "
-                f"{len(space)} labels."
-            )
-        form = self.model._form(_coords(space, self.model._reads()))
-        return Covariance._computed(_scaled(form, std), space, name=name)
+        std = self.std
+        if isinstance(std, pd.Series):
+            values = std.to_numpy()[_by_label(std.index, space)]
+        else:
+            values = np.full(len(space), std)
+        return Covariance._computed(
+            _scaled_form(self.model, space, values), space, name=name
+        )
 
     def __repr__(self) -> str:
         """Return how the model was made."""
-        std = self.std if np.ndim(self.std) == 0 else f"<{np.size(self.std)} values>"
+        std = (
+            f"<Series of {len(self.std)} values>"
+            if isinstance(self.std, pd.Series)
+            else self.std
+        )
         return f"{self.model!r}.with_std({std})"
+
+
+def _by_label(labels: pd.Index, space: Space) -> np.ndarray:
+    """
+    Return where each label of `space`, a space of one block, is in `labels`.
+
+    Raises
+    ------
+    ValueError
+        If the space has more than one block, or `labels` are not the block's
+        labels (one missing or extra, or other levels); the message names them.
+    """
+    if len(space.names) > 1:
+        raise ValueError(
+            "A Series of standard deviations is on one block's labels, and the "
+            f"space has the blocks {_listed(space.names)}. Give each block its "
+            "own model, Covariance.block_diag("
+            + ", ".join(f"{block}=..." for block in space.names)
+            + "), or pass a Vector."
+        )
+    block = space.names[0]
+    return space._align(
+        Space({block: labels}),
+        "the standard deviations",
+        "The space and the Series of standard deviations",
+    )
 
 
 def _on(part: "CovarianceModel | Covariance", space: Space) -> Covariance:
