@@ -970,6 +970,61 @@ class TestAlign:
         assert type(cov.align(flipped, state)) is Operator
 
 
+class TestOn:
+    """``Operator._on``, the one place an operator's form is put on two spaces."""
+
+    def test_the_form_is_returned_as_it_is_when_the_order_is_the_same(
+        self, H, obs, state
+    ):
+        """No selection when each space is in the operator's own order, or equal to it."""
+        assert H._on(H.rows, H.cols) is H.data
+        same = Space({n: obs.select(n) for n in obs.names})
+        assert H._on(same, state) is H.data
+
+    def test_the_form_follows_the_spaces_in_another_order(self, H, obs, state):
+        """Rows and columns are reordered by label, in one call."""
+        form = H._on(reordered(obs), reordered(state))
+
+        np.testing.assert_array_equal(form.dense(), H.dense()[::-1, ::-1])
+
+    def test_one_space_for_both_axes_of_a_covariance(self, state):
+        """A covariance on a reordered space is reordered on both axes."""
+        cov = Covariance(np.diag([1.0, 2.0, 3.0]), state)
+        flipped = reordered(state)
+
+        np.testing.assert_array_equal(
+            cov._on(flipped, flipped).dense(), np.diag([3.0, 2.0, 1.0])
+        )
+
+    @pytest.mark.parametrize(
+        ("args", "message"),
+        [
+            ((), "The spaces do not have the same labels: .* the other space"),
+            (
+                ("forward", ("the observations", "the prior")),
+                "The columns of forward and the prior do not have the same labels: "
+                ".* the columns of forward",
+            ),
+        ],
+        ids=["default", "worded"],
+    )
+    def test_the_message_uses_the_words_the_caller_gives(
+        self, args, message, H, obs, other_state
+    ):
+        """What the caller calls the operator and the spaces is what the message says."""
+        with pytest.raises(ValueError, match=message):
+            H._on(obs, other_state, *args)
+
+    def test_the_rows_are_worded_as_rows(self, H, state):
+        """Each axis names itself."""
+        other_obs = Space({"co2": pd.Index([1, 3], name="obs_id")})
+
+        with pytest.raises(
+            ValueError, match="The rows of W and its rows do not have the same labels"
+        ):
+            H._on(other_obs, state, "W", ("its rows", "the state"))
+
+
 class TestRoundLabels:
     """Rounding the float labels of both axes."""
 

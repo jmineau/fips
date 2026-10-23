@@ -83,8 +83,8 @@ src/fips/
                      its Solution, the factorization of the whitened system
                      read at one gamma (estimate, variances, gain, DOFS,
                      chi-squared; with_gamma and with_data share the
-                     factors) — and _analytic, which returns
-                     Posterior(problem, Whitened.factor(...), options)
+                     factors, which are read-only) — and _analytic, which
+                     returns Posterior(problem, Whitened.factor(...), options)
   linalg/            the unlabeled forms the solvers compute with (public as
                      `fips.linalg`)
     __init__.py      re-exports the forms; its docstring says what a form does

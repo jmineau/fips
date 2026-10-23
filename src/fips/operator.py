@@ -644,18 +644,40 @@ class Operator:
         cols = Space({c: self._cols.select(c)})
         return self._like(form, rows, cols)
 
-    def _on(self, rows: Space, cols: Space) -> LinearOperator:
+    def _on(
+        self,
+        rows: Space,
+        cols: Space,
+        what: str | None = None,
+        of: tuple[str, str] = ("", ""),
+    ) -> LinearOperator:
         """
         Return the form with its rows and columns in the order of `rows` and `cols`.
+
+        Both are exact joins (:meth:`Space.align`): a label on one side and
+        not the other raises, and the message names it. It calls the two
+        spaces "the spaces" unless the caller says what this operator is for:
+        `what` names the operator (``"forward"``) and `of` what its rows and
+        its columns must match (``("the observations", "the prior")``), as in
+        "The rows of forward and the observations do not have the same labels".
 
         Raises
         ------
         ValueError
-            If `rows` or `cols` do not have exactly this operator's labels
-            (:meth:`Space.align`).
+            If `rows` or `cols` do not have exactly this operator's labels.
         """
-        r = rows.align(self._rows) if rows is not self._rows else None
-        c = cols.align(self._cols) if cols is not self._cols else None
+        if what is None:
+            words = [("the other space", "The spaces")] * 2
+        else:
+            words = [
+                (f"the {axis} of {what}", f"The {axis} of {what} and {match}")
+                for axis, match in zip(("rows", "columns"), of, strict=True)
+            ]
+        r = None if rows is self._rows else rows._align(self._rows, *words[0])
+        if cols is rows and self._cols is self._rows:
+            c = r
+        else:
+            c = None if cols is self._cols else cols._align(self._cols, *words[1])
         if (r is None or np.array_equal(r, np.arange(len(r)))) and (
             c is None or np.array_equal(c, np.arange(len(c)))
         ):

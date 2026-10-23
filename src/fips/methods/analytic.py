@@ -21,6 +21,7 @@ from numpy.linalg import LinAlgError
 from scipy.linalg import cholesky, eigh, solve_triangular
 
 from fips.linalg import DiagonalOperator, LinearOperator
+from fips.linalg.forms import _read_only
 from fips.posterior import Posterior
 from fips.problem import Problem
 
@@ -81,7 +82,7 @@ class Whitened:
     neither on gamma nor on the values of the observations, so
     :meth:`with_gamma` and :meth:`with_data` share them. Nothing
     :math:`n \times n` is formed unless the full posterior covariance or the
-    gain is asked for. The arrays are read-only by convention.
+    gain is asked for. The arrays are read-only, also after a pickle or a copy.
 
     With :math:`Q = S_0` the prior error covariance (:math:`n \times n`),
     :math:`S_z = L L^T` the model-data mismatch (:math:`m \times m`; :math:`L` its
@@ -163,7 +164,7 @@ class Whitened:
         S_0 = problem.prior_cov.data
         HS_0 = H @ S_0
         HS_0H = HS_0 @ H._transpose()
-        d = problem.obs.values - (H @ problem.prior.values + problem._offset_values())
+        d = problem.obs.values - problem.predict(problem.prior).values
         HQ = HS_0.dense()
         HQH = HS_0H.dense()
         S_z = problem.obs_cov.data
@@ -217,11 +218,11 @@ class Whitened:
         return cls(
             problem=problem,
             gamma=gamma,
-            eigenvalues=eigenvalues,
-            whitener=B,
-            W=B @ HQ,
-            innovation=B @ d,
-            prior_variances=np.asarray(S_0.diagonal(), dtype=float),
+            eigenvalues=_read_only(eigenvalues),
+            whitener=_read_only(B),
+            W=_read_only(B @ HQ),
+            innovation=_read_only(B @ d),
+            prior_variances=_read_only(np.asarray(S_0.diagonal(), dtype=float)),
         )
 
     def weights(self) -> np.ndarray:
@@ -280,7 +281,20 @@ class Whitened:
         Only the whitened innovation changes: one ``m x m`` product.
         """
         d = problem.obs.values - problem.predict(problem.prior).values
-        return dataclasses.replace(self, problem=problem, innovation=self.whitener @ d)
+        innovation = _read_only(self.whitener @ d)
+        return dataclasses.replace(self, problem=problem, innovation=innovation)
+
+    def __setstate__(self, state: dict) -> None:
+        """Restore from a pickle or a copy, the arrays read-only again."""
+        self.__dict__.update(state)
+        for array in (
+            self.eigenvalues,
+            self.whitener,
+            self.W,
+            self.innovation,
+            self.prior_variances,
+        ):
+            _read_only(array)
 
 
 def _clip(eigenvalues: np.ndarray) -> None:
