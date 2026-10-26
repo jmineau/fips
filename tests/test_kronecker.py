@@ -668,8 +668,10 @@ class TestSqrt:
         op = OPS["ragged"]
         R = op.sqrt()
         assert isinstance(R, DenseOperator)
+        # atol: entries that are zero in exact arithmetic come out at roundoff
+        # (about 1e-17), and differently from SciPy's and NumPy's Cholesky.
         np.testing.assert_allclose(
-            R.dense(), np.linalg.cholesky(op.dense()), rtol=1e-12
+            R.dense(), np.linalg.cholesky(op.dense()), rtol=1e-12, atol=1e-14
         )
 
     def test_zero_std_and_indefinite_factor_raise(self):
