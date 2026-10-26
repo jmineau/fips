@@ -47,84 +47,7 @@ uv sync
 
 ## Usage
 
-### A first problem: rays through a line of cells
-
-Six rays cross a line of four cells, timed by two instruments whose clocks may be off. A ray's travel time is the sum, over the cells it crosses, of its length in the cell times the cell's slowness, plus its instrument's clock delay. What are the slowness of each cell and the delay of each clock?
-
-```python
-import numpy as np
-import pandas as pd
-
-import fips
-
-# The state: what we want to know. The slowness (s/km) of four cells along a
-# line, labeled by where each cell is (km), and the clock delay (s) of each of
-# the two instruments that timed the rays.
-cells = pd.Index([0.5, 1.5, 2.5, 3.5], name="x")
-instruments = pd.Index(["east", "west"], name="instrument")
-prior = fips.Vector.from_blocks(
-    {
-        "slowness": pd.Series(0.25, index=cells),
-        "delay": pd.Series(0.0, index=instruments),
-    }
-)
-
-# The observations: the travel time (s) of six rays, each timed by one instrument.
-rays = pd.MultiIndex.from_tuples(
-    [("east", 1), ("east", 2), ("east", 3), ("west", 4), ("west", 5), ("west", 6)],
-    names=["instrument", "ray"],
-)
-times = pd.Series([0.53, 0.76, 1.02, 0.25, 0.48, 0.80], index=rays)
-obs = fips.Vector.from_series(times, block="time")
-
-# The forward operator: how the state makes the observations. A ray's time is
-# its length (km) in each cell times the cell's slowness, plus its instrument's
-# delay. Each block of the operator is labeled, and placed by its labels.
-lengths = pd.DataFrame(
-    [[1, 1, 0, 0], [1, 1, 1, 0], [1, 1, 1, 1], [0, 0, 0, 1], [0, 0, 1, 1], [0, 1, 1, 1]],
-    index=rays,
-    columns=cells,
-    dtype=float,
-)
-delays = pd.DataFrame(
-    [[1, 0], [1, 0], [1, 0], [0, 1], [0, 1], [0, 1]],
-    index=rays,
-    columns=instruments,
-    dtype=float,
-)
-forward = fips.Operator.from_blocks(
-    {("time", "slowness"): lengths, ("time", "delay"): delays},
-    rows=obs.space,
-    cols=prior.space,
-)
-
-# The covariances: how far the prior and the observations may be off. Neighboring
-# cells are alike (correlated over 1 km); the delays are independent of each other.
-prior_cov = fips.Covariance.block_diag(
-    slowness=fips.Exponential("x", 1.0).with_std(0.05),
-    delay=fips.Independent().with_std(0.02),
-)
-obs_cov = fips.Independent().with_std(0.01)
-
-problem = fips.Problem(prior, prior_cov, obs, obs_cov, forward)
-post = fips.solve(problem)
-
-# The answer, labeled as the prior was, and its standard deviation
-print(post.estimate["slowness"].to_series().round(3))
-print(post.estimate["delay"].to_series().round(3))
-print(post.variances["slowness"].to_series().pow(0.5).rename("std").round(3))
-
-# The posterior of an aggregate: the mean slowness of the two halves of the line
-halves = pd.Series(["near", "near", "far", "far"], index=cells, name="half")
-W = fips.aggregate.mean(prior.space, by=halves, blocks="slowness")
-print(post.cov(W)["slowness", "slowness"].to_frame().round(6))
-```
-
-The prior and the observations are `Vector`s, the forward operator is an `Operator`, the covariances are models put on the labels by the `Problem`, and `fips.solve` returns the `Posterior`. The rows of `lengths` and `delays` could come in any order: everything is matched by label.
-
-### The same objects at scale: an atmospheric flux inversion
-
-The state is monthly fluxes on a grid, and the observations CO₂ every 6 hours at two sites. The prior covariance is correlated in time and in space and kept as its two Kronecker factors, so the full matrix is never formed. A transport Jacobian that covers only the cells a footprint touched is placed on the whole grid by its labels.
+Estimate monthly CO₂ fluxes on a small grid from a year of tower measurements:
 
 ```python
 import numpy as np
@@ -134,10 +57,10 @@ import fips
 
 rng = np.random.default_rng(0)
 
-# The state: monthly fluxes on a 3 x 3 grid, one block named "flux"
+# The state: monthly fluxes on a 3 x 3 grid, labeled by (time, lat, lon)
 cells = pd.MultiIndex.from_product(
     [
-        pd.date_range("2024-01-01", periods=3, freq="MS"),
+        pd.date_range("2024-01", periods=12, freq="MS"),
         [40.6, 40.7, 40.8],
         [-112.0, -111.9, -111.8],
     ],
@@ -145,53 +68,40 @@ cells = pd.MultiIndex.from_product(
 )
 prior = fips.Vector.from_series(pd.Series(1.0, index=cells), block="flux")
 
-# The observations: CO2 every 6 hours at two sites, one block named "co2"
-labels = pd.MultiIndex.from_product(
-    [["UOU", "WBB"], pd.date_range("2024-01-01", periods=360, freq="6h")],
-    names=["site", "obs_time"],
-)
-co2 = pd.Series(rng.normal(420.0, 1.0, len(labels)), index=labels)
+# The observations: CO₂ (ppm) at one tower every 6 hours
+times = pd.Index(pd.date_range("2024-01-01", "2024-12-31", freq="6h"), name="obs_time")
+co2 = pd.Series(rng.normal(420.0, 1.0, len(times)), index=times)
 obs = fips.Vector.from_series(co2, block="co2")
 
-# The transport Jacobian has columns only for the cells a footprint touched:
-# from_blocks places it by its labels, and the other cells get zeros
-touched = cells[rng.random(len(cells)) < 0.7]
+# The forward operator: a transport Jacobian with labeled rows and columns
 jacobian = pd.DataFrame(
-    rng.uniform(0.0, 0.5, (len(labels), len(touched))), index=labels, columns=touched
+    rng.uniform(0.0, 0.5, (len(times), len(cells))), index=times, columns=cells
 )
 forward = fips.Operator.from_blocks(
     {("co2", "flux"): jacobian}, rows=obs.space, cols=prior.space
 )
 
-# The prior covariance, correlated in time and in space and kept as its two
-# Kronecker factors; the observation covariance, correlated within a site's day
-prior_cov = fips.Kronecker(
-    fips.Exponential("time", "30D"),
-    fips.Exponential(["lat", "lon"], 10.0, metric="haversine"),
-).with_std(0.5)
-obs_cov = fips.Independent().with_std(1.0) + fips.Exponential(
-    "obs_time", "12h", within=["site", "obs_time.date"]
-).with_std(0.5)
-
 problem = fips.Problem(
     prior=prior,
-    prior_cov=prior_cov,
+    prior_cov=fips.Independent().with_std(0.5),  # prior flux error
     obs=obs,
-    obs_cov=obs_cov,
+    obs_cov=fips.Independent().with_std(1.0),  # model-data mismatch (ppm)
     forward=forward,
-    offset=415.0,  # the background: the part of the observations the fluxes do not explain
+    offset=415.0,  # the background concentration
 )
 post = fips.solve(problem)
 
-print(post.estimate["flux"].to_xarray())  # the posterior fluxes on (time, lat, lon)
+print(post.estimate.to_series("flux"))  # posterior fluxes, labeled by (time, lat, lon)
 print(post.summary())  # DOFS, chi-squared, R², RMSE, ... in one row
-
-# The posterior of each month's total flux, without forming the full covariance
-W = fips.aggregate.sum(prior.space, by="time")
-print(post.cov(W).to_frame().round(3))
 ```
 
-The [user guide](https://jmineau.github.io/fips/stable/user_guide/index.html) has more: offsets solved for with the state, aggregated observations, part of the state held at its prior, and repeated inversions.
+The prior and the observations are `Vector`s, the forward operator is an `Operator`, the covariances are put on the labels by the `Problem`, and `fips.solve` returns the `Posterior`. Everything is matched by label: the Jacobian's rows and columns could come in any order.
+
+More in the [documentation](https://jmineau.github.io/fips/stable/):
+
+- [A first problem](https://jmineau.github.io/fips/stable/getting_started/first_problem.html), step by step, with a state of two blocks.
+- [The user guide](https://jmineau.github.io/fips/stable/user_guide/index.html): correlated covariances (exponential, Matérn, Kronecker products), sparse Jacobians, offsets solved for with the state, aggregated observations, and repeated inversions.
+- [A regional flux inversion](https://jmineau.github.io/fips/stable/user_guide/examples/flux_regional.html), worked from start to finish.
 
 ## Documentation
 
