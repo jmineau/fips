@@ -199,6 +199,6 @@ fips's own words
 
 .. seealso::
 
-   - :doc:`getting_started`: a first problem, step by step
-   - :doc:`usage`: each object in more depth
-   - :doc:`reference/posterior`: the solve and the posterior it returns
+   - :doc:`first_problem`: a first problem, step by step
+   - :doc:`/user_guide/index`: each object in more depth
+   - :doc:`/reference/posterior`: the solve and the posterior it returns

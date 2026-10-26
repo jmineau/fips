@@ -1,4 +1,4 @@
-Getting Started
+A First Problem
 ===============
 
 This page solves one small problem from start to finish, meeting fips's
@@ -243,10 +243,9 @@ xarray.
 What's next
 -----------
 
-- :doc:`usage`, the User Guide: each object in more depth, covariance models,
+- :doc:`/user_guide/index`, the User Guide: each object in more depth, covariance models,
   sparse matrices, offsets, aggregated observations, part of the state held at
   its prior, and repeated inversions.
-- :doc:`examples/index`: two worked problems, gravity and a regional flux
+- :doc:`/user_guide/examples/index`: two worked problems, gravity and a regional flux
   inversion.
-- :doc:`migration`: from fips 0.1, each old name and its replacement.
-- :doc:`reference/index`: every class, function and attribute.
+- :doc:`/reference/index`: every class, function and attribute.

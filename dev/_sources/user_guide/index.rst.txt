@@ -2,8 +2,8 @@ User Guide
 ==========
 
 This guide takes fips's objects one at a time, in the order a problem uses
-them, and says what each is for before how to call it. :doc:`getting_started`
-solves one problem from start to finish; :doc:`terminology` defines the words.
+them, and says what each is for before how to call it. :doc:`/getting_started/first_problem`
+solves one problem from start to finish; :doc:`/getting_started/terminology` defines the words.
 
 .. contents:: On this page
    :local:
@@ -64,7 +64,7 @@ Operators
 An :class:`~fips.Operator` is a matrix with a space on each axis: the forward
 operator (observations by state), an aggregation, a gain. Its matrix is kept
 in the cheapest form that is exact (a dense array, a SciPy sparse matrix, a
-diagonal, Kronecker factors; see :doc:`reference/linalg`), and the labels are
+diagonal, Kronecker factors; see :doc:`/reference/linalg`), and the labels are
 beside it. There are three ways in:
 
 - ``Operator(matrix, rows, cols)`` labels a matrix you have, by position: its
@@ -496,3 +496,8 @@ A :class:`~fips.Problem` and a :class:`~fips.Posterior` pickle with the
 standard library (``pickle.dump(post, file)``): a posterior keeps its problem,
 its options and what the method kept from the solve, and rebuilds every output
 when it is read.
+
+.. toctree::
+   :hidden:
+
+   examples/index

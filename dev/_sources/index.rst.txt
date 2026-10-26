@@ -29,12 +29,8 @@ fips |release|
    :maxdepth: 1
    :hidden:
 
-   installation
-   getting_started
-   usage
-   terminology
-   examples/index
-   migration
+   getting_started/index
+   user_guide/index
    reference/index
 
 ----

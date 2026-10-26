@@ -17,7 +17,7 @@ observations (see :doc:`aggregate`).
 
 .. seealso::
 
-   See :doc:`../terminology` for definitions of prior, posterior, forward operator,
+   See :doc:`/getting_started/terminology` for definitions of prior, posterior, forward operator,
    and other inverse problem terminology.
 
 .. ipython:: python
