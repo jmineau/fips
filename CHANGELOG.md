@@ -11,9 +11,7 @@ fips 0.2 replaces the pandas-backed structures of 0.1 with labeled linear
 algebra: a `Space` of labels, values on it (`Vector`), matrices between spaces
 (`Operator`, `Covariance`) kept in their cheapest form, covariances written as
 models, a `Problem` that checks its labels once, and `fips.solve`, which returns
-a `Posterior`. Almost every name of 0.1.0b9 changes: the
-[migration guide](https://jmineau.github.io/fips/stable/migration.html)
-(`docs/migration.rst`) gives each one and its replacement. The numbers of a
+a `Posterior`. Almost every name of 0.1.0b9 changes. The numbers of a
 solve do not change: the analytic method gives the posterior the Bayesian
 estimator gave, to 1e-10 and on the paper-1 reference run to 6e-14.
 ([#82](https://github.com/jmineau/fips/issues/82))
@@ -129,8 +127,9 @@ estimator gave, to 1e-10 and on the paper-1 reference run to 6e-14.
 - **Documentation for 0.2**: the README leads with a small problem from no
   particular field; the getting-started guide, the user guide, the terminology
   (each word defined once) and both example notebooks are rewritten on the new
-  objects; a migration guide gives each name of 0.1 and its replacement; every
-  public attribute has a reference page. ([#82](https://github.com/jmineau/fips/issues/82), [#14](https://github.com/jmineau/fips/issues/14))
+  objects; every public attribute has a reference page. The documentation has
+  three sections: Getting Started (installation, a first problem, the
+  terminology), the User Guide (with the examples) and the API Reference. ([#82](https://github.com/jmineau/fips/issues/82), [#14](https://github.com/jmineau/fips/issues/14))
 
 ### Changed
 
@@ -228,8 +227,6 @@ estimator gave, to 1e-10 and on the paper-1 reference run to 6e-14.
   changes. ([#82](https://github.com/jmineau/fips/issues/82))
 
 ### Removed
-
-Each removed name and its replacement is in the migration guide.
 
 - **The 0.1 structures**: `Block`, the old `Vector`, `Matrix`, `MatrixBlock`,
   `ForwardOperator` and `CovarianceMatrix`, with `fips.base` (`Structure`,
