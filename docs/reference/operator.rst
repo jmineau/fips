@@ -89,4 +89,5 @@ Conversion
    :toctree: api/
 
    Operator.dense
+   Operator.sparse
    Operator.to_frame

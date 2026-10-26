@@ -269,14 +269,58 @@ class Vector:
         values = self._values[self._space.slice(block)]
         return Vector(values, Space({block: labels}), name=self._name)
 
-    def to_series(self) -> pd.Series:
+    def to_series(self, block: str | None = None) -> pd.Series:
         """
-        Return the values as a Series, labeled by :attr:`index`.
+        Return the values as a Series: the whole vector, or one block on its own labels.
 
-        The index has the ``block`` level first, and the Series holds a copy
-        of the values.
+        Parameters
+        ----------
+        block : str, optional
+            The name of a block. Without it, the Series has every block and
+            is labeled by :attr:`index`, with the ``block`` level first. With
+            it, the Series has that block's values only, labeled as the block
+            was given (``space.select(block)``: its own levels and dtypes, no
+            ``block`` level), ready for pandas or ``to_xarray``.
+
+        Returns
+        -------
+        pd.Series
+            A copy of the values, named as the vector is.
+
+        Raises
+        ------
+        KeyError
+            If the vector has no block named `block`.
+
+        See Also
+        --------
+        Vector.from_series : The vector of a Series.
+
+        Examples
+        --------
+        >>> import pandas as pd
+        >>> from fips import Space, Vector
+        >>> space = Space(
+        ...     {
+        ...         "flux": pd.Index([1, 2], name="cell"),
+        ...         "bias": pd.Index(["A"], name="site"),
+        ...     }
+        ... )
+        >>> v = Vector([0.5, 1.5, 2.0], space, name="prior")
+        >>> v.to_series("flux")
+        cell
+        1    0.5
+        2    1.5
+        Name: prior, dtype: float64
+        >>> v.to_series().index.names
+        FrozenList(['block', 'cell', 'site'])
         """
-        return pd.Series(np.array(self._values), index=self.index, name=self._name)
+        if block is None:
+            return pd.Series(np.array(self._values), index=self.index, name=self._name)
+        values = self._values[self._space.slice(block)]
+        return pd.Series(
+            np.array(values), index=self._space.select(block), name=self._name
+        )
 
     def to_xarray(self) -> xr.DataArray | xr.Dataset:
         """
