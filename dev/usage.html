@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>User Guide &#8212; fips 0.1.0b10.dev57+g6f9d2299b documentation</title>
+    <title>User Guide &#8212; fips 0.1.0b10.dev58+g53ab9aafc documentation</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0" />
 
-    <script src="_static/documentation_options.js?v=aad72aa2"></script>
+    <script src="_static/documentation_options.js?v=54c30dc7"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -135,8 +135,8 @@
       
     
     
-    <img src="_static/logo.png" class="logo__image only-light" alt="fips 0.1.0b10.dev57+g6f9d2299b documentation - Home"/>
-    <img src="_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.1.0b10.dev57+g6f9d2299b documentation - Home"/>
+    <img src="_static/logo.png" class="logo__image only-light" alt="fips 0.1.0b10.dev58+g53ab9aafc documentation - Home"/>
+    <img src="_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.1.0b10.dev58+g53ab9aafc documentation - Home"/>
   
   
 </a></div>
@@ -524,20 +524,20 @@ that appears twice in the state or the observations, including two labels
 that <code class="docutils literal notranslate"><span class="pre">round_index</span></code> rounds to the same value.</p>
 <div class="admonition tip">
 <p class="admonition-title">Tip</p>
-<p>Plain <a class="reference external" href="https://pandas.pydata.org/docs/reference/api/pandas.Series.html#pandas.Series" title="(in pandas v3.0.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">pandas.Series</span></code></a> and <a class="reference external" href="https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v3.0.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">pandas.DataFrame</span></code></a> are accepted
+<p>Plain <a class="reference external" href="https://pandas.pydata.org/docs/reference/api/pandas.Series.html#pandas.Series" title="(in pandas v3.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">pandas.Series</span></code></a> and <a class="reference external" href="https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v3.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">pandas.DataFrame</span></code></a> are accepted
 everywhere — <em>fips</em> will promote them to <a class="reference internal" href="reference/api/fips.Block.html#fips.Block" title="fips.Block"><code class="xref py py-class docutils literal notranslate"><span class="pre">Block</span></code></a> /
 <a class="reference internal" href="reference/api/fips.MatrixBlock.html#fips.MatrixBlock" title="fips.MatrixBlock"><code class="xref py py-class docutils literal notranslate"><span class="pre">MatrixBlock</span></code></a> automatically.</p>
 </div>
 </section>
 <section id="constructing-covariance-matrices">
 <h2><a class="toc-backref" href="#id2" role="doc-backlink">Constructing Covariance Matrices</a><a class="headerlink" href="#constructing-covariance-matrices" title="Link to this heading">#</a></h2>
-<p><a class="reference internal" href="reference/api/fips.CovarianceMatrix.html#fips.CovarianceMatrix" title="fips.CovarianceMatrix"><code class="xref py py-class docutils literal notranslate"><span class="pre">CovarianceMatrix</span></code></a> takes a full <a class="reference external" href="https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v3.0.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">pandas.DataFrame</span></code></a> (or a 2D
+<p><a class="reference internal" href="reference/api/fips.CovarianceMatrix.html#fips.CovarianceMatrix" title="fips.CovarianceMatrix"><code class="xref py py-class docutils literal notranslate"><span class="pre">CovarianceMatrix</span></code></a> takes a full <a class="reference external" href="https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v3.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">pandas.DataFrame</span></code></a> (or a 2D
 array with an <code class="docutils literal notranslate"><span class="pre">index</span></code>), or a list of <a class="reference internal" href="reference/api/fips.MatrixBlock.html#fips.MatrixBlock" title="fips.MatrixBlock"><code class="xref py py-class docutils literal notranslate"><span class="pre">MatrixBlock</span></code></a> objects. The
 index needs a <code class="docutils literal notranslate"><span class="pre">&quot;block&quot;</span></code> level.</p>
 <p>A diagonal covariance (independent errors) has its own constructor,
 <a class="reference internal" href="reference/api/fips.CovarianceMatrix.diagonal.html#fips.CovarianceMatrix.diagonal" title="fips.CovarianceMatrix.diagonal"><code class="xref py py-meth docutils literal notranslate"><span class="pre">diagonal()</span></code></a>. It takes the variances and the index
 that labels both axes: a scalar is the same variance for every element, and a
-1D array or list gives one for each. A <a class="reference external" href="https://pandas.pydata.org/docs/reference/api/pandas.Series.html#pandas.Series" title="(in pandas v3.0.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">pandas.Series</span></code></a> or a
+1D array or list gives one for each. A <a class="reference external" href="https://pandas.pydata.org/docs/reference/api/pandas.Series.html#pandas.Series" title="(in pandas v3.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">pandas.Series</span></code></a> or a
 <a class="reference internal" href="reference/api/fips.Vector.html#fips.Vector" title="fips.Vector"><code class="xref py py-class docutils literal notranslate"><span class="pre">Vector</span></code></a> brings its own index.</p>
 <div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [1]: </span><span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span><span class="o">,</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 
