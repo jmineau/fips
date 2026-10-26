@@ -7,361 +7,322 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+fips 0.2 replaces the pandas-backed structures of 0.1 with labeled linear
+algebra: a `Space` of labels, values on it (`Vector`), matrices between spaces
+(`Operator`, `Covariance`) kept in their cheapest form, covariances written as
+models, a `Problem` that checks its labels once, and `fips.solve`, which returns
+a `Posterior`. Almost every name of 0.1.0b9 changes: the
+[migration guide](https://jmineau.github.io/fips/stable/migration.html)
+(`docs/migration.rst`) gives each one and its replacement. The numbers of a
+solve do not change: the analytic method gives the posterior the Bayesian
+estimator gave, to 1e-10 and on the paper-1 reference run to 6e-14.
+([#82](https://github.com/jmineau/fips/issues/82))
+
 ### Added
 
-- **`diagonal`, a constructor for diagonal matrices**, on `Matrix`,
-  `CovarianceMatrix`, `ForwardOperator` and `MatrixBlock`:
-  `CovarianceMatrix.diagonal(0.25, index=idx)` is the matrix with 0.25 on the
-  diagonal and zeros elsewhere, labeled by `idx` on both axes. The values are a
-  scalar, a 1D array or list (one value per element), or a `Series`, `Block`
-  or `Vector`, which brings its own index, so
-  `CovarianceMatrix.diagonal(S.variances)` is the diagonal part of `S`. With
-  `sparse=True` the dense matrix is never formed. A `MatrixBlock` also takes
-  its block names: `MatrixBlock.diagonal(0.01, index=idx, row_block="bias",
-  col_block="bias")`.
-  ([#61](https://github.com/jmineau/fips/issues/61))
-- `InverseProblem` (and so `FluxProblem`) accepts a scalar for `prior_error`
-  and `modeldata_mismatch`: one variance for every element of the state or of
-  the observations. A `Series` or a `Vector` of variances with a `block` level
-  gives one for each, as a `Series` did before.
-  ([#61](https://github.com/jmineau/fips/issues/61))
-- **Oracle tests** (`tests/test_oracle.py`), for every registered estimator:
-  the posterior mean and covariance, Kalman gain, averaging kernel, DOFS,
-  modeled observations and reduced chi-squared against the closed-form
-  Gaussian posterior written independently in the test (both covariance
-  forms, 20 seeds, several sizes, at 1e-10); `gamma` against a mismatch
-  scaled by hand; diagonal covariances given as variances, a scalar or a full
-  matrix; a multi-block problem read back block by block; a permutation test
-  (each input in its own random order gives the same labeled posterior); and
-  dot tests of `convolve` and of `ObsAggregator`'s aggregation. No library
-  code changed. ([#82](https://github.com/jmineau/fips/issues/82))
-- **`fips.solve(problem)` returns a `Posterior`**, the solution labeled with
-  the problem's indexes: `estimate` (and `mean`, the same object for every
-  estimator fips has), `covariance`, `variances`, `modeled_obs`,
-  `prior_modeled_obs`, `prior_obs_covariance`, `kalman_gain`,
-  `averaging_kernel`, `desroziers`, the scalars `dofs`, `reduced_chi2`, `r2`,
-  `rmse` and `uncertainty_reduction`, and the fitted `estimator`. Each output is
-  built once and kept. The estimator defaults to `"bayesian"`; options such as
-  `gamma` are passed on. `fips.solve` does not change the problem.
-  `InverseProblem.solve` calls it, keeps the posterior as `problem.result`,
-  and returns the problem as before; `problem.posterior` and the other result
-  properties give the posterior's outputs, with the same values, labels, types
-  and names as before. They now return the same object on every access instead
-  of a new one, so a change made to one in place shows in the next.
-  ([#82](https://github.com/jmineau/fips/issues/82),
-  [#12](https://github.com/jmineau/fips/issues/12))
-
-- **Linear operators** (`fips.operator`): `DenseOperator`, `SparseOperator`
-  and `DiagonalOperator`, subclasses of SciPy's `LinearOperator` (`matvec`,
-  `rmatvec`, `matmat`, `.T`), with `dense()`, `diagonal()`, `trace()`,
-  `to_frame(index, columns)` and `solve(B)` for a symmetric positive-definite
-  operator (Cholesky with the `LDL^T` fallback for a dense one, a division for
-  a diagonal one, a sparse LU for a sparse one). `A @ B` of two operators keeps
-  the cheapest exact form (a diagonal times a sparse matrix stays sparse; a
-  dense side makes it dense), and so do `+`, `-` and a scalar `*` or `/`.
-  `as_operator(x)` wraps an array, a SciPy sparse matrix or a structure, and
-  `dottest(op)` checks that `rmatvec` is the adjoint of `matvec`. Every 2D
-  structure has a read-only `operator` property: its data as an operator,
-  without a dense copy of a sparse frame, and a `DiagonalOperator` for a sparse
-  diagonal such as `CovarianceMatrix.diagonal(..., sparse=True)`.
-  ([#82](https://github.com/jmineau/fips/issues/82))
-- **Kronecker covariances kept as their factors.**
-  `KroneckerError.operator(index)` returns a `KroneckerOperator`
-  (`fips.covariance`): the marginal correlation matrices, each row's position in
-  them and the standard deviations, for any row order and any subset of the
-  product, never the `n x n` matrix. `H @ S_0` and `H @ S_0 @ H.T` go through
-  the factors, `solve` through each factor's Cholesky factorization (a subset of
-  the product by a Schur complement on the missing entries, whose backward
-  error is checked: when ill-conditioned factors make it inaccurate, the dense
-  matrix is solved instead, with a logged warning), `diagonal()` and
-  `trace()` from the factors; `dense()` is the matrix `KroneckerError.build`
-  gives, number for number. `KroneckerError.build` is unchanged.
-  ([#6](https://github.com/jmineau/fips/issues/6))
-- **`from_operator`, a 2D structure that holds an operator**:
-  `CovarianceMatrix.from_operator(error.operator(index), index)` (also on
-  `Matrix`, `ForwardOperator` and `MatrixBlock`) checks the labels and the
-  stored values (a NaN raises, as in a frame) and keeps the operator; `reindex` to labels it has, `round_index`, `copy`, `scale` and
-  pickling keep it too, so `InverseProblem` and `fips.solve` never form the
-  matrix. `data`, `values` and anything that reads them form the DataFrame the
-  first time (with a `UserWarning` past 5,000 rows), as before; `repr` does
-  not. `InverseProblem` also
-  takes an operator as `prior_error` or `modeldata_mismatch` and labels it with
-  the prior's or the observations' index. At 208 times by 90 cells (n =
-  18,720, a sparse `H` with m = 2,800), the solve with `dofs` and
-  `reduced_chi2` took 39 s and 3.9 GB from the factors against 86 s and
-  14.9 GB from the dense `build`, with the same estimate.
-  ([#6](https://github.com/jmineau/fips/issues/6))
-
-- **The posterior of aggregates, and a gamma sweep without a new solve.**
-  `Posterior.cov(W)` is the posterior covariance of aggregates of the state,
-  `W S_hat W^T`, and `Posterior.averaging_kernel(W)` their averaging kernel,
-  `W A W*` with `W* = W^T (W W^T)^-1` the pseudo-inverse of `W` (the form IMI
-  uses; `W A W^T` is not an averaging kernel). `W` is a `Matrix` (or what
-  `Matrix` takes) with one row per aggregate and the state index as its
-  columns, in any order, dense or sparse; the result is labeled by its rows. A
-  column label that is not in the state, a state label that is missing and a
-  repeated label raise. Without `W`, `cov()` is `covariance` and
-  `averaging_kernel()` the full kernel. `Posterior.with_gamma(gamma)` is the
-  posterior `fips.solve(problem, gamma=gamma)` gives, from the factorization
-  the solve kept. The estimator side: `BayesianSolver.with_gamma`, and
-  `Estimator.S_hat_diagonal`, `aggregate_S_hat(W)` and `aggregate_A(W)` (from
-  `S_hat` and `A` for any estimator, from the factors for `BayesianSolver`).
-  ([#23](https://github.com/jmineau/fips/issues/23),
-  [#22](https://github.com/jmineau/fips/issues/22))
+- **Two helpers for code that moves from the old API.** `Vector.to_series(block)`
+  gives one block's values on its own labels, without the `block` level
+  (`post.estimate.to_series("flux")`; with no block it is the whole vector, as
+  before). `Operator.sparse()` gives the matrix as a new SciPy CSR array, from
+  the stored entries of a sparse or diagonal form, as `dense()` gives a dense
+  one. ([#82](https://github.com/jmineau/fips/issues/82))
+- **`Space` and `Vector`.** A `Space` is the labels of a state, of the
+  observations or of one axis of a matrix: ordered named blocks, each labeled by
+  its own pandas index, together one `MultiIndex` with the `block` level first
+  (a level one block lacks is NaN on its rows, and every level keeps its dtype).
+  `select(block)`, `slice(block)`, `offsets`, `from_index`, `align(other)` (an
+  exact join that names the labels on one side only) and `round_labels`. A
+  `Vector` is read-only values on a space: `from_series`, `from_blocks`,
+  `v["flux"]` (a `Vector` of that block, labeled as it was given), `to_series`,
+  `to_xarray`, `align`, `combine_first` and `round_labels`. ([#82](https://github.com/jmineau/fips/issues/82))
+- **`Operator`, a matrix with a `Space` on each axis**, in its cheapest form (a
+  dense array, a SciPy sparse matrix, a diagonal, Kronecker factors):
+  `Operator(matrix, rows, cols)`, `Operator.from_frame(frame)`,
+  `Operator.from_blocks({(row_block, col_block): block}, rows=, cols=)` (a
+  labeled block is placed by its labels: a label it has no entry for is zero, a
+  label the space lacks raises, a sparse block stays sparse), `op["co2",
+  "flux"]`, `op @ vector`, `op @ op`, `+`, `-`, a scalar `*` or `/`, `T`,
+  `align`, `round_labels`, `dense()` and `to_frame()`. Products and sums first
+  match the labels they meet on, in any order. ([#82](https://github.com/jmineau/fips/issues/82))
+- **`Covariance`, an `Operator` from a space to itself**, with
+  `Covariance.diagonal(variances, space)` (kept as the diagonal),
+  `Covariance.block_diag` (each part keeps its form; parts by block name
+  too), `variances`, `solve`, `logdet`, `quadratic_form` and `sqrt`, each done
+  the way its form makes cheap. ([#82](https://github.com/jmineau/fips/issues/82))
+- **`fips.linalg`, the unlabeled forms**: `DenseOperator`, `SparseOperator`,
+  `DiagonalOperator`, `BlockDiagonalOperator` and `KroneckerOperator`
+  (a covariance kept as its factors, for any row order and any subset of the
+  product), subclasses of SciPy's `LinearOperator` with `dense`, `diagonal`,
+  `trace`, `solve`, `logdet` and `sqrt`; `A @ B` and `A + B` keep the cheapest
+  exact form, and a sparse product past a quarter full is dense.
+  `as_linear_operator` and `dottest`. A form copies its input and makes the copy
+  read-only. ([#82](https://github.com/jmineau/fips/issues/82), [#6](https://github.com/jmineau/fips/issues/6))
+- **Covariance models**, exported from `fips`: a correlation model times
+  standard deviations, `model.with_std(std)`. `Exponential`, `Gaussian` and
+  `Matern` decay with the distance along some levels (a datetime level with a
+  time scale such as `"30D"`, numeric levels, or latitude and longitude with
+  `metric="haversine"` or `"chordal"`); `Constant`; `Independent`, the identity;
+  `Kronecker(a, b, ...)`, kept as its factors. `within=` keeps a model inside
+  groups of labels and sparse between them (`within=["site",
+  "obs_time.date"]`, `within="time.hour"`). Parameters are checked when a model
+  is made. `with_std` takes the standard deviations as a `Vector` (the
+  `Covariance` on its space, at once), a number, or a pandas Series on the
+  labels of the block it is built on (lined up by label; a missing or extra
+  label raises); a plain array raises, since it has no labels. Models add,
+  `Covariance.block_diag` takes them by block name, and
+  `build(space)` puts one on a space (`fips.covariance.CovarianceModel`); a new
+  kind is a subclass of `fips.covariance.CorrelationModel`.
+  `fips.covariance.distances.chordal_matrix`. ([#82](https://github.com/jmineau/fips/issues/82))
+- **`Problem(prior, prior_cov, obs, obs_cov, forward, offset=None)`**, the
+  inputs of a solve, their labels checked once by an exact join, each held in
+  its own form; a covariance model is built on the prior's or the observations'
+  space. `predict(x)` is `H x + c` for any state; `aggregate(W)` is the problem
+  of aggregated observations (`W z`, `W H`, `W S_z W^T`, `W c`); `restrict(keep)`
+  solves for part of the state and holds the rest at its prior (its `H x_0` moves
+  into the offset). ([#82](https://github.com/jmineau/fips/issues/82))
+- **`fips.solve(problem, method="analytic", **options)`** returns a `Posterior`;
+  each method declares its options once (`fips.methods.analytic.AnalyticOptions`:
+  `gamma`, positive and finite), an unknown method or option raises with the
+  names it knows, and `fips.available_methods()` lists the methods. ([#82](https://github.com/jmineau/fips/issues/82), [#29](https://github.com/jmineau/fips/issues/29), [#12](https://github.com/jmineau/fips/issues/12))
+- **`Posterior`**, the answer, labeled: `estimate` (and `mean`), `variances`,
+  `cov(W)` and `averaging_kernel(W)` (of the state, or of aggregates of it
+  without the `n x n` matrices; the averaging kernel of aggregates is
+  `W A W*`, as IMI computes it), `kalman_gain`, `modeled_obs`, `innovation_cov`
+  (`H S_0 H^T + S_z / gamma`), `desroziers(by=)` (a DataFrame of the
+  diagnosed and the specified observation error variances), `leverage(x)`, the
+  scalars `dofs`, `chi2`, `reduced_chi2`, `r2`, `rmse` and
+  `uncertainty_reduction`, and `summary()`, a one-row DataFrame that stacks over
+  many solves. `with_gamma(g)` and `with_data(obs)` reuse the factorization
+  instead of solving again. A method's solution answers the
+  `fips.posterior.Solution` protocol, so a new method gets all of it.
+  ([#82](https://github.com/jmineau/fips/issues/82), [#22](https://github.com/jmineau/fips/issues/22), [#23](https://github.com/jmineau/fips/issues/23), [#8](https://github.com/jmineau/fips/issues/8))
+- **The analytic method's information form, chosen by size.** With fewer
+  state elements than observations (`n < m`) and a model-data mismatch that
+  is diagonal, sparse or block diagonal, `fips.solve` factors the prior
+  instead of the observations: with `S_0 = R R^T` (the form's own square root;
+  through the factors' Cholesky factors for a Kronecker `S_0`), it
+  eigendecomposes the `n x n` matrix `R^T H^T S_z^-1 H R` instead of the
+  `m x m` one, holds `n x n` instead of `m x m`, and gives the same posterior
+  (both forms are held to the closed-form oracle at 1e-10; `with_gamma` and
+  `with_data` work in both). Otherwise, and when `S_0` has no Cholesky
+  factor, the whitened form solves as before, bit for bit. There is no option:
+  the choice is logged at DEBUG. The warning about a large solve now fires
+  only for a whitened solve with more than 5,000 observations and more than
+  twice as many observations as state elements, and says why the information
+  form was not used (before, every solve with `m > n` and `m >= 1000`
+  warned). `KroneckerOperator.sqrt` gives its root through the factors when
+  its rows are the whole product.
+  With `n = 300`, `m = 10,000` and a diagonal `S_z` on one core, a solve
+  with the variances, DOFS and chi-squared takes 0.14 s at a 238 MB peak
+  (194 s and 3.4 GB in the whitened form); at `n = 500`, `m = 5,000` a
+  posterior holds 2 MB after the solve instead of 220 MB.
+  ([#90](https://github.com/jmineau/fips/issues/90))
+- **`fips.aggregate.sum` and `fips.aggregate.mean`**: an aggregation `W`, a
+  sparse `Operator` from a space to groups of its labels (levels, a
+  `pandas.Grouper` with a frequency, an `IntervalIndex` of bins, or a Series
+  that maps a level's values to groups). **`fips.offset_block(obs_space, by)`**:
+  a block of unknown offsets for the state, one per group of observations, with
+  the forward block that adds each to its observations. ([#82](https://github.com/jmineau/fips/issues/82), [#28](https://github.com/jmineau/fips/issues/28))
+- **Oracle tests** (`tests/test_oracle.py`): every method against the
+  closed-form Gaussian posterior, and the permutation test (inputs in any order
+  give the same labeled posterior). ([#82](https://github.com/jmineau/fips/issues/82))
+- **Documentation for 0.2**: the README leads with a small problem from no
+  particular field; the getting-started guide, the user guide, the terminology
+  (each word defined once) and both example notebooks are rewritten on the new
+  objects; a migration guide gives each name of 0.1 and its replacement; every
+  public attribute has a reference page. ([#82](https://github.com/jmineau/fips/issues/82), [#14](https://github.com/jmineau/fips/issues/14))
 
 ### Changed
 
-- **`BayesianSolver` solves by whitening and keeps its factorization.** It
-  whitens with the Cholesky factor `L` of the model-data mismatch (or the square
-  root of its diagonal), eigendecomposes the `m x m` matrix
-  `L^-1 H S_0 H^T L^-T` once, and derives the estimate, the gain, the posterior
-  variances, `DOFS` (the sum of `lambda / (lambda + 1)`) and `reduced_chi2` (from
-  the whitened innovation, with no solve against `S_0`) from the factors.
-  Nothing `n x n` is formed unless `S_hat` or `A` (`posterior_error`,
-  `averaging_kernel`) is read; `variances`, `U_red` and `uncertainty_reduction`
-  no longer read `S_hat`. The outputs agree with the closed form and with the
-  previous solve to 1e-10, and the paper-1 reference run to 6e-14. A sum
-  `H S_0 H^T + S_z` that roundoff has tipped off positive-definite no longer
-  matters. The model-data mismatch must itself be positive-definite: one that is
-  not raises `LinAlgError`. With more observations than state elements the
-  state-space form would be cheaper; it is not built, and a solve with
-  `m > n` and `m >= 1000` logs a warning. A pickled `BayesianSolver` keeps the
-  factors and drops `S_hat`, `A`, `K` and `H S_0`. On an slv-like problem with
-  a Kronecker `S_0` (n = 18,720, m = 2,858) the solve with the variances, DOFS
-  and chi-squared took 6.7 s at a 1.6 GB peak (20.8 s and 9.2 GB before), and
-  each further gamma 0.11 s (23.7 s and 15.3 GB before); at a year of daily
-  fluxes (n = 32,850, m = 14,600) 228 s and 20.4 GB (291 s and 36.7 GB), and
-  1.6 s per gamma (291 s and 63 GB).
-  ([#22](https://github.com/jmineau/fips/issues/22),
-  [#23](https://github.com/jmineau/fips/issues/23))
-- `Posterior.averaging_kernel` is a method, `averaging_kernel(W=None)`; without
-  an aggregation it is the full kernel, the same object each time.
-  `InverseProblem.averaging_kernel` is unchanged.
-  ([#23](https://github.com/jmineau/fips/issues/23))
-- **The estimator computes with operators.** `fips.solve` hands it each
-  matrix's `operator` instead of `.values`, and the estimator keeps them as
-  operators under private names. `Estimator.H`, `S_0` and `S_z` give what they
-  gave before: an array, or a CSR matrix for a sparse input; the array is now
-  read-only, so an edit cannot change the estimator's later outputs. The
-  estimator still takes arrays and SciPy sparse matrices. Results are
-  unchanged: for dense inputs and for a sparse forward operator with dense
-  covariances every output is bit for bit what it was. A pickled estimator
-  stores the matrices as arrays, as before, so pickles read both ways.
-  ([#79](https://github.com/jmineau/fips/issues/79))
-- Integer-valued structures compute in float64: `Matrix + Matrix`,
-  `CovarianceMatrix.variances` and `convolve` give float64 for integer data
-  (they kept the integer dtype), as the solve always did.
-  ([#79](https://github.com/jmineau/fips/issues/79))
-- The sum of two sparse `Matrix` (or `CovarianceMatrix`, ...) objects is
-  sparse; it was densified. A sum with a dense side is dense, as before.
-  ([#79](https://github.com/jmineau/fips/issues/79))
-- **`Matrix`, `CovarianceMatrix`, `ForwardOperator` and `MatrixBlock` take 2D
-  data only** (breaking). A scalar or 1D input now raises a `ValueError` that
-  names the replacement, where the constructor used to decide from the shape of
-  `data` what to build:
-  - `CovarianceMatrix(series)` built a diagonal from a Series. Use
-    `CovarianceMatrix.diagonal(series)`, with `name=` if the matrix should
-    have one: it no longer takes the Series' name.
-  - `Matrix(5.0, index=idx)` and `MatrixBlock(5.0, "r", "c", index=idx)` filled
-    every entry with 5.0, which for a `CovarianceMatrix` has rank 1 and is not
-    what "a covariance of 5" means. Use `.diagonal(5.0, index=idx)` for the
-    diagonal, or pass the array, `np.full((n, m), 5.0)`, for a matrix of one
-    value.
-  - A 1D array or list raised already, from pandas or for its unnamed index;
-    it raises the same `ValueError` now.
-
-  ([#61](https://github.com/jmineau/fips/issues/61),
-  [#50](https://github.com/jmineau/fips/issues/50),
-  [#45](https://github.com/jmineau/fips/issues/45))
-- `FluxInversionPipeline.filter_state_space` raises a `TypeError` that says what
-  is wrong when it has to infer the frequency of flux times that are not
-  datetimes (the config has no `flux_freq`). Before, `pd.infer_freq` ran on
-  whatever the `time` level was: integers raised pandas's own `TypeError`,
-  strings and mixed time zones a `ValueError`, and timedeltas were accepted and
-  dropped every observation, since no interval of timedeltas holds an
-  observation time. A `time` level of timestamps stored as objects is not
-  affected; a `Vector` already reads it as datetimes.
-  ([#43](https://github.com/jmineau/fips/issues/43))
-- **`Matrix.scale` keeps the matrix's name, and a sum of two matrices keeps it
-  when both have the same one.** The result of `scale` (on `Matrix`,
-  `CovarianceMatrix` and `ForwardOperator`) and of `a + b` always had no name
-  (`name` was `None`). A scaled matrix now has the name of the original, and
-  `a + b` is named like `a` and `b` when their names are equal and has no name
-  when they differ or either has none, as the sum of two pandas Series does. A
-  sum with a scalar still has no name. The values, the index and the storage are
-  as before.
-  ([#72](https://github.com/jmineau/fips/issues/72))
-- **`Matrix`, `CovarianceMatrix`, `ForwardOperator` and `MatrixBlock` turn a
-  name that is not `None` into a string when they are built**, as `Block` and
-  `Vector` do. `Matrix(data, name=5).name` is `"5"` where it was `5`, and a
-  tuple or a float is its `str`. `None` stays `None`. Compare `matrix.name` with
-  the string if you passed a number. `ObsAggregator.apply` names its result like
-  its input, so it returns the string name too, and two `MatrixBlock`s named `1`
-  and `"1"` are now duplicates when they are assembled into a `Matrix`, as two
-  such `Block`s already were in a `Vector`.
-  ([#72](https://github.com/jmineau/fips/issues/72))
-- **`InversionPipeline.get_inputs` and `run` log their progress instead of
-  printing it.** The line each step prints as it starts ("Loading
-  observations..."), its elapsed time and the total are now `INFO` records of the
-  `fips.pipeline` logger, with the same text. **With no logging configured they
-  no longer appear**, in a terminal or in a batch job's output, because Python
-  shows only warnings by default. Call `logging.basicConfig(level=logging.INFO)`
-  to see them again, and read them from the log, not from standard output, if
-  you captured it. `FluxInversionPipeline.summarize` still prints its report, and
-  so does a subclass that prints in its own `run`.
-  ([#8](https://github.com/jmineau/fips/issues/8))
+- **The solve whitens and keeps its factorization.** The analytic method
+  whitens with the Cholesky factor of the observation covariance (or the square
+  root of its diagonal), eigendecomposes one `m x m` matrix (the `n x n` matrix
+  of the information form, under Added, when that is smaller and the
+  observation covariance allows it), and derives the estimate, the variances,
+  the DOFS and the chi-squared from the factors without forming anything
+  `n x n` in the whitened form. A sum `H S_0 H^T + S_z` that roundoff has tipped off
+  positive-definite no longer matters, but the observation covariance itself
+  must be positive-definite (one that is not raises `LinAlgError`). A whitened
+  solve with more than 5,000 observations and more than twice as many
+  observations as state elements logs a warning. On an slv-like problem
+  (n = 18,720, m = 2,858, a Kronecker prior covariance) a solve with the
+  variances, DOFS and chi-squared took 6.7 s at a 1.6 GB peak (20.8 s and
+  9.2 GB before) and each further gamma 0.11 s. ([#22](https://github.com/jmineau/fips/issues/22), [#23](https://github.com/jmineau/fips/issues/23))
+- **The inputs are matched by label, exactly** (breaking). `InverseProblem`
+  filled the labels a matrix lacked with zeros (with a "Partial overlap"
+  warning), dropped the extra ones, and filled a misspelled block name with
+  zeros; a `Problem` raises and names them. A covariance that lacks a label's
+  variance raises the same way. A Jacobian that covers only some cells is
+  placed with `Operator.from_blocks`. ([#24](https://github.com/jmineau/fips/issues/24), [#80](https://github.com/jmineau/fips/issues/80), [#82](https://github.com/jmineau/fips/issues/82))
+- **Labels are kept as given** (breaking): no conversion to numbers (site codes
+  `"010"` stay strings) and no rounding (`round_index=6` is gone); round on
+  purpose with `round_labels`. Duplicate, missing and unnamed labels raise a
+  `ValueError` that names them. ([#77](https://github.com/jmineau/fips/issues/77), [#78](https://github.com/jmineau/fips/issues/78))
+- **New names, from one table** (breaking): `obs`, `prior`, `forward`,
+  `prior_cov`, `obs_cov`, `offset` and `estimate` everywhere, the method
+  `"analytic"` (was the estimator `"bayesian"`), and lowercase statistics
+  (`dofs`, `r2`, `rmse`). `Problem` takes `(prior, prior_cov, obs, obs_cov,
+  forward, offset)`, where `InverseProblem` took `(obs, prior, forward_operator,
+  modeldata_mismatch, prior_error, constant)`: pass them by name.
+- **Covariances take standard deviations**, where the error components took
+  variances. ([#82](https://github.com/jmineau/fips/issues/82))
+- **Vectors and operators are read-only and own their data**: each copies its
+  input, so changing the original afterwards leaves it as it was. ([#82](https://github.com/jmineau/fips/issues/82))
+- **A problem is not solved in place**: `fips.solve(problem)` returns the
+  posterior and leaves the problem as it was. ([#12](https://github.com/jmineau/fips/issues/12))
+- **The `flux` extra is renamed `viz`** and installs matplotlib only, for
+  `plot_comparison`; cartopy and `h5py` are no longer installed, and `joblib` is
+  no longer a dependency. ([#82](https://github.com/jmineau/fips/issues/82))
+- **fips logs and never prints**: the solve's records go to the `fips.methods`
+  logger, and statistics are returned (`Posterior.summary()`). ([#8](https://github.com/jmineau/fips/issues/8))
+- **A kernel's `within=` is built for all its groups at once.** `Exponential`,
+  `Gaussian`, `Matern` and `Constant` with `within=` (the correlated part of a
+  model-data mismatch, as errors shared by a site's observations on one day)
+  used to select each group's rows with pandas and evaluate the kernel on a
+  small matrix, group by group. They now list every pair of labels in the same
+  group, all groups together, and evaluate the kernel once on the distances of
+  those pairs. The matrix is the same bit for bit, for every kernel, metric and
+  kind of level. With 11,000 hourly observations in 2,752 groups of a site and a
+  day, an `Exponential` builds in 0.009 s instead of 1.1 s and a `Constant` in
+  0.008 s instead of 0.45 s; with 40,000 observations in 0.03 s instead of
+  4.1 s and 1.6 s. `Problem()` for such a problem takes 0.04 s instead of 1.6 s.
+  A few very large groups take about as long as before (an `Exponential` of 7
+  groups of 1,570 observations 1.6 s instead of 1.2 s) in a fifth less memory.
+  Nothing in the API changes.
+- **The analytic solve's eigendecomposition uses LAPACK's `evd` driver, and
+  redoes it with `evr` when there is not enough memory.** Both forms of the
+  solve eigendecompose one symmetric matrix (`m x m` or `n x n`) with SciPy's
+  `eigh`, whose default driver (`evr`) slows down when many eigenvalues are
+  equal, as they are in the whitened form's `m x m` matrix when there are
+  fewer state elements than observations (it has rank `n`, so `m - n`
+  eigenvalues are zero). `evd` is not slowed by that: with `m = 6,000` on 8
+  cores, a matrix with three quarters of its eigenvalues zero took 235.7 s with
+  `evr` and 17.9 s with `evd`, and one with all distinct eigenvalues 20.0 s and
+  19.2 s. `evd` needs more workspace: at `m = 10,000` the peak above the matrix
+  itself is 1.52 GB with `evr` and 2.30 GB with `evd`. When SciPy cannot
+  allocate it, it raises `MemoryError` before the decomposition starts, and
+  the solve redoes it with `evr`, as before, logging one INFO line. There is
+  no option. The estimates of the two drivers agree to 1.8e-13, not bit for
+  bit: the eigenvectors are rounded differently.
+- **A large product of a sparse matrix and a dense one runs on threads.**
+  SciPy multiplies a sparse matrix by a dense one on a single thread, and the
+  solve does it with `H S_0 H^T` (a dense matrix times `H^T`) and, for a sparse
+  `H`, with `H @ X`. Above about ten million multiply-adds, `SparseOperator`
+  now gives each thread a block of the sparse matrix's rows; the result is
+  SciPy's bit for bit (every row's sum is the same, in the same order), in the
+  same memory layout. The threads are the CPUs the process may run on (a Slurm
+  job's, not the node's), and no more than `OMP_NUM_THREADS` when that is
+  set, as for NumPy's BLAS: `OMP_NUM_THREADS=1` keeps a run on one thread, as
+  before. On 8 threads, `H S_0 H^T` with 96,000 state elements and 2,751
+  observations takes 1.6 s instead of 10.4 s, and with 18,720 state elements and
+  10,003 observations 2.8 s instead of 25 s; the whole solve takes 17.4 s
+  instead of 20.7 s and, with the 10,003, 87 s instead of 92 to 97 s. Nothing in
+  the API changes.
+- **The distance functions drop the options nothing used and are typed.**
+  `haversine_matrix(lats, lons)` takes degrees and gives kilometers on a sphere
+  of radius 6371 km: its `deg=` and `earth_radius=` are gone (for radians, pass
+  `np.degrees(lats)`), and `time_diff_matrix(times)` always gives the absolute
+  differences: its `absolute=` is gone. The fips kernels passed none of them.
+  `haversine_matrix` and `chordal_matrix` share the one half-angle term they
+  both write, and every distance function has annotations. No distance
+  changes. ([#82](https://github.com/jmineau/fips/issues/82))
 
 ### Removed
 
-- `Estimator._output_meta`, the private table `InverseProblem` read to label
-  the estimator's outputs: `Posterior` labels them itself.
-  ([#12](https://github.com/jmineau/fips/issues/12))
+Each removed name and its replacement is in the migration guide.
+
+- **The 0.1 structures**: `Block`, the old `Vector`, `Matrix`, `MatrixBlock`,
+  `ForwardOperator` and `CovarianceMatrix`, with `fips.base` (`Structure`,
+  `Structure1D`, `Structure2D`, the block mixins, `xselect`, `Pickleable`),
+  `fips.matrix`, `fips.operators`, `fips.indexes` and `convolve`. Use `Vector`,
+  `Operator` and `Covariance`; save with `pickle`. 0.1 pickles do not load.
+  ([#82](https://github.com/jmineau/fips/issues/82), [#77](https://github.com/jmineau/fips/issues/77))
+- **`InverseProblem`, `Estimator`, `BayesianSolver`, `ESTIMATOR_REGISTRY` and
+  `available_estimators`** (`fips.estimators`): use `Problem`, `fips.solve` and
+  `available_methods`. ([#82](https://github.com/jmineau/fips/issues/82), [#12](https://github.com/jmineau/fips/issues/12))
+- **The error components and kernel factories**: `ErrorComponent`,
+  `DiagonalError`, `BlockDecayError`, `KroneckerError`, `CovarianceBuilder`,
+  `ConstantCorrelation`, `RaggedTimeDecay`, `GridTimeDecay` and
+  `GridSpatialDecay`; `fips.metrics` moved to `fips.covariance.distances`. The
+  covariance models give the same matrices, bit for bit. ([#82](https://github.com/jmineau/fips/issues/82))
+- **`ObsAggregator` and `integrate_over_time_bins`** (`fips.aggregators`): use
+  `fips.aggregate` and `Problem.aggregate`. ([#82](https://github.com/jmineau/fips/issues/82))
+- **`InversionPipeline`, the subpackage `fips.problems` (`FluxProblem`,
+  `FluxInversionPipeline`, `FluxPlotter`) and `fips.filters`**: fips knows no
+  science domain. A flux inversion is a `Problem` whose blocks are read by name;
+  its workflow and its maps are the caller's. ([#82](https://github.com/jmineau/fips/issues/82), [#8](https://github.com/jmineau/fips/issues/8), [#9](https://github.com/jmineau/fips/issues/9), [#10](https://github.com/jmineau/fips/issues/10), [#11](https://github.com/jmineau/fips/issues/11), [#13](https://github.com/jmineau/fips/issues/13))
+- **`fips.visualization.compute_credible_interval` and `plot_error_norm`**:
+  `plot_comparison` is the one plot. ([#82](https://github.com/jmineau/fips/issues/82), [#20](https://github.com/jmineau/fips/issues/20))
 
 ### Fixed
 
-- **`Estimator.leverage` works for a state vector.** It raised
-  `ValueError: Expected at least ndim=2` on every one-dimensional state, which is
-  the only kind there is: the product `(Hx)^T (H S_0 H^T + S_z)^{-1} Hx` of a
-  vector is a scalar, and `scipy.linalg.inv` refuses one. `Hx` is now one column,
-  so the result is the `n_z` by `n_z` projection the docstring describes (idempotent,
-  trace 1), and the tests pin it to the formula written out in numpy.
-  ([#81](https://github.com/jmineau/fips/issues/81))
-- **`InverseProblem` refuses duplicate state or observation labels**, given
-  twice in the input or made equal by `round_index` (6 decimals by default),
-  with a `ValueError` that names them; for rounding it names the labels that
-  merged. Two labels that differed past the sixth decimal used to become one,
-  the problem kept both rows under it, and the posterior had fewer entries than
-  the state. ([#78](https://github.com/jmineau/fips/issues/78))
-- **A block name of the forward operator, the prior error or the model-data
-  mismatch that matches no block of the state or the observations raises a
-  `ValueError`** naming the unknown block and the known ones, on either axis.
-  In a problem with several blocks, a misspelled `row_block` or `col_block` was
-  filled with zeros with only a "Partial overlap" warning, so the block it was
-  meant for was dropped. Labels missing *within* a known block (a state cell no
-  footprint touched) are still filled with zeros, with the same warning as
-  before. ([#80](https://github.com/jmineau/fips/issues/80))
-- **`KroneckerError.build` gives the right covariance for any row order of
-  its index.** It laid the Kronecker product of the marginal correlations over
-  the rows as if they were the product of the marginal coordinates in the
-  kernels' order, and never checked: the same labels sorted another way, by
-  `(lat, lon, time)` against kernels given as `[time, (lat, lon)]`, gave entries
-  off by up to 0.37 on a correlation scale, with no warning, and an index with
-  a cell missing at only some times raised a broadcast error. Each entry is now
-  `std_i * std_j` times the product of the marginal correlations between rows i
-  and j, for any row order and any subset of the product. An index that is the
-  product in the kernels' order, with or without the same cells left out at
-  every time, gets the same matrix as before, bit for bit. Each kernel still
-  receives the unique coordinates of its levels in order of first appearance.
-  `build` raises a `ValueError` when two rows have the same coordinates on
-  every kernel's level (two blocks on one grid would be perfectly correlated;
-  this raised a broadcast error before) or a kernel returns a matrix of the
-  wrong shape. It also holds one n x n array fewer while it builds (a 5.6 GB
-  peak instead of 8.3 GB at n = 18,720, in the same time).
-  ([#76](https://github.com/jmineau/fips/issues/76))
-- **A sparse prior error or model-data mismatch works**, in any combination
-  with a dense or sparse forward operator. With all three sparse, `solve`
-  raised `ValueError: Sparse arrays/matrices are not supported`; with sparse
-  covariances and a dense forward operator, the posterior covariance was an
-  `np.matrix` and `reduced_chi2`, `uncertainty_reduction` and `U_red` raised.
-  `CovarianceMatrix.force_symmetry` raised on sparse data and now returns a
-  sparse matrix, and `CovarianceMatrix.variances` reads a sparse diagonal
-  without forming the dense matrix. A sparse diagonal covariance is solved by
-  division. The usage guide's claim that sparsity is "detected automatically
-  at solve time" now holds and says what it does.
-  ([#79](https://github.com/jmineau/fips/issues/79))
-- **A sparse frame whose `fill_value` is neither 0.0 nor NaN raises a
-  `ValueError`** when it is given to `Matrix`, `CovarianceMatrix`,
-  `ForwardOperator`, `MatrixBlock`, or `ObsAggregator.apply` as the forward
-  operator. It was accepted, and fips reads the implicit entries of a sparse
-  matrix as zeros: on pandas 3, `Matrix.values` (which the solve reads) and the
-  aggregation of a bare sparse operator took the implicit entries of a frame
-  filled with 1.0 as 0.0, though `to_numpy()` gave the cells, and a frame that
-  mixed dense columns with a sparse column of such a fill had the cells that
-  fill stood for changed to 0.0 on both pandas 2 and 3. On pandas 2, `.values`
-  raised a pandas error. **If you pass a sparse frame with another fill, build
-  it with `fill_value=0.0` or hand over a dense frame** (`sparse=True` stores it
-  sparse); `astype(pd.SparseDtype(float, fill_value=0.0))` does not convert it,
-  it keeps the stored entries and turns the implicit ones into zeros. Frames
-  filled with 0.0, and with NaN (read as 0.0), are accepted as before.
-  ([#67](https://github.com/jmineau/fips/issues/67))
-- `FluxInversionPipeline.summarize` leaves out the flux trend when the `time`
-  level of the flux is not datetimes, where it raised `AttributeError: 'Index'
-  object has no attribute 'year'`. The trend is a rate per year, so it needs
-  datetimes, and only a flux with more than two timesteps has one: a pipeline
-  whose flux times are integer steps, or intervals, failed at the end of `run`,
-  after the solve. The rest of the report is unchanged, and the skip is logged
-  at `INFO` level.
-- `plot_comparison` accepts `None` as the error of a series when another series
-  has one: `plot_comparison(a, b, errors=[None, err])` raised `KeyError` (and
-  `errors=[None]` or all `None` raised `ValueError`). A series with no error is
-  plotted without a band or error bars, and the others keep theirs. The error
-  you pass is no longer renamed after its series, which also made
-  `errors=[err, err]` (one error for two series) raise `KeyError`, and an
-  unnamed series is matched with its own error by position.
-  ([#57](https://github.com/jmineau/fips/issues/57))
-- `FluxPlotter.concentrations` no longer warns on pandas 3 when called with its
-  default windows. `rolling_window` and `gap_threshold` defaulted to `"30d"` and
-  `"7d"`, and pandas 3 deprecates the lowercase `d` alias (`Pandas4Warning`);
-  they default to `"30D"` and `"7D"`. A call that passes `"30d"` itself still
-  warns: write `"30D"`.
-  ([#55](https://github.com/jmineau/fips/issues/55))
-- On pandas 3, a column of a sparse frame that stores every row kept
-  `fill_value=NaN`, where every other column filled with 0.0, so a frame such
-  as `DataFrame.sparse.from_spmatrix(csr_matrix([[1.0, 0.0], [3.0, 4.0]]))`
-  handed to `Matrix` had mixed fills and warned ("Concatenating sparse arrays
-  with multiple fill values"). The same happened to a covariance from
-  `CovarianceBuilder.build(sparse=True)` or an operator from `ObsAggregator`
-  with a column that has no zero. Every column now fills with 0.0. No cell
-  changes: a column that stores every row has no implicit entry. pandas 2 was
-  not affected.
-  ([#64](https://github.com/jmineau/fips/issues/64))
-- `MatrixBlock.reindex`, `round_index` and `copy` raised "MatrixBlock must have
-  both row_block and col_block defined", as did `to_sparse` (it copies) and
-  `to_dense` of a sparse block: the new block was built without its block names.
-  They return a block with the same `row_block`, `col_block` and name, and
-  `reindex(..., inplace=True)` and the `Matrix` classes were not affected.
-  Present in 0.1.0b9.
-  ([#65](https://github.com/jmineau/fips/issues/65))
-- On pandas 3, a NaN stored in a sparse matrix was read as a zero, where the
-  dense path raises "Data contains NaN values.". A NaN variance given to
-  `CovarianceBuilder.build(sparse=True)`, a NaN in a sparse forward operator
-  aggregated by `ObsAggregator`, and a sparse frame built with
-  `DataFrame.sparse.from_spmatrix` from a matrix that stores a NaN and handed
-  to `Matrix` or another 2D structure all came out as zeros, so an inversion
-  could run with an element that has no uncertainty. They now raise the same
-  `ValueError` as the dense path. The implicit entries of a sparse frame are
-  still zeros. Since 0.1.0b8; pandas 2 was not affected.
-  ([#63](https://github.com/jmineau/fips/issues/63))
-- `plot_comparison` unpacks only a `Block` or a `Vector`. It took the `data`
-  attribute of anything that had one, and pandas makes an index label or a
-  column called `data` an attribute. A Series whose index had the label `data`
-  raised `TypeError` as a series, `ValueError` as the truth and `AttributeError`
-  as an error; an error DataFrame with a column `data` plotted that column
-  instead of the one named like its series.
-  ([#43](https://github.com/jmineau/fips/issues/43))
-- A `Structure1D` (`Vector`, `Block`) built from 2-D data that cannot be reduced
-  to 1-D, such as a 2 x 2 DataFrame, raises a `ValueError` naming the class and
-  the shape on every pandas version. On pandas 2 it raised "The truth value of
-  a DataFrame is ambiguous".
-  ([#51](https://github.com/jmineau/fips/issues/51))
-- Selecting a block out of a `Matrix` with `matrix[row, col]` or
-  `matrix.blocks[row, col]` (and so `InverseProblem.get_block` and the
-  `FluxProblem` properties such as `jacobian`) kept the column levels that are
-  NaN throughout the block, the levels only the other blocks have, while the
-  rows were already cleaned. The columns are now cleaned too, so the block
-  comes back with the levels it was built with.
-  ([#46](https://github.com/jmineau/fips/issues/46))
-- An unnamed `Vector` keeps its missing name when copied, reindexed, or its
-  index is rounded, instead of acquiring the string name `"None"`.
-  Non-string names are converted to strings during construction so these
-  operations preserve the stored name as well.
-- A `Block` or `Vector` with a single element could not be built from a
-  Series: `Block(pd.Series([0.1], index=..., name="bias"))` raised "All levels
-  in the row index of Block must be named", because the one element was
-  squeezed to a scalar and its index was lost. A state component with one entry
-  (one bias for one site, one region) now builds, from a Series or from a
-  one-row, one-column DataFrame.
-  ([#38](https://github.com/jmineau/fips/issues/38))
+Bugs of 0.1.0b9 that the objects replacing them do not have:
+
+- `Estimator.leverage` raised on every state vector; `Posterior.leverage`
+  gives the leverage matrix. ([#81](https://github.com/jmineau/fips/issues/81))
+- `KroneckerError` built a wrong covariance, with no warning, when the rows
+  were not in the order of its kernels; a `Kronecker` model is right for any
+  order and any subset of the product. ([#76](https://github.com/jmineau/fips/issues/76))
+- Two labels that rounding made equal became one, and the posterior had fewer
+  entries than the state; duplicate labels now raise. ([#78](https://github.com/jmineau/fips/issues/78))
+- A sparse prior error or model-data mismatch raised or returned an
+  `np.matrix`; dense and sparse inputs now work in any combination. ([#79](https://github.com/jmineau/fips/issues/79))
+- A pandas-sparse frame with a fill other than 0 or NaN, or with a stored NaN,
+  was read with zeros in their place; `Operator.from_frame` raises. ([#67](https://github.com/jmineau/fips/issues/67), [#63](https://github.com/jmineau/fips/issues/63))
+- A block selected out of a vector or a matrix came back with float labels for
+  integer ones, or with the other blocks' levels; a block now comes back
+  labeled as it was given. ([#46](https://github.com/jmineau/fips/issues/46), [#82](https://github.com/jmineau/fips/issues/82))
+- A block of one element could not be built from a Series, and 2-D data gave a
+  pandas error on pandas 2. ([#38](https://github.com/jmineau/fips/issues/38), [#51](https://github.com/jmineau/fips/issues/51))
+- `plot_comparison` refused `None` as the error of one series, and took the
+  `data` attribute of anything that had one. ([#57](https://github.com/jmineau/fips/issues/57), [#43](https://github.com/jmineau/fips/issues/43))
+- `ObsAggregator` with one frequency key gave a row of zeros for an empty bin
+  and mixed up the bins of labels out of time order; `fips.aggregate` does not.
+  ([#98](https://github.com/jmineau/fips/issues/98))
+- The README's multi-block example raised. ([#93](https://github.com/jmineau/fips/issues/93))
+- **Labels at every door** (the branch review's fixes;
+  [#82](https://github.com/jmineau/fips/issues/82)):
+  `Covariance` refuses a dense or sparse matrix that is not symmetric (its
+  largest `|A - A^T|` past 1e-10 of its largest entry; the message names the
+  two entries), and `KroneckerOperator` a factor that is not: an upper
+  triangle used to solve silently to a wrong answer. `Operator(op, rows,
+  cols)`, `Covariance(cov, space)` and `Vector(v, space)` refuse a labeled
+  object, whose labels they ignored, and point to `align` or `.data` /
+  `.values`. `plot_comparison` draws `truth` by label, as it does `errors`
+  (it drew it by position). `Operator.from_blocks` without `rows`/`cols`
+  raises when two labeled matrices of a block have different labels, in
+  either order of the keys (the first one's labels won). `v[0]` finds a
+  block named `0` (kept as `"0"`); `Covariance.block_diag(name=model)` raises
+  that `name` is the covariance's name; a mapping to NaN in `aggregate`
+  names the mapping; `Exponential("lag", "1h")` and the other decay kernels
+  take a timedelta level.
+- `haversine_matrix` gave NaN for some exactly antipodal points: the
+  half-angle term is clipped to [0, 1] against roundoff, as `chordal_matrix`'s
+  already was. ([#108](https://github.com/jmineau/fips/issues/108))
+- **Leftovers of the posterior redesign** (the branch review's fixes;
+  [#82](https://github.com/jmineau/fips/issues/82)): the arrays of the
+  analytic method's factors (`Whitened`) are read-only, also after a pickle or
+  a copy (they were writable and shared by `with_gamma` and `with_data`).
+  `with_data` builds its problem with the constructor, and one `Operator._on`
+  puts an operator on two spaces. No number changes.
+- **The `fips.linalg` forms pickle and copy on SciPy 1.18.** A
+  `KroneckerOperator` (and so a `Covariance`, `Problem` or `Posterior` holding
+  one) failed to pickle with "cannot pickle 'module' object", and a dense,
+  sparse, diagonal or block diagonal form that had been through a pickle or a
+  copy raised on its first product. SciPy 1.18 keeps its array namespace in
+  each operator; a form's pickle now leaves SciPy's own attributes out and
+  loading sets them again, so a pickle written on any SciPy version loads on
+  any other. The lock's SciPy is 1.18.1 on Python 3.12 and newer (1.17.1 on
+  3.11), so CI runs both. ([#113](https://github.com/jmineau/fips/issues/113))
+- **`Posterior.r2` is the R² of the enhancement**, `corr(z - c, H x_hat)²`:
+  the observations less the offset `c`, against `H x_hat`. 0.1.0b9's
+  `Estimator.R2`, documented as `corr(z, H x_hat)²`, computed
+  `corr(z, H x_hat + c)²`, the offset included, so a background that varies
+  from day to day raised it whatever the fit of the state: with 200 synthetic
+  observations and a background of standard deviation 1, it gave 0.78 for a
+  fit whose enhancement R² is 0.27. Without an offset, or with a constant one,
+  the number is the same as before.
+  ([#116](https://github.com/jmineau/fips/issues/116))
 
 ## [0.1.0b9] - 2026-10-09
 

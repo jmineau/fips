@@ -131,7 +131,6 @@ nb_execution_show_tb = True  # print the traceback of a failing cell in the log
 
 # Intersphinx settings
 intersphinx_mapping = {
-    "cartopy": ("https://cartopy.readthedocs.io/stable/", None),
     "python": ("https://docs.python.org/3", None),
     "matplotlib": ("https://matplotlib.org/stable/", None),
     "numpy": ("https://numpy.org/doc/stable/", None),

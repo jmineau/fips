@@ -1,708 +1,897 @@
 """
-Linear operators: the matrices of an inverse problem in their cheapest form.
+Operators: matrices with a space of labels on each axis.
 
-A structure (:class:`~fips.Matrix`, :class:`~fips.CovarianceMatrix`, ...) keeps
-its labels in a pandas DataFrame. Its :attr:`~fips.base.Structure2D.operator`
-gives the same matrix as an :class:`Operator`, which the estimators compute
-with: a :class:`DenseOperator` (a NumPy array), a :class:`SparseOperator` (a
-SciPy sparse matrix) or a :class:`DiagonalOperator` (the diagonal only). A
-covariance kept as Kronecker factors is a
-:class:`~fips.covariance.KroneckerOperator`, and a structure holds one through
-:meth:`~fips.base.Structure2D.from_operator`.
+An :class:`Operator` is a linear map from one :class:`~fips.Space` (its
+columns) to another (its rows): a forward operator from the state to the
+observations, an aggregation, a gain. Its matrix is kept in the cheapest form
+that is exact (:mod:`fips.linalg`): a dense array, a SciPy sparse matrix, a
+diagonal, Kronecker factors. The labels are beside the matrix, never inside
+it, and every product, sum and selection checks them: two operators combine
+only when their spaces have the same labels, in any order (an exact join).
 
-Each is a :class:`scipy.sparse.linalg.LinearOperator`, so ``matvec``,
-``rmatvec``, ``matmat`` and ``.T`` work as in SciPy. On top of that:
-
-- ``A @ B`` of two operators keeps the cheapest form that is exact: diagonal
-  times diagonal is diagonal; sparse or diagonal times sparse is sparse; a
-  product with a dense side is dense; a Kronecker operator times a sparse one
-  (``H @ S_0``) is computed through the factors and is dense. ``A @ x`` with an
-  array is an array, as in SciPy.
-- ``A + B`` and ``A - B`` follow the same rule (an array counts as dense), and
-  a scalar ``*`` or ``/`` keeps the form.
-- :meth:`~Operator.dense`, :meth:`~Operator.diagonal`, :meth:`~Operator.trace`,
-  :meth:`~Operator.to_frame`, and :meth:`~Operator.solve` for a symmetric
-  positive-definite operator, each done the way its form makes cheap.
-- ``np.asarray(A)`` is :meth:`~Operator.dense`, so NumPy functions take an
-  operator as its matrix; ``np.array(A)`` is a copy, as for an array.
-
-The operators are real (float64) and pickle with the standard protocol.
+A DataFrame is a way in (:meth:`Operator.from_frame`) and a way out
+(:meth:`Operator.to_frame`), not the store.
 """
 
 import logging
-from typing import TYPE_CHECKING, TypeAlias
+from collections.abc import Hashable, Mapping
+from typing import Any, Self
 
 import numpy as np
-import numpy.typing as npt
 import pandas as pd
 import scipy.sparse as sp
-from numpy.linalg import LinAlgError
-from scipy.linalg import solve
-from scipy.sparse.linalg import LinearOperator, splu
 
-from fips._sparse import frame_from_spmatrix
-
-if TYPE_CHECKING:
-    from fips.base import Structure2D
+from fips.linalg import (
+    BlockDiagonalOperator,
+    DenseOperator,
+    DiagonalOperator,
+    LinearOperator,
+    LinearOperatorLike,
+    SparseOperator,
+    as_linear_operator,
+)
+from fips.linalg.forms import _adopt
+from fips.space import Space, _listed
+from fips.vector import Vector
 
 logger = logging.getLogger(__name__)
 
-OperatorLike: TypeAlias = (
-    "Operator | sp.spmatrix | sp.sparray | npt.ArrayLike | Structure2D"
-)
-"""What :func:`as_operator` takes: an operator, a SciPy sparse matrix, a 2D array or a 2D structure."""
 
-_DENSE_FILL = 0.25
-"""
-The share of stored entries above which a product of sparse operators is dense.
-
-A product of sparse matrices can fill in (``H S_0 H^T`` for a sparse ``H``
-usually does). Past about a quarter of its entries, a dense array is faster to
-add and to factor than CSR, and not much bigger.
-"""
-
-
-def _solve_psd(A: np.ndarray, B: np.ndarray) -> np.ndarray:
-    r"""
-    Solve ``A X = B`` for a symmetric positive-definite ``A``, robust to roundoff.
-
-    Covariance-like matrices such as ``A = H S_0 H^T + S_z`` are positive-definite
-    in exact arithmetic (``S_z`` is positive-definite), so the fast Cholesky path
-    (``assume_a="pos"``) is tried first. When ``A`` is ill-conditioned -- a wide
-    eigenvalue spread, with ``H S_0 H^T`` large relative to ``S_z`` -- roundoff in
-    forming ``A`` can tip it just off positive-definite, and Cholesky raises
-    :class:`~numpy.linalg.LinAlgError`. In that case we symmetrize ``A`` and fall
-    back to the symmetric-indefinite ``LDL^T`` factorization (``assume_a="sym"``),
-    which tolerates the roundoff and stays backward-stable.
-
-    Parameters
-    ----------
-    A : np.ndarray
-        Symmetric matrix, positive-definite in exact arithmetic.
-    B : np.ndarray
-        Right-hand side.
-
-    Returns
-    -------
-    np.ndarray
-        Solution ``X`` of ``A X = B``.
+def _stored_values(form: LinearOperator) -> np.ndarray:
     """
-    try:
-        return solve(A, B, assume_a="pos")
-    except LinAlgError:
-        logger.warning(
-            "Covariance matrix is numerically non-positive-definite (likely "
-            "roundoff from a dominant H S_0 H^T term); falling back to a symmetric "
-            "LDL^T solve. Inspect problem conditioning if results look unphysical."
-        )
-        A = 0.5 * (A + A.T)
-        return solve(A, B, assume_a="sym")
+    Return the values a form stores: a dense one's array, a sparse one's entries, a diagonal.
 
-
-def _as_array(B) -> np.ndarray:
-    """Return `B` (an array, a SciPy sparse matrix or an operator) as a dense array."""
-    if isinstance(B, Operator):
-        return B.dense()
-    if sp.issparse(B):
-        return B.toarray()
-    return np.asarray(B, dtype=float)
-
-
-class Operator(LinearOperator):
+    A block diagonal form gives its blocks' values; any other form (Kronecker
+    factors, which check themselves when built) gives none.
     """
-    A real linear operator that fips can multiply, add, transpose and solve with.
+    if isinstance(form, DenseOperator):
+        return form.array.ravel()
+    if isinstance(form, SparseOperator):
+        return form.matrix.data
+    if isinstance(form, DiagonalOperator):
+        return form.values
+    if isinstance(form, BlockDiagonalOperator):
+        return np.concatenate([_stored_values(block) for block in form.blocks])
+    return np.empty(0)
 
-    The base class of :class:`DenseOperator`, :class:`SparseOperator` and
-    :class:`DiagonalOperator`: build one of those, or let :func:`as_operator`
-    choose. A new form subclasses this one and implements ``_matmat`` and
-    ``_transpose``. Every other method has a default that is right for any
-    form, which the subclass overrides where its form has a cheaper way. A
-    form that is neither dense nor sparse (a
-    :class:`~fips.covariance.KroneckerOperator`) also gets a SciPy sparse
-    matrix in ``_matmat``, from a product with a :class:`SparseOperator`.
 
-    Parameters
-    ----------
-    shape : tuple of int
-        ``(rows, columns)``.
-
-    See Also
-    --------
-    as_operator : The operator that fits an array, a sparse matrix or a structure.
-    fips.base.Structure2D.operator : A structure's data as an operator.
+def _axis_space(
+    index: pd.Index, block: Hashable | None, axis: str
+) -> tuple[Space, np.ndarray]:
     """
+    Return the space of one axis of a frame, and the order that puts the frame's labels in it.
 
-    def __init__(self, shape: tuple[int, ...]):
-        super().__init__(dtype=np.float64, shape=shape)
-
-    # SciPy is not annotated, so pyrefly takes the type of each default it
-    # infers (a private SciPy class) as the type an override must return.
-    def _transpose(self) -> "Operator":  # pyrefly: ignore[bad-override]
-        """Return the transpose; each form implements it."""
-        raise NotImplementedError
-
-    def _matvec(self, x):
-        """Return ``self @ x`` for a vector."""
-        return self._matmat(x.reshape(-1, 1)).reshape(-1)
-
-    def _rmatvec(self, x):
-        """Return ``self.T @ x`` for a vector."""
-        return self._transpose().matvec(x)
-
-    def _rmatmat(self, X):
-        """Return ``self.T @ X``."""
-        return self._transpose().matmat(X)
-
-    def _rmatmul_array(self, X: np.ndarray) -> np.ndarray:
-        """Return ``X @ self`` for a 1D or 2D array."""
-        if X.ndim == 1:
-            return self._transpose().matvec(X)
-        return self._transpose().matmat(X.T).T
-
-    def _elementwise(self, func) -> "Operator":
-        """
-        Return the operator with `func` applied to its entries.
-
-        `func` multiplies by a scalar (``a * c``, ``a / c`` or ``-a``), so it
-        maps 0 to 0 and a form can apply it to what it stores.
-        """
-        return DenseOperator(func(self.dense()))
-
-    def _select(self, rows: np.ndarray, cols: np.ndarray) -> "Operator":
-        """Return the operator's entries at `rows` and `cols` (integer positions), in that order."""
-        csr = self._csr()
-        if csr is None:
-            return DenseOperator(self.dense()[np.ix_(rows, cols)])
-        # SciPy is not annotated, so pyrefly finds no __getitem__ on a sparse array
-        return _from_sparse(csr[rows][:, cols])  # pyrefly: ignore[bad-index]
-
-    def _csr(self) -> "sp.csr_array | None":
-        """Return the operator as a CSR array, or None if its form is dense."""
-        return None
-
-    def dense(self) -> np.ndarray:
-        """
-        Return the operator as a dense NumPy array.
-
-        Returns
-        -------
-        np.ndarray
-            The full matrix. For a :class:`DenseOperator`, the array it holds,
-            not a copy.
-        """
-        return self.matmat(np.eye(self.shape[1]))
-
-    def diagonal(self) -> np.ndarray:
-        """
-        Return the main diagonal; a sparse or diagonal operator reads it from its entries.
-
-        Returns
-        -------
-        np.ndarray
-            A new 1D array of the entries ``A[i, i]``.
-        """
-        return np.diagonal(self.dense()).copy()
-
-    def trace(self) -> float:
-        """
-        Return the sum of the main diagonal.
-
-        Returns
-        -------
-        float
-            The trace.
-        """
-        return float(self.diagonal().sum())
-
-    def solve(self, B) -> np.ndarray:
-        """
-        Solve ``self @ X = B`` for a symmetric positive-definite operator.
-
-        A dense operator solves by Cholesky, falling back to a symmetric
-        ``LDL^T`` solve, with a logged warning, when roundoff has tipped it off
-        positive-definite. A diagonal one divides, and raises
-        :class:`~numpy.linalg.LinAlgError` on a zero. A sparse one uses SuperLU
-        (:func:`scipy.sparse.linalg.splu`): SciPy has no sparse Cholesky, and
-        LU keeps the factors sparse, solves every column of `B` with one
-        factorization, and does not need positive-definiteness. A singular
-        operator raises :class:`~numpy.linalg.LinAlgError` in every form.
-
-        Parameters
-        ----------
-        B : array-like, SciPy sparse matrix or Operator
-            The right-hand side: a vector, or a matrix with as many rows as the
-            operator.
-
-        Returns
-        -------
-        np.ndarray
-            ``X``, dense, with the shape of `B`.
-        """
-        return _solve_psd(self.dense(), _as_array(B))
-
-    def to_frame(
-        self, index: pd.Index, columns: pd.Index | None = None
-    ) -> pd.DataFrame:
-        """
-        Return the operator as a labeled DataFrame.
-
-        Parameters
-        ----------
-        index : pd.Index
-            Labels of the rows.
-        columns : pd.Index, optional
-            Labels of the columns; `index` if not given.
-
-        Returns
-        -------
-        pd.DataFrame
-            A dense frame for a dense operator. A pandas sparse frame (implicit
-            entries 0.0) for a sparse or diagonal one, built without forming
-            the dense matrix.
-        """
-        columns = index if columns is None else columns
-        csr = self._csr()
-        if csr is None:
-            return pd.DataFrame(self.dense(), index=index, columns=columns)
-        return frame_from_spmatrix(sp.csr_matrix(csr), index, columns)
-
-    def __array__(self, dtype=None, copy=None) -> np.ndarray:
-        """
-        Return :meth:`dense`, so NumPy functions take an operator as its matrix.
-
-        `copy` follows NumPy's protocol: ``np.array(op)`` (``copy=True``) never
-        shares memory with the operator, while ``np.asarray(op)`` gives a
-        :class:`DenseOperator`'s own array. Every other form builds a new
-        array either way.
-        """
-        a = self.dense()
-        if dtype is not None and np.dtype(dtype) != a.dtype:
-            if copy is False:
-                raise ValueError(
-                    f"An operator is float64: converting it to {np.dtype(dtype)} "
-                    "needs a copy."
-                )
-            return a.astype(dtype)
-        if copy and isinstance(self, DenseOperator):
-            return a.copy()
-        return a
-
-    def dot(self, x):
-        """
-        Return ``self @ x``, or the operator scaled by a scalar ``x``.
-
-        Parameters
-        ----------
-        x : Operator, SciPy sparse matrix, array-like or scalar
-            What to multiply by.
-
-        Returns
-        -------
-        Operator or np.ndarray
-            An operator, in the cheapest exact form, for an operator, a sparse
-            matrix or a scalar; an array for an array, as :meth:`matvec` and
-            :meth:`matmat` give.
-        """
-        if isinstance(x, Operator) or sp.issparse(x):
-            return _product(self, as_operator(x))
-        if np.ndim(x) == 0:  # a scalar, or a 0-d array
-            return self._elementwise(lambda a: a * float(x))
-        return super().dot(x)
-
-    def __rmatmul__(self, other):
-        """Return ``other @ self``."""
-        if isinstance(other, Operator) or sp.issparse(other):
-            return _product(as_operator(other), self)
-        if np.ndim(other) == 0:
-            raise ValueError("Scalar operands are not allowed, use '*' instead")
-        return self._rmatmul_array(np.asarray(other))
-
-    def __rmul__(self, x):
-        """Return ``x * self`` for a scalar, else ``x @ self``."""
-        if np.ndim(x) == 0:  # a scalar, or a 0-d array
-            return self._elementwise(lambda a: float(x) * a)
-        return self.__rmatmul__(x)
-
-    # Returns an Operator, not SciPy's private class (see _transpose)
-    def __truediv__(self, other):  # pyrefly: ignore[bad-override]
-        """Return the operator divided by a scalar."""
-        if np.ndim(other) != 0:  # a scalar, or a 0-d array
-            raise ValueError("Can only divide an operator by a scalar.")
-        return self._elementwise(lambda a: a / float(other))
-
-    # Returns an Operator, not SciPy's private class (see _transpose)
-    def __neg__(self):  # pyrefly: ignore[bad-override]
-        """Return ``-self``."""
-        return self._elementwise(lambda a: -a)
-
-    def __add__(self, x):
-        """Return ``self + x``."""
-        return _sum(self, as_operator(x))
-
-    def __radd__(self, other):
-        """Return ``other + self``."""
-        return _sum(as_operator(other), self)
-
-    def __sub__(self, x):
-        """Return ``self - x``."""
-        return _sum(self, -as_operator(x))
-
-    def __rsub__(self, other):
-        """Return ``other - self``."""
-        return _sum(as_operator(other), -self)
-
-
-class DenseOperator(Operator):
+    With a ``block`` level, the blocks come from it (:meth:`Space.from_index`)
+    and the rows of each block are put together; without one, the axis is the
+    one block named `block`.
     """
-    An operator held as a dense 2D NumPy array.
-
-    Parameters
-    ----------
-    array : array-like
-        The matrix. A float64 array is kept as it is, not copied.
-
-    Examples
-    --------
-    >>> import numpy as np
-    >>> from fips.operator import DenseOperator
-    >>> A = DenseOperator(np.array([[2.0, 1.0], [1.0, 2.0]]))
-    >>> A @ np.array([1.0, 0.0])
-    array([2., 1.])
-    >>> A.solve(np.array([3.0, 3.0]))
-    array([1., 1.])
-    """
-
-    array: np.ndarray
-    """The matrix."""
-
-    def __init__(self, array: npt.ArrayLike):
-        array = np.asarray(array, dtype=float)
-        if array.ndim != 2:
-            raise ValueError(f"A DenseOperator takes a 2D array, got {array.ndim}D.")
-        self.array = array
-        super().__init__(array.shape)
-
-    def _matvec(self, x):
-        """Return ``self @ x`` for a vector."""
-        return self.array @ x
-
-    def _matmat(self, X):
-        """Return ``self @ X``."""
-        return self.array @ X
-
-    def _rmatmul_array(self, X):
-        """Return ``X @ self``."""
-        return X @ self.array
-
-    def _transpose(self):
-        """Return the transpose, a view of the same array."""
-        return DenseOperator(self.array.T)
-
-    def _elementwise(self, func):
-        """Return the operator with `func` applied to its entries."""
-        return DenseOperator(func(self.array))
-
-    def dense(self) -> np.ndarray:
-        """Return the array the operator holds, not a copy."""
-        return self.array
-
-    def trace(self) -> float:
-        """Return the sum of the main diagonal."""
-        return float(np.trace(self.array))
-
-    def solve(self, B) -> np.ndarray:
-        """Solve ``self @ X = B`` by Cholesky, falling back to ``LDL^T`` (see :meth:`Operator.solve`)."""
-        return _solve_psd(self.array, _as_array(B))
-
-
-class SparseOperator(Operator):
-    """
-    An operator held as a SciPy sparse matrix.
-
-    Parameters
-    ----------
-    matrix : SciPy sparse matrix or array
-        The matrix. It is kept as a CSR array (CSC for a CSC input), sharing
-        the input's data when that is already float64 in that format.
-
-    Examples
-    --------
-    >>> import scipy.sparse as sp
-    >>> from fips.operator import SparseOperator
-    >>> A = SparseOperator(sp.csr_matrix([[4.0, 1.0], [1.0, 3.0]]))
-    >>> A.diagonal()
-    array([4., 3.])
-    >>> type(A @ A).__name__
-    'SparseOperator'
-    """
-
-    matrix: "sp.csr_array | sp.csc_array"
-    """The matrix, as a SciPy sparse array."""
-
-    def __init__(self, matrix: "sp.spmatrix | sp.sparray"):
-        if not sp.issparse(matrix):
-            raise TypeError("A SparseOperator takes a SciPy sparse matrix.")
-        if isinstance(matrix, (sp.csc_matrix, sp.csc_array)):
-            self.matrix = sp.csc_array(matrix, dtype=float)
-        else:
-            self.matrix = sp.csr_array(matrix, dtype=float)
-        # pyrefly reads SciPy's unannotated `shape` as possibly None (its initial value)
-        super().__init__(self.matrix.shape)  # pyrefly: ignore[bad-argument-type]
-
-    def _matvec(self, x):
-        """Return ``self @ x`` for a vector."""
-        return self.matrix @ x
-
-    def _matmat(self, X):
-        """Return ``self @ X``."""
-        return self.matrix @ X
-
-    def _rmatmul_array(self, X):
-        """Return ``X @ self``."""
-        return X @ self.matrix
-
-    def _transpose(self):
-        """Return the transpose (CSC for a CSR matrix, without a copy)."""
-        return SparseOperator(self.matrix.T)
-
-    def _elementwise(self, func):
-        """Return the operator with `func` applied to its stored entries."""
-        return SparseOperator(func(self.matrix))
-
-    def _csr(self):
-        """Return the matrix as a CSR array."""
-        return sp.csr_array(self.matrix)
-
-    def dense(self) -> np.ndarray:
-        """Return the operator as a dense NumPy array."""
-        return self.matrix.toarray()
-
-    def diagonal(self) -> np.ndarray:
-        """Return the main diagonal, read from the stored entries."""
-        return self.matrix.diagonal()
-
-    def solve(self, B) -> np.ndarray:
-        """Solve ``self @ X = B`` by a sparse LU factorization (see :meth:`Operator.solve`)."""
-        # SciPy has no sparse Cholesky (CHOLMOD is in scikit-sparse, not a
-        # dependency). SuperLU keeps the factors sparse, and an LU does not
-        # need the matrix to be positive-definite.
-        try:
-            lu = splu(sp.csc_matrix(self.matrix))
-        except RuntimeError as err:  # SuperLU's "Factor is exactly singular"
-            raise LinAlgError(
-                f"The sparse matrix is singular: its LU factorization failed ({err})."
-            ) from err
-        return lu.solve(_as_array(B))
-
-
-class DiagonalOperator(Operator):
-    """
-    A square operator that is zero off its main diagonal, held as the diagonal.
-
-    Parameters
-    ----------
-    values : array-like
-        The diagonal, 1D.
-
-    Examples
-    --------
-    >>> from fips.operator import DiagonalOperator
-    >>> D = DiagonalOperator([2.0, 4.0])
-    >>> D.solve([1.0, 1.0])
-    array([0.5 , 0.25])
-    >>> D.trace()
-    6.0
-    """
-
-    values: np.ndarray
-    """The diagonal."""
-
-    def __init__(self, values: npt.ArrayLike):
-        values = np.asarray(values, dtype=float)
-        if values.ndim != 1:
+    argument = "row_block" if axis == "rows" else "col_block"
+    if "block" in index.names:
+        if block is not None:
             raise ValueError(
-                f"A DiagonalOperator takes its diagonal, 1D; got {values.ndim}D."
+                f"The frame's {axis} have a 'block' level, which names their "
+                f"blocks; leave `{argument}` out."
             )
-        self.values = values
-        super().__init__((len(values), len(values)))
-
-    def _matvec(self, x):
-        """Return ``self @ x`` for a vector."""
-        return self.values * x
-
-    def _matmat(self, X):
-        """Return ``self @ X``: each row of `X` scaled."""
-        return self.values[:, None] * X
-
-    def _rmatmul_array(self, X):
-        """Return ``X @ self``: each column of `X` scaled."""
-        return X * self.values
-
-    def _transpose(self):
-        """Return the operator itself, which is symmetric."""
-        return self
-
-    def _elementwise(self, func):
-        """Return the operator with `func` applied to the diagonal."""
-        return DiagonalOperator(func(self.values))
-
-    def _csr(self):
-        """Return the operator as a CSR array that stores its nonzero entries."""
-        n = len(self.values)
-        i = np.flatnonzero(self.values)
-        return sp.csr_array((self.values[i], (i, i)), shape=(n, n))
-
-    def dense(self) -> np.ndarray:
-        """Return the operator as a dense NumPy array."""
-        return np.diag(self.values)
-
-    def diagonal(self) -> np.ndarray:
-        """Return a copy of the diagonal."""
-        return self.values.copy()
-
-    def solve(self, B) -> np.ndarray:
-        """Solve ``self @ X = B`` by dividing each row of `B` by the diagonal."""
-        if not np.all(self.values):
-            raise LinAlgError("The diagonal has a zero, so the operator is singular.")
-        B = _as_array(B)
-        return B / (self.values if B.ndim == 1 else self.values[:, None])
-
-
-def _product(a: Operator, b: Operator) -> Operator:
-    """Return ``a @ b`` in the cheapest form that is exact."""
-    if a.shape[1] != b.shape[0]:
+        return Space._regroup(index)
+    if block is None:
         raise ValueError(
-            f"Cannot multiply operators of shapes {a.shape} and {b.shape}."
+            f"The frame's {axis} have no 'block' level, so `{argument}` must "
+            "name their one block."
         )
-    if isinstance(a, DiagonalOperator) and isinstance(b, DiagonalOperator):
-        return DiagonalOperator(a.values * b.values)
-    if isinstance(a, SparseOperator) and isinstance(b, SparseOperator):
-        product = a.matrix @ b.matrix
-        if product.nnz > _DENSE_FILL * product.shape[0] * product.shape[1]:
-            return DenseOperator(product.toarray())
-        return SparseOperator(product)
-    a_csr, b_csr = a._csr(), b._csr()
-    if a_csr is not None and b_csr is not None:  # one side diagonal: no fill-in
-        return SparseOperator(a_csr @ b_csr)
-    if isinstance(b, DenseOperator):
-        return DenseOperator(a.matmat(b.array))
-    if isinstance(a, DenseOperator):
-        return DenseOperator(b._rmatmul_array(a.array))
-    # Left: a form of its own (a Kronecker covariance) on at least one side. A
-    # sparse matrix (a Jacobian) goes through that form's own product, never
-    # its dense matrix; anything else gives a product as big as the dense one.
-    if isinstance(b, SparseOperator):
-        return DenseOperator(a._matmat(b.matrix))
-    if isinstance(a, SparseOperator):
-        return DenseOperator(b._transpose()._matmat(a.matrix.T).T)
-    if b_csr is not None:  # a diagonal right side scales the columns
-        return DenseOperator(b._rmatmul_array(a.dense()))
-    return DenseOperator(a.matmat(b.dense()))
+    return Space({str(block): index}), np.arange(len(index))
 
 
-def _sum(a: Operator, b: Operator) -> Operator:
-    """Return ``a + b`` in the cheapest form that is exact."""
-    if a.shape != b.shape:
-        raise ValueError(f"Cannot add operators of shapes {a.shape} and {b.shape}.")
-    if isinstance(a, DiagonalOperator) and isinstance(b, DiagonalOperator):
-        return DiagonalOperator(a.values + b.values)
-    a_csr, b_csr = a._csr(), b._csr()
-    if a_csr is not None and b_csr is not None:
-        return SparseOperator(a_csr + b_csr)
-    return DenseOperator(a.dense() + b.dense())
-
-
-def _from_sparse(matrix) -> Operator:
-    """Return a SciPy sparse matrix as a DiagonalOperator if it is one, else a SparseOperator."""
-    coo = matrix.tocoo()
-    if matrix.shape[0] == matrix.shape[1] and np.array_equal(coo.row, coo.col):
-        return DiagonalOperator(matrix.diagonal())
-    return SparseOperator(matrix)
-
-
-def as_operator(x: OperatorLike) -> Operator:
+def _frame_matrix(frame: pd.DataFrame) -> "np.ndarray | sp.csr_array":
     """
-    Return `x` as the :class:`Operator` that fits how it is stored.
+    Return a frame's entries as an array, or as a CSR array if a column is pandas-sparse.
 
-    Parameters
-    ----------
-    x : Operator, SciPy sparse matrix, 2D array-like, or a 2D fips structure
-        What to wrap. An operator comes back as it is, and a structure gives
-        its :attr:`~fips.base.Structure2D.operator`.
-
-    Returns
-    -------
-    Operator
-        A :class:`DiagonalOperator` for a square sparse matrix that stores
-        entries on its diagonal only, a :class:`SparseOperator` for any other
-        sparse matrix, and a :class:`DenseOperator` for an array.
+    The implicit entries of a sparse column are zeros: its fill value must be
+    0 or NaN (pandas 3 fills a frame from ``from_spmatrix`` with NaN).
 
     Raises
     ------
     ValueError
-        If `x` is not 2D. A diagonal given as its values is a
-        :class:`DiagonalOperator`.
-
-    Examples
-    --------
-    >>> import numpy as np
-    >>> import scipy.sparse as sp
-    >>> from fips.operator import as_operator
-    >>> type(as_operator(np.eye(3))).__name__
-    'DenseOperator'
-    >>> type(as_operator(sp.eye(3))).__name__
-    'DiagonalOperator'
+        If a sparse column has another fill value, or an entry is NaN.
     """
-    from fips.base import Structure2D  # fips.base imports this module
+    if not any(isinstance(dt, pd.SparseDtype) for dt in frame.dtypes):
+        return frame.to_numpy(dtype=float)
+    rows, cols, values = [], [], []
+    for j, (label, column) in enumerate(frame.items()):
+        array = column.array
+        if isinstance(array, pd.arrays.SparseArray):
+            fill = array.fill_value
+            if not (fill == 0 or pd.isna(fill)):
+                raise ValueError(
+                    f"Column {label!r} is sparse with fill value {fill!r}. fips "
+                    "reads the entries a sparse column does not store as zeros, "
+                    "so its fill value must be 0 (or NaN)."
+                )
+            stored = array.sp_index.indices
+            entries = np.asarray(array.sp_values, dtype=float)
+        else:
+            dense = column.to_numpy(dtype=float)
+            stored = np.flatnonzero(dense)  # NaN is nonzero, so it is kept
+            entries = dense[stored]
+        rows.append(stored)
+        cols.append(np.full(len(stored), j))
+        values.append(entries)
+    return sp.csr_array(
+        (np.concatenate(values), (np.concatenate(rows), np.concatenate(cols))),
+        shape=frame.shape,
+    )
 
-    if isinstance(x, Operator):
-        return x
-    if isinstance(x, Structure2D):
-        return x.operator
-    if sp.issparse(x):
-        return _from_sparse(x)
-    array = np.asarray(x, dtype=float)
-    if array.ndim != 2:
+
+def _permuted(
+    matrix: "np.ndarray | sp.csr_array", rows: np.ndarray, cols: np.ndarray
+) -> "np.ndarray | sp.csr_array":
+    """Return `matrix` with its rows taken in the order `rows` and its columns in the order `cols`."""
+    if not sp.issparse(matrix):
+        return np.asarray(matrix)[np.ix_(rows, cols)]
+    new_row, new_col = np.empty_like(rows), np.empty_like(cols)
+    new_row[rows], new_col[cols] = np.arange(len(rows)), np.arange(len(cols))
+    coo = sp.coo_array(matrix)
+    return sp.csr_array(
+        (coo.data, (new_row[coo.row], new_col[coo.col])), shape=matrix.shape
+    )
+
+
+def _where(target: pd.Index, given: pd.Index, block: str, what: str) -> np.ndarray:
+    """
+    Return where each label of `given` is among the labels `target` of `block`.
+
+    Raises
+    ------
+    ValueError
+        If `given` has other levels than `target`, or a label `target` does
+        not have; the message names them.
+    """
+    if set(given.names) != set(target.names):
         raise ValueError(
-            f"An operator takes 2D data, got {array.ndim}D. For a diagonal, "
-            "use DiagonalOperator(values)."
+            f"The {what} of block {block!r} have levels {list(given.names)}; the "
+            f"block has {list(target.names)}."
         )
-    return DenseOperator(array)
+    if isinstance(given, pd.MultiIndex) and given.names != target.names:
+        given = given.reorder_levels(list(target.names))
+    found = target.get_indexer(given)
+    if (found < 0).any():
+        raise ValueError(
+            f"The {what} of block {block!r} have labels the block does not "
+            f"have: {_listed(given[found < 0])}."
+        )
+    return found
 
 
-def dottest(op: LinearOperator, rtol: float = 1e-12, seed: int | None = 0) -> bool:
+def _difference(first: pd.Index, other: pd.Index) -> tuple[pd.Index, pd.Index]:
+    """Return the labels only in `first` and those only in `other`, two labelings of one block with the same levels (in any order)."""
+    if isinstance(other, pd.MultiIndex) and other.names != first.names:
+        other = other.reorder_levels(list(first.names))
+    return first[~first.isin(other)], other[~other.isin(first)]
+
+
+def _placed(
+    op: "Operator", rows: pd.Index, cols: pd.Index, key: tuple[str, str]
+) -> LinearOperator:
     """
-    Check that ``op.rmatvec`` is the adjoint of ``op.matvec``.
+    Return the form of `op` (on one row and one column block) placed on the labels `rows` and `cols`.
 
-    For random ``x`` and ``y``, ``<op x, y>`` must equal ``<x, op^T y>`` to
-    within `rtol` of ``|op x| |y| + |x| |op^T y|``, the size of the terms the
-    two inner products are summed from.
+    A label `op` has no entry for is a zero row or column. When `op` covers
+    every label, its form is kept (reordered); otherwise it is sparse if it
+    was (or is diagonal), dense if not.
+    """
+    r, c = key
+    where = f"matrix of ({r!r}, {c!r})"
+    r_pos = _where(rows, op.rows.select(r), r, f"rows of the {where}")
+    c_pos = _where(cols, op.cols.select(c), c, f"columns of the {where}")
+    form = op.data
+    if len(r_pos) == len(rows) and len(c_pos) == len(cols):
+        if np.array_equal(r_pos, np.arange(len(rows))) and np.array_equal(
+            c_pos, np.arange(len(cols))
+        ):
+            return form
+        inverse_r, inverse_c = np.empty_like(r_pos), np.empty_like(c_pos)
+        inverse_r[r_pos], inverse_c[c_pos] = (
+            np.arange(len(r_pos)),
+            np.arange(len(c_pos)),
+        )
+        return form._select(inverse_r, inverse_c)
+    csr = form._csr()
+    if csr is not None:
+        coo = sp.coo_array(csr)
+        return SparseOperator._adopt(
+            sp.csr_array(
+                (coo.data, (r_pos[coo.row], c_pos[coo.col])),
+                shape=(len(rows), len(cols)),
+            )
+        )
+    dense = np.zeros((len(rows), len(cols)))
+    dense[np.ix_(r_pos, c_pos)] = form.dense()
+    return DenseOperator._adopt(dense)
+
+
+class Operator:
+    """
+    A matrix with a :class:`~fips.Space` of labels on each axis.
+
+    The matrix is kept in its cheapest form (:attr:`data`, one of the forms
+    of :mod:`fips.linalg`): a dense array, a SciPy sparse matrix, a diagonal,
+    Kronecker factors. Its rows are labeled by :attr:`rows` and its columns
+    by :attr:`cols`, in the order of each space. Products, sums and
+    selections check the labels: two operators combine only when the spaces
+    they meet on have the same labels, in any order (an exact join).
+
+    An operator is not changed in place: every method returns a new one.
+    NumPy defers to it (``__array_ufunc__ = None``), so ``np.float64(2) * op``
+    is an operator and ``array + op`` raises, as ``op + array`` does.
 
     Parameters
     ----------
-    op : LinearOperator
-        The operator to test.
-    rtol : float, default 1e-12
-        Relative tolerance.
-    seed : int, optional
-        Seed of the random vectors.
+    data : array-like, SciPy sparse matrix or LinearOperator
+        The matrix, with rows in the order of `rows` and columns in the
+        order of `cols`. An array or a sparse matrix is copied, and the copy
+        is read-only: changing `data` afterwards leaves the operator as it
+        was. A sparse matrix stays sparse (a diagonal one becomes a
+        :class:`~fips.linalg.DiagonalOperator`); a form of :mod:`fips.linalg`
+        already holds its own copy and is kept as it is. A DataFrame is
+        refused, since its labels would be ignored: use :meth:`from_frame`.
+        So is an :class:`Operator`: use :meth:`align` to put it on other
+        labels, or its :attr:`data` for the matrix by position.
+    rows : Space
+        The labels of the rows.
+    cols : Space
+        The labels of the columns.
+    name : str, optional
+        What the matrix is ("forward", "prior_cov", ...). A name that is not
+        a string is converted to one.
 
-    Returns
-    -------
-    bool
-        True if the two inner products agree.
+    Raises
+    ------
+    TypeError
+        If `data` is a pandas object or an :class:`Operator`, or `rows` or
+        `cols` is not a Space.
+    ValueError
+        If the shape of `data` does not match the spaces, or it stores a NaN.
+
+    See Also
+    --------
+    Operator.from_frame : An operator from a labeled DataFrame.
+    Operator.from_blocks : An operator from its blocks.
+    fips.Covariance : A symmetric operator on one space.
 
     Examples
     --------
     >>> import numpy as np
-    >>> from fips.operator import DenseOperator, dottest
-    >>> dottest(DenseOperator(np.arange(6.0).reshape(2, 3)))
-    True
+    >>> import pandas as pd
+    >>> from fips import Operator, Space, Vector
+    >>> state = Space({"flux": pd.Index(["a", "b"], name="cell")})
+    >>> obs = Space({"co2": pd.Index([1, 2, 3], name="obs_id")})
+    >>> H = Operator(np.array([[1.0, 0.0], [0.0, 1.0], [1.0, 1.0]]), obs, state)
+    >>> H.shape
+    (3, 2)
+    >>> x = Vector([2.0, 3.0], state)
+    >>> (H @ x).values
+    array([2., 3., 5.])
     """
-    rng = np.random.default_rng(seed)
-    x, y = rng.standard_normal(op.shape[1]), rng.standard_normal(op.shape[0])
-    Ax, ATy = op.matvec(x), op.rmatvec(y)
-    size = np.linalg.norm(Ax) * np.linalg.norm(y) + np.linalg.norm(x) * np.linalg.norm(
-        ATy
-    )
-    return bool(abs(Ax @ y - x @ ATy) <= rtol * size)
+
+    __array_ufunc__ = None
+    """NumPy defers to the operator's own arithmetic, which checks labels."""
+
+    def __init__(
+        self,
+        data: LinearOperatorLike,
+        rows: Space,
+        cols: Space,
+        name: str | None = None,
+    ):
+        if isinstance(data, (pd.DataFrame, pd.Series, pd.Index)):
+            raise TypeError(
+                f"{type(self).__name__} takes the matrix as an array, in the "
+                "spaces' order. Build one from a DataFrame with "
+                f"{type(self).__name__}.from_frame, which reads its labels."
+            )
+        if isinstance(data, Operator):
+            raise TypeError(
+                f"{type(self).__name__} takes a matrix, not a labeled "
+                f"{type(data).__name__}, whose labels would be ignored. To put an "
+                "operator on other labels (in any order), use op.align(rows, "
+                "cols); for its matrix by position, op.data."
+            )
+        for space, what in ((rows, "rows"), (cols, "cols")):
+            if not isinstance(space, Space):
+                raise TypeError(f"{what} must be a Space, got {type(space).__name__}.")
+        form = as_linear_operator(data)
+        if form.shape != (len(rows), len(cols)):
+            raise ValueError(
+                f"The matrix has shape {form.shape}, but the spaces have "
+                f"{len(rows)} rows and {len(cols)} columns."
+            )
+        if np.isnan(_stored_values(form)).any():
+            raise ValueError("The matrix has NaN entries.")
+        self._data = form
+        self._rows = rows
+        self._cols = cols
+        self._name = None if name is None else str(name)
+
+    @classmethod
+    def _build(
+        cls, data: LinearOperatorLike, rows: Space, cols: Space, name: str | None
+    ) -> Self:
+        """Return an instance of this class on `rows` and `cols`; a constructor's last step."""
+        return cls(data, rows, cols, name=name)
+
+    def _like(self, data: LinearOperatorLike, rows: Space, cols: Space) -> "Operator":
+        """Return an operator like this one (its class where the spaces allow, its name) with new data or labels."""
+        return Operator(data, rows, cols, name=self._name)
+
+    @classmethod
+    def from_frame(
+        cls,
+        frame: pd.DataFrame,
+        row_block: str | None = None,
+        col_block: str | None = None,
+        name: str | None = None,
+    ) -> Self:
+        """
+        Build an operator from a DataFrame, reading its labels.
+
+        Parameters
+        ----------
+        frame : pd.DataFrame
+            The matrix. An axis with a ``block`` level has those blocks (see
+            :meth:`Space.from_index`), and the rows (or columns) of each
+            block are put together, in the order the blocks first appear; an
+            axis without one is one block, named by `row_block` or
+            `col_block`. A frame with a pandas-sparse column is kept sparse;
+            the entries a sparse column does not store are zeros.
+        row_block, col_block : str, optional
+            The name of the one block of an axis without a ``block`` level.
+        name : str, optional
+            The operator's name.
+
+        Returns
+        -------
+        Operator
+            The matrix on the spaces of the frame's labels.
+
+        Raises
+        ------
+        ValueError
+            If an axis with a ``block`` level is given its block name too, or
+            one without is not; its labels cannot make a :class:`Space`; a
+            sparse column has a fill value other than 0 or NaN; or an entry
+            is NaN.
+
+        Examples
+        --------
+        >>> import pandas as pd
+        >>> from fips import Operator
+        >>> frame = pd.DataFrame(
+        ...     [[1.0, 0.5], [0.0, 2.0]],
+        ...     index=pd.Index(["o1", "o2"], name="obs_id"),
+        ...     columns=pd.Index(["a", "b"], name="cell"),
+        ... )
+        >>> H = Operator.from_frame(frame, row_block="co2", col_block="flux")
+        >>> H.rows
+        Space(co2: 2 x ['obs_id'])
+        >>> H.to_frame().index.names
+        FrozenList(['block', 'obs_id'])
+        """
+        if not isinstance(frame, pd.DataFrame):
+            raise TypeError(
+                f"from_frame takes a DataFrame, got {type(frame).__name__}."
+            )
+        rows, row_order = _axis_space(frame.index, row_block, "rows")
+        cols, col_order = _axis_space(frame.columns, col_block, "columns")
+        # the permuted matrix is a new array, not a view of the frame's
+        matrix = _adopt(_permuted(_frame_matrix(frame), row_order, col_order))
+        return cls._build(matrix, rows, cols, name)
+
+    @classmethod
+    def from_blocks(
+        cls,
+        blocks: Mapping[tuple[str, str], Any],
+        rows: Space | None = None,
+        cols: Space | None = None,
+        name: str | None = None,
+    ) -> Self:
+        """
+        Build an operator from its blocks, each named by its row and its column block.
+
+        A pair of blocks that is not given is zero. A labeled block is placed
+        by its labels: it may cover part of its blocks' labels (the rest is
+        zero), as a transport Jacobian covers the cells a footprint touched.
+
+        Parameters
+        ----------
+        blocks : mapping of (str, str) to a matrix
+            Each ``(row_block, col_block)`` pair mapped to its matrix, labeled
+            or not. Labeled: a DataFrame (dense or pandas-sparse) whose index
+            and columns are the blocks' own labels (no ``block`` level); a
+            tuple ``(matrix, row_labels, col_labels)`` of an array or a SciPy
+            sparse matrix and two pandas Indexes; or an :class:`Operator` on
+            a row space of the one block ``row_block`` and a column space of
+            the one block ``col_block``. Unlabeled: an array, a SciPy sparse
+            matrix or a form of :mod:`fips.linalg`, whose rows and columns are
+            in the order of the blocks' labels in `rows` and `cols`. An array
+            or a sparse matrix is copied, as for :class:`Operator`.
+        rows, cols : Space, optional
+            The labels of the rows and columns. By default each block's labels
+            are those of the labeled matrices in its row or column, which must
+            then have the same labels (in any order); a matrix that covers
+            part of a block is placed by giving the block's labels here. An
+            unlabeled matrix needs its blocks' labels from here or from a
+            labeled matrix in the same row or column block.
+        name : str, optional
+            The operator's name.
+
+        Returns
+        -------
+        Operator
+            The assembled matrix: sparse if every block is sparse (or
+            diagonal), dense otherwise. A labeled block keeps its form
+            when it covers its blocks' labels (a pandas-sparse frame is
+            sparse); a single block that covers both spaces keeps its form.
+
+        Raises
+        ------
+        ValueError
+            If a pair is given twice, a block's labels are found nowhere, two
+            labeled matrices of a block have different labels and `rows` or
+            `cols` does not give them, a labeled matrix has a label its block
+            does not have (the message names it), a labeled matrix is on
+            other blocks than its key names, or an unlabeled matrix has the
+            wrong shape.
+
+        Examples
+        --------
+        >>> import numpy as np
+        >>> import pandas as pd
+        >>> from fips import Operator, Space
+        >>> obs = pd.Index(["o1", "o2"], name="obs_id")
+        >>> H = Operator.from_blocks(
+        ...     {
+        ...         ("co2", "flux"): pd.DataFrame(
+        ...             [[1.0, 0.5], [0.0, 2.0]],
+        ...             index=obs,
+        ...             columns=pd.Index(["a", "b"], name="cell"),
+        ...         ),
+        ...         ("co2", "bias"): pd.DataFrame(
+        ...             1.0, index=obs, columns=pd.Index(["A"], name="site")
+        ...         ),
+        ...     }
+        ... )
+        >>> H.cols
+        Space(flux: 2 x ['cell'], bias: 1 x ['site'])
+        >>> H.dense()
+        array([[1. , 0.5, 1. ],
+               [0. , 2. , 1. ]])
+
+        A Jacobian of the cells a footprint touched, placed on every cell:
+
+        >>> cells = Space({"flux": pd.Index(["a", "b", "c"], name="cell")})
+        >>> J = pd.DataFrame(
+        ...     [[0.5], [0.2]], index=obs, columns=pd.Index(["c"], name="cell")
+        ... )
+        >>> Operator.from_blocks({("co2", "flux"): J}, cols=cells).dense()
+        array([[0. , 0. , 0.5],
+               [0. , 0. , 0.2]])
+        """
+        labeled: dict[tuple[str, str], Operator] = {}
+        unlabeled: dict[tuple[str, str], LinearOperator] = {}
+        for key, block in blocks.items():
+            r, c = (str(part) for part in key)
+            if (r, c) in labeled or (r, c) in unlabeled:
+                raise ValueError(f"The pair ({r!r}, {c!r}) is given twice.")
+            if isinstance(block, pd.DataFrame):
+                block = Operator.from_frame(block, row_block=r, col_block=c)
+            elif isinstance(block, tuple):
+                if len(block) != 3:
+                    raise ValueError(
+                        f"The matrix of ({r!r}, {c!r}) is a tuple of {len(block)}; a "
+                        "labeled matrix is (matrix, row_labels, col_labels)."
+                    )
+                matrix, row_labels, col_labels = block
+                block = Operator(matrix, Space({r: row_labels}), Space({c: col_labels}))
+            if isinstance(block, Operator):
+                if block.rows.names != (r,) or block.cols.names != (c,):
+                    raise ValueError(
+                        f"The matrix of ({r!r}, {c!r}) is on rows {block.rows.names} "
+                        f"and columns {block.cols.names}; it must be on the one "
+                        "block its key names."
+                    )
+                labeled[(r, c)] = block
+            else:
+                unlabeled[(r, c)] = as_linear_operator(block)
+
+        def labels(given: Space | None, axis: int) -> Space:
+            """Return the space of one axis: `given`, or the labeled blocks' labels."""
+            if given is not None:
+                return given
+            keyword = "rows" if axis == 0 else "cols"
+            found: dict[str, pd.Index] = {}
+            first: dict[str, tuple[str, str]] = {}
+            for key, op in labeled.items():
+                space = op.rows if axis == 0 else op.cols
+                index = space.select(key[axis])
+                if key[axis] not in found:
+                    found[key[axis]], first[key[axis]] = index, key
+                    continue
+                if set(index.names) != set(found[key[axis]].names):
+                    continue  # placing it raises, naming the levels
+                only_first, only_this = _difference(found[key[axis]], index)
+                if len(only_first) or len(only_this):
+                    what = "rows" if axis == 0 else "columns"
+                    raise ValueError(
+                        f"The {what} of the matrices of {first[key[axis]]} and "
+                        f"{key} differ: {_listed(only_first) or 'none'} only in "
+                        f"the first, {_listed(only_this) or 'none'} only in the "
+                        f"second. Without `{keyword}`, the labeled matrices of a "
+                        f"block must have the same labels; to place a matrix "
+                        f"that covers part of block {key[axis]!r}, give its "
+                        f"labels in `{keyword}`."
+                    )
+            for key in [*labeled, *unlabeled]:
+                if key[axis] not in found:
+                    raise ValueError(
+                        f"Block {key[axis]!r} has no labels: give a labeled matrix "
+                        f"for one of its pairs, or `{keyword}`."
+                    )
+            order = list(dict.fromkeys(key[axis] for key in blocks))
+            return Space({str(b): found[str(b)] for b in order})
+
+        row_space, col_space = labels(rows, 0), labels(cols, 1)
+        forms: dict[tuple[str, str], LinearOperator] = {}
+        for (r, c), op in labeled.items():
+            forms[(r, c)] = _placed(
+                op, row_space.select(r), col_space.select(c), (r, c)
+            )
+        for (r, c), form in unlabeled.items():
+            shape = (len(row_space.select(r)), len(col_space.select(c)))
+            if form.shape != shape:
+                raise ValueError(
+                    f"The matrix of ({r!r}, {c!r}) has shape {form.shape}; its "
+                    f"blocks have {shape[0]} and {shape[1]} labels."
+                )
+            forms[(r, c)] = form
+
+        if len(forms) == 1 and len(row_space.names) == len(col_space.names) == 1:
+            return cls._build(next(iter(forms.values())), row_space, col_space, name)
+        parts = {key: form._csr() for key, form in forms.items()}
+        if all(part is not None for part in parts.values()):
+            grid = [
+                [parts.get((r, c)) for c in col_space.names] for r in row_space.names
+            ]
+            # bmat needs a size for each row and column of blocks
+            for i, r in enumerate(row_space.names):
+                for j, c in enumerate(col_space.names):
+                    if grid[i][j] is None and (i == 0 or j == 0):
+                        grid[i][j] = sp.csr_array(
+                            (len(row_space.select(r)), len(col_space.select(c)))
+                        )
+            matrix = sp.csr_array(sp.bmat(grid, format="csr"))
+            return cls._build(_adopt(matrix), row_space, col_space, name)
+        dense = np.zeros((len(row_space), len(col_space)))
+        for (r, c), form in forms.items():
+            dense[row_space.slice(r), col_space.slice(c)] = form.dense()
+        return cls._build(_adopt(dense), row_space, col_space, name)
+
+    @property
+    def data(self) -> LinearOperator:
+        """
+        The matrix, in its form (a :mod:`fips.linalg` operator, without labels).
+
+        The rows are in the order of :attr:`rows` and the columns in the
+        order of :attr:`cols`. The form's arrays are read-only.
+        """
+        return self._data
+
+    @property
+    def rows(self) -> Space:
+        """The labels of the rows."""
+        return self._rows
+
+    @property
+    def cols(self) -> Space:
+        """The labels of the columns."""
+        return self._cols
+
+    @property
+    def name(self) -> str | None:
+        """What the matrix is: a string, or None."""
+        return self._name
+
+    @property
+    def shape(self) -> tuple[int, int]:
+        """The number of rows and of columns."""
+        return (len(self._rows), len(self._cols))
+
+    @property
+    def T(self) -> "Operator":
+        """The transpose: the columns become the rows, labels and all."""
+        return self._like(self._data._transpose(), self._cols, self._rows)
+
+    def __getitem__(self, key: tuple[str, str]) -> "Operator":
+        """
+        Return the block of one row block and one column block.
+
+        Parameters
+        ----------
+        key : (str, str)
+            The names of the row block and the column block.
+
+        Returns
+        -------
+        Operator
+            The block, on spaces of those single blocks, labeled as each
+            block was given. A diagonal block of a :class:`~fips.Covariance`
+            is a Covariance, and keeps the form (Kronecker factors stay
+            factors).
+
+        Raises
+        ------
+        KeyError
+            If either space has no block of that name.
+        """
+        r, c = key
+        rs, cs = self._rows.slice(r), self._cols.slice(c)
+        form = self._data._select(
+            np.arange(rs.start, rs.stop), np.arange(cs.start, cs.stop)
+        )
+        rows = Space({r: self._rows.select(r)})
+        cols = Space({c: self._cols.select(c)})
+        return self._like(form, rows, cols)
+
+    def _on(
+        self,
+        rows: Space,
+        cols: Space,
+        what: str | None = None,
+        of: tuple[str, str] = ("", ""),
+    ) -> LinearOperator:
+        """
+        Return the form with its rows and columns in the order of `rows` and `cols`.
+
+        Both are exact joins (:meth:`Space.align`): a label on one side and
+        not the other raises, and the message names it. It calls the two
+        spaces "the spaces" unless the caller says what this operator is for:
+        `what` names the operator (``"forward"``) and `of` what its rows and
+        its columns must match (``("the observations", "the prior")``), as in
+        "The rows of forward and the observations do not have the same labels".
+
+        Raises
+        ------
+        ValueError
+            If `rows` or `cols` do not have exactly this operator's labels.
+        """
+        if what is None:
+            words = [("the other space", "The spaces")] * 2
+        else:
+            words = [
+                (f"the {axis} of {what}", f"The {axis} of {what} and {match}")
+                for axis, match in zip(("rows", "columns"), of, strict=True)
+            ]
+        r = None if rows is self._rows else rows._align(self._rows, *words[0])
+        if cols is rows and self._cols is self._rows:
+            c = r
+        else:
+            c = None if cols is self._cols else cols._align(self._cols, *words[1])
+        if (r is None or np.array_equal(r, np.arange(len(r)))) and (
+            c is None or np.array_equal(c, np.arange(len(c)))
+        ):
+            return self._data
+        r = np.arange(self.shape[0]) if r is None else r
+        c = np.arange(self.shape[1]) if c is None else c
+        return self._data._select(r, c)
+
+    def align(self, rows: Space, cols: Space) -> "Operator":
+        """
+        Return the operator on `rows` and `cols`, which must have exactly its labels.
+
+        Parameters
+        ----------
+        rows, cols : Space
+            The labels to put the rows and columns on, in any order (see
+            :meth:`Space.align`).
+
+        Returns
+        -------
+        Operator
+            The same matrix, its rows and columns reordered.
+
+        Raises
+        ------
+        ValueError
+            If a space does not have the same labels as the operator's; the
+            message names those missing from either.
+        """
+        return self._like(self._on(rows, cols), rows, cols)
+
+    def round_labels(self, decimals: int) -> "Operator":
+        """
+        Return the operator with its float labels rounded (:meth:`Space.round_labels`).
+
+        Parameters
+        ----------
+        decimals : int
+            Number of decimal places.
+
+        Returns
+        -------
+        Operator
+            The same matrix on the rounded labels.
+
+        Raises
+        ------
+        ValueError
+            If rounding makes two labels of a block equal.
+        """
+        rows = self._rows.round_labels(decimals)
+        cols = rows if self._cols is self._rows else self._cols.round_labels(decimals)
+        return self._like(self._data, rows, cols)
+
+    def __matmul__(self, other: "Operator | Vector") -> "Operator | Vector":
+        """
+        Return the product with an operator or a vector, aligned by label.
+
+        Parameters
+        ----------
+        other : Operator or Vector
+            An operator whose rows, or a vector whose space, have exactly the
+            labels of this operator's columns, in any order.
+
+        Returns
+        -------
+        Operator or Vector
+            An operator on this one's rows and `other`'s columns, in the
+            cheapest form that is exact (:mod:`fips.linalg`), or a vector on
+            this one's rows.
+
+        Raises
+        ------
+        TypeError
+            If `other` is an array: it has no labels to check. Multiply
+            :attr:`data` by it to compute by position.
+        ValueError
+            If the labels do not match exactly.
+        """
+        if isinstance(other, Vector):
+            values = self._data @ other.align(self._cols).values
+            return Vector(values, self._rows)
+        if isinstance(other, Operator):
+            # Put this operator's columns in the order of the other's rows:
+            # the other may be a form (Kronecker) that a reordering would densify
+            left = self._on(self._rows, other.rows)
+            return Operator(left @ other.data, self._rows, other.cols)
+        raise TypeError(
+            f"An Operator multiplies an Operator or a Vector, not "
+            f"{type(other).__name__}: an array has no labels to check. Use "
+            "op.data @ x to compute by position."
+        )
+
+    def _combine(self, other: "Operator", sign: float) -> "Operator":
+        """Return ``self + sign * other``, with `other` aligned to this operator's labels."""
+        if not isinstance(other, Operator):
+            raise TypeError(
+                f"An Operator adds an Operator, not {type(other).__name__}."
+            )
+        theirs = other._on(self._rows, self._cols)
+        total = self._data + theirs if sign > 0 else self._data - theirs
+        # two covariances sum to a covariance; a covariance and any other operator, to an operator
+        summed = (
+            self._like(total, self._rows, self._cols)
+            if isinstance(other, type(self))
+            else Operator(total, self._rows, self._cols)
+        )
+        summed._name = self._name if self._name == other.name else None
+        return summed
+
+    def __add__(self, other: "Operator") -> "Operator":
+        """Return the sum with an operator on the same labels (in any order)."""
+        if not isinstance(other, Operator):
+            # a covariance model adds itself (CovarianceModel.__radd__); for
+            # anything else Python raises a TypeError
+            return NotImplemented
+        return self._combine(other, 1.0)
+
+    def __sub__(self, other: "Operator") -> "Operator":
+        """Return the difference with an operator on the same labels (in any order)."""
+        return self._combine(other, -1.0)
+
+    def __mul__(self, scalar: float) -> "Operator":
+        """Return the operator times a scalar, in the same form."""
+        if np.ndim(scalar) != 0:
+            raise TypeError("An Operator is multiplied by a scalar with '*'; use '@'.")
+        return self._like(self._data * float(scalar), self._rows, self._cols)
+
+    def __rmul__(self, scalar: float) -> "Operator":
+        """Return a scalar times the operator."""
+        return self.__mul__(scalar)
+
+    def __truediv__(self, scalar: float) -> "Operator":
+        """Return the operator divided by a scalar."""
+        if np.ndim(scalar) != 0:
+            raise TypeError("An Operator can only be divided by a scalar.")
+        return self._like(self._data / float(scalar), self._rows, self._cols)
+
+    def __neg__(self) -> "Operator":
+        """Return ``-self``."""
+        return self._like(-self._data, self._rows, self._cols)
+
+    def dense(self) -> np.ndarray:
+        """
+        Return the matrix as a new dense array, rows and columns in the spaces' order.
+
+        This forms the full matrix, whatever its form.
+        """
+        return np.array(self._data)
+
+    def sparse(self) -> sp.csr_array:
+        """
+        Return the matrix as a new SciPy CSR array, rows and columns in the spaces' order.
+
+        A sparse or diagonal operator (or a block diagonal one of those) gives
+        its stored entries without forming the dense matrix. Any other form
+        (a dense array, Kronecker factors) forms the full matrix, as
+        :meth:`dense` does, and keeps its nonzero entries.
+
+        Returns
+        -------
+        scipy.sparse.csr_array
+            A writable copy of the matrix, by position: the labels are in
+            :attr:`rows` and :attr:`cols`.
+
+        See Also
+        --------
+        Operator.dense : The matrix as a dense array.
+
+        Examples
+        --------
+        >>> import numpy as np
+        >>> import pandas as pd
+        >>> import scipy.sparse as sp
+        >>> from fips import Operator, Space
+        >>> obs = Space({"co2": pd.Index([1, 2], name="obs_id")})
+        >>> state = Space({"flux": pd.Index(["a", "b", "c"], name="cell")})
+        >>> H = Operator(sp.csr_array([[1.0, 0.0, 0.0], [0.0, 0.0, 2.0]]), obs, state)
+        >>> H.sparse().nnz
+        2
+        >>> abs(H.sparse()).sum(axis=0)
+        array([1., 0., 2.])
+        """
+        stored = self._data._csr()
+        if stored is None:
+            return sp.csr_array(self.dense())
+        return stored.copy()
+
+    def __array__(self, dtype=None, copy=None) -> np.ndarray:
+        """
+        Return the dense matrix, so NumPy functions take an operator as its matrix.
+
+        ``np.asarray(op)`` is a dense operator's own read-only array (any
+        other form builds a new one); ``np.array(op)`` is a writable copy.
+        """
+        return self._data.__array__(dtype=dtype, copy=copy)
+
+    def to_frame(self) -> pd.DataFrame:
+        """
+        Return the matrix as a dense DataFrame.
+
+        The index is :attr:`rows`'s :attr:`~Space.index` and the columns
+        :attr:`cols`'s, each with the ``block`` level first. This forms the
+        full matrix, whatever its form.
+
+        Returns
+        -------
+        pd.DataFrame
+            A copy of the matrix, labeled.
+        """
+        return pd.DataFrame(
+            self.dense(), index=self._rows.index, columns=self._cols.index
+        )
+
+    def __repr__(self) -> str:
+        """Return the name, shape and form, then each space."""
+        return (
+            f"{type(self).__name__}(name={self._name!r}, shape={self.shape}, "
+            f"form={type(self._data).__name__})\n"
+            f"  rows: {self._rows!r}\n  cols: {self._cols!r}"
+        )

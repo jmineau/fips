@@ -2,24 +2,38 @@
 Flexible Inverse Problem Solver (FIPS).
 
 A Pythonic framework for solving linear inverse problems using Bayesian estimation.
-Provides data structures for state vectors, observations, forward operators, and
-covariance matrices; estimators for computing posteriors; and interfaces for
-serialization, visualization, and specialized applications like atmospheric
-flux inversion.
+Labels live in a :class:`Space`; values on one are a :class:`Vector`; a matrix
+between two is an :class:`Operator` (a :class:`Covariance` from one to
+itself), kept in its cheapest form. A covariance is written as a correlation
+model with standard deviations: ``Exponential("time", "30D").with_std(std)``.
+A :class:`Problem` puts the prior, the observations, the forward operator and
+the covariances together, and :func:`solve` returns its :class:`Posterior`.
+:mod:`fips.aggregate` sums or averages a space by group (the observations to
+daily means, the state to monthly totals), and :func:`offset_block` adds a
+block of offsets to the state.
 """
 
 import logging
 from importlib.metadata import PackageNotFoundError
 from importlib.metadata import version as _version
 
-from .covariance import CovarianceMatrix
-from .estimators import Estimator, available_estimators
-from .matrix import Matrix, MatrixBlock
-from .operators import ForwardOperator, convolve
-from .pipeline import InversionPipeline
+from . import aggregate
+from .aggregate import offset_block
+from .covariance import (
+    Constant,
+    Covariance,
+    Exponential,
+    Gaussian,
+    Independent,
+    Kronecker,
+    Matern,
+)
+from .methods import available_methods, solve
+from .operator import Operator
 from .posterior import Posterior
-from .problem import InverseProblem, solve
-from .vector import Block, Vector
+from .problem import Problem
+from .space import Space
+from .vector import Vector
 
 try:
     __version__ = _version("fips")  # set by setuptools-scm from git tags
@@ -30,17 +44,20 @@ logging.getLogger(__name__).addHandler(logging.NullHandler())
 
 __all__ = [
     "__version__",
-    "Block",
+    "Space",
     "Vector",
-    "Matrix",
-    "MatrixBlock",
-    "Estimator",
-    "available_estimators",
-    "ForwardOperator",
-    "CovarianceMatrix",
-    "InversionPipeline",
-    "InverseProblem",
-    "Posterior",
+    "Operator",
+    "Covariance",
+    "Exponential",
+    "Gaussian",
+    "Matern",
+    "Constant",
+    "Independent",
+    "Kronecker",
+    "Problem",
     "solve",
-    "convolve",
+    "available_methods",
+    "Posterior",
+    "aggregate",
+    "offset_block",
 ]

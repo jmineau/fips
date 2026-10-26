@@ -5,8 +5,7 @@ from typing import Any
 import numpy as np
 import pandas as pd
 
-from fips.covariance import CovarianceMatrix
-from fips.indexes import assign_block
+from fips import Covariance
 
 
 def promote_index(
@@ -29,7 +28,9 @@ def promote_index(
     pd.Index
         The promoted index with block level added.
     """
-    return assign_block(index, block_name)
+    frame = index.to_frame(index=False)
+    frame.insert(0, level_name, block_name)
+    return pd.MultiIndex.from_frame(frame)
 
 
 def _parse_dimensions(
@@ -91,8 +92,8 @@ def generate_test_data(
         - 'prior': pd.Series (Prior state x_a)
         - 'obs': pd.Series (Synthetic observations y_obs)
         - 'forward_operator': pd.DataFrame (Forward operator H)
-        - 'prior_error': CovarianceMatrix (S_a)
-        - 'modeldata_mismatch': CovarianceMatrix (S_z)
+        - 'prior_error': Covariance (S_a)
+        - 'modeldata_mismatch': Covariance (S_z)
         - 'truth': pd.Series (Hidden truth x_true)
     """
     rng = np.random.default_rng(seed)
@@ -154,7 +155,7 @@ def generate_test_data(
     H_df.index = promote_index(H_df.index, "obs", "block")
     H_df.columns = promote_index(H_df.columns, "state", "block")
 
-    # 5. Covariances (CovarianceMatrix)
+    # 5. Covariances (Covariance)
     # Build correlation matrix using spatial distance
     # For prior covariance, use spatial correlation
     def build_spatial_corr(coords, length_scale):
@@ -175,13 +176,13 @@ def generate_test_data(
     S_prior_vals = sigma_prior @ spatial_corr @ sigma_prior
     S_prior_idx = promote_index(idx_state, "state", "block")
     S_prior_df = pd.DataFrame(S_prior_vals, index=S_prior_idx, columns=S_prior_idx)
-    S_prior = CovarianceMatrix(S_prior_df)
+    S_prior = Covariance.from_frame(S_prior_df)
 
     # Build Obs Error (S_z) - diagonal
     obs_variances = np.full(n_obs_tot, obs_sigma**2)
     S_obs_idx = promote_index(idx_obs, "obs", "block")
     S_obs_df = pd.DataFrame(np.diag(obs_variances), index=S_obs_idx, columns=S_obs_idx)
-    S_obs = CovarianceMatrix(S_obs_df)
+    S_obs = Covariance.from_frame(S_obs_df)
     # 6. Synthetic Observations
     # y = Hx + noise
     # We use raw values since H and Truth are constructed aligned
@@ -189,7 +190,7 @@ def generate_test_data(
 
     # Noise based on S_obs
     noise = rng.multivariate_normal(
-        mean=np.zeros(n_obs_tot), cov=S_obs.values, check_valid="warn"
+        mean=np.zeros(n_obs_tot), cov=S_obs.dense(), check_valid="warn"
     )
     y_obs_vals = y_clean + noise
     obs_state = pd.Series(y_obs_vals, index=idx_obs, name="obs")

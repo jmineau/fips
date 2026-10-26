@@ -15,134 +15,183 @@
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 [![Pyrefly](https://img.shields.io/badge/types-pyrefly-blue.svg)](https://pyrefly.org)
 
-> **⚠️ Beta Release**: FIPS is currently in beta (v0.1.0b1). The core API is stable and ready for testing, but may evolve based on user feedback. Please [report any issues or edge cases](https://github.com/jmineau/fips/issues) you encounter.
+> **⚠️ Beta**: fips is in beta, and its API may still change between releases. The [changelog](https://github.com/jmineau/fips/blob/main/CHANGELOG.md) says what changed, and the [migration guide](https://jmineau.github.io/fips/stable/migration.html) how to move code from 0.1. Please [report any issues or edge cases](https://github.com/jmineau/fips/issues) you encounter.
 
 ## Bridging Physics and Data
-Inverse problems in geophysics and atmospheric science are incredibly complex, often involving massive state spaces, deeply heterogeneous observational networks, and explicit matrix-algebra requirements. While many general-purpose optimization tools exist, they often force researchers to strip away critical spatiotemporal metadata or translate pre-computed physical models into rigid, abstract array structures.
+Inverse problems in geophysics and atmospheric science often involve large state spaces, heterogeneous observation networks, and explicit matrix algebra. General-purpose optimization tools tend to make researchers strip away the labels of their data (times, places, instruments) and translate their physical models into bare arrays.
 
-**FIPS (Flexible Inverse Problem Solver)** is built from the ground up to solve linear, matrix-based inverse problems without losing the context of your data. It provides the structural flexibility to handle messy, real-world realities seamlessly:
+**fips (Flexible Inverse Problem Solver)** solves linear inverse problems without losing the labels of your data:
 
-- **Native N-Dimensional Alignment**: FIPS natively utilizes `pandas.MultiIndex` to smoothly align heterogeneous datasets across any dimension. Whether you are mixing temporal, spatial, spectral, or sensor-specific data, your coordinates are never dropped or misaligned.
+- **Everything is matched by label**: every value carries a `pandas` index (time, latitude, site, ...). The inputs of a problem are matched by their labels, never by position, and a label on one side only is an error that names it.
 
-- **Modular Block Architecture**: Avoid wrangling monolithic arrays. Construct massive, multi-source state spaces and observation networks piece-by-piece using specialized `Block` and `MatrixBlock` objects.
+- **Built from named blocks**: a state of fluxes and offsets, observations from towers and satellites. Each block keeps its own labels, and a matrix is built block by block.
 
-- **Speak Your Domain's Language**: Built explicitly around the standard `y = Hx + error` paradigm. Directly plug in your pre-computed forward operators ($H$), prior covariances ($S_0$), and model-data mismatches ($S_z$).
+- **The standard linear model**: observations are the forward operator times the state, plus an offset, plus an error. Plug in your forward operator (a Jacobian you computed), the prior and its covariance, and the observation covariance. Covariances are written as correlation models (exponential, Gaussian, Matérn, Kronecker products) with standard deviations.
 
-- **Analytical Speed & Sparse Support**: FIPS is built for scale. By leveraging optimized sparse data structures and direct linear algebra rather than expensive sampling algorithms, it computes exact analytical Maximum A Posteriori (MAP) estimates for massive state spaces in seconds.
+- **Fast and exact**: each matrix is kept in its cheapest form (dense, sparse, diagonal, or Kronecker factors), and fips computes the exact Gaussian posterior with direct linear algebra, not sampling, for large state spaces in seconds.
 
 ## Installation
 
-### From PyPI
 ```bash
-pip install fips
+pip install fips            # the solver
+pip install "fips[viz]"     # with plot_comparison (matplotlib)
 ```
 
-### For development
+For development:
 
 ```bash
 git clone https://github.com/jmineau/fips.git
 cd fips
-uv sync --dev
+uv sync
 ```
 
 ## Usage
 
-### Single-block — one observation source
+### A first problem: rays through a line of cells
+
+Six rays cross a line of four cells, timed by two instruments whose clocks may be off. A ray's travel time is the sum, over the cells it crosses, of its length in the cell times the cell's slowness, plus its instrument's clock delay. What are the slowness of each cell and the delay of each clock?
 
 ```python
 import numpy as np
 import pandas as pd
-from fips import Block, CovarianceMatrix
-from fips.problems.flux import FluxProblem
 
-# State: gridded prior fluxes (time × lat × lon)
-flux_idx = pd.MultiIndex.from_product(
-    [pd.date_range("2023-01", periods=3, freq="MS"), [37.0, 38.0], [-112.0, -111.0]],
-    names=["time", "lat", "lon"],
+import fips
+
+# The state: what we want to know. The slowness (s/km) of four cells along a
+# line, labeled by where each cell is (km), and the clock delay (s) of each of
+# the two instruments that timed the rays.
+cells = pd.Index([0.5, 1.5, 2.5, 3.5], name="x")
+instruments = pd.Index(["east", "west"], name="instrument")
+prior = fips.Vector.from_blocks(
+    {
+        "slowness": pd.Series(0.25, index=cells),
+        "delay": pd.Series(0.0, index=instruments),
+    }
 )
-prior = pd.Series(np.ones(12) * 1.5, index=flux_idx, name="flux")
 
-# Observations: tower concentration measurements
-obs_idx = pd.MultiIndex.from_product(
-    [pd.date_range("2023-01", periods=8, freq="2W"), ["UOU"]],
-    names=["time", "site"],
+# The observations: the travel time (s) of six rays, each timed by one instrument.
+rays = pd.MultiIndex.from_tuples(
+    [("east", 1), ("east", 2), ("east", 3), ("west", 4), ("west", 5), ("west", 6)],
+    names=["instrument", "ray"],
 )
-obs = pd.Series(np.ones(8) * 400.0, index=obs_idx, name="concentration")
+times = pd.Series([0.53, 0.76, 1.02, 0.25, 0.48, 0.80], index=rays)
+obs = fips.Vector.from_series(times, block="time")
 
-# Forward operator (Jacobian), flux error covariance, obs error covariance
-H   = pd.DataFrame(np.random.rand(8, 12), index=obs_idx,  columns=flux_idx)
-S_0 = pd.DataFrame(np.eye(12) * 0.5,  index=flux_idx, columns=flux_idx)
-S_z = pd.DataFrame(np.eye(8)  * 0.1,  index=obs_idx,  columns=obs_idx)
+# The forward operator: how the state makes the observations. A ray's time is
+# its length (km) in each cell times the cell's slowness, plus its instrument's
+# delay. Each block of the operator is labeled, and placed by its labels.
+lengths = pd.DataFrame(
+    [[1, 1, 0, 0], [1, 1, 1, 0], [1, 1, 1, 1], [0, 0, 0, 1], [0, 0, 1, 1], [0, 1, 1, 1]],
+    index=rays,
+    columns=cells,
+    dtype=float,
+)
+delays = pd.DataFrame(
+    [[1, 0], [1, 0], [1, 0], [0, 1], [0, 1], [0, 1]],
+    index=rays,
+    columns=instruments,
+    dtype=float,
+)
+forward = fips.Operator.from_blocks(
+    {("time", "slowness"): lengths, ("time", "delay"): delays},
+    rows=obs.space,
+    cols=prior.space,
+)
 
-problem = FluxProblem(
-    obs=obs, prior=prior,
-    forward_operator=H, prior_error=S_0, modeldata_mismatch=S_z,
-).solve()
+# The covariances: how far the prior and the observations may be off. Neighboring
+# cells are alike (correlated over 1 km); the delays are independent of each other.
+prior_cov = fips.Covariance.block_diag(
+    slowness=fips.Exponential("x", 1.0).with_std(0.05),
+    delay=fips.Independent().with_std(0.02),
+)
+obs_cov = fips.Independent().with_std(0.01)
 
-print(problem.posterior_fluxes)        # posterior pd.Series indexed by (time, lat, lon)
-print(problem.estimator.reduced_chi2)  # reduced chi-squared statistic
+problem = fips.Problem(prior, prior_cov, obs, obs_cov, forward)
+post = fips.solve(problem)
+
+# The answer, labeled as the prior was, and its standard deviation
+print(post.estimate["slowness"].to_series().round(3))
+print(post.estimate["delay"].to_series().round(3))
+print(post.variances["slowness"].to_series().pow(0.5).rename("std").round(3))
+
+# The posterior of an aggregate: the mean slowness of the two halves of the line
+halves = pd.Series(["near", "near", "far", "far"], index=cells, name="half")
+W = fips.aggregate.mean(prior.space, by=halves, blocks="slowness")
+print(post.cov(W)["slowness", "slowness"].to_frame().round(6))
 ```
 
-### Multi-block — combined station + satellite observations
+The prior and the observations are `Vector`s, the forward operator is an `Operator`, the covariances are models put on the labels by the `Problem`, and `fips.solve` returns the `Posterior`. The rows of `lengths` and `delays` could come in any order: everything is matched by label.
+
+### The same objects at scale: an atmospheric flux inversion
+
+The state is monthly fluxes on a grid, and the observations CO₂ every 6 hours at two sites. The prior covariance is correlated in time and in space and kept as its two Kronecker factors, so the full matrix is never formed. A transport Jacobian that covers only the cells a footprint touched is placed on the whole grid by its labels.
 
 ```python
 import numpy as np
 import pandas as pd
-from fips import Block, Vector, Matrix, MatrixBlock, CovarianceMatrix, InverseProblem
 
-# State: same gridded prior fluxes (from above)
-N_f = 12
+import fips
 
-# Obs block 1: ground station in-situ concentrations
-station_idx = pd.MultiIndex.from_product(
-    [pd.date_range("2023-01", periods=8, freq="2W"), ["UOU"]],
-    names=["time", "site"],
-)
-station_obs = Block(pd.Series(np.ones(8) * 400.0,
-                              index=station_idx, name="station"))
+rng = np.random.default_rng(0)
 
-# Obs block 2: satellite column-average concentrations
-satellite_idx = pd.MultiIndex.from_product(
-    [pd.date_range("2023-01", periods=3, freq="MS"), [37.5], [-111.5]],
+# The state: monthly fluxes on a 3 x 3 grid, one block named "flux"
+cells = pd.MultiIndex.from_product(
+    [
+        pd.date_range("2024-01-01", periods=3, freq="MS"),
+        [40.6, 40.7, 40.8],
+        [-112.0, -111.9, -111.8],
+    ],
     names=["time", "lat", "lon"],
 )
-satellite_obs = Block(pd.Series(np.ones(3) * 0.00400,
-                                index=satellite_idx, name="satellite"))
+prior = fips.Vector.from_series(pd.Series(1.0, index=cells), block="flux")
 
-# Combine obs blocks into a list
-obs_blks = [station_obs, satellite_obs]
+# The observations: CO2 every 6 hours at two sites, one block named "co2"
+labels = pd.MultiIndex.from_product(
+    [["UOU", "WBB"], pd.date_range("2024-01-01", periods=360, freq="6h")],
+    names=["site", "obs_time"],
+)
+co2 = pd.Series(rng.normal(420.0, 1.0, len(labels)), index=labels)
+obs = fips.Vector.from_series(co2, block="co2")
 
-# Jacobian: one MatrixBlock per obs type, both mapping to the "flux" state block
-H_blks = [
-    MatrixBlock(
-        pd.DataFrame(np.random.rand(8, N_f),
-        index=station_idx, columns=flux_idx),
-        row_block="station", col_block="flux",
-    ),
-    MatrixBlock(
-        pd.DataFrame(np.random.rand(3, N_f),
-        index=satellite_idx, columns=flux_idx),
-        row_block="satellite", col_block="flux",
-    ),]
+# The transport Jacobian has columns only for the cells a footprint touched:
+# from_blocks places it by its labels, and the other cells get zeros
+touched = cells[rng.random(len(cells)) < 0.7]
+jacobian = pd.DataFrame(
+    rng.uniform(0.0, 0.5, (len(labels), len(touched))), index=labels, columns=touched
+)
+forward = fips.Operator.from_blocks(
+    {("co2", "flux"): jacobian}, rows=obs.space, cols=prior.space
+)
 
-# Prior error covariance: only flux errors, no cross-block covariances
-S_0 = CovarianceMatrix(np.eye(N_f) * 0.5, index=flux_idx, columns=flux_idx)
+# The prior covariance, correlated in time and in space and kept as its two
+# Kronecker factors; the observation covariance, correlated within a site's day
+prior_cov = fips.Kronecker(
+    fips.Exponential("time", "30D"),
+    fips.Exponential(["lat", "lon"], 10.0, metric="haversine"),
+).with_std(0.5)
+obs_cov = fips.Independent().with_std(1.0) + fips.Exponential(
+    "obs_time", "12h", within=["site", "obs_time.date"]
+).with_std(0.5)
 
-# Model-data mismatch covariance: block-diagonal with separate error levels for stations vs. satellite
-S_z_blks = [
-    CovarianceMatrix(np.eye(8) * 0.1, index=station_idx, columns=station_idx),
-    CovarianceMatrix(np.eye(3) * 0.2, index=satellite_idx, columns=satellite_idx),
-]
+problem = fips.Problem(
+    prior=prior,
+    prior_cov=prior_cov,
+    obs=obs,
+    obs_cov=obs_cov,
+    forward=forward,
+    offset=415.0,  # the background: the part of the observations the fluxes do not explain
+)
+post = fips.solve(problem)
 
-# Pass blocks to the InverseProblem and solve
-problem = InverseProblem(
-    obs=obs_blks, prior=prior,
-    forward_operator=H_blks, prior_error=S_0, modeldata_mismatch=S_z_blks,
-).solve()
+print(post.estimate["flux"].to_xarray())  # the posterior fluxes on (time, lat, lon)
+print(post.summary())  # DOFS, chi-squared, R², RMSE, ... in one row
 
-print(problem.posterior['flux'])       # posterior pd.Series indexed by (time, lat, lon)
-print(problem.estimator.reduced_chi2)  # reduced chi-squared statistic
+# The posterior of each month's total flux, without forming the full covariance
+W = fips.aggregate.sum(prior.space, by="time")
+print(post.cov(W).to_frame().round(3))
 ```
+
+The [user guide](https://jmineau.github.io/fips/stable/usage.html) has more: offsets solved for with the state, aggregated observations, part of the state held at its prior, and repeated inversions.
 
 ## Documentation
 

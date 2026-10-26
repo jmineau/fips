@@ -4,117 +4,18 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from fips.vector import Block, Vector
-from fips.visualization import (
-    compute_credible_interval,
-    plot_comparison,
-    plot_error_norm,
-)
+from fips.vector import Vector
+from fips.visualization import plot_comparison
+
+
+def _block(series):
+    """A vector of one block, named after the Series."""
+    return Vector.from_series(series, block=series.name)
 
 
 def _unwrapped_name(x):
-    """The name of the Series ``x`` is or holds."""
-    return x.data.name if isinstance(x, Block) else x.name
-
-
-class TestPlotErrorNorm:
-    """Tests for plot_error_norm function."""
-
-    def test_plot_error_norm_basic(self):
-        """Test basic error norm plotting with 2D arrays."""
-        prior = np.array([[1.0, 2.0], [2.0, 3.0], [3.0, 4.0]])
-        posterior = np.array([[1.1, 2.1], [2.1, 3.1], [3.1, 4.1]])
-        truth = np.array([[1.0, 2.0], [2.0, 3.0], [3.0, 4.0]])
-
-        fig, ax = plot_error_norm(prior, posterior, truth)
-
-        assert fig is not None
-        assert ax is not None
-        # Check that plot has lines
-        assert len(ax.lines) == 2
-
-    def test_plot_error_norm_1d_arrays(self):
-        """Test error norm plotting with 1D arrays."""
-        prior = np.array([1.0, 2.0, 3.0])
-        posterior = np.array([1.1, 2.1, 3.1])
-        truth = np.array([1.0, 2.0, 3.0])
-
-        fig, ax = plot_error_norm(prior, posterior, truth)
-
-        assert fig is not None
-        assert len(ax.lines) == 2
-
-    def test_plot_error_norm_l1_norm(self):
-        """Test error norm plotting with L1 norm."""
-        prior = np.array([[1.0, 2.0], [2.0, 3.0]])
-        posterior = np.array([[1.1, 2.1], [2.1, 3.1]])
-        truth = np.array([[1.0, 2.0], [2.0, 3.0]])
-
-        fig, ax = plot_error_norm(prior, posterior, truth, norm="l1")
-
-        assert fig is not None
-        assert len(ax.lines) == 2
-
-    def test_plot_error_norm_linf_norm(self):
-        """Test error norm plotting with L-infinity norm."""
-        prior = np.array([[1.0, 2.0], [2.0, 3.0]])
-        posterior = np.array([[1.1, 2.1], [2.1, 3.1]])
-        truth = np.array([[1.0, 2.0], [2.0, 3.0]])
-
-        fig, ax = plot_error_norm(prior, posterior, truth, norm="linf")
-
-        assert fig is not None
-        assert len(ax.lines) == 2
-
-    def test_plot_error_norm_custom_x_axis(self):
-        """Test error norm plotting with custom time axis."""
-        prior = np.array([[1.0, 2.0], [2.0, 3.0]])
-        posterior = np.array([[1.1, 2.1], [2.1, 3.1]])
-        truth = np.array([[1.0, 2.0], [2.0, 3.0]])
-        t = np.array([0.0, 1.0])
-
-        fig, ax = plot_error_norm(prior, posterior, truth, t=t)
-
-        assert fig is not None
-
-    def test_plot_error_norm_invalid_norm(self):
-        """Test that invalid norm raises ValueError."""
-        prior = np.array([[1.0, 2.0]])
-        posterior = np.array([[1.1, 2.1]])
-        truth = np.array([[1.0, 2.0]])
-
-        with pytest.raises(ValueError, match="norm must be one of"):
-            plot_error_norm(prior, posterior, truth, norm="invalid")
-
-    def test_plot_error_norm_shape_mismatch(self):
-        """Test that shape mismatch raises ValueError."""
-        prior = np.array([[1.0, 2.0]])
-        posterior = np.array([[1.1, 2.1]])
-        truth = np.array([[1.0, 2.0, 3.0]])  # Wrong shape
-
-        with pytest.raises(ValueError, match="broadcast"):
-            plot_error_norm(prior, posterior, truth)
-
-    def test_plot_error_norm_time_length_mismatch(self):
-        """Test that time array length mismatch raises ValueError."""
-        prior = np.array([[1.0, 2.0], [2.0, 3.0]])
-        posterior = np.array([[1.1, 2.1], [2.1, 3.1]])
-        truth = np.array([[1.0, 2.0], [2.0, 3.0]])
-        t = np.array([0.0])  # Wrong length
-
-        # This should cause a shape mismatch when plotting
-        with pytest.raises(ValueError):
-            plot_error_norm(prior, posterior, truth, t=t)
-
-    def test_plot_error_norm_figsize(self):
-        """Test that figsize parameter is accepted."""
-        prior = np.array([[1.0, 2.0]])
-        posterior = np.array([[1.1, 2.1]])
-        truth = np.array([[1.0, 2.0]])
-
-        fig, ax = plot_error_norm(prior, posterior, truth, figsize=(10, 5))
-
-        assert fig is not None
+    """The name of the Series or vector ``x``."""
+    return x.name
 
 
 class TestPlotComparison:
@@ -202,12 +103,12 @@ class TestPlotComparison:
         """A named Series over a float index called ``x``."""
         return pd.Series(values, index=pd.Index(labels, name="x"), name=name)
 
-    def test_blocks_are_plotted_by_their_data(self):
-        """A Block is plotted as the Series it holds, next to a Series."""
+    def test_one_block_is_plotted_on_its_own_labels(self):
+        """A vector of one block is plotted as its Series without the block level, next to a Series."""
         a = self._series("a", [1.0, 2.0, 3.0])
         b = self._series("b", [1.5, 2.5, 3.5])
 
-        _, ax = plot_comparison(Block(a), b)
+        _, ax = plot_comparison(_block(a), b)
 
         lines = self._lines(ax)
         assert list(lines) == ["a", "b"]
@@ -215,10 +116,10 @@ class TestPlotComparison:
         np.testing.assert_array_equal(lines["b"], b.values)
 
     def test_vectors_are_plotted_by_their_data(self):
-        """A Vector is plotted as the Series it holds, over the level named by ``x``."""
+        """A Vector is plotted as its Series, over the level named by ``x``."""
         a = self._series("a", [1.0, 2.0, 3.0])
 
-        _, ax = plot_comparison(Vector(Block(a)), x="x")
+        _, ax = plot_comparison(_block(a), x="x")
 
         np.testing.assert_array_equal(next(iter(self._lines(ax).values())), a.values)
 
@@ -254,7 +155,7 @@ class TestPlotComparison:
         """With a MultiIndex, ``x`` names the level to plot against, and the label."""
         a = self._series("a", [1.0, 2.0, 3.0])
 
-        _, ax = plot_comparison(Vector(Block(a)), x="x")
+        _, ax = plot_comparison(_block(a).to_series(), x="x")
 
         assert ax.get_xlabel() == "x"
 
@@ -263,7 +164,7 @@ class TestPlotComparison:
         a = self._series("a", [1.0, 2.0, 3.0])
         truth = self._series("t", [1.1, 2.1, 3.1])
 
-        _, ax = plot_comparison(a, truth=Block(truth))
+        _, ax = plot_comparison(a, truth=_block(truth))
 
         line = ax.lines[-1]
         assert line.get_label() == "truth"
@@ -284,9 +185,36 @@ class TestPlotComparison:
 
     @pytest.mark.parametrize(
         "wrap",
+        [pytest.param(lambda e: e, id="series"), pytest.param(_block, id="vector")],
+    )
+    def test_truth_is_matched_by_label(self, wrap):
+        """A truth in another order is drawn at its labels, on a line and on bars."""
+        a = self._series("a", [1.0, 2.0, 3.0])
+        truth = wrap(self._series("t", [10.0, 20.0, 30.0]).iloc[::-1])
+
+        _, ax = plot_comparison(a, truth=truth)
+
+        np.testing.assert_array_equal(ax.lines[-1].get_ydata(), [10.0, 20.0, 30.0])
+
+        b = self._series("b", [1.0, 2.0, 3.0], labels=["u", "v", "w"])
+        t = self._series("t", [10.0, 20.0, 30.0], labels=["u", "v", "w"]).iloc[::-1]
+        _, ax = plot_comparison(b, truth=wrap(t))
+        (crosses,) = ax.collections
+        np.testing.assert_array_equal(crosses.get_offsets()[:, 1], [10.0, 20.0, 30.0])
+
+    def test_a_truth_missing_a_label_raises(self):
+        """A label of the series the truth has no value for is named."""
+        a = self._series("a", [1.0, 2.0, 3.0])
+        truth = self._series("t", [10.0, 20.0], labels=(0.0, 1.0))
+
+        with pytest.raises(ValueError, match="truth has no value .*2.0"):
+            plot_comparison(a, truth=truth)
+
+    @pytest.mark.parametrize(
+        "wrap",
         [
             pytest.param(lambda e: e, id="series"),
-            pytest.param(Block, id="block"),
+            pytest.param(_block, id="vector"),
             pytest.param(lambda e: e.to_frame(), id="dataframe"),
         ],
     )
@@ -306,7 +234,7 @@ class TestPlotComparison:
         "wrap",
         [
             pytest.param(lambda e: e, id="series"),
-            pytest.param(Block, id="block"),
+            pytest.param(_block, id="vector"),
             pytest.param(lambda e: e.to_frame(), id="dataframe"),
         ],
     )
@@ -332,7 +260,7 @@ class TestPlotComparison:
 
     def test_a_truth_labeled_data_is_plotted_as_a_series(self):
         """The truth is not unpacked as ``truth.data`` when its index has that label."""
-        a = self._series("a", [1.0, 2.0, 3.0], labels=["u", "v", "w"])
+        a = self._series("a", [1.0, 2.0, 3.0], labels=["data", "b", "c"])
         truth = self._series("t", [1.1, 2.1, 3.1], labels=["data", "b", "c"])
 
         _, ax = plot_comparison(a, truth=truth)
@@ -439,7 +367,7 @@ class TestPlotComparison:
 
     @pytest.mark.parametrize(
         "wrap",
-        [pytest.param(lambda e: e, id="series"), pytest.param(Block, id="block")],
+        [pytest.param(lambda e: e, id="series"), pytest.param(_block, id="vector")],
     )
     def test_errors_keep_their_name(self, wrap):
         """The error is renamed for plotting, but the one the caller passed is not."""
@@ -459,87 +387,3 @@ class TestPlotComparison:
         plot_comparison(a, errors=[errors])
 
         assert not hasattr(errors, "name")
-
-
-class TestComputeCredibleInterval:
-    """Tests for compute_credible_interval function."""
-
-    def test_credible_interval_basic(self):
-        """Test basic credible interval computation."""
-        # samples should be (n_samples, state_dim)
-        samples = np.array([[1.0, 2.0], [1.1, 2.1], [0.9, 1.9], [1.0, 2.0]])
-
-        lower, upper = compute_credible_interval(samples)
-
-        assert lower.shape == (2,)
-        assert upper.shape == (2,)
-        assert all(lower <= upper)
-
-    def test_credible_interval_default_quantiles(self):
-        """Test credible interval with default quantiles."""
-        samples = np.random.normal(0, 1, (100, 5))
-
-        lower, upper = compute_credible_interval(samples)
-
-        assert lower.shape == (5,)
-        assert upper.shape == (5,)
-
-    def test_credible_interval_custom_quantiles(self):
-        """Test credible interval with custom quantiles."""
-        samples = np.random.normal(0, 1, (100, 3))
-
-        lower, upper = compute_credible_interval(samples, q=(0.1, 0.9))
-
-        assert lower.shape == (3,)
-        assert upper.shape == (3,)
-
-    def test_credible_interval_3d_samples(self):
-        """Test credible interval with 3D samples (time, state_dim)."""
-        # (n_samples, time, state_dim)
-        samples = np.random.normal(0, 1, (50, 10, 3))
-
-        lower, upper = compute_credible_interval(samples)
-
-        assert lower.shape == (10, 3)
-        assert upper.shape == (10, 3)
-
-    def test_credible_interval_symmetric(self):
-        """Test that credible intervals are ordered correctly."""
-        # Create deterministic samples
-        samples = np.array([[1.0], [2.0], [3.0], [4.0], [5.0]])
-
-        lower, upper = compute_credible_interval(samples, q=(0.25, 0.75))
-
-        assert lower < upper
-
-    def test_credible_interval_invalid_dims(self):
-        """Test that 4D or higher arrays work or raise appropriate errors."""
-        samples = np.array([[[[1.0]]]])  # 4D array
-
-        # This might work or raise an error depending on implementation
-        # Just test that it doesn't crash unexpectedly
-        try:
-            result = compute_credible_interval(samples)
-            assert result is not None
-        except (ValueError, IndexError):
-            # It's fine if it raises an error for unusual dimensions
-            pass
-
-    def test_credible_interval_1d_array(self):
-        """Test that 1D array is handled (converted to 2D)."""
-        samples = np.array([1.0, 2.0, 3.0])
-
-        # Function should handle 1D arrays by treating them as single variable
-        result = compute_credible_interval(samples)
-        assert result is not None
-
-    def test_credible_interval_quantile_bounds(self):
-        """Test that quantiles work with extreme values."""
-        samples = np.random.normal(0, 1, (1000, 5))
-
-        lower, upper = compute_credible_interval(samples, q=(0.01, 0.99))
-
-        assert lower.shape == (5,)
-        assert upper.shape == (5,)
-        # Lower quantiles should be lower than upper quantiles
-        assert np.all(lower < upper)

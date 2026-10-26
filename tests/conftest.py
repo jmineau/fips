@@ -16,8 +16,6 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from fips.vector import Block, Vector
-
 # ---------------------------------------------------------------------------
 # Pandas version compatibility utilities
 # ---------------------------------------------------------------------------
@@ -44,77 +42,6 @@ def pandas_lt(major, minor=0, patch=0):
     """Check if pandas version is < specified version."""
     version = get_pandas_version()
     return version < (major, minor, patch)
-
-
-@pytest.fixture
-def simple_prior():
-    """Provide a simple prior state vector."""
-    return pd.Series(
-        [1.0, 2.0, 3.0],
-        index=pd.Index(["state_0", "state_1", "state_2"], name="state_id"),
-        name="state",
-    )
-
-
-@pytest.fixture
-def simple_obs():
-    """Provide a simple observation vector."""
-    return pd.Series(
-        [1.5, 2.5, 3.5, 4.5],
-        index=pd.Index(["obs_0", "obs_1", "obs_2", "obs_3"], name="obs_id"),
-        name="obs",
-    )
-
-
-@pytest.fixture
-def simple_forward_operator():
-    """Provide a simple forward operator matrix."""
-    H = pd.DataFrame(
-        np.array(
-            [[1.0, 0.5, 0.0], [0.5, 1.0, 0.5], [0.0, 0.5, 1.0], [0.25, 0.25, 0.25]]
-        ),
-        index=pd.Index(["obs_0", "obs_1", "obs_2", "obs_3"], name="obs_id"),
-        columns=pd.Index(["state_0", "state_1", "state_2"], name="state_id"),
-    )
-    return H
-
-
-@pytest.fixture
-def simple_prior_error():
-    """Provide a simple prior error covariance matrix."""
-    idx = pd.Index(["state_0", "state_1", "state_2"], name="state_id")
-    S_a = pd.DataFrame(
-        np.array([[1.0, 0.2, 0.0], [0.2, 1.0, 0.2], [0.0, 0.2, 1.0]]),
-        index=idx,
-        columns=idx,
-    )
-    return S_a
-
-
-@pytest.fixture
-def simple_modeldata_mismatch():
-    """Provide a simple model-data mismatch covariance matrix."""
-    idx = pd.Index(["obs_0", "obs_1", "obs_2", "obs_3"], name="obs_id")
-    S_z = pd.DataFrame(
-        np.eye(4) * 0.5,
-        index=idx,
-        columns=idx,
-    )
-    return S_z
-
-
-@pytest.fixture
-def simple_vector_multi_block():
-    """Provide a simple multi-block vector."""
-    block1 = Block(
-        pd.Series([1.0, 2.0], index=pd.Index(["x", "y"], name="dim"), name="state_a")
-    )
-    block2 = Block(
-        pd.Series(
-            [3.0, 4.0, 5.0], index=pd.Index(["a", "b", "c"], name="dim"), name="state_b"
-        )
-    )
-    return Vector(data=[block1, block2], name="state")
 
 
 @pytest.fixture
@@ -180,3 +107,58 @@ def random_modeldata_mismatch(random_state):
         index=idx,
         columns=idx,
     )
+
+
+@pytest.fixture
+def constructors(monkeypatch):
+    """
+    The names of the forms whose public constructor is called.
+
+    The public constructors of ``DenseOperator``, ``SparseOperator``,
+    ``DiagonalOperator`` and ``KroneckerOperator`` copy their input. fips builds
+    the forms it computes without them (``_adopt``), so a test that runs fips's
+    own steps expects the list to stay empty.
+    """
+    from fips.linalg import (
+        DenseOperator,
+        DiagonalOperator,
+        KroneckerOperator,
+        SparseOperator,
+    )
+
+    calls: list[str] = []
+    for cls in (DenseOperator, SparseOperator, DiagonalOperator, KroneckerOperator):
+        original = cls.__init__
+
+        def spy(self, *args, _original=original, **kwargs):
+            calls.append(type(self).__name__)
+            _original(self, *args, **kwargs)
+
+        monkeypatch.setattr(cls, "__init__", spy)
+    return calls
+
+
+@pytest.fixture(params=["whitened", "information"])
+def analytic_form(request, monkeypatch):
+    """
+    Force the analytic method to factor in one form, and return its class.
+
+    The method chooses the form by size (``fips.methods.analytic._choose``);
+    this replaces that choice, so a test holds both forms to the same
+    outputs whatever the size of its problem. The other form's ``factor``
+    raises, so a test cannot pass by falling back to it.
+    """
+    from fips.methods import analytic
+
+    forms = {"whitened": analytic.Whitened, "information": analytic.Information}
+    form = forms[request.param]
+    (other,) = (cls for cls in forms.values() if cls is not form)
+
+    def refuse(problem, gamma):
+        raise AssertionError(
+            f"{other.__name__} factored a problem forced to {form.__name__}"
+        )
+
+    monkeypatch.setattr(analytic, "_choose", lambda problem: (form, "forced by a test"))
+    monkeypatch.setattr(other, "factor", staticmethod(refuse))
+    return form

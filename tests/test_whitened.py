@@ -1,14 +1,20 @@
 """
-Tests for the whitened solve: the factorization ``BayesianSolver`` keeps.
+Tests for the analytic method's factorization, in its two forms: what a ``Posterior`` keeps.
 
 The oracle (``test_oracle.py``) holds the estimate, the full posterior
 covariance, the gain, the averaging kernel, DOFS and the reduced chi-squared to
 the closed form. Here: what the factorization adds (the variances, aggregated
-covariances and averaging kernels, ``with_gamma``), the direct solve the
-factorization replaced, the inputs it refuses, its pickle, and that nothing
-``n x n`` is allocated unless the full covariance or averaging kernel is read.
+covariances and averaging kernels, ``with_gamma``, ``with_data``), the direct
+solve the factorization replaced, the inputs it refuses, its pickle, and that
+nothing ``n x n`` is allocated unless the full covariance or averaging kernel
+is read. Most tests run in both forms (the ``analytic_form`` fixture forces
+one); the last section tests how the method chooses between the whitened form
+(``Whitened``, ``m x m``) and the information form (``Information``,
+``n x n``), and what each holds.
 """
 
+import copy
+import dataclasses
 import logging
 import pickle
 import tracemalloc
@@ -18,14 +24,26 @@ import pandas as pd
 import pytest
 import scipy.sparse as sp
 from numpy.linalg import LinAlgError
+from scipy.linalg import eigh as scipy_eigh
 
 import fips
-from fips import CovarianceMatrix, ForwardOperator, InverseProblem, Matrix
-from fips._sparse import frame_from_spmatrix
-from fips.covariance import KroneckerError, KroneckerOperator
-from fips.estimators import BayesianSolver, Estimator
-from fips.kernels import GridSpatialDecay, GridTimeDecay
-from fips.operator import DiagonalOperator
+from fips import (
+    Covariance,
+    Exponential,
+    Kronecker,
+    Operator,
+    Problem,
+    Space,
+    Vector,
+)
+from fips.linalg import (
+    BlockDiagonalOperator,
+    DiagonalOperator,
+    KroneckerOperator,
+    SparseOperator,
+    as_linear_operator,
+)
+from fips.methods.analytic import Information, Whitened
 
 RTOL = 1e-10
 GAMMAS = [0.1, 0.5, 1.0, 3.0, 20.0]
@@ -99,97 +117,275 @@ def _closed_form(z, x_0, H, S_0, S_z, c, gamma):
     x_hat = x_0 + K @ (z - H @ x_0 - c)
     S_hat = inv(H.T @ inv(S_z) @ H + inv(S_0))
     r, dx = z - H @ x_hat - c, x_hat - x_0
+    chi2 = r @ inv(S_z) @ r + dx @ inv(S_0) @ dx
     return {
-        "x_hat": x_hat,
-        "S_hat": S_hat,
-        "S_hat_diagonal": np.diag(S_hat),
-        "K": K,
-        "A": K @ H,
-        "DOFS": np.trace(K @ H),
-        "reduced_chi2": (r @ inv(S_z) @ r + dx @ inv(S_0) @ dx) / len(z),
-        "U_red": (1 - np.sqrt(np.diag(S_hat)) / np.sqrt(np.diag(S_0))) * 100,
+        "estimate": x_hat,
+        "cov": S_hat,
+        "variances": np.diag(S_hat),
+        "kalman_gain": K,
+        "averaging_kernel": K @ H,
+        "dofs": np.trace(K @ H),
+        "chi2": chi2,
+        "reduced_chi2": chi2 / len(z),
         "uncertainty_reduction": 1 - np.sqrt(np.trace(S_hat)) / np.sqrt(np.trace(S_0)),
     }
 
 
-class _Direct(Estimator):
+def _direct(z, x_0, H, S_0, S_z, c, gamma):
     """
     The direct solve the factorization replaced.
 
-    The base class's gain, from ``(H S_0 H^T + S_z)`` by Cholesky, and
-    ``S_hat = S_0 - K H S_0``.
+    The gain from ``(H S_0 H^T + S_z / gamma)`` by its form's solve, ``S_hat =
+    S_0 - K H S_0``, and each misfit of the chi-squared by a solve with its
+    covariance.
     """
+    H, S_0 = as_linear_operator(H), as_linear_operator(S_0)
+    S_z = as_linear_operator(S_z) / gamma
+    HS_0 = H @ S_0
+    HS_0H = HS_0 @ H._transpose()
+    K = (HS_0H + S_z).solve(HS_0).T
+    x_hat = x_0 + K @ (z - (H @ x_0 + c))
+    S_hat = S_0.dense() - K @ HS_0
+    y_hat, y_0 = H @ x_hat + c, H @ x_0 + c
+    r, dx = z - y_hat, x_hat - x_0
+    chi2 = float(r @ S_z.solve(r) + dx @ S_0.solve(dx))
+    return {
+        "estimate": x_hat,
+        "cov": S_hat,
+        "variances": np.diag(S_hat),
+        "kalman_gain": K,
+        "averaging_kernel": K @ H,
+        "dofs": np.trace(K @ H),
+        "chi2": chi2,
+        "reduced_chi2": chi2 / len(z),
+        "uncertainty_reduction": 1 - np.sqrt(np.trace(S_hat)) / np.sqrt(S_0.trace()),
+        "modeled_obs": y_hat,
+        "predict(prior)": y_0,
+        "innovation_cov": (HS_0H + S_z).dense(),
+        "r2": np.corrcoef(z - c, H @ x_hat)[0, 1] ** 2,
+        "rmse": np.sqrt((r**2).sum() / len(z)),
+        "desroziers": r * (z - y_0),
+    }
 
-    def __init__(self, z, x_0, H, S_0, S_z, c=None, gamma=1.0):
-        super().__init__(z, x_0, H, S_0, S_z, c)
-        self._S_z_op = self._S_z_op / gamma
 
-    def cost(self, x):
-        """Not used."""
-        raise NotImplementedError
-
-    @property
-    def x_hat(self):
-        """The estimate from the base class's gain."""
-        return self.x_0 + self.K @ self.residual(self.x_0)
-
-    @property
-    def S_hat(self):
-        """The posterior covariance from the base class's gain."""
-        return self._S_0_op.dense() - self.K @ self._HS_0
-
-    @property
-    def reduced_chi2(self):  # type: ignore[override]
-        """The two misfits, each by a solve with its covariance."""
-        r, dx = self.residual(self.x_hat), self.x_hat - self.x_0
-        return float(
-            (r @ self._S_z_op.solve(r) + dx @ self._S_0_op.solve(dx)) / self.n_z
-        )
+def _problem(z, x_0, H, S_0, S_z, c) -> Problem:
+    """Label the arrays: one block each, numbered; each matrix keeps its form."""
+    state = Space({"flux": pd.Index(range(len(x_0)), name="cell")})
+    obs = Space({"conc": pd.Index(range(len(z)), name="obs_id")})
+    return Problem(
+        prior=Vector(x_0, state),
+        prior_cov=Covariance(S_0, state),
+        obs=Vector(z, obs),
+        obs_cov=Covariance(S_z, obs),
+        forward=Operator(H, obs, state),
+        offset=Vector(c, obs),
+    )
 
 
-OUTPUTS = [
-    "x_hat", "S_hat", "S_hat_diagonal", "K", "A", "DOFS", "reduced_chi2", "U_red",
-    "uncertainty_reduction", "y_hat", "y_0", "S_y0", "R2", "RMSE", "desroziers",
-]  # fmt: skip
+def _outputs(post) -> dict:
+    """Every output of a posterior, unlabeled, by the names of `_direct`."""
+    return {
+        "estimate": post.estimate.values,
+        "cov": post.cov().dense(),
+        "variances": post.variances.values,
+        "kalman_gain": post.kalman_gain.dense(),
+        "averaging_kernel": post.averaging_kernel().dense(),
+        "dofs": post.dofs,
+        "chi2": post.chi2,
+        "reduced_chi2": post.reduced_chi2,
+        "uncertainty_reduction": post.uncertainty_reduction,
+        "modeled_obs": post.modeled_obs.values,
+        "predict(prior)": post.problem.predict(post.problem.prior).values,
+        "innovation_cov": post.innovation_cov.dense(),
+        "r2": post.r2,
+        "rmse": post.rmse,
+        "desroziers": post.desroziers()["diagnosed"].to_numpy(),
+    }
 
 
 @pytest.mark.parametrize("form", FORMS)
 @pytest.mark.parametrize("gamma", GAMMAS)
 @pytest.mark.parametrize("seed", range(5))
-def test_outputs_match_the_closed_form(form, gamma, seed):
+def test_outputs_match_the_closed_form(form, gamma, seed, analytic_form):
     """Every output the factors give, at 1e-10 of the closed form."""
     z, x_0, H, S_0, S_z, c = _arrays(form, seed)
-    solver = BayesianSolver(z, x_0, H, S_0, S_z, c=c, gamma=gamma)
+    outputs = _outputs(fips.solve(_problem(z, x_0, H, S_0, S_z, c), gamma=gamma))
     for name, expected in _closed_form(z, x_0, H, S_0, S_z, c, gamma).items():
-        _close(getattr(solver, name), expected, f"{name}, {form}, gamma {gamma}")
+        _close(outputs[name], expected, f"{name}, {form}, gamma {gamma}")
 
 
 @pytest.mark.parametrize("form", FORMS)
 @pytest.mark.parametrize("gamma", [0.5, 1.0, 4.0])
 @pytest.mark.parametrize("shape", [(3, 4, 7), (2, 2, 9), (4, 5, 2)], ids=str)
-def test_outputs_match_the_direct_solve(form, gamma, shape):
+def test_outputs_match_the_direct_solve(form, gamma, shape, analytic_form):
     """Every output agrees with the direct solve (the code before the factorization) at 1e-10."""
     args = _arrays(form, 3, *shape)
-    solver = BayesianSolver(*args[:5], c=args[5], gamma=gamma)
-    direct = _Direct(*args[:5], c=args[5], gamma=gamma)
-    for name in OUTPUTS:
-        _close(getattr(solver, name), getattr(direct, name), f"{name}, {form}")
+    outputs = _outputs(fips.solve(_problem(*args), gamma=gamma))
+    for name, expected in _direct(*args, gamma).items():
+        _close(outputs[name], expected, f"{name}, {form}")
 
 
 @pytest.mark.parametrize("form", FORMS)
-def test_with_gamma_is_a_fresh_solve(form):
-    """``with_gamma`` gives what a new solver with that gamma gives, from the same factors."""
-    z, x_0, H, S_0, S_z, c = _arrays(form, 7)
-    solver = BayesianSolver(z, x_0, H, S_0, S_z, c=c)
-    _ = solver.x_hat
+def test_with_gamma_is_a_fresh_solve(form, analytic_form):
+    """``with_gamma`` gives what a new solve with that gamma gives, from the same factors."""
+    problem = _problem(*_arrays(form, 7))
+    post = fips.solve(problem)
     for gamma in GAMMAS:
-        swept = solver.with_gamma(gamma)
-        assert swept._whitened is solver._whitened
-        assert swept.gamma == gamma
-        fresh = BayesianSolver(z, x_0, H, S_0, S_z, c=c, gamma=gamma)
-        for name in OUTPUTS:
-            _close(getattr(swept, name), getattr(fresh, name), f"{name}, gamma {gamma}")
-    assert solver.gamma == 1.0
+        swept = post.with_gamma(gamma)
+        assert swept._solution.eigenvalues is post._solution.eigenvalues
+        assert swept.options.gamma == gamma
+        assert "estimate" in vars(swept)  # computed, as fips.solve does
+        fresh = _outputs(fips.solve(problem, gamma=gamma))
+        for name, value in _outputs(swept).items():
+            _close(value, fresh[name], f"{name}, gamma {gamma}")
+    assert post.options.gamma == 1.0
+
+
+@pytest.mark.parametrize("form", FORMS)
+@pytest.mark.parametrize("gamma", [0.5, 2.0])
+def test_with_data_is_a_fresh_solve(form, gamma, analytic_form):
+    """``with_data`` gives what a solve of the problem with those observations gives."""
+    z, x_0, H, S_0, S_z, c = _arrays(form, 11)
+    post = fips.solve(_problem(z, x_0, H, S_0, S_z, c), gamma=gamma)
+    rng = np.random.default_rng(12)
+    z2 = z + rng.normal(0.0, 1.0, len(z))
+    # Given in another order: the labels decide
+    order = rng.permutation(len(z))
+    new = Vector(
+        z2[order],
+        Space({"conc": pd.Index(order, name="obs_id")}),
+        name="bootstrap",
+    )
+    swept = post.with_data(new)
+    assert swept._solution.eigenvalues is post._solution.eigenvalues
+    assert swept.problem.obs.space == post.problem.obs.space
+    np.testing.assert_array_equal(swept.problem.obs.values, z2)
+    fresh = _outputs(fips.solve(_problem(z2, x_0, H, S_0, S_z, c), gamma=gamma))
+    for name, value in _outputs(swept).items():
+        _close(value, fresh[name], f"{name}, with_data")
+    np.testing.assert_array_equal(post.problem.obs.values, z)
+
+
+@pytest.mark.parametrize("form", FORMS)
+def test_the_factors_are_read_only(form, analytic_form):
+    """No array of the factors can be written to, however the solution was made: a solve, a sweep, new data, a pickle, a copy."""
+    post = fips.solve(_problem(*_arrays(form, 6)))
+    solutions = {
+        "factor": post._solution,
+        "with_gamma": post.with_gamma(2.0)._solution,
+        "with_data": post.with_data(post.problem.obs)._solution,
+        "pickle": pickle.loads(pickle.dumps(post))._solution,
+        "deepcopy": copy.deepcopy(post._solution),
+    }
+    for how, solution in solutions.items():
+        assert isinstance(solution, analytic_form)
+        arrays = [f.name for f in dataclasses.fields(solution) if f.type is np.ndarray]
+        assert len(arrays) == (5 if analytic_form is Whitened else 3)
+        for name in arrays:
+            array = getattr(solution, name)
+            assert not array.flags.writeable, f"{name} after {how}"
+            with pytest.raises(ValueError, match="read-only"):
+                array.fill(0.0)
+
+
+class _Counted(Problem):
+    """A problem that counts how many times its constructor ran."""
+
+    built = 0
+
+    def __init__(self, *args, **kwargs):
+        type(self).built += 1
+        super().__init__(*args, **kwargs)
+
+
+def test_with_data_builds_its_problem_with_the_constructor():
+    """The new problem is made by the problem's own class, from the same inputs (their forms are shared)."""
+    p = _problem(*_arrays("dense", 4))
+    problem = _Counted(
+        prior=p.prior,
+        prior_cov=p.prior_cov,
+        obs=p.obs,
+        obs_cov=p.obs_cov,
+        forward=p.forward,
+        offset=p.offset,
+    )
+    post = fips.solve(problem)
+    before = _Counted.built
+    swept = post.with_data(Vector(problem.obs.values + 1.0, problem.obs.space))
+    assert _Counted.built == before + 1
+    new = swept.problem
+    assert type(new) is _Counted and new is not problem
+    assert new.prior is problem.prior and new.obs.space is problem.obs.space
+    for name in ("prior_cov", "obs_cov", "forward"):
+        assert getattr(new, name).data is getattr(problem, name).data, name
+    np.testing.assert_array_equal(new.offset.values, problem.offset.values)
+    np.testing.assert_array_equal(new.obs.values, problem.obs.values + 1.0)
+
+
+def test_with_data_needs_the_same_labels():
+    """New observations on other labels raise, naming them."""
+    z, x_0, H, S_0, S_z, c = _arrays("dense", 0)
+    post = fips.solve(_problem(z, x_0, H, S_0, S_z, c))
+    other = Vector(z, Space({"conc": pd.Index(range(1, len(z) + 1), name="obs_id")}))
+    with pytest.raises(
+        ValueError,
+        match=r"The new observations and the problem's do not have the same labels:"
+        r".*missing from the new observations: 0;.*only in the new observations: 7",
+    ):
+        post.with_data(other)
+
+
+def test_the_factors_hold_no_m_by_m_matrix_beyond_the_whitener():
+    """H S_0 H^T is formed when ``innovation_cov`` or ``leverage`` asks, not held after a solve (and not pickled)."""
+    z, x_0, H, S_0, S_z, c = _arrays("dense", 5)
+    post = fips.solve(_problem(z, x_0, H, S_0, S_z, c))
+    m = len(z)
+    assert "_HS_0H" not in vars(post)
+    assert not hasattr(post._solution, "HS_0H")
+    assert not [
+        k
+        for k, v in vars(post._solution).items()
+        if getattr(v, "shape", ()) == (m, m) and k != "whitener"
+    ]
+    assert "_HS_0H" not in vars(pickle.loads(pickle.dumps(post)))
+    _ = post.innovation_cov
+    assert "_HS_0H" in vars(post)
+
+
+class _Asked(Problem):
+    """A problem that counts how often it is asked for a prediction."""
+
+    asked = 0
+
+    def predict(self, x):
+        self.asked += 1
+        return super().predict(x)
+
+
+def test_the_innovation_is_read_through_predict(analytic_form):
+    """The innovation each form keeps is built from ``problem.predict(prior)``, with its offset, not around it."""
+    z, x_0, H, S_0, S_z, c = _arrays("dense", 2)
+    p = _problem(z, x_0, H, S_0, S_z, c)
+    problem = _Asked(
+        prior=p.prior,
+        prior_cov=p.prior_cov,
+        obs=p.obs,
+        obs_cov=p.obs_cov,
+        forward=p.forward,
+        offset=p.offset,
+    )
+    post = fips.solve(problem)
+    assert problem.asked == 1
+    solution, d = post._solution, z - problem.predict(problem.prior).values
+    if analytic_form is Whitened:  # e = B d
+        B = solution.whitener
+        np.testing.assert_array_equal(solution.innovation, B @ d)
+        assert not np.array_equal(solution.innovation, B @ (z - H @ x_0))
+    else:  # b = G^T H^T S_z^-1 d
+        G = solution.G
+        _close(solution.innovation, G.T @ (H.T @ np.linalg.solve(S_z, d)), "b")
+        without_c = G.T @ (H.T @ np.linalg.solve(S_z, z - H @ x_0))
+        assert not np.allclose(solution.innovation, without_c)
 
 
 # ---------------------------------------------------------------------------
@@ -213,14 +409,13 @@ def _labeled(seed: int = 0, n_time: int = 3, n_cell: int = 4, m: int = 9):
         std=rng.uniform(0.5, 2.0, len(state)),
     )
     x_0 = rng.normal(2.0, 1.0, len(state))
-    problem = InverseProblem(
-        obs=pd.Series(H @ x_0 + rng.normal(0, 1, m), index=obs),
-        prior=pd.Series(x_0, index=state),
-        forward_operator=ForwardOperator(
-            pd.DataFrame(H, index=obs, columns=state), sparse=True
-        ),
-        prior_error=S_0,
-        modeldata_mismatch=rng.uniform(0.2, 0.5),
+    state_space, obs_space = Space.from_index(state), Space.from_index(obs)
+    problem = Problem(
+        obs=Vector(H @ x_0 + rng.normal(0, 1, m), obs_space),
+        prior=Vector(x_0, state_space),
+        forward=Operator(sp.csr_array(H), obs_space, state_space),
+        prior_cov=Covariance(S_0, state_space),
+        obs_cov=Covariance.diagonal(rng.uniform(0.2, 0.5), obs_space),
     )
     return problem, state
 
@@ -238,53 +433,56 @@ def _aggregation(state, sparse=False, shuffle=False):
     W = pd.DataFrame(np.array(rows), index=index, columns=state)
     if shuffle:
         W = W.iloc[:, np.random.default_rng(1).permutation(len(state))]
-    return Matrix(W, sparse=sparse), W.reindex(columns=state).to_numpy()
+    Wa = W.reindex(columns=state).to_numpy()
+    if sparse:
+        W = W.astype(pd.SparseDtype(float, 0.0))
+    return Operator.from_frame(W), Wa
 
 
 @pytest.mark.parametrize("sparse", [False, True], ids=["dense W", "sparse W"])
 @pytest.mark.parametrize("shuffle", [False, True], ids=["in order", "shuffled"])
-def test_cov_and_averaging_kernel_of_an_aggregation(sparse, shuffle):
+def test_cov_and_averaging_kernel_of_an_aggregation(sparse, shuffle, analytic_form):
     """``cov(W)`` is ``W S_hat W^T`` and ``averaging_kernel(W)`` is ``W A W*``, labeled."""
     problem, state = _labeled()
     post = fips.solve(problem, gamma=0.8)
     W, Wa = _aggregation(state, sparse=sparse, shuffle=shuffle)
-    S_hat = post.covariance.to_numpy()
-    A = post.averaging_kernel().to_numpy()
+    assert isinstance(W.data, SparseOperator) == sparse
+    S_hat = post.cov().dense()
+    A = post.averaging_kernel().dense()
 
     cov = post.cov(W)
-    assert isinstance(cov, CovarianceMatrix)
-    assert cov.index.equals(W.index) and cov.columns.equals(W.index)
-    assert cov.name == "posterior_error"
-    _close(cov.to_numpy(), Wa @ S_hat @ Wa.T, "cov(W)")
+    assert isinstance(cov, Covariance)
+    assert cov.rows.index.equals(W.rows.index) and cov.cols.index.equals(W.rows.index)
+    assert cov.name == "posterior_cov"
+    _close(cov.dense(), Wa @ S_hat @ Wa.T, "cov(W)")
 
     kernel = post.averaging_kernel(W)
-    assert isinstance(kernel, Matrix)
-    assert kernel.index.equals(W.index) and kernel.columns.equals(W.index)
-    _close(kernel.to_numpy(), Wa @ A @ np.linalg.pinv(Wa), "averaging_kernel(W)")
+    assert isinstance(kernel, Operator)
+    assert kernel.rows.index.equals(W.rows.index)
+    assert kernel.cols.index.equals(W.rows.index)
+    _close(kernel.dense(), Wa @ A @ np.linalg.pinv(Wa), "averaging_kernel(W)")
     # For sums over disjoint sets, W* = W^T diag(1 / count): an even spread
-    sums = post.averaging_kernel(Matrix(W.data.iloc[:3]))
+    sums = post.averaging_kernel(Operator.from_frame(W.to_frame().iloc[:3]))
     counts = Wa[:3].sum(axis=1)
-    _close(sums.to_numpy(), Wa[:3] @ A @ (Wa[:3].T / counts), "sums")
+    _close(sums.dense(), Wa[:3] @ A @ (Wa[:3].T / counts), "sums")
 
 
 def test_full_outputs_without_an_aggregation():
-    """Without ``W``, ``cov`` is ``covariance`` and ``averaging_kernel`` is the same object each time."""
+    """Without ``W``, ``cov`` and ``averaging_kernel`` are formed once: the same object each time."""
     problem, _ = _labeled()
     post = fips.solve(problem)
-    assert post.cov() is post.covariance
+    assert post.cov() is post.cov()
     assert post.averaging_kernel() is post.averaging_kernel()
-    problem.solve("bayesian")
-    assert problem.averaging_kernel is problem.result.averaging_kernel()
 
 
-def test_variances_without_the_covariance():
+def test_variances_without_the_covariance(analytic_form):
     """``variances`` is the diagonal of ``covariance``, read without forming it."""
     problem, state = _labeled()
     post = fips.solve(problem)
     variances = post.variances
-    assert "S_hat" not in vars(post.estimator)
-    assert variances.index.equals(state) and variances.name == "posterior_variance"
-    _close(variances.values, np.diag(post.covariance.to_numpy()), "variances", 1e-12)
+    assert "_cov" not in vars(post)
+    assert variances.index.equals(state) and variances.name == "variance"
+    _close(variances.values, np.diag(post.cov().dense()), "variances", 1e-12)
 
 
 def test_aggregation_labels_must_be_the_state():
@@ -292,9 +490,15 @@ def test_aggregation_labels_must_be_the_state():
     problem, state = _labeled()
     post = fips.solve(problem)
     W, _ = _aggregation(state)
-    frame = W.data
-    with pytest.raises(ValueError, match="1 state labels are not among them"):
-        post.cov(Matrix(frame.iloc[:, 1:]))
+    frame = W.to_frame()
+    with pytest.raises(TypeError, match="An aggregation is an Operator"):
+        post.cov(frame)  # type: ignore[arg-type]
+    with pytest.raises(
+        ValueError,
+        match=r"The columns of the aggregation and the state do not have the same "
+        r"labels: labels of block 'flux' missing from the columns of the aggregation",
+    ):
+        post.cov(Operator.from_frame(frame.iloc[:, 1:]))
     extra = pd.DataFrame(
         1.0,
         index=frame.index,
@@ -302,10 +506,14 @@ def test_aggregation_labels_must_be_the_state():
             [("flux", pd.Timestamp("2030-01-01"), "c0")], names=state.names
         ),
     )
-    with pytest.raises(ValueError, match="1 of its labels are not in the state"):
-        post.averaging_kernel(Matrix(pd.concat([frame, extra], axis=1)))
-    with pytest.raises(ValueError, match="repeat a state label"):
-        post.cov(Matrix(pd.concat([frame, frame.iloc[:, :1]], axis=1)))
+    with pytest.raises(
+        ValueError,
+        match=r"labels of block 'flux' only in the columns of the aggregation",
+    ):
+        post.averaging_kernel(Operator.from_frame(pd.concat([frame, extra], axis=1)))
+    # A repeated state label cannot label an Operator at all
+    with pytest.raises(ValueError, match="Block 'flux' has duplicate labels"):
+        Operator.from_frame(pd.concat([frame, frame.iloc[:, :1]], axis=1))
 
 
 def test_dependent_aggregation_rows_raise():
@@ -313,15 +521,15 @@ def test_dependent_aggregation_rows_raise():
     problem, state = _labeled()
     post = fips.solve(problem)
     W, _ = _aggregation(state)
-    frame = W.data
+    frame = W.to_frame()
     twice = pd.concat(
         [frame.iloc[:1], frame.iloc[:1].rename(index={"2024-01-01": "again"})]
     )
     with pytest.raises(ValueError, match="linearly dependent"):
-        post.averaging_kernel(Matrix(twice))
+        post.averaging_kernel(Operator.from_frame(twice))
 
 
-def test_aggregation_across_blocks():
+def test_aggregation_across_blocks(analytic_form):
     """A multi-block state (NaN-padded levels) aggregates with an exact join."""
     rng = np.random.default_rng(4)
     flux = pd.MultiIndex.from_product(
@@ -329,22 +537,20 @@ def test_aggregation_across_blocks():
     )
     bias = pd.MultiIndex.from_product([["bias"], ["s1", "s2"]], names=["block", "site"])
     obs = pd.MultiIndex.from_product([["conc"], range(6)], names=["block", "obs_id"])
-    prior = fips.Vector(
-        [
-            fips.Block(
-                pd.Series(rng.normal(size=3), index=flux.droplevel(0), name="flux")
-            ),
-            fips.Block(pd.Series([0.1, -0.1], index=bias.droplevel(0), name="bias")),
-        ]
+    prior = Vector.from_blocks(
+        {
+            "flux": pd.Series(rng.normal(size=3), index=flux.droplevel(0)),
+            "bias": pd.Series([0.1, -0.1], index=bias.droplevel(0)),
+        }
     )
     state = prior.index
     H = pd.DataFrame(rng.uniform(0, 1, (6, 5)), index=obs, columns=state)
-    problem = InverseProblem(
-        obs=pd.Series(rng.normal(size=6), index=obs),
+    problem = Problem(
+        obs=Vector.from_series(pd.Series(rng.normal(size=6), index=obs)),
         prior=prior,
-        forward_operator=H,
-        prior_error=1.0,
-        modeldata_mismatch=0.5,
+        forward=Operator.from_frame(H),
+        prior_cov=Covariance.diagonal(1.0, prior.space),
+        obs_cov=Covariance.diagonal(0.5, Space.from_index(obs)),
     )
     post = fips.solve(problem)
     rows = pd.MultiIndex.from_tuples(
@@ -352,66 +558,46 @@ def test_aggregation_across_blocks():
     )
     Wa = np.array([[1, 1, 1, 0, 0], [0, 0, 0, 1, 1]], dtype=float)
     order = np.array([4, 2, 0, 3, 1])
-    W = Matrix(pd.DataFrame(Wa[:, order], index=rows, columns=state[order]))
+    W = Operator.from_frame(
+        pd.DataFrame(Wa[:, order], index=rows, columns=state[order])
+    )
     _close(
-        post.cov(W).to_numpy(),
-        Wa @ post.covariance.to_numpy() @ Wa.T,
+        post.cov(W).dense(),
+        Wa @ post.cov().dense() @ Wa.T,
         "cov across blocks",
     )
 
 
 @pytest.mark.parametrize("gamma", [0.25, 2.0, 7.5])
-def test_posterior_with_gamma(gamma):
+def test_posterior_with_gamma(gamma, analytic_form):
     """``Posterior.with_gamma`` is the posterior of a fresh solve with that gamma."""
     problem, state = _labeled(seed=3)
     post = fips.solve(problem)
     swept = post.with_gamma(gamma)
     fresh = fips.solve(problem, gamma=gamma)
-    assert "x_hat" in vars(swept.estimator)
-    assert swept.estimator._whitened is post.estimator._whitened
-    assert problem._estimator is None and post.estimator.gamma == 1.0
+    assert "estimate" in vars(swept)
+    assert swept._solution.eigenvalues is post._solution.eigenvalues
+    assert post.options.gamma == 1.0
     W, _ = _aggregation(state)
     pairs = [
         (swept.estimate, fresh.estimate),
         (swept.variances, fresh.variances),
-        (swept.covariance, fresh.covariance),
+        (swept.cov(), fresh.cov()),
         (swept.cov(W), fresh.cov(W)),
         (swept.averaging_kernel(W), fresh.averaging_kernel(W)),
         (swept.kalman_gain, fresh.kalman_gain),
         (swept.modeled_obs, fresh.modeled_obs),
     ]
     for got, expected in pairs:
-        assert got.index.equals(expected.index)
-        _close(got.to_numpy(), expected.to_numpy(), got.name)
+        if isinstance(expected, Vector):
+            assert got.index.equals(expected.index)
+            _close(got.values, expected.values, got.name)
+        else:
+            assert got.rows.index.equals(expected.rows.index)
+            assert got.cols.index.equals(expected.cols.index)
+            _close(got.dense(), expected.dense(), got.name)
     for name in ("dofs", "reduced_chi2", "r2", "rmse", "uncertainty_reduction"):
         _close(getattr(swept, name), getattr(fresh, name), name)
-
-
-def test_with_gamma_needs_a_gamma():
-    """An estimator without a regularization factor has no ``with_gamma``."""
-
-    class NoGamma(Estimator):
-        def cost(self, x):
-            return 0.0
-
-        @property
-        def x_hat(self):
-            return self.x_0
-
-        @property
-        def S_hat(self):
-            return self.S_0
-
-    problem, _ = _labeled()
-    post = fips.solve(problem, NoGamma)
-    with pytest.raises(TypeError, match="no regularization factor"):
-        post.with_gamma(2.0)
-    # The generic forms of the new outputs, from S_hat and A
-    W, Wa = _aggregation(problem.state_index)
-    _close(post.variances.values, np.diag(post.covariance.to_numpy()), "variances")
-    _close(post.cov(W).to_numpy(), Wa @ post.covariance.to_numpy() @ Wa.T, "cov(W)")
-    A = post.averaging_kernel().to_numpy()
-    _close(post.averaging_kernel(W).to_numpy(), Wa @ A @ np.linalg.pinv(Wa), "A(W)")
 
 
 # ---------------------------------------------------------------------------
@@ -440,32 +626,29 @@ def test_nothing_n_by_n_is_allocated(prior):
     n, m = len(state), 30
     obs = pd.MultiIndex.from_product([["conc"], range(m)], names=["block", "obs_id"])
     H = sp.random(m, n, density=0.05, random_state=1, format="csr")
-    if prior == "Kronecker":
-        S_0 = KroneckerError(
-            "prior",
-            0.5,
-            [
-                ("time", GridTimeDecay("5D")),
-                (["lat", "lon"], GridSpatialDecay("lat", "lon", 20.0)),
-            ],
-        ).operator(state)
+    state_space, obs_space = Space.from_index(state), Space.from_index(obs)
+    if prior == "Kronecker":  # a model, which the problem builds on the state
+        S_0 = Kronecker(
+            Exponential("time", "5D"),
+            Exponential(["lat", "lon"], 20.0, metric="haversine"),
+        ).with_std(np.sqrt(0.5))
     else:
-        S_0 = DiagonalOperator(rng.uniform(0.5, 1.0, n))
-    problem = InverseProblem(
-        obs=pd.Series(rng.normal(size=m), index=obs),
-        prior=pd.Series(rng.normal(size=n), index=state),
-        forward_operator=ForwardOperator(frame_from_spmatrix(H, obs, state)),
-        prior_error=S_0,
-        modeldata_mismatch=0.1,
-        round_index=None,
+        S_0 = Covariance(DiagonalOperator(rng.uniform(0.5, 1.0, n)), state_space)
+    problem = Problem(
+        obs=Vector(rng.normal(size=m), obs_space),
+        prior=Vector(rng.normal(size=n), state_space),
+        forward=Operator(H, obs_space, state_space),
+        prior_cov=S_0,
+        obs_cov=Covariance.diagonal(0.1, obs_space),
     )
-    W = Matrix(
-        pd.DataFrame(
-            1.0,
-            index=pd.MultiIndex.from_tuples([("t", "all")]).set_names(["block", "agg"]),
-            columns=state,
+    if prior == "Kronecker":
+        assert isinstance(problem.prior_cov.data, KroneckerOperator)
+    W = Operator(
+        sp.csr_array(np.ones((1, n))),
+        Space.from_index(
+            pd.MultiIndex.from_tuples([("t", "all")]).set_names(["block", "agg"])
         ),
-        sparse=True,
+        Space.from_index(state),
     )
     n_by_n = n * n * 8
     tracemalloc.start()
@@ -479,7 +662,8 @@ def test_nothing_n_by_n_is_allocated(prior):
     assert peak < n_by_n / 2, (
         f"peak {peak / 1e6:.1f} MB; one n x n is {n_by_n / 1e6:.1f} MB"
     )
-    big = [k for k, v in vars(post.estimator).items() if getattr(v, "size", 0) >= n * n]
+    held = {**vars(post), **vars(post._solution)}
+    big = [k for k, v in held.items() if getattr(v, "size", 0) >= n * n]
     assert not big, big
 
 
@@ -488,20 +672,21 @@ def test_nothing_n_by_n_is_allocated(prior):
 # ---------------------------------------------------------------------------
 
 
-def test_pickle_keeps_the_factors_and_drops_n_by_n():
-    """A posterior pickles its factors, not ``S_hat``, ``A`` or ``K``, and sweeps gamma after loading."""
+def test_pickle_keeps_the_factors_and_drops_n_by_n(analytic_form):
+    """A posterior pickles its problem, options and factors, not ``S_hat``, ``A`` or ``K``, and sweeps gamma after loading."""
     problem, _ = _labeled()
     post = fips.solve(problem)
-    _ = post.covariance, post.averaging_kernel(), post.kalman_gain, post.variances
-    state = post.estimator.__getstate__()
-    assert not {"S_hat", "A", "K", "_HS_0"} & set(state)
-    assert isinstance(state["_whitened"], dict)
+    _ = post.cov(), post.averaging_kernel(), post.kalman_gain, post.variances
+    state = post.__getstate__()
+    assert set(state) == {"problem", "options", "solution"}
+    assert isinstance(state["solution"], analytic_form)
     loaded = pickle.loads(pickle.dumps(post))
-    assert not {"S_hat", "A", "K"} & set(vars(loaded.estimator))
+    assert not {"_cov", "_averaging_kernel", "kalman_gain"} & set(vars(loaded))
     np.testing.assert_array_equal(loaded.variances.values, post.variances.values)
-    np.testing.assert_array_equal(
-        loaded.covariance.to_numpy(), post.covariance.to_numpy()
-    )
+    np.testing.assert_array_equal(loaded.cov().dense(), post.cov().dense())
+    assert loaded.problem.prior.space == problem.prior.space
+    assert isinstance(loaded.problem.prior_cov.data, KroneckerOperator)
+    assert loaded._solution.problem is loaded.problem  # stored once
     _close(
         loaded.with_gamma(3.0).estimate.values,
         fips.solve(problem, gamma=3.0).estimate.values,
@@ -509,26 +694,25 @@ def test_pickle_keeps_the_factors_and_drops_n_by_n():
     )
 
 
-def test_singular_mismatch_raises():
+def test_singular_mismatch_raises(analytic_form):
     """``S_z`` whitens the observations, so it must be positive-definite."""
     z, x_0, H, S_0, _, c = _arrays("dense", 0)
     m = len(z)
     with pytest.raises(LinAlgError, match="not positive-definite"):
-        _ = BayesianSolver(z, x_0, H, S_0, np.ones((m, m)), c=c).x_hat
+        fips.solve(_problem(z, x_0, H, S_0, np.ones((m, m)), c))
     zero = sp.diags(np.r_[0.0, np.ones(m - 1)]).tocsr()
     with pytest.raises(LinAlgError, match="not positive"):
-        _ = BayesianSolver(z, x_0, H, S_0, zero, c=c).x_hat
+        fips.solve(_problem(z, x_0, H, S_0, zero, c))
 
 
 def test_negative_eigenvalues_are_clipped_and_logged(caplog):
     """A prior error that is not positive semidefinite gives eigenvalues below zero: clipped, logged."""
     z, x_0, H, _, S_z, c = _arrays("dense", 0, n_time=1, n_cell=3, m=3)
     S_0 = np.diag([1.0, 1.0, -0.5])
-    with caplog.at_level(logging.WARNING, logger="fips._whitened"):
-        solver = BayesianSolver(z, x_0, np.eye(3), S_0, S_z, c=c)
-        _ = solver.x_hat
+    with caplog.at_level(logging.WARNING, logger="fips.methods.analytic"):
+        post = fips.solve(_problem(z, x_0, np.eye(3), S_0, S_z, c))
     assert any("negative eigenvalue" in r.message for r in caplog.records)
-    assert (solver._whitened.eigenvalues >= 0).all()
+    assert (post._solution.eigenvalues >= 0).all()
 
 
 def test_roundoff_is_clipped_quietly(caplog):
@@ -538,22 +722,210 @@ def test_roundoff_is_clipped_quietly(caplog):
     T = np.exp(-((t[:, None] - t[None, :]) ** 2) / 200.0)  # near rank-deficient
     S_0 = np.kron(T, np.eye(3))
     H = rng.uniform(0, 1, (40, 30))
-    with caplog.at_level(logging.WARNING, logger="fips._whitened"):
-        solver = BayesianSolver(rng.normal(size=40), np.zeros(30), H, S_0, np.eye(40))
-        _ = solver.x_hat
+    with caplog.at_level(logging.WARNING, logger="fips.methods.analytic"):
+        post = fips.solve(
+            _problem(
+                rng.normal(size=40), np.zeros(30), H, S_0, np.eye(40), np.zeros(40)
+            )
+        )
     assert not caplog.records
-    assert np.isfinite(solver.S_hat_diagonal).all()
+    assert np.isfinite(post.variances.values).all()
 
 
-def test_more_observations_than_state_logs(caplog, monkeypatch):
-    """A large solve with ``m > n`` says that the state-space form would be cheaper."""
-    monkeypatch.setattr("fips._whitened._LARGE_M", 5)
+def _spy_eigh(monkeypatch, *, force=None, no_memory_for=None):
+    """
+    Replace the method's ``eigh`` with one that records the drivers it is called with.
+
+    `force` makes every call use that driver. A call whose driver is
+    `no_memory_for` raises ``MemoryError``, as SciPy does when LAPACK's
+    workspace cannot be allocated, before it touches the matrix.
+    """
+    from fips.methods import analytic
+
+    drivers = []
+
+    def eigh(a, **kwargs):
+        drivers.append(kwargs["driver"])
+        if force is not None:
+            kwargs["driver"] = force
+        if kwargs["driver"] == no_memory_for:
+            raise MemoryError
+        return scipy_eigh(a, **kwargs)
+
+    monkeypatch.setattr(analytic, "eigh", eigh)
+    return drivers
+
+
+def _logged(caplog):
+    """The records the analytic method logged (``fips.solve`` logs its own start)."""
+    return [r for r in caplog.records if r.name == "fips.methods.analytic"]
+
+
+def test_the_eigendecomposition_uses_evd(analytic_form, monkeypatch, caplog):
+    """Each solve eigendecomposes once, with the ``evd`` driver, and logs nothing about memory."""
+    drivers = _spy_eigh(monkeypatch)
+    with caplog.at_level(logging.INFO, logger="fips.methods.analytic"):
+        fips.solve(_problem(*_arrays("dense", 0)))
+    assert drivers == ["evd"]
+    assert not _logged(caplog)
+
+
+def test_no_memory_for_evd_redoes_the_eigendecomposition_with_evr(
+    analytic_form, monkeypatch, caplog
+):
+    """A ``MemoryError`` from ``evd`` is met with ``evr`` on the same matrix: the same result, and one INFO line."""
+    args = _arrays("dense", 0)
+    _spy_eigh(monkeypatch, force="evr")
+    expected = _outputs(fips.solve(_problem(*args)))
+    drivers = _spy_eigh(monkeypatch, no_memory_for="evd")
+    with caplog.at_level(logging.INFO, logger="fips.methods.analytic"):
+        post = fips.solve(_problem(*args))
+    assert drivers == ["evd", "evr"]
+    (record,) = _logged(caplog)
+    assert record.levelno == logging.INFO
+    assert "'evd'" in record.message and "'evr'" in record.message
+    for name, value in _outputs(post).items():
+        np.testing.assert_array_equal(value, expected[name], err_msg=name)
+
+
+# ---------------------------------------------------------------------------
+# The two forms: which one factors, and what each holds
+# ---------------------------------------------------------------------------
+
+
+def _mismatch(kind: str, m: int, rng) -> object:
+    """A model-data mismatch of ``m`` observations in one form."""
+    if kind == "diagonal":
+        return sp.diags(rng.uniform(0.5, 2.0, m)).tocsr()
+    if kind == "sparse":
+        return sp.csr_matrix(
+            np.diag(rng.uniform(1, 3, m))
+            + np.diag(np.full(m - 1, 0.2), 1)
+            + np.diag(np.full(m - 1, 0.2), -1)
+        )
+    if kind == "block diagonal":
+        k = m // 2
+        return BlockDiagonalOperator([_spd(rng, k), DiagonalOperator(np.ones(m - k))])
+    if kind == "Kronecker":
+        return KroneckerOperator([_spd(rng, 2), _spd(rng, m // 2)])
+    return _spd(rng, m)  # dense
+
+
+@pytest.mark.parametrize(
+    "n_time, n_cell, m, mismatch, chosen",
+    [
+        (1, 3, 8, "diagonal", Information),
+        (1, 3, 8, "sparse", Information),
+        (1, 3, 8, "block diagonal", Information),
+        (1, 3, 8, "dense", Whitened),
+        (1, 3, 8, "Kronecker", Whitened),
+        (2, 4, 8, "diagonal", Whitened),  # n = m
+        (3, 4, 7, "diagonal", Whitened),  # n > m
+    ],
+)
+def test_the_form_is_chosen_by_size(n_time, n_cell, m, mismatch, chosen, caplog):
+    """The information form when ``n < m`` and ``S_z`` is cheap to invert; else the whitened form. Logged at DEBUG."""
+    z, x_0, H, S_0, _, c = _arrays("dense", 0, n_time=n_time, n_cell=n_cell, m=m)
+    S_z = _mismatch(mismatch, m, np.random.default_rng(1))
+    with caplog.at_level(logging.DEBUG, logger="fips.methods.analytic"):
+        post = fips.solve(_problem(z, x_0, H, S_0, S_z, c), gamma=0.7)
+    assert type(post._solution) is chosen
+    name = "information" if chosen is Information else "whitened"
+    assert any(
+        r.levelno == logging.DEBUG and f"uses the {name} form: " in r.message
+        for r in caplog.records
+    )
+    assert not [r for r in caplog.records if r.levelno >= logging.WARNING]
+    expected = _closed_form(z, x_0, H, S_0, _dense(S_z), c, 0.7)
+    for name, value in _outputs(post).items():
+        if name in expected:
+            _close(value, expected[name], name)
+
+
+def test_a_prior_without_a_square_root_takes_the_whitened_form(caplog):
+    """A prior error that is only semidefinite has no Cholesky factor: the whitened form, which needs none, solves."""
+    z, x_0, H, _, _, c = _arrays("dense", 0, n_time=1, n_cell=3, m=8)
+    S_0 = np.diag([1.0, 2.0, 0.0])  # the third element is known exactly
+    S_z = sp.diags(np.linspace(0.5, 1.5, 8)).tocsr()
+    with caplog.at_level(logging.DEBUG, logger="fips.methods.analytic"):
+        post = fips.solve(_problem(z, x_0, H, S_0, S_z, c))
+    assert type(post._solution) is Whitened
+    assert any("has no square root" in r.message for r in caplog.records)
+    # The gain form of the posterior, which needs no inverse of S_0
+    K = S_0 @ H.T @ np.linalg.inv(H @ S_0 @ H.T + S_z.toarray())
+    _close(post.estimate.values, x_0 + K @ (z - H @ x_0 - c), "estimate")
+    assert post.estimate.values[2] == x_0[2]
+
+
+def test_a_large_whitened_solve_warns(caplog, monkeypatch):
+    """Only a whitened solve above ``_LARGE_M`` observations and more than twice ``n`` warns, saying why the information form was not used."""
+    monkeypatch.setattr("fips.methods.analytic._LARGE_M", 5)
+    rng = np.random.default_rng(2)
     z, x_0, H, S_0, S_z, c = _arrays("dense", 0, n_time=1, n_cell=3, m=8)
-    with caplog.at_level(logging.WARNING, logger="fips._whitened"):
-        _ = BayesianSolver(z, x_0, H, S_0, S_z, c=c).x_hat
-    assert any("state-space (information) form" in r.message for r in caplog.records)
+    with caplog.at_level(logging.WARNING, logger="fips.methods.analytic"):
+        fips.solve(_problem(z, x_0, H, S_0, S_z, c))
+    (record,) = caplog.records
+    assert "m = 8 observations, more than twice the n = 3 state elements" in (
+        record.message
+    )
+    assert "the model-data mismatch is a DenseOperator" in record.message
+    quiet = {
+        "information form": (
+            _arrays("dense", 0, 1, 3, 8),
+            _mismatch("diagonal", 8, rng),
+        ),
+        "m = 2 n": (_arrays("dense", 0, 1, 4, 8), None),
+    }
+    for what, ((z, x_0, H, S_0, S_z, c), other) in quiet.items():
+        caplog.clear()
+        with caplog.at_level(logging.WARNING, logger="fips.methods.analytic"):
+            fips.solve(_problem(z, x_0, H, S_0, S_z if other is None else other, c))
+        assert not caplog.records, what
+    monkeypatch.undo()
     caplog.clear()
-    z, x_0, H, S_0, S_z, c = _arrays("dense", 0, n_time=2, n_cell=4, m=8)
-    with caplog.at_level(logging.WARNING, logger="fips._whitened"):
-        _ = BayesianSolver(z, x_0, H, S_0, S_z, c=c).x_hat
-    assert not caplog.records
+    z, x_0, H, S_0, S_z, c = _arrays("dense", 0, n_time=1, n_cell=3, m=8)
+    with caplog.at_level(logging.WARNING, logger="fips.methods.analytic"):
+        fips.solve(_problem(z, x_0, H, S_0, S_z, c))
+    assert not caplog.records, "below the default _LARGE_M"
+
+
+def test_the_information_form_allocates_nothing_m_by_m():
+    """
+    With ``n = 30`` and ``m = 2,400``, the information form is chosen, and solving and reading every output but the gain never allocates ``m x m``.
+
+    One ``m x m`` array is 46 MB; the information form needs ``m x n`` (0.6
+    MB for ``H R``) and holds ``n x n``. The traced peak must stay under half
+    of one ``m x m`` array.
+    """
+    rng = np.random.default_rng(0)
+    n, m = 30, 2400
+    state = Space({"flux": pd.Index(range(n), name="cell")})
+    obs = Space({"conc": pd.Index(range(m), name="obs_id")})
+    problem = Problem(
+        obs=Vector(rng.normal(size=m), obs),
+        prior=Vector(rng.normal(size=n), state),
+        forward=Operator(
+            sp.random(m, n, density=0.2, random_state=1, format="csr"), obs, state
+        ),
+        prior_cov=Covariance(_spd(rng, n), state),
+        obs_cov=Covariance.diagonal(rng.uniform(0.1, 0.5, m), obs),
+    )
+    m_by_m = m * m * 8
+    tracemalloc.start()
+    try:
+        post = fips.solve(problem)
+        _ = post.variances, post.dofs, post.reduced_chi2, post.cov()
+        _ = post.with_gamma(2.0).variances, post.with_data(problem.obs).estimate
+        _, peak = tracemalloc.get_traced_memory()
+    finally:
+        tracemalloc.stop()
+    assert type(post._solution) is Information
+    assert peak < m_by_m / 2, (
+        f"peak {peak / 1e6:.1f} MB; one m x m is {m_by_m / 1e6:.1f} MB"
+    )
+    held = {k: v for k, v in vars(post._solution).items() if isinstance(v, np.ndarray)}
+    assert {k: v.shape for k, v in held.items()} == {
+        "eigenvalues": (n,),
+        "G": (n, n),
+        "innovation": (n,),
+    }

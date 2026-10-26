@@ -1,114 +1,54 @@
 """
-Visualization and plotting utilities for inverse problem results.
+Plotting of inverse problem results.
 
-This module provides functions for plotting error norms, comparing multiple series,
-and computing credible intervals for uncertainty visualization.
+:func:`plot_comparison` draws several series (a prior, a posterior, the
+observations) on one axes, with error bands or bars. It needs matplotlib,
+which the ``viz`` extra installs (``pip install "fips[viz]"``). For anything
+else, a :class:`~fips.Vector` gives pandas and xarray objects to plot
+(``post.estimate["flux"].to_series()``, ``.to_xarray()``).
 """
 
-from collections.abc import Iterable, Sequence
+from collections.abc import Sequence
 
 import numpy as np
 import pandas as pd
 
-from fips.covariance import CovarianceMatrix
-from fips.matrix import Matrix
-from fips.vector import Block, Vector
-
-ArrayLike = Sequence | np.ndarray
+from fips.covariance import Covariance
+from fips.operator import Operator
+from fips.space import _listed
+from fips.vector import Vector
 
 
 def _require_matplotlib():
     """Import and return ``matplotlib.pyplot``, with an install hint when missing."""
     try:
-        import matplotlib.pyplot as plt  # type: ignore
+        import matplotlib.pyplot as plt
 
         return plt
     except ImportError as exc:
         raise ImportError(
-            "matplotlib is required for plotting; install with `pip install matplotlib`."
+            'matplotlib is required for plotting; install with `pip install "fips[viz]"`.'
         ) from exc
 
 
-def _unwrap(x: pd.Series | pd.DataFrame | Vector | Block) -> pd.Series | pd.DataFrame:
-    """Return the pandas object inside a ``Block`` or ``Vector``; anything else as is."""
-    return x.data if isinstance(x, (Block, Vector)) else x
-
-
-def plot_error_norm(
-    prior: ArrayLike | Vector | Block,
-    posterior: ArrayLike | Vector | Block,
-    truth: ArrayLike | Vector | Block,
-    t: Iterable[float] | None = None,
-    norm: str = "l2",
-    figsize: tuple[float, float] | None = None,
-):
+def _unwrap(x: pd.Series | pd.DataFrame | Vector) -> pd.Series | pd.DataFrame:
     """
-    Plot normed errors of prior and posterior against truth.
+    Return a ``Vector`` as a Series; anything else as is.
 
-    Parameters
-    ----------
-    prior : ArrayLike or Vector or Block
-        Prior estimates.
-    posterior : ArrayLike or Vector or Block
-        Posterior estimates.
-    truth : ArrayLike or Vector or Block
-        True values for comparison.
-    t : Iterable[float], optional
-        Time or x-axis values. If None, uses integer indices.
-    norm : {'l2', 'l1', 'linf'}, default 'l2'
-        Norm type to use for error calculation.
-    figsize : tuple[float, float], optional
-        Figure size (width, height) in inches.
-
-    Returns
-    -------
-    fig : matplotlib.figure.Figure
-        The figure object.
-    ax : matplotlib.axes.Axes
-        The axes object.
+    A vector of one block is the Series on the block's own labels, without
+    the ``block`` level; one of several blocks keeps it.
     """
-    plt = _require_matplotlib()
-
-    # Safely extract raw values and force to 2D for consistent norm calculation
-    def _format(x):
-        """Return ``x`` as a 2-D numpy array."""
-        arr = np.asarray(getattr(x, "values", x))
-        return arr[:, None] if arr.ndim == 1 else arr
-
-    p_arr, post_arr, t_arr = _format(prior), _format(posterior), _format(truth)
-
-    if norm == "l2":
-        prior_err = np.linalg.norm(p_arr - t_arr, axis=1)
-        post_err = np.linalg.norm(post_arr - t_arr, axis=1)
-    elif norm == "l1":
-        prior_err = np.sum(np.abs(p_arr - t_arr), axis=1)
-        post_err = np.sum(np.abs(post_arr - t_arr), axis=1)
-    elif norm == "linf":
-        prior_err = np.max(np.abs(p_arr - t_arr), axis=1)
-        post_err = np.max(np.abs(post_arr - t_arr), axis=1)
-    else:
-        raise ValueError("norm must be one of {'l2', 'l1', 'linf'}")
-
-    x = np.arange(len(prior_err)) if t is None else np.asarray(list(t))
-
-    fig, ax = plt.subplots(figsize=figsize)
-    ax.plot(x, prior_err, label=f"prior |.|{norm}", linestyle="--", color="tab:blue")
-    ax.plot(
-        x, post_err, label=f"posterior |.|{norm}", linestyle="-", color="tab:orange"
-    )
-    ax.set(xlabel="step", ylabel=f"{norm} error")
-    ax.legend(loc="best")
-    fig.tight_layout()
-
-    return fig, ax
+    if not isinstance(x, Vector):
+        return x
+    series = x.to_series()
+    return series.droplevel("block") if len(x.space.names) == 1 else series
 
 
 def plot_comparison(
-    *series: pd.Series | Vector | Block,
+    *series: pd.Series | Vector,
     x: str | int | None = None,
-    truth: pd.Series | Vector | Block | None = None,
-    errors: Sequence[pd.DataFrame | CovarianceMatrix | Matrix | pd.Series | None]
-    | None = None,
+    truth: pd.Series | Vector | None = None,
+    errors: Sequence[pd.DataFrame | Operator | pd.Series | None] | None = None,
     kind: str | None = None,
 ):
     """
@@ -119,15 +59,17 @@ def plot_comparison(
 
     Parameters
     ----------
-    *series : pd.Series or Vector or Block
+    *series : pd.Series or Vector
         Variable number of series to compare.
     x : str or int, optional
         Name or level of the index to use for x-axis. Required if series have MultiIndex.
-    truth : pd.Series or Vector or Block, optional
-        True values to plot as reference.
-    errors : Sequence of pd.DataFrame or CovarianceMatrix or Matrix or pd.Series or None, optional
+    truth : pd.Series or Vector, optional
+        True values to plot as reference, matched to the series by label (in
+        any order), as the errors are.
+    errors : Sequence of pd.DataFrame or Covariance or Operator or pd.Series or None, optional
         Error estimates for each series. Must match length of series.
-        If CovarianceMatrix or Matrix, extracts diagonal as standard deviations.
+        If a Covariance or an Operator, its diagonal's square roots (the
+        standard deviations) are used.
         Use None for a series with no error: it is plotted without a band or
         error bars.
     kind : {'line', 'bar'}, optional
@@ -139,6 +81,12 @@ def plot_comparison(
         The figure object.
     ax : matplotlib.axes.Axes
         The axes object.
+
+    Raises
+    ------
+    ValueError
+        If `x` is not given for series with a MultiIndex, or `truth` has no
+        value for a label of the series.
     """
     plt = _require_matplotlib()
 
@@ -156,10 +104,14 @@ def plot_comparison(
 
             name = df.columns[i]
 
-            if isinstance(err, CovarianceMatrix):
-                e = pd.Series(np.sqrt(err.variances.values), index=err.index, name=name)
-            elif isinstance(err, Matrix):
-                e = pd.Series(np.sqrt(np.diag(err.values)), index=err.index, name=name)
+            if isinstance(err, Covariance):
+                variances = err.variances
+                e = pd.Series(
+                    np.sqrt(variances.values), index=variances.index, name=name
+                )
+            elif isinstance(err, Operator):
+                diagonal = np.sqrt(err.data.diagonal())
+                e = pd.Series(diagonal, index=err.rows.index, name=name)
             else:
                 e = _unwrap(err)
                 if isinstance(e, pd.Series):
@@ -212,7 +164,12 @@ def plot_comparison(
             )
 
     if truth is not None:
-        t_data = _unwrap(truth)
+        t_data = _unwrap(truth).reindex(df.index)
+        if t_data.isna().any():
+            raise ValueError(
+                "truth has no value for some labels of the series: "
+                f"{_listed(df.index[t_data.isna().to_numpy()])}."
+            )
         if kind == "line":
             ax.plot(x_vals, t_data, label="truth", color="black", linestyle="--")
         else:
@@ -234,27 +191,3 @@ def plot_comparison(
     ax.set(xlabel=str(x), ylabel="value")
 
     return fig, ax
-
-
-def compute_credible_interval(
-    samples: ArrayLike, q: tuple[float, float] = (0.05, 0.95)
-) -> tuple[np.ndarray, np.ndarray]:
-    """
-    Compute lower and upper quantiles along the first axis of samples.
-
-    Parameters
-    ----------
-    samples : ArrayLike
-        Array of samples with shape (n_samples, ...). Quantiles computed along axis 0.
-    q : tuple[float, float], default (0.05, 0.95)
-        Lower and upper quantile values in [0, 1].
-
-    Returns
-    -------
-    lower : np.ndarray
-        Lower quantile values.
-    upper : np.ndarray
-        Upper quantile values.
-    """
-    samples = np.asarray(samples)
-    return np.quantile(samples, q[0], axis=0), np.quantile(samples, q[1], axis=0)
