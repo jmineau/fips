@@ -23,7 +23,7 @@ or averaging kernel is asked for, and :meth:`Posterior.with_gamma` and
 
 .. seealso::
 
-   See :doc:`../terminology` for the notation (:math:`\hat{x}`,
+   See :doc:`/getting_started/terminology` for the notation (:math:`\hat{x}`,
    :math:`\hat{S}`, :math:`K`, :math:`A`, DOFS).
 
 Solving

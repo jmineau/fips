@@ -15,7 +15,7 @@
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 [![Pyrefly](https://img.shields.io/badge/types-pyrefly-blue.svg)](https://pyrefly.org)
 
-> **⚠️ Beta**: fips is in beta, and its API may still change between releases. The [changelog](https://github.com/jmineau/fips/blob/main/CHANGELOG.md) says what changed, and the [migration guide](https://jmineau.github.io/fips/stable/migration.html) how to move code from 0.1. Please [report any issues or edge cases](https://github.com/jmineau/fips/issues) you encounter.
+> **⚠️ Beta**: fips is in beta, and its API may still change between releases. The [changelog](https://github.com/jmineau/fips/blob/main/CHANGELOG.md) says what changed. Please [report any issues or edge cases](https://github.com/jmineau/fips/issues) you encounter.
 
 ## Bridging Physics and Data
 Inverse problems in geophysics and atmospheric science often involve large state spaces, heterogeneous observation networks, and explicit matrix algebra. General-purpose optimization tools tend to make researchers strip away the labels of their data (times, places, instruments) and translate their physical models into bare arrays.
@@ -191,7 +191,7 @@ W = fips.aggregate.sum(prior.space, by="time")
 print(post.cov(W).to_frame().round(3))
 ```
 
-The [user guide](https://jmineau.github.io/fips/stable/usage.html) has more: offsets solved for with the state, aggregated observations, part of the state held at its prior, and repeated inversions.
+The [user guide](https://jmineau.github.io/fips/stable/user_guide/index.html) has more: offsets solved for with the state, aggregated observations, part of the state held at its prior, and repeated inversions.
 
 ## Documentation
 

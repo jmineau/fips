@@ -76,14 +76,6 @@ html_theme_options = {
     "show_version_warning_banner": True,  # point old versions at stable
 }
 
-# Hide primary (left) sidebar on specific pages
-html_sidebars = {
-    "installation": [],
-    "getting_started": [],
-    "usage": [],
-    "terminology": [],
-}
-
 # -- Extension configuration -------------------------------------------------
 
 # Napoleon settings
