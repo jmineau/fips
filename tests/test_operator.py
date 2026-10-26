@@ -15,7 +15,7 @@ import pandas as pd
 import pytest
 import scipy.sparse as sp
 
-from fips import Covariance, Operator, Space, Vector
+from fips import Covariance, Exponential, Kronecker, Operator, Space, Vector
 from fips.linalg import DenseOperator, DiagonalOperator, SparseOperator
 
 # A scalar in each form a caller might pass: Python float and int, a NumPy scalar, a 0-d array
@@ -687,6 +687,48 @@ class TestBlockSelection:
 
         assert type(cov["flux", "flux"]) is Covariance
         assert type(cov["flux", "bias"]) is Operator
+
+
+class TestSparse:
+    """``op.sparse()`` is the matrix as a new CSR array, in the spaces' order."""
+
+    def test_sparse_form_gives_its_entries(self, obs, state):
+        m = sp.csr_array(np.array([[1.0, 0.0, 0.0], [0.0, 0.0, 2.0]]))
+        op = Operator(m, obs, state)
+        out = op.sparse()
+        assert isinstance(out, sp.csr_array) and out.nnz == 2
+        np.testing.assert_array_equal(out.toarray(), m.toarray())
+
+    def test_dense_and_diagonal_forms(self, H, state):
+        """A dense form is converted (zeros left out); a diagonal one stores its diagonal."""
+        out = H.sparse()
+        assert isinstance(out, sp.csr_array)
+        np.testing.assert_array_equal(out.toarray(), H.dense())
+        assert out.nnz == np.count_nonzero(H.dense())
+        cov = Covariance.diagonal(np.array([1.0, 0.0, 3.0]), state)
+        assert isinstance(cov.data, DiagonalOperator)
+        assert cov.sparse().nnz == 2
+        np.testing.assert_array_equal(cov.sparse().toarray(), np.diag([1.0, 0.0, 3.0]))
+
+    def test_a_new_writable_copy(self, obs, state):
+        """Changing the array leaves the operator as it was."""
+        op = Operator(sp.csr_array(np.eye(2, 3)), obs, state)
+        out = op.sparse()
+        out.data[:] = 7.0
+        np.testing.assert_array_equal(op.dense(), np.eye(2, 3))
+
+    def test_kronecker_covariance(self):
+        """A Kronecker covariance is formed, as ``dense`` does."""
+        cells = pd.MultiIndex.from_product(
+            [[0.0, 1.0], [10.0, 11.0, 12.0]], names=["x", "y"]
+        )
+        space = Space({"flux": cells})
+        cov = (
+            Kronecker(Exponential("x", 1.0), Exponential("y", 1.0))
+            .with_std(1.0)
+            .build(space)
+        )
+        np.testing.assert_allclose(cov.sparse().toarray(), cov.dense(), rtol=0, atol=0)
 
 
 class TestToFrame:

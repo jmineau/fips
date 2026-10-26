@@ -20,6 +20,12 @@ estimator gave, to 1e-10 and on the paper-1 reference run to 6e-14.
 
 ### Added
 
+- **Two helpers for code that moves from the old API.** `Vector.to_series(block)`
+  gives one block's values on its own labels, without the `block` level
+  (`post.estimate.to_series("flux")`; with no block it is the whole vector, as
+  before). `Operator.sparse()` gives the matrix as a new SciPy CSR array, from
+  the stored entries of a sparse or diagonal form, as `dense()` gives a dense
+  one. ([#82](https://github.com/jmineau/fips/issues/82))
 - **`Space` and `Vector`.** A `Space` is the labels of a state, of the
   observations or of one axis of a matrix: ordered named blocks, each labeled by
   its own pandas index, together one `MultiIndex` with the `block` level first

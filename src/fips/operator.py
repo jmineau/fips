@@ -824,6 +824,44 @@ class Operator:
         """
         return np.array(self._data)
 
+    def sparse(self) -> sp.csr_array:
+        """
+        Return the matrix as a new SciPy CSR array, rows and columns in the spaces' order.
+
+        A sparse or diagonal operator (or a block diagonal one of those) gives
+        its stored entries without forming the dense matrix. Any other form
+        (a dense array, Kronecker factors) forms the full matrix, as
+        :meth:`dense` does, and keeps its nonzero entries.
+
+        Returns
+        -------
+        scipy.sparse.csr_array
+            A writable copy of the matrix, by position: the labels are in
+            :attr:`rows` and :attr:`cols`.
+
+        See Also
+        --------
+        Operator.dense : The matrix as a dense array.
+
+        Examples
+        --------
+        >>> import numpy as np
+        >>> import pandas as pd
+        >>> import scipy.sparse as sp
+        >>> from fips import Operator, Space
+        >>> obs = Space({"co2": pd.Index([1, 2], name="obs_id")})
+        >>> state = Space({"flux": pd.Index(["a", "b", "c"], name="cell")})
+        >>> H = Operator(sp.csr_array([[1.0, 0.0, 0.0], [0.0, 0.0, 2.0]]), obs, state)
+        >>> H.sparse().nnz
+        2
+        >>> abs(H.sparse()).sum(axis=0)
+        array([1., 0., 2.])
+        """
+        stored = self._data._csr()
+        if stored is None:
+            return sp.csr_array(self.dense())
+        return stored.copy()
+
     def __array__(self, dtype=None, copy=None) -> np.ndarray:
         """
         Return the dense matrix, so NumPy functions take an operator as its matrix.
