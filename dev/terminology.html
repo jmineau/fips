@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Terminology &amp; Notation &#8212; fips 0.1.0b10.dev58+g53ab9aafc documentation</title>
+    <title>Terminology &#8212; fips 0.1.0b10.dev129+gae95fcfbc documentation</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0" />
 
-    <script src="_static/documentation_options.js?v=54c30dc7"></script>
+    <script src="_static/documentation_options.js?v=9a57f19f"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -135,8 +135,8 @@
       
     
     
-    <img src="_static/logo.png" class="logo__image only-light" alt="fips 0.1.0b10.dev58+g53ab9aafc documentation - Home"/>
-    <img src="_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.1.0b10.dev58+g53ab9aafc documentation - Home"/>
+    <img src="_static/logo.png" class="logo__image only-light" alt="fips 0.1.0b10.dev129+gae95fcfbc documentation - Home"/>
+    <img src="_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.1.0b10.dev129+gae95fcfbc documentation - Home"/>
   
   
 </a></div>
@@ -174,7 +174,7 @@
 
 <li class="nav-item current active">
   <a class="nav-link nav-internal" href="#" aria-current="page">
-    Terminology & Notation
+    Terminology
   </a>
 </li>
 
@@ -185,13 +185,30 @@
   </a>
 </li>
 
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false"
+                aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="migration.html">
+    Moving from fips 0.1
+  </a>
+</li>
 
-<li class="nav-item ">
-  <a class="nav-link nav-internal" href="reference/index.html">
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="reference/index.html">
     API Reference
   </a>
 </li>
 
+                </ul>
+            </li>
+            
   </ul>
 </nav></div>
       
@@ -330,7 +347,7 @@
 
 <li class="nav-item current active">
   <a class="nav-link nav-internal" href="#" aria-current="page">
-    Terminology & Notation
+    Terminology
   </a>
 </li>
 
@@ -338,6 +355,13 @@
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="examples/index.html">
     Examples
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="migration.html">
+    Moving from fips 0.1
   </a>
 </li>
 
@@ -447,7 +471,7 @@
         <i class="fa-solid fa-home"></i>
       </a>
     </li>
-    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Terminology &amp; Notation</span></li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Terminology</span></li>
   </ul>
 </nav>
 </div>
@@ -464,204 +488,221 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="terminology-notation">
-<h1>Terminology &amp; Notation<a class="headerlink" href="#terminology-notation" title="Link to this heading">#</a></h1>
-<p>This page defines common abbreviations and the mathematical notation used throughout the FIPS documentation and code. Different scientific fields often use different conventions — this guide helps bridge those gaps.</p>
-<section id="mathematical-notation">
-<h2>Mathematical Notation<a class="headerlink" href="#mathematical-notation" title="Link to this heading">#</a></h2>
-<section id="notation-framework">
-<span id="id1"></span><h3>Notation Framework<a class="headerlink" href="#notation-framework" title="Link to this heading">#</a></h3>
-<p>FIPS uses a consistent notation system throughout:</p>
-<p><strong>Dimensionality Convention</strong></p>
-<ul class="simple">
-<li><p><strong>Lowercase letters</strong> (<span class="math notranslate nohighlight">\(x\)</span>, <span class="math notranslate nohighlight">\(z\)</span>, <span class="math notranslate nohighlight">\(y\)</span>) represent <strong>1-D vectors</strong></p></li>
-<li><p><strong>Uppercase letters</strong> (<span class="math notranslate nohighlight">\(H\)</span>, <span class="math notranslate nohighlight">\(S\)</span>, <span class="math notranslate nohighlight">\(K\)</span>, <span class="math notranslate nohighlight">\(A\)</span>) represent <strong>2-D matrices</strong></p></li>
-</ul>
-<p><strong>Hat Notation</strong></p>
-<ul class="simple">
-<li><p><strong>Hat</strong> <span class="math notranslate nohighlight">\(\hat{\ }\)</span> = <strong>posterior</strong> (<em>a posteriori</em> estimate after incorporating observations)</p>
-<ul>
-<li><p><span class="math notranslate nohighlight">\(\hat{x}\)</span> = posterior state</p></li>
-<li><p><span class="math notranslate nohighlight">\(\hat{S}\)</span> = posterior covariance</p></li>
-<li><p><span class="math notranslate nohighlight">\(\hat{y}\)</span> = posterior modeled observations</p></li>
-</ul>
-</li>
-</ul>
-<p><strong>The Forward Model</strong></p>
-<p>The fundamental relationship is:</p>
+  <section id="terminology">
+<h1>Terminology<a class="headerlink" href="#terminology" title="Link to this heading">#</a></h1>
+<p>Each field that solves inverse problems has its own words and letters for the
+same things. This page defines the words fips uses, once each, with the
+symbol, the name in the code, and the other names you may know them by. The
+rest of the documentation uses these words and no others.</p>
+<section id="the-linear-model">
+<span id="id1"></span><h2>The linear model<a class="headerlink" href="#the-linear-model" title="Link to this heading">#</a></h2>
+<p>fips solves the linear model</p>
 <div class="math notranslate nohighlight">
-\[z - c = y = Hx\]</div>
-<p>where:</p>
-<ul class="simple">
-<li><p><span class="math notranslate nohighlight">\(x\)</span> = <strong>state vector</strong> (the unknowns we’re solving for)</p></li>
-<li><p><span class="math notranslate nohighlight">\(z\)</span> = <strong>observations</strong> (measured data)</p></li>
-<li><p><span class="math notranslate nohighlight">\(c\)</span> = <strong>constant</strong> (background or offset)</p></li>
-<li><p><span class="math notranslate nohighlight">\(y\)</span> = <strong>modeled observations</strong> (what the forward model predicts)</p></li>
-<li><p><span class="math notranslate nohighlight">\(H\)</span> = <strong>forward operator</strong> (maps state space → observation space)</p></li>
-</ul>
-<p><strong>Subscript Conventions</strong></p>
-<p>The subscript system indicates which space or time a variable belongs to:</p>
-<ul class="simple">
-<li><p><strong>Subscript</strong> <span class="math notranslate nohighlight">\(_0\)</span> = <strong>prior information</strong> / <em>a priori</em> (before incorporating observations)</p>
-<ul>
-<li><p><span class="math notranslate nohighlight">\(x_0\)</span> = prior state vector</p></li>
-<li><p><span class="math notranslate nohighlight">\(S_0\)</span> = prior error covariance matrix</p></li>
-</ul>
-</li>
-<li><p><strong>Subscript</strong> <span class="math notranslate nohighlight">\(_z\)</span> = <strong>observation space</strong> (associated with <span class="math notranslate nohighlight">\(z\)</span>)</p>
-<ul>
-<li><p><span class="math notranslate nohighlight">\(S_z\)</span> = observation/model-data mismatch error covariance matrix</p></li>
-</ul>
-</li>
-</ul>
-<p><strong>Covariance Matrices</strong></p>
-<p>Following the uppercase convention for matrices, covariance matrices are denoted with <span class="math notranslate nohighlight">\(S\)</span>:</p>
-<ul class="simple">
-<li><p><span class="math notranslate nohighlight">\(S\)</span> = any covariance matrix (uppercase because 2-D)</p></li>
-<li><p><span class="math notranslate nohighlight">\(S_0\)</span> = <strong>prior</strong> error covariance (subscript _0 for <em>a priori</em>)</p></li>
-<li><p><span class="math notranslate nohighlight">\(S_z\)</span> = <strong>observation</strong> error covariance (subscript _z because it’s in observation space)</p></li>
-<li><p><span class="math notranslate nohighlight">\(\hat{S}\)</span> = <strong>posterior</strong> error covariance (hat for <em>a posteriori</em>)</p></li>
-</ul>
-<p>This framework applies consistently: any variable with subscript <span class="math notranslate nohighlight">\(_0\)</span> refers to the prior,
-any variable in observation space gets subscript <span class="math notranslate nohighlight">\(_z\)</span>, and posterior quantities get a hat.</p>
+\[z = H x + c + \varepsilon\]</div>
+<p>for the state <span class="math notranslate nohighlight">\(x\)</span>, given the observations <span class="math notranslate nohighlight">\(z\)</span>, the forward
+operator <span class="math notranslate nohighlight">\(H\)</span>, the offset <span class="math notranslate nohighlight">\(c\)</span>, a prior <span class="math notranslate nohighlight">\(x_0\)</span> with its prior
+covariance <span class="math notranslate nohighlight">\(S_0\)</span>, and the observation covariance <span class="math notranslate nohighlight">\(S_z\)</span> (the
+covariance of the error <span class="math notranslate nohighlight">\(\varepsilon\)</span>). With <span class="math notranslate nohighlight">\(n\)</span> state elements and
+<span class="math notranslate nohighlight">\(m\)</span> observations, the answer is the posterior</p>
+<div class="math notranslate nohighlight">
+\[\hat{x} = x_0 + K (z - H x_0 - c), \qquad
+\hat{S} = S_0 - K H S_0, \qquad
+K = S_0 H^T \left(H S_0 H^T + S_z / \gamma\right)^{-1}.\]</div>
+<p>The letters follow one convention: lowercase for vectors, uppercase for
+matrices, a subscript <span class="math notranslate nohighlight">\(0\)</span> for the prior, a subscript <span class="math notranslate nohighlight">\(z\)</span> for the
+observations, and a hat for the posterior.</p>
 </section>
-<section id="quick-reference">
-<span id="notation-reference"></span><h3>Quick Reference<a class="headerlink" href="#quick-reference" title="Link to this heading">#</a></h3>
+<section id="the-words">
+<span id="inverse-problem-terms"></span><h2>The words<a class="headerlink" href="#the-words" title="Link to this heading">#</a></h2>
 <div class="pst-scrollable-table-container"><table class="table">
 <colgroup>
-<col style="width: 15.0%" />
-<col style="width: 30.0%" />
-<col style="width: 55.0%" />
+<col style="width: 18.0%" />
+<col style="width: 9.0%" />
+<col style="width: 23.0%" />
+<col style="width: 50.0%" />
 </colgroup>
 <thead>
-<tr class="row-odd"><th class="head"><p>Symbol</p></th>
-<th class="head"><p>Name</p></th>
-<th class="head"><p>Description</p></th>
+<tr class="row-odd"><th class="head"><p>Word</p></th>
+<th class="head"><p>Symbol</p></th>
+<th class="head"><p>In fips</p></th>
+<th class="head"><p>What it is</p></th>
 </tr>
 </thead>
 <tbody>
-<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(x\)</span></p></td>
-<td><p>State vector</p></td>
-<td><p>The unknown quantities being estimated (e.g., fluxes, densities)</p></td>
+<tr class="row-even"><td><p><strong>state</strong></p></td>
+<td><p><span class="math notranslate nohighlight">\(x\)</span></p></td>
+<td><p>the prior’s labels (<code class="docutils literal notranslate"><span class="pre">problem.prior.space</span></code>)</p></td>
+<td><p>The unknowns the problem solves for (fluxes, densities, slownesses),
+<span class="math notranslate nohighlight">\(n\)</span> of them. Also called the control vector or the parameters.</p></td>
 </tr>
-<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(x_0\)</span></p></td>
-<td><p>Prior state</p></td>
-<td><p><em>A priori</em> estimate before incorporating observations</p></td>
+<tr class="row-odd"><td><p><strong>observation</strong></p></td>
+<td><p><span class="math notranslate nohighlight">\(z\)</span></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">obs</span></code></p></td>
+<td><p>The measured data, <span class="math notranslate nohighlight">\(m\)</span> of them. Also called the data or the
+measurement vector (Rodgers writes <span class="math notranslate nohighlight">\(y\)</span>).</p></td>
 </tr>
-<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(\hat{x}\)</span></p></td>
-<td><p>Posterior state</p></td>
-<td><p><em>A posteriori</em> optimized state estimate after inversion</p></td>
+<tr class="row-even"><td><p><strong>forward operator</strong></p></td>
+<td><p><span class="math notranslate nohighlight">\(H\)</span></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">forward</span></code></p></td>
+<td><p>The matrix that maps a state to the observations it would produce,
+<span class="math notranslate nohighlight">\(m \times n\)</span>. Also called the Jacobian (of a nonlinear model,
+linearized), the observation operator, the sensitivity matrix or, in
+atmospheric transport, the footprints. <a class="reference internal" href="reference/api/fips.Problem.predict.html#fips.Problem.predict" title="fips.Problem.predict"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Problem.predict</span></code></a> gives <span class="math notranslate nohighlight">\(H x + c\)</span> for any state.</p></td>
 </tr>
-<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(z\)</span></p></td>
-<td><p>Observations</p></td>
-<td><p>Measured data (e.g., concentrations, gravity anomalies)</p></td>
+<tr class="row-odd"><td><p><strong>offset</strong></p></td>
+<td><p><span class="math notranslate nohighlight">\(c\)</span></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">offset</span></code></p></td>
+<td><p>The part of the observations the state does not explain, added to
+<span class="math notranslate nohighlight">\(H x\)</span>: a background concentration, a known bias. Optional. An
+offset the data should decide is a block of the state instead
+(<a class="reference internal" href="reference/api/fips.offset_block.html#fips.offset_block" title="fips.offset_block"><code class="xref py py-func docutils literal notranslate"><span class="pre">offset_block()</span></code></a>).</p></td>
 </tr>
-<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(c\)</span></p></td>
-<td><p>Constant / Background</p></td>
-<td><p>Additive offset or background field</p></td>
+<tr class="row-even"><td><p><strong>prior</strong></p></td>
+<td><p><span class="math notranslate nohighlight">\(x_0\)</span></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">prior</span></code></p></td>
+<td><p>What is known of the state before the observations: an inventory, a
+climatology, a first guess. Also called the <em>a priori</em> or the
+background state.</p></td>
 </tr>
-<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(y\)</span></p></td>
-<td><p>Modeled observations</p></td>
-<td><p>Forward model output <span class="math notranslate nohighlight">\(y = Hx + c\)</span></p></td>
+<tr class="row-odd"><td><p><strong>prior covariance</strong></p></td>
+<td><p><span class="math notranslate nohighlight">\(S_0\)</span></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">prior_cov</span></code></p></td>
+<td><p>The covariance of the prior’s error, <span class="math notranslate nohighlight">\(n \times n\)</span>. Also called
+the prior error covariance (<span class="math notranslate nohighlight">\(B\)</span> in data assimilation,
+<span class="math notranslate nohighlight">\(S_a\)</span> in Rodgers, <span class="math notranslate nohighlight">\(C_M\)</span> in Tarantola).</p></td>
 </tr>
-<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(y_0\)</span></p></td>
-<td><p>Prior observations</p></td>
-<td><p><span class="math notranslate nohighlight">\(y_0 = Hx_0 + c\)</span></p></td>
+<tr class="row-even"><td><p><strong>observation covariance</strong></p></td>
+<td><p><span class="math notranslate nohighlight">\(S_z\)</span></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">obs_cov</span></code></p></td>
+<td><p>The covariance of the error <span class="math notranslate nohighlight">\(\varepsilon\)</span> between the
+observations and what the forward operator models, <span class="math notranslate nohighlight">\(m \times m\)</span>:
+measurement error plus the errors of the model and of representing the
+state. Also called the model-data mismatch or the observation error
+covariance (<span class="math notranslate nohighlight">\(R\)</span> in data assimilation, <span class="math notranslate nohighlight">\(S_\epsilon\)</span> in
+Rodgers, <span class="math notranslate nohighlight">\(C_D\)</span> in Tarantola).</p></td>
 </tr>
-<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(\hat{y}\)</span></p></td>
-<td><p>Posterior observations</p></td>
-<td><p><span class="math notranslate nohighlight">\(\hat{y} = H\hat{x} + c\)</span></p></td>
+<tr class="row-odd"><td><p><strong>innovation</strong></p></td>
+<td><p><span class="math notranslate nohighlight">\(d\)</span></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">post.innovation_cov</span></code></p></td>
+<td><p>The observations minus what the prior models,
+<span class="math notranslate nohighlight">\(d = z - H x_0 - c\)</span>. Its covariance,
+<span class="math notranslate nohighlight">\(H S_0 H^T + S_z / \gamma\)</span>, is the <span class="math notranslate nohighlight">\(m \times m\)</span> matrix the
+solve factors.</p></td>
 </tr>
-<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(H\)</span></p></td>
-<td><p>Forward operator / Jacobian</p></td>
-<td><p>Operator mapping state space to observation space</p></td>
+<tr class="row-even"><td><p><strong>posterior</strong></p></td>
+<td><p><span class="math notranslate nohighlight">\(\hat{x}\)</span>, <span class="math notranslate nohighlight">\(\hat{S}\)</span></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">fips.solve(problem)</span></code>, a <a class="reference internal" href="reference/api/fips.Posterior.html#fips.Posterior" title="fips.Posterior"><code class="xref py py-class docutils literal notranslate"><span class="pre">Posterior</span></code></a></p></td>
+<td><p>The answer: the state estimate <span class="math notranslate nohighlight">\(\hat{x}\)</span> (<code class="docutils literal notranslate"><span class="pre">post.estimate</span></code>) and
+its posterior covariance <span class="math notranslate nohighlight">\(\hat{S}\)</span> (<code class="docutils literal notranslate"><span class="pre">post.cov()</span></code>, whose
+diagonal is <code class="docutils literal notranslate"><span class="pre">post.variances</span></code>). Also called the <em>a posteriori</em>, the
+analysis or the retrieval. <code class="docutils literal notranslate"><span class="pre">post.modeled_obs</span></code> is
+<span class="math notranslate nohighlight">\(H \hat{x} + c\)</span>.</p></td>
 </tr>
-<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(S_0\)</span></p></td>
-<td><p>Prior error covariance</p></td>
-<td><p>Uncertainty in the prior state estimate</p></td>
+<tr class="row-odd"><td><p><strong>gain</strong></p></td>
+<td><p><span class="math notranslate nohighlight">\(K\)</span></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">post.kalman_gain</span></code></p></td>
+<td><p>The <span class="math notranslate nohighlight">\(n \times m\)</span> matrix that weighs how much each observation
+moves the estimate (the Kalman gain, the contribution function).</p></td>
 </tr>
-<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(S_z\)</span></p></td>
-<td><p>Observation error covariance</p></td>
-<td><p>Combined measurement error and model representation error</p></td>
+<tr class="row-even"><td><p><strong>averaging kernel</strong></p></td>
+<td><p><span class="math notranslate nohighlight">\(A\)</span></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">post.averaging_kernel()</span></code></p></td>
+<td><p><span class="math notranslate nohighlight">\(A = K H\)</span>, how the estimate responds to the true state: a
+diagonal near 1 is a state element the observations constrain, near 0
+one left at its prior.</p></td>
 </tr>
-<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(\hat{S}\)</span></p></td>
-<td><p>Posterior error covariance</p></td>
-<td><p>Reduced uncertainty after incorporating observations</p></td>
+<tr class="row-odd"><td><p><strong>DOFS</strong></p></td>
+<td><p><span class="math notranslate nohighlight">\(\operatorname{tr}(A)\)</span></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">post.dofs</span></code></p></td>
+<td><p>Degrees of freedom for signal: the number of independent pieces of
+information the observations give about the state.</p></td>
 </tr>
-<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(K\)</span></p></td>
-<td><p>Kalman gain</p></td>
-<td><p>Weighting matrix that determines how observations update the prior</p></td>
+<tr class="row-even"><td><p><strong>gamma</strong></p></td>
+<td><p><span class="math notranslate nohighlight">\(\gamma\)</span></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">gamma</span></code>, <code class="docutils literal notranslate"><span class="pre">post.with_gamma(g)</span></code></p></td>
+<td><p>The regularization factor: the solve uses <span class="math notranslate nohighlight">\(S_z / \gamma\)</span>, so a
+gamma above 1 trusts the observations more and below 1 the prior
+more. 1 by default.</p></td>
 </tr>
-<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(A\)</span></p></td>
-<td><p>Averaging kernel</p></td>
-<td><p>Shows which states are constrained by observations: <span class="math notranslate nohighlight">\(A = KH\)</span></p></td>
+</tbody>
+</table>
+</div>
+<p>The posterior also has these statistics:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<colgroup>
+<col style="width: 27.0%" />
+<col style="width: 23.0%" />
+<col style="width: 50.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Statistic</p></th>
+<th class="head"><p>In fips</p></th>
+<th class="head"><p>What it is</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>chi-squared</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">post.chi2</span></code></p></td>
+<td><p>The misfit of the estimate to the observations and to the prior, each
+weighed by its covariance; <code class="docutils literal notranslate"><span class="pre">post.reduced_chi2</span></code> divides it by
+<span class="math notranslate nohighlight">\(m\)</span>, and is near 1 when the covariances are right.</p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(R^2\)</span>, RMSE</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">post.r2</span></code>, <code class="docutils literal notranslate"><span class="pre">post.rmse</span></code></p></td>
+<td><p>The squared correlation, and the root mean square difference, of the
+observations and <span class="math notranslate nohighlight">\(H \hat{x} + c\)</span>.</p></td>
+</tr>
+<tr class="row-even"><td><p>uncertainty reduction</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">post.uncertainty_reduction</span></code></p></td>
+<td><p><span class="math notranslate nohighlight">\(1 - \sqrt{\operatorname{tr}(\hat{S})} / \sqrt{\operatorname{tr}(S_0)}\)</span>.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Desroziers diagnostic</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">post.desroziers(by=...)</span></code></p></td>
+<td><p>The observation error variances the residuals <span class="math notranslate nohighlight">\(z - H \hat{x} - c\)</span>
+and the innovation diagnose, beside those the solve used.</p></td>
 </tr>
 </tbody>
 </table>
 </div>
 </section>
-<section id="diagnostic-metrics">
-<span id="id2"></span><h3>Diagnostic Metrics<a class="headerlink" href="#diagnostic-metrics" title="Link to this heading">#</a></h3>
-<div class="pst-scrollable-table-container"><table class="table">
-<colgroup>
-<col style="width: 15.0%" />
-<col style="width: 30.0%" />
-<col style="width: 55.0%" />
-</colgroup>
-<thead>
-<tr class="row-odd"><th class="head"><p>Symbol</p></th>
-<th class="head"><p>Name</p></th>
-<th class="head"><p>Description</p></th>
-</tr>
-</thead>
-<tbody>
-<tr class="row-even"><td><p>DOFS</p></td>
-<td><p>Degrees of Freedom for Signal</p></td>
-<td><p>Number of independent pieces of information from observations. Equal to <span class="math notranslate nohighlight">\(\text{Tr}(A)\)</span></p></td>
-</tr>
-<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(\chi^2\)</span></p></td>
-<td><p>Chi-squared statistic</p></td>
-<td><p>Goodness-of-fit metric comparing observations to model predictions</p></td>
-</tr>
-<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(R^2\)</span></p></td>
-<td><p>Coefficient of determination</p></td>
-<td><p>Fraction of variance explained by the model (0 to 1)</p></td>
-</tr>
-</tbody>
-</table>
-</div>
-</section>
-</section>
-<section id="inverse-problem-terminology">
-<span id="inverse-problem-terms"></span><h2>Inverse Problem Terminology<a class="headerlink" href="#inverse-problem-terminology" title="Link to this heading">#</a></h2>
-<dl class="simple glossary">
-<dt id="term-Prior"><strong>Prior</strong><a class="headerlink" href="#term-Prior" title="Link to this term">#</a></dt><dd><p>The initial estimate of the state (and its uncertainty) before incorporating observations. Often comes from inventory data, climatology, or a process model.</p>
+<section id="fips-s-own-words">
+<span id="fips-words"></span><h2>fips’s own words<a class="headerlink" href="#fips-s-own-words" title="Link to this heading">#</a></h2>
+<dl class="simple">
+<dt><strong>label</strong></dt><dd><p>What names one element of a vector or one row or column of a matrix: a
+time, a cell, a site and a time. A label is a row of a pandas index.</p>
 </dd>
-<dt id="term-Posterior"><strong>Posterior</strong><a class="headerlink" href="#term-Posterior" title="Link to this term">#</a></dt><dd><p>The updated estimate of the state (and its uncertainty) after incorporating observations through Bayesian inference.</p>
+<dt><strong>block</strong></dt><dd><p>A named part of a state or of the observations whose elements share their
+kind of label: the <code class="docutils literal notranslate"><span class="pre">flux</span></code> cells and the <code class="docutils literal notranslate"><span class="pre">bias</span></code> sites of a state, the
+<code class="docutils literal notranslate"><span class="pre">station</span></code> and <code class="docutils literal notranslate"><span class="pre">satellite</span></code> blocks of the observations.</p>
 </dd>
-<dt id="term-Forward-Model-Forward-Operator"><strong>Forward Model / Forward Operator</strong><a class="headerlink" href="#term-Forward-Model-Forward-Operator" title="Link to this term">#</a></dt><dd><p>The mathematical operator <span class="math notranslate nohighlight">\(H\)</span> that predicts observations from a given state: <span class="math notranslate nohighlight">\(y = Hx + c\)</span>. Sometimes called the Jacobian, observation operator, or sensitivity matrix.</p>
+<dt><strong>space</strong> (<a class="reference internal" href="reference/api/fips.Space.html#fips.Space" title="fips.Space"><code class="xref py py-class docutils literal notranslate"><span class="pre">Space</span></code></a>)</dt><dd><p>The labels of a state, of the observations, or of one axis of a matrix: an
+ordered set of blocks, each with its own pandas index.</p>
 </dd>
-<dt id="term-Jacobian"><strong>Jacobian</strong><a class="headerlink" href="#term-Jacobian" title="Link to this term">#</a></dt><dd><p>In the linear case, identical to the forward operator <span class="math notranslate nohighlight">\(H\)</span>. For nonlinear problems, the Jacobian is the local linearization of the forward model.</p>
+<dt><strong>vector</strong> (<a class="reference internal" href="reference/api/fips.Vector.html#fips.Vector" title="fips.Vector"><code class="xref py py-class docutils literal notranslate"><span class="pre">Vector</span></code></a>)</dt><dd><p>Values on a space: a prior, the observations, an estimate.</p>
 </dd>
-<dt id="term-Observation-Operator"><strong>Observation Operator</strong><a class="headerlink" href="#term-Observation-Operator" title="Link to this term">#</a></dt><dd><p>Another name for the forward operator, emphasizing its role in mapping state space to observation space.</p>
+<dt><strong>operator</strong> (<a class="reference internal" href="reference/api/fips.Operator.html#fips.Operator" title="fips.Operator"><code class="xref py py-class docutils literal notranslate"><span class="pre">Operator</span></code></a>)</dt><dd><p>A matrix with a space on each axis: the forward operator, an aggregation, a
+gain. A covariance (<a class="reference internal" href="reference/api/fips.Covariance.html#fips.Covariance" title="fips.Covariance"><code class="xref py py-class docutils literal notranslate"><span class="pre">Covariance</span></code></a>) is an operator from a space to
+itself.</p>
 </dd>
-<dt id="term-Kalman-Gain"><strong>Kalman Gain</strong><a class="headerlink" href="#term-Kalman-Gain" title="Link to this term">#</a></dt><dd><p>The matrix <span class="math notranslate nohighlight">\(K\)</span> that optimally weights how much each observation updates the prior state. Derived from minimizing posterior uncertainty.</p>
+<dt><strong>covariance model</strong></dt><dd><p>A covariance written down before its labels exist: a correlation model
+(<a class="reference internal" href="reference/api/fips.Exponential.html#fips.Exponential" title="fips.Exponential"><code class="xref py py-class docutils literal notranslate"><span class="pre">Exponential</span></code></a>, <a class="reference internal" href="reference/api/fips.Kronecker.html#fips.Kronecker" title="fips.Kronecker"><code class="xref py py-class docutils literal notranslate"><span class="pre">Kronecker</span></code></a>, …) with standard
+deviations, which a <a class="reference internal" href="reference/api/fips.Problem.html#fips.Problem" title="fips.Problem"><code class="xref py py-class docutils literal notranslate"><span class="pre">Problem</span></code></a> puts on the prior’s or the
+observations’ space.</p>
 </dd>
-<dt id="term-Averaging-Kernel"><strong>Averaging Kernel</strong><a class="headerlink" href="#term-Averaging-Kernel" title="Link to this term">#</a></dt><dd><p>Matrix <span class="math notranslate nohighlight">\(A = KH\)</span> showing which true state variables are constrained by the observations. Diagonal elements near 1 indicate strong constraint; near 0 indicates weak constraint.</p>
+<dt><strong>aggregation</strong> (<span class="math notranslate nohighlight">\(W\)</span>)</dt><dd><p>An operator from a space to groups of its labels (sums or means): hourly
+observations to daily means, the state to monthly totals
+(<code class="xref py py-mod docutils literal notranslate"><span class="pre">fips.aggregate</span></code>).</p>
 </dd>
-<dt id="term-Model-Data-Mismatch"><strong>Model-Data Mismatch</strong><a class="headerlink" href="#term-Model-Data-Mismatch" title="Link to this term">#</a></dt><dd><p>The combined error in observations and forward model representation, captured in the covariance matrix <span class="math notranslate nohighlight">\(S_z\)</span>. Includes measurement error, transport error, aggregation error, etc.</p>
-</dd>
-<dt id="term-Covariance-Matrix"><strong>Covariance Matrix</strong><a class="headerlink" href="#term-Covariance-Matrix" title="Link to this term">#</a></dt><dd><p>A symmetric positive-definite matrix encoding uncertainties and their correlations. Diagonal elements are variances; off-diagonal elements are covariances.</p>
-</dd>
-<dt id="term-Posterior-Error-Reduction"><strong>Posterior Error Reduction</strong><a class="headerlink" href="#term-Posterior-Error-Reduction" title="Link to this term">#</a></dt><dd><p>The decrease in uncertainty from prior to posterior, often expressed as <span class="math notranslate nohighlight">\(1 - \text{diag}(\hat{S}) / \text{diag}(S_0)\)</span>.</p>
+<dt><strong>method</strong></dt><dd><p>How <a class="reference internal" href="reference/api/fips.solve.html#fips.solve" title="fips.solve"><code class="xref py py-func docutils literal notranslate"><span class="pre">fips.solve()</span></code></a> solves a problem. The one method is <code class="docutils literal notranslate"><span class="pre">&quot;analytic&quot;</span></code>,
+the closed-form Gaussian posterior.</p>
 </dd>
 </dl>
 <div class="admonition seealso">
 <p class="admonition-title">See also</p>
 <ul class="simple">
-<li><p><a class="reference internal" href="getting_started.html"><span class="doc">Getting Started</span></a> — Quick introduction to FIPS with minimal example</p></li>
-<li><p><a class="reference internal" href="usage.html"><span class="doc">User Guide</span></a> — Detailed guide to data structures and workflows</p></li>
-<li><p><a class="reference internal" href="reference/estimators.html"><span class="doc">Estimators</span></a> — Full mathematical details of estimators</p></li>
+<li><p><a class="reference internal" href="getting_started.html"><span class="doc">Getting Started</span></a>: a first problem, step by step</p></li>
+<li><p><a class="reference internal" href="usage.html"><span class="doc">User Guide</span></a>: each object in more depth</p></li>
+<li><p><a class="reference internal" href="reference/posterior.html"><span class="doc">Solving and Posterior</span></a>: the solve and the posterior it returns</p></li>
 </ul>
 </div>
 </section>
@@ -714,13 +755,9 @@ any variable in observation space gets subscript <span class="math notranslate n
   </div>
   <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#mathematical-notation">Mathematical Notation</a><ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#notation-framework">Notation Framework</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#quick-reference">Quick Reference</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#diagnostic-metrics">Diagnostic Metrics</a></li>
-</ul>
-</li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#inverse-problem-terminology">Inverse Problem Terminology</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-linear-model">The linear model</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-words">The words</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#fips-s-own-words">fips’s own words</a></li>
 </ul>
   </nav></div>
 

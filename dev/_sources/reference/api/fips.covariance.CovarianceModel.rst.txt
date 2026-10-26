@@ -1,0 +1,23 @@
+﻿fips.covariance.CovarianceModel
+===============================
+
+.. currentmodule:: fips.covariance
+
+.. autoclass:: CovarianceModel
+   :no-members:
+   :show-inheritance:
+
+
+
+
+
+
+.. rubric:: Methods
+
+.. autosummary::
+   :toctree:
+
+   ~CovarianceModel.build
+
+
+

@@ -1,0 +1,6 @@
+﻿fips.Operator.\_\_truediv\_\_
+=============================
+
+.. currentmodule:: fips
+
+.. automethod:: Operator.__truediv__

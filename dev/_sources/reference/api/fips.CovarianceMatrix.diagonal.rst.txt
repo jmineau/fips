@@ -1,6 +1,0 @@
-﻿fips.CovarianceMatrix.diagonal
-==============================
-
-.. currentmodule:: fips
-
-.. automethod:: CovarianceMatrix.diagonal

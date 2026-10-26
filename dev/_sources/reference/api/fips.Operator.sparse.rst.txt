@@ -1,0 +1,6 @@
+fips.Operator.sparse
+====================
+
+.. currentmodule:: fips
+
+.. automethod:: Operator.sparse

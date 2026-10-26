@@ -1,6 +1,0 @@
-﻿fips.indexes.apply\_to\_index
-=============================
-
-.. currentmodule:: fips.indexes
-
-.. autofunction:: apply_to_index

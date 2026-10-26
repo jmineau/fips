@@ -1,0 +1,1053 @@
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>fips.aggregate &#8212; fips 0.1.0b10.dev129+gae95fcfbc documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=64cc4de3f052d77215f0" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=64cc4de3f052d77215f0" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../_static/plot_directive.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../_static/custom.css?v=4b8357b6" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="../../_static/scripts/fontawesome.js?digest=64cc4de3f052d77215f0"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0" />
+
+    <script src="../../_static/documentation_options.js?v=9a57f19f"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/fips/aggregate';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.22.0';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://jmineau.github.io/fips/switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'dev';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner =
+            true;
+        </script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.1" />
+  
+    
+    <script src="../../_static/searchtools.js"></script>
+    <script src="../../_static/language_data.js"></script>
+    <script src="../../searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button type="button" class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class=" navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.1.0b10.dev129+gae95fcfbc documentation - Home"/>
+    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.1.0b10.dev129+gae95fcfbc documentation - Home"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class=" navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../installation.html">
+    Installation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../getting_started.html">
+    Getting Started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../usage.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../terminology.html">
+    Terminology
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../examples/index.html">
+    Examples
+  </a>
+</li>
+
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false"
+                aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../migration.html">
+    Moving from fips 0.1
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../reference/index.html">
+    API Reference
+  </a>
+</li>
+
+                </ul>
+            </li>
+            
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+      
+        <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/jmineau/fips" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar hide-on-wide">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../installation.html">
+    Installation
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../getting_started.html">
+    Getting Started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../usage.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../terminology.html">
+    Terminology
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../examples/index.html">
+    Examples
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../migration.html">
+    Moving from fips 0.1
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../reference/index.html">
+    API Reference
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-3"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-3"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-3"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-3">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+        
+          <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/jmineau/fips" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../index.html" class="nav-link">Module code</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">fips.aggregate</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for fips.aggregate</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Aggregation: operators that sum or average the labels of a space by group.</span>
+
+<span class="sd">:func:`sum` and :func:`mean` build an aggregation :math:`W`, an</span>
+<span class="sd">:class:`~fips.Operator` from a :class:`~fips.Space` (its columns) to the groups</span>
+<span class="sd">of its labels (its rows). The same operator works on both sides of a problem:</span>
+
+<span class="sd">- on the observations, ``problem.aggregate(W)`` gives the problem of the</span>
+<span class="sd">  aggregated observations, :math:`W z`, :math:`W H`, :math:`W S_z W^T` and</span>
+<span class="sd">  :math:`W c` (hourly observations to daily means, say);</span>
+<span class="sd">- on the state, ``post.cov(W)`` and ``post.averaging_kernel(W)`` give the</span>
+<span class="sd">  posterior of the aggregates (a total per month, the mean over a region).</span>
+
+<span class="sd">A sum is right for extensive quantities (a total, the columns of a Jacobian),</span>
+<span class="sd">a mean for intensive ones (a flux, a concentration). A weighted sum, such as</span>
+<span class="sd">fluxes per area to a total mass, is the sum times a diagonal of the weights:</span>
+<span class="sd">``fips.aggregate.sum(space, by=&quot;time&quot;) @ Operator(scipy.sparse.diags(w),</span>
+<span class="sd">space, space)``.</span>
+
+<span class="sd">:func:`offset_block` uses the same groups for a block of offsets in the state:</span>
+<span class="sd">one unknown offset per group of observations (a site&#39;s background in a month),</span>
+<span class="sd">with the forward block that adds each to its observations.</span>
+
+<span class="sd">The groups are given by ``by``, one key or a list of keys, each of which gives</span>
+<span class="sd">every label of a block a group label on one level:</span>
+
+<span class="sd">- a level name: the labels&#39; values on that level;</span>
+<span class="sd">- a :class:`pandas.Grouper` with a ``level`` and a ``freq``: that (datetime)</span>
+<span class="sd">  level binned at the frequency, labeled by the start of each bin, as pandas</span>
+<span class="sd">  bins it (``pd.Grouper(level=&quot;obs_time&quot;, freq=&quot;1D&quot;)``);</span>
+<span class="sd">- a :class:`pandas.IntervalIndex` named after a level: that level binned into</span>
+<span class="sd">  the intervals, labeled by the left edge of each;</span>
+<span class="sd">- a :class:`pandas.Series` that maps the values of a level (its index, named</span>
+<span class="sd">  after the level; an IntervalIndex maps the intervals) to group labels (its</span>
+<span class="sd">  values), on a level named after the Series (or, unnamed, after the level it</span>
+<span class="sd">  maps): sites to networks, cells to regions.</span>
+
+<span class="sd">The group labels of every key together label the groups. A label a key cannot</span>
+<span class="sd">place (outside every interval, missing from a mapping, mapped to NaN) raises.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Hashable</span><span class="p">,</span> <span class="n">Sequence</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">scipy.sparse</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">sp</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">fips.linalg.forms</span><span class="w"> </span><span class="kn">import</span> <span class="n">_adopt</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fips.operator</span><span class="w"> </span><span class="kn">import</span> <span class="n">Operator</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fips.space</span><span class="w"> </span><span class="kn">import</span> <span class="n">Space</span><span class="p">,</span> <span class="n">_listed</span><span class="p">,</span> <span class="n">_sorted</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fips.vector</span><span class="w"> </span><span class="kn">import</span> <span class="n">Vector</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;sum&quot;</span><span class="p">,</span> <span class="s2">&quot;mean&quot;</span><span class="p">,</span> <span class="s2">&quot;offset_block&quot;</span><span class="p">]</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_level</span><span class="p">(</span><span class="n">index</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">,</span> <span class="n">level</span><span class="p">:</span> <span class="n">Hashable</span><span class="p">,</span> <span class="n">block</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the values of `level` in the labels of `block`, or raise naming its levels.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">level</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">index</span><span class="o">.</span><span class="n">names</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Block </span><span class="si">{</span><span class="n">block</span><span class="si">!r}</span><span class="s2"> has no level </span><span class="si">{</span><span class="n">level</span><span class="si">!r}</span><span class="s2">; its levels are &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">list</span><span class="p">(</span><span class="n">index</span><span class="o">.</span><span class="n">names</span><span class="p">)</span><span class="si">}</span><span class="s2">.&quot;</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="n">index</span><span class="o">.</span><span class="n">get_level_values</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">index</span><span class="o">.</span><span class="n">names</span><span class="p">)</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">level</span><span class="p">))</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_key_labels</span><span class="p">(</span><span class="n">index</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">block</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return the group label one key gives each label of a block, as an Index named after its level.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    TypeError</span>
+<span class="sd">        If `key` is not one of the kinds the module docstring lists.</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        If the block lacks the key&#39;s level, or the key cannot place a label.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">_level</span><span class="p">(</span><span class="n">index</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">block</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">Grouper</span><span class="p">):</span>
+        <span class="n">level</span> <span class="o">=</span> <span class="n">key</span><span class="o">.</span><span class="n">level</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">level</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">or</span> <span class="n">key</span><span class="o">.</span><span class="n">freq</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;A pandas Grouper in `by` needs a `level` (by name) and a &quot;</span>
+                <span class="s2">&quot;`freq`; a level on its own is its name.&quot;</span>
+            <span class="p">)</span>
+        <span class="n">values</span> <span class="o">=</span> <span class="n">_level</span><span class="p">(</span><span class="n">index</span><span class="p">,</span> <span class="n">level</span><span class="p">,</span> <span class="n">block</span><span class="p">)</span>
+        <span class="c1"># pandas numbers the bins of one key in time order, empty bins</span>
+        <span class="c1"># included (as size() lists them), whatever the order of the labels:</span>
+        <span class="c1"># bin the labels sorted, then put the bins back in the labels&#39; order</span>
+        <span class="n">order</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">kind</span><span class="o">=</span><span class="s2">&quot;stable&quot;</span><span class="p">)</span>
+        <span class="n">groups</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">values</span><span class="p">)),</span> <span class="n">index</span><span class="o">=</span><span class="n">values</span><span class="p">[</span><span class="n">order</span><span class="p">])</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+        <span class="n">bins</span> <span class="o">=</span> <span class="n">groups</span><span class="o">.</span><span class="n">size</span><span class="p">()</span><span class="o">.</span><span class="n">index</span>
+        <span class="n">labels</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">values</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">intp</span><span class="p">)</span>
+        <span class="n">labels</span><span class="p">[</span><span class="n">order</span><span class="p">]</span> <span class="o">=</span> <span class="n">groups</span><span class="o">.</span><span class="n">ngroup</span><span class="p">()</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">(</span><span class="n">bins</span><span class="o">.</span><span class="n">take</span><span class="p">(</span><span class="n">labels</span><span class="p">),</span> <span class="n">name</span><span class="o">=</span><span class="n">level</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">IntervalIndex</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">key</span><span class="o">.</span><span class="n">name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;An IntervalIndex in `by` must be named after the level it bins &quot;</span>
+                <span class="s1">&#39;(bins.rename(&quot;obs_time&quot;)).&#39;</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="n">_mapped</span><span class="p">(</span><span class="n">index</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">(</span><span class="n">key</span><span class="o">.</span><span class="n">left</span><span class="p">),</span> <span class="n">key</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">block</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">key</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;A Series in `by` maps the values of a level: name its index &quot;</span>
+                <span class="s2">&quot;after that level.&quot;</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">key</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">is_unique</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;The Series in `by` that maps level </span><span class="si">{</span><span class="n">key</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">name</span><span class="si">!r}</span><span class="s2"> has &quot;</span>
+                <span class="s2">&quot;duplicate entries in its index.&quot;</span>
+            <span class="p">)</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="n">key</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">name</span> <span class="k">if</span> <span class="n">key</span><span class="o">.</span><span class="n">name</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">key</span><span class="o">.</span><span class="n">name</span>
+        <span class="k">return</span> <span class="n">_mapped</span><span class="p">(</span><span class="n">index</span><span class="p">,</span> <span class="n">key</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">(</span><span class="n">key</span><span class="o">.</span><span class="n">array</span><span class="p">),</span> <span class="n">name</span><span class="p">,</span> <span class="n">block</span><span class="p">)</span>
+    <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+        <span class="s2">&quot;Each key in `by` is a level name, a pandas Grouper, an IntervalIndex &quot;</span>
+        <span class="sa">f</span><span class="s2">&quot;or a Series, not </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">key</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">.&quot;</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_mapped</span><span class="p">(</span>
+    <span class="n">index</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">,</span> <span class="n">lookup</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">,</span> <span class="n">to</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="n">Hashable</span><span class="p">,</span> <span class="n">block</span><span class="p">:</span> <span class="nb">str</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return the entry of `to` at the position of each label&#39;s value in `lookup`.</span>
+
+<span class="sd">    `lookup`&#39;s name is the level read; the result is named `name`.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        If a value is not in `lookup` (outside every interval of an</span>
+<span class="sd">        IntervalIndex), or `to` gives it a missing (NaN) group.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">values</span> <span class="o">=</span> <span class="n">_level</span><span class="p">(</span><span class="n">index</span><span class="p">,</span> <span class="n">lookup</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">block</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">lookup</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">IntervalIndex</span><span class="p">):</span>
+        <span class="n">subtype</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">lookup</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="s2">&quot;subtype&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="c1"># pandas 2 cannot look up datetimes of one unit in intervals of another</span>
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="n">subtype</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+            <span class="ow">and</span> <span class="n">values</span><span class="o">.</span><span class="n">dtype</span> <span class="o">!=</span> <span class="n">subtype</span>
+            <span class="ow">and</span> <span class="n">values</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">kind</span> <span class="o">==</span> <span class="s2">&quot;M&quot;</span>
+            <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="n">subtype</span><span class="p">)</span><span class="o">.</span><span class="n">kind</span> <span class="o">==</span> <span class="s2">&quot;M&quot;</span>
+        <span class="p">):</span>
+            <span class="n">values</span> <span class="o">=</span> <span class="n">values</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">subtype</span><span class="p">)</span>
+    <span class="n">positions</span> <span class="o">=</span> <span class="n">lookup</span><span class="o">.</span><span class="n">get_indexer</span><span class="p">(</span><span class="n">values</span><span class="p">)</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">positions</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+        <span class="n">where</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="s2">&quot;outside every interval&quot;</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">lookup</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">IntervalIndex</span><span class="p">)</span>
+            <span class="k">else</span> <span class="s2">&quot;not in the mapping&quot;</span>
+        <span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Labels of block </span><span class="si">{</span><span class="n">block</span><span class="si">!r}</span><span class="s2"> with a </span><span class="si">{</span><span class="n">lookup</span><span class="o">.</span><span class="n">name</span><span class="si">!r}</span><span class="s2"> </span><span class="si">{</span><span class="n">where</span><span class="si">}</span><span class="s2">: &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">_listed</span><span class="p">(</span><span class="n">values</span><span class="p">[</span><span class="n">positions</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">unique</span><span class="p">())</span><span class="si">}</span><span class="s2">.&quot;</span>
+        <span class="p">)</span>
+    <span class="n">groups</span> <span class="o">=</span> <span class="n">to</span><span class="o">.</span><span class="n">take</span><span class="p">(</span><span class="n">positions</span><span class="p">)</span>
+    <span class="n">missing</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">groups</span><span class="o">.</span><span class="n">isna</span><span class="p">())</span>
+    <span class="k">if</span> <span class="n">missing</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;The Series in `by` maps </span><span class="si">{</span><span class="n">lookup</span><span class="o">.</span><span class="n">name</span><span class="si">!r}</span><span class="s2"> &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">_listed</span><span class="p">(</span><span class="n">values</span><span class="p">[</span><span class="n">missing</span><span class="p">]</span><span class="o">.</span><span class="n">unique</span><span class="p">())</span><span class="si">}</span><span class="s2"> (on labels of block &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">block</span><span class="si">!r}</span><span class="s2">) to a missing (NaN) group. Give each a group, or leave &quot;</span>
+            <span class="s2">&quot;their labels out of the space.&quot;</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">(</span><span class="n">groups</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_groups</span><span class="p">(</span>
+    <span class="n">blocks</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">]],</span> <span class="n">by</span><span class="p">:</span> <span class="n">Any</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return the group of each label of `blocks` (their labels in order) and the groups, sorted.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        If `by` is empty, two keys label the same level, or a key cannot</span>
+<span class="sd">        place a label.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">keys</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">by</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">by</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">))</span> <span class="k">else</span> <span class="p">[</span><span class="n">by</span><span class="p">]</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">keys</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;`by` needs at least one key.&quot;</span><span class="p">)</span>
+    <span class="n">columns</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">:</span>
+        <span class="n">parts</span> <span class="o">=</span> <span class="p">[</span><span class="n">_key_labels</span><span class="p">(</span><span class="n">index</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span> <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">index</span> <span class="ow">in</span> <span class="n">blocks</span><span class="p">]</span>
+        <span class="n">columns</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">parts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">parts</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">parts</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="k">else</span> <span class="n">parts</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">names</span> <span class="o">=</span> <span class="p">[</span><span class="n">column</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">column</span> <span class="ow">in</span> <span class="n">columns</span><span class="p">]</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">names</span><span class="p">))</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">names</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Two keys in `by` label the same level: </span><span class="si">{</span><span class="n">names</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+    <span class="n">labels</span> <span class="o">=</span> <span class="n">columns</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">columns</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="k">else</span> <span class="n">pd</span><span class="o">.</span><span class="n">MultiIndex</span><span class="o">.</span><span class="n">from_arrays</span><span class="p">(</span><span class="n">columns</span><span class="p">)</span>
+    <span class="n">groups</span> <span class="o">=</span> <span class="n">_sorted</span><span class="p">(</span><span class="n">labels</span><span class="o">.</span><span class="n">unique</span><span class="p">())</span>
+    <span class="k">return</span> <span class="n">groups</span><span class="o">.</span><span class="n">get_indexer</span><span class="p">(</span><span class="n">labels</span><span class="p">),</span> <span class="n">groups</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_chosen</span><span class="p">(</span><span class="n">space</span><span class="p">:</span> <span class="n">Space</span><span class="p">,</span> <span class="n">blocks</span><span class="p">:</span> <span class="s2">&quot;str | Sequence[str] | None&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the names of `blocks` (every block of `space` by default), checked.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">blocks</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">space</span><span class="o">.</span><span class="n">names</span><span class="p">)</span>
+    <span class="n">chosen</span> <span class="o">=</span> <span class="p">[</span><span class="n">blocks</span><span class="p">]</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">blocks</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">else</span> <span class="nb">list</span><span class="p">(</span><span class="n">blocks</span><span class="p">)</span>
+    <span class="n">unknown</span> <span class="o">=</span> <span class="p">[</span><span class="n">name</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">chosen</span> <span class="k">if</span> <span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">space</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">unknown</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;No block named </span><span class="si">{</span><span class="n">_listed</span><span class="p">(</span><span class="n">unknown</span><span class="p">)</span><span class="si">}</span><span class="s2">; the blocks are </span><span class="si">{</span><span class="n">_listed</span><span class="p">(</span><span class="n">space</span><span class="o">.</span><span class="n">names</span><span class="p">)</span><span class="si">}</span><span class="s2">.&quot;</span>
+        <span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">chosen</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;`blocks` names no block.&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">chosen</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_aggregation</span><span class="p">(</span>
+    <span class="n">space</span><span class="p">:</span> <span class="n">Space</span><span class="p">,</span> <span class="n">by</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">blocks</span><span class="p">:</span> <span class="s2">&quot;str | Sequence[str] | None&quot;</span><span class="p">,</span> <span class="n">average</span><span class="p">:</span> <span class="nb">bool</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Operator</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the sum (or the mean, if `average`) of each group of labels, block by block.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">space</span><span class="p">,</span> <span class="n">Space</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;space must be a Space, got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">space</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+    <span class="n">chosen</span> <span class="o">=</span> <span class="n">_chosen</span><span class="p">(</span><span class="n">space</span><span class="p">,</span> <span class="n">blocks</span><span class="p">)</span>
+    <span class="n">rows</span><span class="p">,</span> <span class="n">cols</span><span class="p">,</span> <span class="n">weights</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[],</span> <span class="p">[]</span>
+    <span class="n">labels</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">start</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">space</span><span class="o">.</span><span class="n">names</span><span class="p">:</span>
+        <span class="n">index</span> <span class="o">=</span> <span class="n">space</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">chosen</span><span class="p">:</span>
+            <span class="n">codes</span><span class="p">,</span> <span class="n">groups</span> <span class="o">=</span> <span class="n">_groups</span><span class="p">([(</span><span class="n">name</span><span class="p">,</span> <span class="n">index</span><span class="p">)],</span> <span class="n">by</span><span class="p">)</span>
+            <span class="n">counts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">bincount</span><span class="p">(</span><span class="n">codes</span><span class="p">,</span> <span class="n">minlength</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">groups</span><span class="p">))</span>
+            <span class="n">weight</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="n">counts</span><span class="p">[</span><span class="n">codes</span><span class="p">]</span> <span class="k">if</span> <span class="n">average</span> <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">codes</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>  <span class="c1"># passed through, one row per label</span>
+            <span class="n">codes</span><span class="p">,</span> <span class="n">groups</span><span class="p">,</span> <span class="n">weight</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">index</span><span class="p">)),</span> <span class="n">index</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">index</span><span class="p">))</span>
+        <span class="n">rows</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">start</span> <span class="o">+</span> <span class="n">codes</span><span class="p">)</span>
+        <span class="n">cols</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">space</span><span class="o">.</span><span class="n">slice</span><span class="p">(</span><span class="n">name</span><span class="p">)</span><span class="o">.</span><span class="n">start</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">index</span><span class="p">)))</span>
+        <span class="n">weights</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">weight</span><span class="p">)</span>
+        <span class="n">labels</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">groups</span>
+        <span class="n">start</span> <span class="o">+=</span> <span class="nb">len</span><span class="p">(</span><span class="n">groups</span><span class="p">)</span>
+    <span class="n">matrix</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">csr_array</span><span class="p">(</span>
+        <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">weights</span><span class="p">),</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">rows</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">cols</span><span class="p">))),</span>
+        <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">space</span><span class="p">)),</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">Operator</span><span class="p">(</span><span class="n">_adopt</span><span class="p">(</span><span class="n">matrix</span><span class="p">),</span> <span class="n">Space</span><span class="p">(</span><span class="n">labels</span><span class="p">),</span> <span class="n">space</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="sum">
+<a class="viewcode-back" href="../../reference/api/fips.aggregate.sum.html#fips.aggregate.sum">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">sum</span><span class="p">(</span><span class="n">space</span><span class="p">:</span> <span class="n">Space</span><span class="p">,</span> <span class="n">by</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">blocks</span><span class="p">:</span> <span class="s2">&quot;str | Sequence[str] | None&quot;</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Operator</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return the operator that sums the labels of `space` by group.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    space : Space</span>
+<span class="sd">        The labels to sum: the state&#39;s or the observations&#39;.</span>
+<span class="sd">    by : key or list of keys</span>
+<span class="sd">        The groups: level names, a :class:`pandas.Grouper` with a ``level`` and</span>
+<span class="sd">        a ``freq``, an :class:`pandas.IntervalIndex` named after a level, or a</span>
+<span class="sd">        :class:`pandas.Series` that maps a level&#39;s values to groups (see</span>
+<span class="sd">        :mod:`fips.aggregate`). Every block summed must have the levels the</span>
+<span class="sd">        keys read.</span>
+<span class="sd">    blocks : str or list of str, optional</span>
+<span class="sd">        The blocks to sum, each on its own; every block by default. A block</span>
+<span class="sd">        not named is passed through, one row for each of its labels.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    Operator</span>
+<span class="sd">        :math:`W`, sparse, with one row per group (ones where a label is in</span>
+<span class="sd">        the group) and `space` as its columns. Its rows are a space of the</span>
+<span class="sd">        same blocks, each labeled by its groups in sorted order on the</span>
+<span class="sd">        levels the keys name (a block passed through keeps its labels).</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    TypeError</span>
+<span class="sd">        If `space` is not a Space, or a key is of another kind.</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        If `by` is empty, a block summed lacks a level a key reads, a key</span>
+<span class="sd">        cannot place a label (outside every interval, missing from a</span>
+<span class="sd">        mapping or mapped to NaN), two keys label one level, or `blocks`</span>
+<span class="sd">        names no block of `space`.</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    mean : The operator that averages by group.</span>
+<span class="sd">    fips.Posterior.cov : The posterior covariance of aggregates of the state.</span>
+<span class="sd">    fips.Problem.aggregate : The problem of aggregated observations.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; import numpy as np</span>
+<span class="sd">    &gt;&gt;&gt; import pandas as pd</span>
+<span class="sd">    &gt;&gt;&gt; import fips</span>
+<span class="sd">    &gt;&gt;&gt; cells = pd.MultiIndex.from_product(</span>
+<span class="sd">    ...     [pd.date_range(&quot;2020-01-01&quot;, periods=2, freq=&quot;MS&quot;), [&quot;a&quot;, &quot;b&quot;, &quot;c&quot;]],</span>
+<span class="sd">    ...     names=[&quot;time&quot;, &quot;cell&quot;],</span>
+<span class="sd">    ... )</span>
+<span class="sd">    &gt;&gt;&gt; flux = fips.Vector.from_series(</span>
+<span class="sd">    ...     pd.Series(np.arange(6.0), index=cells), block=&quot;flux&quot;</span>
+<span class="sd">    ... )</span>
+<span class="sd">    &gt;&gt;&gt; W = fips.aggregate.sum(flux.space, by=&quot;time&quot;)</span>
+<span class="sd">    &gt;&gt;&gt; W.rows</span>
+<span class="sd">    Space(flux: 2 x [&#39;time&#39;])</span>
+<span class="sd">    &gt;&gt;&gt; (W @ flux).values</span>
+<span class="sd">    array([ 3., 12.])</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">_aggregation</span><span class="p">(</span><span class="n">space</span><span class="p">,</span> <span class="n">by</span><span class="p">,</span> <span class="n">blocks</span><span class="p">,</span> <span class="n">average</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="mean">
+<a class="viewcode-back" href="../../reference/api/fips.aggregate.mean.html#fips.aggregate.mean">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">mean</span><span class="p">(</span>
+    <span class="n">space</span><span class="p">:</span> <span class="n">Space</span><span class="p">,</span> <span class="n">by</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">blocks</span><span class="p">:</span> <span class="s2">&quot;str | Sequence[str] | None&quot;</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Operator</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return the operator that averages the labels of `space` by group.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    space : Space</span>
+<span class="sd">        The labels to average: the observations&#39; or the state&#39;s.</span>
+<span class="sd">    by : key or list of keys</span>
+<span class="sd">        The groups, as :func:`sum` takes them.</span>
+<span class="sd">    blocks : str or list of str, optional</span>
+<span class="sd">        The blocks to average, each on its own; every block by default. A</span>
+<span class="sd">        block not named is passed through, one row for each of its labels.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    Operator</span>
+<span class="sd">        :math:`W`, sparse, with one row per group (``1/n`` for each of its</span>
+<span class="sd">        ``n`` labels) and `space` as its columns, its rows labeled as</span>
+<span class="sd">        :func:`sum` labels them. :math:`W S W^T` divides the variance of</span>
+<span class="sd">        independent errors by ``n``.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    TypeError</span>
+<span class="sd">        If `space` is not a Space, or a key is of another kind.</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        As :func:`sum`.</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    sum : The operator that sums by group.</span>
+<span class="sd">    fips.Problem.aggregate : The problem of aggregated observations.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    Hourly observations at two sites, to daily means at each:</span>
+
+<span class="sd">    &gt;&gt;&gt; import numpy as np</span>
+<span class="sd">    &gt;&gt;&gt; import pandas as pd</span>
+<span class="sd">    &gt;&gt;&gt; import fips</span>
+<span class="sd">    &gt;&gt;&gt; labels = pd.MultiIndex.from_product(</span>
+<span class="sd">    ...     [[&quot;A&quot;, &quot;B&quot;], pd.date_range(&quot;2020-01-01&quot;, periods=4, freq=&quot;12h&quot;)],</span>
+<span class="sd">    ...     names=[&quot;site&quot;, &quot;obs_time&quot;],</span>
+<span class="sd">    ... )</span>
+<span class="sd">    &gt;&gt;&gt; obs = fips.Vector.from_series(</span>
+<span class="sd">    ...     pd.Series(np.arange(8.0), index=labels), block=&quot;co2&quot;</span>
+<span class="sd">    ... )</span>
+<span class="sd">    &gt;&gt;&gt; W = fips.aggregate.mean(</span>
+<span class="sd">    ...     obs.space, by=[&quot;site&quot;, pd.Grouper(level=&quot;obs_time&quot;, freq=&quot;1D&quot;)]</span>
+<span class="sd">    ... )</span>
+<span class="sd">    &gt;&gt;&gt; W.rows.select(&quot;co2&quot;)</span>
+<span class="sd">    MultiIndex([(&#39;A&#39;, &#39;2020-01-01&#39;),</span>
+<span class="sd">                (&#39;A&#39;, &#39;2020-01-02&#39;),</span>
+<span class="sd">                (&#39;B&#39;, &#39;2020-01-01&#39;),</span>
+<span class="sd">                (&#39;B&#39;, &#39;2020-01-02&#39;)],</span>
+<span class="sd">               names=[&#39;site&#39;, &#39;obs_time&#39;])</span>
+<span class="sd">    &gt;&gt;&gt; (W @ obs).values</span>
+<span class="sd">    array([0.5, 2.5, 4.5, 6.5])</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">_aggregation</span><span class="p">(</span><span class="n">space</span><span class="p">,</span> <span class="n">by</span><span class="p">,</span> <span class="n">blocks</span><span class="p">,</span> <span class="n">average</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="offset_block">
+<a class="viewcode-back" href="../../reference/api/fips.offset_block.html#fips.aggregate.offset_block">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">offset_block</span><span class="p">(</span>
+    <span class="n">obs_space</span><span class="p">:</span> <span class="n">Space</span><span class="p">,</span>
+    <span class="n">by</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+    <span class="n">block</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;offset&quot;</span><span class="p">,</span>
+    <span class="n">blocks</span><span class="p">:</span> <span class="s2">&quot;str | Sequence[str] | None&quot;</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Vector</span><span class="p">,</span> <span class="n">Operator</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return a block of offsets for the state: one per group of observations, and the map to them.</span>
+
+<span class="sd">    An offset is an unknown that adds to each observation of its group (the</span>
+<span class="sd">    background at a site in a month, a calibration bias of a network): it is</span>
+<span class="sd">    solved for with the state, as a block of its own, instead of being fixed</span>
+<span class="sd">    (the problem&#39;s ``offset``) or left in the model-data mismatch. Its prior</span>
+<span class="sd">    and its covariance are the caller&#39;s: the offsets&#39; labels are the groups,</span>
+<span class="sd">    so a covariance model on their levels correlates them (an</span>
+<span class="sd">    ``Exponential(&quot;obs_time&quot;, &quot;30D&quot;)`` between the months of one site).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    obs_space : Space</span>
+<span class="sd">        The observations.</span>
+<span class="sd">    by : key or list of keys</span>
+<span class="sd">        The groups, as :func:`sum` takes them: one offset for each group of</span>
+<span class="sd">        observations that has any (``[bins, &quot;site&quot;]`` for one per interval and</span>
+<span class="sd">        site, with ``bins`` an IntervalIndex named after the time level).</span>
+<span class="sd">    block : str, default &quot;offset&quot;</span>
+<span class="sd">        The name of the offsets&#39; block in the state.</span>
+<span class="sd">    blocks : str or list of str, optional</span>
+<span class="sd">        The blocks of observations the offsets apply to, every block by</span>
+<span class="sd">        default; their observations share an offset when their groups have</span>
+<span class="sd">        the same labels. Observations of another block get none. For separate</span>
+<span class="sd">        offsets per block, call this once per block with another `block`</span>
+<span class="sd">        name.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    prior : Vector</span>
+<span class="sd">        Zeros on the offsets&#39; space: one block, `block`, labeled by the</span>
+<span class="sd">        groups (sorted) on the levels the keys name.</span>
+<span class="sd">    forward : Operator</span>
+<span class="sd">        The forward block, from the offsets (its columns) to `obs_space` (its</span>
+<span class="sd">        rows): 1 where an observation has that offset, 0 elsewhere. Sparse.</span>
+<span class="sd">        It is the transpose of :func:`sum`&#39;s operator on the same groups.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    TypeError</span>
+<span class="sd">        If `obs_space` is not a Space, or a key is of another kind.</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        As :func:`sum`.</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    sum : The aggregation on the same groups.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    One offset per site and month, for hourly observations at two sites:</span>
+
+<span class="sd">    &gt;&gt;&gt; import numpy as np</span>
+<span class="sd">    &gt;&gt;&gt; import pandas as pd</span>
+<span class="sd">    &gt;&gt;&gt; import fips</span>
+<span class="sd">    &gt;&gt;&gt; labels = pd.MultiIndex.from_product(</span>
+<span class="sd">    ...     [[&quot;A&quot;, &quot;B&quot;], pd.to_datetime([&quot;2020-01-10&quot;, &quot;2020-01-20&quot;, &quot;2020-02-05&quot;])],</span>
+<span class="sd">    ...     names=[&quot;site&quot;, &quot;obs_time&quot;],</span>
+<span class="sd">    ... )</span>
+<span class="sd">    &gt;&gt;&gt; obs = fips.Vector.from_series(pd.Series(400.0, index=labels), block=&quot;co2&quot;)</span>
+<span class="sd">    &gt;&gt;&gt; months = pd.interval_range(</span>
+<span class="sd">    ...     pd.Timestamp(&quot;2020-01-01&quot;),</span>
+<span class="sd">    ...     periods=2,</span>
+<span class="sd">    ...     freq=&quot;MS&quot;,</span>
+<span class="sd">    ...     closed=&quot;left&quot;,</span>
+<span class="sd">    ...     name=&quot;obs_time&quot;,</span>
+<span class="sd">    ... )</span>
+<span class="sd">    &gt;&gt;&gt; prior, forward = fips.offset_block(obs.space, by=[months, &quot;site&quot;])</span>
+<span class="sd">    &gt;&gt;&gt; prior.space</span>
+<span class="sd">    Space(offset: 4 x [&#39;obs_time&#39;, &#39;site&#39;])</span>
+<span class="sd">    &gt;&gt;&gt; forward.dense()</span>
+<span class="sd">    array([[1., 0., 0., 0.],</span>
+<span class="sd">           [1., 0., 0., 0.],</span>
+<span class="sd">           [0., 0., 1., 0.],</span>
+<span class="sd">           [0., 1., 0., 0.],</span>
+<span class="sd">           [0., 1., 0., 0.],</span>
+<span class="sd">           [0., 0., 0., 1.]])</span>
+
+<span class="sd">    The offsets go in the state beside the fluxes, with a prior covariance of</span>
+<span class="sd">    their own:</span>
+
+<span class="sd">    .. code-block:: python</span>
+
+<span class="sd">        prior = fips.Vector.from_blocks({&quot;flux&quot;: flux_prior, &quot;offset&quot;: prior})</span>
+<span class="sd">        H = fips.Operator.from_blocks(</span>
+<span class="sd">            {(&quot;co2&quot;, &quot;flux&quot;): H_flux, (&quot;co2&quot;, &quot;offset&quot;): forward[&quot;co2&quot;, &quot;offset&quot;]}</span>
+<span class="sd">        )</span>
+<span class="sd">        prior_cov = fips.Covariance.block_diag(</span>
+<span class="sd">            flux=flux_cov, offset=fips.Independent().with_std(0.5)</span>
+<span class="sd">        )</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obs_space</span><span class="p">,</span> <span class="n">Space</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;obs_space must be a Space, got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">obs_space</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+    <span class="n">chosen</span> <span class="o">=</span> <span class="n">_chosen</span><span class="p">(</span><span class="n">obs_space</span><span class="p">,</span> <span class="n">blocks</span><span class="p">)</span>
+    <span class="n">codes</span><span class="p">,</span> <span class="n">groups</span> <span class="o">=</span> <span class="n">_groups</span><span class="p">([(</span><span class="n">name</span><span class="p">,</span> <span class="n">obs_space</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">name</span><span class="p">))</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">chosen</span><span class="p">],</span> <span class="n">by</span><span class="p">)</span>
+    <span class="n">rows</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span>
+        <span class="p">[</span>
+            <span class="n">obs_space</span><span class="o">.</span><span class="n">slice</span><span class="p">(</span><span class="n">name</span><span class="p">)</span><span class="o">.</span><span class="n">start</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">obs_space</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">name</span><span class="p">)))</span>
+            <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">chosen</span>
+        <span class="p">]</span>
+    <span class="p">)</span>
+    <span class="n">offsets</span> <span class="o">=</span> <span class="n">Space</span><span class="p">({</span><span class="n">block</span><span class="p">:</span> <span class="n">groups</span><span class="p">})</span>
+    <span class="n">matrix</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">csr_array</span><span class="p">(</span>
+        <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">rows</span><span class="p">)),</span> <span class="p">(</span><span class="n">rows</span><span class="p">,</span> <span class="n">codes</span><span class="p">)),</span> <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">obs_space</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">groups</span><span class="p">))</span>
+    <span class="p">)</span>
+    <span class="n">prior</span> <span class="o">=</span> <span class="n">Vector</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">groups</span><span class="p">)),</span> <span class="n">offsets</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">prior</span><span class="p">,</span> <span class="n">Operator</span><span class="p">(</span><span class="n">_adopt</span><span class="p">(</span><span class="n">matrix</span><span class="p">),</span> <span class="n">obs_space</span><span class="p">,</span> <span class="n">offsets</span><span class="p">)</span></div>
+
+</pre></div>
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0"></script>
+<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2025-2026, James Mineau.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.1.0.
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.22.0.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

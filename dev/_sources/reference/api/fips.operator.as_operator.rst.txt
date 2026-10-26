@@ -1,6 +1,0 @@
-﻿fips.operator.as\_operator
-==========================
-
-.. currentmodule:: fips.operator
-
-.. autofunction:: as_operator

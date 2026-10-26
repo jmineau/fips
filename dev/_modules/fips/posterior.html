@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>fips.posterior &#8212; fips 0.1.0b10.dev58+g53ab9aafc documentation</title>
+    <title>fips.posterior &#8212; fips 0.1.0b10.dev129+gae95fcfbc documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0" />
 
-    <script src="../../_static/documentation_options.js?v=54c30dc7"></script>
+    <script src="../../_static/documentation_options.js?v=9a57f19f"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -130,8 +130,8 @@
       
     
     
-    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.1.0b10.dev58+g53ab9aafc documentation - Home"/>
-    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.1.0b10.dev58+g53ab9aafc documentation - Home"/>
+    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.1.0b10.dev129+gae95fcfbc documentation - Home"/>
+    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.1.0b10.dev129+gae95fcfbc documentation - Home"/>
   
   
 </a></div>
@@ -169,7 +169,7 @@
 
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="../../terminology.html">
-    Terminology & Notation
+    Terminology
   </a>
 </li>
 
@@ -180,13 +180,30 @@
   </a>
 </li>
 
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false"
+                aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../migration.html">
+    Moving from fips 0.1
+  </a>
+</li>
 
-<li class="nav-item ">
-  <a class="nav-link nav-internal" href="../../reference/index.html">
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../../reference/index.html">
     API Reference
   </a>
 </li>
 
+                </ul>
+            </li>
+            
   </ul>
 </nav></div>
       
@@ -323,7 +340,7 @@
 
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="../../terminology.html">
-    Terminology & Notation
+    Terminology
   </a>
 </li>
 
@@ -331,6 +348,13 @@
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="../../examples/index.html">
     Examples
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../migration.html">
+    Moving from fips 0.1
   </a>
 </li>
 
@@ -461,71 +485,249 @@
                 <article class="bd-article">
                   
   <h1>Source code for fips.posterior</h1><div class="highlight"><pre>
-<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span></span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">The posterior of a solved inverse problem.</span>
 
-<span class="sd">:func:`fips.solve` fits an estimator and returns a :class:`~fips.Posterior`, which</span>
-<span class="sd">puts the problem&#39;s labels on what the estimator computed: the state index on</span>
-<span class="sd">the state axes, the observation index on the observation axes.</span>
+<span class="sd">:func:`fips.solve` returns a :class:`Posterior`: the problem, the options of</span>
+<span class="sd">the method, and what the method kept from its solve (a :class:`Solution`).</span>
+<span class="sd">The posterior labels the answer; the method keeps its own machinery. It asks</span>
+<span class="sd">the solution for unlabeled arrays (the estimate, the variances, the</span>
+<span class="sd">covariance of aggregates, the gain, DOFS, chi-squared), puts the problem&#39;s</span>
+<span class="sd">labels on them and keeps each one once computed. Everything else it gives is</span>
+<span class="sd">written from those and the problem, so it holds for every method. The</span>
+<span class="sd">analytic method&#39;s solution is the factorization of its whitened system, or of</span>
+<span class="sd">its information system when that is smaller (:mod:`fips.methods.analytic`).</span>
+
+<span class="sd">The :class:`~fips.Problem` is the question and the posterior the answer: the</span>
+<span class="sd">posterior holds what depends on the solve or on the ``m x m`` matrix it</span>
+<span class="sd">factors; what needs neither (:meth:`Problem.predict &lt;fips.Problem.predict&gt;`)</span>
+<span class="sd">is on the problem.</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
+<span class="kn">import</span><span class="w"> </span><span class="nn">dataclasses</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">functools</span><span class="w"> </span><span class="kn">import</span> <span class="n">cached_property</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">ClassVar</span><span class="p">,</span> <span class="n">Protocol</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">scipy.sparse</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">sp</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">numpy.linalg</span><span class="w"> </span><span class="kn">import</span> <span class="n">LinAlgError</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">scipy.linalg</span><span class="w"> </span><span class="kn">import</span> <span class="n">inv</span><span class="p">,</span> <span class="n">solve</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">fips.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">Pickleable</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">fips.covariance</span><span class="w"> </span><span class="kn">import</span> <span class="n">CovarianceMatrix</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">fips.estimators</span><span class="w"> </span><span class="kn">import</span> <span class="n">Estimator</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">fips.matrix</span><span class="w"> </span><span class="kn">import</span> <span class="n">Matrix</span><span class="p">,</span> <span class="n">MatrixLike</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fips.covariance</span><span class="w"> </span><span class="kn">import</span> <span class="n">Covariance</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fips.linalg</span><span class="w"> </span><span class="kn">import</span> <span class="n">LinearOperator</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fips.linalg.forms</span><span class="w"> </span><span class="kn">import</span> <span class="n">_adopt</span><span class="p">,</span> <span class="n">_solve_psd</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fips.operator</span><span class="w"> </span><span class="kn">import</span> <span class="n">Operator</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fips.problem</span><span class="w"> </span><span class="kn">import</span> <span class="n">Problem</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">fips.vector</span><span class="w"> </span><span class="kn">import</span> <span class="n">Vector</span>
 
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
 
+<div class="viewcode-block" id="Solution">
+<a class="viewcode-back" href="../../reference/api/fips.posterior.Solution.html#fips.Solution">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">Solution</span><span class="p">(</span><span class="n">Protocol</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    What a :class:`Posterior` asks of the object a method keeps from its solve.</span>
+
+<span class="sd">    A method solves a :class:`~fips.Problem` and keeps whatever it needs to</span>
+<span class="sd">    answer these questions (the analytic method keeps a factorization of</span>
+<span class="sd">    its system; a sampling method would keep its samples). Each answer is an unlabeled NumPy array (or a float), in the order of the</span>
+<span class="sd">    problem&#39;s spaces: ``n`` the state elements (``problem.prior``), ``m`` the</span>
+<span class="sd">    observations (``problem.obs``). The posterior labels them, and computes</span>
+<span class="sd">    each one once.</span>
+
+<span class="sd">    Two members are optional, and a posterior whose solution lacks one says</span>
+<span class="sd">    so when it is asked for the feature:</span>
+
+<span class="sd">    - ``with_gamma(gamma) -&gt; Solution``: the solution at another</span>
+<span class="sd">      regularization factor, without solving again (:meth:`Posterior.with_gamma`).</span>
+<span class="sd">    - ``with_data(problem) -&gt; Solution``: the solution of `problem`, the same</span>
+<span class="sd">      problem with other values of the observations, without solving again</span>
+<span class="sd">      (:meth:`Posterior.with_data`).</span>
+
+<span class="sd">    And a solution whose :meth:`estimate` is the posterior mean says so with a</span>
+<span class="sd">    class attribute ``estimate_is_mean = True``; without it, a posterior has</span>
+<span class="sd">    no :attr:`~Posterior.mean`.</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    Posterior : The labeled answer built on it.</span>
+<span class="sd">    fips.methods : How a method is added.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="Solution.estimate">
+<a class="viewcode-back" href="../../reference/api/fips.posterior.Solution.estimate.html#fips.Solution.estimate">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">estimate</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Return the point estimate of the state, :math:`\hat{x}` (``n``).&quot;&quot;&quot;</span>
+        <span class="o">...</span></div>
+
+
+<div class="viewcode-block" id="Solution.variances">
+<a class="viewcode-back" href="../../reference/api/fips.posterior.Solution.variances.html#fips.Solution.variances">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">variances</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Return the posterior error variances, the diagonal of :math:`\hat{S}` (``n``).&quot;&quot;&quot;</span>
+        <span class="o">...</span></div>
+
+
+<div class="viewcode-block" id="Solution.cov">
+<a class="viewcode-back" href="../../reference/api/fips.posterior.Solution.cov.html#fips.Solution.cov">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">cov</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">W</span><span class="p">:</span> <span class="n">LinearOperator</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the posterior error covariance of the state, or of aggregates of it.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        W : LinearOperator, optional</span>
+<span class="sd">            An aggregation, ``k x n``, its columns in the state&#39;s order.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        np.ndarray</span>
+<span class="sd">            Without `W`, :math:`\hat{S}` (``n x n``); with it,</span>
+<span class="sd">            :math:`W \hat{S} W^T` (``k x k``). The posterior writes into</span>
+<span class="sd">            neither, and keeps the first.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="o">...</span></div>
+
+
+<div class="viewcode-block" id="Solution.gain">
+<a class="viewcode-back" href="../../reference/api/fips.posterior.Solution.gain.html#fips.Solution.gain">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">gain</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">W</span><span class="p">:</span> <span class="n">LinearOperator</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the gain :math:`K`, or :math:`W K` for an aggregation.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        W : LinearOperator, optional</span>
+<span class="sd">            An aggregation, ``k x n``, its columns in the state&#39;s order.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        np.ndarray</span>
+<span class="sd">            Without `W`, :math:`K` (``n x m``), with</span>
+<span class="sd">            :math:`\hat{x} = x_0 + K (z - H x_0 - c)` for a linear method;</span>
+<span class="sd">            with it, :math:`W K` (``k x m``). The averaging kernel is</span>
+<span class="sd">            written from it: :math:`A = K H`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="o">...</span></div>
+
+
+<div class="viewcode-block" id="Solution.dofs">
+<a class="viewcode-back" href="../../reference/api/fips.posterior.Solution.dofs.html#fips.Solution.dofs">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">dofs</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Return the degrees of freedom for signal, :math:`\operatorname{tr}(K H)`.&quot;&quot;&quot;</span>
+        <span class="o">...</span></div>
+
+
+<div class="viewcode-block" id="Solution.chi2">
+<a class="viewcode-back" href="../../reference/api/fips.posterior.Solution.chi2.html#fips.Solution.chi2">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">chi2</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Return the chi-squared of the solution: the sum of the data and the state misfits.&quot;&quot;&quot;</span>
+        <span class="o">...</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="Options">
+<a class="viewcode-back" href="../../reference/api/fips.posterior.Options.html#fips.Options">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">Options</span><span class="p">(</span><span class="n">Protocol</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    What a :class:`Posterior` reads from the options of a method.</span>
+
+<span class="sd">    A method&#39;s options are a frozen dataclass of its own</span>
+<span class="sd">    (:class:`~fips.methods.analytic.AnalyticOptions`); the posterior keeps them</span>
+<span class="sd">    as :attr:`Posterior.options`, reads only the regularization factor, and</span>
+<span class="sd">    makes another gamma&#39;s with :func:`dataclasses.replace`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">__dataclass_fields__</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">dataclasses</span><span class="o">.</span><span class="n">Field</span><span class="p">[</span><span class="n">Any</span><span class="p">]]]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">gamma</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;The regularization factor :math:`\gamma`: the solve divided the model-data mismatch by it.&quot;&quot;&quot;</span>
+        <span class="o">...</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_times_pseudo_inverse</span><span class="p">(</span><span class="n">XWt</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">W</span><span class="p">:</span> <span class="n">LinearOperator</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return ``X W*`` given ``X W^T``, where ``W* = W^T (W W^T)^-1`` is the pseudo-inverse of `W`.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        If the rows of `W` are linearly dependent, so ``W W^T`` is singular.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">G</span> <span class="o">=</span> <span class="p">(</span><span class="n">W</span> <span class="o">@</span> <span class="n">W</span><span class="o">.</span><span class="n">T</span><span class="p">)</span><span class="o">.</span><span class="n">dense</span><span class="p">()</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="c1"># X W^T (W W^T)^-1 is the transpose of (W W^T)^-1 (X W^T)^T</span>
+        <span class="k">return</span> <span class="n">solve</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">XWt</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">assume_a</span><span class="o">=</span><span class="s2">&quot;pos&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
+    <span class="k">except</span> <span class="n">LinAlgError</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">&quot;The rows of the aggregation are linearly dependent, so it has no &quot;</span>
+            <span class="s2">&quot;pseudo-inverse.&quot;</span>
+        <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">err</span>
+
+
 <div class="viewcode-block" id="Posterior">
 <a class="viewcode-back" href="../../reference/api/fips.Posterior.html#fips.Posterior">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">Posterior</span><span class="p">(</span><span class="n">Pickleable</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Posterior</span><span class="p">:</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    The solution of an inverse problem, labeled.</span>
 
-<span class="sd">    :func:`fips.solve` builds it; there is no need to build one by hand. Each</span>
-<span class="sd">    output is computed when first asked for, then kept, so asking again</span>
-<span class="sd">    returns the same object. The outputs are shared: change one in place and</span>
-<span class="sd">    the next access shows the change.</span>
+<span class="sd">    :func:`fips.solve` builds it; there is no need to build one by hand. It</span>
+<span class="sd">    keeps what the method kept from the solve (its :class:`Solution`), and</span>
+<span class="sd">    each output is computed from it when first asked for, labeled with the</span>
+<span class="sd">    problem&#39;s spaces, then kept. For the ``&quot;analytic&quot;`` method the posterior</span>
+<span class="sd">    is Gaussian: :attr:`estimate` is its mean (so :attr:`mean` is the same</span>
+<span class="sd">    object), and the posterior covariance is</span>
+<span class="sd">    :math:`\hat{S} = (H^T S_z^{-1} H + S_0^{-1})^{-1}`, with :math:`S_z`</span>
+<span class="sd">    divided by the regularization factor :math:`\gamma`. It holds what depends</span>
+<span class="sd">    on the solve or on the ``m x m`` matrix the solve factors</span>
+<span class="sd">    (:attr:`innovation_cov`); what needs neither is on the</span>
+<span class="sd">    :class:`~fips.Problem` (:meth:`~fips.Problem.predict`).</span>
+
+<span class="sd">    Every member works for every method, except three that need more of the</span>
+<span class="sd">    method than a :class:`Solution` gives: :attr:`mean` (where the estimate is</span>
+<span class="sd">    the mean), :meth:`with_gamma` and :meth:`with_data` (where the method can</span>
+<span class="sd">    answer without solving again). The analytic method has all three.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    estimator : Estimator</span>
-<span class="sd">        The fitted estimator.</span>
-<span class="sd">    state_index : pd.Index</span>
-<span class="sd">        The problem&#39;s state index, which labels every state axis.</span>
-<span class="sd">    obs_index : pd.Index</span>
-<span class="sd">        The problem&#39;s observation index, which labels every observation axis.</span>
+<span class="sd">    problem : Problem</span>
+<span class="sd">        The problem that was solved.</span>
+<span class="sd">    solution : Solution</span>
+<span class="sd">        What the method kept from the solve, which gives the unlabeled</span>
+<span class="sd">        arrays (for the analytic method, a factorization:</span>
+<span class="sd">        ``fips.methods.analytic.Whitened`` or ``Information``).</span>
+<span class="sd">    options : Options</span>
+<span class="sd">        The options of the method, such as</span>
+<span class="sd">        :class:`fips.methods.analytic.AnalyticOptions`.</span>
 
 <span class="sd">    See Also</span>
 <span class="sd">    --------</span>
 <span class="sd">    fips.solve : Solve a problem and return its posterior.</span>
-<span class="sd">    fips.InverseProblem.solve : Solve a problem in place.</span>
 
 <span class="sd">    Examples</span>
 <span class="sd">    --------</span>
 <span class="sd">    &gt;&gt;&gt; import numpy as np</span>
 <span class="sd">    &gt;&gt;&gt; import pandas as pd</span>
 <span class="sd">    &gt;&gt;&gt; import fips</span>
-<span class="sd">    &gt;&gt;&gt; state = pd.Index([&quot;a&quot;, &quot;b&quot;], name=&quot;cell&quot;)</span>
-<span class="sd">    &gt;&gt;&gt; obs = pd.Index([&quot;o1&quot;, &quot;o2&quot;, &quot;o3&quot;], name=&quot;obs_id&quot;)</span>
-<span class="sd">    &gt;&gt;&gt; problem = fips.InverseProblem(</span>
-<span class="sd">    ...     obs=pd.Series([1.0, 2.0, 3.0], index=obs, name=&quot;obs&quot;),</span>
-<span class="sd">    ...     prior=pd.Series([0.0, 0.0], index=state, name=&quot;prior&quot;),</span>
-<span class="sd">    ...     forward_operator=pd.DataFrame(</span>
-<span class="sd">    ...         [[1.0, 0.0], [0.0, 1.0], [1.0, 1.0]], index=obs, columns=state</span>
+<span class="sd">    &gt;&gt;&gt; cells = pd.Index([&quot;a&quot;, &quot;b&quot;], name=&quot;cell&quot;)</span>
+<span class="sd">    &gt;&gt;&gt; obs_id = pd.Index([&quot;o1&quot;, &quot;o2&quot;, &quot;o3&quot;], name=&quot;obs_id&quot;)</span>
+<span class="sd">    &gt;&gt;&gt; prior = fips.Vector.from_series(pd.Series(0.0, index=cells), block=&quot;flux&quot;)</span>
+<span class="sd">    &gt;&gt;&gt; obs = fips.Vector.from_series(</span>
+<span class="sd">    ...     pd.Series([1.0, 2.0, 3.0], index=obs_id), block=&quot;co2&quot;</span>
+<span class="sd">    ... )</span>
+<span class="sd">    &gt;&gt;&gt; problem = fips.Problem(</span>
+<span class="sd">    ...     prior=prior,</span>
+<span class="sd">    ...     prior_cov=fips.Independent().with_std(1.0),</span>
+<span class="sd">    ...     obs=obs,</span>
+<span class="sd">    ...     obs_cov=fips.Independent().with_std(np.sqrt(0.1)),</span>
+<span class="sd">    ...     forward=fips.Operator(</span>
+<span class="sd">    ...         np.array([[1.0, 0.0], [0.0, 1.0], [1.0, 1.0]]), obs.space, prior.space</span>
 <span class="sd">    ...     ),</span>
-<span class="sd">    ...     prior_error=1.0,</span>
-<span class="sd">    ...     modeldata_mismatch=0.1,</span>
 <span class="sd">    ... )</span>
 <span class="sd">    &gt;&gt;&gt; post = fips.solve(problem)</span>
 <span class="sd">    &gt;&gt;&gt; post.estimate.values.round(3)</span>
@@ -534,111 +736,106 @@
 <span class="sd">    1.877</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="n">estimator</span><span class="p">:</span> <span class="n">Estimator</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;The fitted estimator, which holds the unlabeled arrays.&quot;&quot;&quot;</span>
-    <span class="n">state_index</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Index</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;The state index, which labels every state axis.&quot;&quot;&quot;</span>
-    <span class="n">obs_index</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Index</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;The observation index, which labels every observation axis.&quot;&quot;&quot;</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">problem</span><span class="p">:</span> <span class="n">Problem</span><span class="p">,</span> <span class="n">solution</span><span class="p">:</span> <span class="n">Solution</span><span class="p">,</span> <span class="n">options</span><span class="p">:</span> <span class="n">Options</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_problem</span> <span class="o">=</span> <span class="n">problem</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_solution</span> <span class="o">=</span> <span class="n">solution</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_options</span> <span class="o">=</span> <span class="n">options</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">estimator</span><span class="p">:</span> <span class="n">Estimator</span><span class="p">,</span> <span class="n">state_index</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">,</span> <span class="n">obs_index</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Index</span>
-    <span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">estimator</span> <span class="o">=</span> <span class="n">estimator</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">state_index</span> <span class="o">=</span> <span class="n">state_index</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">obs_index</span> <span class="o">=</span> <span class="n">obs_index</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">problem</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Problem</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The problem that was solved.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_problem</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">__getstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the estimator and the two indexes; the labeled outputs are rebuilt.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="p">{</span>
-            <span class="s2">&quot;estimator&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">estimator</span><span class="p">,</span>
-            <span class="s2">&quot;state_index&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">state_index</span><span class="p">,</span>
-            <span class="s2">&quot;obs_index&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">obs_index</span><span class="p">,</span>
-        <span class="p">}</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">options</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Options</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The options the method solved with (``gamma``).&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_options</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">__setstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Restore the estimator and the two indexes.&quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">estimator</span> <span class="o">=</span> <span class="n">state</span><span class="p">[</span><span class="s2">&quot;estimator&quot;</span><span class="p">]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">state_index</span> <span class="o">=</span> <span class="n">state</span><span class="p">[</span><span class="s2">&quot;state_index&quot;</span><span class="p">]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">obs_index</span> <span class="o">=</span> <span class="n">state</span><span class="p">[</span><span class="s2">&quot;obs_index&quot;</span><span class="p">]</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_gamma</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The regularization factor.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_options</span><span class="o">.</span><span class="n">gamma</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return string representation.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the options and the sizes.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">(&quot;</span>
-            <span class="sa">f</span><span class="s2">&quot;estimator=</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">estimator</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">, &quot;</span>
-            <span class="sa">f</span><span class="s2">&quot;n_state=</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">state_index</span><span class="p">)</span><span class="si">}</span><span class="s2">, n_obs=</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">obs_index</span><span class="p">)</span><span class="si">}</span><span class="s2">)&quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;Posterior(</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_options</span><span class="si">!r}</span><span class="s2">, n_state=</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_problem</span><span class="o">.</span><span class="n">prior</span><span class="p">)</span><span class="si">}</span><span class="s2">, &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;n_obs=</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_problem</span><span class="o">.</span><span class="n">obs</span><span class="p">)</span><span class="si">}</span><span class="s2">)&quot;</span>
         <span class="p">)</span>
 
-    <span class="c1"># The names given to the outputs below are the names they had as</span>
-    <span class="c1"># properties of InverseProblem, so ``problem.posterior`` and</span>
-    <span class="c1"># ``post.estimate`` are one object with one name.</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">__getstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the problem, the options and the solution; the outputs are rebuilt.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;problem&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_problem</span><span class="p">,</span>
+            <span class="s2">&quot;options&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_options</span><span class="p">,</span>
+            <span class="s2">&quot;solution&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_solution</span><span class="p">,</span>
+        <span class="p">}</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_state_vector</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">values</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Vector</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Label ``values`` with the state index.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">Vector</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">state_index</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">__setstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Restore from :meth:`__getstate__`.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_problem</span> <span class="o">=</span> <span class="n">state</span><span class="p">[</span><span class="s2">&quot;problem&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_options</span> <span class="o">=</span> <span class="n">state</span><span class="p">[</span><span class="s2">&quot;options&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_solution</span> <span class="o">=</span> <span class="n">state</span><span class="p">[</span><span class="s2">&quot;solution&quot;</span><span class="p">]</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_obs_vector</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">values</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Vector</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Label ``values`` with the observation index.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">Vector</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">obs_index</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_optional</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">feature</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the solution&#39;s optional member `name`.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        TypeError</span>
+<span class="sd">            If the solution does not have it: the method cannot give `feature`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">member</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_solution</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">member</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;The method that solved this problem cannot give </span><span class="si">{</span><span class="n">feature</span><span class="si">}</span><span class="s2"> &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;(</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_solution</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2"> has no </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">); solve the &quot;</span>
+                <span class="s2">&quot;problem again with fips.solve.&quot;</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="n">member</span>
+
+    <span class="c1"># -- the state -----------------------------------------------------------</span>
 
 <div class="viewcode-block" id="Posterior.estimate">
 <a class="viewcode-back" href="../../reference/api/fips.Posterior.estimate.html#fips.Posterior.estimate">[docs]</a>
     <span class="nd">@cached_property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">estimate</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Vector</span><span class="p">:</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        The posterior state estimate, :math:`\hat{x}`, on the state index.</span>
+<span class="sd">        The posterior state estimate, :math:`\hat{x}`, on the prior&#39;s space.</span>
 
-<span class="sd">        The point estimate of the method. For the analytic Bayesian solve it</span>
-<span class="sd">        is the posterior mean, so it is also :attr:`mean`.</span>
+<span class="sd">        The point estimate of the method; for the analytic method the</span>
+<span class="sd">        posterior mean, :math:`\hat{x} = x_0 + K (z - H x_0 - c)`.</span>
 
 <span class="sd">        See Also</span>
 <span class="sd">        --------</span>
-<span class="sd">        mean : The posterior mean, where the method gives it.</span>
-<span class="sd">        covariance : The posterior error covariance.</span>
+<span class="sd">        mean : The posterior mean.</span>
+<span class="sd">        variances : The posterior error variances.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_state_vector</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">estimator</span><span class="o">.</span><span class="n">x_hat</span><span class="p">,</span> <span class="s2">&quot;posterior&quot;</span><span class="p">)</span></div>
+        <span class="n">values</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_solution</span><span class="o">.</span><span class="n">estimate</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">Vector</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_problem</span><span class="o">.</span><span class="n">prior</span><span class="o">.</span><span class="n">space</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;estimate&quot;</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="Posterior.mean">
-<a class="viewcode-back" href="../../reference/api/fips.Posterior.mean.html#fips.Posterior.mean">[docs]</a>
-    <span class="nd">@cached_property</span>
+    <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">mean</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Vector</span><span class="p">:</span>
-<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        The posterior mean, on the state index.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The posterior mean, :attr:`estimate` itself.</span>
 
-<span class="sd">        Every estimator in fips gives the posterior mean as its estimate</span>
-<span class="sd">        (:attr:`~fips.Estimator.x_hat`), so this is the same object as</span>
-<span class="sd">        :attr:`estimate`. A method whose estimate is not the mean, such as a</span>
-<span class="sd">        bounded one that gives the mode, will not have it.</span>
+<span class="sd">        The analytic method&#39;s posterior is Gaussian, so its estimate is its</span>
+<span class="sd">        mean. A posterior whose method gives another point estimate (a mode)</span>
+<span class="sd">        has no mean.</span>
 
-<span class="sd">        See Also</span>
-<span class="sd">        --------</span>
-<span class="sd">        estimate : The point estimate.</span>
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        AttributeError</span>
+<span class="sd">            If the method&#39;s estimate is not the posterior mean.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">estimate</span></div>
-
-
-<div class="viewcode-block" id="Posterior.covariance">
-<a class="viewcode-back" href="../../reference/api/fips.Posterior.covariance.html#fips.Posterior.covariance">[docs]</a>
-    <span class="nd">@cached_property</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">covariance</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CovarianceMatrix</span><span class="p">:</span>
-<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        The posterior error covariance, :math:`\hat{S}`, on the state index.</span>
-
-<span class="sd">        A dense n x n matrix.</span>
-
-<span class="sd">        See Also</span>
-<span class="sd">        --------</span>
-<span class="sd">        variances : Its diagonal.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">CovarianceMatrix</span><span class="p">(</span>
-            <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">estimator</span><span class="o">.</span><span class="n">S_hat</span><span class="p">),</span>
-            <span class="n">index</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">state_index</span><span class="p">,</span>
-            <span class="n">columns</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">state_index</span><span class="p">,</span>
-            <span class="n">name</span><span class="o">=</span><span class="s2">&quot;posterior_error&quot;</span><span class="p">,</span>
-        <span class="p">)</span></div>
-
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_solution</span><span class="p">,</span> <span class="s2">&quot;estimate_is_mean&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span>
+                <span class="s2">&quot;The method that solved this problem does not give the posterior &quot;</span>
+                <span class="s2">&quot;mean; its point estimate is `estimate`.&quot;</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">estimate</span>
 
 <div class="viewcode-block" id="Posterior.variances">
 <a class="viewcode-back" href="../../reference/api/fips.Posterior.variances.html#fips.Posterior.variances">[docs]</a>
@@ -647,74 +844,75 @@
 <span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        The posterior error variances, the diagonal of :math:`\hat{S}`.</span>
 
-<span class="sd">        The estimator&#39;s :attr:`~fips.Estimator.S_hat_diagonal`: for the</span>
-<span class="sd">        Bayesian solve, computed from its factorization without forming the</span>
-<span class="sd">        ``n x n`` :attr:`covariance`.</span>
+<span class="sd">        The analytic method computes them from its factors in</span>
+<span class="sd">        :math:`O(m n)`, without the :math:`n \times n` covariance.</span>
 
 <span class="sd">        See Also</span>
 <span class="sd">        --------</span>
-<span class="sd">        covariance : The full posterior error covariance.</span>
-<span class="sd">        cov : The covariance of aggregates of the state.</span>
+<span class="sd">        cov : The posterior error covariance, of the state or of aggregates.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_state_vector</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">estimator</span><span class="o">.</span><span class="n">S_hat_diagonal</span><span class="p">,</span> <span class="s2">&quot;posterior_variance&quot;</span><span class="p">)</span></div>
+        <span class="n">values</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_solution</span><span class="o">.</span><span class="n">variances</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">Vector</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_problem</span><span class="o">.</span><span class="n">prior</span><span class="o">.</span><span class="n">space</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;variance&quot;</span><span class="p">)</span></div>
 
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_aggregation</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">W</span><span class="p">:</span> <span class="n">MatrixLike</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">|</span> <span class="n">sp</span><span class="o">.</span><span class="n">csr_matrix</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_aggregation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">W</span><span class="p">:</span> <span class="n">Operator</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LinearOperator</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Return an aggregation&#39;s values with its columns in state order, and its row labels.</span>
+<span class="sd">        Return an aggregation&#39;s matrix with its columns in the state&#39;s order.</span>
 
 <span class="sd">        Raises</span>
 <span class="sd">        ------</span>
+<span class="sd">        TypeError</span>
+<span class="sd">            If `W` is not an Operator.</span>
 <span class="sd">        ValueError</span>
-<span class="sd">            If the columns are not exactly the state index (a label missing,</span>
-<span class="sd">            extra or repeated).</span>
+<span class="sd">            If its columns do not have exactly the state&#39;s labels.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">W</span> <span class="o">=</span> <span class="n">W</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">W</span><span class="p">,</span> <span class="n">Matrix</span><span class="p">)</span> <span class="k">else</span> <span class="n">Matrix</span><span class="p">(</span><span class="n">W</span><span class="p">)</span>
-        <span class="n">cols</span> <span class="o">=</span> <span class="n">W</span><span class="o">.</span><span class="n">columns</span>
-        <span class="k">if</span> <span class="n">cols</span><span class="o">.</span><span class="n">has_duplicates</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;The aggregation&#39;s columns repeat a state label.&quot;</span><span class="p">)</span>
-        <span class="n">missing</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">state_index</span><span class="o">.</span><span class="n">difference</span><span class="p">(</span><span class="n">cols</span><span class="p">,</span> <span class="n">sort</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-        <span class="n">extra</span> <span class="o">=</span> <span class="n">cols</span><span class="o">.</span><span class="n">difference</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">state_index</span><span class="p">,</span> <span class="n">sort</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">missing</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">extra</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="s2">&quot;The aggregation&#39;s columns must be the state index. &quot;</span>
-                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">missing</span><span class="p">)</span><span class="si">}</span><span class="s2"> state labels are not among them &quot;</span>
-                <span class="sa">f</span><span class="s2">&quot;(first: </span><span class="si">{</span><span class="nb">list</span><span class="p">(</span><span class="n">missing</span><span class="p">[:</span><span class="mi">3</span><span class="p">])</span><span class="si">}</span><span class="s2">), and </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">extra</span><span class="p">)</span><span class="si">}</span><span class="s2"> of its labels &quot;</span>
-                <span class="sa">f</span><span class="s2">&quot;are not in the state (first: </span><span class="si">{</span><span class="nb">list</span><span class="p">(</span><span class="n">extra</span><span class="p">[:</span><span class="mi">3</span><span class="p">])</span><span class="si">}</span><span class="s2">).&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">W</span><span class="p">,</span> <span class="n">Operator</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;An aggregation is an Operator, not </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">W</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">: build one &quot;</span>
+                <span class="s2">&quot;with Operator.from_frame or Operator.from_blocks.&quot;</span>
             <span class="p">)</span>
-        <span class="n">values</span> <span class="o">=</span> <span class="n">W</span><span class="o">.</span><span class="n">values</span>
-        <span class="k">return</span> <span class="n">values</span><span class="p">[:,</span> <span class="n">cols</span><span class="o">.</span><span class="n">get_indexer</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">state_index</span><span class="p">)],</span> <span class="n">W</span><span class="o">.</span><span class="n">index</span>
+        <span class="k">return</span> <span class="n">W</span><span class="o">.</span><span class="n">_on</span><span class="p">(</span>
+            <span class="n">W</span><span class="o">.</span><span class="n">rows</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_problem</span><span class="o">.</span><span class="n">prior</span><span class="o">.</span><span class="n">space</span><span class="p">,</span>
+            <span class="s2">&quot;the aggregation&quot;</span><span class="p">,</span>
+            <span class="p">(</span><span class="s2">&quot;its rows&quot;</span><span class="p">,</span> <span class="s2">&quot;the state&quot;</span><span class="p">),</span>
+        <span class="p">)</span>
+
+    <span class="nd">@cached_property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_cov</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Covariance</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The full posterior covariance, formed once.&quot;&quot;&quot;</span>
+        <span class="n">S_hat</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_solution</span><span class="o">.</span><span class="n">cov</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">Covariance</span><span class="o">.</span><span class="n">_computed</span><span class="p">(</span>
+            <span class="n">_adopt</span><span class="p">(</span><span class="n">S_hat</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">_problem</span><span class="o">.</span><span class="n">prior</span><span class="o">.</span><span class="n">space</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;posterior_cov&quot;</span>
+        <span class="p">)</span>
 
 <div class="viewcode-block" id="Posterior.cov">
 <a class="viewcode-back" href="../../reference/api/fips.Posterior.cov.html#fips.Posterior.cov">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">cov</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">W</span><span class="p">:</span> <span class="s2">&quot;MatrixLike | None&quot;</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CovarianceMatrix</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">cov</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">W</span><span class="p">:</span> <span class="n">Operator</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Covariance</span><span class="p">:</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Return the posterior error covariance, of the state or of aggregates of it.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        W : Matrix or DataFrame, optional</span>
+<span class="sd">        W : Operator, optional</span>
 <span class="sd">            An aggregation, ``k x n``: one row per aggregate (a region, a</span>
-<span class="sd">            month, a total), one column per state element, with the state</span>
-<span class="sd">            index as its columns (in any order) and a ``block`` level on both</span>
-<span class="sd">            axes, as a :class:`~fips.Matrix` takes it. Row ``i`` holds the</span>
-<span class="sd">            weight of each state element in aggregate ``i``: ones for a sum,</span>
+<span class="sd">            month, a total), one column per state element, with the state&#39;s</span>
+<span class="sd">            labels as its columns (in any order). Row ``i`` holds the weight</span>
+<span class="sd">            of each state element in aggregate ``i``: ones for a sum,</span>
 <span class="sd">            ``1/count`` for a mean. It may be sparse.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        CovarianceMatrix</span>
-<span class="sd">            Without `W`, :attr:`covariance` (dense, ``n x n``). With `W`,</span>
-<span class="sd">            :math:`W \hat{S} W^T` on the aggregation&#39;s row labels, ``k x k``,</span>
-<span class="sd">            computed without the ``n x n`` covariance for the Bayesian solve.</span>
+<span class="sd">        Covariance</span>
+<span class="sd">            Without `W`, :math:`\hat{S}`, dense, ``n x n`` (formed once, the</span>
+<span class="sd">            same object each time). With `W`, :math:`W \hat{S} W^T` on the</span>
+<span class="sd">            aggregation&#39;s rows, ``k x k``, computed without the ``n x n``</span>
+<span class="sd">            covariance.</span>
 
 <span class="sd">        Raises</span>
 <span class="sd">        ------</span>
 <span class="sd">        ValueError</span>
-<span class="sd">            If the columns of `W` are not exactly the state index: a state label</span>
-<span class="sd">            missing, a label that is not in the state, or one repeated.</span>
+<span class="sd">            If the columns of `W` do not have exactly the state&#39;s labels.</span>
 
 <span class="sd">        See Also</span>
 <span class="sd">        --------</span>
@@ -726,147 +924,92 @@
 <span class="sd">        &gt;&gt;&gt; import numpy as np</span>
 <span class="sd">        &gt;&gt;&gt; import pandas as pd</span>
 <span class="sd">        &gt;&gt;&gt; import fips</span>
-<span class="sd">        &gt;&gt;&gt; state = pd.Index([&quot;a&quot;, &quot;b&quot;, &quot;c&quot;], name=&quot;cell&quot;)</span>
-<span class="sd">        &gt;&gt;&gt; obs = pd.Index([&quot;o1&quot;, &quot;o2&quot;], name=&quot;obs_id&quot;)</span>
-<span class="sd">        &gt;&gt;&gt; problem = fips.InverseProblem(</span>
-<span class="sd">        ...     obs=pd.Series([1.0, 2.0], index=obs, name=&quot;obs&quot;),</span>
-<span class="sd">        ...     prior=pd.Series(0.0, index=state, name=&quot;prior&quot;),</span>
-<span class="sd">        ...     forward_operator=pd.DataFrame(</span>
-<span class="sd">        ...         [[1.0, 1.0, 0.0], [0.0, 1.0, 1.0]], index=obs, columns=state</span>
+<span class="sd">        &gt;&gt;&gt; cells = pd.Index([&quot;a&quot;, &quot;b&quot;, &quot;c&quot;], name=&quot;cell&quot;)</span>
+<span class="sd">        &gt;&gt;&gt; prior = fips.Vector.from_series(pd.Series(0.0, index=cells), block=&quot;flux&quot;)</span>
+<span class="sd">        &gt;&gt;&gt; obs = fips.Vector.from_series(</span>
+<span class="sd">        ...     pd.Series([1.0, 2.0], index=pd.Index([&quot;o1&quot;, &quot;o2&quot;], name=&quot;obs_id&quot;)),</span>
+<span class="sd">        ...     block=&quot;co2&quot;,</span>
+<span class="sd">        ... )</span>
+<span class="sd">        &gt;&gt;&gt; problem = fips.Problem(</span>
+<span class="sd">        ...     prior=prior,</span>
+<span class="sd">        ...     prior_cov=fips.Independent().with_std(1.0),</span>
+<span class="sd">        ...     obs=obs,</span>
+<span class="sd">        ...     obs_cov=fips.Independent().with_std(np.sqrt(0.1)),</span>
+<span class="sd">        ...     forward=fips.Operator(</span>
+<span class="sd">        ...         np.array([[1.0, 1.0, 0.0], [0.0, 1.0, 1.0]]), obs.space, prior.space</span>
 <span class="sd">        ...     ),</span>
-<span class="sd">        ...     prior_error=1.0,</span>
-<span class="sd">        ...     modeldata_mismatch=0.1,</span>
 <span class="sd">        ... )</span>
 <span class="sd">        &gt;&gt;&gt; post = fips.solve(problem)</span>
-<span class="sd">        &gt;&gt;&gt; total = fips.MatrixBlock(</span>
-<span class="sd">        ...     pd.DataFrame(</span>
-<span class="sd">        ...         1.0, index=pd.Index([&quot;total&quot;], name=&quot;region&quot;), columns=state</span>
-<span class="sd">        ...     ),</span>
-<span class="sd">        ...     row_block=&quot;region&quot;,</span>
-<span class="sd">        ...     col_block=&quot;prior&quot;,</span>
+<span class="sd">        &gt;&gt;&gt; total = fips.Operator(</span>
+<span class="sd">        ...     np.ones((1, 3)),</span>
+<span class="sd">        ...     fips.Space({&quot;total&quot;: pd.Index([&quot;all&quot;], name=&quot;region&quot;)}),</span>
+<span class="sd">        ...     prior.space,</span>
 <span class="sd">        ... )</span>
-<span class="sd">        &gt;&gt;&gt; post.cov(total).values.round(3)</span>
-<span class="sd">        array([[0.722]])</span>
+<span class="sd">        &gt;&gt;&gt; post.cov(total).dense().round(3)</span>
+<span class="sd">        array([[0.419]])</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">W</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">covariance</span>
-        <span class="n">values</span><span class="p">,</span> <span class="n">index</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_aggregation</span><span class="p">(</span><span class="n">W</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">CovarianceMatrix</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">estimator</span><span class="o">.</span><span class="n">aggregate_S_hat</span><span class="p">(</span><span class="n">values</span><span class="p">),</span>
-            <span class="n">index</span><span class="o">=</span><span class="n">index</span><span class="p">,</span>
-            <span class="n">columns</span><span class="o">=</span><span class="n">index</span><span class="p">,</span>
-            <span class="n">name</span><span class="o">=</span><span class="s2">&quot;posterior_error&quot;</span><span class="p">,</span>
-        <span class="p">)</span></div>
-
-
-<div class="viewcode-block" id="Posterior.modeled_obs">
-<a class="viewcode-back" href="../../reference/api/fips.Posterior.modeled_obs.html#fips.Posterior.modeled_obs">[docs]</a>
-    <span class="nd">@cached_property</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">modeled_obs</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Vector</span><span class="p">:</span>
-<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        The observations the estimate models, :math:`H \hat{x} + c`.</span>
-
-<span class="sd">        See Also</span>
-<span class="sd">        --------</span>
-<span class="sd">        prior_modeled_obs : The observations the prior models.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_obs_vector</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">estimator</span><span class="o">.</span><span class="n">y_hat</span><span class="p">,</span> <span class="s2">&quot;modeled_obs&quot;</span><span class="p">)</span></div>
-
-
-<div class="viewcode-block" id="Posterior.prior_modeled_obs">
-<a class="viewcode-back" href="../../reference/api/fips.Posterior.prior_modeled_obs.html#fips.Posterior.prior_modeled_obs">[docs]</a>
-    <span class="nd">@cached_property</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">prior_modeled_obs</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Vector</span><span class="p">:</span>
-<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        The observations the prior models, :math:`H x_0 + c`.</span>
-
-<span class="sd">        See Also</span>
-<span class="sd">        --------</span>
-<span class="sd">        modeled_obs : The observations the estimate models.</span>
-<span class="sd">        prior_obs_covariance : Their covariance from the prior error.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_obs_vector</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">estimator</span><span class="o">.</span><span class="n">y_0</span><span class="p">,</span> <span class="s2">&quot;prior_obs&quot;</span><span class="p">)</span></div>
-
-
-<div class="viewcode-block" id="Posterior.prior_obs_covariance">
-<a class="viewcode-back" href="../../reference/api/fips.Posterior.prior_obs_covariance.html#fips.Posterior.prior_obs_covariance">[docs]</a>
-    <span class="nd">@cached_property</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">prior_obs_covariance</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CovarianceMatrix</span><span class="p">:</span>
-<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        The prior error in observation space, :math:`H S_0 H^T`.</span>
-
-<span class="sd">        The uncertainty of :attr:`prior_modeled_obs` that the prior error</span>
-<span class="sd">        implies, on the observation index. Its diagonal, square-rooted, is the</span>
-<span class="sd">        prior&#39;s share of each observation&#39;s error budget; add the model-data</span>
-<span class="sd">        mismatch in quadrature for the total the solve expects.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">CovarianceMatrix</span><span class="p">(</span>
-            <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">estimator</span><span class="o">.</span><span class="n">S_y0</span><span class="p">),</span>
-            <span class="n">index</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">obs_index</span><span class="p">,</span>
-            <span class="n">columns</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">obs_index</span><span class="p">,</span>
-            <span class="n">name</span><span class="o">=</span><span class="s2">&quot;prior_obs_error&quot;</span><span class="p">,</span>
-        <span class="p">)</span></div>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cov</span>
+        <span class="n">values</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_solution</span><span class="o">.</span><span class="n">cov</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_aggregation</span><span class="p">(</span><span class="n">W</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">Covariance</span><span class="o">.</span><span class="n">_computed</span><span class="p">(</span><span class="n">_adopt</span><span class="p">(</span><span class="n">values</span><span class="p">),</span> <span class="n">W</span><span class="o">.</span><span class="n">rows</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;posterior_cov&quot;</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="Posterior.kalman_gain">
 <a class="viewcode-back" href="../../reference/api/fips.Posterior.kalman_gain.html#fips.Posterior.kalman_gain">[docs]</a>
     <span class="nd">@cached_property</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">kalman_gain</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Matrix</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">kalman_gain</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Operator</span><span class="p">:</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        The gain :math:`K`, state by observations.</span>
+<span class="sd">        The gain :math:`K`, state by observations, dense.</span>
 
 <span class="sd">        :math:`\hat{x} = x_0 + K (z - H x_0 - c)`.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">Matrix</span><span class="p">(</span>
-            <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">estimator</span><span class="o">.</span><span class="n">K</span><span class="p">),</span>
-            <span class="n">index</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">state_index</span><span class="p">,</span>
-            <span class="n">columns</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">obs_index</span><span class="p">,</span>
+        <span class="k">return</span> <span class="n">Operator</span><span class="p">(</span>
+            <span class="n">_adopt</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_solution</span><span class="o">.</span><span class="n">gain</span><span class="p">()),</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_problem</span><span class="o">.</span><span class="n">prior</span><span class="o">.</span><span class="n">space</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_problem</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">space</span><span class="p">,</span>
             <span class="n">name</span><span class="o">=</span><span class="s2">&quot;kalman_gain&quot;</span><span class="p">,</span>
         <span class="p">)</span></div>
 
 
     <span class="nd">@cached_property</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">_averaging_kernel</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Matrix</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;The full averaging kernel, built once.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">Matrix</span><span class="p">(</span>
-            <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">estimator</span><span class="o">.</span><span class="n">A</span><span class="p">),</span>
-            <span class="n">index</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">state_index</span><span class="p">,</span>
-            <span class="n">columns</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">state_index</span><span class="p">,</span>
-            <span class="n">name</span><span class="o">=</span><span class="s2">&quot;averaging_kernel&quot;</span><span class="p">,</span>
-        <span class="p">)</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_averaging_kernel</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Operator</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The full averaging kernel, formed once.&quot;&quot;&quot;</span>
+        <span class="n">A</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">kalman_gain</span><span class="o">.</span><span class="n">dense</span><span class="p">()</span> <span class="o">@</span> <span class="bp">self</span><span class="o">.</span><span class="n">_problem</span><span class="o">.</span><span class="n">forward</span><span class="o">.</span><span class="n">data</span>
+        <span class="n">space</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_problem</span><span class="o">.</span><span class="n">prior</span><span class="o">.</span><span class="n">space</span>
+        <span class="k">return</span> <span class="n">Operator</span><span class="p">(</span><span class="n">_adopt</span><span class="p">(</span><span class="n">A</span><span class="p">),</span> <span class="n">space</span><span class="p">,</span> <span class="n">space</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;averaging_kernel&quot;</span><span class="p">)</span>
 
 <div class="viewcode-block" id="Posterior.averaging_kernel">
 <a class="viewcode-back" href="../../reference/api/fips.Posterior.averaging_kernel.html#fips.Posterior.averaging_kernel">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">averaging_kernel</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">W</span><span class="p">:</span> <span class="s2">&quot;MatrixLike | None&quot;</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Matrix</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">averaging_kernel</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">W</span><span class="p">:</span> <span class="n">Operator</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Operator</span><span class="p">:</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Return the averaging kernel, of the state or of aggregates of it.</span>
 
-<span class="sd">        Without `W`, :math:`A = K H`, state by state (dense, ``n x n``; the same</span>
-<span class="sd">        object each time). With an aggregation :math:`W`, :math:`W A W^*`,</span>
-<span class="sd">        where :math:`W^* = W^T (W W^T)^{-1}` is the pseudo-inverse of</span>
-<span class="sd">        :math:`W`: it spreads a change of the aggregates back over the state</span>
-<span class="sd">        elements (for a sum, evenly over the elements summed), so :math:`W A</span>
-<span class="sd">        W^*` is how the aggregated estimate responds to the aggregated truth.</span>
-<span class="sd">        This is the form IMI uses; :math:`W A W^T` is not an averaging kernel.</span>
-<span class="sd">        For the Bayesian solve it is computed without the ``n x n`` kernel.</span>
+<span class="sd">        Without `W`, :math:`A = K H`, state by state (dense, ``n x n``; formed</span>
+<span class="sd">        once, the same object each time). With an aggregation :math:`W`,</span>
+<span class="sd">        :math:`W A W^*`, where :math:`W^* = W^T (W W^T)^{-1}` is the</span>
+<span class="sd">        pseudo-inverse of :math:`W`: it spreads a change of the aggregates back</span>
+<span class="sd">        over the state elements (for a sum, evenly over the elements summed),</span>
+<span class="sd">        so :math:`W A W^*` is how the aggregated estimate responds to the</span>
+<span class="sd">        aggregated truth. This is the form IMI uses; :math:`W A W^T` is not an</span>
+<span class="sd">        averaging kernel. It is computed without the ``n x n`` kernel.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        W : Matrix or DataFrame, optional</span>
+<span class="sd">        W : Operator, optional</span>
 <span class="sd">            An aggregation, as :meth:`cov` takes it. Its rows must be linearly</span>
 <span class="sd">            independent.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        Matrix</span>
-<span class="sd">            ``n x n`` on the state index, or ``k x k`` on the aggregation&#39;s row</span>
-<span class="sd">            labels.</span>
+<span class="sd">        Operator</span>
+<span class="sd">            ``n x n`` on the state&#39;s space, or ``k x k`` on the aggregation&#39;s</span>
+<span class="sd">            rows.</span>
 
 <span class="sd">        Raises</span>
 <span class="sd">        ------</span>
 <span class="sd">        ValueError</span>
-<span class="sd">            If the columns of `W` are not exactly the state index, or its rows</span>
-<span class="sd">            are linearly dependent.</span>
+<span class="sd">            If the columns of `W` do not have exactly the state&#39;s labels, or</span>
+<span class="sd">            its rows are linearly dependent.</span>
 
 <span class="sd">        See Also</span>
 <span class="sd">        --------</span>
@@ -875,14 +1018,381 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">W</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_averaging_kernel</span>
-        <span class="n">values</span><span class="p">,</span> <span class="n">index</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_aggregation</span><span class="p">(</span><span class="n">W</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">Matrix</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">estimator</span><span class="o">.</span><span class="n">aggregate_A</span><span class="p">(</span><span class="n">values</span><span class="p">),</span>
-            <span class="n">index</span><span class="o">=</span><span class="n">index</span><span class="p">,</span>
-            <span class="n">columns</span><span class="o">=</span><span class="n">index</span><span class="p">,</span>
-            <span class="n">name</span><span class="o">=</span><span class="s2">&quot;averaging_kernel&quot;</span><span class="p">,</span>
+        <span class="n">W_form</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_aggregation</span><span class="p">(</span><span class="n">W</span><span class="p">)</span>
+        <span class="n">WK</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_solution</span><span class="o">.</span><span class="n">gain</span><span class="p">(</span><span class="n">W_form</span><span class="p">)</span>  <span class="c1"># k x m</span>
+        <span class="n">HWt</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_problem</span><span class="o">.</span><span class="n">forward</span><span class="o">.</span><span class="n">data</span> <span class="o">@</span> <span class="n">W_form</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>  <span class="c1"># m x k</span>
+        <span class="n">values</span> <span class="o">=</span> <span class="n">_times_pseudo_inverse</span><span class="p">(</span><span class="n">WK</span> <span class="o">@</span> <span class="n">HWt</span><span class="p">,</span> <span class="n">W_form</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">Operator</span><span class="p">(</span><span class="n">_adopt</span><span class="p">(</span><span class="n">values</span><span class="p">),</span> <span class="n">W</span><span class="o">.</span><span class="n">rows</span><span class="p">,</span> <span class="n">W</span><span class="o">.</span><span class="n">rows</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;averaging_kernel&quot;</span><span class="p">)</span></div>
+
+
+    <span class="c1"># -- the observations ----------------------------------------------------</span>
+
+<div class="viewcode-block" id="Posterior.modeled_obs">
+<a class="viewcode-back" href="../../reference/api/fips.Posterior.modeled_obs.html#fips.Posterior.modeled_obs">[docs]</a>
+    <span class="nd">@cached_property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">modeled_obs</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Vector</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The observations the estimate models, :math:`H \hat{x} + c`.</span>
+
+<span class="sd">        ``problem.predict(post.estimate)``, kept. The observations another</span>
+<span class="sd">        state models are :meth:`Problem.predict &lt;fips.Problem.predict&gt;` of it</span>
+<span class="sd">        (the prior&#39;s: ``problem.predict(problem.prior)``).</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        --------</span>
+<span class="sd">        fips.Problem.predict : The observations any state models.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">values</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_problem</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">estimate</span><span class="p">)</span><span class="o">.</span><span class="n">values</span>
+        <span class="k">return</span> <span class="n">Vector</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_problem</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">space</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;modeled_obs&quot;</span><span class="p">)</span></div>
+
+
+    <span class="nd">@cached_property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_HS_0H</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LinearOperator</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;:math:`H S_0 H^T`, in the cheapest form of its factors.&quot;&quot;&quot;</span>
+        <span class="n">H</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_problem</span><span class="o">.</span><span class="n">forward</span><span class="o">.</span><span class="n">data</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">H</span> <span class="o">@</span> <span class="bp">self</span><span class="o">.</span><span class="n">_problem</span><span class="o">.</span><span class="n">prior_cov</span><span class="o">.</span><span class="n">data</span><span class="p">)</span> <span class="o">@</span> <span class="n">H</span><span class="o">.</span><span class="n">_transpose</span><span class="p">()</span>
+
+<div class="viewcode-block" id="Posterior.innovation_cov">
+<a class="viewcode-back" href="../../reference/api/fips.Posterior.innovation_cov.html#fips.Posterior.innovation_cov">[docs]</a>
+    <span class="nd">@cached_property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">innovation_cov</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Covariance</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The covariance of the innovation, :math:`H S_0 H^T + S_z / \gamma`, dense.</span>
+
+<span class="sd">        The innovation is :math:`z - H x_0 - c`, the observations minus what</span>
+<span class="sd">        the prior models; this is its covariance when the prior error and the</span>
+<span class="sd">        model-data mismatch are right, and the ``m x m`` matrix the solve</span>
+<span class="sd">        factors. Kalman filtering calls it the innovation covariance; Rodgers</span>
+<span class="sd">        (2000) writes it :math:`S_y`. It includes the regularization factor:</span>
+<span class="sd">        the mismatch is divided by :math:`\gamma`. Its diagonal, square-rooted,</span>
+<span class="sd">        is the spread expected for each observation&#39;s innovation, of which</span>
+<span class="sd">        :math:`H S_0 H^T` is the prior&#39;s share.</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        --------</span>
+<span class="sd">        desroziers : The observation error variances the residuals diagnose.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">G</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_HS_0H</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_problem</span><span class="o">.</span><span class="n">obs_cov</span><span class="o">.</span><span class="n">data</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gamma</span>
+        <span class="k">return</span> <span class="n">Covariance</span><span class="o">.</span><span class="n">_computed</span><span class="p">(</span>
+            <span class="n">_adopt</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">dense</span><span class="p">()),</span> <span class="bp">self</span><span class="o">.</span><span class="n">_problem</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">space</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;innovation_cov&quot;</span>
         <span class="p">)</span></div>
 
+
+<div class="viewcode-block" id="Posterior.desroziers">
+<a class="viewcode-back" href="../../reference/api/fips.Posterior.desroziers.html#fips.Posterior.desroziers">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">desroziers</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">by</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Compare the observation error variances Desroziers et al. (2005) diagnose with those the solve used.</span>
+
+<span class="sd">        With :math:`d^b = z - H x_0 - c` (the innovation) and</span>
+<span class="sd">        :math:`d^a = z - H \hat{x} - c` (the residual), the expected value of</span>
+<span class="sd">        :math:`d^a_i d^b_i` is the variance of the error of observation</span>
+<span class="sd">        :math:`i` when the covariances of the problem are right. One</span>
+<span class="sd">        observation&#39;s product is noisy; its mean over a group of observations</span>
+<span class="sd">        (a site, a month) is the diagnostic.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        by : str, list or pandas.Grouper, optional</span>
+<span class="sd">            The levels of the observations&#39; labels to group by, as</span>
+<span class="sd">            :meth:`pandas.DataFrame.groupby` takes them: ``&quot;site&quot;``,</span>
+<span class="sd">            ``[&quot;site&quot;, &quot;block&quot;]``, or ``pd.Grouper(level=&quot;obs_time&quot;,</span>
+<span class="sd">            freq=&quot;MS&quot;)``. Observations whose block lacks a level are left out</span>
+<span class="sd">            of a grouping by it. By default, one row per observation.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        pandas.DataFrame</span>
+<span class="sd">            ``diagnosed`` (:math:`d^a_i d^b_i`, or its mean over a group),</span>
+<span class="sd">            ``specified`` (the diagonal of :math:`S_z / \gamma`, the</span>
+<span class="sd">            variances the solve used, or their mean), and ``ratio``</span>
+<span class="sd">            (diagnosed over specified; near 1 when they agree). Indexed by</span>
+<span class="sd">            the observations&#39; labels, or by the groups.</span>
+
+<span class="sd">        References</span>
+<span class="sd">        ----------</span>
+<span class="sd">        Desroziers, G., Berre, L., Chapnik, B., &amp; Poli, P. (2005). Diagnosis</span>
+<span class="sd">        of observation, background and analysis-error statistics in</span>
+<span class="sd">        observation space. Q.J.R. Meteorol. Soc., 131, 3385-3396.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; import numpy as np</span>
+<span class="sd">        &gt;&gt;&gt; import pandas as pd</span>
+<span class="sd">        &gt;&gt;&gt; import fips</span>
+<span class="sd">        &gt;&gt;&gt; sites = pd.MultiIndex.from_product(</span>
+<span class="sd">        ...     [[&quot;A&quot;, &quot;B&quot;], [0, 1, 2]], names=[&quot;site&quot;, &quot;hour&quot;]</span>
+<span class="sd">        ... )</span>
+<span class="sd">        &gt;&gt;&gt; cell = pd.Index([&quot;c&quot;], name=&quot;cell&quot;)</span>
+<span class="sd">        &gt;&gt;&gt; prior = fips.Vector.from_series(pd.Series(0.0, index=cell), block=&quot;flux&quot;)</span>
+<span class="sd">        &gt;&gt;&gt; obs = fips.Vector.from_series(</span>
+<span class="sd">        ...     pd.Series([1.0, 2.0, 0.5, 3.0, 2.5, 1.0], index=sites), block=&quot;co2&quot;</span>
+<span class="sd">        ... )</span>
+<span class="sd">        &gt;&gt;&gt; problem = fips.Problem(</span>
+<span class="sd">        ...     prior=prior,</span>
+<span class="sd">        ...     prior_cov=fips.Independent().with_std(1.0),</span>
+<span class="sd">        ...     obs=obs,</span>
+<span class="sd">        ...     obs_cov=fips.Independent().with_std(1.0),</span>
+<span class="sd">        ...     forward=fips.Operator(np.ones((6, 1)), obs.space, prior.space),</span>
+<span class="sd">        ... )</span>
+<span class="sd">        &gt;&gt;&gt; fips.solve(problem).desroziers(by=&quot;site&quot;).round(3).reset_index()</span>
+<span class="sd">          site  diagnosed  specified  ratio</span>
+<span class="sd">        0    A      0.083        1.0  0.083</span>
+<span class="sd">        1    B      2.321        1.0  2.321</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">problem</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_problem</span>
+        <span class="n">before</span> <span class="o">=</span> <span class="n">problem</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">values</span> <span class="o">-</span> <span class="n">problem</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">problem</span><span class="o">.</span><span class="n">prior</span><span class="p">)</span><span class="o">.</span><span class="n">values</span>
+        <span class="n">after</span> <span class="o">=</span> <span class="n">problem</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">values</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">modeled_obs</span><span class="o">.</span><span class="n">values</span>
+        <span class="n">frame</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
+            <span class="p">{</span>
+                <span class="s2">&quot;diagnosed&quot;</span><span class="p">:</span> <span class="n">after</span> <span class="o">*</span> <span class="n">before</span><span class="p">,</span>
+                <span class="s2">&quot;specified&quot;</span><span class="p">:</span> <span class="n">problem</span><span class="o">.</span><span class="n">obs_cov</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">diagonal</span><span class="p">()</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gamma</span><span class="p">,</span>
+            <span class="p">},</span>
+            <span class="n">index</span><span class="o">=</span><span class="n">problem</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">index</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">by</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">frame</span> <span class="o">=</span> <span class="n">frame</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="n">by</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+        <span class="n">frame</span><span class="p">[</span><span class="s2">&quot;ratio&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">frame</span><span class="p">[</span><span class="s2">&quot;diagnosed&quot;</span><span class="p">]</span> <span class="o">/</span> <span class="n">frame</span><span class="p">[</span><span class="s2">&quot;specified&quot;</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">frame</span></div>
+
+
+<div class="viewcode-block" id="Posterior.leverage">
+<a class="viewcode-back" href="../../reference/api/fips.Posterior.leverage.html#fips.Posterior.leverage">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">leverage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">Vector</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Operator</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the leverage matrix of the state `x`: which observations weigh most on it.</span>
+
+<span class="sd">        .. math::</span>
+<span class="sd">            L = Hx \left((Hx)^T G^{-1} Hx\right)^{-1} (Hx)^T G^{-1},</span>
+<span class="sd">            \qquad G = H S_0 H^T + S_z / \gamma</span>
+
+<span class="sd">        This is the generalized-least-squares hat matrix of the one regressor</span>
+<span class="sd">        :math:`Hx` (which includes the offset :math:`c`): the projection onto</span>
+<span class="sd">        :math:`Hx` in the metric :math:`G^{-1}`. It is idempotent and its</span>
+<span class="sd">        trace is 1, so its diagonal shares one unit of leverage among the</span>
+<span class="sd">        observations; with correlated errors an entry can be negative.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        x : Vector</span>
+<span class="sd">            A state, on the prior&#39;s labels (in any order), such as</span>
+<span class="sd">            :attr:`estimate` or the problem&#39;s prior.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Operator</span>
+<span class="sd">            ``m x m``, dense, on the observations&#39; space.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            If `x` does not have exactly the state&#39;s labels.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">problem</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_problem</span>
+        <span class="n">Hx</span> <span class="o">=</span> <span class="n">problem</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">values</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">]</span>
+        <span class="n">G</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">innovation_cov</span><span class="o">.</span><span class="n">dense</span><span class="p">()</span>
+        <span class="n">term</span> <span class="o">=</span> <span class="n">_solve_psd</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">Hx</span><span class="p">)</span>
+        <span class="n">L</span> <span class="o">=</span> <span class="n">Hx</span> <span class="o">@</span> <span class="n">inv</span><span class="p">(</span><span class="n">Hx</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">term</span><span class="p">)</span> <span class="o">@</span> <span class="n">term</span><span class="o">.</span><span class="n">T</span>
+        <span class="n">space</span> <span class="o">=</span> <span class="n">problem</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">space</span>
+        <span class="k">return</span> <span class="n">Operator</span><span class="p">(</span><span class="n">_adopt</span><span class="p">(</span><span class="n">L</span><span class="p">),</span> <span class="n">space</span><span class="p">,</span> <span class="n">space</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;leverage&quot;</span><span class="p">)</span></div>
+
+
+    <span class="c1"># -- scalars -------------------------------------------------------------</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">dofs</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Degrees of freedom for signal, the trace of :meth:`averaging_kernel`.</span>
+
+<span class="sd">        The analytic method reads it from its factors,</span>
+<span class="sd">        :math:`\sum_k \gamma\lambda_k / (\gamma\lambda_k + 1)` over the</span>
+<span class="sd">        eigenvalues :math:`\lambda_k` of its factorization (the same in</span>
+<span class="sd">        both of its forms), without the kernel.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_solution</span><span class="o">.</span><span class="n">dofs</span><span class="p">()</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">chi2</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The chi-squared of the solution: the sum of the data and the state misfits.</span>
+
+<span class="sd">        .. math::</span>
+<span class="sd">            \chi^2 = (z - H\hat{x} - c)^T (S_z/\gamma)^{-1} (z - H\hat{x} - c)</span>
+<span class="sd">                + (\hat{x} - x_0)^T S_0^{-1} (\hat{x} - x_0)</span>
+
+<span class="sd">        which equals :math:`d^T (H S_0 H^T + S_z/\gamma)^{-1} d` with</span>
+<span class="sd">        :math:`d = z - H x_0 - c`; the analytic method reads it from its</span>
+<span class="sd">        factors.</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        --------</span>
+<span class="sd">        reduced_chi2 : It, divided by the number of observations.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_solution</span><span class="o">.</span><span class="n">chi2</span><span class="p">()</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">reduced_chi2</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        :attr:`chi2` divided by the number of observations; near 1 when the covariances are right.</span>
+
+<span class="sd">        Tarantola (1987), as in Kunik et al. (2019),</span>
+<span class="sd">        https://doi.org/10.1525/elementa.375.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">chi2</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_problem</span><span class="o">.</span><span class="n">obs</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">r2</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The R² of the enhancement, :math:`\operatorname{corr}(z - c, H\hat{x})^2`.</span>
+
+<span class="sd">        How well the estimate fits the part of the observations the state</span>
+<span class="sd">        explains: the observations :math:`z` less the offset :math:`c` (in a</span>
+<span class="sd">        flux inversion, the enhancement over the background), against</span>
+<span class="sd">        :math:`H\hat{x}`, which is :attr:`modeled_obs` less the offset.</span>
+
+<span class="sd">        The offset is taken out because it is given, not fitted. One that</span>
+<span class="sd">        varies from observation to observation, as a background does from</span>
+<span class="sd">        day to day, would otherwise raise the correlation by how well it</span>
+<span class="sd">        follows the observations, whatever the fit of the state. A constant</span>
+<span class="sd">        offset, or none, changes no correlation: then this is the squared</span>
+<span class="sd">        correlation of the observations and :attr:`modeled_obs`.</span>
+
+<span class="sd">        It is a squared correlation, not :math:`1 - SS_{res} / SS_{tot}`: a</span>
+<span class="sd">        fit that is off by a constant or a factor scores as well as an exact</span>
+<span class="sd">        one. :attr:`rmse` measures the misfit itself.</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        --------</span>
+<span class="sd">        modeled_obs : :math:`H\hat{x} + c`.</span>
+<span class="sd">        rmse : The root mean square of the residuals.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        Four days of one flux over a background that rises from day to day,</span>
+<span class="sd">        given as the offset:</span>
+
+<span class="sd">        &gt;&gt;&gt; import numpy as np</span>
+<span class="sd">        &gt;&gt;&gt; import pandas as pd</span>
+<span class="sd">        &gt;&gt;&gt; import fips</span>
+<span class="sd">        &gt;&gt;&gt; state = fips.Space({&quot;flux&quot;: pd.Index([&quot;a&quot;], name=&quot;cell&quot;)})</span>
+<span class="sd">        &gt;&gt;&gt; days = fips.Space({&quot;co2&quot;: pd.RangeIndex(4, name=&quot;day&quot;)})</span>
+<span class="sd">        &gt;&gt;&gt; background = np.array([400.0, 402.0, 404.0, 406.0])</span>
+<span class="sd">        &gt;&gt;&gt; problem = fips.Problem(</span>
+<span class="sd">        ...     prior=fips.Vector(np.zeros(1), state),</span>
+<span class="sd">        ...     prior_cov=fips.Covariance.diagonal(1.0, state),</span>
+<span class="sd">        ...     obs=fips.Vector(background + [1.0, 0.0, 2.0, 1.0], days),</span>
+<span class="sd">        ...     obs_cov=fips.Covariance.diagonal(0.5, days),</span>
+<span class="sd">        ...     forward=fips.Operator(</span>
+<span class="sd">        ...         np.array([[1.0], [0.5], [1.5], [0.0]]), days, state</span>
+<span class="sd">        ...     ),</span>
+<span class="sd">        ...     offset=fips.Vector(background, days),</span>
+<span class="sd">        ... )</span>
+<span class="sd">        &gt;&gt;&gt; post = fips.solve(problem)</span>
+<span class="sd">        &gt;&gt;&gt; round(post.r2, 3)</span>
+<span class="sd">        0.4</span>
+
+<span class="sd">        With the background left in, its rise alone would make the fit look</span>
+<span class="sd">        nearly perfect:</span>
+
+<span class="sd">        &gt;&gt;&gt; z, modeled = problem.obs.values, post.modeled_obs.values</span>
+<span class="sd">        &gt;&gt;&gt; round(float(np.corrcoef(z, modeled)[0, 1] ** 2), 3)</span>
+<span class="sd">        0.983</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">z</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_problem</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">values</span>
+        <span class="n">offset</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_problem</span><span class="o">.</span><span class="n">offset</span>
+        <span class="k">if</span> <span class="n">offset</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">z</span> <span class="o">=</span> <span class="n">z</span> <span class="o">-</span> <span class="n">offset</span><span class="o">.</span><span class="n">values</span>
+        <span class="n">fit</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_problem</span><span class="o">.</span><span class="n">forward</span><span class="o">.</span><span class="n">data</span> <span class="o">@</span> <span class="bp">self</span><span class="o">.</span><span class="n">estimate</span><span class="o">.</span><span class="n">values</span>
+        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">corrcoef</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="n">fit</span><span class="p">)[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">rmse</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The root mean square of the observations minus :attr:`modeled_obs`.&quot;&quot;&quot;</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_problem</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">values</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">modeled_obs</span><span class="o">.</span><span class="n">values</span>
+        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">((</span><span class="n">r</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">r</span><span class="p">)))</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">uncertainty_reduction</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        One minus the ratio of the posterior to the prior total error.</span>
+
+<span class="sd">        :math:`1 - \sqrt{\operatorname{tr}(\hat{S})} / \sqrt{\operatorname{tr}(S_0)}`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">prior</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_problem</span><span class="o">.</span><span class="n">prior_cov</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">trace</span><span class="p">()</span>
+        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">variances</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">prior</span><span class="p">))</span>
+
+<div class="viewcode-block" id="Posterior.summary">
+<a class="viewcode-back" href="../../reference/api/fips.Posterior.summary.html#fips.Posterior.summary">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">summary</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the diagnostics of the solve as a table of one row.</span>
+
+<span class="sd">        Nothing is printed: the numbers are returned, and the row of one</span>
+<span class="sd">        posterior stacks with those of others (``pd.concat``), as in a sweep</span>
+<span class="sd">        over the regularization factor.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        pandas.DataFrame</span>
+<span class="sd">            One row: ``gamma`` (the regularization factor), ``n_state`` and</span>
+<span class="sd">            ``n_obs`` (the sizes of the state and of the observations), then</span>
+<span class="sd">            :attr:`dofs`, :attr:`chi2`, :attr:`reduced_chi2`, :attr:`r2`,</span>
+<span class="sd">            :attr:`rmse` and :attr:`uncertainty_reduction`.</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        --------</span>
+<span class="sd">        desroziers : The observation error variances the residuals diagnose.</span>
+<span class="sd">        with_gamma : The posterior with another regularization factor.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; import numpy as np</span>
+<span class="sd">        &gt;&gt;&gt; import pandas as pd</span>
+<span class="sd">        &gt;&gt;&gt; import fips</span>
+<span class="sd">        &gt;&gt;&gt; cells = pd.Index([&quot;a&quot;, &quot;b&quot;], name=&quot;cell&quot;)</span>
+<span class="sd">        &gt;&gt;&gt; obs_id = pd.Index([&quot;o1&quot;, &quot;o2&quot;, &quot;o3&quot;], name=&quot;obs_id&quot;)</span>
+<span class="sd">        &gt;&gt;&gt; prior = fips.Vector.from_series(pd.Series(0.0, index=cells), block=&quot;flux&quot;)</span>
+<span class="sd">        &gt;&gt;&gt; obs = fips.Vector.from_series(</span>
+<span class="sd">        ...     pd.Series([1.0, 2.0, 3.0], index=obs_id), block=&quot;co2&quot;</span>
+<span class="sd">        ... )</span>
+<span class="sd">        &gt;&gt;&gt; problem = fips.Problem(</span>
+<span class="sd">        ...     prior=prior,</span>
+<span class="sd">        ...     prior_cov=fips.Independent().with_std(1.0),</span>
+<span class="sd">        ...     obs=obs,</span>
+<span class="sd">        ...     obs_cov=fips.Independent().with_std(np.sqrt(0.1)),</span>
+<span class="sd">        ...     forward=fips.Operator(</span>
+<span class="sd">        ...         np.array([[1.0, 0.0], [0.0, 1.0], [1.0, 1.0]]),</span>
+<span class="sd">        ...         obs.space,</span>
+<span class="sd">        ...         prior.space,</span>
+<span class="sd">        ...     ),</span>
+<span class="sd">        ... )</span>
+<span class="sd">        &gt;&gt;&gt; post = fips.solve(problem)</span>
+<span class="sd">        &gt;&gt;&gt; table = pd.concat(</span>
+<span class="sd">        ...     [post.with_gamma(g).summary() for g in (0.1, 1.0, 10.0)],</span>
+<span class="sd">        ...     ignore_index=True,</span>
+<span class="sd">        ... )</span>
+<span class="sd">        &gt;&gt;&gt; table[[&quot;gamma&quot;, &quot;dofs&quot;, &quot;reduced_chi2&quot;]].round(3)</span>
+<span class="sd">           gamma   dofs  reduced_chi2</span>
+<span class="sd">        0    0.1  1.250         1.208</span>
+<span class="sd">        1    1.0  1.877         1.603</span>
+<span class="sd">        2   10.0  1.987         1.660</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">problem</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_problem</span>
+        <span class="n">row</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;gamma&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gamma</span><span class="p">,</span>
+            <span class="s2">&quot;n_state&quot;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">problem</span><span class="o">.</span><span class="n">prior</span><span class="p">),</span>
+            <span class="s2">&quot;n_obs&quot;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">problem</span><span class="o">.</span><span class="n">obs</span><span class="p">),</span>
+            <span class="s2">&quot;dofs&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">dofs</span><span class="p">,</span>
+            <span class="s2">&quot;chi2&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">chi2</span><span class="p">,</span>
+            <span class="s2">&quot;reduced_chi2&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">reduced_chi2</span><span class="p">,</span>
+            <span class="s2">&quot;r2&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">r2</span><span class="p">,</span>
+            <span class="s2">&quot;rmse&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">rmse</span><span class="p">,</span>
+            <span class="s2">&quot;uncertainty_reduction&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">uncertainty_reduction</span><span class="p">,</span>
+        <span class="p">}</span>
+        <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">([</span><span class="n">row</span><span class="p">])</span></div>
+
+
+    <span class="c1"># -- reusing the factorization --------------------------------------------</span>
 
 <div class="viewcode-block" id="Posterior.with_gamma">
 <a class="viewcode-back" href="../../reference/api/fips.Posterior.with_gamma.html#fips.Posterior.with_gamma">[docs]</a>
@@ -890,9 +1400,9 @@
 <span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Return the posterior of the same problem with another regularization factor.</span>
 
-<span class="sd">        The Bayesian solve keeps its factorization, which does not depend on</span>
-<span class="sd">        gamma, so the new posterior costs :math:`O(m n)` instead of a new</span>
-<span class="sd">        solve: a sweep over gamma factors once. The problem is unchanged.</span>
+<span class="sd">        The analytic method&#39;s factorization does not depend on gamma, so</span>
+<span class="sd">        this costs :math:`O(m n)` at most instead of a new solve: a sweep over</span>
+<span class="sd">        gamma factors once.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -909,100 +1419,92 @@
 <span class="sd">        Raises</span>
 <span class="sd">        ------</span>
 <span class="sd">        TypeError</span>
-<span class="sd">            If the estimator has no regularization factor to change.</span>
+<span class="sd">            If the method cannot change gamma without solving again (its</span>
+<span class="sd">            solution has no ``with_gamma``).</span>
 
 <span class="sd">        Examples</span>
 <span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; import numpy as np</span>
 <span class="sd">        &gt;&gt;&gt; import pandas as pd</span>
 <span class="sd">        &gt;&gt;&gt; import fips</span>
-<span class="sd">        &gt;&gt;&gt; state = pd.Index([&quot;a&quot;, &quot;b&quot;], name=&quot;cell&quot;)</span>
-<span class="sd">        &gt;&gt;&gt; obs = pd.Index([&quot;o1&quot;, &quot;o2&quot;, &quot;o3&quot;], name=&quot;obs_id&quot;)</span>
-<span class="sd">        &gt;&gt;&gt; problem = fips.InverseProblem(</span>
-<span class="sd">        ...     obs=pd.Series([1.0, 2.0, 3.0], index=obs, name=&quot;obs&quot;),</span>
-<span class="sd">        ...     prior=pd.Series([0.0, 0.0], index=state, name=&quot;prior&quot;),</span>
-<span class="sd">        ...     forward_operator=pd.DataFrame(</span>
-<span class="sd">        ...         [[1.0, 0.0], [0.0, 1.0], [1.0, 1.0]], index=obs, columns=state</span>
+<span class="sd">        &gt;&gt;&gt; cells = pd.Index([&quot;a&quot;, &quot;b&quot;], name=&quot;cell&quot;)</span>
+<span class="sd">        &gt;&gt;&gt; obs_id = pd.Index([&quot;o1&quot;, &quot;o2&quot;, &quot;o3&quot;], name=&quot;obs_id&quot;)</span>
+<span class="sd">        &gt;&gt;&gt; prior = fips.Vector.from_series(pd.Series(0.0, index=cells), block=&quot;flux&quot;)</span>
+<span class="sd">        &gt;&gt;&gt; obs = fips.Vector.from_series(</span>
+<span class="sd">        ...     pd.Series([1.0, 2.0, 3.0], index=obs_id), block=&quot;co2&quot;</span>
+<span class="sd">        ... )</span>
+<span class="sd">        &gt;&gt;&gt; problem = fips.Problem(</span>
+<span class="sd">        ...     prior=prior,</span>
+<span class="sd">        ...     prior_cov=fips.Independent().with_std(1.0),</span>
+<span class="sd">        ...     obs=obs,</span>
+<span class="sd">        ...     obs_cov=fips.Independent().with_std(np.sqrt(0.1)),</span>
+<span class="sd">        ...     forward=fips.Operator(</span>
+<span class="sd">        ...         np.array([[1.0, 0.0], [0.0, 1.0], [1.0, 1.0]]),</span>
+<span class="sd">        ...         obs.space,</span>
+<span class="sd">        ...         prior.space,</span>
 <span class="sd">        ...     ),</span>
-<span class="sd">        ...     prior_error=1.0,</span>
-<span class="sd">        ...     modeldata_mismatch=0.1,</span>
 <span class="sd">        ... )</span>
 <span class="sd">        &gt;&gt;&gt; post = fips.solve(problem)</span>
 <span class="sd">        &gt;&gt;&gt; [round(post.with_gamma(g).dofs, 3) for g in (0.1, 1.0, 10.0)]</span>
-<span class="sd">        [0.886, 1.877, 1.986]</span>
+<span class="sd">        [1.25, 1.877, 1.987]</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">with_gamma</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">estimator</span><span class="p">,</span> <span class="s2">&quot;with_gamma&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">with_gamma</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">estimator</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2"> has no regularization factor to change.&quot;</span>
-            <span class="p">)</span>
-        <span class="n">post</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)(</span><span class="n">with_gamma</span><span class="p">(</span><span class="n">gamma</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">state_index</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">obs_index</span><span class="p">)</span>
+        <span class="n">sweep</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_optional</span><span class="p">(</span><span class="s2">&quot;with_gamma&quot;</span><span class="p">,</span> <span class="s2">&quot;another gamma&#39;s posterior&quot;</span><span class="p">)</span>
+        <span class="n">options</span> <span class="o">=</span> <span class="n">dataclasses</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_options</span><span class="p">,</span> <span class="n">gamma</span><span class="o">=</span><span class="n">gamma</span><span class="p">)</span>
+        <span class="n">post</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)(</span><span class="bp">self</span><span class="o">.</span><span class="n">_problem</span><span class="p">,</span> <span class="n">sweep</span><span class="p">(</span><span class="n">options</span><span class="o">.</span><span class="n">gamma</span><span class="p">),</span> <span class="n">options</span><span class="p">)</span>
         <span class="n">_</span> <span class="o">=</span> <span class="n">post</span><span class="o">.</span><span class="n">estimate</span>
         <span class="k">return</span> <span class="n">post</span></div>
 
 
-<div class="viewcode-block" id="Posterior.desroziers">
-<a class="viewcode-back" href="../../reference/api/fips.Posterior.desroziers.html#fips.Posterior.desroziers">[docs]</a>
-    <span class="nd">@cached_property</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">desroziers</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CovarianceMatrix</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        The observation error covariance diagnosed by Desroziers et al. (2005).</span>
-
-<span class="sd">        On the observation index. See :attr:`~fips.Estimator.desroziers` for the</span>
-<span class="sd">        formula.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">CovarianceMatrix</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">estimator</span><span class="o">.</span><span class="n">desroziers</span><span class="p">,</span>
-            <span class="n">index</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">obs_index</span><span class="p">,</span>
-            <span class="n">columns</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">obs_index</span><span class="p">,</span>
-            <span class="n">name</span><span class="o">=</span><span class="s2">&quot;desroziers&quot;</span><span class="p">,</span>
-        <span class="p">)</span></div>
-
-
-    <span class="nd">@property</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">dofs</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Degrees of freedom for signal, the trace of :meth:`averaging_kernel`.</span>
-
-<span class="sd">        The estimator&#39;s :attr:`~fips.Estimator.DOFS`.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">estimator</span><span class="o">.</span><span class="n">DOFS</span>
-
-    <span class="nd">@property</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">reduced_chi2</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        The reduced chi-squared of the solution.</span>
-
-<span class="sd">        The estimator&#39;s :attr:`~fips.Estimator.reduced_chi2`.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">estimator</span><span class="o">.</span><span class="n">reduced_chi2</span>
-
-    <span class="nd">@property</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">r2</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        The squared correlation of the observations and :attr:`modeled_obs`.</span>
-
-<span class="sd">        The estimator&#39;s :attr:`~fips.Estimator.R2`.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">estimator</span><span class="o">.</span><span class="n">R2</span>
-
-    <span class="nd">@property</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">rmse</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        The root mean square of the observations minus :attr:`modeled_obs`.</span>
-
-<span class="sd">        The estimator&#39;s :attr:`~fips.Estimator.RMSE`.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">estimator</span><span class="o">.</span><span class="n">RMSE</span>
-
-    <span class="nd">@property</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">uncertainty_reduction</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<div class="viewcode-block" id="Posterior.with_data">
+<a class="viewcode-back" href="../../reference/api/fips.Posterior.with_data.html#fips.Posterior.with_data">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">with_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obs</span><span class="p">:</span> <span class="n">Vector</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;Posterior&quot;</span><span class="p">:</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        One minus the ratio of the posterior to the prior total error.</span>
+<span class="sd">        Return the posterior of the same problem with other observations.</span>
 
-<span class="sd">        The estimator&#39;s :attr:`~fips.Estimator.uncertainty_reduction`: the square</span>
-<span class="sd">        roots of the traces of :math:`\hat{S}` and :math:`S_0`.</span>
+<span class="sd">        The analytic method&#39;s factorization depends on where the</span>
+<span class="sd">        observations are and how uncertain they are, not on their values, so</span>
+<span class="sd">        this costs a product with the factors instead of a new solve (a</span>
+<span class="sd">        bootstrap, or synthetic observations of a known truth): one</span>
+<span class="sd">        :math:`m \times m` product in the whitened form, a solve with the</span>
+<span class="sd">        model-data mismatch and :math:`O(n^2)` in the information form.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        obs : Vector</span>
+<span class="sd">            New observations, with exactly the labels of the problem&#39;s (in</span>
+<span class="sd">            any order).</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Posterior</span>
+<span class="sd">            The posterior of the problem with `obs`, its estimate computed.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            If `obs` does not have exactly the observations&#39; labels.</span>
+<span class="sd">        TypeError</span>
+<span class="sd">            If the method cannot take new observations without solving again</span>
+<span class="sd">            (its solution has no ``with_data``).</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">estimator</span><span class="o">.</span><span class="n">uncertainty_reduction</span></div>
+        <span class="n">resolve</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_optional</span><span class="p">(</span><span class="s2">&quot;with_data&quot;</span><span class="p">,</span> <span class="s2">&quot;the posterior of other observations&quot;</span><span class="p">)</span>
+        <span class="n">problem</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_problem</span>
+        <span class="n">space</span> <span class="o">=</span> <span class="n">problem</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">space</span>
+        <span class="n">positions</span> <span class="o">=</span> <span class="n">space</span><span class="o">.</span><span class="n">_align</span><span class="p">(</span>
+            <span class="n">obs</span><span class="o">.</span><span class="n">space</span><span class="p">,</span> <span class="s2">&quot;the new observations&quot;</span><span class="p">,</span> <span class="s2">&quot;The new observations and the problem&#39;s&quot;</span>
+        <span class="p">)</span>
+        <span class="n">new</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span><span class="n">problem</span><span class="p">)(</span>
+            <span class="n">prior</span><span class="o">=</span><span class="n">problem</span><span class="o">.</span><span class="n">prior</span><span class="p">,</span>
+            <span class="n">prior_cov</span><span class="o">=</span><span class="n">problem</span><span class="o">.</span><span class="n">prior_cov</span><span class="p">,</span>
+            <span class="n">obs</span><span class="o">=</span><span class="n">Vector</span><span class="p">(</span><span class="n">obs</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="n">positions</span><span class="p">],</span> <span class="n">space</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">obs</span><span class="o">.</span><span class="n">name</span><span class="p">),</span>
+            <span class="n">obs_cov</span><span class="o">=</span><span class="n">problem</span><span class="o">.</span><span class="n">obs_cov</span><span class="p">,</span>
+            <span class="n">forward</span><span class="o">=</span><span class="n">problem</span><span class="o">.</span><span class="n">forward</span><span class="p">,</span>
+            <span class="n">offset</span><span class="o">=</span><span class="n">problem</span><span class="o">.</span><span class="n">offset</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">post</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)(</span><span class="n">new</span><span class="p">,</span> <span class="n">resolve</span><span class="p">(</span><span class="n">new</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">_options</span><span class="p">)</span>
+        <span class="n">_</span> <span class="o">=</span> <span class="n">post</span><span class="o">.</span><span class="n">estimate</span>
+        <span class="k">return</span> <span class="n">post</span></div>
+</div>
 
 </pre></div>
 

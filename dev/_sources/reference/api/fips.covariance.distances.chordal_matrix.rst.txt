@@ -1,0 +1,6 @@
+﻿fips.covariance.distances.chordal\_matrix
+=========================================
+
+.. currentmodule:: fips.covariance.distances
+
+.. autofunction:: chordal_matrix

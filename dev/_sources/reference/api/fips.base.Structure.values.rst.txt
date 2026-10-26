@@ -1,6 +1,0 @@
-fips.base.Structure.values
-==========================
-
-.. currentmodule:: fips.base
-
-.. autoproperty:: Structure.values

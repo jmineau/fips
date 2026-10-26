@@ -1,0 +1,6 @@
+fips.Covariance.space
+=====================
+
+.. currentmodule:: fips
+
+.. autoproperty:: Covariance.space

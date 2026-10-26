@@ -1,6 +1,0 @@
-fips.InverseProblem.result
-==========================
-
-.. currentmodule:: fips
-
-.. autoproperty:: InverseProblem.result

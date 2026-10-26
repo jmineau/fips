@@ -1,0 +1,6 @@
+fips.Vector.align
+=================
+
+.. currentmodule:: fips
+
+.. automethod:: Vector.align

@@ -1,6 +1,0 @@
-fips.InversionPipeline.get\_prior\_error
-========================================
-
-.. currentmodule:: fips
-
-.. automethod:: InversionPipeline.get_prior_error

@@ -1,0 +1,6 @@
+fips.Covariance.solve
+=====================
+
+.. currentmodule:: fips
+
+.. automethod:: Covariance.solve

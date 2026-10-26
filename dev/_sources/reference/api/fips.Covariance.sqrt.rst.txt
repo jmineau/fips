@@ -1,0 +1,6 @@
+fips.Covariance.sqrt
+====================
+
+.. currentmodule:: fips
+
+.. automethod:: Covariance.sqrt

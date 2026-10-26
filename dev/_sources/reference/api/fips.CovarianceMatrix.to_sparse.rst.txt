@@ -1,6 +1,0 @@
-﻿fips.CovarianceMatrix.to\_sparse
-================================
-
-.. currentmodule:: fips
-
-.. automethod:: CovarianceMatrix.to_sparse

@@ -1,6 +1,0 @@
-﻿fips.CovarianceMatrix.reindex
-=============================
-
-.. currentmodule:: fips
-
-.. automethod:: CovarianceMatrix.reindex

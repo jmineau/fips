@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>fips 0.1.0b10.dev58+g53ab9aafc &#8212; fips 0.1.0b10.dev58+g53ab9aafc documentation</title>
+    <title>fips 0.1.0b10.dev129+gae95fcfbc &#8212; fips 0.1.0b10.dev129+gae95fcfbc documentation</title>
   
   
   
@@ -41,13 +41,11 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0" />
 
-    <script src="_static/documentation_options.js?v=54c30dc7"></script>
+    <script src="_static/documentation_options.js?v=9a57f19f"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="_static/copybutton.js?v=f281be69"></script>
-    <script>window.MathJax = {"options": {"processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
-    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'index';</script>
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.22.0';
@@ -134,8 +132,8 @@
       
     
     
-    <img src="_static/logo.png" class="logo__image only-light" alt="fips 0.1.0b10.dev58+g53ab9aafc documentation - Home"/>
-    <img src="_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.1.0b10.dev58+g53ab9aafc documentation - Home"/>
+    <img src="_static/logo.png" class="logo__image only-light" alt="fips 0.1.0b10.dev129+gae95fcfbc documentation - Home"/>
+    <img src="_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.1.0b10.dev129+gae95fcfbc documentation - Home"/>
   
   
 </a></div>
@@ -173,7 +171,7 @@
 
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="terminology.html">
-    Terminology & Notation
+    Terminology
   </a>
 </li>
 
@@ -184,13 +182,30 @@
   </a>
 </li>
 
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false"
+                aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="migration.html">
+    Moving from fips 0.1
+  </a>
+</li>
 
-<li class="nav-item ">
-  <a class="nav-link nav-internal" href="reference/index.html">
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="reference/index.html">
     API Reference
   </a>
 </li>
 
+                </ul>
+            </li>
+            
   </ul>
 </nav></div>
       
@@ -331,7 +346,7 @@
 
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="terminology.html">
-    Terminology & Notation
+    Terminology
   </a>
 </li>
 
@@ -339,6 +354,13 @@
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="examples/index.html">
     Examples
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="migration.html">
+    Moving from fips 0.1
   </a>
 </li>
 
@@ -442,7 +464,7 @@
                 <article class="bd-article">
                   
   <section class="hidden-title" id="fips-release">
-<h1>fips 0.1.0b10.dev58+g53ab9aafc<a class="headerlink" href="#fips-release" title="Link to this heading">#</a></h1>
+<h1>fips 0.1.0b10.dev129+gae95fcfbc<a class="headerlink" href="#fips-release" title="Link to this heading">#</a></h1>
 <a class="only-light reference internal image-reference" href="_images/logo.png"><img alt="fips logo" class="align-center only-light" src="_images/logo.png" style="width: 600px;" />
 </a>
 <a class="only-dark reference internal image-reference" href="_images/logo_dark.png"><img alt="fips logo" class="align-center only-dark" src="_images/logo_dark.png" style="width: 600px;" />
@@ -450,134 +472,175 @@
 <a class="reference external image-reference" href="https://doi.org/10.5281/zenodo.22258484"><img alt="DOI" src="https://zenodo.org/badge/DOI/10.5281/zenodo.22258484.svg" />
 </a>
 <blockquote>
-<div><p><strong>⚠️ Beta Release</strong>: FIPS is currently in beta (v0.1.0b1). The core API is stable and ready for testing, but may evolve based on user feedback. Please <a class="reference external" href="https://github.com/jmineau/fips/issues">report any issues or edge cases</a> you encounter.</p>
+<div><p><strong>⚠️ Beta</strong>: fips is in beta, and its API may still change between releases. The <a class="reference external" href="https://github.com/jmineau/fips/blob/main/CHANGELOG.md">changelog</a> says what changed, and the <a class="reference external" href="https://jmineau.github.io/fips/stable/migration.html">migration guide</a> how to move code from 0.1. Please <a class="reference external" href="https://github.com/jmineau/fips/issues">report any issues or edge cases</a> you encounter.</p>
 </div></blockquote>
 <section id="bridging-physics-and-data">
 <h2>Bridging Physics and Data<a class="headerlink" href="#bridging-physics-and-data" title="Link to this heading">#</a></h2>
-<p>Inverse problems in geophysics and atmospheric science are incredibly complex, often involving massive state spaces, deeply heterogeneous observational networks, and explicit matrix-algebra requirements. While many general-purpose optimization tools exist, they often force researchers to strip away critical spatiotemporal metadata or translate pre-computed physical models into rigid, abstract array structures.</p>
-<p><strong>FIPS (Flexible Inverse Problem Solver)</strong> is built from the ground up to solve linear, matrix-based inverse problems without losing the context of your data. It provides the structural flexibility to handle messy, real-world realities seamlessly:</p>
+<p>Inverse problems in geophysics and atmospheric science often involve large state spaces, heterogeneous observation networks, and explicit matrix algebra. General-purpose optimization tools tend to make researchers strip away the labels of their data (times, places, instruments) and translate their physical models into bare arrays.</p>
+<p><strong>fips (Flexible Inverse Problem Solver)</strong> solves linear inverse problems without losing the labels of your data:</p>
 <ul class="simple">
-<li><p><strong>Native N-Dimensional Alignment</strong>: FIPS natively utilizes <code class="docutils literal notranslate"><span class="pre">pandas.MultiIndex</span></code> to smoothly align heterogeneous datasets across any dimension. Whether you are mixing temporal, spatial, spectral, or sensor-specific data, your coordinates are never dropped or misaligned.</p></li>
-<li><p><strong>Modular Block Architecture</strong>: Avoid wrangling monolithic arrays. Construct massive, multi-source state spaces and observation networks piece-by-piece using specialized <code class="docutils literal notranslate"><span class="pre">Block</span></code> and <code class="docutils literal notranslate"><span class="pre">MatrixBlock</span></code> objects.</p></li>
-<li><p><strong>Speak Your Domain’s Language</strong>: Built explicitly around the standard <code class="docutils literal notranslate"><span class="pre">y</span> <span class="pre">=</span> <span class="pre">Hx</span> <span class="pre">+</span> <span class="pre">error</span></code> paradigm. Directly plug in your pre-computed forward operators (<span class="math notranslate nohighlight">\(H\)</span>), prior covariances (<span class="math notranslate nohighlight">\(S_0\)</span>), and model-data mismatches (<span class="math notranslate nohighlight">\(S_z\)</span>).</p></li>
-<li><p><strong>Analytical Speed &amp; Sparse Support</strong>: FIPS is built for scale. By leveraging optimized sparse data structures and direct linear algebra rather than expensive sampling algorithms, it computes exact analytical Maximum A Posteriori (MAP) estimates for massive state spaces in seconds.</p></li>
+<li><p><strong>Everything is matched by label</strong>: every value carries a <code class="docutils literal notranslate"><span class="pre">pandas</span></code> index (time, latitude, site, …). The inputs of a problem are matched by their labels, never by position, and a label on one side only is an error that names it.</p></li>
+<li><p><strong>Built from named blocks</strong>: a state of fluxes and offsets, observations from towers and satellites. Each block keeps its own labels, and a matrix is built block by block.</p></li>
+<li><p><strong>The standard linear model</strong>: observations are the forward operator times the state, plus an offset, plus an error. Plug in your forward operator (a Jacobian you computed), the prior and its covariance, and the observation covariance. Covariances are written as correlation models (exponential, Gaussian, Matérn, Kronecker products) with standard deviations.</p></li>
+<li><p><strong>Fast and exact</strong>: each matrix is kept in its cheapest form (dense, sparse, diagonal, or Kronecker factors), and fips computes the exact Gaussian posterior with direct linear algebra, not sampling, for large state spaces in seconds.</p></li>
 </ul>
 </section>
 <section id="installation">
 <h2>Installation<a class="headerlink" href="#installation" title="Link to this heading">#</a></h2>
-<section id="from-pypi">
-<h3>From PyPI<a class="headerlink" href="#from-pypi" title="Link to this heading">#</a></h3>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>fips
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>fips<span class="w">            </span><span class="c1"># the solver</span>
+pip<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot;fips[viz]&quot;</span><span class="w">     </span><span class="c1"># with plot_comparison (matplotlib)</span>
 </pre></div>
 </div>
-</section>
-<section id="for-development">
-<h3>For development<a class="headerlink" href="#for-development" title="Link to this heading">#</a></h3>
+<p>For development:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/jmineau/fips.git
 <span class="nb">cd</span><span class="w"> </span>fips
-uv<span class="w"> </span>sync<span class="w"> </span>--dev
+uv<span class="w"> </span>sync
 </pre></div>
 </div>
-</section>
 </section>
 <section id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Link to this heading">#</a></h2>
-<section id="single-block-one-observation-source">
-<h3>Single-block — one observation source<a class="headerlink" href="#single-block-one-observation-source" title="Link to this heading">#</a></h3>
+<section id="a-first-problem-rays-through-a-line-of-cells">
+<h3>A first problem: rays through a line of cells<a class="headerlink" href="#a-first-problem-rays-through-a-line-of-cells" title="Link to this heading">#</a></h3>
+<p>Six rays cross a line of four cells, timed by two instruments whose clocks may be off. A ray’s travel time is the sum, over the cells it crosses, of its length in the cell times the cell’s slowness, plus its instrument’s clock delay. What are the slowness of each cell and the delay of each clock?</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">fips</span><span class="w"> </span><span class="kn">import</span> <span class="n">Block</span><span class="p">,</span> <span class="n">CovarianceMatrix</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">fips.problems.flux</span><span class="w"> </span><span class="kn">import</span> <span class="n">FluxProblem</span>
 
-<span class="c1"># State: gridded prior fluxes (time × lat × lon)</span>
-<span class="n">flux_idx</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">MultiIndex</span><span class="o">.</span><span class="n">from_product</span><span class="p">(</span>
-    <span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">date_range</span><span class="p">(</span><span class="s2">&quot;2023-01&quot;</span><span class="p">,</span> <span class="n">periods</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">freq</span><span class="o">=</span><span class="s2">&quot;MS&quot;</span><span class="p">),</span> <span class="p">[</span><span class="mf">37.0</span><span class="p">,</span> <span class="mf">38.0</span><span class="p">],</span> <span class="p">[</span><span class="o">-</span><span class="mf">112.0</span><span class="p">,</span> <span class="o">-</span><span class="mf">111.0</span><span class="p">]],</span>
-    <span class="n">names</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;time&quot;</span><span class="p">,</span> <span class="s2">&quot;lat&quot;</span><span class="p">,</span> <span class="s2">&quot;lon&quot;</span><span class="p">],</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">fips</span>
+
+<span class="c1"># The state: what we want to know. The slowness (s/km) of four cells along a</span>
+<span class="c1"># line, labeled by where each cell is (km), and the clock delay (s) of each of</span>
+<span class="c1"># the two instruments that timed the rays.</span>
+<span class="n">cells</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">([</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">1.5</span><span class="p">,</span> <span class="mf">2.5</span><span class="p">,</span> <span class="mf">3.5</span><span class="p">],</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;x&quot;</span><span class="p">)</span>
+<span class="n">instruments</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">([</span><span class="s2">&quot;east&quot;</span><span class="p">,</span> <span class="s2">&quot;west&quot;</span><span class="p">],</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;instrument&quot;</span><span class="p">)</span>
+<span class="n">prior</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Vector</span><span class="o">.</span><span class="n">from_blocks</span><span class="p">(</span>
+    <span class="p">{</span>
+        <span class="s2">&quot;slowness&quot;</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="mf">0.25</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">cells</span><span class="p">),</span>
+        <span class="s2">&quot;delay&quot;</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">instruments</span><span class="p">),</span>
+    <span class="p">}</span>
 <span class="p">)</span>
-<span class="n">prior</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="mi">12</span><span class="p">)</span> <span class="o">*</span> <span class="mf">1.5</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">flux_idx</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;flux&quot;</span><span class="p">)</span>
 
-<span class="c1"># Observations: tower concentration measurements</span>
-<span class="n">obs_idx</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">MultiIndex</span><span class="o">.</span><span class="n">from_product</span><span class="p">(</span>
-    <span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">date_range</span><span class="p">(</span><span class="s2">&quot;2023-01&quot;</span><span class="p">,</span> <span class="n">periods</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">freq</span><span class="o">=</span><span class="s2">&quot;2W&quot;</span><span class="p">),</span> <span class="p">[</span><span class="s2">&quot;UOU&quot;</span><span class="p">]],</span>
-    <span class="n">names</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;time&quot;</span><span class="p">,</span> <span class="s2">&quot;site&quot;</span><span class="p">],</span>
+<span class="c1"># The observations: the travel time (s) of six rays, each timed by one instrument.</span>
+<span class="n">rays</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">MultiIndex</span><span class="o">.</span><span class="n">from_tuples</span><span class="p">(</span>
+    <span class="p">[(</span><span class="s2">&quot;east&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="s2">&quot;east&quot;</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="p">(</span><span class="s2">&quot;east&quot;</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="p">(</span><span class="s2">&quot;west&quot;</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span> <span class="p">(</span><span class="s2">&quot;west&quot;</span><span class="p">,</span> <span class="mi">5</span><span class="p">),</span> <span class="p">(</span><span class="s2">&quot;west&quot;</span><span class="p">,</span> <span class="mi">6</span><span class="p">)],</span>
+    <span class="n">names</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;instrument&quot;</span><span class="p">,</span> <span class="s2">&quot;ray&quot;</span><span class="p">],</span>
 <span class="p">)</span>
-<span class="n">obs</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="mi">8</span><span class="p">)</span> <span class="o">*</span> <span class="mf">400.0</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">obs_idx</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;concentration&quot;</span><span class="p">)</span>
+<span class="n">times</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">([</span><span class="mf">0.53</span><span class="p">,</span> <span class="mf">0.76</span><span class="p">,</span> <span class="mf">1.02</span><span class="p">,</span> <span class="mf">0.25</span><span class="p">,</span> <span class="mf">0.48</span><span class="p">,</span> <span class="mf">0.80</span><span class="p">],</span> <span class="n">index</span><span class="o">=</span><span class="n">rays</span><span class="p">)</span>
+<span class="n">obs</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Vector</span><span class="o">.</span><span class="n">from_series</span><span class="p">(</span><span class="n">times</span><span class="p">,</span> <span class="n">block</span><span class="o">=</span><span class="s2">&quot;time&quot;</span><span class="p">)</span>
 
-<span class="c1"># Forward operator (Jacobian), flux error covariance, obs error covariance</span>
-<span class="n">H</span>   <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">12</span><span class="p">),</span> <span class="n">index</span><span class="o">=</span><span class="n">obs_idx</span><span class="p">,</span>  <span class="n">columns</span><span class="o">=</span><span class="n">flux_idx</span><span class="p">)</span>
-<span class="n">S_0</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">12</span><span class="p">)</span> <span class="o">*</span> <span class="mf">0.5</span><span class="p">,</span>  <span class="n">index</span><span class="o">=</span><span class="n">flux_idx</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="n">flux_idx</span><span class="p">)</span>
-<span class="n">S_z</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">8</span><span class="p">)</span>  <span class="o">*</span> <span class="mf">0.1</span><span class="p">,</span>  <span class="n">index</span><span class="o">=</span><span class="n">obs_idx</span><span class="p">,</span>  <span class="n">columns</span><span class="o">=</span><span class="n">obs_idx</span><span class="p">)</span>
+<span class="c1"># The forward operator: how the state makes the observations. A ray&#39;s time is</span>
+<span class="c1"># its length (km) in each cell times the cell&#39;s slowness, plus its instrument&#39;s</span>
+<span class="c1"># delay. Each block of the operator is labeled, and placed by its labels.</span>
+<span class="n">lengths</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
+    <span class="p">[[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]],</span>
+    <span class="n">index</span><span class="o">=</span><span class="n">rays</span><span class="p">,</span>
+    <span class="n">columns</span><span class="o">=</span><span class="n">cells</span><span class="p">,</span>
+    <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">delays</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
+    <span class="p">[[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]],</span>
+    <span class="n">index</span><span class="o">=</span><span class="n">rays</span><span class="p">,</span>
+    <span class="n">columns</span><span class="o">=</span><span class="n">instruments</span><span class="p">,</span>
+    <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">forward</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Operator</span><span class="o">.</span><span class="n">from_blocks</span><span class="p">(</span>
+    <span class="p">{(</span><span class="s2">&quot;time&quot;</span><span class="p">,</span> <span class="s2">&quot;slowness&quot;</span><span class="p">):</span> <span class="n">lengths</span><span class="p">,</span> <span class="p">(</span><span class="s2">&quot;time&quot;</span><span class="p">,</span> <span class="s2">&quot;delay&quot;</span><span class="p">):</span> <span class="n">delays</span><span class="p">},</span>
+    <span class="n">rows</span><span class="o">=</span><span class="n">obs</span><span class="o">.</span><span class="n">space</span><span class="p">,</span>
+    <span class="n">cols</span><span class="o">=</span><span class="n">prior</span><span class="o">.</span><span class="n">space</span><span class="p">,</span>
+<span class="p">)</span>
 
-<span class="n">problem</span> <span class="o">=</span> <span class="n">FluxProblem</span><span class="p">(</span>
-    <span class="n">obs</span><span class="o">=</span><span class="n">obs</span><span class="p">,</span> <span class="n">prior</span><span class="o">=</span><span class="n">prior</span><span class="p">,</span>
-    <span class="n">forward_operator</span><span class="o">=</span><span class="n">H</span><span class="p">,</span> <span class="n">prior_error</span><span class="o">=</span><span class="n">S_0</span><span class="p">,</span> <span class="n">modeldata_mismatch</span><span class="o">=</span><span class="n">S_z</span><span class="p">,</span>
-<span class="p">)</span><span class="o">.</span><span class="n">solve</span><span class="p">()</span>
+<span class="c1"># The covariances: how far the prior and the observations may be off. Neighboring</span>
+<span class="c1"># cells are alike (correlated over 1 km); the delays are independent of each other.</span>
+<span class="n">prior_cov</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Covariance</span><span class="o">.</span><span class="n">block_diag</span><span class="p">(</span>
+    <span class="n">slowness</span><span class="o">=</span><span class="n">fips</span><span class="o">.</span><span class="n">Exponential</span><span class="p">(</span><span class="s2">&quot;x&quot;</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span><span class="o">.</span><span class="n">with_std</span><span class="p">(</span><span class="mf">0.05</span><span class="p">),</span>
+    <span class="n">delay</span><span class="o">=</span><span class="n">fips</span><span class="o">.</span><span class="n">Independent</span><span class="p">()</span><span class="o">.</span><span class="n">with_std</span><span class="p">(</span><span class="mf">0.02</span><span class="p">),</span>
+<span class="p">)</span>
+<span class="n">obs_cov</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Independent</span><span class="p">()</span><span class="o">.</span><span class="n">with_std</span><span class="p">(</span><span class="mf">0.01</span><span class="p">)</span>
 
-<span class="nb">print</span><span class="p">(</span><span class="n">problem</span><span class="o">.</span><span class="n">posterior_fluxes</span><span class="p">)</span>        <span class="c1"># posterior pd.Series indexed by (time, lat, lon)</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">problem</span><span class="o">.</span><span class="n">estimator</span><span class="o">.</span><span class="n">reduced_chi2</span><span class="p">)</span>  <span class="c1"># reduced chi-squared statistic</span>
+<span class="n">problem</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Problem</span><span class="p">(</span><span class="n">prior</span><span class="p">,</span> <span class="n">prior_cov</span><span class="p">,</span> <span class="n">obs</span><span class="p">,</span> <span class="n">obs_cov</span><span class="p">,</span> <span class="n">forward</span><span class="p">)</span>
+<span class="n">post</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">problem</span><span class="p">)</span>
+
+<span class="c1"># The answer, labeled as the prior was, and its standard deviation</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">post</span><span class="o">.</span><span class="n">estimate</span><span class="p">[</span><span class="s2">&quot;slowness&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">to_series</span><span class="p">()</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">3</span><span class="p">))</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">post</span><span class="o">.</span><span class="n">estimate</span><span class="p">[</span><span class="s2">&quot;delay&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">to_series</span><span class="p">()</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">3</span><span class="p">))</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">post</span><span class="o">.</span><span class="n">variances</span><span class="p">[</span><span class="s2">&quot;slowness&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">to_series</span><span class="p">()</span><span class="o">.</span><span class="n">pow</span><span class="p">(</span><span class="mf">0.5</span><span class="p">)</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="s2">&quot;std&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">3</span><span class="p">))</span>
+
+<span class="c1"># The posterior of an aggregate: the mean slowness of the two halves of the line</span>
+<span class="n">halves</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">([</span><span class="s2">&quot;near&quot;</span><span class="p">,</span> <span class="s2">&quot;near&quot;</span><span class="p">,</span> <span class="s2">&quot;far&quot;</span><span class="p">,</span> <span class="s2">&quot;far&quot;</span><span class="p">],</span> <span class="n">index</span><span class="o">=</span><span class="n">cells</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;half&quot;</span><span class="p">)</span>
+<span class="n">W</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">aggregate</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">prior</span><span class="o">.</span><span class="n">space</span><span class="p">,</span> <span class="n">by</span><span class="o">=</span><span class="n">halves</span><span class="p">,</span> <span class="n">blocks</span><span class="o">=</span><span class="s2">&quot;slowness&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">post</span><span class="o">.</span><span class="n">cov</span><span class="p">(</span><span class="n">W</span><span class="p">)[</span><span class="s2">&quot;slowness&quot;</span><span class="p">,</span> <span class="s2">&quot;slowness&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">to_frame</span><span class="p">()</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">6</span><span class="p">))</span>
 </pre></div>
 </div>
+<p>The prior and the observations are <code class="docutils literal notranslate"><span class="pre">Vector</span></code>s, the forward operator is an <code class="docutils literal notranslate"><span class="pre">Operator</span></code>, the covariances are models put on the labels by the <code class="docutils literal notranslate"><span class="pre">Problem</span></code>, and <code class="docutils literal notranslate"><span class="pre">fips.solve</span></code> returns the <code class="docutils literal notranslate"><span class="pre">Posterior</span></code>. The rows of <code class="docutils literal notranslate"><span class="pre">lengths</span></code> and <code class="docutils literal notranslate"><span class="pre">delays</span></code> could come in any order: everything is matched by label.</p>
 </section>
-<section id="multi-block-combined-station-satellite-observations">
-<h3>Multi-block — combined station + satellite observations<a class="headerlink" href="#multi-block-combined-station-satellite-observations" title="Link to this heading">#</a></h3>
+<section id="the-same-objects-at-scale-an-atmospheric-flux-inversion">
+<h3>The same objects at scale: an atmospheric flux inversion<a class="headerlink" href="#the-same-objects-at-scale-an-atmospheric-flux-inversion" title="Link to this heading">#</a></h3>
+<p>The state is monthly fluxes on a grid, and the observations CO₂ every 6 hours at two sites. The prior covariance is correlated in time and in space and kept as its two Kronecker factors, so the full matrix is never formed. A transport Jacobian that covers only the cells a footprint touched is placed on the whole grid by its labels.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">fips</span><span class="w"> </span><span class="kn">import</span> <span class="n">Block</span><span class="p">,</span> <span class="n">Vector</span><span class="p">,</span> <span class="n">Matrix</span><span class="p">,</span> <span class="n">MatrixBlock</span><span class="p">,</span> <span class="n">CovarianceMatrix</span><span class="p">,</span> <span class="n">InverseProblem</span>
 
-<span class="c1"># State: same gridded prior fluxes (from above)</span>
-<span class="n">N_f</span> <span class="o">=</span> <span class="mi">12</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">fips</span>
 
-<span class="c1"># Obs block 1: ground station in-situ concentrations</span>
-<span class="n">station_idx</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">MultiIndex</span><span class="o">.</span><span class="n">from_product</span><span class="p">(</span>
-    <span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">date_range</span><span class="p">(</span><span class="s2">&quot;2023-01&quot;</span><span class="p">,</span> <span class="n">periods</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">freq</span><span class="o">=</span><span class="s2">&quot;2W&quot;</span><span class="p">),</span> <span class="p">[</span><span class="s2">&quot;UOU&quot;</span><span class="p">]],</span>
-    <span class="n">names</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;time&quot;</span><span class="p">,</span> <span class="s2">&quot;site&quot;</span><span class="p">],</span>
-<span class="p">)</span>
-<span class="n">station_obs</span> <span class="o">=</span> <span class="n">Block</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="mi">8</span><span class="p">)</span> <span class="o">*</span> <span class="mf">400.0</span><span class="p">,</span>
-                              <span class="n">index</span><span class="o">=</span><span class="n">station_idx</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;station&quot;</span><span class="p">))</span>
+<span class="n">rng</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
 
-<span class="c1"># Obs block 2: satellite column-average concentrations</span>
-<span class="n">satellite_idx</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">MultiIndex</span><span class="o">.</span><span class="n">from_product</span><span class="p">(</span>
-    <span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">date_range</span><span class="p">(</span><span class="s2">&quot;2023-01&quot;</span><span class="p">,</span> <span class="n">periods</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">freq</span><span class="o">=</span><span class="s2">&quot;MS&quot;</span><span class="p">),</span> <span class="p">[</span><span class="mf">37.5</span><span class="p">],</span> <span class="p">[</span><span class="o">-</span><span class="mf">111.5</span><span class="p">]],</span>
+<span class="c1"># The state: monthly fluxes on a 3 x 3 grid, one block named &quot;flux&quot;</span>
+<span class="n">cells</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">MultiIndex</span><span class="o">.</span><span class="n">from_product</span><span class="p">(</span>
+    <span class="p">[</span>
+        <span class="n">pd</span><span class="o">.</span><span class="n">date_range</span><span class="p">(</span><span class="s2">&quot;2024-01-01&quot;</span><span class="p">,</span> <span class="n">periods</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">freq</span><span class="o">=</span><span class="s2">&quot;MS&quot;</span><span class="p">),</span>
+        <span class="p">[</span><span class="mf">40.6</span><span class="p">,</span> <span class="mf">40.7</span><span class="p">,</span> <span class="mf">40.8</span><span class="p">],</span>
+        <span class="p">[</span><span class="o">-</span><span class="mf">112.0</span><span class="p">,</span> <span class="o">-</span><span class="mf">111.9</span><span class="p">,</span> <span class="o">-</span><span class="mf">111.8</span><span class="p">],</span>
+    <span class="p">],</span>
     <span class="n">names</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;time&quot;</span><span class="p">,</span> <span class="s2">&quot;lat&quot;</span><span class="p">,</span> <span class="s2">&quot;lon&quot;</span><span class="p">],</span>
 <span class="p">)</span>
-<span class="n">satellite_obs</span> <span class="o">=</span> <span class="n">Block</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span> <span class="o">*</span> <span class="mf">0.00400</span><span class="p">,</span>
-                                <span class="n">index</span><span class="o">=</span><span class="n">satellite_idx</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;satellite&quot;</span><span class="p">))</span>
+<span class="n">prior</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Vector</span><span class="o">.</span><span class="n">from_series</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">cells</span><span class="p">),</span> <span class="n">block</span><span class="o">=</span><span class="s2">&quot;flux&quot;</span><span class="p">)</span>
 
-<span class="c1"># Combine obs blocks into a list</span>
-<span class="n">obs_blks</span> <span class="o">=</span> <span class="p">[</span><span class="n">station_obs</span><span class="p">,</span> <span class="n">satellite_obs</span><span class="p">]</span>
+<span class="c1"># The observations: CO2 every 6 hours at two sites, one block named &quot;co2&quot;</span>
+<span class="n">labels</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">MultiIndex</span><span class="o">.</span><span class="n">from_product</span><span class="p">(</span>
+    <span class="p">[[</span><span class="s2">&quot;UOU&quot;</span><span class="p">,</span> <span class="s2">&quot;WBB&quot;</span><span class="p">],</span> <span class="n">pd</span><span class="o">.</span><span class="n">date_range</span><span class="p">(</span><span class="s2">&quot;2024-01-01&quot;</span><span class="p">,</span> <span class="n">periods</span><span class="o">=</span><span class="mi">360</span><span class="p">,</span> <span class="n">freq</span><span class="o">=</span><span class="s2">&quot;6h&quot;</span><span class="p">)],</span>
+    <span class="n">names</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;site&quot;</span><span class="p">,</span> <span class="s2">&quot;obs_time&quot;</span><span class="p">],</span>
+<span class="p">)</span>
+<span class="n">co2</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">rng</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mf">420.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">labels</span><span class="p">)),</span> <span class="n">index</span><span class="o">=</span><span class="n">labels</span><span class="p">)</span>
+<span class="n">obs</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Vector</span><span class="o">.</span><span class="n">from_series</span><span class="p">(</span><span class="n">co2</span><span class="p">,</span> <span class="n">block</span><span class="o">=</span><span class="s2">&quot;co2&quot;</span><span class="p">)</span>
 
-<span class="c1"># Jacobian: one MatrixBlock per obs type, both mapping to the &quot;flux&quot; state block</span>
-<span class="n">H_blks</span> <span class="o">=</span> <span class="p">[</span>
-    <span class="n">MatrixBlock</span><span class="p">(</span>
-        <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="n">N_f</span><span class="p">),</span>
-        <span class="n">index</span><span class="o">=</span><span class="n">station_idx</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="n">flux_idx</span><span class="p">),</span>
-        <span class="n">row_block</span><span class="o">=</span><span class="s2">&quot;station&quot;</span><span class="p">,</span> <span class="n">col_block</span><span class="o">=</span><span class="s2">&quot;flux&quot;</span><span class="p">,</span>
-    <span class="p">),</span>
-    <span class="n">MatrixBlock</span><span class="p">(</span>
-        <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="n">N_f</span><span class="p">),</span>
-        <span class="n">index</span><span class="o">=</span><span class="n">satellite_idx</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="n">flux_idx</span><span class="p">),</span>
-        <span class="n">row_block</span><span class="o">=</span><span class="s2">&quot;satellite&quot;</span><span class="p">,</span> <span class="n">col_block</span><span class="o">=</span><span class="s2">&quot;flux&quot;</span><span class="p">,</span>
-    <span class="p">),]</span>
+<span class="c1"># The transport Jacobian has columns only for the cells a footprint touched:</span>
+<span class="c1"># from_blocks places it by its labels, and the other cells get zeros</span>
+<span class="n">touched</span> <span class="o">=</span> <span class="n">cells</span><span class="p">[</span><span class="n">rng</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">cells</span><span class="p">))</span> <span class="o">&lt;</span> <span class="mf">0.7</span><span class="p">]</span>
+<span class="n">jacobian</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
+    <span class="n">rng</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">labels</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">touched</span><span class="p">))),</span> <span class="n">index</span><span class="o">=</span><span class="n">labels</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="n">touched</span>
+<span class="p">)</span>
+<span class="n">forward</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Operator</span><span class="o">.</span><span class="n">from_blocks</span><span class="p">(</span>
+    <span class="p">{(</span><span class="s2">&quot;co2&quot;</span><span class="p">,</span> <span class="s2">&quot;flux&quot;</span><span class="p">):</span> <span class="n">jacobian</span><span class="p">},</span> <span class="n">rows</span><span class="o">=</span><span class="n">obs</span><span class="o">.</span><span class="n">space</span><span class="p">,</span> <span class="n">cols</span><span class="o">=</span><span class="n">prior</span><span class="o">.</span><span class="n">space</span>
+<span class="p">)</span>
 
-<span class="c1"># Prior error covariance: only flux errors, no cross-block covariances</span>
-<span class="n">S_0</span> <span class="o">=</span> <span class="n">CovarianceMatrix</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">N_f</span><span class="p">)</span> <span class="o">*</span> <span class="mf">0.5</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">flux_idx</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="n">flux_idx</span><span class="p">)</span>
+<span class="c1"># The prior covariance, correlated in time and in space and kept as its two</span>
+<span class="c1"># Kronecker factors; the observation covariance, correlated within a site&#39;s day</span>
+<span class="n">prior_cov</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Kronecker</span><span class="p">(</span>
+    <span class="n">fips</span><span class="o">.</span><span class="n">Exponential</span><span class="p">(</span><span class="s2">&quot;time&quot;</span><span class="p">,</span> <span class="s2">&quot;30D&quot;</span><span class="p">),</span>
+    <span class="n">fips</span><span class="o">.</span><span class="n">Exponential</span><span class="p">([</span><span class="s2">&quot;lat&quot;</span><span class="p">,</span> <span class="s2">&quot;lon&quot;</span><span class="p">],</span> <span class="mf">10.0</span><span class="p">,</span> <span class="n">metric</span><span class="o">=</span><span class="s2">&quot;haversine&quot;</span><span class="p">),</span>
+<span class="p">)</span><span class="o">.</span><span class="n">with_std</span><span class="p">(</span><span class="mf">0.5</span><span class="p">)</span>
+<span class="n">obs_cov</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Independent</span><span class="p">()</span><span class="o">.</span><span class="n">with_std</span><span class="p">(</span><span class="mf">1.0</span><span class="p">)</span> <span class="o">+</span> <span class="n">fips</span><span class="o">.</span><span class="n">Exponential</span><span class="p">(</span>
+    <span class="s2">&quot;obs_time&quot;</span><span class="p">,</span> <span class="s2">&quot;12h&quot;</span><span class="p">,</span> <span class="n">within</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;site&quot;</span><span class="p">,</span> <span class="s2">&quot;obs_time.date&quot;</span><span class="p">]</span>
+<span class="p">)</span><span class="o">.</span><span class="n">with_std</span><span class="p">(</span><span class="mf">0.5</span><span class="p">)</span>
 
-<span class="c1"># Model-data mismatch covariance: block-diagonal with separate error levels for stations vs. satellite</span>
-<span class="n">S_z_blks</span> <span class="o">=</span> <span class="p">[</span>
-    <span class="n">CovarianceMatrix</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">8</span><span class="p">)</span> <span class="o">*</span> <span class="mf">0.1</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">station_idx</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="n">station_idx</span><span class="p">),</span>
-    <span class="n">CovarianceMatrix</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span> <span class="o">*</span> <span class="mf">0.2</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">satellite_idx</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="n">satellite_idx</span><span class="p">),</span>
-<span class="p">]</span>
+<span class="n">problem</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Problem</span><span class="p">(</span>
+    <span class="n">prior</span><span class="o">=</span><span class="n">prior</span><span class="p">,</span>
+    <span class="n">prior_cov</span><span class="o">=</span><span class="n">prior_cov</span><span class="p">,</span>
+    <span class="n">obs</span><span class="o">=</span><span class="n">obs</span><span class="p">,</span>
+    <span class="n">obs_cov</span><span class="o">=</span><span class="n">obs_cov</span><span class="p">,</span>
+    <span class="n">forward</span><span class="o">=</span><span class="n">forward</span><span class="p">,</span>
+    <span class="n">offset</span><span class="o">=</span><span class="mf">415.0</span><span class="p">,</span>  <span class="c1"># the background: the part of the observations the fluxes do not explain</span>
+<span class="p">)</span>
+<span class="n">post</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">problem</span><span class="p">)</span>
 
-<span class="c1"># Pass blocks to the InverseProblem and solve</span>
-<span class="n">problem</span> <span class="o">=</span> <span class="n">InverseProblem</span><span class="p">(</span>
-    <span class="n">obs</span><span class="o">=</span><span class="n">obs_blks</span><span class="p">,</span> <span class="n">prior</span><span class="o">=</span><span class="n">prior</span><span class="p">,</span>
-    <span class="n">forward_operator</span><span class="o">=</span><span class="n">H_blks</span><span class="p">,</span> <span class="n">prior_error</span><span class="o">=</span><span class="n">S_0</span><span class="p">,</span> <span class="n">modeldata_mismatch</span><span class="o">=</span><span class="n">S_z_blks</span><span class="p">,</span>
-<span class="p">)</span><span class="o">.</span><span class="n">solve</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">post</span><span class="o">.</span><span class="n">estimate</span><span class="p">[</span><span class="s2">&quot;flux&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">to_xarray</span><span class="p">())</span>  <span class="c1"># the posterior fluxes on (time, lat, lon)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">post</span><span class="o">.</span><span class="n">summary</span><span class="p">())</span>  <span class="c1"># DOFS, chi-squared, R², RMSE, ... in one row</span>
 
-<span class="nb">print</span><span class="p">(</span><span class="n">problem</span><span class="o">.</span><span class="n">posterior</span><span class="p">[</span><span class="s1">&#39;flux&#39;</span><span class="p">])</span>       <span class="c1"># posterior pd.Series indexed by (time, lat, lon)</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">problem</span><span class="o">.</span><span class="n">estimator</span><span class="o">.</span><span class="n">reduced_chi2</span><span class="p">)</span>  <span class="c1"># reduced chi-squared statistic</span>
+<span class="c1"># The posterior of each month&#39;s total flux, without forming the full covariance</span>
+<span class="n">W</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">aggregate</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">prior</span><span class="o">.</span><span class="n">space</span><span class="p">,</span> <span class="n">by</span><span class="o">=</span><span class="s2">&quot;time&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">post</span><span class="o">.</span><span class="n">cov</span><span class="p">(</span><span class="n">W</span><span class="p">)</span><span class="o">.</span><span class="n">to_frame</span><span class="p">()</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">3</span><span class="p">))</span>
 </pre></div>
 </div>
+<p>The <a class="reference external" href="https://jmineau.github.io/fips/stable/usage.html">user guide</a> has more: offsets solved for with the state, aggregated observations, part of the state held at its prior, and repeated inversions.</p>
 </section>
 </section>
 <div class="toctree-wrapper compound">
@@ -628,14 +691,10 @@ uv<span class="w"> </span>sync<span class="w"> </span>--dev
   <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="pst-show_toc_level nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#bridging-physics-and-data">Bridging Physics and Data</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#installation">Installation</a><ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#from-pypi">From PyPI</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#for-development">For development</a></li>
-</ul>
-</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#installation">Installation</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#usage">Usage</a><ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#single-block-one-observation-source">Single-block — one observation source</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#multi-block-combined-station-satellite-observations">Multi-block — combined station + satellite observations</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#a-first-problem-rays-through-a-line-of-cells">A first problem: rays through a line of cells</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-same-objects-at-scale-an-atmospheric-flux-inversion">The same objects at scale: an atmospheric flux inversion</a></li>
 </ul>
 </li>
 </ul>

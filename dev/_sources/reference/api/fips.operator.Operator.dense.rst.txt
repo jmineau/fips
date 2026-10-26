@@ -1,6 +1,0 @@
-fips.operator.Operator.dense
-============================
-
-.. currentmodule:: fips.operator
-
-.. automethod:: Operator.dense

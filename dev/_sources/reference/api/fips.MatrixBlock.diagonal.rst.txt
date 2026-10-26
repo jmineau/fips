@@ -1,6 +1,0 @@
-﻿fips.MatrixBlock.diagonal
-=========================
-
-.. currentmodule:: fips
-
-.. automethod:: MatrixBlock.diagonal

@@ -1,0 +1,41 @@
+﻿fips.linalg.BlockDiagonalOperator
+=================================
+
+.. currentmodule:: fips.linalg
+
+.. autoclass:: BlockDiagonalOperator
+   :no-members:
+   :show-inheritance:
+
+
+
+
+.. rubric:: Attributes
+
+.. autosummary::
+   :toctree:
+
+   ~BlockDiagonalOperator.blocks
+
+
+
+.. rubric:: Methods
+
+.. autosummary::
+   :toctree:
+
+   ~BlockDiagonalOperator.dense
+   ~BlockDiagonalOperator.diagonal
+   ~BlockDiagonalOperator.logdet
+   ~BlockDiagonalOperator.solve
+   ~BlockDiagonalOperator.sqrt
+
+
+
+
+.. rubric:: Inherited
+
+
+From :class:`~.LinearOperator`: :py:obj:`~.LinearOperator.dot`, :py:obj:`~.LinearOperator.trace`
+
+

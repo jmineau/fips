@@ -1,6 +1,0 @@
-fips.ForwardOperator.convolve
-=============================
-
-.. currentmodule:: fips
-
-.. automethod:: ForwardOperator.convolve

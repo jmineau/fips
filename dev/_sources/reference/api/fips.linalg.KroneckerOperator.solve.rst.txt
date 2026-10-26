@@ -1,0 +1,6 @@
+fips.linalg.KroneckerOperator.solve
+===================================
+
+.. currentmodule:: fips.linalg
+
+.. automethod:: KroneckerOperator.solve

@@ -1,6 +1,0 @@
-﻿fips.ForwardOperator.columns
-============================
-
-.. currentmodule:: fips
-
-.. autoproperty:: ForwardOperator.columns

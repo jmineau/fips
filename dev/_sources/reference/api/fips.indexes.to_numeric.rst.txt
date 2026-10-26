@@ -1,6 +1,0 @@
-﻿fips.indexes.to\_numeric
-========================
-
-.. currentmodule:: fips.indexes
-
-.. autofunction:: to_numeric

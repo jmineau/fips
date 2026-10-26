@@ -1,0 +1,36 @@
+﻿fips.Problem
+============
+
+.. currentmodule:: fips
+
+.. autoclass:: Problem
+   :no-members:
+
+
+
+
+.. rubric:: Attributes
+
+.. autosummary::
+   :toctree:
+
+   ~Problem.forward
+   ~Problem.obs
+   ~Problem.obs_cov
+   ~Problem.offset
+   ~Problem.prior
+   ~Problem.prior_cov
+
+
+
+.. rubric:: Methods
+
+.. autosummary::
+   :toctree:
+
+   ~Problem.aggregate
+   ~Problem.predict
+   ~Problem.restrict
+
+
+

@@ -1,6 +1,0 @@
-﻿fips.CovarianceMatrix.blocks
-============================
-
-.. currentmodule:: fips
-
-.. autoproperty:: CovarianceMatrix.blocks

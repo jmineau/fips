@@ -1,0 +1,6 @@
+﻿fips.covariance.distances.haversine\_matrix
+===========================================
+
+.. currentmodule:: fips.covariance.distances
+
+.. autofunction:: haversine_matrix

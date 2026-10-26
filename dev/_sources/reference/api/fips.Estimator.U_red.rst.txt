@@ -1,6 +1,0 @@
-fips.Estimator.U\_red
-=====================
-
-.. currentmodule:: fips
-
-.. autoproperty:: Estimator.U_red

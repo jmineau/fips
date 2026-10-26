@@ -1,6 +1,0 @@
-fips.Estimator.aggregate\_A
-===========================
-
-.. currentmodule:: fips
-
-.. automethod:: Estimator.aggregate_A

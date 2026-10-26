@@ -1,6 +1,0 @@
-﻿fips.operator.dottest
-=====================
-
-.. currentmodule:: fips.operator
-
-.. autofunction:: dottest

@@ -1,0 +1,6 @@
+﻿fips.offset\_block
+==================
+
+.. currentmodule:: fips
+
+.. autofunction:: offset_block

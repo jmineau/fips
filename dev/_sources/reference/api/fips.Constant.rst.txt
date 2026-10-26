@@ -1,0 +1,38 @@
+﻿fips.Constant
+=============
+
+.. currentmodule:: fips
+
+.. autoclass:: Constant
+   :no-members:
+   :show-inheritance:
+
+
+
+
+.. rubric:: Attributes
+
+.. autosummary::
+   :toctree:
+
+   ~Constant.levels
+   ~Constant.within
+
+
+
+.. rubric:: Methods
+
+.. autosummary::
+   :toctree:
+
+   ~Constant.correlation
+
+
+
+
+.. rubric:: Inherited
+
+
+From :class:`~.CorrelationModel`: :py:obj:`~.CorrelationModel.with_std`
+
+

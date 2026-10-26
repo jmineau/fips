@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Linear Operators &#8212; fips 0.1.0b10.dev58+g53ab9aafc documentation</title>
+    <title>Operators &#8212; fips 0.1.0b10.dev129+gae95fcfbc documentation</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0" />
 
-    <script src="../_static/documentation_options.js?v=54c30dc7"></script>
+    <script src="../_static/documentation_options.js?v=9a57f19f"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -57,8 +57,8 @@
     <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="fips.operator.Operator" href="api/fips.operator.Operator.html" />
-    <link rel="prev" title="fips.covariance.CovarianceBuilder.__radd__" href="api/fips.covariance.CovarianceBuilder.__radd__.html" />
+    <link rel="next" title="fips.Operator" href="api/fips.Operator.html" />
+    <link rel="prev" title="fips.Vector.__getitem__" href="api/fips.Vector.__getitem__.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="0.1" />
@@ -133,8 +133,8 @@
       
     
     
-    <img src="../_static/logo.png" class="logo__image only-light" alt="fips 0.1.0b10.dev58+g53ab9aafc documentation - Home"/>
-    <img src="../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.1.0b10.dev58+g53ab9aafc documentation - Home"/>
+    <img src="../_static/logo.png" class="logo__image only-light" alt="fips 0.1.0b10.dev129+gae95fcfbc documentation - Home"/>
+    <img src="../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.1.0b10.dev129+gae95fcfbc documentation - Home"/>
   
   
 </a></div>
@@ -172,7 +172,7 @@
 
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="../terminology.html">
-    Terminology & Notation
+    Terminology
   </a>
 </li>
 
@@ -183,13 +183,30 @@
   </a>
 </li>
 
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false"
+                aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="../migration.html">
+    Moving from fips 0.1
+  </a>
+</li>
 
-<li class="nav-item current active">
-  <a class="nav-link nav-internal" href="index.html">
+
+<li class=" current active">
+  <a class="nav-link dropdown-item nav-internal" href="index.html">
     API Reference
   </a>
 </li>
 
+                </ul>
+            </li>
+            
   </ul>
 </nav></div>
       
@@ -328,7 +345,7 @@
 
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="../terminology.html">
-    Terminology & Notation
+    Terminology
   </a>
 </li>
 
@@ -336,6 +353,13 @@
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="../examples/index.html">
     Examples
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../migration.html">
+    Moving from fips 0.1
   </a>
 </li>
 
@@ -424,622 +448,365 @@
      aria-label="Section Navigation">
   <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
   <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
-<li class="toctree-l1 has-children"><a class="reference internal" href="blocks.html">Block Structures</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l2 has-children"><a class="reference internal" href="api/fips.Block.html">fips.Block</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.Block.to_series.html">fips.Block.to_series</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.Block.to_xarray.html">fips.Block.to_xarray</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="space.html">Spaces and Vectors</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="api/fips.Space.html">fips.Space</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="api/fips.Space.index.html">fips.Space.index</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/fips.Space.levels.html">fips.Space.levels</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/fips.Space.names.html">fips.Space.names</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/fips.Space.offsets.html">fips.Space.offsets</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/fips.Space.align.html">fips.Space.align</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/fips.Space.from_index.html">fips.Space.from_index</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/fips.Space.round_labels.html">fips.Space.round_labels</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/fips.Space.select.html">fips.Space.select</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/fips.Space.slice.html">fips.Space.slice</a></li>
 </ul>
 </details></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.Block.name.html">fips.Block.name</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.Block.data.html">fips.Block.data</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.Block.index.html">fips.Block.index</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.Block.copy.html">fips.Block.copy</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.Block.to_series.html">fips.Block.to_series</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.Block.to_numpy.html">fips.Block.to_numpy</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.Block.to_xarray.html">fips.Block.to_xarray</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.Block.xs.html">fips.Block.xs</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.Block.reindex.html">fips.Block.reindex</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.Block.round_index.html">fips.Block.round_index</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.Block.from_file.html">fips.Block.from_file</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.Block.to_file.html">fips.Block.to_file</a></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="api/fips.MatrixBlock.html">fips.MatrixBlock</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.MatrixBlock.col_block.html">fips.MatrixBlock.col_block</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.MatrixBlock.row_block.html">fips.MatrixBlock.row_block</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.MatrixBlock.to_frame.html">fips.MatrixBlock.to_frame</a></li>
-</ul>
-</details></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.MatrixBlock.diagonal.html">fips.MatrixBlock.diagonal</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.MatrixBlock.from_operator.html">fips.MatrixBlock.from_operator</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.MatrixBlock.name.html">fips.MatrixBlock.name</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.MatrixBlock.data.html">fips.MatrixBlock.data</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.MatrixBlock.row_block.html">fips.MatrixBlock.row_block</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.MatrixBlock.col_block.html">fips.MatrixBlock.col_block</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.MatrixBlock.index.html">fips.MatrixBlock.index</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.MatrixBlock.columns.html">fips.MatrixBlock.columns</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.MatrixBlock.shape.html">fips.MatrixBlock.shape</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.MatrixBlock.values.html">fips.MatrixBlock.values</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.MatrixBlock.operator.html">fips.MatrixBlock.operator</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.MatrixBlock.copy.html">fips.MatrixBlock.copy</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.MatrixBlock.to_frame.html">fips.MatrixBlock.to_frame</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.MatrixBlock.to_numpy.html">fips.MatrixBlock.to_numpy</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.MatrixBlock.xs.html">fips.MatrixBlock.xs</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.MatrixBlock.reindex.html">fips.MatrixBlock.reindex</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.MatrixBlock.round_index.html">fips.MatrixBlock.round_index</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.MatrixBlock.from_file.html">fips.MatrixBlock.from_file</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.MatrixBlock.to_file.html">fips.MatrixBlock.to_file</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.MatrixBlock.is_sparse.html">fips.MatrixBlock.is_sparse</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.MatrixBlock.to_sparse.html">fips.MatrixBlock.to_sparse</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.MatrixBlock.to_dense.html">fips.MatrixBlock.to_dense</a></li>
-</ul>
-</details></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="multiblocks.html">Multi-Block Structures</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="api/fips.Space.from_index.html">fips.Space.from_index</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/fips.Space.names.html">fips.Space.names</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/fips.Space.levels.html">fips.Space.levels</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/fips.Space.index.html">fips.Space.index</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/fips.Space.offsets.html">fips.Space.offsets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/fips.Space.select.html">fips.Space.select</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/fips.Space.slice.html">fips.Space.slice</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/fips.Space.align.html">fips.Space.align</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/fips.Space.round_labels.html">fips.Space.round_labels</a></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="api/fips.Vector.html">fips.Vector</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.Vector.blocks.html">fips.Vector.blocks</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.Vector.data.html">fips.Vector.data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/fips.Vector.index.html">fips.Vector.index</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/fips.Vector.name.html">fips.Vector.name</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/fips.Vector.space.html">fips.Vector.space</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/fips.Vector.values.html">fips.Vector.values</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/fips.Vector.align.html">fips.Vector.align</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/fips.Vector.combine_first.html">fips.Vector.combine_first</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/fips.Vector.from_blocks.html">fips.Vector.from_blocks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/fips.Vector.from_series.html">fips.Vector.from_series</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/fips.Vector.round_labels.html">fips.Vector.round_labels</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/fips.Vector.to_series.html">fips.Vector.to_series</a></li>
 <li class="toctree-l3"><a class="reference internal" href="api/fips.Vector.to_xarray.html">fips.Vector.to_xarray</a></li>
 </ul>
 </details></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.Vector.name.html">fips.Vector.name</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.Vector.data.html">fips.Vector.data</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.Vector.index.html">fips.Vector.index</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.Vector.shape.html">fips.Vector.shape</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/fips.Vector.from_series.html">fips.Vector.from_series</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/fips.Vector.from_blocks.html">fips.Vector.from_blocks</a></li>
 <li class="toctree-l2"><a class="reference internal" href="api/fips.Vector.values.html">fips.Vector.values</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.Vector.blocks.html">fips.Vector.blocks</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.Vector.copy.html">fips.Vector.copy</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.Vector.to_series.html">fips.Vector.to_series</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.Vector.to_numpy.html">fips.Vector.to_numpy</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.Vector.to_xarray.html">fips.Vector.to_xarray</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/fips.Vector.space.html">fips.Vector.space</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/fips.Vector.name.html">fips.Vector.name</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/fips.Vector.index.html">fips.Vector.index</a></li>
 <li class="toctree-l2"><a class="reference internal" href="api/fips.Vector.__getitem__.html">fips.Vector.__getitem__</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.Vector.xs.html">fips.Vector.xs</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.Vector.reindex.html">fips.Vector.reindex</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.Vector.round_index.html">fips.Vector.round_index</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.Vector.from_file.html">fips.Vector.from_file</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.Vector.to_file.html">fips.Vector.to_file</a></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="api/fips.Matrix.html">fips.Matrix</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.Matrix.blocks.html">fips.Matrix.blocks</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.Matrix.data.html">fips.Matrix.data</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.Matrix.scale.html">fips.Matrix.scale</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.Matrix.to_xarray.html">fips.Matrix.to_xarray</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/fips.Vector.to_series.html">fips.Vector.to_series</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/fips.Vector.to_xarray.html">fips.Vector.to_xarray</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/fips.Vector.align.html">fips.Vector.align</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/fips.Vector.combine_first.html">fips.Vector.combine_first</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/fips.Vector.round_labels.html">fips.Vector.round_labels</a></li>
 </ul>
 </details></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.Matrix.diagonal.html">fips.Matrix.diagonal</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.Matrix.from_operator.html">fips.Matrix.from_operator</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.Matrix.name.html">fips.Matrix.name</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.Matrix.data.html">fips.Matrix.data</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.Matrix.index.html">fips.Matrix.index</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.Matrix.columns.html">fips.Matrix.columns</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.Matrix.shape.html">fips.Matrix.shape</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.Matrix.values.html">fips.Matrix.values</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.Matrix.operator.html">fips.Matrix.operator</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.Matrix.copy.html">fips.Matrix.copy</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.Matrix.to_frame.html">fips.Matrix.to_frame</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.Matrix.to_numpy.html">fips.Matrix.to_numpy</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.Matrix.__getitem__.html">fips.Matrix.__getitem__</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.Matrix.xs.html">fips.Matrix.xs</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.Matrix.reindex.html">fips.Matrix.reindex</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.Matrix.round_index.html">fips.Matrix.round_index</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.Matrix.scale.html">fips.Matrix.scale</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.Matrix.__add__.html">fips.Matrix.__add__</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.Matrix.from_file.html">fips.Matrix.from_file</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.Matrix.to_file.html">fips.Matrix.to_file</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.Matrix.is_sparse.html">fips.Matrix.is_sparse</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.Matrix.to_sparse.html">fips.Matrix.to_sparse</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.Matrix.to_dense.html">fips.Matrix.to_dense</a></li>
+<li class="toctree-l1 current active has-children"><a aria-current="page" class="current reference internal" href="#">Operators</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="api/fips.Operator.html">fips.Operator</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="api/fips.Operator.cols.html">fips.Operator.cols</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/fips.Operator.data.html">fips.Operator.data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/fips.Operator.name.html">fips.Operator.name</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/fips.Operator.rows.html">fips.Operator.rows</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/fips.Operator.shape.html">fips.Operator.shape</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/fips.Operator.T.html">fips.Operator.T</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/fips.Operator.align.html">fips.Operator.align</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/fips.Operator.dense.html">fips.Operator.dense</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/fips.Operator.from_blocks.html">fips.Operator.from_blocks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/fips.Operator.from_frame.html">fips.Operator.from_frame</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/fips.Operator.round_labels.html">fips.Operator.round_labels</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/fips.Operator.sparse.html">fips.Operator.sparse</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/fips.Operator.to_frame.html">fips.Operator.to_frame</a></li>
 </ul>
 </details></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="operators.html">Operators</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l2 has-children"><a class="reference internal" href="api/fips.ForwardOperator.html">fips.ForwardOperator</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.ForwardOperator.obs_index.html">fips.ForwardOperator.obs_index</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.ForwardOperator.state_index.html">fips.ForwardOperator.state_index</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.ForwardOperator.convolve.html">fips.ForwardOperator.convolve</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/fips.Operator.from_frame.html">fips.Operator.from_frame</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/fips.Operator.from_blocks.html">fips.Operator.from_blocks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/fips.Operator.data.html">fips.Operator.data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/fips.Operator.rows.html">fips.Operator.rows</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/fips.Operator.cols.html">fips.Operator.cols</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/fips.Operator.name.html">fips.Operator.name</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/fips.Operator.shape.html">fips.Operator.shape</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/fips.Operator.T.html">fips.Operator.T</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/fips.Operator.__getitem__.html">fips.Operator.__getitem__</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/fips.Operator.align.html">fips.Operator.align</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/fips.Operator.round_labels.html">fips.Operator.round_labels</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/fips.Operator.__matmul__.html">fips.Operator.__matmul__</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/fips.Operator.__add__.html">fips.Operator.__add__</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/fips.Operator.__sub__.html">fips.Operator.__sub__</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/fips.Operator.__mul__.html">fips.Operator.__mul__</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/fips.Operator.__truediv__.html">fips.Operator.__truediv__</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/fips.Operator.__neg__.html">fips.Operator.__neg__</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/fips.Operator.dense.html">fips.Operator.dense</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/fips.Operator.sparse.html">fips.Operator.sparse</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/fips.Operator.to_frame.html">fips.Operator.to_frame</a></li>
 </ul>
 </details></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.ForwardOperator.diagonal.html">fips.ForwardOperator.diagonal</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.ForwardOperator.from_operator.html">fips.ForwardOperator.from_operator</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.ForwardOperator.name.html">fips.ForwardOperator.name</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.ForwardOperator.data.html">fips.ForwardOperator.data</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.ForwardOperator.index.html">fips.ForwardOperator.index</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.ForwardOperator.obs_index.html">fips.ForwardOperator.obs_index</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.ForwardOperator.columns.html">fips.ForwardOperator.columns</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.ForwardOperator.state_index.html">fips.ForwardOperator.state_index</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.ForwardOperator.shape.html">fips.ForwardOperator.shape</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.ForwardOperator.values.html">fips.ForwardOperator.values</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.ForwardOperator.operator.html">fips.ForwardOperator.operator</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.ForwardOperator.blocks.html">fips.ForwardOperator.blocks</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.ForwardOperator.copy.html">fips.ForwardOperator.copy</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.ForwardOperator.to_frame.html">fips.ForwardOperator.to_frame</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.ForwardOperator.to_numpy.html">fips.ForwardOperator.to_numpy</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.ForwardOperator.xs.html">fips.ForwardOperator.xs</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.ForwardOperator.reindex.html">fips.ForwardOperator.reindex</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.ForwardOperator.round_index.html">fips.ForwardOperator.round_index</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.ForwardOperator.from_file.html">fips.ForwardOperator.from_file</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.ForwardOperator.to_file.html">fips.ForwardOperator.to_file</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.ForwardOperator.is_sparse.html">fips.ForwardOperator.is_sparse</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.ForwardOperator.to_sparse.html">fips.ForwardOperator.to_sparse</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.ForwardOperator.to_dense.html">fips.ForwardOperator.to_dense</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.ForwardOperator.convolve.html">fips.ForwardOperator.convolve</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.operators.convolve.html">fips.operators.convolve</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="covariance.html">Covariances</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="api/fips.Covariance.html">fips.Covariance</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="api/fips.Covariance.space.html">fips.Covariance.space</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/fips.Covariance.variances.html">fips.Covariance.variances</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/fips.Covariance.block_diag.html">fips.Covariance.block_diag</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/fips.Covariance.diagonal.html">fips.Covariance.diagonal</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/fips.Covariance.logdet.html">fips.Covariance.logdet</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/fips.Covariance.quadratic_form.html">fips.Covariance.quadratic_form</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/fips.Covariance.solve.html">fips.Covariance.solve</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/fips.Covariance.sqrt.html">fips.Covariance.sqrt</a></li>
 </ul>
 </details></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="covariance.html">Covariance Matrices</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l2 has-children"><a class="reference internal" href="api/fips.CovarianceMatrix.html">fips.CovarianceMatrix</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.CovarianceMatrix.variances.html">fips.CovarianceMatrix.variances</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.CovarianceMatrix.force_symmetry.html">fips.CovarianceMatrix.force_symmetry</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/fips.Covariance.diagonal.html">fips.Covariance.diagonal</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/fips.Covariance.block_diag.html">fips.Covariance.block_diag</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/fips.Covariance.space.html">fips.Covariance.space</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/fips.Covariance.variances.html">fips.Covariance.variances</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/fips.Covariance.solve.html">fips.Covariance.solve</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/fips.Covariance.logdet.html">fips.Covariance.logdet</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/fips.Covariance.quadratic_form.html">fips.Covariance.quadratic_form</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/fips.Covariance.sqrt.html">fips.Covariance.sqrt</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="api/fips.Exponential.html">fips.Exponential</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="api/fips.Exponential.metric.html">fips.Exponential.metric</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/fips.Exponential.scale.html">fips.Exponential.scale</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/fips.Exponential.within.html">fips.Exponential.within</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/fips.Exponential.correlation.html">fips.Exponential.correlation</a></li>
 </ul>
 </details></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.CovarianceMatrix.diagonal.html">fips.CovarianceMatrix.diagonal</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.CovarianceMatrix.from_operator.html">fips.CovarianceMatrix.from_operator</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.CovarianceMatrix.name.html">fips.CovarianceMatrix.name</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.CovarianceMatrix.data.html">fips.CovarianceMatrix.data</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.CovarianceMatrix.index.html">fips.CovarianceMatrix.index</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.CovarianceMatrix.columns.html">fips.CovarianceMatrix.columns</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.CovarianceMatrix.shape.html">fips.CovarianceMatrix.shape</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.CovarianceMatrix.values.html">fips.CovarianceMatrix.values</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.CovarianceMatrix.operator.html">fips.CovarianceMatrix.operator</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.CovarianceMatrix.variances.html">fips.CovarianceMatrix.variances</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.CovarianceMatrix.blocks.html">fips.CovarianceMatrix.blocks</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.CovarianceMatrix.copy.html">fips.CovarianceMatrix.copy</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.CovarianceMatrix.to_frame.html">fips.CovarianceMatrix.to_frame</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.CovarianceMatrix.to_numpy.html">fips.CovarianceMatrix.to_numpy</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.CovarianceMatrix.xs.html">fips.CovarianceMatrix.xs</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.CovarianceMatrix.reindex.html">fips.CovarianceMatrix.reindex</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.CovarianceMatrix.round_index.html">fips.CovarianceMatrix.round_index</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.CovarianceMatrix.from_file.html">fips.CovarianceMatrix.from_file</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.CovarianceMatrix.to_file.html">fips.CovarianceMatrix.to_file</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.CovarianceMatrix.is_sparse.html">fips.CovarianceMatrix.is_sparse</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.CovarianceMatrix.to_sparse.html">fips.CovarianceMatrix.to_sparse</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.CovarianceMatrix.to_dense.html">fips.CovarianceMatrix.to_dense</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.CovarianceMatrix.force_symmetry.html">fips.CovarianceMatrix.force_symmetry</a></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="api/fips.covariance.ErrorComponent.html">fips.covariance.ErrorComponent</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.covariance.ErrorComponent.name.html">fips.covariance.ErrorComponent.name</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.covariance.ErrorComponent.variances.html">fips.covariance.ErrorComponent.variances</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.covariance.ErrorComponent.build.html">fips.covariance.ErrorComponent.build</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="api/fips.Gaussian.html">fips.Gaussian</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="api/fips.Gaussian.metric.html">fips.Gaussian.metric</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/fips.Gaussian.scale.html">fips.Gaussian.scale</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/fips.Gaussian.within.html">fips.Gaussian.within</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/fips.Gaussian.correlation.html">fips.Gaussian.correlation</a></li>
 </ul>
 </details></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="api/fips.covariance.DiagonalError.html">fips.covariance.DiagonalError</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.covariance.DiagonalError.build.html">fips.covariance.DiagonalError.build</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="api/fips.Matern.html">fips.Matern</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="api/fips.Matern.metric.html">fips.Matern.metric</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/fips.Matern.nu.html">fips.Matern.nu</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/fips.Matern.scale.html">fips.Matern.scale</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/fips.Matern.within.html">fips.Matern.within</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/fips.Matern.correlation.html">fips.Matern.correlation</a></li>
 </ul>
 </details></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="api/fips.covariance.BlockDecayError.html">fips.covariance.BlockDecayError</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.covariance.BlockDecayError.corr_func.html">fips.covariance.BlockDecayError.corr_func</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.covariance.BlockDecayError.groupers.html">fips.covariance.BlockDecayError.groupers</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.covariance.BlockDecayError.build.html">fips.covariance.BlockDecayError.build</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="api/fips.Constant.html">fips.Constant</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="api/fips.Constant.levels.html">fips.Constant.levels</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/fips.Constant.within.html">fips.Constant.within</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/fips.Constant.correlation.html">fips.Constant.correlation</a></li>
 </ul>
 </details></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="api/fips.covariance.KroneckerError.html">fips.covariance.KroneckerError</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.covariance.KroneckerError.marginal_kernels.html">fips.covariance.KroneckerError.marginal_kernels</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.covariance.KroneckerError.build.html">fips.covariance.KroneckerError.build</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.covariance.KroneckerError.operator.html">fips.covariance.KroneckerError.operator</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="api/fips.Independent.html">fips.Independent</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="api/fips.Independent.levels.html">fips.Independent.levels</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/fips.Independent.correlation.html">fips.Independent.correlation</a></li>
 </ul>
 </details></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.covariance.ErrorComponent.build.html">fips.covariance.ErrorComponent.build</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.covariance.ErrorComponent.__add__.html">fips.covariance.ErrorComponent.__add__</a></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="api/fips.covariance.KroneckerOperator.html">fips.covariance.KroneckerOperator</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.covariance.KroneckerOperator.factors.html">fips.covariance.KroneckerOperator.factors</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.covariance.KroneckerOperator.positions.html">fips.covariance.KroneckerOperator.positions</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.covariance.KroneckerOperator.std.html">fips.covariance.KroneckerOperator.std</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.covariance.KroneckerOperator.dense.html">fips.covariance.KroneckerOperator.dense</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.covariance.KroneckerOperator.diagonal.html">fips.covariance.KroneckerOperator.diagonal</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.covariance.KroneckerOperator.solve.html">fips.covariance.KroneckerOperator.solve</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="api/fips.Kronecker.html">fips.Kronecker</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="api/fips.Kronecker.factors.html">fips.Kronecker.factors</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/fips.Kronecker.levels.html">fips.Kronecker.levels</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/fips.Kronecker.correlation.html">fips.Kronecker.correlation</a></li>
 </ul>
 </details></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.covariance.KroneckerError.operator.html">fips.covariance.KroneckerError.operator</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.covariance.KroneckerOperator.solve.html">fips.covariance.KroneckerOperator.solve</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.covariance.KroneckerOperator.dense.html">fips.covariance.KroneckerOperator.dense</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.covariance.KroneckerOperator.diagonal.html">fips.covariance.KroneckerOperator.diagonal</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.covariance.KroneckerOperator.factors.html">fips.covariance.KroneckerOperator.factors</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.covariance.KroneckerOperator.positions.html">fips.covariance.KroneckerOperator.positions</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.covariance.KroneckerOperator.std.html">fips.covariance.KroneckerOperator.std</a></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="api/fips.covariance.CovarianceBuilder.html">fips.covariance.CovarianceBuilder</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.covariance.CovarianceBuilder.components.html">fips.covariance.CovarianceBuilder.components</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.covariance.CovarianceBuilder.build.html">fips.covariance.CovarianceBuilder.build</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/fips.Exponential.levels.html">fips.Exponential.levels</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/fips.Exponential.scale.html">fips.Exponential.scale</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/fips.Exponential.metric.html">fips.Exponential.metric</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/fips.Exponential.within.html">fips.Exponential.within</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/fips.Matern.nu.html">fips.Matern.nu</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/fips.Constant.within.html">fips.Constant.within</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/fips.Kronecker.factors.html">fips.Kronecker.factors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/fips.Kronecker.levels.html">fips.Kronecker.levels</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="api/fips.covariance.CorrelationModel.html">fips.covariance.CorrelationModel</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="api/fips.covariance.CorrelationModel.levels.html">fips.covariance.CorrelationModel.levels</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/fips.covariance.CorrelationModel.correlation.html">fips.covariance.CorrelationModel.correlation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/fips.covariance.CorrelationModel.with_std.html">fips.covariance.CorrelationModel.with_std</a></li>
 </ul>
 </details></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.covariance.CovarianceBuilder.build.html">fips.covariance.CovarianceBuilder.build</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.covariance.CovarianceBuilder.__add__.html">fips.covariance.CovarianceBuilder.__add__</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.covariance.CovarianceBuilder.__radd__.html">fips.covariance.CovarianceBuilder.__radd__</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/fips.covariance.CorrelationModel.levels.html">fips.covariance.CorrelationModel.levels</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/fips.covariance.CorrelationModel.correlation.html">fips.covariance.CorrelationModel.correlation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/fips.covariance.CorrelationModel.with_std.html">fips.covariance.CorrelationModel.with_std</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="api/fips.covariance.CovarianceModel.html">fips.covariance.CovarianceModel</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="api/fips.covariance.CovarianceModel.build.html">fips.covariance.CovarianceModel.build</a></li>
 </ul>
 </details></li>
-<li class="toctree-l1 current active has-children"><a aria-current="page" class="current reference internal" href="#">Linear Operators</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l2 has-children"><a class="reference internal" href="api/fips.operator.Operator.html">fips.operator.Operator</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.operator.Operator.dense.html">fips.operator.Operator.dense</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.operator.Operator.diagonal.html">fips.operator.Operator.diagonal</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.operator.Operator.dot.html">fips.operator.Operator.dot</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.operator.Operator.solve.html">fips.operator.Operator.solve</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.operator.Operator.to_frame.html">fips.operator.Operator.to_frame</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.operator.Operator.trace.html">fips.operator.Operator.trace</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/fips.covariance.CovarianceModel.build.html">fips.covariance.CovarianceModel.build</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/fips.covariance.CovarianceModel.__add__.html">fips.covariance.CovarianceModel.__add__</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/fips.covariance.distances.haversine_matrix.html">fips.covariance.distances.haversine_matrix</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/fips.covariance.distances.chordal_matrix.html">fips.covariance.distances.chordal_matrix</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/fips.covariance.distances.time_diff_matrix.html">fips.covariance.distances.time_diff_matrix</a></li>
 </ul>
 </details></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="api/fips.operator.DenseOperator.html">fips.operator.DenseOperator</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.operator.DenseOperator.array.html">fips.operator.DenseOperator.array</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.operator.DenseOperator.dense.html">fips.operator.DenseOperator.dense</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.operator.DenseOperator.solve.html">fips.operator.DenseOperator.solve</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.operator.DenseOperator.trace.html">fips.operator.DenseOperator.trace</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="problem.html">Problem</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="api/fips.Problem.html">fips.Problem</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="api/fips.Problem.forward.html">fips.Problem.forward</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/fips.Problem.obs.html">fips.Problem.obs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/fips.Problem.obs_cov.html">fips.Problem.obs_cov</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/fips.Problem.offset.html">fips.Problem.offset</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/fips.Problem.prior.html">fips.Problem.prior</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/fips.Problem.prior_cov.html">fips.Problem.prior_cov</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/fips.Problem.aggregate.html">fips.Problem.aggregate</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/fips.Problem.predict.html">fips.Problem.predict</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/fips.Problem.restrict.html">fips.Problem.restrict</a></li>
 </ul>
 </details></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="api/fips.operator.SparseOperator.html">fips.operator.SparseOperator</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.operator.SparseOperator.matrix.html">fips.operator.SparseOperator.matrix</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.operator.SparseOperator.dense.html">fips.operator.SparseOperator.dense</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.operator.SparseOperator.diagonal.html">fips.operator.SparseOperator.diagonal</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.operator.SparseOperator.solve.html">fips.operator.SparseOperator.solve</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/fips.Problem.prior.html">fips.Problem.prior</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/fips.Problem.prior_cov.html">fips.Problem.prior_cov</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/fips.Problem.obs.html">fips.Problem.obs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/fips.Problem.obs_cov.html">fips.Problem.obs_cov</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/fips.Problem.forward.html">fips.Problem.forward</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/fips.Problem.offset.html">fips.Problem.offset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/fips.Problem.predict.html">fips.Problem.predict</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/fips.Problem.aggregate.html">fips.Problem.aggregate</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/fips.Problem.restrict.html">fips.Problem.restrict</a></li>
 </ul>
 </details></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="api/fips.operator.DiagonalOperator.html">fips.operator.DiagonalOperator</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.operator.DiagonalOperator.values.html">fips.operator.DiagonalOperator.values</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.operator.DiagonalOperator.dense.html">fips.operator.DiagonalOperator.dense</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.operator.DiagonalOperator.diagonal.html">fips.operator.DiagonalOperator.diagonal</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.operator.DiagonalOperator.solve.html">fips.operator.DiagonalOperator.solve</a></li>
-</ul>
-</details></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.operator.as_operator.html">fips.operator.as_operator</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.operator.Operator.dot.html">fips.operator.Operator.dot</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.operator.Operator.solve.html">fips.operator.Operator.solve</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.operator.Operator.dense.html">fips.operator.Operator.dense</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.operator.Operator.diagonal.html">fips.operator.Operator.diagonal</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.operator.Operator.trace.html">fips.operator.Operator.trace</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.operator.Operator.to_frame.html">fips.operator.Operator.to_frame</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.operator.DenseOperator.array.html">fips.operator.DenseOperator.array</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.operator.SparseOperator.matrix.html">fips.operator.SparseOperator.matrix</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.operator.DiagonalOperator.values.html">fips.operator.DiagonalOperator.values</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.operator.dottest.html">fips.operator.dottest</a></li>
-</ul>
-</details></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="inverse.html">Inverse Problem</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l2 has-children"><a class="reference internal" href="api/fips.InverseProblem.html">fips.InverseProblem</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.InverseProblem.averaging_kernel.html">fips.InverseProblem.averaging_kernel</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.InverseProblem.constant.html">fips.InverseProblem.constant</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.InverseProblem.desroziers.html">fips.InverseProblem.desroziers</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.InverseProblem.estimator.html">fips.InverseProblem.estimator</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.InverseProblem.forward_operator.html">fips.InverseProblem.forward_operator</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.InverseProblem.kalman_gain.html">fips.InverseProblem.kalman_gain</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.InverseProblem.modeldata_mismatch.html">fips.InverseProblem.modeldata_mismatch</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.InverseProblem.n_obs.html">fips.InverseProblem.n_obs</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.InverseProblem.n_state.html">fips.InverseProblem.n_state</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.InverseProblem.obs.html">fips.InverseProblem.obs</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.InverseProblem.obs_index.html">fips.InverseProblem.obs_index</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.InverseProblem.posterior.html">fips.InverseProblem.posterior</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.InverseProblem.posterior_error.html">fips.InverseProblem.posterior_error</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.InverseProblem.posterior_obs.html">fips.InverseProblem.posterior_obs</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.InverseProblem.prior.html">fips.InverseProblem.prior</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.InverseProblem.prior_error.html">fips.InverseProblem.prior_error</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.InverseProblem.prior_obs.html">fips.InverseProblem.prior_obs</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.InverseProblem.prior_obs_error.html">fips.InverseProblem.prior_obs_error</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.InverseProblem.result.html">fips.InverseProblem.result</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.InverseProblem.state_index.html">fips.InverseProblem.state_index</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.InverseProblem.get_block.html">fips.InverseProblem.get_block</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.InverseProblem.solve.html">fips.InverseProblem.solve</a></li>
-</ul>
-</details></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.InverseProblem.obs.html">fips.InverseProblem.obs</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.InverseProblem.prior.html">fips.InverseProblem.prior</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.InverseProblem.forward_operator.html">fips.InverseProblem.forward_operator</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.InverseProblem.prior_error.html">fips.InverseProblem.prior_error</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.InverseProblem.modeldata_mismatch.html">fips.InverseProblem.modeldata_mismatch</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.InverseProblem.constant.html">fips.InverseProblem.constant</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.InverseProblem.estimator.html">fips.InverseProblem.estimator</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.InverseProblem.solve.html">fips.InverseProblem.solve</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.InverseProblem.result.html">fips.InverseProblem.result</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.InverseProblem.posterior.html">fips.InverseProblem.posterior</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.InverseProblem.posterior_error.html">fips.InverseProblem.posterior_error</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.InverseProblem.prior_obs.html">fips.InverseProblem.prior_obs</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.InverseProblem.posterior_obs.html">fips.InverseProblem.posterior_obs</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.InverseProblem.prior_obs_error.html">fips.InverseProblem.prior_obs_error</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.InverseProblem.kalman_gain.html">fips.InverseProblem.kalman_gain</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.InverseProblem.averaging_kernel.html">fips.InverseProblem.averaging_kernel</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.InverseProblem.desroziers.html">fips.InverseProblem.desroziers</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.InverseProblem.get_block.html">fips.InverseProblem.get_block</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.InverseProblem.from_file.html">fips.InverseProblem.from_file</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.InverseProblem.to_file.html">fips.InverseProblem.to_file</a></li>
-</ul>
-</details></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="posterior.html">Posterior</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="posterior.html">Solving and Posterior</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="api/fips.solve.html">fips.solve</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/fips.available_methods.html">fips.available_methods</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="api/fips.methods.analytic.AnalyticOptions.html">fips.methods.analytic.AnalyticOptions</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="api/fips.methods.analytic.AnalyticOptions.gamma.html">fips.methods.analytic.AnalyticOptions.gamma</a></li>
+</ul>
+</details></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="api/fips.Posterior.html">fips.Posterior</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.Posterior.covariance.html">fips.Posterior.covariance</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.Posterior.desroziers.html">fips.Posterior.desroziers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/fips.Posterior.chi2.html">fips.Posterior.chi2</a></li>
 <li class="toctree-l3"><a class="reference internal" href="api/fips.Posterior.dofs.html">fips.Posterior.dofs</a></li>
 <li class="toctree-l3"><a class="reference internal" href="api/fips.Posterior.estimate.html">fips.Posterior.estimate</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.Posterior.estimator.html">fips.Posterior.estimator</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/fips.Posterior.innovation_cov.html">fips.Posterior.innovation_cov</a></li>
 <li class="toctree-l3"><a class="reference internal" href="api/fips.Posterior.kalman_gain.html">fips.Posterior.kalman_gain</a></li>
 <li class="toctree-l3"><a class="reference internal" href="api/fips.Posterior.mean.html">fips.Posterior.mean</a></li>
 <li class="toctree-l3"><a class="reference internal" href="api/fips.Posterior.modeled_obs.html">fips.Posterior.modeled_obs</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.Posterior.obs_index.html">fips.Posterior.obs_index</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.Posterior.prior_modeled_obs.html">fips.Posterior.prior_modeled_obs</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.Posterior.prior_obs_covariance.html">fips.Posterior.prior_obs_covariance</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/fips.Posterior.options.html">fips.Posterior.options</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/fips.Posterior.problem.html">fips.Posterior.problem</a></li>
 <li class="toctree-l3"><a class="reference internal" href="api/fips.Posterior.r2.html">fips.Posterior.r2</a></li>
 <li class="toctree-l3"><a class="reference internal" href="api/fips.Posterior.reduced_chi2.html">fips.Posterior.reduced_chi2</a></li>
 <li class="toctree-l3"><a class="reference internal" href="api/fips.Posterior.rmse.html">fips.Posterior.rmse</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.Posterior.state_index.html">fips.Posterior.state_index</a></li>
 <li class="toctree-l3"><a class="reference internal" href="api/fips.Posterior.uncertainty_reduction.html">fips.Posterior.uncertainty_reduction</a></li>
 <li class="toctree-l3"><a class="reference internal" href="api/fips.Posterior.variances.html">fips.Posterior.variances</a></li>
 <li class="toctree-l3"><a class="reference internal" href="api/fips.Posterior.averaging_kernel.html">fips.Posterior.averaging_kernel</a></li>
 <li class="toctree-l3"><a class="reference internal" href="api/fips.Posterior.cov.html">fips.Posterior.cov</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/fips.Posterior.desroziers.html">fips.Posterior.desroziers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/fips.Posterior.leverage.html">fips.Posterior.leverage</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/fips.Posterior.summary.html">fips.Posterior.summary</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/fips.Posterior.with_data.html">fips.Posterior.with_data</a></li>
 <li class="toctree-l3"><a class="reference internal" href="api/fips.Posterior.with_gamma.html">fips.Posterior.with_gamma</a></li>
 </ul>
 </details></li>
+<li class="toctree-l2"><a class="reference internal" href="api/fips.Posterior.problem.html">fips.Posterior.problem</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/fips.Posterior.options.html">fips.Posterior.options</a></li>
 <li class="toctree-l2"><a class="reference internal" href="api/fips.Posterior.estimate.html">fips.Posterior.estimate</a></li>
 <li class="toctree-l2"><a class="reference internal" href="api/fips.Posterior.mean.html">fips.Posterior.mean</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.Posterior.covariance.html">fips.Posterior.covariance</a></li>
 <li class="toctree-l2"><a class="reference internal" href="api/fips.Posterior.variances.html">fips.Posterior.variances</a></li>
 <li class="toctree-l2"><a class="reference internal" href="api/fips.Posterior.cov.html">fips.Posterior.cov</a></li>
 <li class="toctree-l2"><a class="reference internal" href="api/fips.Posterior.modeled_obs.html">fips.Posterior.modeled_obs</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.Posterior.prior_modeled_obs.html">fips.Posterior.prior_modeled_obs</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.Posterior.prior_obs_covariance.html">fips.Posterior.prior_obs_covariance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/fips.Posterior.innovation_cov.html">fips.Posterior.innovation_cov</a></li>
 <li class="toctree-l2"><a class="reference internal" href="api/fips.Posterior.desroziers.html">fips.Posterior.desroziers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/fips.Posterior.leverage.html">fips.Posterior.leverage</a></li>
 <li class="toctree-l2"><a class="reference internal" href="api/fips.Posterior.kalman_gain.html">fips.Posterior.kalman_gain</a></li>
 <li class="toctree-l2"><a class="reference internal" href="api/fips.Posterior.averaging_kernel.html">fips.Posterior.averaging_kernel</a></li>
 <li class="toctree-l2"><a class="reference internal" href="api/fips.Posterior.dofs.html">fips.Posterior.dofs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/fips.Posterior.chi2.html">fips.Posterior.chi2</a></li>
 <li class="toctree-l2"><a class="reference internal" href="api/fips.Posterior.reduced_chi2.html">fips.Posterior.reduced_chi2</a></li>
 <li class="toctree-l2"><a class="reference internal" href="api/fips.Posterior.r2.html">fips.Posterior.r2</a></li>
 <li class="toctree-l2"><a class="reference internal" href="api/fips.Posterior.rmse.html">fips.Posterior.rmse</a></li>
 <li class="toctree-l2"><a class="reference internal" href="api/fips.Posterior.uncertainty_reduction.html">fips.Posterior.uncertainty_reduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/fips.Posterior.summary.html">fips.Posterior.summary</a></li>
 <li class="toctree-l2"><a class="reference internal" href="api/fips.Posterior.with_gamma.html">fips.Posterior.with_gamma</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.Posterior.estimator.html">fips.Posterior.estimator</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.Posterior.state_index.html">fips.Posterior.state_index</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.Posterior.obs_index.html">fips.Posterior.obs_index</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.Posterior.from_file.html">fips.Posterior.from_file</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.Posterior.to_file.html">fips.Posterior.to_file</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/fips.Posterior.with_data.html">fips.Posterior.with_data</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="api/fips.posterior.Solution.html">fips.posterior.Solution</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="api/fips.posterior.Solution.chi2.html">fips.posterior.Solution.chi2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/fips.posterior.Solution.cov.html">fips.posterior.Solution.cov</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/fips.posterior.Solution.dofs.html">fips.posterior.Solution.dofs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/fips.posterior.Solution.estimate.html">fips.posterior.Solution.estimate</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/fips.posterior.Solution.gain.html">fips.posterior.Solution.gain</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/fips.posterior.Solution.variances.html">fips.posterior.Solution.variances</a></li>
 </ul>
 </details></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="estimators.html">Estimators</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l2 has-children"><a class="reference internal" href="api/fips.Estimator.html">fips.Estimator</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.Estimator.A.html">fips.Estimator.A</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.Estimator.c.html">fips.Estimator.c</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.Estimator.desroziers.html">fips.Estimator.desroziers</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.Estimator.DOFS.html">fips.Estimator.DOFS</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.Estimator.H.html">fips.Estimator.H</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.Estimator.K.html">fips.Estimator.K</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.Estimator.n_x.html">fips.Estimator.n_x</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.Estimator.n_z.html">fips.Estimator.n_z</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.Estimator.R2.html">fips.Estimator.R2</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.Estimator.reduced_chi2.html">fips.Estimator.reduced_chi2</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.Estimator.RMSE.html">fips.Estimator.RMSE</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.Estimator.S_0.html">fips.Estimator.S_0</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.Estimator.S_hat.html">fips.Estimator.S_hat</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.Estimator.S_hat_diagonal.html">fips.Estimator.S_hat_diagonal</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.Estimator.S_y0.html">fips.Estimator.S_y0</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.Estimator.S_z.html">fips.Estimator.S_z</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.Estimator.U_red.html">fips.Estimator.U_red</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.Estimator.uncertainty_reduction.html">fips.Estimator.uncertainty_reduction</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.Estimator.x_0.html">fips.Estimator.x_0</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.Estimator.x_hat.html">fips.Estimator.x_hat</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.Estimator.y_0.html">fips.Estimator.y_0</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.Estimator.y_hat.html">fips.Estimator.y_hat</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.Estimator.z.html">fips.Estimator.z</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.Estimator.aggregate_A.html">fips.Estimator.aggregate_A</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.Estimator.aggregate_S_hat.html">fips.Estimator.aggregate_S_hat</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.Estimator.cost.html">fips.Estimator.cost</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.Estimator.forward.html">fips.Estimator.forward</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.Estimator.leverage.html">fips.Estimator.leverage</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.Estimator.residual.html">fips.Estimator.residual</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/fips.posterior.Solution.estimate.html">fips.posterior.Solution.estimate</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/fips.posterior.Solution.variances.html">fips.posterior.Solution.variances</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/fips.posterior.Solution.cov.html">fips.posterior.Solution.cov</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/fips.posterior.Solution.gain.html">fips.posterior.Solution.gain</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/fips.posterior.Solution.dofs.html">fips.posterior.Solution.dofs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/fips.posterior.Solution.chi2.html">fips.posterior.Solution.chi2</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="api/fips.posterior.Options.html">fips.posterior.Options</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="api/fips.posterior.Options.gamma.html">fips.posterior.Options.gamma</a></li>
 </ul>
 </details></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.Estimator.n_z.html">fips.Estimator.n_z</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.Estimator.n_x.html">fips.Estimator.n_x</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.Estimator.z.html">fips.Estimator.z</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.Estimator.x_0.html">fips.Estimator.x_0</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.Estimator.H.html">fips.Estimator.H</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.Estimator.S_0.html">fips.Estimator.S_0</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.Estimator.S_z.html">fips.Estimator.S_z</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.Estimator.c.html">fips.Estimator.c</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.Estimator.cost.html">fips.Estimator.cost</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.Estimator.forward.html">fips.Estimator.forward</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.Estimator.residual.html">fips.Estimator.residual</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.Estimator.leverage.html">fips.Estimator.leverage</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.Estimator.x_hat.html">fips.Estimator.x_hat</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.Estimator.S_hat.html">fips.Estimator.S_hat</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.Estimator.y_hat.html">fips.Estimator.y_hat</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.Estimator.y_0.html">fips.Estimator.y_0</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.Estimator.K.html">fips.Estimator.K</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.Estimator.A.html">fips.Estimator.A</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.Estimator.S_hat_diagonal.html">fips.Estimator.S_hat_diagonal</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.Estimator.aggregate_S_hat.html">fips.Estimator.aggregate_S_hat</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.Estimator.aggregate_A.html">fips.Estimator.aggregate_A</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.Estimator.reduced_chi2.html">fips.Estimator.reduced_chi2</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.Estimator.R2.html">fips.Estimator.R2</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.Estimator.RMSE.html">fips.Estimator.RMSE</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.Estimator.uncertainty_reduction.html">fips.Estimator.uncertainty_reduction</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.Estimator.U_red.html">fips.Estimator.U_red</a></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="api/fips.estimators.BayesianSolver.html">fips.estimators.BayesianSolver</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.estimators.BayesianSolver.DOFS.html">fips.estimators.BayesianSolver.DOFS</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.estimators.BayesianSolver.gamma.html">fips.estimators.BayesianSolver.gamma</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.estimators.BayesianSolver.K.html">fips.estimators.BayesianSolver.K</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.estimators.BayesianSolver.reduced_chi2.html">fips.estimators.BayesianSolver.reduced_chi2</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.estimators.BayesianSolver.S_hat.html">fips.estimators.BayesianSolver.S_hat</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.estimators.BayesianSolver.S_hat_diagonal.html">fips.estimators.BayesianSolver.S_hat_diagonal</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.estimators.BayesianSolver.x_hat.html">fips.estimators.BayesianSolver.x_hat</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.estimators.BayesianSolver.aggregate_A.html">fips.estimators.BayesianSolver.aggregate_A</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.estimators.BayesianSolver.aggregate_S_hat.html">fips.estimators.BayesianSolver.aggregate_S_hat</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.estimators.BayesianSolver.cost.html">fips.estimators.BayesianSolver.cost</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.estimators.BayesianSolver.with_gamma.html">fips.estimators.BayesianSolver.with_gamma</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/fips.posterior.Options.gamma.html">fips.posterior.Options.gamma</a></li>
 </ul>
 </details></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.estimators.BayesianSolver.cost.html">fips.estimators.BayesianSolver.cost</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.estimators.BayesianSolver.with_gamma.html">fips.estimators.BayesianSolver.with_gamma</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.estimators.BayesianSolver.x_hat.html">fips.estimators.BayesianSolver.x_hat</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.estimators.BayesianSolver.S_hat.html">fips.estimators.BayesianSolver.S_hat</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.estimators.BayesianSolver.K.html">fips.estimators.BayesianSolver.K</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.estimators.BayesianSolver.S_hat_diagonal.html">fips.estimators.BayesianSolver.S_hat_diagonal</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.estimators.BayesianSolver.aggregate_S_hat.html">fips.estimators.BayesianSolver.aggregate_S_hat</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.estimators.BayesianSolver.aggregate_A.html">fips.estimators.BayesianSolver.aggregate_A</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.estimators.BayesianSolver.DOFS.html">fips.estimators.BayesianSolver.DOFS</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.estimators.BayesianSolver.reduced_chi2.html">fips.estimators.BayesianSolver.reduced_chi2</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="aggregate.html">Aggregation and Offsets</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="api/fips.aggregate.sum.html">fips.aggregate.sum</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/fips.aggregate.mean.html">fips.aggregate.mean</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/fips.offset_block.html">fips.offset_block</a></li>
 </ul>
 </details></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="pipeline.html">Pipeline</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l2 has-children"><a class="reference internal" href="api/fips.InversionPipeline.html">fips.InversionPipeline</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.InversionPipeline.config.html">fips.InversionPipeline.config</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.InversionPipeline.estimator.html">fips.InversionPipeline.estimator</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.InversionPipeline.aggregate_obs_space.html">fips.InversionPipeline.aggregate_obs_space</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.InversionPipeline.filter_state_space.html">fips.InversionPipeline.filter_state_space</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.InversionPipeline.get_constant.html">fips.InversionPipeline.get_constant</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.InversionPipeline.get_forward_operator.html">fips.InversionPipeline.get_forward_operator</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.InversionPipeline.get_inputs.html">fips.InversionPipeline.get_inputs</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.InversionPipeline.get_modeldata_mismatch.html">fips.InversionPipeline.get_modeldata_mismatch</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.InversionPipeline.get_obs.html">fips.InversionPipeline.get_obs</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.InversionPipeline.get_prior.html">fips.InversionPipeline.get_prior</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.InversionPipeline.get_prior_error.html">fips.InversionPipeline.get_prior_error</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.InversionPipeline.run.html">fips.InversionPipeline.run</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="visualization.html">Visualization</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="api/fips.visualization.plot_comparison.html">fips.visualization.plot_comparison</a></li>
 </ul>
 </details></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.InversionPipeline.get_obs.html">fips.InversionPipeline.get_obs</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.InversionPipeline.get_prior.html">fips.InversionPipeline.get_prior</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.InversionPipeline.get_forward_operator.html">fips.InversionPipeline.get_forward_operator</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.InversionPipeline.get_prior_error.html">fips.InversionPipeline.get_prior_error</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.InversionPipeline.get_modeldata_mismatch.html">fips.InversionPipeline.get_modeldata_mismatch</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.InversionPipeline.get_constant.html">fips.InversionPipeline.get_constant</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.InversionPipeline.filter_state_space.html">fips.InversionPipeline.filter_state_space</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.InversionPipeline.aggregate_obs_space.html">fips.InversionPipeline.aggregate_obs_space</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.InversionPipeline.get_inputs.html">fips.InversionPipeline.get_inputs</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.InversionPipeline.run.html">fips.InversionPipeline.run</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="linalg.html">Linear Algebra</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="api/fips.linalg.LinearOperator.html">fips.linalg.LinearOperator</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="api/fips.linalg.LinearOperator.dense.html">fips.linalg.LinearOperator.dense</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/fips.linalg.LinearOperator.diagonal.html">fips.linalg.LinearOperator.diagonal</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/fips.linalg.LinearOperator.dot.html">fips.linalg.LinearOperator.dot</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/fips.linalg.LinearOperator.logdet.html">fips.linalg.LinearOperator.logdet</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/fips.linalg.LinearOperator.solve.html">fips.linalg.LinearOperator.solve</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/fips.linalg.LinearOperator.sqrt.html">fips.linalg.LinearOperator.sqrt</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/fips.linalg.LinearOperator.trace.html">fips.linalg.LinearOperator.trace</a></li>
 </ul>
 </details></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="base.html">Base Classes</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l2 has-children"><a class="reference internal" href="api/fips.base.Pickleable.html">fips.base.Pickleable</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.base.Pickleable.from_file.html">fips.base.Pickleable.from_file</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.base.Pickleable.to_file.html">fips.base.Pickleable.to_file</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="api/fips.linalg.DenseOperator.html">fips.linalg.DenseOperator</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="api/fips.linalg.DenseOperator.array.html">fips.linalg.DenseOperator.array</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/fips.linalg.DenseOperator.dense.html">fips.linalg.DenseOperator.dense</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/fips.linalg.DenseOperator.solve.html">fips.linalg.DenseOperator.solve</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/fips.linalg.DenseOperator.trace.html">fips.linalg.DenseOperator.trace</a></li>
 </ul>
 </details></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="api/fips.base.Structure.html">fips.base.Structure</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.base.Structure.data.html">fips.base.Structure.data</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.base.Structure.index.html">fips.base.Structure.index</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.base.Structure.name.html">fips.base.Structure.name</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.base.Structure.shape.html">fips.base.Structure.shape</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.base.Structure.values.html">fips.base.Structure.values</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.base.Structure.copy.html">fips.base.Structure.copy</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.base.Structure.reindex.html">fips.base.Structure.reindex</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.base.Structure.round_index.html">fips.base.Structure.round_index</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.base.Structure.to_numpy.html">fips.base.Structure.to_numpy</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.base.Structure.xs.html">fips.base.Structure.xs</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="api/fips.linalg.SparseOperator.html">fips.linalg.SparseOperator</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="api/fips.linalg.SparseOperator.matrix.html">fips.linalg.SparseOperator.matrix</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/fips.linalg.SparseOperator.dense.html">fips.linalg.SparseOperator.dense</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/fips.linalg.SparseOperator.diagonal.html">fips.linalg.SparseOperator.diagonal</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/fips.linalg.SparseOperator.logdet.html">fips.linalg.SparseOperator.logdet</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/fips.linalg.SparseOperator.solve.html">fips.linalg.SparseOperator.solve</a></li>
 </ul>
 </details></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="api/fips.base.Structure1D.html">fips.base.Structure1D</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.base.Structure1D.data.html">fips.base.Structure1D.data</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.base.Structure1D.name.html">fips.base.Structure1D.name</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.base.Structure1D.to_series.html">fips.base.Structure1D.to_series</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="api/fips.linalg.DiagonalOperator.html">fips.linalg.DiagonalOperator</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="api/fips.linalg.DiagonalOperator.values.html">fips.linalg.DiagonalOperator.values</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/fips.linalg.DiagonalOperator.dense.html">fips.linalg.DiagonalOperator.dense</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/fips.linalg.DiagonalOperator.diagonal.html">fips.linalg.DiagonalOperator.diagonal</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/fips.linalg.DiagonalOperator.logdet.html">fips.linalg.DiagonalOperator.logdet</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/fips.linalg.DiagonalOperator.solve.html">fips.linalg.DiagonalOperator.solve</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/fips.linalg.DiagonalOperator.sqrt.html">fips.linalg.DiagonalOperator.sqrt</a></li>
 </ul>
 </details></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="api/fips.base.Structure2D.html">fips.base.Structure2D</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.base.Structure2D.columns.html">fips.base.Structure2D.columns</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.base.Structure2D.data.html">fips.base.Structure2D.data</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.base.Structure2D.index.html">fips.base.Structure2D.index</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.base.Structure2D.is_sparse.html">fips.base.Structure2D.is_sparse</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.base.Structure2D.name.html">fips.base.Structure2D.name</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.base.Structure2D.operator.html">fips.base.Structure2D.operator</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.base.Structure2D.shape.html">fips.base.Structure2D.shape</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.base.Structure2D.values.html">fips.base.Structure2D.values</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.base.Structure2D.copy.html">fips.base.Structure2D.copy</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.base.Structure2D.diagonal.html">fips.base.Structure2D.diagonal</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.base.Structure2D.from_operator.html">fips.base.Structure2D.from_operator</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.base.Structure2D.reindex.html">fips.base.Structure2D.reindex</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.base.Structure2D.round_index.html">fips.base.Structure2D.round_index</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.base.Structure2D.to_dense.html">fips.base.Structure2D.to_dense</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.base.Structure2D.to_frame.html">fips.base.Structure2D.to_frame</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.base.Structure2D.to_sparse.html">fips.base.Structure2D.to_sparse</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="api/fips.linalg.BlockDiagonalOperator.html">fips.linalg.BlockDiagonalOperator</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="api/fips.linalg.BlockDiagonalOperator.blocks.html">fips.linalg.BlockDiagonalOperator.blocks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/fips.linalg.BlockDiagonalOperator.dense.html">fips.linalg.BlockDiagonalOperator.dense</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/fips.linalg.BlockDiagonalOperator.diagonal.html">fips.linalg.BlockDiagonalOperator.diagonal</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/fips.linalg.BlockDiagonalOperator.logdet.html">fips.linalg.BlockDiagonalOperator.logdet</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/fips.linalg.BlockDiagonalOperator.solve.html">fips.linalg.BlockDiagonalOperator.solve</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/fips.linalg.BlockDiagonalOperator.sqrt.html">fips.linalg.BlockDiagonalOperator.sqrt</a></li>
 </ul>
 </details></li>
-<li class="toctree-l2"><a class="reference internal" href="api/fips.base.SingleBlockMixin.html">fips.base.SingleBlockMixin</a></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="api/fips.base.MultiBlockMixin.html">fips.base.MultiBlockMixin</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.base.MultiBlockMixin.blocks.html">fips.base.MultiBlockMixin.blocks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/fips.linalg.as_linear_operator.html">fips.linalg.as_linear_operator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/fips.linalg.LinearOperator.dot.html">fips.linalg.LinearOperator.dot</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/fips.linalg.LinearOperator.solve.html">fips.linalg.LinearOperator.solve</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/fips.linalg.LinearOperator.logdet.html">fips.linalg.LinearOperator.logdet</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/fips.linalg.LinearOperator.sqrt.html">fips.linalg.LinearOperator.sqrt</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/fips.linalg.LinearOperator.dense.html">fips.linalg.LinearOperator.dense</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/fips.linalg.LinearOperator.diagonal.html">fips.linalg.LinearOperator.diagonal</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/fips.linalg.LinearOperator.trace.html">fips.linalg.LinearOperator.trace</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/fips.linalg.DenseOperator.array.html">fips.linalg.DenseOperator.array</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/fips.linalg.SparseOperator.matrix.html">fips.linalg.SparseOperator.matrix</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/fips.linalg.DiagonalOperator.values.html">fips.linalg.DiagonalOperator.values</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/fips.linalg.BlockDiagonalOperator.blocks.html">fips.linalg.BlockDiagonalOperator.blocks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/fips.linalg.dottest.html">fips.linalg.dottest</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="api/fips.linalg.KroneckerOperator.html">fips.linalg.KroneckerOperator</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="api/fips.linalg.KroneckerOperator.factors.html">fips.linalg.KroneckerOperator.factors</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/fips.linalg.KroneckerOperator.positions.html">fips.linalg.KroneckerOperator.positions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/fips.linalg.KroneckerOperator.std.html">fips.linalg.KroneckerOperator.std</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/fips.linalg.KroneckerOperator.dense.html">fips.linalg.KroneckerOperator.dense</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/fips.linalg.KroneckerOperator.diagonal.html">fips.linalg.KroneckerOperator.diagonal</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/fips.linalg.KroneckerOperator.logdet.html">fips.linalg.KroneckerOperator.logdet</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/fips.linalg.KroneckerOperator.solve.html">fips.linalg.KroneckerOperator.solve</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/fips.linalg.KroneckerOperator.sqrt.html">fips.linalg.KroneckerOperator.sqrt</a></li>
 </ul>
 </details></li>
-</ul>
-</details></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="utilities/index.html">Utilities</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l2 has-children"><a class="reference internal" href="utilities/aggregators.html">Aggregators</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.aggregators.integrate_over_time_bins.html">fips.aggregators.integrate_over_time_bins</a></li>
-<li class="toctree-l3 has-children"><a class="reference internal" href="api/fips.aggregators.ObsAggregator.html">fips.aggregators.ObsAggregator</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l4"><a class="reference internal" href="api/fips.aggregators.ObsAggregator.blocks.html">fips.aggregators.ObsAggregator.blocks</a></li>
-<li class="toctree-l4"><a class="reference internal" href="api/fips.aggregators.ObsAggregator.by.html">fips.aggregators.ObsAggregator.by</a></li>
-<li class="toctree-l4"><a class="reference internal" href="api/fips.aggregators.ObsAggregator.freq.html">fips.aggregators.ObsAggregator.freq</a></li>
-<li class="toctree-l4"><a class="reference internal" href="api/fips.aggregators.ObsAggregator.func.html">fips.aggregators.ObsAggregator.func</a></li>
-<li class="toctree-l4"><a class="reference internal" href="api/fips.aggregators.ObsAggregator.level.html">fips.aggregators.ObsAggregator.level</a></li>
-<li class="toctree-l4"><a class="reference internal" href="api/fips.aggregators.ObsAggregator.apply.html">fips.aggregators.ObsAggregator.apply</a></li>
-</ul>
-</details></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.aggregators.ObsAggregator.apply.html">fips.aggregators.ObsAggregator.apply</a></li>
-</ul>
-</details></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="utilities/filters.html">Filters</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.filters.enough_obs_per_interval.html">fips.filters.enough_obs_per_interval</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.filters.select_intervals_with_min_obs.html">fips.filters.select_intervals_with_min_obs</a></li>
-</ul>
-</details></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="utilities/indexes.html">Index utilities</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.indexes.apply_to_index.html">fips.indexes.apply_to_index</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.indexes.assign_block.html">fips.indexes.assign_block</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.indexes.outer_align_levels.html">fips.indexes.outer_align_levels</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.indexes.overlaps.html">fips.indexes.overlaps</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.indexes.resolve_axes.html">fips.indexes.resolve_axes</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.indexes.round_index.html">fips.indexes.round_index</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.indexes.to_numeric.html">fips.indexes.to_numeric</a></li>
-</ul>
-</details></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="utilities/kernels.html">Kernels</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.kernels.ConstantCorrelation.html">fips.kernels.ConstantCorrelation</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.kernels.RaggedTimeDecay.html">fips.kernels.RaggedTimeDecay</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.kernels.GridTimeDecay.html">fips.kernels.GridTimeDecay</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.kernels.GridSpatialDecay.html">fips.kernels.GridSpatialDecay</a></li>
-</ul>
-</details></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="utilities/metrics.html">Metrics</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.metrics.haversine_matrix.html">fips.metrics.haversine_matrix</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.metrics.time_diff_matrix.html">fips.metrics.time_diff_matrix</a></li>
-</ul>
-</details></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="utilities/visualization.html">Visualization</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.visualization.plot_error_norm.html">fips.visualization.plot_error_norm</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.visualization.plot_comparison.html">fips.visualization.plot_comparison</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.visualization.compute_credible_interval.html">fips.visualization.compute_credible_interval</a></li>
-</ul>
-</details></li>
-</ul>
-</details></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="problems/index.html">Problems</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l2 has-children"><a class="reference internal" href="problems/flux.html">Flux Inversion</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l3 has-children"><a class="reference internal" href="api/fips.problems.flux.FluxProblem.html">fips.problems.flux.FluxProblem</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l4"><a class="reference internal" href="api/fips.problems.flux.FluxProblem.background.html">fips.problems.flux.FluxProblem.background</a></li>
-<li class="toctree-l4"><a class="reference internal" href="api/fips.problems.flux.FluxProblem.concentration_error.html">fips.problems.flux.FluxProblem.concentration_error</a></li>
-<li class="toctree-l4"><a class="reference internal" href="api/fips.problems.flux.FluxProblem.concentrations.html">fips.problems.flux.FluxProblem.concentrations</a></li>
-<li class="toctree-l4"><a class="reference internal" href="api/fips.problems.flux.FluxProblem.enhancement.html">fips.problems.flux.FluxProblem.enhancement</a></li>
-<li class="toctree-l4"><a class="reference internal" href="api/fips.problems.flux.FluxProblem.jacobian.html">fips.problems.flux.FluxProblem.jacobian</a></li>
-<li class="toctree-l4"><a class="reference internal" href="api/fips.problems.flux.FluxProblem.plot.html">fips.problems.flux.FluxProblem.plot</a></li>
-<li class="toctree-l4"><a class="reference internal" href="api/fips.problems.flux.FluxProblem.posterior_concentrations.html">fips.problems.flux.FluxProblem.posterior_concentrations</a></li>
-<li class="toctree-l4"><a class="reference internal" href="api/fips.problems.flux.FluxProblem.posterior_flux_error.html">fips.problems.flux.FluxProblem.posterior_flux_error</a></li>
-<li class="toctree-l4"><a class="reference internal" href="api/fips.problems.flux.FluxProblem.posterior_fluxes.html">fips.problems.flux.FluxProblem.posterior_fluxes</a></li>
-<li class="toctree-l4"><a class="reference internal" href="api/fips.problems.flux.FluxProblem.prior_concentration_error.html">fips.problems.flux.FluxProblem.prior_concentration_error</a></li>
-<li class="toctree-l4"><a class="reference internal" href="api/fips.problems.flux.FluxProblem.prior_concentrations.html">fips.problems.flux.FluxProblem.prior_concentrations</a></li>
-<li class="toctree-l4"><a class="reference internal" href="api/fips.problems.flux.FluxProblem.prior_flux_error.html">fips.problems.flux.FluxProblem.prior_flux_error</a></li>
-<li class="toctree-l4"><a class="reference internal" href="api/fips.problems.flux.FluxProblem.prior_fluxes.html">fips.problems.flux.FluxProblem.prior_fluxes</a></li>
-<li class="toctree-l4"><a class="reference internal" href="api/fips.problems.flux.FluxProblem.solve.html">fips.problems.flux.FluxProblem.solve</a></li>
-</ul>
-</details></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.problems.flux.FluxProblem.prior.html">fips.problems.flux.FluxProblem.prior</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.problems.flux.FluxProblem.obs.html">fips.problems.flux.FluxProblem.obs</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.problems.flux.FluxProblem.estimator.html">fips.problems.flux.FluxProblem.estimator</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.problems.flux.FluxProblem.solve.html">fips.problems.flux.FluxProblem.solve</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.problems.flux.FluxProblem.get_block.html">fips.problems.flux.FluxProblem.get_block</a></li>
-<li class="toctree-l3 has-children"><a class="reference internal" href="api/fips.problems.flux.pipeline.FluxInversionPipeline.html">fips.problems.flux.pipeline.FluxInversionPipeline</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l4"><a class="reference internal" href="api/fips.problems.flux.pipeline.FluxInversionPipeline.filter_state_space.html">fips.problems.flux.pipeline.FluxInversionPipeline.filter_state_space</a></li>
-<li class="toctree-l4"><a class="reference internal" href="api/fips.problems.flux.pipeline.FluxInversionPipeline.run.html">fips.problems.flux.pipeline.FluxInversionPipeline.run</a></li>
-<li class="toctree-l4"><a class="reference internal" href="api/fips.problems.flux.pipeline.FluxInversionPipeline.summarize.html">fips.problems.flux.pipeline.FluxInversionPipeline.summarize</a></li>
-</ul>
-</details></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.problems.flux.pipeline.FluxInversionPipeline.problem.html">fips.problems.flux.pipeline.FluxInversionPipeline.problem</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.problems.flux.pipeline.FluxInversionPipeline.estimator.html">fips.problems.flux.pipeline.FluxInversionPipeline.estimator</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.problems.flux.pipeline.FluxInversionPipeline.filter_state_space.html">fips.problems.flux.pipeline.FluxInversionPipeline.filter_state_space</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.problems.flux.pipeline.FluxInversionPipeline.run.html">fips.problems.flux.pipeline.FluxInversionPipeline.run</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.problems.flux.pipeline.FluxInversionPipeline.summarize.html">fips.problems.flux.pipeline.FluxInversionPipeline.summarize</a></li>
-<li class="toctree-l3 has-children"><a class="reference internal" href="api/fips.problems.flux.visualization.FluxPlotter.html">fips.problems.flux.visualization.FluxPlotter</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
-<li class="toctree-l4"><a class="reference internal" href="api/fips.problems.flux.visualization.FluxPlotter.inversion.html">fips.problems.flux.visualization.FluxPlotter.inversion</a></li>
-<li class="toctree-l4"><a class="reference internal" href="api/fips.problems.flux.visualization.FluxPlotter.concentrations.html">fips.problems.flux.visualization.FluxPlotter.concentrations</a></li>
-<li class="toctree-l4"><a class="reference internal" href="api/fips.problems.flux.visualization.FluxPlotter.fluxes.html">fips.problems.flux.visualization.FluxPlotter.fluxes</a></li>
-</ul>
-</details></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.problems.flux.visualization.FluxPlotter.fluxes.html">fips.problems.flux.visualization.FluxPlotter.fluxes</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fips.problems.flux.visualization.FluxPlotter.concentrations.html">fips.problems.flux.visualization.FluxPlotter.concentrations</a></li>
-</ul>
-</details></li>
+<li class="toctree-l2"><a class="reference internal" href="api/fips.linalg.KroneckerOperator.solve.html">fips.linalg.KroneckerOperator.solve</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/fips.linalg.KroneckerOperator.logdet.html">fips.linalg.KroneckerOperator.logdet</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/fips.linalg.KroneckerOperator.dense.html">fips.linalg.KroneckerOperator.dense</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/fips.linalg.KroneckerOperator.diagonal.html">fips.linalg.KroneckerOperator.diagonal</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/fips.linalg.KroneckerOperator.factors.html">fips.linalg.KroneckerOperator.factors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/fips.linalg.KroneckerOperator.positions.html">fips.linalg.KroneckerOperator.positions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/fips.linalg.KroneckerOperator.std.html">fips.linalg.KroneckerOperator.std</a></li>
 </ul>
 </details></li>
 </ul>
@@ -1085,7 +852,7 @@
     
     <li class="breadcrumb-item"><a href="index.html" class="nav-link">API Reference</a></li>
     
-    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Linear Operators</span></li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Operators</span></li>
   </ul>
 </nav>
 </div>
@@ -1102,118 +869,168 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="module-fips.operator">
-<span id="linear-operators"></span><h1>Linear Operators<a class="headerlink" href="#module-fips.operator" title="Link to this heading">#</a></h1>
-<p>Linear operators: the matrices of an inverse problem in their cheapest form.</p>
-<p>A structure (<a class="reference internal" href="api/fips.Matrix.html#fips.Matrix" title="fips.Matrix"><code class="xref py py-class docutils literal notranslate"><span class="pre">Matrix</span></code></a>, <a class="reference internal" href="api/fips.CovarianceMatrix.html#fips.CovarianceMatrix" title="fips.CovarianceMatrix"><code class="xref py py-class docutils literal notranslate"><span class="pre">CovarianceMatrix</span></code></a>, …) keeps
-its labels in a pandas DataFrame. Its <a class="reference internal" href="api/fips.base.Structure2D.operator.html#fips.base.Structure2D.operator" title="fips.base.Structure2D.operator"><code class="xref py py-attr docutils literal notranslate"><span class="pre">operator</span></code></a>
-gives the same matrix as an <a class="reference internal" href="api/fips.operator.Operator.html#fips.operator.Operator" title="fips.operator.Operator"><code class="xref py py-class docutils literal notranslate"><span class="pre">Operator</span></code></a>, which the estimators compute
-with: a <a class="reference internal" href="api/fips.operator.DenseOperator.html#fips.operator.DenseOperator" title="fips.operator.DenseOperator"><code class="xref py py-class docutils literal notranslate"><span class="pre">DenseOperator</span></code></a> (a NumPy array), a <a class="reference internal" href="api/fips.operator.SparseOperator.html#fips.operator.SparseOperator" title="fips.operator.SparseOperator"><code class="xref py py-class docutils literal notranslate"><span class="pre">SparseOperator</span></code></a> (a
-SciPy sparse matrix) or a <a class="reference internal" href="api/fips.operator.DiagonalOperator.html#fips.operator.DiagonalOperator" title="fips.operator.DiagonalOperator"><code class="xref py py-class docutils literal notranslate"><span class="pre">DiagonalOperator</span></code></a> (the diagonal only). A
-covariance kept as Kronecker factors is a
-<a class="reference internal" href="api/fips.covariance.KroneckerOperator.html#fips.covariance.KroneckerOperator" title="fips.covariance.KroneckerOperator"><code class="xref py py-class docutils literal notranslate"><span class="pre">KroneckerOperator</span></code></a>, and a structure holds one through
-<a class="reference internal" href="api/fips.base.Structure2D.from_operator.html#fips.base.Structure2D.from_operator" title="fips.base.Structure2D.from_operator"><code class="xref py py-meth docutils literal notranslate"><span class="pre">from_operator()</span></code></a>.</p>
-<p>Each is a <a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.sparse.linalg.LinearOperator.html#scipy.sparse.linalg.LinearOperator" title="(in SciPy v1.18.0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">scipy.sparse.linalg.LinearOperator</span></code></a>, so <code class="docutils literal notranslate"><span class="pre">matvec</span></code>,
-<code class="docutils literal notranslate"><span class="pre">rmatvec</span></code>, <code class="docutils literal notranslate"><span class="pre">matmat</span></code> and <code class="docutils literal notranslate"><span class="pre">.T</span></code> work as in SciPy. On top of that:</p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">A</span> <span class="pre">&#64;</span> <span class="pre">B</span></code> of two operators keeps the cheapest form that is exact: diagonal
-times diagonal is diagonal; sparse or diagonal times sparse is sparse; a
-product with a dense side is dense; a Kronecker operator times a sparse one
-(<code class="docutils literal notranslate"><span class="pre">H</span> <span class="pre">&#64;</span> <span class="pre">S_0</span></code>) is computed through the factors and is dense. <code class="docutils literal notranslate"><span class="pre">A</span> <span class="pre">&#64;</span> <span class="pre">x</span></code> with an
-array is an array, as in SciPy.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">A</span> <span class="pre">+</span> <span class="pre">B</span></code> and <code class="docutils literal notranslate"><span class="pre">A</span> <span class="pre">-</span> <span class="pre">B</span></code> follow the same rule (an array counts as dense), and
-a scalar <code class="docutils literal notranslate"><span class="pre">*</span></code> or <code class="docutils literal notranslate"><span class="pre">/</span></code> keeps the form.</p></li>
-<li><p><a class="reference internal" href="api/fips.operator.Operator.dense.html#fips.operator.Operator.dense" title="fips.operator.Operator.dense"><code class="xref py py-meth docutils literal notranslate"><span class="pre">dense()</span></code></a>, <a class="reference internal" href="api/fips.operator.Operator.diagonal.html#fips.operator.Operator.diagonal" title="fips.operator.Operator.diagonal"><code class="xref py py-meth docutils literal notranslate"><span class="pre">diagonal()</span></code></a>, <a class="reference internal" href="api/fips.operator.Operator.trace.html#fips.operator.Operator.trace" title="fips.operator.Operator.trace"><code class="xref py py-meth docutils literal notranslate"><span class="pre">trace()</span></code></a>,
-<a class="reference internal" href="api/fips.operator.Operator.to_frame.html#fips.operator.Operator.to_frame" title="fips.operator.Operator.to_frame"><code class="xref py py-meth docutils literal notranslate"><span class="pre">to_frame()</span></code></a>, and <a class="reference internal" href="api/fips.operator.Operator.solve.html#fips.operator.Operator.solve" title="fips.operator.Operator.solve"><code class="xref py py-meth docutils literal notranslate"><span class="pre">solve()</span></code></a> for a symmetric
-positive-definite operator, each done the way its form makes cheap.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">np.asarray(A)</span></code> is <a class="reference internal" href="api/fips.operator.Operator.dense.html#fips.operator.Operator.dense" title="fips.operator.Operator.dense"><code class="xref py py-meth docutils literal notranslate"><span class="pre">dense()</span></code></a>, so NumPy functions take an
-operator as its matrix; <code class="docutils literal notranslate"><span class="pre">np.array(A)</span></code> is a copy, as for an array.</p></li>
-</ul>
-<p>The operators are real (float64) and pickle with the standard protocol.</p>
-<section id="forms">
-<h2>Forms<a class="headerlink" href="#forms" title="Link to this heading">#</a></h2>
+  <section id="operators">
+<h1>Operators<a class="headerlink" href="#operators" title="Link to this heading">#</a></h1>
+<p>An <a class="reference internal" href="api/fips.Operator.html#fips.Operator" title="fips.Operator"><code class="xref py py-class docutils literal notranslate"><span class="pre">Operator</span></code></a> is a matrix with a <a class="reference internal" href="api/fips.Space.html#fips.Space" title="fips.Space"><code class="xref py py-class docutils literal notranslate"><span class="pre">Space</span></code></a> of labels on each
+axis: a forward operator from the state to the observations, an aggregation,
+a gain. Its matrix is kept in the cheapest form that is exact (a dense array,
+a SciPy sparse matrix, a diagonal, Kronecker factors; see <a class="reference internal" href="linalg.html"><span class="doc">Linear Algebra</span></a>), and
+the labels are beside it. Products, sums and selections check the labels: two
+operators combine only when the spaces they meet on have the same labels, in
+any order. A DataFrame is a way in (<a class="reference internal" href="api/fips.Operator.from_frame.html#fips.Operator.from_frame" title="fips.Operator.from_frame"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Operator.from_frame()</span></code></a>) and a way
+out (<a class="reference internal" href="api/fips.Operator.to_frame.html#fips.Operator.to_frame" title="fips.Operator.to_frame"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Operator.to_frame()</span></code></a>).</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [1]: </span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+<span class="gp">In [2]: </span><span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+
+<span class="gp">In [3]: </span><span class="kn">import</span><span class="w"> </span><span class="nn">fips</span>
+
+<span class="gp">In [4]: </span><span class="n">obs</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">([</span><span class="s2">&quot;o1&quot;</span><span class="p">,</span> <span class="s2">&quot;o2&quot;</span><span class="p">],</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;obs_id&quot;</span><span class="p">)</span>
+
+<span class="gp">In [5]: </span><span class="n">H</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Operator</span><span class="o">.</span><span class="n">from_blocks</span><span class="p">(</span>
+<span class="gp">   ...: </span>    <span class="p">{</span>
+<span class="gp">   ...: </span>        <span class="p">(</span><span class="s2">&quot;co2&quot;</span><span class="p">,</span> <span class="s2">&quot;flux&quot;</span><span class="p">):</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
+<span class="gp">   ...: </span>            <span class="p">[[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">]],</span>
+<span class="gp">   ...: </span>            <span class="n">index</span><span class="o">=</span><span class="n">obs</span><span class="p">,</span>
+<span class="gp">   ...: </span>            <span class="n">columns</span><span class="o">=</span><span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">([</span><span class="s2">&quot;a&quot;</span><span class="p">,</span> <span class="s2">&quot;b&quot;</span><span class="p">],</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;cell&quot;</span><span class="p">),</span>
+<span class="gp">   ...: </span>        <span class="p">),</span>
+<span class="gp">   ...: </span>        <span class="p">(</span><span class="s2">&quot;co2&quot;</span><span class="p">,</span> <span class="s2">&quot;bias&quot;</span><span class="p">):</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
+<span class="gp">   ...: </span>            <span class="mf">1.0</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">obs</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">([</span><span class="s2">&quot;A&quot;</span><span class="p">],</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;site&quot;</span><span class="p">)</span>
+<span class="gp">   ...: </span>        <span class="p">),</span>
+<span class="gp">   ...: </span>    <span class="p">},</span>
+<span class="gp">   ...: </span>    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;forward&quot;</span><span class="p">,</span>
+<span class="gp">   ...: </span><span class="p">)</span>
+<span class="gp">   ...: </span>
+
+<span class="gp">In [6]: </span><span class="n">H</span>
+<span class="gh">Out[6]: </span>
+<span class="go">Operator(name=&#39;forward&#39;, shape=(2, 3), form=DenseOperator)</span>
+<span class="go">  rows: Space(co2: 2 x [&#39;obs_id&#39;])</span>
+<span class="go">  cols: Space(flux: 2 x [&#39;cell&#39;], bias: 1 x [&#39;site&#39;])</span>
+
+<span class="gp">In [7]: </span><span class="n">H</span><span class="p">[</span><span class="s2">&quot;co2&quot;</span><span class="p">,</span> <span class="s2">&quot;flux&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">to_frame</span><span class="p">()</span>
+<span class="gh">Out[7]: </span>
+<span class="go">block        flux     </span>
+<span class="go">cell            a    b</span>
+<span class="go">block obs_id          </span>
+<span class="go">co2   o1      1.0  0.5</span>
+<span class="go">      o2      0.0  2.0</span>
+
+<span class="gp">In [8]: </span><span class="n">x</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Vector</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">2.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">]),</span> <span class="n">H</span><span class="o">.</span><span class="n">cols</span><span class="p">)</span>
+
+<span class="gp">In [9]: </span><span class="p">(</span><span class="n">H</span> <span class="o">@</span> <span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">to_series</span><span class="p">()</span>
+<span class="gh">Out[9]: </span>
+<span class="go">block  obs_id</span>
+<span class="go">co2    o1        3.0</span>
+<span class="go">       o2        2.5</span>
+<span class="go">dtype: float64</span>
+</pre></div>
+</div>
+<section id="operator">
+<h2>Operator<a class="headerlink" href="#operator" title="Link to this heading">#</a></h2>
+<section id="constructor">
+<h3>Constructor<a class="headerlink" href="#constructor" title="Link to this heading">#</a></h3>
 <div class="pst-scrollable-table-container"><table class="autosummary longtable table">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="api/fips.operator.Operator.html#fips.operator.Operator" title="fips.operator.Operator"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Operator</span></code></a>(shape)</p></td>
-<td><p>A real linear operator that fips can multiply, add, transpose and solve with.</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="api/fips.Operator.html#fips.Operator" title="fips.Operator"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Operator</span></code></a>(data, rows, cols[, name])</p></td>
+<td><p>A matrix with a <a class="reference internal" href="api/fips.Space.html#fips.Space" title="fips.Space"><code class="xref py py-class docutils literal notranslate"><span class="pre">Space</span></code></a> of labels on each axis.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="api/fips.operator.DenseOperator.html#fips.operator.DenseOperator" title="fips.operator.DenseOperator"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DenseOperator</span></code></a>(array)</p></td>
-<td><p>An operator held as a dense 2D NumPy array.</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="api/fips.Operator.from_frame.html#fips.Operator.from_frame" title="fips.Operator.from_frame"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Operator.from_frame</span></code></a>(frame[, row_block, ...])</p></td>
+<td><p>Build an operator from a DataFrame, reading its labels.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="api/fips.operator.SparseOperator.html#fips.operator.SparseOperator" title="fips.operator.SparseOperator"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SparseOperator</span></code></a>(matrix)</p></td>
-<td><p>An operator held as a SciPy sparse matrix.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="api/fips.operator.DiagonalOperator.html#fips.operator.DiagonalOperator" title="fips.operator.DiagonalOperator"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DiagonalOperator</span></code></a>(values)</p></td>
-<td><p>A square operator that is zero off its main diagonal, held as the diagonal.</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="api/fips.Operator.from_blocks.html#fips.Operator.from_blocks" title="fips.Operator.from_blocks"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Operator.from_blocks</span></code></a>(blocks[, rows, cols, name])</p></td>
+<td><p>Build an operator from its blocks, each named by its row and its column block.</p></td>
 </tr>
 </tbody>
 </table>
 </div>
 </section>
-<section id="building">
-<h2>Building<a class="headerlink" href="#building" title="Link to this heading">#</a></h2>
+<section id="attributes">
+<h3>Attributes<a class="headerlink" href="#attributes" title="Link to this heading">#</a></h3>
 <div class="pst-scrollable-table-container"><table class="autosummary longtable table">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="api/fips.operator.as_operator.html#fips.operator.as_operator" title="fips.operator.as_operator"><code class="xref py py-obj docutils literal notranslate"><span class="pre">as_operator</span></code></a>(x)</p></td>
-<td><p>Return <cite>x</cite> as the <a class="reference internal" href="api/fips.operator.Operator.html#fips.operator.Operator" title="fips.operator.Operator"><code class="xref py py-class docutils literal notranslate"><span class="pre">Operator</span></code></a> that fits how it is stored.</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="api/fips.Operator.data.html#fips.Operator.data" title="fips.Operator.data"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Operator.data</span></code></a></p></td>
+<td><p>The matrix, in its form (a <a class="reference internal" href="linalg.html#module-fips.linalg" title="fips.linalg"><code class="xref py py-mod docutils literal notranslate"><span class="pre">fips.linalg</span></code></a> operator, without labels).</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="api/fips.Operator.rows.html#fips.Operator.rows" title="fips.Operator.rows"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Operator.rows</span></code></a></p></td>
+<td><p>The labels of the rows.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="api/fips.Operator.cols.html#fips.Operator.cols" title="fips.Operator.cols"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Operator.cols</span></code></a></p></td>
+<td><p>The labels of the columns.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="api/fips.Operator.name.html#fips.Operator.name" title="fips.Operator.name"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Operator.name</span></code></a></p></td>
+<td><p>a string, or None.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="api/fips.Operator.shape.html#fips.Operator.shape" title="fips.Operator.shape"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Operator.shape</span></code></a></p></td>
+<td><p>The number of rows and of columns.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="api/fips.Operator.T.html#fips.Operator.T" title="fips.Operator.T"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Operator.T</span></code></a></p></td>
+<td><p>the columns become the rows, labels and all.</p></td>
 </tr>
 </tbody>
 </table>
 </div>
 </section>
-<section id="linear-algebra">
-<h2>Linear algebra<a class="headerlink" href="#linear-algebra" title="Link to this heading">#</a></h2>
+<section id="selection-and-labels">
+<h3>Selection and labels<a class="headerlink" href="#selection-and-labels" title="Link to this heading">#</a></h3>
 <div class="pst-scrollable-table-container"><table class="autosummary longtable table">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="api/fips.operator.Operator.dot.html#fips.operator.Operator.dot" title="fips.operator.Operator.dot"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Operator.dot</span></code></a>(x)</p></td>
-<td><p>Return <code class="docutils literal notranslate"><span class="pre">self</span> <span class="pre">&#64;</span> <span class="pre">x</span></code>, or the operator scaled by a scalar <code class="docutils literal notranslate"><span class="pre">x</span></code>.</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="api/fips.Operator.__getitem__.html#fips.Operator.__getitem__" title="fips.Operator.__getitem__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Operator.__getitem__</span></code></a>(key)</p></td>
+<td><p>Return the block of one row block and one column block.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="api/fips.operator.Operator.solve.html#fips.operator.Operator.solve" title="fips.operator.Operator.solve"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Operator.solve</span></code></a>(B)</p></td>
-<td><p>Solve <code class="docutils literal notranslate"><span class="pre">self</span> <span class="pre">&#64;</span> <span class="pre">X</span> <span class="pre">=</span> <span class="pre">B</span></code> for a symmetric positive-definite operator.</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="api/fips.Operator.align.html#fips.Operator.align" title="fips.Operator.align"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Operator.align</span></code></a>(rows, cols)</p></td>
+<td><p>Return the operator on <cite>rows</cite> and <cite>cols</cite>, which must have exactly its labels.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="api/fips.operator.Operator.dense.html#fips.operator.Operator.dense" title="fips.operator.Operator.dense"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Operator.dense</span></code></a>()</p></td>
-<td><p>Return the operator as a dense NumPy array.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="api/fips.operator.Operator.diagonal.html#fips.operator.Operator.diagonal" title="fips.operator.Operator.diagonal"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Operator.diagonal</span></code></a>()</p></td>
-<td><p>Return the main diagonal; a sparse or diagonal operator reads it from its entries.</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="api/fips.operator.Operator.trace.html#fips.operator.Operator.trace" title="fips.operator.Operator.trace"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Operator.trace</span></code></a>()</p></td>
-<td><p>Return the sum of the main diagonal.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="api/fips.operator.Operator.to_frame.html#fips.operator.Operator.to_frame" title="fips.operator.Operator.to_frame"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Operator.to_frame</span></code></a>(index[, columns])</p></td>
-<td><p>Return the operator as a labeled DataFrame.</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="api/fips.Operator.round_labels.html#fips.Operator.round_labels" title="fips.Operator.round_labels"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Operator.round_labels</span></code></a>(decimals)</p></td>
+<td><p>Return the operator with its float labels rounded (<a class="reference internal" href="api/fips.Space.round_labels.html#fips.Space.round_labels" title="fips.Space.round_labels"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Space.round_labels()</span></code></a>).</p></td>
 </tr>
 </tbody>
 </table>
 </div>
 </section>
-<section id="stored-data">
-<h2>Stored data<a class="headerlink" href="#stored-data" title="Link to this heading">#</a></h2>
+<section id="arithmetic">
+<h3>Arithmetic<a class="headerlink" href="#arithmetic" title="Link to this heading">#</a></h3>
 <div class="pst-scrollable-table-container"><table class="autosummary longtable table">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="api/fips.operator.DenseOperator.array.html#fips.operator.DenseOperator.array" title="fips.operator.DenseOperator.array"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DenseOperator.array</span></code></a></p></td>
-<td><p>The matrix.</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="api/fips.Operator.__matmul__.html#fips.Operator.__matmul__" title="fips.Operator.__matmul__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Operator.__matmul__</span></code></a>(other)</p></td>
+<td><p>Return the product with an operator or a vector, aligned by label.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="api/fips.operator.SparseOperator.matrix.html#fips.operator.SparseOperator.matrix" title="fips.operator.SparseOperator.matrix"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SparseOperator.matrix</span></code></a></p></td>
-<td><p>The matrix, as a SciPy sparse array.</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="api/fips.Operator.__add__.html#fips.Operator.__add__" title="fips.Operator.__add__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Operator.__add__</span></code></a>(other)</p></td>
+<td><p>Return the sum with an operator on the same labels (in any order).</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="api/fips.operator.DiagonalOperator.values.html#fips.operator.DiagonalOperator.values" title="fips.operator.DiagonalOperator.values"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DiagonalOperator.values</span></code></a></p></td>
-<td><p>The diagonal.</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="api/fips.Operator.__sub__.html#fips.Operator.__sub__" title="fips.Operator.__sub__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Operator.__sub__</span></code></a>(other)</p></td>
+<td><p>Return the difference with an operator on the same labels (in any order).</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="api/fips.Operator.__mul__.html#fips.Operator.__mul__" title="fips.Operator.__mul__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Operator.__mul__</span></code></a>(scalar)</p></td>
+<td><p>Return the operator times a scalar, in the same form.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="api/fips.Operator.__truediv__.html#fips.Operator.__truediv__" title="fips.Operator.__truediv__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Operator.__truediv__</span></code></a>(scalar)</p></td>
+<td><p>Return the operator divided by a scalar.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="api/fips.Operator.__neg__.html#fips.Operator.__neg__" title="fips.Operator.__neg__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Operator.__neg__</span></code></a>()</p></td>
+<td><p>Return <code class="docutils literal notranslate"><span class="pre">-self</span></code>.</p></td>
 </tr>
 </tbody>
 </table>
 </div>
 </section>
-<section id="testing">
-<h2>Testing<a class="headerlink" href="#testing" title="Link to this heading">#</a></h2>
+<section id="conversion">
+<h3>Conversion<a class="headerlink" href="#conversion" title="Link to this heading">#</a></h3>
 <div class="pst-scrollable-table-container"><table class="autosummary longtable table">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="api/fips.operator.dottest.html#fips.operator.dottest" title="fips.operator.dottest"><code class="xref py py-obj docutils literal notranslate"><span class="pre">dottest</span></code></a>(op[, rtol, seed])</p></td>
-<td><p>Check that <code class="docutils literal notranslate"><span class="pre">op.rmatvec</span></code> is the adjoint of <code class="docutils literal notranslate"><span class="pre">op.matvec</span></code>.</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="api/fips.Operator.dense.html#fips.Operator.dense" title="fips.Operator.dense"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Operator.dense</span></code></a>()</p></td>
+<td><p>Return the matrix as a new dense array, rows and columns in the spaces' order.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="api/fips.Operator.sparse.html#fips.Operator.sparse" title="fips.Operator.sparse"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Operator.sparse</span></code></a>()</p></td>
+<td><p>Return the matrix as a new SciPy CSR array, rows and columns in the spaces' order.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="api/fips.Operator.to_frame.html#fips.Operator.to_frame" title="fips.Operator.to_frame"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Operator.to_frame</span></code></a>()</p></td>
+<td><p>Return the matrix as a dense DataFrame.</p></td>
 </tr>
 </tbody>
 </table>
 </div>
+</section>
 </section>
 </section>
 
@@ -1228,20 +1045,20 @@ operator as its matrix; <code class="docutils literal notranslate"><span class="
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="api/fips.covariance.CovarianceBuilder.__radd__.html"
+       href="api/fips.Vector.__getitem__.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">fips.covariance.CovarianceBuilder.__radd__</p>
+        <p class="prev-next-title">fips.Vector.__getitem__</p>
       </div>
     </a>
     <a class="right-next"
-       href="api/fips.operator.Operator.html"
+       href="api/fips.Operator.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">fips.operator.Operator</p>
+        <p class="prev-next-title">fips.Operator</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -1264,11 +1081,14 @@ operator as its matrix; <code class="docutils literal notranslate"><span class="
   </div>
   <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#forms">Forms</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#building">Building</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#linear-algebra">Linear algebra</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#stored-data">Stored data</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#testing">Testing</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#operator">Operator</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#constructor">Constructor</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#attributes">Attributes</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#selection-and-labels">Selection and labels</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#arithmetic">Arithmetic</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#conversion">Conversion</a></li>
+</ul>
+</li>
 </ul>
   </nav></div>
 

@@ -1,0 +1,6 @@
+fips.Constant.levels
+====================
+
+.. currentmodule:: fips
+
+.. autoattribute:: Constant.levels

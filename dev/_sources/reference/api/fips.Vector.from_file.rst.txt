@@ -1,6 +1,0 @@
-﻿fips.Vector.from\_file
-======================
-
-.. currentmodule:: fips
-
-.. automethod:: Vector.from_file

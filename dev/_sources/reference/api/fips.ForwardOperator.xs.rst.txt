@@ -1,6 +1,0 @@
-﻿fips.ForwardOperator.xs
-=======================
-
-.. currentmodule:: fips
-
-.. automethod:: ForwardOperator.xs

@@ -1,0 +1,6 @@
+fips.Space.from\_index
+======================
+
+.. currentmodule:: fips
+
+.. automethod:: Space.from_index

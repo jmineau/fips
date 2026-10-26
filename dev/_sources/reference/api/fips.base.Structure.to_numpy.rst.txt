@@ -1,6 +1,0 @@
-fips.base.Structure.to\_numpy
-=============================
-
-.. currentmodule:: fips.base
-
-.. automethod:: Structure.to_numpy

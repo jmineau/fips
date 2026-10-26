@@ -1,6 +1,0 @@
-﻿fips.ForwardOperator.operator
-=============================
-
-.. currentmodule:: fips
-
-.. autoproperty:: ForwardOperator.operator

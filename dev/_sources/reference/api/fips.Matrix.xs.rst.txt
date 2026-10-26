@@ -1,6 +1,0 @@
-﻿fips.Matrix.xs
-==============
-
-.. currentmodule:: fips
-
-.. automethod:: Matrix.xs

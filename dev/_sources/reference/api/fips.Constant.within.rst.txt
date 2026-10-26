@@ -1,0 +1,6 @@
+fips.Constant.within
+====================
+
+.. currentmodule:: fips
+
+.. autoattribute:: Constant.within

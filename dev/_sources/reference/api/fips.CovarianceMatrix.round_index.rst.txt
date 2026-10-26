@@ -1,6 +1,0 @@
-﻿fips.CovarianceMatrix.round\_index
-==================================
-
-.. currentmodule:: fips
-
-.. automethod:: CovarianceMatrix.round_index

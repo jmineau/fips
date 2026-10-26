@@ -1,6 +1,0 @@
-﻿fips.CovarianceMatrix.shape
-===========================
-
-.. currentmodule:: fips
-
-.. autoproperty:: CovarianceMatrix.shape

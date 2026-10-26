@@ -1,6 +1,0 @@
-fips.estimators.BayesianSolver.reduced\_chi2
-============================================
-
-.. currentmodule:: fips.estimators
-
-.. autoproperty:: BayesianSolver.reduced_chi2

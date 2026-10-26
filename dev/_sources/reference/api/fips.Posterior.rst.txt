@@ -5,7 +5,6 @@
 
 .. autoclass:: Posterior
    :no-members:
-   :show-inheritance:
 
 
 
@@ -15,21 +14,18 @@
 .. autosummary::
    :toctree:
 
-   ~Posterior.covariance
-   ~Posterior.desroziers
+   ~Posterior.chi2
    ~Posterior.dofs
    ~Posterior.estimate
-   ~Posterior.estimator
+   ~Posterior.innovation_cov
    ~Posterior.kalman_gain
    ~Posterior.mean
    ~Posterior.modeled_obs
-   ~Posterior.obs_index
-   ~Posterior.prior_modeled_obs
-   ~Posterior.prior_obs_covariance
+   ~Posterior.options
+   ~Posterior.problem
    ~Posterior.r2
    ~Posterior.reduced_chi2
    ~Posterior.rmse
-   ~Posterior.state_index
    ~Posterior.uncertainty_reduction
    ~Posterior.variances
 
@@ -42,14 +38,11 @@
 
    ~Posterior.averaging_kernel
    ~Posterior.cov
+   ~Posterior.desroziers
+   ~Posterior.leverage
+   ~Posterior.summary
+   ~Posterior.with_data
    ~Posterior.with_gamma
 
-
-
-
-.. rubric:: Inherited
-
-
-From :class:`~.Pickleable`: :py:obj:`~.Pickleable.from_file`, :py:obj:`~.Pickleable.to_file`
 
 

@@ -1,0 +1,39 @@
+﻿fips.Exponential
+================
+
+.. currentmodule:: fips
+
+.. autoclass:: Exponential
+   :no-members:
+   :show-inheritance:
+
+
+
+
+.. rubric:: Attributes
+
+.. autosummary::
+   :toctree:
+
+   ~Exponential.metric
+   ~Exponential.scale
+   ~Exponential.within
+
+
+
+.. rubric:: Methods
+
+.. autosummary::
+   :toctree:
+
+   ~Exponential.correlation
+
+
+
+
+.. rubric:: Inherited
+
+
+From :class:`~.CorrelationModel`: :py:obj:`~.CorrelationModel.levels`, :py:obj:`~.CorrelationModel.with_std`
+
+

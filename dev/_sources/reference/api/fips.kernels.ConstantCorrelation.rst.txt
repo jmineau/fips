@@ -1,6 +1,0 @@
-﻿fips.kernels.ConstantCorrelation
-================================
-
-.. currentmodule:: fips.kernels
-
-.. autofunction:: ConstantCorrelation

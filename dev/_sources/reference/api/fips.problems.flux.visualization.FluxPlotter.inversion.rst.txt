@@ -1,6 +1,0 @@
-fips.problems.flux.visualization.FluxPlotter.inversion
-======================================================
-
-.. currentmodule:: fips.problems.flux.visualization
-
-.. autoattribute:: FluxPlotter.inversion

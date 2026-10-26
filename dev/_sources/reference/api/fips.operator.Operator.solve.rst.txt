@@ -1,6 +1,0 @@
-fips.operator.Operator.solve
-============================
-
-.. currentmodule:: fips.operator
-
-.. automethod:: Operator.solve

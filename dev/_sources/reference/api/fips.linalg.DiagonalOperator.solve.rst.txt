@@ -1,0 +1,6 @@
+fips.linalg.DiagonalOperator.solve
+==================================
+
+.. currentmodule:: fips.linalg
+
+.. automethod:: DiagonalOperator.solve

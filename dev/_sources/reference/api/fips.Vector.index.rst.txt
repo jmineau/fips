@@ -1,4 +1,4 @@
-﻿fips.Vector.index
+fips.Vector.index
 =================
 
 .. currentmodule:: fips

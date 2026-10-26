@@ -1,6 +1,0 @@
-fips.InverseProblem.forward\_operator
-=====================================
-
-.. currentmodule:: fips
-
-.. autoattribute:: InverseProblem.forward_operator

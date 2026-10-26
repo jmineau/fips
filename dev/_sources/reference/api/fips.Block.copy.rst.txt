@@ -1,6 +1,0 @@
-﻿fips.Block.copy
-===============
-
-.. currentmodule:: fips
-
-.. automethod:: Block.copy

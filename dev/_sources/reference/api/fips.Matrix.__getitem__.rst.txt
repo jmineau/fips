@@ -1,6 +1,0 @@
-﻿fips.Matrix.\_\_getitem\_\_
-===========================
-
-.. currentmodule:: fips
-
-.. automethod:: Matrix.__getitem__

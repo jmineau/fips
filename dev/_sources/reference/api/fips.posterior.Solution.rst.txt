@@ -1,0 +1,28 @@
+﻿fips.posterior.Solution
+=======================
+
+.. currentmodule:: fips.posterior
+
+.. autoclass:: Solution
+   :no-members:
+   :show-inheritance:
+
+
+
+
+
+
+.. rubric:: Methods
+
+.. autosummary::
+   :toctree:
+
+   ~Solution.chi2
+   ~Solution.cov
+   ~Solution.dofs
+   ~Solution.estimate
+   ~Solution.gain
+   ~Solution.variances
+
+
+

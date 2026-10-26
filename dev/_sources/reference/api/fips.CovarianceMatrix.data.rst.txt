@@ -1,6 +1,0 @@
-﻿fips.CovarianceMatrix.data
-==========================
-
-.. currentmodule:: fips
-
-.. autoproperty:: CovarianceMatrix.data

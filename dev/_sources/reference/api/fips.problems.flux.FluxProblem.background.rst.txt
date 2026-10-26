@@ -1,6 +1,0 @@
-fips.problems.flux.FluxProblem.background
-=========================================
-
-.. currentmodule:: fips.problems.flux
-
-.. autoproperty:: FluxProblem.background

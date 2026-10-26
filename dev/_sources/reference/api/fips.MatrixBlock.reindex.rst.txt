@@ -1,6 +1,0 @@
-﻿fips.MatrixBlock.reindex
-========================
-
-.. currentmodule:: fips
-
-.. automethod:: MatrixBlock.reindex

@@ -1,0 +1,6 @@
+fips.Kronecker.levels
+=====================
+
+.. currentmodule:: fips
+
+.. autoattribute:: Kronecker.levels

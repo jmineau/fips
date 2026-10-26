@@ -1,6 +1,0 @@
-fips.base.Structure2D.data
-==========================
-
-.. currentmodule:: fips.base
-
-.. autoproperty:: Structure2D.data

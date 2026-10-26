@@ -1,6 +1,0 @@
-fips.covariance.KroneckerOperator.std
-=====================================
-
-.. currentmodule:: fips.covariance
-
-.. autoattribute:: KroneckerOperator.std

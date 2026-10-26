@@ -1,6 +1,0 @@
-fips.estimators.BayesianSolver.DOFS
-===================================
-
-.. currentmodule:: fips.estimators
-
-.. autoproperty:: BayesianSolver.DOFS

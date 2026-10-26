@@ -1,6 +1,0 @@
-﻿fips.CovarianceMatrix.to\_dense
-===============================
-
-.. currentmodule:: fips
-
-.. automethod:: CovarianceMatrix.to_dense

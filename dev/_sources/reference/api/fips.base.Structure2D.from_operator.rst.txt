@@ -1,6 +1,0 @@
-fips.base.Structure2D.from\_operator
-====================================
-
-.. currentmodule:: fips.base
-
-.. automethod:: Structure2D.from_operator

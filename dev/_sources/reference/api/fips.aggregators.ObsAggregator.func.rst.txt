@@ -1,6 +1,0 @@
-fips.aggregators.ObsAggregator.func
-===================================
-
-.. currentmodule:: fips.aggregators
-
-.. autoattribute:: ObsAggregator.func

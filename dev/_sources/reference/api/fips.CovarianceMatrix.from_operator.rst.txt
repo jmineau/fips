@@ -1,6 +1,0 @@
-﻿fips.CovarianceMatrix.from\_operator
-====================================
-
-.. currentmodule:: fips
-
-.. automethod:: CovarianceMatrix.from_operator

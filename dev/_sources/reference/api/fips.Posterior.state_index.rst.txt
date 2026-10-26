@@ -1,6 +1,0 @@
-fips.Posterior.state\_index
-===========================
-
-.. currentmodule:: fips
-
-.. autoattribute:: Posterior.state_index

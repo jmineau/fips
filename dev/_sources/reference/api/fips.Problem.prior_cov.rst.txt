@@ -1,0 +1,6 @@
+fips.Problem.prior\_cov
+=======================
+
+.. currentmodule:: fips
+
+.. autoproperty:: Problem.prior_cov

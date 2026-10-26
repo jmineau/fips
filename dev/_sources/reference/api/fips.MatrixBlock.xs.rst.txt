@@ -1,6 +1,0 @@
-﻿fips.MatrixBlock.xs
-===================
-
-.. currentmodule:: fips
-
-.. automethod:: MatrixBlock.xs

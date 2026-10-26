@@ -1,6 +1,0 @@
-﻿fips.MatrixBlock.to\_dense
-==========================
-
-.. currentmodule:: fips
-
-.. automethod:: MatrixBlock.to_dense

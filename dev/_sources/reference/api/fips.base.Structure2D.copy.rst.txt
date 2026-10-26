@@ -1,6 +1,0 @@
-fips.base.Structure2D.copy
-==========================
-
-.. currentmodule:: fips.base
-
-.. automethod:: Structure2D.copy

@@ -1,6 +1,0 @@
-﻿fips.CovarianceMatrix.operator
-==============================
-
-.. currentmodule:: fips
-
-.. autoproperty:: CovarianceMatrix.operator

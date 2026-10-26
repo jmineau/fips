@@ -1,0 +1,6 @@
+fips.linalg.DenseOperator.array
+===============================
+
+.. currentmodule:: fips.linalg
+
+.. autoattribute:: DenseOperator.array

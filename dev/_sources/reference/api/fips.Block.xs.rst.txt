@@ -1,6 +1,0 @@
-﻿fips.Block.xs
-=============
-
-.. currentmodule:: fips
-
-.. automethod:: Block.xs

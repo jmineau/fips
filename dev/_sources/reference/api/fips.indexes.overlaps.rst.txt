@@ -1,6 +1,0 @@
-﻿fips.indexes.overlaps
-=====================
-
-.. currentmodule:: fips.indexes
-
-.. autofunction:: overlaps

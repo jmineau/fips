@@ -2,82 +2,60 @@
  "cells": [
   {
    "cell_type": "markdown",
-   "id": "8d5fcb02",
+   "id": "cell-00",
    "metadata": {},
    "source": [
-    "# 2D Gravity Inversion\n",
+    "# Gravity: density below the surface\n",
     "\n",
-    "## Bayesian Inversion for Subsurface Density Estimation\n",
+    "Gravity measured along a line at the surface depends on how dense the ground\n",
+    "is below it. This notebook finds the density anomaly of 40 buried prisms (a\n",
+    "10 x 4 grid, 1000 m across and 25 to 250 m deep) from the vertical gravity\n",
+    "measured at 41 points above them.\n",
     "\n",
-    "This notebook demonstrates solving a 2D gravity inverse problem using Bayesian estimation.\n",
+    "In the words of the [terminology](../terminology.rst):\n",
     "\n",
-    "### Problem Setup\n",
-    "\n",
-    "**State (x):** Density anomalies in subsurface prisms [g/cm³]  \n",
-    "**Observations (z):** Vertical component of gravity field at surface [mGal]  \n",
-    "**Forward model:** z = H @ x (Newtonian gravity from rectangular prisms)\n",
-    "\n",
-    "### Geometry\n",
-    "- **Domain:** 100m horizontal × 40m depth\n",
-    "- **Mesh:** 10 × 4 prisms (horizontal × vertical)\n",
-    "- **Observations:** 41 surface gravity measurements"
+    "- the **state** is the density anomaly of each prism (g/cm³);\n",
+    "- the **observations** are the gravity anomalies at the surface (mGal);\n",
+    "- the **forward operator** is Newton's law for a rectangular prism: the\n",
+    "  gravity at each point from a unit density in each prism;\n",
+    "- the **prior** is no anomaly anywhere, with a **prior covariance** that makes\n",
+    "  neighboring prisms alike, and the **observation covariance** says the\n",
+    "  measurements are good to 1% of the largest signal."
    ]
   },
   {
    "cell_type": "code",
    "execution_count": null,
-   "id": "b724c1bc",
+   "id": "cell-01",
    "metadata": {},
    "outputs": [],
    "source": [
     "import matplotlib.pyplot as plt\n",
     "import numpy as np\n",
     "import pandas as pd\n",
-    "from mpl_toolkits.axes_grid1 import make_axes_locatable\n",
     "\n",
-    "from fips import Block, CovarianceMatrix, ForwardOperator, InverseProblem, Vector\n",
-    "\n",
-    "# Configure plotting\n",
-    "plt.style.use(\"seaborn-v0_8-darkgrid\")\n",
-    "%matplotlib inline"
+    "import fips\n",
+    "from fips.visualization import plot_comparison"
    ]
   },
   {
    "cell_type": "markdown",
-   "id": "9a5fcbce",
+   "id": "cell-02",
    "metadata": {},
    "source": [
-    "## Configuration"
+    "## The data and the geometry\n",
+    "\n",
+    "The observed gravity anomalies, and where the prisms are."
    ]
   },
   {
    "cell_type": "code",
    "execution_count": null,
-   "id": "8077d031",
+   "id": "cell-03",
    "metadata": {},
    "outputs": [],
    "source": [
-    "# Physical constant\n",
-    "GAMMA = 6.67e-4  # Gravitational constant in CGS units"
-   ]
-  },
-  {
-   "cell_type": "markdown",
-   "id": "57a62cf4",
-   "metadata": {},
-   "source": [
-    "## Define Geometry and Generate Synthetic Data"
-   ]
-  },
-  {
-   "cell_type": "code",
-   "execution_count": null,
-   "id": "48f15093",
-   "metadata": {},
-   "outputs": [],
-   "source": [
-    "# Observed gravity anomalies\n",
-    "z_obs = np.array(\n",
+    "gravity = np.array(\n",
     "    [\n",
     "        6.5112333e-03,\n",
     "        7.1144759e-03,\n",
@@ -121,363 +99,274 @@
     "        1.2701558e-02,\n",
     "        1.1293783e-02,\n",
     "    ]\n",
+    ")  # mGal\n",
+    "stations = np.linspace(0, 1000, len(gravity))  # where gravity was measured, m\n",
+    "\n",
+    "x_edges = np.linspace(0, 1000, 11)  # the prisms' edges across, m\n",
+    "depth_edges = np.linspace(25, 250, 5)  # and down, m\n",
+    "x_centers = (x_edges[:-1] + x_edges[1:]) / 2\n",
+    "depth_centers = (depth_edges[:-1] + depth_edges[1:]) / 2"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "cell-04",
+   "metadata": {},
+   "source": [
+    "## Labels and vectors\n",
+    "\n",
+    "fips keeps a label beside every number. Each prism is labeled by where it is,\n",
+    "its `x` and its `depth`; each observation by its `x`. A `Vector` is values on\n",
+    "such labels: the prior is no anomaly in any prism, in a block named\n",
+    "`density`, and the observations are a block named `gravity`."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "cell-05",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "prisms = pd.MultiIndex.from_product([x_centers, depth_centers], names=[\"x\", \"depth\"])\n",
+    "prior = fips.Vector.from_series(\n",
+    "    pd.Series(0.0, index=prisms, name=\"prior\"), block=\"density\"\n",
     ")\n",
     "\n",
-    "# Create observation locations (41 points from 0 to 1000 m)\n",
-    "obs_locs = np.linspace(0, 1000, len(z_obs))\n",
+    "points = pd.Index(stations, name=\"x\")\n",
+    "obs = fips.Vector.from_series(\n",
+    "    pd.Series(gravity, index=points, name=\"observed\"), block=\"gravity\"\n",
+    ")\n",
+    "prior.space"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "cell-06",
+   "metadata": {},
+   "source": [
+    "## The forward operator\n",
     "\n",
-    "# Create mesh boundaries (10 x 4 prisms)\n",
-    "prism_x = np.linspace(0, 1000, 11)  # 11 boundaries for 10 prisms\n",
-    "prism_z = np.linspace(25, 250, 5)  # 5 boundaries for 4 prisms\n",
+    "The gravity of a rectangular prism of unit density has a closed form. The\n",
+    "matrix has one row per observation and one column per prism, in the order of\n",
+    "the labels above (`x` outer, `depth` inner), so `fips.Operator` puts the\n",
+    "observations' labels on its rows and the prisms' on its columns."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "cell-07",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "G = 6.67e-4  # the gravitational constant, in units that give mGal\n",
     "\n",
-    "n_obs = len(z_obs)\n",
-    "n_x = len(prism_x) - 1\n",
-    "n_z = len(prism_z) - 1\n",
-    "n_state = n_x * n_z\n",
     "\n",
-    "print(\"Data created:\")\n",
-    "print(f\"  Observations: {n_obs}\")\n",
-    "print(f\"  State dimension: {n_state} ({n_x} × {n_z} prisms)\")\n",
-    "print(f\"  Gravity range: [{z_obs.min():.4f}, {z_obs.max():.4f}] mGal\")\n",
-    "print(\n",
-    "    f\"  Domain: {prism_x.min()}-{prism_x.max()} m (horizontal), {prism_z.min()}-{prism_z.max()} m (depth)\"\n",
+    "def prism_integral(dx, dz):\n",
+    "    \"\"\"Return the indefinite integral of the vertical gravity of a 2D prism.\"\"\"\n",
+    "    return dz * np.arctan(dx / dz) + dx / 2 * np.log(dz**2 + dx**2)\n",
+    "\n",
+    "\n",
+    "def prism_gravity(stations, x_edges, depth_edges):\n",
+    "    \"\"\"Return the gravity at each station of a unit density in each prism (stations x prisms).\"\"\"\n",
+    "    columns = []\n",
+    "    for x1, x2 in zip(x_edges[:-1], x_edges[1:], strict=True):\n",
+    "        for z1, z2 in zip(depth_edges[:-1], depth_edges[1:], strict=True):\n",
+    "            a, b = x1 - stations, x2 - stations\n",
+    "            columns.append(\n",
+    "                2\n",
+    "                * G\n",
+    "                * (\n",
+    "                    prism_integral(b, z2)\n",
+    "                    - prism_integral(b, z1)\n",
+    "                    - prism_integral(a, z2)\n",
+    "                    + prism_integral(a, z1)\n",
+    "                )\n",
+    "            )\n",
+    "    return np.column_stack(columns)\n",
+    "\n",
+    "\n",
+    "forward = fips.Operator(\n",
+    "    prism_gravity(stations, x_edges, depth_edges), obs.space, prior.space\n",
+    ")\n",
+    "forward.shape"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "cell-08",
+   "metadata": {},
+   "source": [
+    "## The covariances\n",
+    "\n",
+    "Neighboring prisms should be alike: the prior covariance correlates two prisms\n",
+    "by their distance across (over 200 m) and in depth (over 100 m), with a\n",
+    "standard deviation of 0.5 g/cm³. It is a `Kronecker` product of two\n",
+    "exponential correlations, kept as its two small factors. The observations'\n",
+    "errors are independent, at 1% of the largest signal."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "cell-09",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "prior_cov = fips.Kronecker(\n",
+    "    fips.Exponential(\"x\", 200.0), fips.Exponential(\"depth\", 100.0)\n",
+    ").with_std(0.5)\n",
+    "obs_cov = fips.Independent().with_std(0.01 * gravity.max())"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "cell-10",
+   "metadata": {},
+   "source": [
+    "## The problem and its solution\n",
+    "\n",
+    "A `Problem` puts the inputs together and checks that every label matches.\n",
+    "`fips.solve` returns the `Posterior`: the estimate, its uncertainty and the\n",
+    "diagnostics of the solve."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "cell-11",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "problem = fips.Problem(\n",
+    "    prior=prior, prior_cov=prior_cov, obs=obs, obs_cov=obs_cov, forward=forward\n",
+    ")\n",
+    "post = fips.solve(problem)\n",
+    "post.summary()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "cell-12",
+   "metadata": {},
+   "source": [
+    "The DOFS say how many independent pieces of information the 41 measurements\n",
+    "give about the 40 prisms. The reduced chi-squared is near 1 when the\n",
+    "covariances fit the data; here it is well below, because these synthetic\n",
+    "observations have no noise at all."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "cell-13",
+   "metadata": {},
+   "source": [
+    "## The fit to the data\n",
+    "\n",
+    "`plot_comparison` draws the observations, what the prior predicts\n",
+    "(`problem.predict`, the forward operator times the prior) and what the\n",
+    "estimate predicts (`post.modeled_obs`) on one axes."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "cell-14",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "def named(vector, name):\n",
+    "    \"\"\"Return a vector of one block as a Series on its own labels, named for the legend.\"\"\"\n",
+    "    return vector.to_series().droplevel(\"block\").rename(name)\n",
+    "\n",
+    "\n",
+    "fig, ax = plot_comparison(\n",
+    "    named(problem.obs, \"observed\"),\n",
+    "    named(problem.predict(problem.prior), \"prior\"),\n",
+    "    named(post.modeled_obs, \"posterior\"),\n",
+    ")\n",
+    "ax.set(xlabel=\"x (m)\", ylabel=\"gravity (mGal)\");"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "cell-15",
+   "metadata": {},
+   "source": [
+    "## The density below\n",
+    "\n",
+    "The estimate and its standard deviation, as maps of the prisms:\n",
+    "`to_xarray()` puts a block on its levels, `x` and `depth`."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "cell-16",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "estimate = post.estimate[\"density\"].to_xarray()\n",
+    "std = np.sqrt(post.variances[\"density\"].to_xarray())\n",
+    "\n",
+    "fig, axes = plt.subplots(2, 1, figsize=(8, 6), sharex=True)\n",
+    "estimate.plot(\n",
+    "    ax=axes[0],\n",
+    "    x=\"x\",\n",
+    "    y=\"depth\",\n",
+    "    yincrease=False,\n",
+    "    cmap=\"Greys\",\n",
+    "    cbar_kwargs={\"label\": \"density (g/cm³)\"},\n",
+    ")\n",
+    "axes[0].set_title(\"Posterior estimate\")\n",
+    "std.plot(\n",
+    "    ax=axes[1],\n",
+    "    x=\"x\",\n",
+    "    y=\"depth\",\n",
+    "    yincrease=False,\n",
+    "    cmap=\"viridis\",\n",
+    "    cbar_kwargs={\"label\": \"std (g/cm³)\"},\n",
+    ")\n",
+    "axes[1].set_title(\"Posterior standard deviation\");"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "cell-17",
+   "metadata": {},
+   "source": [
+    "## How much to trust the data\n",
+    "\n",
+    "The regularization factor `gamma` divides the observation covariance: above\n",
+    "1 the solve trusts the data more, below 1 the prior. The posterior keeps its\n",
+    "factorization, so `with_gamma` gives each gamma's posterior without solving\n",
+    "again, and the rows of `summary()` stack into a table."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "cell-18",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "pd.concat(\n",
+    "    [post.with_gamma(g).summary() for g in (0.1, 0.3, 1.0, 3.0, 10.0)],\n",
+    "    ignore_index=True,\n",
     ")"
    ]
-  },
-  {
-   "cell_type": "markdown",
-   "id": "bf44a10c",
-   "metadata": {},
-   "source": [
-    "## Build Forward Operator"
-   ]
-  },
-  {
-   "cell_type": "code",
-   "execution_count": null,
-   "id": "20f00d2b",
-   "metadata": {},
-   "outputs": [],
-   "source": [
-    "def gravity_integral(x, z):\n",
-    "    \"\"\"\n",
-    "    Analytical integral for Newtonian gravity from a rectangular prism.\n",
-    "\n",
-    "    Parameters\n",
-    "    ----------\n",
-    "    x, z : array_like\n",
-    "        Horizontal and vertical distances\n",
-    "\n",
-    "    Returns\n",
-    "    -------\n",
-    "    array_like\n",
-    "        Integrated gravity contribution\n",
-    "    \"\"\"\n",
-    "    return z * np.arctan(x / z) + x / 2 * np.log(z**2 + x**2)\n",
-    "\n",
-    "\n",
-    "def build_forward_operator(obs_locs, prism_x, prism_z, gamma=GAMMA):\n",
-    "    \"\"\"\n",
-    "    Build forward operator H relating density to gravity.\n",
-    "\n",
-    "    Maps state (density in prisms) to observations (gravity at surface):\n",
-    "        z = H @ x\n",
-    "\n",
-    "    Parameters\n",
-    "    ----------\n",
-    "    obs_locs : array\n",
-    "        Observation locations (horizontal positions) [m]\n",
-    "    prism_x : array\n",
-    "        Prism boundaries in x-direction [m]\n",
-    "    prism_z : array\n",
-    "        Prism boundaries in z-direction (depth) [m]\n",
-    "    gamma : float\n",
-    "        Gravitational constant\n",
-    "\n",
-    "    Returns\n",
-    "    -------\n",
-    "    H : ndarray\n",
-    "        Forward operator [n_obs × n_state]\n",
-    "    \"\"\"\n",
-    "    n_obs = len(obs_locs)\n",
-    "    n_x = len(prism_x) - 1\n",
-    "    n_z = len(prism_z) - 1\n",
-    "    n_state = n_x * n_z\n",
-    "\n",
-    "    H = np.zeros((n_obs, n_state))\n",
-    "\n",
-    "    idx = 0\n",
-    "    for ix in range(1, len(prism_x)):\n",
-    "        x1 = prism_x[ix - 1] - obs_locs  # Lower x boundary\n",
-    "        x2 = prism_x[ix] - obs_locs  # Upper x boundary\n",
-    "\n",
-    "        for iz in range(1, len(prism_z)):\n",
-    "            z1 = prism_z[iz - 1]  # Upper z boundary (shallow)\n",
-    "            z2 = prism_z[iz]  # Lower z boundary (deep)\n",
-    "\n",
-    "            # Compute gravity contribution using analytical formula\n",
-    "            contrib = (\n",
-    "                gravity_integral(x2, z2)\n",
-    "                - gravity_integral(x2, z1)\n",
-    "                - gravity_integral(x1, z2)\n",
-    "                + gravity_integral(x1, z1)\n",
-    "            )\n",
-    "\n",
-    "            H[:, idx] = 2 * gamma * contrib\n",
-    "            idx += 1\n",
-    "\n",
-    "    return H"
-   ]
-  },
-  {
-   "cell_type": "code",
-   "execution_count": null,
-   "id": "aabb2f0e",
-   "metadata": {},
-   "outputs": [],
-   "source": [
-    "# Build forward operator\n",
-    "print(\"Building forward operator...\")\n",
-    "H = build_forward_operator(obs_locs, prism_x, prism_z)\n",
-    "\n",
-    "print(f\"Forward operator shape: {H.shape}\")\n",
-    "print(f\"  Condition number: {np.linalg.cond(H):.2e}\")"
-   ]
-  },
-  {
-   "cell_type": "markdown",
-   "id": "bb169318",
-   "metadata": {},
-   "source": [
-    "## Setup Inverse Problem\n",
-    "\n",
-    "### Prior Information\n",
-    "- **Mean:** x₀ = 0 (zero density anomaly)\n",
-    "- **Covariance:** S_0 = 0.5² I (independent prisms)\n",
-    "\n",
-    "### Observation Error\n",
-    "- S_z = (0.05 · max(z))² I (5% of maximum signal)\n",
-    "\n",
-    "### Bayesian Framework\n",
-    "**Posterior estimate:**\n",
-    "$$\\hat{x} = x_0 + K(z - Hx_0)$$\n",
-    "\n",
-    "**Posterior covariance:**\n",
-    "$$\\hat{S} = S_0 - (HS_0)^T(HS_0H^T + S_z)^{-1}(HS_0)$$"
-   ]
-  },
-  {
-   "cell_type": "code",
-   "execution_count": null,
-   "id": "1b84fab9",
-   "metadata": {},
-   "outputs": [],
-   "source": [
-    "# Create indices\n",
-    "obs_idx = pd.Index([f\"obs_{i:03d}\" for i in range(n_obs)], name=\"x\")\n",
-    "state_idx = pd.Index([f\"prism_{i:03d}\" for i in range(n_state)], name=\"prism\")\n",
-    "\n",
-    "# Observation vector\n",
-    "z = Vector(\n",
-    "    name=\"observations\", data=[Block(pd.Series(z_obs, index=obs_idx, name=\"gravity\"))]\n",
-    ")\n",
-    "\n",
-    "# Prior state (zero density anomaly)\n",
-    "x_0 = Vector(\n",
-    "    name=\"prior\",\n",
-    "    data=[Block(pd.Series(np.zeros(n_state), index=state_idx, name=\"density\"))],\n",
-    ")\n",
-    "\n",
-    "# Prior error covariance (independent prisms)\n",
-    "sigma_x = 0.5  # Prior uncertainty [g/cm³]\n",
-    "S_0 = CovarianceMatrix.diagonal(sigma_x**2, index=x_0.index)\n",
-    "\n",
-    "# Observation error covariance (independent observations)\n",
-    "sigma_z = 0.05 * np.max(z_obs)  # 5% of max signal\n",
-    "S_z = CovarianceMatrix.diagonal(sigma_z**2, index=z.index)\n",
-    "\n",
-    "# Forward operator\n",
-    "H_mat = ForwardOperator(pd.DataFrame(H, index=z.index, columns=x_0.index))\n",
-    "\n",
-    "# Create problem\n",
-    "problem = InverseProblem(\n",
-    "    prior=x_0, obs=z, forward_operator=H_mat, prior_error=S_0, modeldata_mismatch=S_z\n",
-    ")\n",
-    "\n",
-    "print(\"Inverse problem configured.\")\n",
-    "print(f\"  Prior uncertainty: {sigma_x} g/cm³\")\n",
-    "print(f\"  Observation uncertainty: {sigma_z:.4f} mGal\")"
-   ]
-  },
-  {
-   "cell_type": "markdown",
-   "id": "f1d82f35",
-   "metadata": {},
-   "source": [
-    "## Solve Problem"
-   ]
-  },
-  {
-   "cell_type": "code",
-   "execution_count": null,
-   "id": "c6c1663a",
-   "metadata": {},
-   "outputs": [],
-   "source": [
-    "# Solve using Bayesian estimator\n",
-    "print(\"Solving...\")\n",
-    "problem.solve(estimator=\"bayesian\")\n",
-    "print(\"✓ Solution complete\")"
-   ]
-  },
-  {
-   "cell_type": "markdown",
-   "id": "0f78cfa4",
-   "metadata": {},
-   "source": [
-    "## Diagnostics\n",
-    "\n",
-    "Analyze the solution quality and information content."
-   ]
-  },
-  {
-   "cell_type": "code",
-   "execution_count": null,
-   "id": "2750f6aa",
-   "metadata": {},
-   "outputs": [],
-   "source": [
-    "# Extract results\n",
-    "x_post = problem.posterior.data.values\n",
-    "z_obs_vals = problem.obs.data.values\n",
-    "z_post = problem.posterior_obs.data.values\n",
-    "z_prior = problem.prior_obs.data.values\n",
-    "\n",
-    "# Posterior state\n",
-    "print(\"POSTERIOR STATE (DENSITY)\")\n",
-    "print(f\"  Mean: {x_post.mean():.4f} g/cm³\")\n",
-    "print(f\"  Std:  {x_post.std():.4f} g/cm³\")\n",
-    "print(f\"  Range: [{x_post.min():.4f}, {x_post.max():.4f}] g/cm³\")\n",
-    "\n",
-    "# Observation fit\n",
-    "print(\"\\nOBSERVATION FIT\")\n",
-    "print(f\"  RMSE: {problem.estimator.RMSE:.6e} mGal\")\n",
-    "print(f\"  R²: {problem.estimator.R2:.4f}\")\n",
-    "residuals = z_obs_vals - z_post\n",
-    "print(f\"  Max residual: {np.abs(residuals).max():.6e} mGal\")\n",
-    "\n",
-    "# Uncertainty reduction\n",
-    "prior_std = np.sqrt(np.diag(problem.prior_error.values))\n",
-    "post_std = np.sqrt(np.diag(problem.posterior_error.values))\n",
-    "reduction = (1 - post_std / prior_std) * 100\n",
-    "\n",
-    "print(\"\\nUNCERTAINTY REDUCTION\")\n",
-    "print(f\"  Mean: {reduction.mean():.1f}%\")\n",
-    "print(f\"  Range: [{reduction.min():.1f}%, {reduction.max():.1f}%]\")\n",
-    "\n",
-    "# Information content\n",
-    "print(\"\\nINFORMATION CONTENT\")\n",
-    "print(f\"  DOFS: {problem.estimator.DOFS:.1f}\")\n",
-    "print(f\"  Reduced χ²: {problem.estimator.reduced_chi2:.3f}\")"
-   ]
-  },
-  {
-   "cell_type": "markdown",
-   "id": "8b5ee9b6",
-   "metadata": {},
-   "source": [
-    "## Visualization\n",
-    "\n",
-    "### Data Fit"
-   ]
-  },
-  {
-   "cell_type": "code",
-   "execution_count": null,
-   "id": "9d5057a1",
-   "metadata": {},
-   "outputs": [],
-   "source": [
-    "# Combined visualization: all plots with shared x-axis\n",
-    "fig, axes = plt.subplots(\n",
-    "    4, 1, figsize=(12, 14), sharex=True, gridspec_kw={\"hspace\": 0.4}\n",
-    ")\n",
-    "\n",
-    "# Prepare data for pcolormesh plots\n",
-    "x_post_2d = x_post.reshape(n_x, n_z).T\n",
-    "x_post_std = np.sqrt(np.diag(problem.posterior_error.values))\n",
-    "x_post_std_2d = x_post_std.reshape(n_x, n_z).T\n",
-    "X, Z = np.meshgrid(prism_x, prism_z)\n",
-    "\n",
-    "# Plot 1: Data fit\n",
-    "ax = axes[0]\n",
-    "ax.plot(obs_locs, z_obs_vals, \"kx\", label=\"Observed\", markersize=8, markeredgewidth=2)\n",
-    "ax.plot(obs_locs, z_post, \"b-\", label=\"Posterior\", linewidth=2.5)\n",
-    "ax.plot(obs_locs, z_prior, \"g--\", label=\"Prior\", linewidth=2, alpha=0.7)\n",
-    "ax.set(ylabel=\"Gravity (mGal)\")\n",
-    "ax.set_title(\"Data Fit\", fontweight=\"bold\", fontsize=12)\n",
-    "ax.legend(fontsize=10)\n",
-    "ax.grid(True, alpha=0.3)\n",
-    "\n",
-    "# Plot 2: Posterior density\n",
-    "ax = axes[1]\n",
-    "im1 = ax.pcolormesh(X, Z, x_post_2d, cmap=\"Greys\", shading=\"flat\")\n",
-    "ax.set(ylabel=\"Depth (m)\")\n",
-    "ax.set_title(\"Posterior State\", fontweight=\"bold\", fontsize=12)\n",
-    "ax.invert_yaxis()\n",
-    "cax1 = make_axes_locatable(ax).append_axes(\"bottom\", size=\"8%\", pad=0.3)\n",
-    "cbar1 = plt.colorbar(im1, cax=cax1, orientation=\"horizontal\")\n",
-    "cbar1.set_label(\"Density (g/cm³)\", fontsize=10)\n",
-    "\n",
-    "# Plot 3: Posterior uncertainty\n",
-    "ax = axes[2]\n",
-    "im2 = ax.pcolormesh(X, Z, x_post_std_2d, cmap=\"viridis\", shading=\"flat\")\n",
-    "ax.set(ylabel=\"Depth (m)\")\n",
-    "ax.set_title(\"Posterior Uncertainty\", fontweight=\"bold\", fontsize=12)\n",
-    "ax.invert_yaxis()\n",
-    "cax2 = make_axes_locatable(ax).append_axes(\"bottom\", size=\"8%\", pad=0.3)\n",
-    "cbar2 = plt.colorbar(im2, cax=cax2, orientation=\"horizontal\")\n",
-    "cbar2.set_label(\"Std Dev (g/cm³)\", fontsize=10)\n",
-    "\n",
-    "# Plot 4: Residuals\n",
-    "ax = axes[3]\n",
-    "residuals = z_obs_vals - z_post\n",
-    "ax.bar(obs_locs, residuals, width=8, alpha=0.7, edgecolor=\"black\")\n",
-    "ax.axhline(0, color=\"r\", linestyle=\"--\", linewidth=2, label=\"Zero\")\n",
-    "ax.set(xlabel=\"x (m)\", ylabel=\"Residual (mGal)\")\n",
-    "ax.set_title(\"Observation Residuals\", fontweight=\"bold\", fontsize=12)\n",
-    "ax.legend(fontsize=10)\n",
-    "ax.grid(True, alpha=0.3, axis=\"y\")\n",
-    "\n",
-    "plt.show()"
-   ]
-  },
-  {
-   "cell_type": "code",
-   "execution_count": null,
-   "id": "a2a6faa6",
-   "metadata": {},
-   "outputs": [],
-   "source": []
   }
  ],
  "metadata": {
   "kernelspec": {
-   "display_name": "fips",
+   "display_name": "Python 3",
    "language": "python",
    "name": "python3"
   },
   "language_info": {
-   "codemirror_mode": {
-    "name": "ipython",
-    "version": 3
-   },
-   "file_extension": ".py",
-   "mimetype": "text/x-python",
    "name": "python",
-   "nbconvert_exporter": "python",
-   "pygments_lexer": "ipython3",
-   "version": "3.10.18"
+   "pygments_lexer": "ipython3"
   }
  },
  "nbformat": 4,

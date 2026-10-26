@@ -1,6 +1,0 @@
-fips.operator.Operator.trace
-============================
-
-.. currentmodule:: fips.operator
-
-.. automethod:: Operator.trace

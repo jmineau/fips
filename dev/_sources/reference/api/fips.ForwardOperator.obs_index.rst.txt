@@ -1,6 +1,0 @@
-fips.ForwardOperator.obs\_index
-===============================
-
-.. currentmodule:: fips
-
-.. autoproperty:: ForwardOperator.obs_index

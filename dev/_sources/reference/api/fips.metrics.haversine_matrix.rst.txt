@@ -1,6 +1,0 @@
-﻿fips.metrics.haversine\_matrix
-==============================
-
-.. currentmodule:: fips.metrics
-
-.. autofunction:: haversine_matrix

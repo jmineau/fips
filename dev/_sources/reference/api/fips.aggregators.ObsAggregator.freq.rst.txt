@@ -1,6 +1,0 @@
-fips.aggregators.ObsAggregator.freq
-===================================
-
-.. currentmodule:: fips.aggregators
-
-.. autoattribute:: ObsAggregator.freq

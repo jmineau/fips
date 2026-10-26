@@ -1,6 +1,0 @@
-﻿fips.MatrixBlock.columns
-========================
-
-.. currentmodule:: fips
-
-.. autoproperty:: MatrixBlock.columns

@@ -1,6 +1,0 @@
-fips.covariance.KroneckerOperator.solve
-=======================================
-
-.. currentmodule:: fips.covariance
-
-.. automethod:: KroneckerOperator.solve

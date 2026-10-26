@@ -1,6 +1,0 @@
-fips.covariance.KroneckerOperator.diagonal
-==========================================
-
-.. currentmodule:: fips.covariance
-
-.. automethod:: KroneckerOperator.diagonal

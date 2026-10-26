@@ -1,6 +1,0 @@
-﻿fips.Matrix.operator
-====================
-
-.. currentmodule:: fips
-
-.. autoproperty:: Matrix.operator

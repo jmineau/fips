@@ -1,6 +1,0 @@
-﻿fips.Block.name
-===============
-
-.. currentmodule:: fips
-
-.. autoproperty:: Block.name

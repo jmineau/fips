@@ -1,0 +1,6 @@
+fips.linalg.DenseOperator.dense
+===============================
+
+.. currentmodule:: fips.linalg
+
+.. automethod:: DenseOperator.dense

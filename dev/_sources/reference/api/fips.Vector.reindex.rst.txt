@@ -1,6 +1,0 @@
-﻿fips.Vector.reindex
-===================
-
-.. currentmodule:: fips
-
-.. automethod:: Vector.reindex

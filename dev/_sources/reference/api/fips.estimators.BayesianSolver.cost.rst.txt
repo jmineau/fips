@@ -1,6 +1,0 @@
-fips.estimators.BayesianSolver.cost
-===================================
-
-.. currentmodule:: fips.estimators
-
-.. automethod:: BayesianSolver.cost

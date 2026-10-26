@@ -1,6 +1,0 @@
-﻿fips.indexes.assign\_block
-==========================
-
-.. currentmodule:: fips.indexes
-
-.. autofunction:: assign_block

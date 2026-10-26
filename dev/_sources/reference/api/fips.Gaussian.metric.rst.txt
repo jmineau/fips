@@ -1,0 +1,6 @@
+fips.Gaussian.metric
+====================
+
+.. currentmodule:: fips
+
+.. autoattribute:: Gaussian.metric

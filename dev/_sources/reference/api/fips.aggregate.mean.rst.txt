@@ -1,0 +1,6 @@
+﻿fips.aggregate.mean
+===================
+
+.. currentmodule:: fips.aggregate
+
+.. autofunction:: mean

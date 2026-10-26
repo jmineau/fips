@@ -1,0 +1,6 @@
+fips.linalg.BlockDiagonalOperator.diagonal
+==========================================
+
+.. currentmodule:: fips.linalg
+
+.. automethod:: BlockDiagonalOperator.diagonal

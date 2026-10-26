@@ -1,6 +1,0 @@
-﻿fips.Block.index
-================
-
-.. currentmodule:: fips
-
-.. autoproperty:: Block.index

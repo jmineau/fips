@@ -1,6 +1,0 @@
-fips.InverseProblem.constant
-============================
-
-.. currentmodule:: fips
-
-.. autoattribute:: InverseProblem.constant

@@ -1,6 +1,0 @@
-﻿fips.ForwardOperator.diagonal
-=============================
-
-.. currentmodule:: fips
-
-.. automethod:: ForwardOperator.diagonal

@@ -1,6 +1,0 @@
-fips.MatrixBlock.to\_frame
-==========================
-
-.. currentmodule:: fips
-
-.. automethod:: MatrixBlock.to_frame

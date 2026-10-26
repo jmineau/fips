@@ -1,6 +1,0 @@
-fips.covariance.KroneckerOperator.dense
-=======================================
-
-.. currentmodule:: fips.covariance
-
-.. automethod:: KroneckerOperator.dense
