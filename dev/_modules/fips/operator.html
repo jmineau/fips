@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>fips.operator &#8212; fips 0.2.0b1 documentation</title>
+    <title>fips.operator &#8212; fips 0.2.0b2.dev1+g7c1006ecf documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0" />
 
-    <script src="../../_static/documentation_options.js?v=3804d0ff"></script>
+    <script src="../../_static/documentation_options.js?v=4d20c14a"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -49,7 +49,7 @@
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.22.0';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://jmineau.github.io/fips/switcher.json';
-        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.2.0b1';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'dev';
         DOCUMENTATION_OPTIONS.show_version_warning_banner =
             true;
         </script>
@@ -130,8 +130,8 @@
       
     
     
-    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b1 documentation - Home"/>
-    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b1 documentation - Home"/>
+    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b2.dev1+g7c1006ecf documentation - Home"/>
+    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b2.dev1+g7c1006ecf documentation - Home"/>
   
   
 </a></div>
@@ -435,7 +435,7 @@
 <span class="sd">&quot;&quot;&quot;</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Hashable</span><span class="p">,</span> <span class="n">Mapping</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Container</span><span class="p">,</span> <span class="n">Hashable</span><span class="p">,</span> <span class="n">Mapping</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Self</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
@@ -827,6 +827,9 @@
 <span class="sd">        A pair of blocks that is not given is zero. A labeled block is placed</span>
 <span class="sd">        by its labels: it may cover part of its blocks&#39; labels (the rest is</span>
 <span class="sd">        zero), as a transport Jacobian covers the cells a footprint touched.</span>
+<span class="sd">        A :class:`~fips.Covariance` may not (see ``Raises``): its variances</span>
+<span class="sd">        are the diagonal of the blocks&#39; own pairs, so each of those must</span>
+<span class="sd">        cover its block&#39;s labels.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -867,7 +870,11 @@
 <span class="sd">            `cols` does not give them, a labeled matrix has a label its block</span>
 <span class="sd">            does not have (the message names it), a labeled matrix is on</span>
 <span class="sd">            other blocks than its key names, or an unlabeled matrix has the</span>
-<span class="sd">            wrong shape.</span>
+<span class="sd">            wrong shape. For a :class:`~fips.Covariance` also: a block has no</span>
+<span class="sd">            pair of its own (``(&quot;flux&quot;, &quot;flux&quot;)``), or that pair lacks a</span>
+<span class="sd">            label of the block on its rows or its columns. That label would get</span>
+<span class="sd">            a variance of 0, so the message names it; give the pair a row and</span>
+<span class="sd">            a column for every label.</span>
 
 <span class="sd">        Examples</span>
 <span class="sd">        --------</span>
@@ -981,6 +988,8 @@
                 <span class="p">)</span>
             <span class="n">forms</span><span class="p">[(</span><span class="n">r</span><span class="p">,</span> <span class="n">c</span><span class="p">)]</span> <span class="o">=</span> <span class="n">form</span>
 
+        <span class="bp">cls</span><span class="o">.</span><span class="n">_check_blocks</span><span class="p">(</span><span class="n">labeled</span><span class="p">,</span> <span class="n">unlabeled</span><span class="p">,</span> <span class="n">row_space</span><span class="p">,</span> <span class="n">col_space</span><span class="p">)</span>
+
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">forms</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">row_space</span><span class="o">.</span><span class="n">names</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">col_space</span><span class="o">.</span><span class="n">names</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_build</span><span class="p">(</span><span class="nb">next</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="n">forms</span><span class="o">.</span><span class="n">values</span><span class="p">())),</span> <span class="n">row_space</span><span class="p">,</span> <span class="n">col_space</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
         <span class="n">parts</span> <span class="o">=</span> <span class="p">{</span><span class="n">key</span><span class="p">:</span> <span class="n">form</span><span class="o">.</span><span class="n">_csr</span><span class="p">()</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">form</span> <span class="ow">in</span> <span class="n">forms</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
@@ -1002,6 +1011,16 @@
             <span class="n">dense</span><span class="p">[</span><span class="n">row_space</span><span class="o">.</span><span class="n">slice</span><span class="p">(</span><span class="n">r</span><span class="p">),</span> <span class="n">col_space</span><span class="o">.</span><span class="n">slice</span><span class="p">(</span><span class="n">c</span><span class="p">)]</span> <span class="o">=</span> <span class="n">form</span><span class="o">.</span><span class="n">dense</span><span class="p">()</span>
         <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_build</span><span class="p">(</span><span class="n">_adopt</span><span class="p">(</span><span class="n">dense</span><span class="p">),</span> <span class="n">row_space</span><span class="p">,</span> <span class="n">col_space</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span></div>
 
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_check_blocks</span><span class="p">(</span>
+        <span class="bp">cls</span><span class="p">,</span>
+        <span class="n">labeled</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="s2">&quot;Operator&quot;</span><span class="p">],</span>
+        <span class="n">unlabeled</span><span class="p">:</span> <span class="n">Container</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]],</span>
+        <span class="n">rows</span><span class="p">:</span> <span class="n">Space</span><span class="p">,</span>
+        <span class="n">cols</span><span class="p">:</span> <span class="n">Space</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Raise if the labeled blocks of :meth:`from_blocks` do not suit this class; an operator takes any.&quot;&quot;&quot;</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">data</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LinearOperator</span><span class="p">:</span>

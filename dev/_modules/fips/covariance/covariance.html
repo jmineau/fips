@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>fips.covariance.covariance &#8212; fips 0.2.0b1 documentation</title>
+    <title>fips.covariance.covariance &#8212; fips 0.2.0b2.dev1+g7c1006ecf documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0" />
 
-    <script src="../../../_static/documentation_options.js?v=3804d0ff"></script>
+    <script src="../../../_static/documentation_options.js?v=4d20c14a"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -49,7 +49,7 @@
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.22.0';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://jmineau.github.io/fips/switcher.json';
-        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.2.0b1';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'dev';
         DOCUMENTATION_OPTIONS.show_version_warning_banner =
             true;
         </script>
@@ -130,8 +130,8 @@
       
     
     
-    <img src="../../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b1 documentation - Home"/>
-    <img src="../../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b1 documentation - Home"/>
+    <img src="../../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b2.dev1+g7c1006ecf documentation - Home"/>
+    <img src="../../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b2.dev1+g7c1006ecf documentation - Home"/>
   
   
 </a></div>
@@ -430,7 +430,7 @@
 <span class="sd">&quot;&quot;&quot;</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Container</span><span class="p">,</span> <span class="n">Mapping</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">ClassVar</span><span class="p">,</span> <span class="n">Protocol</span><span class="p">,</span> <span class="n">Self</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
@@ -447,8 +447,8 @@
     <span class="n">as_linear_operator</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">fips.linalg.forms</span><span class="w"> </span><span class="kn">import</span> <span class="n">_adopt</span><span class="p">,</span> <span class="n">_asymmetry</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">fips.operator</span><span class="w"> </span><span class="kn">import</span> <span class="n">Operator</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">fips.space</span><span class="w"> </span><span class="kn">import</span> <span class="n">Space</span><span class="p">,</span> <span class="n">_plain</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fips.operator</span><span class="w"> </span><span class="kn">import</span> <span class="n">Operator</span><span class="p">,</span> <span class="n">_difference</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fips.space</span><span class="w"> </span><span class="kn">import</span> <span class="n">Space</span><span class="p">,</span> <span class="n">_listed</span><span class="p">,</span> <span class="n">_plain</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">fips.vector</span><span class="w"> </span><span class="kn">import</span> <span class="n">Vector</span>
 
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
@@ -609,6 +609,50 @@
                 <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="kc">None</span>
             <span class="n">data</span> <span class="o">=</span> <span class="n">as_linear_operator</span><span class="p">(</span><span class="n">data</span><span class="p">)</span><span class="o">.</span><span class="n">_select</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">rows</span><span class="p">)),</span> <span class="n">order</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">rows</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_check_blocks</span><span class="p">(</span>
+        <span class="bp">cls</span><span class="p">,</span>
+        <span class="n">labeled</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="n">Operator</span><span class="p">],</span>
+        <span class="n">unlabeled</span><span class="p">:</span> <span class="n">Container</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]],</span>
+        <span class="n">rows</span><span class="p">:</span> <span class="n">Space</span><span class="p">,</span>
+        <span class="n">cols</span><span class="p">:</span> <span class="n">Space</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Raise if a block of a covariance built from blocks lacks a variance.</span>
+
+<span class="sd">        A variance is the entry of a label on the diagonal, which only the</span>
+<span class="sd">        block&#39;s own pair ``(block, block)`` can give. A pair that does not</span>
+<span class="sd">        cover every label of its block (or is not there) would leave those</span>
+<span class="sd">        entries 0 and the covariance singular, so it raises, naming them. An</span>
+<span class="sd">        unlabeled pair already has one row and column per label. Rows and</span>
+<span class="sd">        columns on other blocks are not a covariance at all, and</span>
+<span class="sd">        :meth:`_build` says so.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">set</span><span class="p">(</span><span class="n">rows</span><span class="o">.</span><span class="n">names</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">set</span><span class="p">(</span><span class="n">cols</span><span class="o">.</span><span class="n">names</span><span class="p">):</span>
+            <span class="k">return</span>
+        <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="n">rows</span><span class="o">.</span><span class="n">names</span><span class="p">:</span>
+            <span class="n">pair</span> <span class="o">=</span> <span class="p">(</span><span class="n">block</span><span class="p">,</span> <span class="n">block</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">pair</span> <span class="ow">in</span> <span class="n">unlabeled</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="k">if</span> <span class="n">pair</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">labeled</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Block </span><span class="si">{</span><span class="n">block</span><span class="si">!r}</span><span class="s2"> has no </span><span class="si">{</span><span class="n">pair</span><span class="si">!r}</span><span class="s2"> pair, so its &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">rows</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">block</span><span class="p">))</span><span class="si">}</span><span class="s2"> variances would be 0. Give the &quot;</span>
+                    <span class="s2">&quot;pair, with a variance for every label.&quot;</span>
+                <span class="p">)</span>
+            <span class="k">for</span> <span class="n">axis</span><span class="p">,</span> <span class="n">space</span> <span class="ow">in</span> <span class="p">((</span><span class="s2">&quot;rows&quot;</span><span class="p">,</span> <span class="n">rows</span><span class="p">),</span> <span class="p">(</span><span class="s2">&quot;columns&quot;</span><span class="p">,</span> <span class="n">cols</span><span class="p">)):</span>
+                <span class="n">have</span> <span class="o">=</span> <span class="n">labeled</span><span class="p">[</span><span class="n">pair</span><span class="p">]</span><span class="o">.</span><span class="n">rows</span> <span class="k">if</span> <span class="n">axis</span> <span class="o">==</span> <span class="s2">&quot;rows&quot;</span> <span class="k">else</span> <span class="n">labeled</span><span class="p">[</span><span class="n">pair</span><span class="p">]</span><span class="o">.</span><span class="n">cols</span>
+                <span class="n">lacking</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">_difference</span><span class="p">(</span><span class="n">space</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">block</span><span class="p">),</span> <span class="n">have</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">block</span><span class="p">))</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">lacking</span><span class="p">):</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">&quot;The </span><span class="si">{</span><span class="n">axis</span><span class="si">}</span><span class="s2"> of the matrix of </span><span class="si">{</span><span class="n">pair</span><span class="si">!r}</span><span class="s2"> lack &quot;</span>
+                        <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">lacking</span><span class="p">)</span><span class="si">}</span><span class="s2"> of the </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">space</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">block</span><span class="p">))</span><span class="si">}</span><span class="s2"> labels &quot;</span>
+                        <span class="sa">f</span><span class="s2">&quot;of block </span><span class="si">{</span><span class="n">block</span><span class="si">!r}</span><span class="s2">: </span><span class="si">{</span><span class="n">_listed</span><span class="p">(</span><span class="n">lacking</span><span class="p">)</span><span class="si">}</span><span class="s2">. A label without &quot;</span>
+                        <span class="s2">&quot;a row and column there gets a variance of 0, which makes &quot;</span>
+                        <span class="s2">&quot;the covariance singular. Give the pair every label of &quot;</span>
+                        <span class="s2">&quot;the block.&quot;</span>
+                    <span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_like</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">LinearOperatorLike</span><span class="p">,</span> <span class="n">rows</span><span class="p">:</span> <span class="n">Space</span><span class="p">,</span> <span class="n">cols</span><span class="p">:</span> <span class="n">Space</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Operator</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return a covariance when the two axes are one space, else an operator.&quot;&quot;&quot;</span>

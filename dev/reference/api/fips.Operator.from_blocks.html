@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>fips.Operator.from_blocks &#8212; fips 0.2.0b1 documentation</title>
+    <title>fips.Operator.from_blocks &#8212; fips 0.2.0b2.dev1+g7c1006ecf documentation</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0" />
 
-    <script src="../../_static/documentation_options.js?v=3804d0ff"></script>
+    <script src="../../_static/documentation_options.js?v=4d20c14a"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -50,7 +50,7 @@
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.22.0';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://jmineau.github.io/fips/switcher.json';
-        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.2.0b1';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'dev';
         DOCUMENTATION_OPTIONS.show_version_warning_banner =
             true;
         </script>
@@ -133,8 +133,8 @@
       
     
     
-    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b1 documentation - Home"/>
-    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b1 documentation - Home"/>
+    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b2.dev1+g7c1006ecf documentation - Home"/>
+    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b2.dev1+g7c1006ecf documentation - Home"/>
   
   
 </a></div>
@@ -817,7 +817,10 @@
 <dd><p>Build an operator from its blocks, each named by its row and its column block.</p>
 <p>A pair of blocks that is not given is zero. A labeled block is placed
 by its labels: it may cover part of its blocks’ labels (the rest is
-zero), as a transport Jacobian covers the cells a footprint touched.</p>
+zero), as a transport Jacobian covers the cells a footprint touched.
+A <a class="reference internal" href="fips.Covariance.html#fips.Covariance" title="fips.Covariance"><code class="xref py py-class docutils literal notranslate"><span class="pre">Covariance</span></code></a> may not (see <code class="docutils literal notranslate"><span class="pre">Raises</span></code>): its variances
+are the diagonal of the blocks’ own pairs, so each of those must
+cover its block’s labels.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -861,7 +864,11 @@ sparse); a single block that covers both spaces keeps its form.</p>
     <cite>cols</cite> does not give them, a labeled matrix has a label its block
     does not have (the message names it), a labeled matrix is on
     other blocks than its key names, or an unlabeled matrix has the
-    wrong shape.</p>
+    wrong shape. For a <a class="reference internal" href="fips.Covariance.html#fips.Covariance" title="fips.Covariance"><code class="xref py py-class docutils literal notranslate"><span class="pre">Covariance</span></code></a> also: a block has no
+    pair of its own (<code class="docutils literal notranslate"><span class="pre">(&quot;flux&quot;,</span> <span class="pre">&quot;flux&quot;)</span></code>), or that pair lacks a
+    label of the block on its rows or its columns. That label would get
+    a variance of 0, so the message names it; give the pair a row and
+    a column for every label.</p>
 </dd>
 </dl>
 <p class="rubric">Examples</p>
