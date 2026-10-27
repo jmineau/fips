@@ -142,10 +142,17 @@ to bump.
    Documentation workflow publishes its docs as `X.Y.Z/` in the version
    dropdown.
 
-Dependabot leaves a package at its old version when the newest release needs a
-newer Python than the oldest one this project supports. So on the 1st of each
-month the Upgrade lock workflow runs `uv lock --upgrade` (`uv.lock` then holds
-the newest release for each Python) and, when the lock changes, opens the pull
+## Dependency updates
+
+Dependabot opens one pull request a month for each of GitHub Actions and
+pre-commit hooks. Merge it when CI passes.
+
+`uv.lock` (the dev tools and every dependency) is updated by the Upgrade lock
+workflow alone, not by Dependabot, which would leave a package at its old
+version when the newest release needs a newer Python than the oldest one this
+project supports. On the 1st of each month the workflow runs `uv lock --upgrade`
+(`uv.lock` then holds the newest release for each Python; it never raises the
+minimum versions in `pyproject.toml`) and, when the lock changes, opens the pull
 request `chore/lock-upgrade` (or updates it). GitHub does not start workflows on
 a pull request that its own token opened, so the workflow starts Tests, Code
 Quality and Documentation on the branch itself; their results show on the pull

@@ -1,11 +1,12 @@
 name: Upgrade lock
 
 # Once a month, re-lock every dependency to its newest release and open one pull
-# request when uv.lock changes (`uv lock --upgrade`). Dependabot's uv updates do
-# not do this on their own: a package whose newest release needs a newer Python
-# than the oldest one this project supports stays at its old version, so CI would
-# test a release that users on a newer Python no longer get. `uv lock --upgrade`
-# locks the newest release for each Python (a fork in uv.lock).
+# request when uv.lock changes (`uv lock --upgrade`). It is the only thing that
+# updates uv.lock (Dependabot does actions and pre-commit hooks). Dependabot's uv
+# updates would leave a package whose newest release needs a newer Python than the
+# oldest one this project supports at its old version, so CI would test a release
+# that users on a newer Python no longer get. `uv lock --upgrade` locks the newest
+# release for each Python (a fork in uv.lock).
 #
 # Setup, once: Settings > Actions > General > Workflow permissions > tick "Allow
 # GitHub Actions to create and approve pull requests".
