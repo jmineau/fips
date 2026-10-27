@@ -64,17 +64,21 @@ def _nan_filled_frame(stored_nan: bool) -> pd.DataFrame:
     """
     Build a sparse frame with ``fill_value=NaN`` that stores rows 0 and 1.
 
-    Built on a sparse index directly, so that column "x" can store a NaN in
-    row 1 when `stored_nan` is set; row 2 is implicit.
+    Column "x" can store a NaN in row 1 when `stored_nan` is set; row 2 is
+    implicit. Pandas drops a NaN while building a NaN-filled array, so each
+    column is built with fill value 0, which stores rows 0 and 1 whatever they
+    hold (NaN included), and then relabeled with ``fill_value=NaN``: a
+    SparseArray built from a SparseArray keeps its stored positions and values.
     """
-    stored = pd.arrays.SparseArray([1.0, 2.0, 0.0], fill_value=0.0).sp_index
-    x = [1.0, np.nan] if stored_nan else [1.0, 2.0]
+
+    def column(stored: list[float]) -> pd.arrays.SparseArray:
+        zero_filled = pd.arrays.SparseArray([*stored, 0.0], fill_value=0.0)
+        return pd.arrays.SparseArray(zero_filled, fill_value=np.nan)
+
     frame = pd.DataFrame(
         {
-            "x": pd.arrays.SparseArray(x, sparse_index=stored, fill_value=np.nan),
-            "y": pd.arrays.SparseArray(
-                [4.0, 5.0], sparse_index=stored, fill_value=np.nan
-            ),
+            "x": column([1.0, np.nan] if stored_nan else [1.0, 2.0]),
+            "y": column([4.0, 5.0]),
         },
         index=pd.Index(["o0", "o1", "o2"], name="obs_id"),
     )
