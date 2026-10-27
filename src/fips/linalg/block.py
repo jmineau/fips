@@ -142,3 +142,32 @@ class BlockDiagonalOperator(LinearOperator):
     def sqrt(self) -> "BlockDiagonalOperator":
         """Return the square root of each block."""
         return BlockDiagonalOperator([form.sqrt() for form in self.blocks])
+
+    def _make_root(self) -> "_BlockRoot":
+        """Return the roots of the blocks, each as its own form draws, side by side."""
+        return _BlockRoot([form._root for form in self.blocks])
+
+
+class _BlockRoot(LinearOperator):
+    """
+    The root of a :class:`BlockDiagonalOperator`: the roots of its blocks, diagonal block by block.
+
+    A block's root may be rectangular (a Kronecker block on a subset of its
+    grid has more columns than rows), so this is ``n x r`` and the draw of
+    block ``k`` uses the next ``r_k`` normals, in the blocks' order. It is
+    applied one way only: a draw needs ``R w``, never ``R^T``.
+    """
+
+    def __init__(self, roots):
+        self._roots = tuple(roots)
+        self._cols = np.concatenate([[0], np.cumsum([R.shape[1] for R in roots])])
+        super().__init__((sum(R.shape[0] for R in roots), int(self._cols[-1])))
+
+    def _matmat(self, X):
+        """Return ``R @ X``: each block's root times its rows of `X`."""
+        return np.concatenate(
+            [
+                _as_array(R.matmat(X[self._cols[k] : self._cols[k + 1]]))
+                for k, R in enumerate(self._roots)
+            ]
+        )

@@ -23,7 +23,8 @@ labeled by pandas indexes in named blocks. Labels are matched, never positions;
 each matrix is kept in its cheapest form (dense, sparse, diagonal, Kronecker
 factors). Beta: the API may change between releases. PyPI and import name `fips`.
 
-It is not a sampler, not a nonlinear solver (the caller linearizes), not a file
+It is not an MCMC sampler (a draw from a Gaussian covariance, `Covariance.sample`, is
+all it samples), not a nonlinear solver (the caller linearizes), not a file
 format, and not tied to a science domain: a flux inversion is a `Problem` whose
 blocks are named `flux` and `concentration`, and its workflow, maps and STILT
 code live in its user's package (no domain subpackages, no lat/lon defaults, no
@@ -44,7 +45,7 @@ src/fips/
   aggregate.py      sum, mean (an aggregation W), offset_block
   visualization.py  plot_comparison, the one plot (the `viz` extra: matplotlib)
   covariance/       Covariance and the models that write one down (public)
-    covariance.py   Covariance: diagonal, block_diag, variances, solve, logdet, sqrt
+    covariance.py   Covariance: diagonal, block_diag, variances, solve, logdet, sqrt, sample
     models.py       CorrelationModel, Independent, Kronecker, CovarianceModel
                     (`with_std` takes a number, a Vector or a Series, never an array)
     kernels.py      Exponential, Gaussian, Matern, Constant; within= groups
@@ -194,6 +195,12 @@ dependency needs a reason, proposed first.
 
 - **Never run `python` from inside `src/fips`**: `operator.py` there shadows
   the standard library's `operator`.
+- **A draw is `form._root @ w`.** `LinearOperator._root` (cached, left out of
+  `__getstate__`) is built by `_make_root`: the Cholesky factor of the dense
+  matrix, or its `eigh` root when it is only semi-definite (one INFO line); a
+  diagonal, sparse (one factor per connected group), block diagonal and
+  Kronecker form (`n x N`, on the whole grid, then its rows) override it so a
+  draw never forms `n x n`. A new form with a cheap root overrides `_make_root`.
 - **Docs:** an `.. ipython::` block runs only the first line of a multi-line
   statement that is its 10th (or 100th), so split long blocks; napoleon reads a colon in an attribute docstring's first
   line as a type; docstr-coverage counts each `@overload` (give it a one-liner

@@ -9,9 +9,9 @@ to itself: the prior covariance or the observation covariance of a problem.
 It keeps its matrix in the cheapest form (a diagonal covariance is its
 variances, a Kronecker one its factors, independent blocks each their own
 form) and adds what a covariance needs: its variances, solves, the
-log-determinant, the quadratic form of its inverse and a square root. A dense
-or sparse matrix must be symmetric, to 1e-10 of its largest entry; one that is
-not (an upper triangle, say) raises, naming the two entries.
+log-determinant, the quadratic form of its inverse, a square root and a draw
+from it. A dense or sparse matrix must be symmetric, to 1e-10 of its largest
+entry; one that is not (an upper triangle, say) raises, naming the two entries.
 
 .. ipython:: python
 
@@ -58,6 +58,13 @@ Linear algebra
    Covariance.logdet
    Covariance.quadratic_form
    Covariance.sqrt
+
+Random draws
+~~~~~~~~~~~~
+.. autosummary::
+   :toctree: api/
+
+   Covariance.sample
 
 
 Covariance models
