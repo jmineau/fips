@@ -12,13 +12,15 @@ made of other forms are in :mod:`fips.linalg.block` and
 import logging
 import os
 from concurrent.futures import ThreadPoolExecutor
+from functools import cached_property
 from typing import Self, TypeAlias
 
 import numpy as np
 import numpy.typing as npt
 import scipy.sparse as sp
 from numpy.linalg import LinAlgError
-from scipy.linalg import cholesky, solve
+from scipy.linalg import cholesky, eigh, solve
+from scipy.sparse.csgraph import connected_components
 from scipy.sparse.linalg import LinearOperator as _SciPyLinearOperator
 from scipy.sparse.linalg import splu
 
@@ -93,6 +95,53 @@ def _cholesky(A: np.ndarray) -> np.ndarray:
         raise LinAlgError(
             f"The matrix is not positive-definite, so it has no Cholesky factor ({err})."
         ) from err
+
+
+def _clip_eigenvalues(w: np.ndarray) -> tuple[np.ndarray, bool]:
+    """
+    Return the eigenvalues `w` of a covariance with the negative ones set to zero, and whether any was.
+
+    An eigenvalue of a positive semi-definite matrix that comes out negative
+    by roundoff is within ``len(w) * eps * max|w|`` of zero (the size LAPACK
+    works to); a more negative one means the matrix is not a covariance.
+
+    Raises
+    ------
+    numpy.linalg.LinAlgError
+        If an eigenvalue is more negative than that.
+    """
+    tol = len(w) * np.finfo(float).eps * np.abs(w).max(initial=0.0)
+    if w.min(initial=0.0) < -tol:
+        raise LinAlgError(
+            f"The matrix is not positive semi-definite, so it is not a covariance: "
+            f"its smallest eigenvalue is {w.min():.3g}, more than the roundoff "
+            f"{tol:.3g} below zero."
+        )
+    return np.maximum(w, 0.0), bool((w < 0).any())
+
+
+def _dense_root(A: np.ndarray) -> tuple[np.ndarray, bool]:
+    """
+    Return a square `R` with ``R R^T = A`` for a symmetric positive semi-definite `A`, and whether it is semi-definite.
+
+    The lower Cholesky factor when `A` has one. A semi-definite `A` (a
+    ``Constant()`` block is rank one) has none, so `R` is then
+    ``V sqrt(w)`` from its eigendecomposition ``A = V diag(w) V^T``, with the
+    eigenvalues that are negative by roundoff set to zero, and the second
+    value is True. `linalg` cannot import `methods`, so this calls SciPy's
+    ``eigh`` itself, as the analytic method does.
+
+    Raises
+    ------
+    numpy.linalg.LinAlgError
+        If `A` has an eigenvalue that is clearly negative.
+    """
+    try:
+        return np.asarray(cholesky(A, lower=True)), False
+    except LinAlgError:
+        w, V = eigh(A)
+        w, _ = _clip_eigenvalues(np.asarray(w))
+        return np.asarray(V) * np.sqrt(w), True
 
 
 def _read_only(array: np.ndarray) -> np.ndarray:
@@ -233,9 +282,12 @@ class LinearOperator(_SciPyLinearOperator):
     ``_transpose``. Every other method has a default that is right for any
     form, which the subclass overrides where its form has a cheaper way. A
     form that is neither dense nor sparse also gets a SciPy sparse matrix in
-    ``_matmat``, from a product with a :class:`SparseOperator`. A form that
+    ``_matmat``, from a product with a :class:`SparseOperator`. A covariance
+    form with a root cheaper than the Cholesky factor of its dense matrix
+    (the one a draw is made with) overrides ``_make_root``. A form that
     keeps something out of its pickle (a cache) overrides ``__getstate__``
-    starting from this class's, which leaves out SciPy's own attributes.
+    starting from this class's, which leaves out SciPy's own attributes and
+    the root a draw is made with.
 
     Parameters
     ----------
@@ -263,6 +315,7 @@ class LinearOperator(_SciPyLinearOperator):
         """Return the state for pickling, without SciPy's array namespace (a module)."""
         state = self.__dict__.copy()
         state.pop("_xp", None)
+        state.pop("_root", None)  # a cache, built again by the next draw
         return state
 
     def __setstate__(self, state: dict) -> None:
@@ -438,6 +491,39 @@ class LinearOperator(_SciPyLinearOperator):
             If the form is not positive-definite.
         """
         return DenseOperator._adopt(_cholesky(self.dense()))
+
+    @cached_property
+    def _root(self) -> "LinearOperator":
+        """
+        A matrix ``R`` (``n x r``) with ``R R^T`` equal to this symmetric positive semi-definite form.
+
+        A draw from ``N(0, S)`` is ``R w`` for ``w`` standard normal of length
+        ``r``. Built by the first draw and kept (as ``KroneckerOperator._inverses``
+        is), so a loop of draws factors once; ``__getstate__`` leaves it out.
+        """
+        return self._make_root()
+
+    def _make_root(self) -> "LinearOperator":
+        """
+        Return the root of the form: the Cholesky factor of its dense matrix, or its eigenvalue root when it is semi-definite.
+
+        A form that is cheaper in another way overrides this. Raises
+        :class:`~numpy.linalg.LinAlgError` if the form has a clearly negative eigenvalue.
+        """
+        R, semidefinite = _dense_root(self.dense())
+        if semidefinite:
+            logger.info(
+                "The %d x %d covariance has no Cholesky factor (it is only "
+                "positive semi-definite); drawing from its eigendecomposition, "
+                "with the eigenvalues below roundoff set to zero.",
+                *self.shape,
+            )
+        return DenseOperator._adopt(R)
+
+    def _sample(self, rng: np.random.Generator) -> np.ndarray:
+        """Return one draw from ``N(0, S)``: the root times ``r`` standard normals from `rng`."""
+        R = self._root
+        return R.matvec(rng.standard_normal(R.shape[1]))
 
     def __array__(self, dtype=None, copy=None) -> np.ndarray:
         """
@@ -711,6 +797,59 @@ class SparseOperator(LinearOperator):
                 f"The sparse matrix is singular: its LU factorization failed ({err})."
             ) from err
 
+    def _make_root(self) -> "SparseOperator":
+        """
+        Return the root of each independent group of rows, as one sparse matrix.
+
+        The rows are split into the connected components of the sparsity
+        pattern (a ``within=`` kernel's groups are a site-day each): rows in
+        different components are uncorrelated, so the matrix is block diagonal
+        up to a permutation, and the root is the dense root of each block
+        (:func:`_dense_root`), put back at the rows' own places. A matrix whose
+        rows are all connected has one group, its dense matrix.
+        """
+        A = sp.csr_array(self.matrix)
+        n = self.shape[0]
+        graph = A.astype(bool)
+        graph.eliminate_zeros()  # a stored zero is not a correlation
+        count, label = connected_components(graph, directed=False)
+        order = np.argsort(label, kind="stable")  # each group's rows together
+        sizes = np.bincount(label, minlength=count)
+        ends = np.cumsum(sizes)
+        starts = ends - sizes
+        # SciPy is not annotated, so pyrefly finds no __getitem__ on a sparse array
+        ordered = sp.csr_array(A[order][:, order])  # pyrefly: ignore[bad-index]
+
+        # the groups of one row, all at once: the root is the square root of the entry
+        alone = starts[sizes == 1]
+        variances, semidefinite = _clip_eigenvalues(ordered.diagonal()[alone])
+        roots = np.sqrt(variances)
+        rows, cols, vals = [order[alone]], [order[alone]], [roots]
+        for a, b in zip(starts[sizes > 1], ends[sizes > 1], strict=True):
+            # pyrefly reads a slice of the array as the bare `sparray` (no toarray)
+            block = ordered[a:b, a:b].toarray()  # pyrefly: ignore[missing-attribute]
+            R, semi = _dense_root(block)
+            semidefinite = semidefinite or semi
+            i, j = np.nonzero(R)
+            rows.append(order[a + i])
+            cols.append(order[a + j])
+            vals.append(R[i, j])
+        if semidefinite:
+            logger.info(
+                "The %d x %d sparse covariance has a group of rows with no "
+                "Cholesky factor (it is only positive semi-definite); drawing "
+                "from its eigendecomposition, with the eigenvalues below "
+                "roundoff set to zero.",
+                n,
+                n,
+            )
+        root = sp.csr_array(
+            (np.concatenate(vals), (np.concatenate(rows), np.concatenate(cols))),
+            shape=(n, n),
+        )
+        root.eliminate_zeros()
+        return SparseOperator._adopt(root)
+
     def dense(self) -> np.ndarray:
         """Return the form as a dense NumPy array."""
         return self.matrix.toarray()
@@ -856,6 +995,16 @@ class DiagonalOperator(LinearOperator):
         if (self.values <= 0).any():
             raise LinAlgError("The diagonal has an entry that is not positive.")
         return float(np.log(self.values).sum())
+
+    def _make_root(self) -> "DiagonalOperator":
+        """Return the diagonal of square roots; an entry negative by roundoff is zero (a draw from it is 0)."""
+        values, clipped = _clip_eigenvalues(self.values)
+        if clipped:
+            logger.info(
+                "The diagonal covariance has an entry below zero by roundoff; "
+                "drawing it as zero."
+            )
+        return DiagonalOperator._adopt(np.sqrt(values))
 
     def sqrt(self) -> "DiagonalOperator":
         """Return the diagonal of square roots."""

@@ -26,6 +26,7 @@ from fips.linalg.forms import (
     _as_array,
     _asymmetry,
     _cholesky,
+    _dense_root,
     _read_only,
     _solve_psd,
 )
@@ -392,6 +393,31 @@ class KroneckerOperator(LinearOperator):
             )
         return _KroneckerRoot(self, tuple(_cholesky(C) for C in self.factors))
 
+    def _make_root(self) -> "_KroneckerDraw":
+        r"""
+        Return the root :math:`D P (L_1 \otimes \dots \otimes L_K)`, ``n x N``, through the factors.
+
+        :math:`L_k L_k^T = C_k` (the Cholesky factor, or the eigenvalue root of
+        a factor that is only semi-definite), so the root times its transpose
+        is :math:`D P (C_1 \otimes \dots \otimes C_K) P^T D = S` for any
+        rows :math:`P` picks, the whole grid or a subset. The draw is made on
+        the whole grid, ``N`` normals, and the operator's rows kept: a part of
+        a Gaussian vector has the part of its covariance. The ``n x n`` matrix
+        is never formed.
+        """
+        roots, semidefinite = [], False
+        for C in self.factors:
+            L, semi = _dense_root(C)
+            roots.append(L)
+            semidefinite = semidefinite or semi
+        if semidefinite:
+            logger.info(
+                "A factor of the Kronecker covariance has no Cholesky factor (it "
+                "is only positive semi-definite); drawing from its "
+                "eigendecomposition, with the eigenvalues below roundoff set to zero."
+            )
+        return _KroneckerDraw(self, tuple(roots))
+
     @cached_property
     def _inverses(self) -> tuple[np.ndarray, ...]:
         """The inverse of each factor, each factored once (Cholesky, or ``LDL^T`` with a warning)."""
@@ -558,3 +584,29 @@ class _KroneckerRoot(LinearOperator):
     def _transpose(self):
         """Return the transpose, the same factors applied the other way."""
         return _KroneckerRoot(self._of, self._roots, not self._transposed)
+
+
+class _KroneckerDraw(LinearOperator):
+    r"""
+    The root :math:`R = D P (L_1 \otimes \dots \otimes L_K)` of a :class:`KroneckerOperator` that draws are made with.
+
+    It is ``n x N``, from the standard normals on the whole product grid to
+    the operator's rows (:meth:`KroneckerOperator._make_root`), and is applied
+    through the Cholesky factors :math:`L_k`, one way only: a draw needs
+    :math:`R w`, never :math:`R^T`.
+    """
+
+    def __init__(self, of: KroneckerOperator, roots: tuple[np.ndarray, ...]):
+        self._of = of
+        self._roots = tuple(_read_only(L) for L in roots)
+        super().__init__((of.shape[0], of._size))
+
+    def _matmat(self, X):
+        """Return ``R @ X`` through the factors."""
+        of, s = self._of, self._of.std[:, None]
+
+        def apply(Y):
+            """Return ``R Y`` for a block of columns."""
+            return s * of._gather(of._through(Y, self._roots))
+
+        return of._by_columns(X, apply)

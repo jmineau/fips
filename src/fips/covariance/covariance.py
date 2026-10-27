@@ -509,5 +509,75 @@ class Covariance(Operator):
         ------
         numpy.linalg.LinAlgError
             If the covariance is not positive-definite.
+
+        See Also
+        --------
+        sample : A draw, made without forming :math:`L` where a form has a cheaper root.
         """
         return Operator(self._data.sqrt(), self._rows, self._rows, name=self._name)
+
+    def sample(self, rng: int | np.random.Generator | None = None) -> Vector:
+        r"""
+        Return one draw from :math:`N(0, S)`, a vector on the covariance's space.
+
+        The draw is :math:`R w` with :math:`R R^T = S` and :math:`w` standard
+        normal, and :math:`R` is the root the form makes cheapest, never the
+        ``n x n`` matrix where the form is cheaper than that. A diagonal
+        covariance scales its normals by the standard deviations; a block
+        diagonal one draws each block in turn; a Kronecker one applies the
+        Cholesky factors of its factors to normals on the whole product grid
+        and keeps its rows (a part of a Gaussian vector has the part of its
+        covariance), so a subset of the grid costs what the whole grid does;
+        a sparse one draws each group of correlated rows (a ``within=``
+        kernel's site-days) from the Cholesky factor of its own block; a dense
+        one uses its Cholesky factor. The root is built by the first draw and
+        kept, so a loop of draws factors once.
+
+        A semi-definite covariance, a ``Constant()`` kernel's rank-one block
+        for one, has no Cholesky factor, so it is drawn from its
+        eigendecomposition, with the eigenvalues that are negative by roundoff
+        set to zero and one INFO line logged.
+
+        Parameters
+        ----------
+        rng : int, numpy.random.Generator or None, default None
+            A seed, or the generator to draw from (used as given, so one
+            generator passed to every call gives independent draws). None
+            draws from fresh entropy. It goes through
+            :func:`numpy.random.default_rng`, as SciPy's ``rng`` argument
+            does. The same seed gives the same draw for the same form of
+            covariance; a Kronecker covariance on a subset of its grid uses
+            one normal for each point of the whole grid, so changing a
+            covariance's form changes the draw.
+
+        Returns
+        -------
+        Vector
+            The draw, on the covariance's space.
+
+        Raises
+        ------
+        numpy.linalg.LinAlgError
+            If the covariance has a clearly negative eigenvalue (not
+            positive semi-definite).
+
+        See Also
+        --------
+        sqrt : The root :math:`L`, as an operator.
+
+        Examples
+        --------
+        >>> import pandas as pd
+        >>> from fips import Covariance, Space
+        >>> space = Space({"flux": pd.Index(["a", "b", "c"], name="cell")})
+        >>> S = Covariance.diagonal([4.0, 1.0, 0.25], space)
+        >>> S.sample(rng=0).to_series().round(2)
+        block  cell
+        flux   a       0.25
+               b      -0.13
+               c       0.32
+        dtype: float64
+        >>> S.sample(rng=0).values.tolist() == S.sample(rng=0).values.tolist()
+        True
+        """
+        return Vector(self._data._sample(np.random.default_rng(rng)), self._rows)
