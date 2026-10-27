@@ -208,6 +208,54 @@ class TestConstruction:
         with pytest.raises(ValueError, match="same labels on both axes"):
             Covariance.from_blocks({("bias", "other"): frame})
 
+    def test_from_blocks_with_a_label_missing_raises(self):
+        """A label a block's own pair lacks would get variance 0: it raises, naming the labels."""
+        flux = CELLS.select("flux")
+        part = _frame(np.eye(4), flux[:4])
+        with pytest.raises(
+            ValueError, match=r"2 of the 6 labels of block 'flux': 'e', 'f'"
+        ):
+            Covariance.from_blocks({("flux", "flux"): part}, rows=CELLS, cols=CELLS)
+        # a label in the columns but not in the rows is missing too
+        wide = _frame(np.eye(6)[:4], flux[:4], flux)
+        with pytest.raises(ValueError, match="'e', 'f'"):
+            Covariance.from_blocks({("flux", "flux"): wide}, rows=CELLS, cols=CELLS)
+
+    def test_from_blocks_names_a_few_labels_then_a_count(self):
+        """A long list of missing labels is cut short with a count."""
+        labels = pd.Index(range(20), name="cell")
+        space = Space({"flux": labels})
+        part = _frame(np.eye(2), labels[:2])
+        with pytest.raises(ValueError, match=r"18 of the 20 labels.*and \d+ more"):
+            Covariance.from_blocks({("flux", "flux"): part}, rows=space, cols=space)
+
+    def test_from_blocks_with_a_block_lacking_its_own_pair_raises(self):
+        """A block with only cross pairs has no variances at all."""
+        flux, bias = CELLS.select("flux"), SITES.select("bias")
+        space = Space({"flux": flux, "bias": bias})
+        blocks = {
+            ("flux", "flux"): _frame(np.eye(6), flux),
+            ("bias", "flux"): _frame(np.zeros((2, 6)), bias, flux),
+            ("flux", "bias"): _frame(np.zeros((6, 2)), flux, bias),
+        }
+        with pytest.raises(
+            ValueError, match=r"Block 'bias' has no \('bias', 'bias'\) pair"
+        ):
+            Covariance.from_blocks(blocks, rows=space, cols=space)
+
+    def test_from_blocks_with_labels_in_another_order_is_fine(self):
+        """Every label present, in any order, is not missing."""
+        rng = np.random.default_rng(5)
+        flux = CELLS.select("flux")
+        A = _spd(rng, 6)
+        order = rng.permutation(6)
+        S = Covariance.from_blocks(
+            {("flux", "flux"): _frame(A[np.ix_(order, order)], flux[order])},
+            rows=CELLS,
+            cols=CELLS,
+        )
+        np.testing.assert_allclose(S.dense(), A)
+
     def test_one_block_keeps_its_form(self):
         """A single form given as the one block stays that form."""
         op = COVS["kronecker"].data

@@ -14,7 +14,7 @@ A DataFrame is a way in (:meth:`Operator.from_frame`) and a way out
 """
 
 import logging
-from collections.abc import Hashable, Mapping
+from collections.abc import Container, Hashable, Mapping
 from typing import Any, Self
 
 import numpy as np
@@ -399,6 +399,9 @@ class Operator:
         A pair of blocks that is not given is zero. A labeled block is placed
         by its labels: it may cover part of its blocks' labels (the rest is
         zero), as a transport Jacobian covers the cells a footprint touched.
+        A :class:`~fips.Covariance` may not (see ``Raises``): its variances
+        are the diagonal of the blocks' own pairs, so each of those must
+        cover its block's labels.
 
         Parameters
         ----------
@@ -439,7 +442,11 @@ class Operator:
             `cols` does not give them, a labeled matrix has a label its block
             does not have (the message names it), a labeled matrix is on
             other blocks than its key names, or an unlabeled matrix has the
-            wrong shape.
+            wrong shape. For a :class:`~fips.Covariance` also: a block has no
+            pair of its own (``("flux", "flux")``), or that pair lacks a
+            label of the block on its rows or its columns. That label would get
+            a variance of 0, so the message names it; give the pair a row and
+            a column for every label.
 
         Examples
         --------
@@ -553,6 +560,8 @@ class Operator:
                 )
             forms[(r, c)] = form
 
+        cls._check_blocks(labeled, unlabeled, row_space, col_space)
+
         if len(forms) == 1 and len(row_space.names) == len(col_space.names) == 1:
             return cls._build(next(iter(forms.values())), row_space, col_space, name)
         parts = {key: form._csr() for key, form in forms.items()}
@@ -573,6 +582,16 @@ class Operator:
         for (r, c), form in forms.items():
             dense[row_space.slice(r), col_space.slice(c)] = form.dense()
         return cls._build(_adopt(dense), row_space, col_space, name)
+
+    @classmethod
+    def _check_blocks(
+        cls,
+        labeled: Mapping[tuple[str, str], "Operator"],
+        unlabeled: Container[tuple[str, str]],
+        rows: Space,
+        cols: Space,
+    ) -> None:
+        """Raise if the labeled blocks of :meth:`from_blocks` do not suit this class; an operator takes any."""
 
     @property
     def data(self) -> LinearOperator:

@@ -9,7 +9,7 @@ correlation models of :mod:`fips.covariance` make one from the labels
 """
 
 import logging
-from collections.abc import Callable
+from collections.abc import Callable, Container, Mapping
 from typing import ClassVar, Protocol, Self
 
 import numpy as np
@@ -26,8 +26,8 @@ from fips.linalg import (
     as_linear_operator,
 )
 from fips.linalg.forms import _adopt, _asymmetry
-from fips.operator import Operator
-from fips.space import Space, _plain
+from fips.operator import Operator, _difference
+from fips.space import Space, _listed, _plain
 from fips.vector import Vector
 
 logger = logging.getLogger(__name__)
@@ -186,6 +186,50 @@ class Covariance(Operator):
                 ) from None
             data = as_linear_operator(data)._select(np.arange(len(rows)), order)
         return cls(data, rows, name=name)
+
+    @classmethod
+    def _check_blocks(
+        cls,
+        labeled: Mapping[tuple[str, str], Operator],
+        unlabeled: Container[tuple[str, str]],
+        rows: Space,
+        cols: Space,
+    ) -> None:
+        """
+        Raise if a block of a covariance built from blocks lacks a variance.
+
+        A variance is the entry of a label on the diagonal, which only the
+        block's own pair ``(block, block)`` can give. A pair that does not
+        cover every label of its block (or is not there) would leave those
+        entries 0 and the covariance singular, so it raises, naming them. An
+        unlabeled pair already has one row and column per label. Rows and
+        columns on other blocks are not a covariance at all, and
+        :meth:`_build` says so.
+        """
+        if set(rows.names) != set(cols.names):
+            return
+        for block in rows.names:
+            pair = (block, block)
+            if pair in unlabeled:
+                continue
+            if pair not in labeled:
+                raise ValueError(
+                    f"Block {block!r} has no {pair!r} pair, so its "
+                    f"{len(rows.select(block))} variances would be 0. Give the "
+                    "pair, with a variance for every label."
+                )
+            for axis, space in (("rows", rows), ("columns", cols)):
+                have = labeled[pair].rows if axis == "rows" else labeled[pair].cols
+                lacking, _ = _difference(space.select(block), have.select(block))
+                if len(lacking):
+                    raise ValueError(
+                        f"The {axis} of the matrix of {pair!r} lack "
+                        f"{len(lacking)} of the {len(space.select(block))} labels "
+                        f"of block {block!r}: {_listed(lacking)}. A label without "
+                        "a row and column there gets a variance of 0, which makes "
+                        "the covariance singular. Give the pair every label of "
+                        "the block."
+                    )
 
     def _like(self, data: LinearOperatorLike, rows: Space, cols: Space) -> Operator:
         """Return a covariance when the two axes are one space, else an operator."""
