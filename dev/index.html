@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>fips 0.1.0b10.dev130+g8f510df2c &#8212; fips 0.1.0b10.dev130+g8f510df2c documentation</title>
+    <title>fips 0.1.0b10.dev131+gdca30ee2d &#8212; fips 0.1.0b10.dev131+gdca30ee2d documentation</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0" />
 
-    <script src="_static/documentation_options.js?v=96f06d47"></script>
+    <script src="_static/documentation_options.js?v=2a4ea03d"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -132,8 +132,8 @@
       
     
     
-    <img src="_static/logo.png" class="logo__image only-light" alt="fips 0.1.0b10.dev130+g8f510df2c documentation - Home"/>
-    <img src="_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.1.0b10.dev130+g8f510df2c documentation - Home"/>
+    <img src="_static/logo.png" class="logo__image only-light" alt="fips 0.1.0b10.dev131+gdca30ee2d documentation - Home"/>
+    <img src="_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.1.0b10.dev131+gdca30ee2d documentation - Home"/>
   
   
 </a></div>
@@ -398,7 +398,7 @@
                 <article class="bd-article">
                   
   <section class="hidden-title" id="fips-release">
-<h1>fips 0.1.0b10.dev130+g8f510df2c<a class="headerlink" href="#fips-release" title="Link to this heading">#</a></h1>
+<h1>fips 0.1.0b10.dev131+gdca30ee2d<a class="headerlink" href="#fips-release" title="Link to this heading">#</a></h1>
 <a class="only-light reference internal image-reference" href="_images/logo.png"><img alt="fips logo" class="align-center only-light" src="_images/logo.png" style="width: 600px;" />
 </a>
 <a class="only-dark reference internal image-reference" href="_images/logo_dark.png"><img alt="fips logo" class="align-center only-dark" src="_images/logo_dark.png" style="width: 600px;" />
@@ -434,82 +434,7 @@ uv<span class="w"> </span>sync
 </section>
 <section id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Link to this heading">#</a></h2>
-<section id="a-first-problem-rays-through-a-line-of-cells">
-<h3>A first problem: rays through a line of cells<a class="headerlink" href="#a-first-problem-rays-through-a-line-of-cells" title="Link to this heading">#</a></h3>
-<p>Six rays cross a line of four cells, timed by two instruments whose clocks may be off. A ray’s travel time is the sum, over the cells it crosses, of its length in the cell times the cell’s slowness, plus its instrument’s clock delay. What are the slowness of each cell and the delay of each clock?</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
-
-<span class="kn">import</span><span class="w"> </span><span class="nn">fips</span>
-
-<span class="c1"># The state: what we want to know. The slowness (s/km) of four cells along a</span>
-<span class="c1"># line, labeled by where each cell is (km), and the clock delay (s) of each of</span>
-<span class="c1"># the two instruments that timed the rays.</span>
-<span class="n">cells</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">([</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">1.5</span><span class="p">,</span> <span class="mf">2.5</span><span class="p">,</span> <span class="mf">3.5</span><span class="p">],</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;x&quot;</span><span class="p">)</span>
-<span class="n">instruments</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">([</span><span class="s2">&quot;east&quot;</span><span class="p">,</span> <span class="s2">&quot;west&quot;</span><span class="p">],</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;instrument&quot;</span><span class="p">)</span>
-<span class="n">prior</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Vector</span><span class="o">.</span><span class="n">from_blocks</span><span class="p">(</span>
-    <span class="p">{</span>
-        <span class="s2">&quot;slowness&quot;</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="mf">0.25</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">cells</span><span class="p">),</span>
-        <span class="s2">&quot;delay&quot;</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">instruments</span><span class="p">),</span>
-    <span class="p">}</span>
-<span class="p">)</span>
-
-<span class="c1"># The observations: the travel time (s) of six rays, each timed by one instrument.</span>
-<span class="n">rays</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">MultiIndex</span><span class="o">.</span><span class="n">from_tuples</span><span class="p">(</span>
-    <span class="p">[(</span><span class="s2">&quot;east&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="s2">&quot;east&quot;</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="p">(</span><span class="s2">&quot;east&quot;</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="p">(</span><span class="s2">&quot;west&quot;</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span> <span class="p">(</span><span class="s2">&quot;west&quot;</span><span class="p">,</span> <span class="mi">5</span><span class="p">),</span> <span class="p">(</span><span class="s2">&quot;west&quot;</span><span class="p">,</span> <span class="mi">6</span><span class="p">)],</span>
-    <span class="n">names</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;instrument&quot;</span><span class="p">,</span> <span class="s2">&quot;ray&quot;</span><span class="p">],</span>
-<span class="p">)</span>
-<span class="n">times</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">([</span><span class="mf">0.53</span><span class="p">,</span> <span class="mf">0.76</span><span class="p">,</span> <span class="mf">1.02</span><span class="p">,</span> <span class="mf">0.25</span><span class="p">,</span> <span class="mf">0.48</span><span class="p">,</span> <span class="mf">0.80</span><span class="p">],</span> <span class="n">index</span><span class="o">=</span><span class="n">rays</span><span class="p">)</span>
-<span class="n">obs</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Vector</span><span class="o">.</span><span class="n">from_series</span><span class="p">(</span><span class="n">times</span><span class="p">,</span> <span class="n">block</span><span class="o">=</span><span class="s2">&quot;time&quot;</span><span class="p">)</span>
-
-<span class="c1"># The forward operator: how the state makes the observations. A ray&#39;s time is</span>
-<span class="c1"># its length (km) in each cell times the cell&#39;s slowness, plus its instrument&#39;s</span>
-<span class="c1"># delay. Each block of the operator is labeled, and placed by its labels.</span>
-<span class="n">lengths</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
-    <span class="p">[[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]],</span>
-    <span class="n">index</span><span class="o">=</span><span class="n">rays</span><span class="p">,</span>
-    <span class="n">columns</span><span class="o">=</span><span class="n">cells</span><span class="p">,</span>
-    <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span>
-<span class="p">)</span>
-<span class="n">delays</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
-    <span class="p">[[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]],</span>
-    <span class="n">index</span><span class="o">=</span><span class="n">rays</span><span class="p">,</span>
-    <span class="n">columns</span><span class="o">=</span><span class="n">instruments</span><span class="p">,</span>
-    <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span>
-<span class="p">)</span>
-<span class="n">forward</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Operator</span><span class="o">.</span><span class="n">from_blocks</span><span class="p">(</span>
-    <span class="p">{(</span><span class="s2">&quot;time&quot;</span><span class="p">,</span> <span class="s2">&quot;slowness&quot;</span><span class="p">):</span> <span class="n">lengths</span><span class="p">,</span> <span class="p">(</span><span class="s2">&quot;time&quot;</span><span class="p">,</span> <span class="s2">&quot;delay&quot;</span><span class="p">):</span> <span class="n">delays</span><span class="p">},</span>
-    <span class="n">rows</span><span class="o">=</span><span class="n">obs</span><span class="o">.</span><span class="n">space</span><span class="p">,</span>
-    <span class="n">cols</span><span class="o">=</span><span class="n">prior</span><span class="o">.</span><span class="n">space</span><span class="p">,</span>
-<span class="p">)</span>
-
-<span class="c1"># The covariances: how far the prior and the observations may be off. Neighboring</span>
-<span class="c1"># cells are alike (correlated over 1 km); the delays are independent of each other.</span>
-<span class="n">prior_cov</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Covariance</span><span class="o">.</span><span class="n">block_diag</span><span class="p">(</span>
-    <span class="n">slowness</span><span class="o">=</span><span class="n">fips</span><span class="o">.</span><span class="n">Exponential</span><span class="p">(</span><span class="s2">&quot;x&quot;</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span><span class="o">.</span><span class="n">with_std</span><span class="p">(</span><span class="mf">0.05</span><span class="p">),</span>
-    <span class="n">delay</span><span class="o">=</span><span class="n">fips</span><span class="o">.</span><span class="n">Independent</span><span class="p">()</span><span class="o">.</span><span class="n">with_std</span><span class="p">(</span><span class="mf">0.02</span><span class="p">),</span>
-<span class="p">)</span>
-<span class="n">obs_cov</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Independent</span><span class="p">()</span><span class="o">.</span><span class="n">with_std</span><span class="p">(</span><span class="mf">0.01</span><span class="p">)</span>
-
-<span class="n">problem</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Problem</span><span class="p">(</span><span class="n">prior</span><span class="p">,</span> <span class="n">prior_cov</span><span class="p">,</span> <span class="n">obs</span><span class="p">,</span> <span class="n">obs_cov</span><span class="p">,</span> <span class="n">forward</span><span class="p">)</span>
-<span class="n">post</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">problem</span><span class="p">)</span>
-
-<span class="c1"># The answer, labeled as the prior was, and its standard deviation</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">post</span><span class="o">.</span><span class="n">estimate</span><span class="p">[</span><span class="s2">&quot;slowness&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">to_series</span><span class="p">()</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">3</span><span class="p">))</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">post</span><span class="o">.</span><span class="n">estimate</span><span class="p">[</span><span class="s2">&quot;delay&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">to_series</span><span class="p">()</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">3</span><span class="p">))</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">post</span><span class="o">.</span><span class="n">variances</span><span class="p">[</span><span class="s2">&quot;slowness&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">to_series</span><span class="p">()</span><span class="o">.</span><span class="n">pow</span><span class="p">(</span><span class="mf">0.5</span><span class="p">)</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="s2">&quot;std&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">3</span><span class="p">))</span>
-
-<span class="c1"># The posterior of an aggregate: the mean slowness of the two halves of the line</span>
-<span class="n">halves</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">([</span><span class="s2">&quot;near&quot;</span><span class="p">,</span> <span class="s2">&quot;near&quot;</span><span class="p">,</span> <span class="s2">&quot;far&quot;</span><span class="p">,</span> <span class="s2">&quot;far&quot;</span><span class="p">],</span> <span class="n">index</span><span class="o">=</span><span class="n">cells</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;half&quot;</span><span class="p">)</span>
-<span class="n">W</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">aggregate</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">prior</span><span class="o">.</span><span class="n">space</span><span class="p">,</span> <span class="n">by</span><span class="o">=</span><span class="n">halves</span><span class="p">,</span> <span class="n">blocks</span><span class="o">=</span><span class="s2">&quot;slowness&quot;</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">post</span><span class="o">.</span><span class="n">cov</span><span class="p">(</span><span class="n">W</span><span class="p">)[</span><span class="s2">&quot;slowness&quot;</span><span class="p">,</span> <span class="s2">&quot;slowness&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">to_frame</span><span class="p">()</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">6</span><span class="p">))</span>
-</pre></div>
-</div>
-<p>The prior and the observations are <code class="docutils literal notranslate"><span class="pre">Vector</span></code>s, the forward operator is an <code class="docutils literal notranslate"><span class="pre">Operator</span></code>, the covariances are models put on the labels by the <code class="docutils literal notranslate"><span class="pre">Problem</span></code>, and <code class="docutils literal notranslate"><span class="pre">fips.solve</span></code> returns the <code class="docutils literal notranslate"><span class="pre">Posterior</span></code>. The rows of <code class="docutils literal notranslate"><span class="pre">lengths</span></code> and <code class="docutils literal notranslate"><span class="pre">delays</span></code> could come in any order: everything is matched by label.</p>
-</section>
-<section id="the-same-objects-at-scale-an-atmospheric-flux-inversion">
-<h3>The same objects at scale: an atmospheric flux inversion<a class="headerlink" href="#the-same-objects-at-scale-an-atmospheric-flux-inversion" title="Link to this heading">#</a></h3>
-<p>The state is monthly fluxes on a grid, and the observations CO₂ every 6 hours at two sites. The prior covariance is correlated in time and in space and kept as its two Kronecker factors, so the full matrix is never formed. A transport Jacobian that covers only the cells a footprint touched is placed on the whole grid by its labels.</p>
+<p>Estimate monthly CO₂ fluxes on a small grid from a year of tower measurements:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
 
@@ -517,10 +442,10 @@ uv<span class="w"> </span>sync
 
 <span class="n">rng</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
 
-<span class="c1"># The state: monthly fluxes on a 3 x 3 grid, one block named &quot;flux&quot;</span>
+<span class="c1"># The state: monthly fluxes on a 3 x 3 grid, labeled by (time, lat, lon)</span>
 <span class="n">cells</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">MultiIndex</span><span class="o">.</span><span class="n">from_product</span><span class="p">(</span>
     <span class="p">[</span>
-        <span class="n">pd</span><span class="o">.</span><span class="n">date_range</span><span class="p">(</span><span class="s2">&quot;2024-01-01&quot;</span><span class="p">,</span> <span class="n">periods</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">freq</span><span class="o">=</span><span class="s2">&quot;MS&quot;</span><span class="p">),</span>
+        <span class="n">pd</span><span class="o">.</span><span class="n">date_range</span><span class="p">(</span><span class="s2">&quot;2024-01&quot;</span><span class="p">,</span> <span class="n">periods</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span> <span class="n">freq</span><span class="o">=</span><span class="s2">&quot;MS&quot;</span><span class="p">),</span>
         <span class="p">[</span><span class="mf">40.6</span><span class="p">,</span> <span class="mf">40.7</span><span class="p">,</span> <span class="mf">40.8</span><span class="p">],</span>
         <span class="p">[</span><span class="o">-</span><span class="mf">112.0</span><span class="p">,</span> <span class="o">-</span><span class="mf">111.9</span><span class="p">,</span> <span class="o">-</span><span class="mf">111.8</span><span class="p">],</span>
     <span class="p">],</span>
@@ -528,54 +453,40 @@ uv<span class="w"> </span>sync
 <span class="p">)</span>
 <span class="n">prior</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Vector</span><span class="o">.</span><span class="n">from_series</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">cells</span><span class="p">),</span> <span class="n">block</span><span class="o">=</span><span class="s2">&quot;flux&quot;</span><span class="p">)</span>
 
-<span class="c1"># The observations: CO2 every 6 hours at two sites, one block named &quot;co2&quot;</span>
-<span class="n">labels</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">MultiIndex</span><span class="o">.</span><span class="n">from_product</span><span class="p">(</span>
-    <span class="p">[[</span><span class="s2">&quot;UOU&quot;</span><span class="p">,</span> <span class="s2">&quot;WBB&quot;</span><span class="p">],</span> <span class="n">pd</span><span class="o">.</span><span class="n">date_range</span><span class="p">(</span><span class="s2">&quot;2024-01-01&quot;</span><span class="p">,</span> <span class="n">periods</span><span class="o">=</span><span class="mi">360</span><span class="p">,</span> <span class="n">freq</span><span class="o">=</span><span class="s2">&quot;6h&quot;</span><span class="p">)],</span>
-    <span class="n">names</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;site&quot;</span><span class="p">,</span> <span class="s2">&quot;obs_time&quot;</span><span class="p">],</span>
-<span class="p">)</span>
-<span class="n">co2</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">rng</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mf">420.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">labels</span><span class="p">)),</span> <span class="n">index</span><span class="o">=</span><span class="n">labels</span><span class="p">)</span>
+<span class="c1"># The observations: CO₂ (ppm) at one tower every 6 hours</span>
+<span class="n">times</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">date_range</span><span class="p">(</span><span class="s2">&quot;2024-01-01&quot;</span><span class="p">,</span> <span class="s2">&quot;2024-12-31&quot;</span><span class="p">,</span> <span class="n">freq</span><span class="o">=</span><span class="s2">&quot;6h&quot;</span><span class="p">),</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;obs_time&quot;</span><span class="p">)</span>
+<span class="n">co2</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">rng</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mf">420.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">times</span><span class="p">)),</span> <span class="n">index</span><span class="o">=</span><span class="n">times</span><span class="p">)</span>
 <span class="n">obs</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Vector</span><span class="o">.</span><span class="n">from_series</span><span class="p">(</span><span class="n">co2</span><span class="p">,</span> <span class="n">block</span><span class="o">=</span><span class="s2">&quot;co2&quot;</span><span class="p">)</span>
 
-<span class="c1"># The transport Jacobian has columns only for the cells a footprint touched:</span>
-<span class="c1"># from_blocks places it by its labels, and the other cells get zeros</span>
-<span class="n">touched</span> <span class="o">=</span> <span class="n">cells</span><span class="p">[</span><span class="n">rng</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">cells</span><span class="p">))</span> <span class="o">&lt;</span> <span class="mf">0.7</span><span class="p">]</span>
+<span class="c1"># The forward operator: a transport Jacobian with labeled rows and columns</span>
 <span class="n">jacobian</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
-    <span class="n">rng</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">labels</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">touched</span><span class="p">))),</span> <span class="n">index</span><span class="o">=</span><span class="n">labels</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="n">touched</span>
+    <span class="n">rng</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">times</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">cells</span><span class="p">))),</span> <span class="n">index</span><span class="o">=</span><span class="n">times</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="n">cells</span>
 <span class="p">)</span>
 <span class="n">forward</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Operator</span><span class="o">.</span><span class="n">from_blocks</span><span class="p">(</span>
     <span class="p">{(</span><span class="s2">&quot;co2&quot;</span><span class="p">,</span> <span class="s2">&quot;flux&quot;</span><span class="p">):</span> <span class="n">jacobian</span><span class="p">},</span> <span class="n">rows</span><span class="o">=</span><span class="n">obs</span><span class="o">.</span><span class="n">space</span><span class="p">,</span> <span class="n">cols</span><span class="o">=</span><span class="n">prior</span><span class="o">.</span><span class="n">space</span>
 <span class="p">)</span>
 
-<span class="c1"># The prior covariance, correlated in time and in space and kept as its two</span>
-<span class="c1"># Kronecker factors; the observation covariance, correlated within a site&#39;s day</span>
-<span class="n">prior_cov</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Kronecker</span><span class="p">(</span>
-    <span class="n">fips</span><span class="o">.</span><span class="n">Exponential</span><span class="p">(</span><span class="s2">&quot;time&quot;</span><span class="p">,</span> <span class="s2">&quot;30D&quot;</span><span class="p">),</span>
-    <span class="n">fips</span><span class="o">.</span><span class="n">Exponential</span><span class="p">([</span><span class="s2">&quot;lat&quot;</span><span class="p">,</span> <span class="s2">&quot;lon&quot;</span><span class="p">],</span> <span class="mf">10.0</span><span class="p">,</span> <span class="n">metric</span><span class="o">=</span><span class="s2">&quot;haversine&quot;</span><span class="p">),</span>
-<span class="p">)</span><span class="o">.</span><span class="n">with_std</span><span class="p">(</span><span class="mf">0.5</span><span class="p">)</span>
-<span class="n">obs_cov</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Independent</span><span class="p">()</span><span class="o">.</span><span class="n">with_std</span><span class="p">(</span><span class="mf">1.0</span><span class="p">)</span> <span class="o">+</span> <span class="n">fips</span><span class="o">.</span><span class="n">Exponential</span><span class="p">(</span>
-    <span class="s2">&quot;obs_time&quot;</span><span class="p">,</span> <span class="s2">&quot;12h&quot;</span><span class="p">,</span> <span class="n">within</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;site&quot;</span><span class="p">,</span> <span class="s2">&quot;obs_time.date&quot;</span><span class="p">]</span>
-<span class="p">)</span><span class="o">.</span><span class="n">with_std</span><span class="p">(</span><span class="mf">0.5</span><span class="p">)</span>
-
 <span class="n">problem</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Problem</span><span class="p">(</span>
     <span class="n">prior</span><span class="o">=</span><span class="n">prior</span><span class="p">,</span>
-    <span class="n">prior_cov</span><span class="o">=</span><span class="n">prior_cov</span><span class="p">,</span>
+    <span class="n">prior_cov</span><span class="o">=</span><span class="n">fips</span><span class="o">.</span><span class="n">Independent</span><span class="p">()</span><span class="o">.</span><span class="n">with_std</span><span class="p">(</span><span class="mf">0.5</span><span class="p">),</span>  <span class="c1"># prior flux error</span>
     <span class="n">obs</span><span class="o">=</span><span class="n">obs</span><span class="p">,</span>
-    <span class="n">obs_cov</span><span class="o">=</span><span class="n">obs_cov</span><span class="p">,</span>
+    <span class="n">obs_cov</span><span class="o">=</span><span class="n">fips</span><span class="o">.</span><span class="n">Independent</span><span class="p">()</span><span class="o">.</span><span class="n">with_std</span><span class="p">(</span><span class="mf">1.0</span><span class="p">),</span>  <span class="c1"># model-data mismatch (ppm)</span>
     <span class="n">forward</span><span class="o">=</span><span class="n">forward</span><span class="p">,</span>
-    <span class="n">offset</span><span class="o">=</span><span class="mf">415.0</span><span class="p">,</span>  <span class="c1"># the background: the part of the observations the fluxes do not explain</span>
+    <span class="n">offset</span><span class="o">=</span><span class="mf">415.0</span><span class="p">,</span>  <span class="c1"># the background concentration</span>
 <span class="p">)</span>
 <span class="n">post</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">problem</span><span class="p">)</span>
 
-<span class="nb">print</span><span class="p">(</span><span class="n">post</span><span class="o">.</span><span class="n">estimate</span><span class="p">[</span><span class="s2">&quot;flux&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">to_xarray</span><span class="p">())</span>  <span class="c1"># the posterior fluxes on (time, lat, lon)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">post</span><span class="o">.</span><span class="n">estimate</span><span class="o">.</span><span class="n">to_series</span><span class="p">(</span><span class="s2">&quot;flux&quot;</span><span class="p">))</span>  <span class="c1"># posterior fluxes, labeled by (time, lat, lon)</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">post</span><span class="o">.</span><span class="n">summary</span><span class="p">())</span>  <span class="c1"># DOFS, chi-squared, R², RMSE, ... in one row</span>
-
-<span class="c1"># The posterior of each month&#39;s total flux, without forming the full covariance</span>
-<span class="n">W</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">aggregate</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">prior</span><span class="o">.</span><span class="n">space</span><span class="p">,</span> <span class="n">by</span><span class="o">=</span><span class="s2">&quot;time&quot;</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">post</span><span class="o">.</span><span class="n">cov</span><span class="p">(</span><span class="n">W</span><span class="p">)</span><span class="o">.</span><span class="n">to_frame</span><span class="p">()</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">3</span><span class="p">))</span>
 </pre></div>
 </div>
-<p>The <a class="reference external" href="https://jmineau.github.io/fips/stable/user_guide/index.html">user guide</a> has more: offsets solved for with the state, aggregated observations, part of the state held at its prior, and repeated inversions.</p>
-</section>
+<p>The prior and the observations are <code class="docutils literal notranslate"><span class="pre">Vector</span></code>s, the forward operator is an <code class="docutils literal notranslate"><span class="pre">Operator</span></code>, the covariances are put on the labels by the <code class="docutils literal notranslate"><span class="pre">Problem</span></code>, and <code class="docutils literal notranslate"><span class="pre">fips.solve</span></code> returns the <code class="docutils literal notranslate"><span class="pre">Posterior</span></code>. Everything is matched by label: the Jacobian’s rows and columns could come in any order.</p>
+<p>More in the <a class="reference external" href="https://jmineau.github.io/fips/stable/">documentation</a>:</p>
+<ul class="simple">
+<li><p><a class="reference external" href="https://jmineau.github.io/fips/stable/getting_started/first_problem.html">A first problem</a>, step by step, with a state of two blocks.</p></li>
+<li><p><a class="reference external" href="https://jmineau.github.io/fips/stable/user_guide/index.html">The user guide</a>: correlated covariances (exponential, Matérn, Kronecker products), sparse Jacobians, offsets solved for with the state, aggregated observations, and repeated inversions.</p></li>
+<li><p><a class="reference external" href="https://jmineau.github.io/fips/stable/user_guide/examples/flux_regional.html">A regional flux inversion</a>, worked from start to finish.</p></li>
+</ul>
 </section>
 <div class="toctree-wrapper compound">
 </div>
@@ -626,11 +537,7 @@ uv<span class="w"> </span>sync
     <ul class="pst-show_toc_level nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#bridging-physics-and-data">Bridging Physics and Data</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#installation">Installation</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#usage">Usage</a><ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#a-first-problem-rays-through-a-line-of-cells">A first problem: rays through a line of cells</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-same-objects-at-scale-an-atmospheric-flux-inversion">The same objects at scale: an atmospheric flux inversion</a></li>
-</ul>
-</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#usage">Usage</a></li>
 </ul>
   </nav></div>
 
