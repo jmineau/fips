@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>fips.linalg.forms &#8212; fips 0.2.0b2.dev11+ge2ea25b84 documentation</title>
+    <title>fips.linalg.forms &#8212; fips 0.2.0b2.dev13+gc2a85e57c documentation</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../../_static/documentation_options.js?v=4732e594"></script>
+    <script src="../../../_static/documentation_options.js?v=99ab9a52"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -132,8 +132,8 @@
       
     
     
-    <img src="../../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b2.dev11+ge2ea25b84 documentation - Home"/>
-    <img src="../../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b2.dev11+ge2ea25b84 documentation - Home"/>
+    <img src="../../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b2.dev13+gc2a85e57c documentation - Home"/>
+    <img src="../../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b2.dev13+gc2a85e57c documentation - Home"/>
   
   
 </a></div>
@@ -435,13 +435,15 @@
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">concurrent.futures</span><span class="w"> </span><span class="kn">import</span> <span class="n">ThreadPoolExecutor</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">functools</span><span class="w"> </span><span class="kn">import</span> <span class="n">cached_property</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Self</span><span class="p">,</span> <span class="n">TypeAlias</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy.typing</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">npt</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">scipy.sparse</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">sp</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">numpy.linalg</span><span class="w"> </span><span class="kn">import</span> <span class="n">LinAlgError</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">scipy.linalg</span><span class="w"> </span><span class="kn">import</span> <span class="n">cholesky</span><span class="p">,</span> <span class="n">solve</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">scipy.linalg</span><span class="w"> </span><span class="kn">import</span> <span class="n">cholesky</span><span class="p">,</span> <span class="n">eigh</span><span class="p">,</span> <span class="n">solve</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">scipy.sparse.csgraph</span><span class="w"> </span><span class="kn">import</span> <span class="n">connected_components</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">scipy.sparse.linalg</span><span class="w"> </span><span class="kn">import</span> <span class="n">LinearOperator</span> <span class="k">as</span> <span class="n">_SciPyLinearOperator</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">scipy.sparse.linalg</span><span class="w"> </span><span class="kn">import</span> <span class="n">splu</span>
 
@@ -516,6 +518,53 @@
         <span class="k">raise</span> <span class="n">LinAlgError</span><span class="p">(</span>
             <span class="sa">f</span><span class="s2">"The matrix is not positive-definite, so it has no Cholesky factor (</span><span class="si">{</span><span class="n">err</span><span class="si">}</span><span class="s2">)."</span>
         <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">err</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_clip_eigenvalues</span><span class="p">(</span><span class="n">w</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="nb">bool</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Return the eigenvalues `w` of a covariance with the negative ones set to zero, and whether any was.</span>
+
+<span class="sd">    An eigenvalue of a positive semi-definite matrix that comes out negative</span>
+<span class="sd">    by roundoff is within ``len(w) * eps * max|w|`` of zero (the size LAPACK</span>
+<span class="sd">    works to); a more negative one means the matrix is not a covariance.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    numpy.linalg.LinAlgError</span>
+<span class="sd">        If an eigenvalue is more negative than that.</span>
+<span class="sd">    """</span>
+    <span class="n">tol</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">w</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">finfo</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span><span class="o">.</span><span class="n">eps</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">w</span><span class="p">)</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">initial</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">w</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">initial</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)</span> <span class="o">&lt;</span> <span class="o">-</span><span class="n">tol</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">LinAlgError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"The matrix is not positive semi-definite, so it is not a covariance: "</span>
+            <span class="sa">f</span><span class="s2">"its smallest eigenvalue is </span><span class="si">{</span><span class="n">w</span><span class="o">.</span><span class="n">min</span><span class="p">()</span><span class="si">:</span><span class="s2">.3g</span><span class="si">}</span><span class="s2">, more than the roundoff "</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">tol</span><span class="si">:</span><span class="s2">.3g</span><span class="si">}</span><span class="s2"> below zero."</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span> <span class="nb">bool</span><span class="p">((</span><span class="n">w</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">any</span><span class="p">())</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_dense_root</span><span class="p">(</span><span class="n">A</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="nb">bool</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Return a square `R` with ``R R^T = A`` for a symmetric positive semi-definite `A`, and whether it is semi-definite.</span>
+
+<span class="sd">    The lower Cholesky factor when `A` has one. A semi-definite `A` (a</span>
+<span class="sd">    ``Constant()`` block is rank one) has none, so `R` is then</span>
+<span class="sd">    ``V sqrt(w)`` from its eigendecomposition ``A = V diag(w) V^T``, with the</span>
+<span class="sd">    eigenvalues that are negative by roundoff set to zero, and the second</span>
+<span class="sd">    value is True. `linalg` cannot import `methods`, so this calls SciPy's</span>
+<span class="sd">    ``eigh`` itself, as the analytic method does.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    numpy.linalg.LinAlgError</span>
+<span class="sd">        If `A` has an eigenvalue that is clearly negative.</span>
+<span class="sd">    """</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">cholesky</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">lower</span><span class="o">=</span><span class="kc">True</span><span class="p">)),</span> <span class="kc">False</span>
+    <span class="k">except</span> <span class="n">LinAlgError</span><span class="p">:</span>
+        <span class="n">w</span><span class="p">,</span> <span class="n">V</span> <span class="o">=</span> <span class="n">eigh</span><span class="p">(</span><span class="n">A</span><span class="p">)</span>
+        <span class="n">w</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">_clip_eigenvalues</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">w</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">V</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">w</span><span class="p">),</span> <span class="kc">True</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_read_only</span><span class="p">(</span><span class="n">array</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
@@ -658,9 +707,12 @@
 <span class="sd">    ``_transpose``. Every other method has a default that is right for any</span>
 <span class="sd">    form, which the subclass overrides where its form has a cheaper way. A</span>
 <span class="sd">    form that is neither dense nor sparse also gets a SciPy sparse matrix in</span>
-<span class="sd">    ``_matmat``, from a product with a :class:`SparseOperator`. A form that</span>
+<span class="sd">    ``_matmat``, from a product with a :class:`SparseOperator`. A covariance</span>
+<span class="sd">    form with a root cheaper than the Cholesky factor of its dense matrix</span>
+<span class="sd">    (the one a draw is made with) overrides ``_make_root``. A form that</span>
 <span class="sd">    keeps something out of its pickle (a cache) overrides ``__getstate__``</span>
-<span class="sd">    starting from this class's, which leaves out SciPy's own attributes.</span>
+<span class="sd">    starting from this class's, which leaves out SciPy's own attributes and</span>
+<span class="sd">    the root a draw is made with.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -688,6 +740,7 @@
 <span class="w">        </span><span class="sd">"""Return the state for pickling, without SciPy's array namespace (a module)."""</span>
         <span class="n">state</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
         <span class="n">state</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">"_xp"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">state</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">"_root"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>  <span class="c1"># a cache, built again by the next draw</span>
         <span class="k">return</span> <span class="n">state</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">__setstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
@@ -881,6 +934,39 @@
 <span class="sd">        """</span>
         <span class="k">return</span> <span class="n">DenseOperator</span><span class="o">.</span><span class="n">_adopt</span><span class="p">(</span><span class="n">_cholesky</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dense</span><span class="p">()))</span></div>
 
+
+    <span class="nd">@cached_property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_root</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"LinearOperator"</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        A matrix ``R`` (``n x r``) with ``R R^T`` equal to this symmetric positive semi-definite form.</span>
+
+<span class="sd">        A draw from ``N(0, S)`` is ``R w`` for ``w`` standard normal of length</span>
+<span class="sd">        ``r``. Built by the first draw and kept (as ``KroneckerOperator._inverses``</span>
+<span class="sd">        is), so a loop of draws factors once; ``__getstate__`` leaves it out.</span>
+<span class="sd">        """</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_make_root</span><span class="p">()</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_make_root</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"LinearOperator"</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Return the root of the form: the Cholesky factor of its dense matrix, or its eigenvalue root when it is semi-definite.</span>
+
+<span class="sd">        A form that is cheaper in another way overrides this. Raises</span>
+<span class="sd">        :class:`~numpy.linalg.LinAlgError` if the form has a clearly negative eigenvalue.</span>
+<span class="sd">        """</span>
+        <span class="n">R</span><span class="p">,</span> <span class="n">semidefinite</span> <span class="o">=</span> <span class="n">_dense_root</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dense</span><span class="p">())</span>
+        <span class="k">if</span> <span class="n">semidefinite</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                <span class="s2">"The </span><span class="si">%d</span><span class="s2"> x </span><span class="si">%d</span><span class="s2"> covariance has no Cholesky factor (it is only "</span>
+                <span class="s2">"positive semi-definite); drawing from its eigendecomposition, "</span>
+                <span class="s2">"with the eigenvalues below roundoff set to zero."</span><span class="p">,</span>
+                <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="n">DenseOperator</span><span class="o">.</span><span class="n">_adopt</span><span class="p">(</span><span class="n">R</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_sample</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rng</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">Generator</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return one draw from ``N(0, S)``: the root times ``r`` standard normals from `rng`."""</span>
+        <span class="n">R</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_root</span>
+        <span class="k">return</span> <span class="n">R</span><span class="o">.</span><span class="n">matvec</span><span class="p">(</span><span class="n">rng</span><span class="o">.</span><span class="n">standard_normal</span><span class="p">(</span><span class="n">R</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">__array__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">"""</span>
@@ -1172,6 +1258,59 @@
                 <span class="sa">f</span><span class="s2">"The sparse matrix is singular: its LU factorization failed (</span><span class="si">{</span><span class="n">err</span><span class="si">}</span><span class="s2">)."</span>
             <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">err</span>
 
+    <span class="k">def</span><span class="w"> </span><span class="nf">_make_root</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"SparseOperator"</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Return the root of each independent group of rows, as one sparse matrix.</span>
+
+<span class="sd">        The rows are split into the connected components of the sparsity</span>
+<span class="sd">        pattern (a ``within=`` kernel's groups are a site-day each): rows in</span>
+<span class="sd">        different components are uncorrelated, so the matrix is block diagonal</span>
+<span class="sd">        up to a permutation, and the root is the dense root of each block</span>
+<span class="sd">        (:func:`_dense_root`), put back at the rows' own places. A matrix whose</span>
+<span class="sd">        rows are all connected has one group, its dense matrix.</span>
+<span class="sd">        """</span>
+        <span class="n">A</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">csr_array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">matrix</span><span class="p">)</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">graph</span> <span class="o">=</span> <span class="n">A</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">bool</span><span class="p">)</span>
+        <span class="n">graph</span><span class="o">.</span><span class="n">eliminate_zeros</span><span class="p">()</span>  <span class="c1"># a stored zero is not a correlation</span>
+        <span class="n">count</span><span class="p">,</span> <span class="n">label</span> <span class="o">=</span> <span class="n">connected_components</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">directed</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="n">order</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">label</span><span class="p">,</span> <span class="n">kind</span><span class="o">=</span><span class="s2">"stable"</span><span class="p">)</span>  <span class="c1"># each group's rows together</span>
+        <span class="n">sizes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">bincount</span><span class="p">(</span><span class="n">label</span><span class="p">,</span> <span class="n">minlength</span><span class="o">=</span><span class="n">count</span><span class="p">)</span>
+        <span class="n">ends</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span><span class="n">sizes</span><span class="p">)</span>
+        <span class="n">starts</span> <span class="o">=</span> <span class="n">ends</span> <span class="o">-</span> <span class="n">sizes</span>
+        <span class="c1"># SciPy is not annotated, so pyrefly finds no __getitem__ on a sparse array</span>
+        <span class="n">ordered</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">csr_array</span><span class="p">(</span><span class="n">A</span><span class="p">[</span><span class="n">order</span><span class="p">][:,</span> <span class="n">order</span><span class="p">])</span>  <span class="c1"># pyrefly: ignore[bad-index]</span>
+
+        <span class="c1"># the groups of one row, all at once: the root is the square root of the entry</span>
+        <span class="n">alone</span> <span class="o">=</span> <span class="n">starts</span><span class="p">[</span><span class="n">sizes</span> <span class="o">==</span> <span class="mi">1</span><span class="p">]</span>
+        <span class="n">variances</span><span class="p">,</span> <span class="n">semidefinite</span> <span class="o">=</span> <span class="n">_clip_eigenvalues</span><span class="p">(</span><span class="n">ordered</span><span class="o">.</span><span class="n">diagonal</span><span class="p">()[</span><span class="n">alone</span><span class="p">])</span>
+        <span class="n">roots</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">variances</span><span class="p">)</span>
+        <span class="n">rows</span><span class="p">,</span> <span class="n">cols</span><span class="p">,</span> <span class="n">vals</span> <span class="o">=</span> <span class="p">[</span><span class="n">order</span><span class="p">[</span><span class="n">alone</span><span class="p">]],</span> <span class="p">[</span><span class="n">order</span><span class="p">[</span><span class="n">alone</span><span class="p">]],</span> <span class="p">[</span><span class="n">roots</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">starts</span><span class="p">[</span><span class="n">sizes</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">],</span> <span class="n">ends</span><span class="p">[</span><span class="n">sizes</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">],</span> <span class="n">strict</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+            <span class="c1"># pyrefly reads a slice of the array as the bare `sparray` (no toarray)</span>
+            <span class="n">block</span> <span class="o">=</span> <span class="n">ordered</span><span class="p">[</span><span class="n">a</span><span class="p">:</span><span class="n">b</span><span class="p">,</span> <span class="n">a</span><span class="p">:</span><span class="n">b</span><span class="p">]</span><span class="o">.</span><span class="n">toarray</span><span class="p">()</span>  <span class="c1"># pyrefly: ignore[missing-attribute]</span>
+            <span class="n">R</span><span class="p">,</span> <span class="n">semi</span> <span class="o">=</span> <span class="n">_dense_root</span><span class="p">(</span><span class="n">block</span><span class="p">)</span>
+            <span class="n">semidefinite</span> <span class="o">=</span> <span class="n">semidefinite</span> <span class="ow">or</span> <span class="n">semi</span>
+            <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nonzero</span><span class="p">(</span><span class="n">R</span><span class="p">)</span>
+            <span class="n">rows</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">order</span><span class="p">[</span><span class="n">a</span> <span class="o">+</span> <span class="n">i</span><span class="p">])</span>
+            <span class="n">cols</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">order</span><span class="p">[</span><span class="n">a</span> <span class="o">+</span> <span class="n">j</span><span class="p">])</span>
+            <span class="n">vals</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">R</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">])</span>
+        <span class="k">if</span> <span class="n">semidefinite</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                <span class="s2">"The </span><span class="si">%d</span><span class="s2"> x </span><span class="si">%d</span><span class="s2"> sparse covariance has a group of rows with no "</span>
+                <span class="s2">"Cholesky factor (it is only positive semi-definite); drawing "</span>
+                <span class="s2">"from its eigendecomposition, with the eigenvalues below "</span>
+                <span class="s2">"roundoff set to zero."</span><span class="p">,</span>
+                <span class="n">n</span><span class="p">,</span>
+                <span class="n">n</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="n">root</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">csr_array</span><span class="p">(</span>
+            <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">vals</span><span class="p">),</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">rows</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">cols</span><span class="p">))),</span>
+            <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">n</span><span class="p">),</span>
+        <span class="p">)</span>
+        <span class="n">root</span><span class="o">.</span><span class="n">eliminate_zeros</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">SparseOperator</span><span class="o">.</span><span class="n">_adopt</span><span class="p">(</span><span class="n">root</span><span class="p">)</span>
+
 <div class="viewcode-block" id="SparseOperator.dense">
 <a class="viewcode-back" href="../../../reference/api/fips.linalg.SparseOperator.dense.html#fips.linalg.SparseOperator.dense">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">dense</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
@@ -1344,6 +1483,16 @@
             <span class="k">raise</span> <span class="n">LinAlgError</span><span class="p">(</span><span class="s2">"The diagonal has an entry that is not positive."</span><span class="p">)</span>
         <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">values</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span></div>
 
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_make_root</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"DiagonalOperator"</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return the diagonal of square roots; an entry negative by roundoff is zero (a draw from it is 0)."""</span>
+        <span class="n">values</span><span class="p">,</span> <span class="n">clipped</span> <span class="o">=</span> <span class="n">_clip_eigenvalues</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">values</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">clipped</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                <span class="s2">"The diagonal covariance has an entry below zero by roundoff; "</span>
+                <span class="s2">"drawing it as zero."</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="n">DiagonalOperator</span><span class="o">.</span><span class="n">_adopt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">values</span><span class="p">))</span>
 
 <div class="viewcode-block" id="DiagonalOperator.sqrt">
 <a class="viewcode-back" href="../../../reference/api/fips.linalg.DiagonalOperator.sqrt.html#fips.linalg.DiagonalOperator.sqrt">[docs]</a>

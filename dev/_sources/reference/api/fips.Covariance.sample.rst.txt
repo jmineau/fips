@@ -1,0 +1,6 @@
+fips.Covariance.sample
+======================
+
+.. currentmodule:: fips
+
+.. automethod:: Covariance.sample

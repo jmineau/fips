@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>fips.covariance.covariance &#8212; fips 0.2.0b2.dev11+ge2ea25b84 documentation</title>
+    <title>fips.covariance.covariance &#8212; fips 0.2.0b2.dev13+gc2a85e57c documentation</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../../_static/documentation_options.js?v=4732e594"></script>
+    <script src="../../../_static/documentation_options.js?v=99ab9a52"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -132,8 +132,8 @@
       
     
     
-    <img src="../../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b2.dev11+ge2ea25b84 documentation - Home"/>
-    <img src="../../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b2.dev11+ge2ea25b84 documentation - Home"/>
+    <img src="../../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b2.dev13+gc2a85e57c documentation - Home"/>
+    <img src="../../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b2.dev13+gc2a85e57c documentation - Home"/>
   
   
 </a></div>
@@ -934,10 +934,13 @@
 <span class="sd">        Return a square root :math:`L`, with :math:`L L^T = S`.</span>
 
 <span class="sd">        A diagonal covariance gives the diagonal of standard deviations, a</span>
-<span class="sd">        block diagonal one the root of each block, any other form the lower</span>
-<span class="sd">        Cholesky factor of its dense matrix. :math:`L` maps independent unit</span>
-<span class="sd">        variables, one per label, to the covariance's space: ``L @ w`` with</span>
-<span class="sd">        ``w`` standard normal is a draw from :math:`N(0, S)`.</span>
+<span class="sd">        block diagonal one the root of each block, and a Kronecker one whose</span>
+<span class="sd">        rows are its whole grid a root applied through its factors. Any</span>
+<span class="sd">        other form, a Kronecker one on a subset of its grid among them, gives</span>
+<span class="sd">        the lower Cholesky factor of its dense matrix.</span>
+<span class="sd">        :math:`L` maps independent unit variables, one per label, to the</span>
+<span class="sd">        covariance's space: ``L @ w`` with ``w`` standard normal is a draw</span>
+<span class="sd">        from :math:`N(0, S)`.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
@@ -948,8 +951,81 @@
 <span class="sd">        ------</span>
 <span class="sd">        numpy.linalg.LinAlgError</span>
 <span class="sd">            If the covariance is not positive-definite.</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        --------</span>
+<span class="sd">        sample : A draw, made without forming :math:`L` where a form has a cheaper root.</span>
 <span class="sd">        """</span>
         <span class="k">return</span> <span class="n">Operator</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rows</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rows</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_name</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Covariance.sample">
+<a class="viewcode-back" href="../../../reference/api/fips.Covariance.sample.html#fips.Covariance.sample">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">sample</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rng</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">Generator</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Vector</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">        Return one draw from :math:`N(0, S)`, a vector on the covariance's space.</span>
+
+<span class="sd">        The draw is :math:`R w` with :math:`R R^T = S` and :math:`w` standard</span>
+<span class="sd">        normal, and :math:`R` is the root the form makes cheapest, never the</span>
+<span class="sd">        ``n x n`` matrix where the form is cheaper than that. A diagonal</span>
+<span class="sd">        covariance scales its normals by the standard deviations; a block</span>
+<span class="sd">        diagonal one draws each block in turn; a Kronecker one applies the</span>
+<span class="sd">        Cholesky factors of its factors to normals on the whole product grid</span>
+<span class="sd">        and keeps its rows (a part of a Gaussian vector has the part of its</span>
+<span class="sd">        covariance), so a subset of the grid costs what the whole grid does;</span>
+<span class="sd">        a sparse one draws each group of correlated rows (a ``within=``</span>
+<span class="sd">        kernel's site-days) from the Cholesky factor of its own block; a dense</span>
+<span class="sd">        one uses its Cholesky factor. The root is built by the first draw and</span>
+<span class="sd">        kept, so a loop of draws factors once.</span>
+
+<span class="sd">        A semi-definite covariance, a ``Constant()`` kernel's rank-one block</span>
+<span class="sd">        for one, has no Cholesky factor, so it is drawn from its</span>
+<span class="sd">        eigendecomposition, with the eigenvalues that are negative by roundoff</span>
+<span class="sd">        set to zero and one INFO line logged.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        rng : int, numpy.random.Generator or None, default None</span>
+<span class="sd">            A seed, or the generator to draw from (used as given, so one</span>
+<span class="sd">            generator passed to every call gives independent draws). None</span>
+<span class="sd">            draws from fresh entropy. It goes through</span>
+<span class="sd">            :func:`numpy.random.default_rng`, as SciPy's ``rng`` argument</span>
+<span class="sd">            does. The same seed gives the same draw for the same form of</span>
+<span class="sd">            covariance; a Kronecker covariance on a subset of its grid uses</span>
+<span class="sd">            one normal for each point of the whole grid, so changing a</span>
+<span class="sd">            covariance's form changes the draw.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Vector</span>
+<span class="sd">            The draw, on the covariance's space.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        numpy.linalg.LinAlgError</span>
+<span class="sd">            If the covariance has a clearly negative eigenvalue (not</span>
+<span class="sd">            positive semi-definite).</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        --------</span>
+<span class="sd">        sqrt : The root :math:`L`, as an operator.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; import pandas as pd</span>
+<span class="sd">        &gt;&gt;&gt; from fips import Covariance, Space</span>
+<span class="sd">        &gt;&gt;&gt; space = Space({"flux": pd.Index(["a", "b", "c"], name="cell")})</span>
+<span class="sd">        &gt;&gt;&gt; S = Covariance.diagonal([4.0, 1.0, 0.25], space)</span>
+<span class="sd">        &gt;&gt;&gt; S.sample(rng=0).to_series().round(2)</span>
+<span class="sd">        block  cell</span>
+<span class="sd">        flux   a       0.25</span>
+<span class="sd">               b      -0.13</span>
+<span class="sd">               c       0.32</span>
+<span class="sd">        dtype: float64</span>
+<span class="sd">        &gt;&gt;&gt; S.sample(rng=0).values.tolist() == S.sample(rng=0).values.tolist()</span>
+<span class="sd">        True</span>
+<span class="sd">        """</span>
+        <span class="k">return</span> <span class="n">Vector</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="o">.</span><span class="n">_sample</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="n">rng</span><span class="p">)),</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rows</span><span class="p">)</span></div>
 </div>
 
 </pre></div>

@@ -29,6 +29,7 @@
    ~Covariance.diagonal
    ~Covariance.logdet
    ~Covariance.quadratic_form
+   ~Covariance.sample
    ~Covariance.solve
    ~Covariance.sqrt
 
