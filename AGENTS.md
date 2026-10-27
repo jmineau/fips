@@ -209,11 +209,20 @@ dependency needs a reason, proposed first.
   diagonal, sparse, block diagonal or Kronecker, applied through its
   factors), it takes the information form (`Information`): `S_0 = R R^T` by
   the form's own `sqrt` (through the factors for a Kronecker `S_0`), and it
-  eigendecomposes the `n x n` matrix `R^T H^T S_z^-1 H R`, holding no `m x m`
+  factors the `n x n` matrix `R^T H^T S_z^-1 H R`, holding no `m x m`
   of its own. Otherwise, or when `S_0` has no Cholesky factor, the whitened form. Both give the same
   posterior; the oracle and `tests/test_whitened.py` run every case in both
-  (the `analytic_form` fixture replaces `_choose`). Both decompose with
-  `eigh` (`_eigh`: the `evd` driver, redone with `evr` on `MemoryError`).
+  (the `analytic_form` fixture replaces `_choose`).
+- **A solve factors by Cholesky at its gamma; the first `with_gamma`
+  eigendecomposes** (`_decompose`). Both forms need `(A + I/gamma)^-1` for
+  their matrix `A` (`M` or `N`). `fips.solve` takes it from a Cholesky
+  (eigenvalues None, weights 1, DOFS computed with it), after checking that
+  `A` is positive semidefinite to roundoff with a second Cholesky of `A + tau I`
+  (`_cholesky_inverse`); an `A` that fails is eigendecomposed, so `_clip`
+  warns for the same priors as before. The first `with_gamma` eigendecomposes
+  (`_eigh`: `evd`, redone with `evr` on `MemoryError`) and keeps it outside
+  the frozen fields (not pickled). Every output of the Cholesky must equal the
+  eigendecomposition's at the same gamma: `tests/test_whitened.py` holds them at 1e-10.
   Only a whitened solve with more than `_LARGE_M` observations and more
   than twice `n` logs a warning, saying why the information form was not used.
 - **The whitened form whitens with the Cholesky factor of `S_z`**, so `S_z`
