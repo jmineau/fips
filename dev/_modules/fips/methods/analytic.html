@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>fips.methods.analytic &#8212; fips 0.2.0b2.dev1+g7c1006ecf documentation</title>
+    <title>fips.methods.analytic &#8212; fips 0.2.0b2.dev2+ga63107831 documentation</title>
   
   
   
@@ -40,7 +40,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0" />
 
-    <script src="../../../_static/documentation_options.js?v=4d20c14a"></script>
+    <script src="../../../_static/documentation_options.js?v=25e754a7"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -130,8 +130,8 @@
       
     
     
-    <img src="../../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b2.dev1+g7c1006ecf documentation - Home"/>
-    <img src="../../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b2.dev1+g7c1006ecf documentation - Home"/>
+    <img src="../../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b2.dev2+ga63107831 documentation - Home"/>
+    <img src="../../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b2.dev2+ga63107831 documentation - Home"/>
   
   
 </a></div>
@@ -433,13 +433,13 @@
 <span class="sd">  eigendecomposes an ``m x m`` matrix (``m`` observations);</span>
 <span class="sd">- ``Information`` whitens the state with the prior error covariance and</span>
 <span class="sd">  eigendecomposes an ``n x n`` matrix (``n`` state elements). It applies the</span>
-<span class="sd">  inverse of the model-data mismatch, so it needs one whose inverse is cheap</span>
-<span class="sd">  to apply.</span>
+<span class="sd">  inverse of the model-data mismatch, which it can for a mismatch that is</span>
+<span class="sd">  dense, diagonal, sparse or block diagonal.</span>
 
 <span class="sd">The information form is used when there are fewer state elements than</span>
-<span class="sd">observations and the mismatch is diagonal, sparse or block diagonal (and the</span>
-<span class="sd">prior error covariance has a square root); otherwise the whitened form</span>
-<span class="sd">(``_choose``). The factors depend neither on the regularization factor</span>
+<span class="sd">observations and the mismatch is dense, diagonal, sparse or block diagonal</span>
+<span class="sd">(and the prior error covariance has a square root); otherwise the whitened</span>
+<span class="sd">form (``_choose``). The factors depend neither on the regularization factor</span>
 <span class="sd">:math:`\gamma` nor on the values of the observations, so the posterior of</span>
 <span class="sd">another :math:`\gamma` (``post.with_gamma``) or of other observations</span>
 <span class="sd">(``post.with_data``) shares them instead of solving again.</span>
@@ -462,6 +462,7 @@
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">fips.linalg</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">BlockDiagonalOperator</span><span class="p">,</span>
+    <span class="n">DenseOperator</span><span class="p">,</span>
     <span class="n">DiagonalOperator</span><span class="p">,</span>
     <span class="n">LinearOperator</span><span class="p">,</span>
     <span class="n">SparseOperator</span><span class="p">,</span>
@@ -483,8 +484,14 @@
 <span class="sd">than twice ``n``, a solve above this size says why.</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
-<span class="n">_CHEAP_INVERSE</span> <span class="o">=</span> <span class="p">(</span><span class="n">DiagonalOperator</span><span class="p">,</span> <span class="n">SparseOperator</span><span class="p">,</span> <span class="n">BlockDiagonalOperator</span><span class="p">)</span>
-<span class="sd">&quot;&quot;&quot;The forms of the model-data mismatch whose inverse the information form applies.&quot;&quot;&quot;</span>
+<span class="n">_INVERTIBLE</span> <span class="o">=</span> <span class="p">(</span><span class="n">DenseOperator</span><span class="p">,</span> <span class="n">DiagonalOperator</span><span class="p">,</span> <span class="n">SparseOperator</span><span class="p">,</span> <span class="n">BlockDiagonalOperator</span><span class="p">)</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">The forms of the model-data mismatch whose inverse the information form applies.</span>
+
+<span class="sd">A dense mismatch is applied through its Cholesky factor. The whitened form</span>
+<span class="sd">needs that factor too, so the information form saves the ``m x m``</span>
+<span class="sd">eigendecomposition and the ``m x m`` products.</span>
+<span class="sd">&quot;&quot;&quot;</span>
 
 
 <div class="viewcode-block" id="AnalyticOptions">
@@ -748,13 +755,14 @@
 
 <span class="sd">    ``_analytic`` factors its problem into this once (:meth:`factor`) when</span>
 <span class="sd">    there are fewer state elements than observations and the model-data</span>
-<span class="sd">    mismatch has an inverse that is cheap to apply (diagonal, sparse or</span>
-<span class="sd">    block diagonal); otherwise into :class:`Whitened`. It eigendecomposes an</span>
+<span class="sd">    mismatch is dense, diagonal, sparse or block diagonal; otherwise into</span>
+<span class="sd">    :class:`Whitened`. It eigendecomposes an</span>
 <span class="sd">    :math:`n \times n` matrix instead of an :math:`m \times m` one, and gives</span>
 <span class="sd">    the same posterior. The factors depend neither on gamma nor on the</span>
 <span class="sd">    values of the observations, so :meth:`with_gamma` and :meth:`with_data`</span>
-<span class="sd">    share them. It holds one :math:`n \times n` array; nothing</span>
-<span class="sd">    :math:`m \times m` is formed. The arrays are read-only, also after a</span>
+<span class="sd">    share them. It holds one :math:`n \times n` array; it forms nothing</span>
+<span class="sd">    :math:`m \times m` of its own (a dense mismatch is factored by Cholesky</span>
+<span class="sd">    inside each solve with it). The arrays are read-only, also after a</span>
 <span class="sd">    pickle or a copy.</span>
 
 <span class="sd">    With :math:`S_0 = R R^T` the prior error covariance (:math:`R` its square</span>
@@ -813,7 +821,8 @@
 
 <span class="sd">        :math:`H R` is formed in the cheapest form of its factors (through a</span>
 <span class="sd">        Kronecker :math:`S_0`&#39;s factors), then dense (:math:`m \times n`), and</span>
-<span class="sd">        :math:`S_z^{-1}` is applied by its form&#39;s solve.</span>
+<span class="sd">        :math:`S_z^{-1}` is applied by its form&#39;s solve (for a dense</span>
+<span class="sd">        :math:`S_z`, by Cholesky).</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -1011,9 +1020,9 @@
 <span class="sd">    Return the form to factor `problem` in, and why.</span>
 
 <span class="sd">    The information form when there are fewer state elements than</span>
-<span class="sd">    observations and the model-data mismatch is diagonal, sparse or block</span>
-<span class="sd">    diagonal; otherwise the whitened form. The tests replace this function to</span>
-<span class="sd">    hold both forms to the same outputs.</span>
+<span class="sd">    observations and the model-data mismatch is dense, diagonal, sparse or</span>
+<span class="sd">    block diagonal; otherwise the whitened form. The tests replace this</span>
+<span class="sd">    function to hold both forms to the same outputs.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">m</span><span class="p">,</span> <span class="n">n</span> <span class="o">=</span> <span class="n">problem</span><span class="o">.</span><span class="n">forward</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span>
     <span class="n">S_z</span> <span class="o">=</span> <span class="n">problem</span><span class="o">.</span><span class="n">obs_cov</span><span class="o">.</span><span class="n">data</span>
@@ -1022,10 +1031,10 @@
             <span class="n">Whitened</span><span class="p">,</span>
             <span class="sa">f</span><span class="s2">&quot;the n = </span><span class="si">{</span><span class="n">n</span><span class="si">}</span><span class="s2"> state elements are not fewer than the m = </span><span class="si">{</span><span class="n">m</span><span class="si">}</span><span class="s2"> observations&quot;</span><span class="p">,</span>
         <span class="p">)</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">S_z</span><span class="p">,</span> <span class="n">_CHEAP_INVERSE</span><span class="p">):</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">S_z</span><span class="p">,</span> <span class="n">_INVERTIBLE</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">Whitened</span><span class="p">,</span> <span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;the model-data mismatch is a </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">S_z</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">, and the information &quot;</span>
-            <span class="s2">&quot;form needs one whose inverse is cheap to apply (diagonal, sparse or &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;the model-data mismatch is a </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">S_z</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">, which the &quot;</span>
+            <span class="s2">&quot;information form does not take (it takes dense, diagonal, sparse and &quot;</span>
             <span class="s2">&quot;block diagonal)&quot;</span>
         <span class="p">)</span>
     <span class="k">return</span> <span class="n">Information</span><span class="p">,</span> <span class="p">(</span>
