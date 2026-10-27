@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>fips.Posterior.with_gamma &#8212; fips 0.2.0b2.dev9+g9dded00bd documentation</title>
+    <title>fips.Posterior.with_gamma &#8212; fips 0.2.0b2.dev11+ge2ea25b84 documentation</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../_static/documentation_options.js?v=46a0216e"></script>
+    <script src="../../_static/documentation_options.js?v=4732e594"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -137,8 +137,8 @@
       
     
     
-    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b2.dev9+g9dded00bd documentation - Home"/>
-    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b2.dev9+g9dded00bd documentation - Home"/>
+    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b2.dev11+ge2ea25b84 documentation - Home"/>
+    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b2.dev11+ge2ea25b84 documentation - Home"/>
   
   
 </a></div>
@@ -819,9 +819,12 @@
 <dt class="sig sig-object py" id="fips.Posterior.with_gamma">
 <span class="sig-prename descclassname"><span class="pre">Posterior.</span></span><span class="sig-name descname"><span class="pre">with_gamma</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">gamma</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/fips/posterior.html#Posterior.with_gamma"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fips.Posterior.with_gamma" title="Link to this definition">#</a></dt>
 <dd><p>Return the posterior of the same problem with another regularization factor.</p>
-<p>The analytic method’s factorization does not depend on gamma, so
-this costs <span class="math notranslate nohighlight">\(O(m n)\)</span> at most instead of a new solve: a sweep over
-gamma factors once.</p>
+<p><a class="reference internal" href="fips.solve.html#fips.solve" title="fips.solve"><code class="xref py py-func docutils literal notranslate"><span class="pre">fips.solve()</span></code></a> factors the analytic method’s matrix by Cholesky
+at its own gamma. The first call eigendecomposes it (about the cost
+of a solve) and keeps that, since the eigendecomposition reads the
+factors at any gamma: every later call on this posterior, or on one
+it returned, costs <span class="math notranslate nohighlight">\(O(m n)\)</span> at most, so a sweep over gamma
+eigendecomposes once.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>gamma</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a></span>) – The regularization factor, as <code class="docutils literal notranslate"><span class="pre">fips.solve(problem,</span> <span class="pre">gamma=...)</span></code>

@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>User Guide &#8212; fips 0.2.0b2.dev9+g9dded00bd documentation</title>
+    <title>User Guide &#8212; fips 0.2.0b2.dev11+ge2ea25b84 documentation</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../_static/documentation_options.js?v=46a0216e"></script>
+    <script src="../_static/documentation_options.js?v=4732e594"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -137,8 +137,8 @@
       
     
     
-    <img src="../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b2.dev9+g9dded00bd documentation - Home"/>
-    <img src="../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b2.dev9+g9dded00bd documentation - Home"/>
+    <img src="../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b2.dev11+ge2ea25b84 documentation - Home"/>
+    <img src="../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b2.dev11+ge2ea25b84 documentation - Home"/>
   
   
 </a></div>
@@ -858,12 +858,12 @@ names it knows.</p>
 <p>The analytic method factors the problem once, in one of two forms that give
 the same posterior. The whitened form works in the observations’ size: it
 whitens with the Cholesky factor of <span class="math notranslate nohighlight">\(S_z\)</span> (or the square root of its
-diagonal), so <span class="math notranslate nohighlight">\(S_z\)</span> must be positive-definite, and eigendecomposes the
+diagonal), so <span class="math notranslate nohighlight">\(S_z\)</span> must be positive-definite, and factors the
 <span class="math notranslate nohighlight">\(m \times m\)</span> matrix <span class="math notranslate nohighlight">\(H S_0 H^T\)</span> in that metric. It computes
 <span class="math notranslate nohighlight">\(H S_0\)</span> in the forms of <span class="math notranslate nohighlight">\(H\)</span> and <span class="math notranslate nohighlight">\(S_0\)</span> (through the factors of
 a Kronecker covariance), and the estimate, the variances, the DOFS and the
 chi-squared from the factors, without forming anything <span class="math notranslate nohighlight">\(n \times n\)</span>. The
-information form works in the state’s size: it eigendecomposes an
+information form works in the state’s size: it factors an
 <span class="math notranslate nohighlight">\(n \times n\)</span> matrix built from <span class="math notranslate nohighlight">\(H\)</span>, a square root of <span class="math notranslate nohighlight">\(S_0\)</span> and
 <span class="math notranslate nohighlight">\(S_z^{-1}\)</span>, and forms no <span class="math notranslate nohighlight">\(m \times m\)</span> matrix of its own (a dense
 <span class="math notranslate nohighlight">\(S_z\)</span> is applied through its Cholesky factor, a Kronecker one through
@@ -871,7 +871,10 @@ its factors). It is used when there are fewer state elements than
 observations and <span class="math notranslate nohighlight">\(S_z\)</span> is dense, diagonal, sparse, block diagonal or
 Kronecker; otherwise the whitened form. In both, the full posterior
 covariance (<code class="docutils literal notranslate"><span class="pre">post.cov()</span></code>), the gain and the averaging kernel are formed
-only when they are read, once each.</p>
+only when they are read, once each. <a class="reference internal" href="../reference/api/fips.solve.html#fips.solve" title="fips.solve"><code class="xref py py-func docutils literal notranslate"><span class="pre">fips.solve()</span></code></a> factors that matrix
+by Cholesky at its <code class="docutils literal notranslate"><span class="pre">gamma</span></code>, the cheapest way to solve at one <code class="docutils literal notranslate"><span class="pre">gamma</span></code>; the
+first <code class="docutils literal notranslate"><span class="pre">post.with_gamma</span></code> eigendecomposes it, which holds at any <code class="docutils literal notranslate"><span class="pre">gamma</span></code>,
+and keeps it, so a sweep over <code class="docutils literal notranslate"><span class="pre">gamma</span></code> pays for one eigendecomposition.</p>
 <div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [46]: </span><span class="n">rng</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
 
 <span class="gp">In [47]: </span><span class="n">obs_labels</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">MultiIndex</span><span class="o">.</span><span class="n">from_product</span><span class="p">([[</span><span class="s2">"conc"</span><span class="p">],</span> <span class="nb">range</span><span class="p">(</span><span class="mi">15</span><span class="p">)],</span> <span class="n">names</span><span class="o">=</span><span class="p">[</span><span class="s2">"block"</span><span class="p">,</span> <span class="s2">"obs_id"</span><span class="p">])</span>

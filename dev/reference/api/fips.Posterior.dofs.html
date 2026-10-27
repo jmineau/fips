@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>fips.Posterior.dofs &#8212; fips 0.2.0b2.dev9+g9dded00bd documentation</title>
+    <title>fips.Posterior.dofs &#8212; fips 0.2.0b2.dev11+ge2ea25b84 documentation</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../_static/documentation_options.js?v=46a0216e"></script>
+    <script src="../../_static/documentation_options.js?v=4732e594"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -137,8 +137,8 @@
       
     
     
-    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b2.dev9+g9dded00bd documentation - Home"/>
-    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b2.dev9+g9dded00bd documentation - Home"/>
+    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b2.dev11+ge2ea25b84 documentation - Home"/>
+    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b2.dev11+ge2ea25b84 documentation - Home"/>
   
   
 </a></div>
@@ -819,10 +819,11 @@
 <dt class="sig sig-object py" id="fips.Posterior.dofs">
 <span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">Posterior.</span></span><span class="sig-name descname"><span class="pre">dofs</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><span class="pre">float</span></a></span><a class="headerlink" href="#fips.Posterior.dofs" title="Link to this definition">#</a></dt>
 <dd><p>Degrees of freedom for signal, the trace of <a class="reference internal" href="fips.Posterior.averaging_kernel.html#fips.Posterior.averaging_kernel" title="fips.Posterior.averaging_kernel"><code class="xref py py-meth docutils literal notranslate"><span class="pre">averaging_kernel()</span></code></a>.</p>
-<p>The analytic method reads it from its factors,
+<p>The analytic method reads it from its factors without the kernel:
 <span class="math notranslate nohighlight">\(\sum_k \gamma\lambda_k / (\gamma\lambda_k + 1)\)</span> over the
 eigenvalues <span class="math notranslate nohighlight">\(\lambda_k\)</span> of its factorization (the same in
-both of its forms), without the kernel.</p>
+both of its forms), or, at the gamma of <a class="reference internal" href="fips.solve.html#fips.solve" title="fips.solve"><code class="xref py py-func docutils literal notranslate"><span class="pre">fips.solve()</span></code></a>, from the
+Cholesky factor it solved with.</p>
 </dd></dl>
 
 </section>
