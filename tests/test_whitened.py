@@ -43,7 +43,7 @@ from fips.linalg import (
     SparseOperator,
     as_linear_operator,
 )
-from fips.methods.analytic import Information, Whitened
+from fips.methods.analytic import AnalyticOptions, Information, Whitened
 from fips.posterior import Posterior
 
 RTOL = 1e-10
@@ -228,12 +228,16 @@ def test_outputs_match_the_direct_solve(form, gamma, shape, analytic_form):
 
 @pytest.mark.parametrize("form", FORMS)
 def test_with_gamma_is_a_fresh_solve(form, analytic_form):
-    """``with_gamma`` gives what a new solve with that gamma gives, from the same factors."""
+    """``with_gamma`` gives what a new solve with that gamma gives, every sweep from one eigendecomposition."""
     problem = _problem(*_arrays(form, 7))
     post = fips.solve(problem)
+    assert post._solution.eigenvalues is None  # a Cholesky at gamma 1
+    eigenvalues = post.with_gamma(1.0)._solution.eigenvalues
+    assert eigenvalues is not None
     for gamma in GAMMAS:
         swept = post.with_gamma(gamma)
-        assert swept._solution.eigenvalues is post._solution.eigenvalues
+        assert swept._solution.eigenvalues is eigenvalues
+        assert swept.with_gamma(2.0)._solution.eigenvalues is eigenvalues
         assert swept.options.gamma == gamma
         assert "estimate" in vars(swept)  # computed, as fips.solve does
         fresh = _outputs(fips.solve(problem, gamma=gamma))
@@ -258,7 +262,8 @@ def test_with_data_is_a_fresh_solve(form, gamma, analytic_form):
         name="bootstrap",
     )
     swept = post.with_data(new)
-    assert swept._solution.eigenvalues is post._solution.eigenvalues
+    held = "whitener" if analytic_form is Whitened else "G"
+    assert getattr(swept._solution, held) is getattr(post._solution, held)
     assert swept.problem.obs.space == post.problem.obs.space
     np.testing.assert_array_equal(swept.problem.obs.values, z2)
     fresh = _outputs(fips.solve(_problem(z2, x_0, H, S_0, S_z, c), gamma=gamma))
@@ -271,17 +276,26 @@ def test_with_data_is_a_fresh_solve(form, gamma, analytic_form):
 def test_the_factors_are_read_only(form, analytic_form):
     """No array of the factors can be written to, however the solution was made: a solve, a sweep, new data, a pickle, a copy."""
     post = fips.solve(_problem(*_arrays(form, 6)))
+    swept = post.with_gamma(2.0)
     solutions = {
         "factor": post._solution,
-        "with_gamma": post.with_gamma(2.0)._solution,
+        "with_gamma": swept._solution,
         "with_data": post.with_data(post.problem.obs)._solution,
+        "with_data after with_gamma": swept.with_data(post.problem.obs)._solution,
         "pickle": pickle.loads(pickle.dumps(post))._solution,
+        "pickle after with_gamma": pickle.loads(pickle.dumps(swept))._solution,
         "deepcopy": copy.deepcopy(post._solution),
     }
     for how, solution in solutions.items():
         assert isinstance(solution, analytic_form)
-        arrays = [f.name for f in dataclasses.fields(solution) if f.type is np.ndarray]
-        assert len(arrays) == (5 if analytic_form is Whitened else 3)
+        arrays = [
+            f.name
+            for f in dataclasses.fields(solution)
+            if isinstance(getattr(solution, f.name), np.ndarray)
+        ]
+        eigendecomposed = solution.eigenvalues is not None
+        assert eigendecomposed == ("with_gamma" in how), how
+        assert len(arrays) == (4 if analytic_form is Whitened else 2) + eigendecomposed
         for name in arrays:
             array = getattr(solution, name)
             assert not array.flags.writeable, f"{name} after {how}"
@@ -577,7 +591,7 @@ def test_posterior_with_gamma(gamma, analytic_form):
     swept = post.with_gamma(gamma)
     fresh = fips.solve(problem, gamma=gamma)
     assert "estimate" in vars(swept)
-    assert swept._solution.eigenvalues is post._solution.eigenvalues
+    assert swept._solution.eigenvalues is post.with_gamma(1.0)._solution.eigenvalues
     assert post.options.gamma == 1.0
     W, _ = _aggregation(state)
     pairs = [
@@ -713,6 +727,7 @@ def test_negative_eigenvalues_are_clipped_and_logged(caplog):
     with caplog.at_level(logging.WARNING, logger="fips.methods.analytic"):
         post = fips.solve(_problem(z, x_0, np.eye(3), S_0, S_z, c))
     assert any("negative eigenvalue" in r.message for r in caplog.records)
+    assert post._solution.eigenvalues is not None  # eigendecomposed, not a Cholesky
     assert (post._solution.eigenvalues >= 0).all()
 
 
@@ -762,11 +777,18 @@ def _logged(caplog):
     return [r for r in caplog.records if r.name == "fips.methods.analytic"]
 
 
-def test_the_eigendecomposition_uses_evd(analytic_form, monkeypatch, caplog):
-    """Each solve eigendecomposes once, with the ``evd`` driver, and logs nothing about memory."""
+def test_only_the_first_with_gamma_eigendecomposes(analytic_form, monkeypatch, caplog):
+    """A solve and every output at its gamma never eigendecompose; the first ``with_gamma`` does, once, with ``evd``, and logs nothing about memory."""
     drivers = _spy_eigh(monkeypatch)
     with caplog.at_level(logging.INFO, logger="fips.methods.analytic"):
-        fips.solve(_problem(*_arrays("dense", 0)))
+        post = fips.solve(_problem(*_arrays("dense", 0)))
+        _outputs(post)
+        _outputs(post.with_data(post.problem.obs))
+        assert drivers == []
+        swept = [post.with_gamma(g) for g in GAMMAS]
+        assert drivers == ["evd"]
+        _ = [_outputs(s.with_gamma(3.0)) for s in swept]
+        _outputs(swept[0].with_data(post.problem.obs).with_gamma(0.2))
     assert drivers == ["evd"]
     assert not _logged(caplog)
 
@@ -777,16 +799,181 @@ def test_no_memory_for_evd_redoes_the_eigendecomposition_with_evr(
     """A ``MemoryError`` from ``evd`` is met with ``evr`` on the same matrix: the same result, and one INFO line."""
     args = _arrays("dense", 0)
     _spy_eigh(monkeypatch, force="evr")
-    expected = _outputs(fips.solve(_problem(*args)))
+    expected = _outputs(fips.solve(_problem(*args)).with_gamma(2.0))
     drivers = _spy_eigh(monkeypatch, no_memory_for="evd")
     with caplog.at_level(logging.INFO, logger="fips.methods.analytic"):
-        post = fips.solve(_problem(*args))
+        post = fips.solve(_problem(*args)).with_gamma(2.0)
     assert drivers == ["evd", "evr"]
     (record,) = _logged(caplog)
     assert record.levelno == logging.INFO
     assert "'evd'" in record.message and "'evr'" in record.message
     for name, value in _outputs(post).items():
         np.testing.assert_array_equal(value, expected[name], err_msg=name)
+
+
+# ---------------------------------------------------------------------------
+# One gamma by Cholesky, any gamma by the eigendecomposition
+# ---------------------------------------------------------------------------
+
+MISMATCHES = ["diagonal", "sparse", "block diagonal", "dense", "Kronecker"]
+
+
+def _both(problem, form, gamma):
+    """The posteriors of `problem` at `gamma` in `form`: from the Cholesky a solve does, and from the eigendecomposition."""
+    options = AnalyticOptions(gamma=gamma)
+    cholesky = Posterior(problem, form.factor(problem, gamma), options)
+    eigen = form.factor(problem, gamma, eigendecompose=True)
+    assert cholesky._solution.eigenvalues is None
+    assert eigen.eigenvalues is not None
+    return cholesky, Posterior(problem, eigen, options)
+
+
+def _every_output(post) -> dict:
+    """:func:`_outputs`, and the covariance and averaging kernel of two aggregates."""
+    state = post.problem.prior.space
+    n = len(post.problem.prior)
+    rows = Space({"total": pd.Index(["a", "b"], name="total")})
+    W = Operator(np.random.default_rng(0).uniform(0, 1, (2, n)), rows, state)
+    return {
+        **_outputs(post),
+        "cov(W)": post.cov(W).dense(),
+        "averaging_kernel(W)": post.averaging_kernel(W).dense(),
+    }
+
+
+@pytest.mark.parametrize(
+    "form", [Whitened, Information], ids=["whitened", "information"]
+)
+@pytest.mark.parametrize("prior", FORMS)
+@pytest.mark.parametrize("mismatch", MISMATCHES)
+@pytest.mark.parametrize("shape", [(3, 4, 8), (1, 3, 8)], ids=["n > m", "n < m"])
+@pytest.mark.parametrize("gamma", [0.05, 1.0, 30.0])
+@pytest.mark.parametrize("seed", range(2))
+def test_the_cholesky_gives_what_the_eigendecomposition_gives(
+    form, prior, mismatch, shape, gamma, seed
+):
+    """Every output of a one-gamma solve, at 1e-10 of the eigendecomposition's at that gamma and of the closed form."""
+    z, x_0, H, S_0, _, c = _arrays(prior, seed, *shape)
+    S_z = _mismatch(mismatch, shape[2], np.random.default_rng(seed + 10))
+    problem = _problem(z, x_0, H, S_0, S_z, c)
+    cholesky, eigen = _both(problem, form, gamma)
+    got, expected = _every_output(cholesky), _every_output(eigen)
+    for name, value in got.items():
+        _close(value, expected[name], f"{name} against the eigendecomposition")
+    for name, value in _closed_form(z, x_0, H, S_0, _dense(S_z), c, gamma).items():
+        _close(got[name], value, f"{name} against the closed form")
+
+
+@pytest.mark.parametrize(
+    "form, n, m",
+    [(Whitened, 300, 200), (Information, 60, 200)],
+    ids=["whitened", "information"],
+)
+@pytest.mark.parametrize("gamma", [0.01, 1.0, 100.0])
+@pytest.mark.parametrize("weak", [False, True], ids=["strong", "weak"])
+def test_the_cholesky_matches_at_size(form, n, m, gamma, weak):
+    """
+    At a few hundred observations, strongly or weakly observed, the Cholesky's outputs are the eigendecomposition's at 1e-10.
+
+    Weakly observed (a mismatch a thousand times the prior's projection), DOFS
+    is much smaller than ``k``, where ``k - ||R^-1||^2 / gamma`` would lose
+    digits; ``tr(R^-1 A R^-T)`` does not.
+    """
+    rng = np.random.default_rng(int(gamma * 100) + weak)
+    H = sp.random(m, n, density=0.3, random_state=rng, format="csr")
+    times = np.arange(n)
+    S_0 = np.exp(-np.abs(times[:, None] - times[None, :]) / 20.0)
+    scale = 1e3 if weak else 1e-2
+    S_z = sp.diags(rng.uniform(0.5, 2.0, m) * scale * n * 0.3).tocsr()
+    x_0 = rng.normal(size=n)
+    z = np.asarray(H @ x_0) + rng.normal(size=m)
+    problem = _problem(z, x_0, H, S_0, S_z, np.zeros(m))
+    cholesky, eigen = _both(problem, form, gamma)
+    got, expected = _every_output(cholesky), _every_output(eigen)
+    for name, value in got.items():
+        _close(value, expected[name], name)
+    if weak:
+        assert got["dofs"] < 0.05 * n
+
+
+@pytest.mark.parametrize("smallest", [-0.5, -1e-4, -1e-9, 0.0, 1e-9])
+def test_a_prior_that_is_not_positive_semidefinite_warns_as_before(smallest, caplog):
+    """
+    A one-gamma solve warns about a negative eigenvalue for the same prior errors as the eigendecomposition, and gives its posterior.
+
+    The prior error covariance has a positive diagonal and one eigenvalue
+    `smallest` (relative to the largest), so nothing but its eigenvalues shows
+    it. A Cholesky at gamma cannot see an eigenvalue above ``-1/gamma``: the
+    solve's check sends such a prior to the eigendecomposition, which clips
+    and warns.
+    """
+    rng = np.random.default_rng(3)
+    k = 6
+    Q, _ = np.linalg.qr(rng.standard_normal((k, k)))
+    S_0 = Q @ np.diag([1.0, 0.8, 0.5, 0.3, 0.1, smallest]) @ Q.T
+    S_0 = 0.5 * (S_0 + S_0.T)
+    assert (np.diag(S_0) > 0).all()
+    H = rng.standard_normal((k, k))
+    S_z = sp.diags(rng.uniform(0.5, 1.5, k)).tocsr()
+    z, x_0 = rng.normal(size=k), np.zeros(k)
+    problem = _problem(z, x_0, H, S_0, S_z, np.zeros(k))
+
+    def warned(factor):
+        caplog.clear()
+        with caplog.at_level(logging.WARNING, logger="fips.methods.analytic"):
+            result = factor()
+        return result, any("negative eigenvalue" in r.message for r in caplog.records)
+
+    post, solve_warned = warned(lambda: fips.solve(problem))
+    eigen, eigen_warned = warned(
+        lambda: Whitened.factor(problem, 1.0, eigendecompose=True)
+    )
+    assert type(post._solution) is Whitened  # S_0 has no square root, or n = m
+    assert solve_warned == eigen_warned == (smallest < 0)
+    assert (post._solution.eigenvalues is not None) == (smallest < 0)
+    expected = Posterior(problem, eigen, post.options)
+
+    def core(p):
+        """Not the outputs that take a square root: the variances can sum below zero."""
+        return {
+            "estimate": p.estimate.values,
+            "variances": p.variances.values,
+            "kalman_gain": p.kalman_gain.dense(),
+            "dofs": p.dofs,
+            "chi2": p.chi2,
+        }
+
+    want = core(expected)
+    for name, value in core(post).items():
+        _close(value, want[name], name)
+
+
+def test_a_solution_pickled_before_the_cholesky_loads(analytic_form):
+    """A solution pickled by fips 0.2.0b1 (an eigendecomposition, with no ``dofs_at_gamma``) loads, reads the same, and sweeps gamma."""
+    post = fips.solve(_problem(*_arrays("dense", 4))).with_gamma(1.5)
+    state = post._solution.__getstate__()
+    del state["dofs_at_gamma"]
+    old = analytic_form.__new__(analytic_form)
+    old.__setstate__(state)
+    loaded = pickle.loads(pickle.dumps(Posterior(post.problem, old, post.options)))
+    expected = _outputs(post)
+    for name, value in _outputs(loaded).items():
+        np.testing.assert_array_equal(value, expected[name], err_msg=name)
+    assert loaded.with_gamma(3.0)._solution.eigenvalues is loaded._solution.eigenvalues
+
+
+def test_a_pickle_leaves_out_the_kept_eigendecomposition(analytic_form):
+    """The eigendecomposition the first ``with_gamma`` keeps is not pickled or copied; after loading, ``with_gamma`` redoes it."""
+    problem = _problem(*_arrays("dense", 5))
+    post = fips.solve(problem)
+    swept = post.with_gamma(2.0)
+    assert vars(post._solution)["_eigendecomposed"].eigenvalues is not None
+    for loaded in (pickle.loads(pickle.dumps(post)), copy.deepcopy(post)):
+        assert "_eigendecomposed" not in vars(loaded._solution)
+        assert loaded._solution.eigenvalues is None
+        _close(
+            loaded.with_gamma(2.0).estimate.values, swept.estimate.values, "estimate"
+        )
 
 
 # ---------------------------------------------------------------------------
@@ -1014,9 +1201,9 @@ def test_the_information_form_allocates_nothing_m_by_m(mismatch):
     assert peak < m_by_m / 2, (
         f"peak {peak / 1e6:.1f} MB; one m x m is {m_by_m / 1e6:.1f} MB"
     )
-    held = {k: v for k, v in vars(post._solution).items() if isinstance(v, np.ndarray)}
-    assert {k: v.shape for k, v in held.items()} == {
-        "eigenvalues": (n,),
-        "G": (n, n),
-        "innovation": (n,),
-    }
+    for solution in (post._solution, post.with_gamma(2.0)._solution):
+        held = {k: v for k, v in vars(solution).items() if isinstance(v, np.ndarray)}
+        shapes = {"G": (n, n), "innovation": (n,)}
+        if solution.eigenvalues is not None:
+            shapes["eigenvalues"] = (n,)
+        assert {k: v.shape for k, v in held.items()} == shapes

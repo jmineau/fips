@@ -324,12 +324,12 @@ names it knows.
 The analytic method factors the problem once, in one of two forms that give
 the same posterior. The whitened form works in the observations' size: it
 whitens with the Cholesky factor of :math:`S_z` (or the square root of its
-diagonal), so :math:`S_z` must be positive-definite, and eigendecomposes the
+diagonal), so :math:`S_z` must be positive-definite, and factors the
 :math:`m \times m` matrix :math:`H S_0 H^T` in that metric. It computes
 :math:`H S_0` in the forms of :math:`H` and :math:`S_0` (through the factors of
 a Kronecker covariance), and the estimate, the variances, the DOFS and the
 chi-squared from the factors, without forming anything :math:`n \times n`. The
-information form works in the state's size: it eigendecomposes an
+information form works in the state's size: it factors an
 :math:`n \times n` matrix built from :math:`H`, a square root of :math:`S_0` and
 :math:`S_z^{-1}`, and forms no :math:`m \times m` matrix of its own (a dense
 :math:`S_z` is applied through its Cholesky factor, a Kronecker one through
@@ -337,7 +337,10 @@ its factors). It is used when there are fewer state elements than
 observations and :math:`S_z` is dense, diagonal, sparse, block diagonal or
 Kronecker; otherwise the whitened form. In both, the full posterior
 covariance (``post.cov()``), the gain and the averaging kernel are formed
-only when they are read, once each.
+only when they are read, once each. :func:`fips.solve` factors that matrix
+by Cholesky at its ``gamma``, the cheapest way to solve at one ``gamma``; the
+first ``post.with_gamma`` eigendecomposes it, which holds at any ``gamma``,
+and keeps it, so a sweep over ``gamma`` pays for one eigendecomposition.
 
 .. ipython:: python
 

@@ -6,35 +6,39 @@ that asks the factors for everything it reports. It factors in one of two
 forms, chosen by the problem's size, which give the same posterior:
 
 - ``Whitened`` whitens the observations with the model-data mismatch and
-  eigendecomposes an ``m x m`` matrix (``m`` observations);
+  works with an ``m x m`` matrix (``m`` observations);
 - ``Information`` whitens the state with the prior error covariance and
-  eigendecomposes an ``n x n`` matrix (``n`` state elements). It applies the
+  works with an ``n x n`` matrix (``n`` state elements). It applies the
   inverse of the model-data mismatch, which it can for a mismatch that is
   dense, diagonal, sparse, block diagonal or Kronecker.
 
 The information form is used when there are fewer state elements than
 observations and the mismatch is dense, diagonal, sparse, block diagonal or
 Kronecker (and the prior error covariance has a square root); otherwise the
-whitened form (``_choose``). The factors depend neither on the regularization factor
-:math:`\gamma` nor on the values of the observations, so the posterior of
-another :math:`\gamma` (``post.with_gamma``) or of other observations
-(``post.with_data``) shares them instead of solving again.
-:class:`AnalyticOptions` holds :math:`\gamma`.
+whitened form (``_choose``). :class:`AnalyticOptions` holds :math:`\gamma`.
 
-Either form's eigendecomposition uses LAPACK's ``evd`` driver, and redoes it
-with ``evr`` when there is not enough memory for ``evd``'s workspace
-(``_eigh``).
+Either form's matrix is factored at the solve's :math:`\gamma` by Cholesky
+(``_decompose``): most problems are solved at one :math:`\gamma`, and the
+Cholesky costs a fraction of an eigendecomposition. The eigendecomposition
+reads the factors at any :math:`\gamma`, so the first ``post.with_gamma``
+does it and keeps it, and later ones share it. Neither depends on the values
+of the observations, so the posterior of other observations
+(``post.with_data``) shares the factors instead of solving again. The
+eigendecomposition uses LAPACK's ``evd`` driver, and redoes it with ``evr``
+when there is not enough memory for ``evd``'s workspace (``_eigh``).
 """
 
 import dataclasses
 import logging
 import math
-from dataclasses import dataclass
-from typing import ClassVar
+from dataclasses import dataclass, field
+from typing import ClassVar, Self
 
 import numpy as np
 from numpy.linalg import LinAlgError
 from scipy.linalg import cholesky, eigh, solve_triangular
+from scipy.linalg.blas import get_blas_funcs
+from scipy.linalg.lapack import get_lapack_funcs
 
 from fips.linalg import (
     BlockDiagonalOperator,
@@ -54,11 +58,13 @@ _LARGE_M = 5000
 """
 The number of observations above which a whitened solve with many more observations than state elements logs a warning.
 
-The whitened form eigendecomposes an ``m x m`` matrix, in a time that grows as
-``m^3``. Measured on one core of a cluster node (``n = 100``), the whole solve
-took 2 s at ``m = 2,205``, 25 s at ``5,000``, 85 s at ``7,500`` and 203 s at
-``10,000``. When the information form could not be used and ``m`` is more
-than twice ``n``, a solve above this size says why.
+The whitened form factors an ``m x m`` matrix, in a time that grows as
+``m^3``. Measured on one core of a cluster node (``n = 100``) when every solve
+eigendecomposed it, the whole solve took 2 s at ``m = 2,205``, 25 s at
+``5,000``, 85 s at ``7,500`` and 203 s at ``10,000``; the Cholesky of a
+one-gamma solve is several times faster, and the first ``with_gamma`` still
+eigendecomposes. When the information form could not be used and ``m`` is
+more than twice ``n``, a solve above this size says why.
 """
 
 _INVERTIBLE = (
@@ -73,7 +79,7 @@ The forms of the model-data mismatch whose inverse the information form applies.
 
 A dense mismatch is applied through its Cholesky factor. The whitened form
 needs that factor too, so the information form saves the ``m x m``
-eigendecomposition and the ``m x m`` products. A Kronecker mismatch is applied
+factorization and the ``m x m`` products. A Kronecker mismatch is applied
 through its factors; the whitened form would form it as a dense ``m x m``
 matrix.
 """
@@ -114,18 +120,92 @@ class AnalyticOptions:
 
 
 @dataclass(frozen=True, eq=False)
-class Whitened:
+class _Factors:
+    r"""
+    What both forms share: the weights, DOFS, and the eigendecomposition :meth:`with_gamma` needs.
+
+    A form factors its matrix :math:`A` (``M`` or ``N``) so that
+    :math:`(A + I/\gamma)^{-1} = X \operatorname{diag}(w) X^T` (``_decompose``).
+    ``fips.solve`` factors by Cholesky at its gamma: :attr:`eigenvalues` is
+    None, the weights are 1 and DOFS was computed with the factor. The first
+    :meth:`with_gamma` eigendecomposes the same problem, keeps that, and reads
+    it at the new gamma: :math:`w_k = \gamma / (\gamma \lambda_k + 1)`.
+    """
+
+    problem: Problem
+    """The problem that was factored."""
+    gamma: float
+    r"""The regularization factor :math:`\gamma` the factors are read at."""
+    eigenvalues: np.ndarray | None
+    r"""The eigenvalues :math:`\lambda_k` of the form's matrix, clipped at zero; None after a Cholesky."""
+    innovation: np.ndarray
+    """The innovation in the form's basis (:math:`e` or :math:`b`)."""
+    dofs_at_gamma: float | None = field(default=None, kw_only=True)
+    """DOFS at :attr:`gamma`, computed with a Cholesky; None after an eigendecomposition."""
+
+    @classmethod
+    def factor(
+        cls, problem: Problem, gamma: float, eigendecompose: bool = False
+    ) -> "Self":
+        """Factor a problem (each form defines it)."""
+        raise NotImplementedError
+
+    def weights(self) -> np.ndarray:
+        r"""Return :math:`w_k = \gamma / (\gamma \lambda_k + 1)`, or ones after a Cholesky (its factors are read at gamma already)."""
+        if self.eigenvalues is None:
+            return np.ones(len(self.innovation))
+        return self.gamma / (self.gamma * self.eigenvalues + 1.0)
+
+    def dofs(self) -> float:
+        r"""Return :math:`\sum_k \gamma \lambda_k / (\gamma \lambda_k + 1)`, or after a Cholesky the DOFS computed with it."""
+        if self.eigenvalues is None:
+            assert self.dofs_at_gamma is not None  # set with every Cholesky
+            return self.dofs_at_gamma
+        return float(np.sum(self.weights() * self.eigenvalues))
+
+    def with_gamma(self, gamma: float) -> "Self":
+        """Return the same factors, read at `gamma`, from the eigendecomposition (done on the first call after a Cholesky, and kept)."""
+        if self.eigenvalues is not None:
+            return dataclasses.replace(self, gamma=gamma)
+        eigendecomposed = self.__dict__.get("_eigendecomposed")
+        if eigendecomposed is None:
+            logger.debug(
+                "Eigendecomposing the %s form's matrix, for another gamma.",
+                type(self).__name__,
+            )
+            eigendecomposed = type(self).factor(
+                self.problem, self.gamma, eigendecompose=True
+            )
+            # Kept outside the fields (the dataclass is frozen): later sweeps share it
+            self.__dict__["_eigendecomposed"] = eigendecomposed
+        return eigendecomposed.with_gamma(gamma)
+
+    def __getstate__(self) -> dict:
+        """Return the fields for a pickle or a copy, without the kept eigendecomposition (the first ``with_gamma`` after loading redoes it)."""
+        state = dict(self.__dict__)
+        state.pop("_eigendecomposed", None)
+        return state
+
+    def __setstate__(self, state: dict) -> None:
+        """Restore from a pickle or a copy, the arrays read-only again."""
+        self.__dict__.update(state)
+        for value in state.values():
+            if isinstance(value, np.ndarray):
+                _read_only(value)
+
+
+@dataclass(frozen=True, eq=False)
+class Whitened(_Factors):
     r"""
     The analytic method's solution in the whitened form: the factors of one problem, read at one gamma.
 
-    ``_analytic`` factors its problem into this once (:meth:`factor`) unless
-    it takes the :class:`Information` form, and the
-    :class:`~fips.Posterior` asks it for every array it reports: it is the
-    analytic method's :class:`~fips.posterior.Solution`. It eigendecomposes an
-    :math:`m \times m` matrix. The factors depend neither on gamma nor on the values of the observations, so
-    :meth:`with_gamma` and :meth:`with_data` share them. Nothing
-    :math:`n \times n` is formed unless the full posterior covariance or the
-    gain is asked for. The arrays are read-only, also after a pickle or a copy.
+    ``_analytic`` factors its problem into this (:meth:`factor`) unless it
+    takes the :class:`Information` form, and the :class:`~fips.Posterior`
+    asks it for every array it reports: it is the analytic method's
+    :class:`~fips.posterior.Solution`. It factors an :math:`m \times m`
+    matrix. Nothing :math:`n \times n` is formed unless the full posterior
+    covariance or the gain is asked for. The arrays are read-only, also after
+    a pickle or a copy.
 
     With :math:`Q = S_0` the prior error covariance (:math:`n \times n`),
     :math:`S_z = L L^T` the model-data mismatch (:math:`m \times m`; :math:`L` its
@@ -134,14 +214,19 @@ class Whitened:
 
     .. math::
 
-        M = L^{-1} H Q H^T L^{-T} = V \Lambda V^T, \qquad
-        H Q H^T + S_z / \gamma = L V (\Lambda + I / \gamma) V^T L^T.
+        M = L^{-1} H Q H^T L^{-T}, \qquad
+        H Q H^T + S_z / \gamma = L (M + I / \gamma) L^T.
 
-    :math:`M` is symmetric positive semidefinite, so its eigenvalues are clipped at
-    zero (roundoff can make a few slightly negative). With the whitener
-    :math:`B = V^T L^{-1}`, :math:`W = B H Q` (:math:`m \times n`), the whitened
-    innovation :math:`e = B d` with :math:`d = z - H x_0 - c`, and the weights
-    :math:`w_k = \gamma / (\gamma \lambda_k + 1)`:
+    :math:`M` is symmetric positive semidefinite, and the solve needs
+    :math:`(M + I/\gamma)^{-1} = X \operatorname{diag}(w) X^T`. ``fips.solve``
+    takes it from the Cholesky factor at its gamma, :math:`M + I/\gamma = R
+    R^T`: :math:`X = R^{-T}` and :math:`w = 1`. The first :meth:`with_gamma`
+    takes it from the eigendecomposition :math:`M = V \Lambda V^T`, which holds
+    at any gamma: :math:`X = V` and :math:`w_k = \gamma / (\gamma \lambda_k +
+    1)`, the eigenvalues clipped at zero (roundoff can make a few slightly
+    negative). With the whitener :math:`B = X^T L^{-1}`, :math:`W = B H Q`
+    (:math:`m \times n`) and the whitened innovation :math:`e = B d` with
+    :math:`d = z - H x_0 - c`:
 
     .. math::
 
@@ -152,34 +237,33 @@ class Whitened:
     .. math::
 
         K = W^T \operatorname{diag}(w) B, \qquad
-        \mathrm{DOFS} = \operatorname{tr}(K H) = \textstyle\sum_k \gamma\lambda_k / (\gamma\lambda_k + 1), \qquad
         d^T (H Q H^T + S_z/\gamma)^{-1} d = \textstyle\sum_k w_k e_k^2.
 
     The last is the minimum of the cost, the sum of the data and model misfits of
-    the reduced chi-squared. Only :math:`w` depends on :math:`\gamma`, so a new
-    :math:`\gamma` costs :math:`O(m n)`.
+    the reduced chi-squared. DOFS, :math:`\operatorname{tr}(K H) =
+    \operatorname{tr}(M (M + I/\gamma)^{-1})`, is :math:`\sum_k \gamma\lambda_k /
+    (\gamma\lambda_k + 1)` from the eigenvalues, and :math:`\operatorname{tr}(R^{-1}
+    M R^{-T})` from the Cholesky factor. Once the eigendecomposition
+    is done only :math:`w` depends on :math:`\gamma`, so another :math:`\gamma`
+    costs :math:`O(m n)`.
     """
 
     estimate_is_mean: ClassVar[bool] = True
     """The posterior is Gaussian, so its estimate is its mean."""
 
-    problem: Problem
-    """The problem that was factored (the estimate and the covariance read its prior)."""
-    gamma: float
-    r"""The regularization factor :math:`\gamma` the factors are read at."""
-    eigenvalues: np.ndarray
-    r"""The eigenvalues :math:`\lambda_k` of the whitened :math:`M`, clipped at zero (``m``)."""
+    # And from _Factors: problem, gamma, eigenvalues (of M, m), innovation
+    # (e = B (z - H x_0 - c), m), dofs_at_gamma
     whitener: np.ndarray
-    """:math:`B = V^T L^{-1}`, which whitens an observation-space vector (``m x m``)."""
+    """:math:`B = X^T L^{-1}`, which whitens an observation-space vector (``m x m``)."""
     W: np.ndarray
     """:math:`W = B H Q` (``m x n``)."""
-    innovation: np.ndarray
-    """The whitened innovation :math:`e = B (z - H x_0 - c)` (``m``)."""
     prior_variances: np.ndarray
     """The diagonal of :math:`Q` (``n``)."""
 
     @classmethod
-    def factor(cls, problem: Problem, gamma: float) -> "Whitened":
+    def factor(
+        cls, problem: Problem, gamma: float, eigendecompose: bool = False
+    ) -> "Whitened":
         r"""
         Factor a problem.
 
@@ -192,6 +276,9 @@ class Whitened:
             The problem to factor.
         gamma : float
             The regularization factor to read the factors at.
+        eigendecompose : bool, default False
+            Eigendecompose :math:`M`, which :meth:`with_gamma` reads at any
+            gamma, instead of the Cholesky at `gamma` (``_decompose``).
 
         Returns
         -------
@@ -220,9 +307,9 @@ class Whitened:
             s = np.sqrt(S_z.values)
             M = HQH / s[:, None] / s[None, :]
 
-            def whiten(V):
-                """Return ``V^T L^{-1}`` for the diagonal ``L``."""
-                return V.T / s[None, :]
+            def whiten(X):
+                """Return ``X^T L^{-1}`` for the diagonal ``L``."""
+                return X.T / s[None, :]
 
         else:
             try:
@@ -236,31 +323,29 @@ class Whitened:
             X = np.asarray(solve_triangular(L, HQH, lower=True))
             M = np.asarray(solve_triangular(L, X.T, lower=True))
 
-            def whiten(V):
-                """Return ``V^T L^{-1}``, as the transpose of ``L^{-T} V``."""
-                return np.asarray(solve_triangular(L, V, lower=True, trans="T")).T
+            def whiten(X):
+                """Return ``X^T L^{-1}``, as the transpose of ``L^{-T} X``."""
+                return np.asarray(solve_triangular(L, X, lower=True, trans="T")).T
 
         M = 0.5 * (M + M.T)
-        eigenvalues, V = _eigh(M)
-        _clip(
-            eigenvalues,
+        X, eigenvalues, dofs = _decompose(
+            M,
+            gamma,
+            eigendecompose,
             "The whitened prior in observation space",
             "the prior error covariance",
         )
-        B = whiten(V)
+        B = whiten(X)
         return cls(
             problem=problem,
             gamma=gamma,
-            eigenvalues=_read_only(eigenvalues),
+            eigenvalues=None if eigenvalues is None else _read_only(eigenvalues),
             whitener=_read_only(B),
             W=_read_only(B @ HQ),
             innovation=_read_only(B @ d),
             prior_variances=_read_only(np.asarray(S_0.diagonal(), dtype=float)),
+            dofs_at_gamma=dofs,
         )
-
-    def weights(self) -> np.ndarray:
-        r"""Return :math:`w_k = \gamma / (\gamma \lambda_k + 1)`."""
-        return self.gamma / (self.gamma * self.eigenvalues + 1.0)
 
     def estimate(self) -> np.ndarray:
         r"""Return :math:`\hat{x} = x_0 + W^T (w \circ e)`."""
@@ -295,17 +380,9 @@ class Whitened:
             return self.W.T @ (self.weights()[:, None] * self.whitener)
         return ((W @ self.W.T) * self.weights()) @ self.whitener
 
-    def dofs(self) -> float:
-        r"""Return :math:`\sum_k \gamma \lambda_k / (\gamma \lambda_k + 1)`."""
-        return float(np.sum(self.weights() * self.eigenvalues))
-
     def chi2(self) -> float:
         r"""Return :math:`d^T (H Q H^T + S_z/\gamma)^{-1} d = \sum_k w_k e_k^2`."""
         return float(np.sum(self.weights() * self.innovation**2))
-
-    def with_gamma(self, gamma: float) -> "Whitened":
-        """Return the same factors, read at `gamma`."""
-        return dataclasses.replace(self, gamma=gamma)
 
     def with_data(self, problem: Problem) -> "Whitened":
         """
@@ -317,49 +394,42 @@ class Whitened:
         innovation = _read_only(self.whitener @ d)
         return dataclasses.replace(self, problem=problem, innovation=innovation)
 
-    def __setstate__(self, state: dict) -> None:
-        """Restore from a pickle or a copy, the arrays read-only again."""
-        self.__dict__.update(state)
-        for array in (
-            self.eigenvalues,
-            self.whitener,
-            self.W,
-            self.innovation,
-            self.prior_variances,
-        ):
-            _read_only(array)
-
 
 @dataclass(frozen=True, eq=False)
-class Information:
+class Information(_Factors):
     r"""
     The analytic method's solution in the information form: the factors of one problem, read at one gamma.
 
-    ``_analytic`` factors its problem into this once (:meth:`factor`) when
-    there are fewer state elements than observations and the model-data
-    mismatch is dense, diagonal, sparse, block diagonal or Kronecker;
-    otherwise into :class:`Whitened`. It eigendecomposes an
-    :math:`n \times n` matrix instead of an :math:`m \times m` one, and gives
-    the same posterior. The factors depend neither on gamma nor on the
-    values of the observations, so :meth:`with_gamma` and :meth:`with_data`
-    share them. It holds one :math:`n \times n` array; it forms nothing
-    :math:`m \times m` of its own (a dense mismatch is factored by Cholesky
-    inside each solve with it; a Kronecker one is applied through its factors). The arrays are read-only, also after a
-    pickle or a copy.
+    ``_analytic`` factors its problem into this (:meth:`factor`) when there
+    are fewer state elements than observations and the model-data mismatch
+    is dense, diagonal, sparse, block diagonal or Kronecker; otherwise into
+    :class:`Whitened`. It factors an :math:`n \times n` matrix instead of an
+    :math:`m \times m` one, and gives the same posterior. It holds one
+    :math:`n \times n` array; it forms nothing :math:`m \times m` of its own
+    (a dense mismatch is factored by Cholesky inside each solve with it; a
+    Kronecker one is applied through its factors). The arrays are read-only,
+    also after a pickle or a copy.
 
-    With :math:`S_0 = R R^T` the prior error covariance (:math:`R` its square
-    root in its own form: :meth:`~fips.linalg.LinearOperator.sqrt`), :math:`S_z`
-    the model-data mismatch and :math:`S_z / \gamma` the mismatch the solve
-    uses:
+    With :math:`S_0 = R_0 R_0^T` the prior error covariance (:math:`R_0` its
+    square root in its own form: :meth:`~fips.linalg.LinearOperator.sqrt`),
+    :math:`S_z` the model-data mismatch and :math:`S_z / \gamma` the mismatch
+    the solve uses:
 
     .. math::
 
-        N = R^T H^T S_z^{-1} H R = U \Lambda U^T.
+        N = R_0^T H^T S_z^{-1} H R_0, \qquad
+        \hat{S} = R_0 (\gamma N + I)^{-1} R_0^T
+        = R_0 (N + I/\gamma)^{-1} R_0^T / \gamma.
 
-    The nonzero eigenvalues of :math:`N` are those of the whitened form's
-    :math:`M` (both are the squared singular values of
-    :math:`S_z^{-1/2} H R`), so the weights :math:`w_k = \gamma / (\gamma
-    \lambda_k + 1)` and DOFS are the same. With :math:`G = R U`
+    The solve needs :math:`(N + I/\gamma)^{-1} = X \operatorname{diag}(w) X^T`,
+    which it takes as the whitened form does: from the Cholesky factor at
+    ``fips.solve``'s gamma, :math:`N + I/\gamma = R R^T` (:math:`X = R^{-T}`,
+    :math:`w = 1`), or, from the first :meth:`with_gamma` on, from the
+    eigendecomposition :math:`N = U \Lambda U^T` (:math:`X = U`, :math:`w_k =
+    \gamma / (\gamma \lambda_k + 1)`, the eigenvalues clipped at zero). The
+    nonzero eigenvalues of :math:`N` are those of the whitened form's
+    :math:`M` (both are the squared singular values of :math:`S_z^{-1/2} H
+    R_0`), so the weights and DOFS are the same. With :math:`G = R_0 X`
     (:math:`n \times n`), the innovation :math:`d = z - H x_0 - c` and
     :math:`b = G^T H^T S_z^{-1} d`:
 
@@ -372,36 +442,32 @@ class Information:
     .. math::
 
         K = G \operatorname{diag}(w) G^T H^T S_z^{-1}, \qquad
-        \mathrm{DOFS} = \textstyle\sum_k \gamma\lambda_k / (\gamma\lambda_k + 1).
+        \mathrm{DOFS} = \operatorname{tr}(N (N + I/\gamma)^{-1}),
 
-    The chi-squared is the minimum of the cost, the sum of its two misfits:
-    :math:`\lVert w \circ b \rVert^2` for the state (:math:`G^{-1} (\hat{x}
-    - x_0) = U^T (w \circ b)` is orthogonal) and :math:`\gamma r^T S_z^{-1} r`
-    for the observations, with :math:`r = d - H (\hat{x} - x_0)`. Only
-    :math:`w` depends on :math:`\gamma`, so a new :math:`\gamma` costs
+    DOFS from the eigenvalues or the Cholesky factor as in the whitened form.
+    The chi-squared is the minimum of the cost, :math:`d^T (H S_0 H^T +
+    S_z/\gamma)^{-1} d = \gamma d^T S_z^{-1} r`, with :math:`r = d - H
+    (\hat{x} - x_0)` the residual. Once the eigendecomposition is done only
+    :math:`w` depends on :math:`\gamma`, so another :math:`\gamma` costs
     :math:`O(n^2)`.
     """
 
     estimate_is_mean: ClassVar[bool] = True
     """The posterior is Gaussian, so its estimate is its mean."""
 
-    problem: Problem
-    """The problem that was factored (the estimate and the gain read it)."""
-    gamma: float
-    r"""The regularization factor :math:`\gamma` the factors are read at."""
-    eigenvalues: np.ndarray
-    r"""The eigenvalues :math:`\lambda_k` of :math:`N`, clipped at zero (``n``)."""
+    # And from _Factors: problem, gamma, eigenvalues (of N, n), innovation
+    # (b = G^T H^T S_z^-1 (z - H x_0 - c), n), dofs_at_gamma
     G: np.ndarray
-    """:math:`G = R U`, the prior's square root in the eigenvectors of :math:`N` (``n x n``)."""
-    innovation: np.ndarray
-    r""":math:`b = G^T H^T S_z^{-1} (z - H x_0 - c)` (``n``)."""
+    """:math:`G = R_0 X`, the prior's square root in the basis :math:`X` (``n x n``)."""
 
     @classmethod
-    def factor(cls, problem: Problem, gamma: float) -> "Information":
+    def factor(
+        cls, problem: Problem, gamma: float, eigendecompose: bool = False
+    ) -> "Information":
         r"""
         Factor a problem.
 
-        :math:`H R` is formed in the cheapest form of its factors (through a
+        :math:`H R_0` is formed in the cheapest form of its factors (through a
         Kronecker :math:`S_0`'s factors), then dense (:math:`m \times n`), and
         :math:`S_z^{-1}` is applied by its form's solve (for a dense
         :math:`S_z`, by Cholesky; for a Kronecker one, through its factors).
@@ -412,6 +478,9 @@ class Information:
             The problem to factor.
         gamma : float
             The regularization factor to read the factors at.
+        eigendecompose : bool, default False
+            Eigendecompose :math:`N`, which :meth:`with_gamma` reads at any
+            gamma, instead of the Cholesky at `gamma` (``_decompose``).
 
         Returns
         -------
@@ -436,33 +505,31 @@ class Information:
                 "weight the observations."
             ) from err
         try:
-            R = problem.prior_cov.data.sqrt()
+            R_0 = problem.prior_cov.data.sqrt()
         except LinAlgError as err:
             raise _NoSquareRoot(
                 "The prior error covariance has no square root: it is not "
                 "positive-definite to working precision."
             ) from err
-        HR = (H @ R).dense()
+        HR = (H @ R_0).dense()
         N = HR.T @ S_z.solve(HR)
         N = 0.5 * (N + N.T)
-        eigenvalues, U = _eigh(N)
-        _clip(
-            eigenvalues,
+        X, eigenvalues, dofs = _decompose(
+            N,
+            gamma,
+            eigendecompose,
             "The observations' information on the whitened state",
             "the model-data mismatch",
         )
-        G = np.asarray(R @ U)
+        G = np.asarray(R_0 @ X)
         return cls(
             problem=problem,
             gamma=gamma,
-            eigenvalues=_read_only(eigenvalues),
+            eigenvalues=None if eigenvalues is None else _read_only(eigenvalues),
             G=_read_only(G),
             innovation=_read_only(_carried(problem, G)),
+            dofs_at_gamma=dofs,
         )
-
-    def weights(self) -> np.ndarray:
-        r"""Return :math:`w_k = \gamma / (\gamma \lambda_k + 1)`."""
-        return self.gamma / (self.gamma * self.eigenvalues + 1.0)
 
     def _increment(self) -> np.ndarray:
         r"""Return :math:`\hat{x} - x_0 = G (w \circ b)`."""
@@ -499,20 +566,12 @@ class Information:
         WG = self.G if W is None else np.asarray(W @ self.G)
         return (WG * self.weights()) @ Z.T
 
-    def dofs(self) -> float:
-        r"""Return :math:`\sum_k \gamma \lambda_k / (\gamma \lambda_k + 1)`."""
-        return float(np.sum(self.weights() * self.eigenvalues))
-
     def chi2(self) -> float:
-        r"""Return :math:`\lVert w \circ b \rVert^2 + \gamma r^T S_z^{-1} r`, the minimum of the cost."""
+        r"""Return the minimum of the cost, :math:`\gamma d^T S_z^{-1} r` with :math:`r = d - H (\hat{x} - x_0)`."""
         problem = self.problem
-        r = _innovation(problem) - problem.forward.data @ self._increment()
-        state = float(np.sum((self.weights() * self.innovation) ** 2))
-        return state + self.gamma * float(r @ problem.obs_cov.data.solve(r))
-
-    def with_gamma(self, gamma: float) -> "Information":
-        """Return the same factors, read at `gamma`."""
-        return dataclasses.replace(self, gamma=gamma)
+        d = _innovation(problem)
+        r = d - problem.forward.data @ self._increment()
+        return self.gamma * float(d @ problem.obs_cov.data.solve(r))
 
     def with_data(self, problem: Problem) -> "Information":
         """
@@ -523,12 +582,6 @@ class Information:
         """
         innovation = _read_only(_carried(problem, self.G))
         return dataclasses.replace(self, problem=problem, innovation=innovation)
-
-    def __setstate__(self, state: dict) -> None:
-        """Restore from a pickle or a copy, the arrays read-only again."""
-        self.__dict__.update(state)
-        for array in (self.eigenvalues, self.G, self.innovation):
-            _read_only(array)
 
 
 class _NoSquareRoot(LinAlgError):
@@ -544,6 +597,79 @@ def _carried(problem: Problem, G: np.ndarray) -> np.ndarray:
     r"""Return :math:`b = G^T H^T S_z^{-1} d`, the innovation carried into the information form's eigenvectors."""
     y = problem.obs_cov.data.solve(_innovation(problem))
     return G.T @ (problem.forward.data._transpose() @ y)
+
+
+def _decompose(
+    A: np.ndarray, gamma: float, eigendecompose: bool, matrix: str, covariance: str
+) -> tuple[np.ndarray, np.ndarray | None, float | None]:
+    r"""
+    Return :math:`X`, the eigenvalues and DOFS, with :math:`(A + I/\gamma)^{-1} = X \operatorname{diag}(w) X^T`.
+
+    `A` is a form's symmetric positive semidefinite matrix (``M`` or ``N``,
+    ``k x k``), which this may overwrite.
+
+    Here a solve chooses how to factor. Most problems are solved at one
+    gamma, and a Cholesky :math:`A + I/\gamma = R R^T` costs a fraction of an
+    eigendecomposition (about a tenth at ``k = 10,000``): :math:`X = R^{-T}`,
+    :math:`w = 1`, no eigenvalues, and DOFS is :math:`\operatorname{tr}(A (A +
+    I/\gamma)^{-1}) = \operatorname{tr}(R^{-1} A R^{-T})`, by a triangular
+    product (:math:`k^3` flops, less than the form spends making `A`). It
+    equals :math:`k - \lVert R^{-1} \rVert_F^2 / \gamma`, but that loses
+    digits when DOFS is much smaller than `k` (two in paper 1's monthly
+    inversion). The
+    eigendecomposition :math:`A = V \Lambda V^T` holds at any gamma
+    (:math:`X = V`, :math:`w_k = \gamma / (\gamma \lambda_k + 1)`; DOFS is
+    then read from the eigenvalues, so None here). It is done when
+    `eigendecompose` (the first ``with_gamma`` asks for it), and when `A` is
+    not positive semidefinite to roundoff (``_cholesky_inverse``), so that
+    ``_clip`` clips its negative eigenvalues and names `matrix` and
+    `covariance` in its warning, as for every solve before.
+    """
+    if not eigendecompose:
+        R_inv = _cholesky_inverse(A, gamma)
+        if R_inv is not None:
+            (trmm,) = get_blas_funcs(("trmm",), (R_inv,))  # triangular times full
+            dofs = float(np.vdot(trmm(1.0, R_inv, A, lower=1), R_inv))
+            return R_inv.T, None, dofs
+        logger.debug(
+            "%s is not positive semidefinite to roundoff: eigendecomposing it.", matrix
+        )
+    eigenvalues, V = _eigh(A)
+    _clip(eigenvalues, matrix, covariance)
+    return V, eigenvalues, None
+
+
+def _cholesky_inverse(A: np.ndarray, gamma: float) -> np.ndarray | None:
+    r"""
+    Return :math:`R^{-1}`, with :math:`A + I/\gamma = R R^T` and :math:`R` lower triangular, or None when `A` is not positive semidefinite to roundoff.
+
+    A Cholesky factor of :math:`A + I/\gamma` exists whenever no eigenvalue
+    of `A` is below :math:`-1/\gamma`, so it cannot show the negative
+    eigenvalues that ``_clip`` warns about. :math:`A + \tau I` is factored
+    first, with :math:`\tau = k \epsilon \max_i A_{ii}`: it has a factor
+    only if no eigenvalue of `A` is below about :math:`-\tau`. Since
+    :math:`\max_i A_{ii} \le \lambda_{max}`, :math:`\tau` is at most the
+    roundoff ``_clip`` allows, so an `A` that passes would have been clipped
+    without a warning. One that fails (or a gamma so large that :math:`A +
+    I/\gamma` has no factor) gives None, and is eigendecomposed.
+    """
+    k = len(A)
+    tau = k * np.finfo(float).eps * float(np.diagonal(A).max(initial=0.0))
+    shifted = np.array(A, order="F")  # Fortran order: LAPACK factors it in place
+    try:
+        shifted.flat[:: k + 1] += tau
+        cholesky(shifted, lower=True, overwrite_a=True, check_finite=False)
+        np.copyto(shifted, A)
+        shifted.flat[:: k + 1] += 1.0 / gamma
+        R = cholesky(shifted, lower=True, overwrite_a=True, check_finite=False)
+    except LinAlgError:
+        return None
+    (trtri,) = get_lapack_funcs(("trtri",), (R,))  # inverts a triangular matrix
+    R_inv, info = trtri(R, lower=1, overwrite_c=1)
+    if info != 0:  # a Cholesky factor has a positive diagonal: never
+        raise LinAlgError(f"The Cholesky factor could not be inverted (info {info}).")
+    # np.asarray: SciPy is not annotated, and gives no array type
+    return np.asarray(R_inv)
 
 
 def _eigh(a: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
@@ -653,7 +779,7 @@ def _factor(problem: Problem, gamma: float) -> "Whitened | Information":
     m, n = problem.forward.data.shape
     if m > _LARGE_M and m > 2 * n:
         logger.warning(
-            "The whitened form eigendecomposes an m x m matrix, with m = %d "
+            "The whitened form factors an m x m matrix, with m = %d "
             "observations, more than twice the n = %d state elements: its time "
             "grows as m^3. The information form (n x n) would be cheaper, but %s. "
             "Aggregating the observations makes m smaller.",

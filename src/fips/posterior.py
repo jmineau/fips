@@ -664,10 +664,11 @@ class Posterior:
         r"""
         Degrees of freedom for signal, the trace of :meth:`averaging_kernel`.
 
-        The analytic method reads it from its factors,
+        The analytic method reads it from its factors without the kernel:
         :math:`\sum_k \gamma\lambda_k / (\gamma\lambda_k + 1)` over the
         eigenvalues :math:`\lambda_k` of its factorization (the same in
-        both of its forms), without the kernel.
+        both of its forms), or, at the gamma of :func:`fips.solve`, from the
+        Cholesky factor it solved with.
         """
         return self._solution.dofs()
 
@@ -855,9 +856,12 @@ class Posterior:
         r"""
         Return the posterior of the same problem with another regularization factor.
 
-        The analytic method's factorization does not depend on gamma, so
-        this costs :math:`O(m n)` at most instead of a new solve: a sweep over
-        gamma factors once.
+        :func:`fips.solve` factors the analytic method's matrix by Cholesky
+        at its own gamma. The first call eigendecomposes it (about the cost
+        of a solve) and keeps that, since the eigendecomposition reads the
+        factors at any gamma: every later call on this posterior, or on one
+        it returned, costs :math:`O(m n)` at most, so a sweep over gamma
+        eigendecomposes once.
 
         Parameters
         ----------
