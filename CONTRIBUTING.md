@@ -60,6 +60,7 @@ the orientation file it should read.
    just test
    # Or directly: uv run pytest
    ```
+   This also runs the `>>>` examples in the docstrings under `src/`.
 
 5. Run pre-commit checks:
    ```bash
@@ -84,7 +85,9 @@ the orientation file it should read.
 
 - Keep pull requests focused on a single feature or bugfix
 - Write clear, descriptive commit messages
-- Update the changelog if applicable
+- Leave `CHANGELOG.md` alone: the release notes are drafted from the commit
+  messages when the maintainer releases, so write each message as the line a
+  user would read
 - Ensure all tests pass
 - Maintain or improve test coverage
 - Update documentation as needed
@@ -126,10 +129,11 @@ By contributing, you agree that your contributions will be licensed under the sa
 The version comes from git tags (setuptools-scm), so there is no version string
 to bump.
 
-1. Run `just changelog` to draft entries from the commit messages, edit them
-   into `CHANGELOG.md` under `## [Unreleased]`, then rename that heading to
-   `## [X.Y.Z] - YYYY-MM-DD` and start a new empty `## [Unreleased]` above it.
-   Commit (`chore(release): cut X.Y.Z`) and push to `main`.
+1. Write the changelog: `just changelog` drafts the entries from the commit
+   messages since the last release. Edit them into `CHANGELOG.md` under
+   `## [Unreleased]`, then rename that heading to `## [X.Y.Z] - YYYY-MM-DD` and
+   start a new empty `## [Unreleased]` above it. Commit (`chore(release): cut X.Y.Z`)
+   and push to `main`.
 2. Run `just release X.Y.Z`. It checks that the tree is clean, that `main` is in
    sync with GitHub, and that the version is newer than every existing tag,
    then pushes the tag `vX.Y.Z`.
@@ -137,6 +141,16 @@ to bump.
    GitHub Release from the CHANGELOG section; Zenodo archives it. The
    Documentation workflow publishes its docs as `X.Y.Z/` in the version
    dropdown.
+
+Dependabot leaves a package at its old version when the newest release needs a
+newer Python than the oldest one this project supports. So on the 1st of each
+month the Upgrade lock workflow runs `uv lock --upgrade` (`uv.lock` then holds
+the newest release for each Python) and, when the lock changes, opens the pull
+request `chore/lock-upgrade` (or updates it). GitHub does not start workflows on
+a pull request that its own token opened, so the workflow starts Tests, Code
+Quality and Documentation on the branch itself; their results show on the pull
+request. Merge it when they pass. You can also run it by hand: Actions > Upgrade
+lock > Run workflow.
 
 ## Template
 

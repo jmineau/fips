@@ -147,17 +147,22 @@ Driven by `just` and `uv`; CI runs the same recipes.
 |---|---|
 | `just sync` | `uv sync`: fips, its `viz` extra, and the dev tools |
 | `just quality-check` | `lint` + `type-check` + `docstr` + `test`: what CI checks |
-| `just test` | pytest in parallel, skipping `network`/`slow` (`-n 0` for serial) |
+| `just test` | pytest in parallel, skipping `network`/`slow` (`-n 0` for serial); also the docstring examples |
 | `just lint` / `just format` | ruff check and format check / fix and format |
 | `just type-check` | pyrefly (no baseline: every error fails) |
 | `just docstr` | docstr-coverage of the public API |
 | `just build-docs` | Sphinx, running every example; warnings are errors |
 | `just pre-commit`, `just dist` | every hook on every file; build and check the dists |
 
-`just test` does not run docstring examples: `uv run pytest --doctest-modules
-src/fips` does. Workflows: `tests.yml`, `quality.yml`, `docs.yml` (versioned
-docs on gh-pages), `publish.yml` (a `vX.Y.Z` tag publishes). The version comes
-from git tags; the maintainer cuts releases. Tooling comes from
+`just test` also runs the `>>>` examples in docstrings under `src/`
+(`--doctest-modules`), so an example that stops matching the code fails the
+tests; one that needs data CI lacks gets `# doctest: +SKIP` on its `>>>` line.
+Workflows: `tests.yml`, `quality.yml`, `docs.yml` (versioned docs on gh-pages),
+`lock-upgrade.yml` (monthly `uv lock --upgrade` pull request), `publish.yml` (a
+`vX.Y.Z` tag publishes). The version comes from git tags; the maintainer cuts
+releases. A pull request leaves `CHANGELOG.md` alone: at release `just
+changelog` drafts the entries from the commit messages (`cliff.toml`), so write
+each message as the line a user would read. Tooling comes from
 [jmineau/python-template](https://github.com/jmineau/python-template) (copier).
 
 ## Conventions
@@ -189,8 +194,8 @@ dependency needs a reason, proposed first.
 
 - **Never run `python` from inside `src/fips`**: `operator.py` there shadows
   the standard library's `operator`.
-- **Docs:** an `.. ipython::` block can drop a long statement near its tenth
-  (split long blocks); napoleon reads a colon in an attribute docstring's first
+- **Docs:** an `.. ipython::` block runs only the first line of a multi-line
+  statement that is its 10th (or 100th), so split long blocks; napoleon reads a colon in an attribute docstring's first
   line as a type; docstr-coverage counts each `@overload` (give it a one-liner
   with `# noqa: D418`); a `.. currentmodule::` goes after an `.. automodule::`.
 - **SciPy is not annotated**: pyrefly takes a `LinearOperator` default's private
