@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>fips.problem &#8212; fips 0.2.0b2.dev8+g22c2598c9 documentation</title>
+    <title>fips.problem &#8212; fips 0.2.0b2.dev9+g9dded00bd documentation</title>
   
   
   
@@ -25,29 +25,30 @@
   </noscript>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="../../_static/styles/theme.css?digest=64cc4de3f052d77215f0" rel="stylesheet" />
-<link href="../../_static/styles/pydata-sphinx-theme.css?digest=64cc4de3f052d77215f0" rel="stylesheet" />
+  <link href="../../_static/styles/theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
 
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../_static/plot_directive.css" />
     <link rel="stylesheet" type="text/css" href="../../_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx_autodoc_typehints.css?v=057ac668" />
     <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../../_static/custom.css?v=4b8357b6" />
   
   <!-- So that users can add custom icons -->
-  <script defer src="../../_static/scripts/fontawesome.js?digest=64cc4de3f052d77215f0"></script>
+  <script defer src="../../_static/scripts/fontawesome.js?digest=18bd87630a240e9c25be"></script>
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0" />
-<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0" />
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../_static/documentation_options.js?v=3193467b"></script>
+    <script src="../../_static/documentation_options.js?v=46a0216e"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../../_static/copybutton.js?v=f281be69"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = '_modules/fips/problem';</script>
     <script>
-        DOCUMENTATION_OPTIONS.theme_version = '0.22.0';
+        DOCUMENTATION_OPTIONS.theme_version = '0.23.0';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://jmineau.github.io/fips/switcher.json';
         DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'dev';
         DOCUMENTATION_OPTIONS.show_version_warning_banner =
@@ -57,6 +58,7 @@
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="0.2" />
   
@@ -130,8 +132,8 @@
       
     
     
-    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b2.dev8+g22c2598c9 documentation - Home"/>
-    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b2.dev8+g22c2598c9 documentation - Home"/>
+    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b2.dev9+g9dded00bd documentation - Home"/>
+    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b2.dev9+g9dded00bd documentation - Home"/>
   
   
 </a></div>
@@ -419,13 +421,13 @@
                 <article class="bd-article">
                   
   <h1>Source code for fips.problem</h1><div class="highlight"><pre>
-<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span></span><span class="sd">"""</span>
 <span class="sd">Inverse problems: the inputs of a solve, on their labels.</span>
 
 <span class="sd">A :class:`Problem` holds the prior, the observations, the forward operator,</span>
 <span class="sd">the two covariances and an optional offset of a linear inverse problem,</span>
 <span class="sd">``obs = forward @ state + offset + error``. It checks their labels once,</span>
-<span class="sd">when it is built, and puts every input on the prior&#39;s and the observations&#39;</span>
+<span class="sd">when it is built, and puts every input on the prior's and the observations'</span>
 <span class="sd">spaces: :func:`fips.solve` then computes by position.</span>
 
 <span class="sd">The problem is the question, and the :class:`~fips.Posterior` that</span>
@@ -434,7 +436,7 @@
 <span class="sd">problems from itself (:meth:`Problem.aggregate`, :meth:`Problem.restrict`);</span>
 <span class="sd">the posterior holds what depends on the solve or on the ``m x m`` matrix it</span>
 <span class="sd">factors.</span>
-<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">"""</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span>
@@ -450,30 +452,30 @@
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_vector</span><span class="p">(</span><span class="n">value</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">what</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Vector</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return `value` if it is a Vector; raise a TypeError naming the way in otherwise.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Return `value` if it is a Vector; raise a TypeError naming the way in otherwise."""</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">Vector</span><span class="p">):</span>
         <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">what</span><span class="si">}</span><span class="s2"> must be a Vector, got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">value</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">. Build one with &quot;</span>
-            <span class="s2">&quot;Vector.from_series(series, block=...) or Vector.from_blocks({...}).&quot;</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">what</span><span class="si">}</span><span class="s2"> must be a Vector, got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">value</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">. Build one with "</span>
+            <span class="s2">"Vector.from_series(series, block=...) or Vector.from_blocks({...})."</span>
         <span class="p">)</span>
     <span class="k">return</span> <span class="n">value</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_covariance</span><span class="p">(</span><span class="n">value</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">space</span><span class="p">:</span> <span class="n">Space</span><span class="p">,</span> <span class="n">what</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">of</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Covariance</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Return `value` as a covariance on `space`.</span>
 
 <span class="sd">    A :class:`~fips.covariance.CovarianceModel` is built there; a</span>
-<span class="sd">    :class:`~fips.Covariance` must have exactly the space&#39;s labels.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    :class:`~fips.Covariance` must have exactly the space's labels.</span>
+<span class="sd">    """</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">CovarianceModel</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">value</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">space</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">what</span><span class="p">)</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">Covariance</span><span class="p">):</span>
         <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">what</span><span class="si">}</span><span class="s2"> must be a Covariance or a covariance model, got &quot;</span>
-            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">value</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">. Make one with a model &quot;</span>
-            <span class="s2">&quot;(Independent().with_std(std)), Covariance.diagonal(variances, space) &quot;</span>
-            <span class="s2">&quot;or Covariance.from_frame(frame).&quot;</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">what</span><span class="si">}</span><span class="s2"> must be a Covariance or a covariance model, got "</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">value</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">. Make one with a model "</span>
+            <span class="s2">"(Independent().with_std(std)), Covariance.diagonal(variances, space) "</span>
+            <span class="s2">"or Covariance.from_frame(frame)."</span>
         <span class="p">)</span>
     <span class="k">return</span> <span class="n">Covariance</span><span class="o">.</span><span class="n">_computed</span><span class="p">(</span>
         <span class="n">value</span><span class="o">.</span><span class="n">_on</span><span class="p">(</span><span class="n">space</span><span class="p">,</span> <span class="n">space</span><span class="p">,</span> <span class="n">what</span><span class="p">,</span> <span class="p">(</span><span class="n">of</span><span class="p">,</span> <span class="n">of</span><span class="p">)),</span> <span class="n">space</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">value</span><span class="o">.</span><span class="n">name</span>
@@ -483,7 +485,7 @@
 <div class="viewcode-block" id="Problem">
 <a class="viewcode-back" href="../../reference/api/fips.Problem.html#fips.Problem">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">Problem</span><span class="p">:</span>
-<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">    A linear inverse problem: what is known before the observations, and the observations.</span>
 
 <span class="sd">    The state is :math:`x \sim N(x_0, S_0)` (the prior), and the observations</span>
@@ -491,7 +493,7 @@
 <span class="sd">    labeled, and the labels are checked once, here, by an exact join: the</span>
 <span class="sd">    forward operator, the covariances and the offset must have exactly the</span>
 <span class="sd">    labels of the prior or of the observations, in any order. Each is then put</span>
-<span class="sd">    in the order of the prior&#39;s and the observations&#39; spaces. A problem is not</span>
+<span class="sd">    in the order of the prior's and the observations' spaces. A problem is not</span>
 <span class="sd">    changed after it is built; :func:`fips.solve` solves it.</span>
 
 <span class="sd">    The problem is the question: it holds what needs no solve and no</span>
@@ -506,19 +508,19 @@
 <span class="sd">        The prior state :math:`x_0`. Its space labels the state.</span>
 <span class="sd">    prior_cov : Covariance or CovarianceModel</span>
 <span class="sd">        The prior error covariance :math:`S_0`. A covariance model (such as</span>
-<span class="sd">        ``Kronecker(...).with_std(std)``) is built on the prior&#39;s space.</span>
+<span class="sd">        ``Kronecker(...).with_std(std)``) is built on the prior's space.</span>
 <span class="sd">    obs : Vector</span>
 <span class="sd">        The observations :math:`z`. Its space labels the observations.</span>
 <span class="sd">    obs_cov : Covariance or CovarianceModel</span>
 <span class="sd">        The model-data mismatch :math:`S_z`, the covariance of the</span>
-<span class="sd">        observation error; a model is built on the observations&#39; space. It</span>
+<span class="sd">        observation error; a model is built on the observations' space. It</span>
 <span class="sd">        must be positive-definite.</span>
 <span class="sd">    forward : Operator</span>
 <span class="sd">        The forward operator :math:`H`, from the state (its columns) to the</span>
 <span class="sd">        observations (its rows).</span>
 <span class="sd">    offset : Vector or float, optional</span>
 <span class="sd">        The part of the observations the state does not explain, :math:`c`</span>
-<span class="sd">        (a background): a vector on the observations&#39; labels, or one value</span>
+<span class="sd">        (a background): a vector on the observations' labels, or one value</span>
 <span class="sd">        for all of them. None (the default) is no offset.</span>
 
 <span class="sd">    Raises</span>
@@ -545,7 +547,7 @@
 <span class="sd">    ``(matrix, row_labels, col_labels)``)::</span>
 
 <span class="sd">        forward = Operator.from_blocks(</span>
-<span class="sd">            {(&quot;co2&quot;, &quot;flux&quot;): J}, rows=obs.space, cols=prior.space</span>
+<span class="sd">            {("co2", "flux"): J}, rows=obs.space, cols=prior.space</span>
 <span class="sd">        )</span>
 
 <span class="sd">    Examples</span>
@@ -553,11 +555,11 @@
 <span class="sd">    &gt;&gt;&gt; import numpy as np</span>
 <span class="sd">    &gt;&gt;&gt; import pandas as pd</span>
 <span class="sd">    &gt;&gt;&gt; import fips</span>
-<span class="sd">    &gt;&gt;&gt; cells = pd.Index([&quot;a&quot;, &quot;b&quot;], name=&quot;cell&quot;)</span>
-<span class="sd">    &gt;&gt;&gt; obs_id = pd.Index([&quot;o1&quot;, &quot;o2&quot;, &quot;o3&quot;], name=&quot;obs_id&quot;)</span>
-<span class="sd">    &gt;&gt;&gt; prior = fips.Vector.from_series(pd.Series(0.0, index=cells), block=&quot;flux&quot;)</span>
+<span class="sd">    &gt;&gt;&gt; cells = pd.Index(["a", "b"], name="cell")</span>
+<span class="sd">    &gt;&gt;&gt; obs_id = pd.Index(["o1", "o2", "o3"], name="obs_id")</span>
+<span class="sd">    &gt;&gt;&gt; prior = fips.Vector.from_series(pd.Series(0.0, index=cells), block="flux")</span>
 <span class="sd">    &gt;&gt;&gt; obs = fips.Vector.from_series(</span>
-<span class="sd">    ...     pd.Series([1.0, 2.0, 3.0], index=obs_id), block=&quot;co2&quot;</span>
+<span class="sd">    ...     pd.Series([1.0, 2.0, 3.0], index=obs_id), block="co2"</span>
 <span class="sd">    ... )</span>
 <span class="sd">    &gt;&gt;&gt; problem = fips.Problem(</span>
 <span class="sd">    ...     prior=prior,</span>
@@ -569,107 +571,107 @@
 <span class="sd">    ...     ),</span>
 <span class="sd">    ... )</span>
 <span class="sd">    &gt;&gt;&gt; problem</span>
-<span class="sd">    Problem(state: Space(flux: 2 x [&#39;cell&#39;]), obs: Space(co2: 3 x [&#39;obs_id&#39;]))</span>
+<span class="sd">    Problem(state: Space(flux: 2 x ['cell']), obs: Space(co2: 3 x ['obs_id']))</span>
 <span class="sd">    &gt;&gt;&gt; fips.solve(problem).estimate.values.round(3)</span>
 <span class="sd">    array([0.997, 1.906])</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">prior</span><span class="p">:</span> <span class="n">Vector</span><span class="p">,</span>
-        <span class="n">prior_cov</span><span class="p">:</span> <span class="s2">&quot;Covariance | CovarianceModel&quot;</span><span class="p">,</span>
+        <span class="n">prior_cov</span><span class="p">:</span> <span class="s2">"Covariance | CovarianceModel"</span><span class="p">,</span>
         <span class="n">obs</span><span class="p">:</span> <span class="n">Vector</span><span class="p">,</span>
-        <span class="n">obs_cov</span><span class="p">:</span> <span class="s2">&quot;Covariance | CovarianceModel&quot;</span><span class="p">,</span>
+        <span class="n">obs_cov</span><span class="p">:</span> <span class="s2">"Covariance | CovarianceModel"</span><span class="p">,</span>
         <span class="n">forward</span><span class="p">:</span> <span class="n">Operator</span><span class="p">,</span>
-        <span class="n">offset</span><span class="p">:</span> <span class="s2">&quot;Vector | float | None&quot;</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">offset</span><span class="p">:</span> <span class="s2">"Vector | float | None"</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_prior</span> <span class="o">=</span> <span class="n">_vector</span><span class="p">(</span><span class="n">prior</span><span class="p">,</span> <span class="s2">&quot;prior&quot;</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_obs</span> <span class="o">=</span> <span class="n">_vector</span><span class="p">(</span><span class="n">obs</span><span class="p">,</span> <span class="s2">&quot;obs&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_prior</span> <span class="o">=</span> <span class="n">_vector</span><span class="p">(</span><span class="n">prior</span><span class="p">,</span> <span class="s2">"prior"</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_obs</span> <span class="o">=</span> <span class="n">_vector</span><span class="p">(</span><span class="n">obs</span><span class="p">,</span> <span class="s2">"obs"</span><span class="p">)</span>
         <span class="n">state</span><span class="p">,</span> <span class="n">observed</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_prior</span><span class="o">.</span><span class="n">space</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_obs</span><span class="o">.</span><span class="n">space</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">forward</span><span class="p">,</span> <span class="n">Operator</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;forward must be an Operator, got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">forward</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">. Build &quot;</span>
-                <span class="s2">&quot;one with Operator(matrix, rows, cols), Operator.from_blocks or &quot;</span>
-                <span class="s2">&quot;Operator.from_frame.&quot;</span>
+                <span class="sa">f</span><span class="s2">"forward must be an Operator, got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">forward</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">. Build "</span>
+                <span class="s2">"one with Operator(matrix, rows, cols), Operator.from_blocks or "</span>
+                <span class="s2">"Operator.from_frame."</span>
             <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_forward</span> <span class="o">=</span> <span class="n">Operator</span><span class="p">(</span>
-            <span class="n">forward</span><span class="o">.</span><span class="n">_on</span><span class="p">(</span><span class="n">observed</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="s2">&quot;forward&quot;</span><span class="p">,</span> <span class="p">(</span><span class="s2">&quot;the observations&quot;</span><span class="p">,</span> <span class="s2">&quot;the prior&quot;</span><span class="p">)),</span>
+            <span class="n">forward</span><span class="o">.</span><span class="n">_on</span><span class="p">(</span><span class="n">observed</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="s2">"forward"</span><span class="p">,</span> <span class="p">(</span><span class="s2">"the observations"</span><span class="p">,</span> <span class="s2">"the prior"</span><span class="p">)),</span>
             <span class="n">observed</span><span class="p">,</span>
             <span class="n">state</span><span class="p">,</span>
             <span class="n">name</span><span class="o">=</span><span class="n">forward</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
         <span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_prior_cov</span> <span class="o">=</span> <span class="n">_covariance</span><span class="p">(</span><span class="n">prior_cov</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="s2">&quot;prior_cov&quot;</span><span class="p">,</span> <span class="s2">&quot;the prior&quot;</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_obs_cov</span> <span class="o">=</span> <span class="n">_covariance</span><span class="p">(</span><span class="n">obs_cov</span><span class="p">,</span> <span class="n">observed</span><span class="p">,</span> <span class="s2">&quot;obs_cov&quot;</span><span class="p">,</span> <span class="s2">&quot;the observations&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_prior_cov</span> <span class="o">=</span> <span class="n">_covariance</span><span class="p">(</span><span class="n">prior_cov</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="s2">"prior_cov"</span><span class="p">,</span> <span class="s2">"the prior"</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_obs_cov</span> <span class="o">=</span> <span class="n">_covariance</span><span class="p">(</span><span class="n">obs_cov</span><span class="p">,</span> <span class="n">observed</span><span class="p">,</span> <span class="s2">"obs_cov"</span><span class="p">,</span> <span class="s2">"the observations"</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">offset</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_offset</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">offset</span><span class="p">,</span> <span class="n">Vector</span><span class="p">):</span>
             <span class="n">positions</span> <span class="o">=</span> <span class="n">observed</span><span class="o">.</span><span class="n">_align</span><span class="p">(</span>
-                <span class="n">offset</span><span class="o">.</span><span class="n">space</span><span class="p">,</span> <span class="s2">&quot;the offset&quot;</span><span class="p">,</span> <span class="s2">&quot;The offset and the observations&quot;</span>
+                <span class="n">offset</span><span class="o">.</span><span class="n">space</span><span class="p">,</span> <span class="s2">"the offset"</span><span class="p">,</span> <span class="s2">"The offset and the observations"</span>
             <span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_offset</span> <span class="o">=</span> <span class="n">Vector</span><span class="p">(</span><span class="n">offset</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="n">positions</span><span class="p">],</span> <span class="n">observed</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">offset</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
         <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">offset</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">integer</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">floating</span><span class="p">)):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_offset</span> <span class="o">=</span> <span class="n">Vector</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">observed</span><span class="p">),</span> <span class="nb">float</span><span class="p">(</span><span class="n">offset</span><span class="p">)),</span> <span class="n">observed</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;offset must be a Vector, a number or None, got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">offset</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">.&quot;</span>
+                <span class="sa">f</span><span class="s2">"offset must be a Vector, a number or None, got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">offset</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">."</span>
             <span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">prior</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Vector</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;The prior state, :math:`x_0`; its space labels the state.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""The prior state, :math:`x_0`; its space labels the state."""</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_prior</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">prior_cov</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Covariance</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;The prior error covariance, :math:`S_0`, on the prior&#39;s space.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""The prior error covariance, :math:`S_0`, on the prior's space."""</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_prior_cov</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">obs</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Vector</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;The observations, :math:`z`; their space labels the observations.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""The observations, :math:`z`; their space labels the observations."""</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_obs</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">obs_cov</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Covariance</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;The model-data mismatch, :math:`S_z`, on the observations&#39; space.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""The model-data mismatch, :math:`S_z`, on the observations' space."""</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_obs_cov</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Operator</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;The forward operator, :math:`H`: rows on the observations, columns on the prior.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""The forward operator, :math:`H`: rows on the observations, columns on the prior."""</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_forward</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">offset</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Vector</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;The offset, :math:`c`, on the observations&#39; space, or None.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""The offset, :math:`c`, on the observations' space, or None."""</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_offset</span>
 
 <div class="viewcode-block" id="Problem.predict">
 <a class="viewcode-back" href="../../reference/api/fips.Problem.predict.html#fips.Problem.predict">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">predict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">Vector</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Vector</span><span class="p">:</span>
-<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Return the observations the state `x` models, :math:`H x + c`.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        x : Vector</span>
-<span class="sd">            A state on the prior&#39;s labels, in any order: the prior, a</span>
+<span class="sd">            A state on the prior's labels, in any order: the prior, a</span>
 <span class="sd">            posterior estimate, a truth to test with.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        Vector</span>
 <span class="sd">            :math:`H x + c` (with the offset :math:`c`, if any) on the</span>
-<span class="sd">            observations&#39; space.</span>
+<span class="sd">            observations' space.</span>
 
 <span class="sd">        Raises</span>
 <span class="sd">        ------</span>
 <span class="sd">        TypeError</span>
 <span class="sd">            If `x` is not a Vector.</span>
 <span class="sd">        ValueError</span>
-<span class="sd">            If `x` does not have exactly the prior&#39;s labels; the message names</span>
+<span class="sd">            If `x` does not have exactly the prior's labels; the message names</span>
 <span class="sd">            those on one side only.</span>
 
 <span class="sd">        Examples</span>
@@ -677,11 +679,11 @@
 <span class="sd">        &gt;&gt;&gt; import numpy as np</span>
 <span class="sd">        &gt;&gt;&gt; import pandas as pd</span>
 <span class="sd">        &gt;&gt;&gt; import fips</span>
-<span class="sd">        &gt;&gt;&gt; cells = pd.Index([&quot;a&quot;, &quot;b&quot;], name=&quot;cell&quot;)</span>
-<span class="sd">        &gt;&gt;&gt; obs_id = pd.Index([&quot;o1&quot;, &quot;o2&quot;, &quot;o3&quot;], name=&quot;obs_id&quot;)</span>
-<span class="sd">        &gt;&gt;&gt; prior = fips.Vector.from_series(pd.Series(1.0, index=cells), block=&quot;flux&quot;)</span>
+<span class="sd">        &gt;&gt;&gt; cells = pd.Index(["a", "b"], name="cell")</span>
+<span class="sd">        &gt;&gt;&gt; obs_id = pd.Index(["o1", "o2", "o3"], name="obs_id")</span>
+<span class="sd">        &gt;&gt;&gt; prior = fips.Vector.from_series(pd.Series(1.0, index=cells), block="flux")</span>
 <span class="sd">        &gt;&gt;&gt; obs = fips.Vector.from_series(</span>
-<span class="sd">        ...     pd.Series([1.0, 2.0, 3.0], index=obs_id), block=&quot;co2&quot;</span>
+<span class="sd">        ...     pd.Series([1.0, 2.0, 3.0], index=obs_id), block="co2"</span>
 <span class="sd">        ... )</span>
 <span class="sd">        &gt;&gt;&gt; problem = fips.Problem(</span>
 <span class="sd">        ...     prior=prior,</span>
@@ -697,34 +699,34 @@
 <span class="sd">        ... )</span>
 <span class="sd">        &gt;&gt;&gt; problem.predict(problem.prior).values</span>
 <span class="sd">        array([1.5, 1.5, 2.5])</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="n">state</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_prior</span><span class="o">.</span><span class="n">space</span>
-        <span class="n">values</span> <span class="o">=</span> <span class="n">_vector</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="s2">&quot;x&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">values</span>
+        <span class="n">values</span> <span class="o">=</span> <span class="n">_vector</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="s2">"x"</span><span class="p">)</span><span class="o">.</span><span class="n">values</span>
         <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">space</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">state</span><span class="p">:</span>
-            <span class="n">values</span> <span class="o">=</span> <span class="n">values</span><span class="p">[</span><span class="n">state</span><span class="o">.</span><span class="n">_align</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">space</span><span class="p">,</span> <span class="s2">&quot;x&quot;</span><span class="p">,</span> <span class="s2">&quot;x and the prior&quot;</span><span class="p">)]</span>
+            <span class="n">values</span> <span class="o">=</span> <span class="n">values</span><span class="p">[</span><span class="n">state</span><span class="o">.</span><span class="n">_align</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">space</span><span class="p">,</span> <span class="s2">"x"</span><span class="p">,</span> <span class="s2">"x and the prior"</span><span class="p">)]</span>
         <span class="n">predicted</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_forward</span><span class="o">.</span><span class="n">data</span> <span class="o">@</span> <span class="n">values</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_offset_values</span><span class="p">()</span>
         <span class="k">return</span> <span class="n">Vector</span><span class="p">(</span><span class="n">predicted</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_obs</span><span class="o">.</span><span class="n">space</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="Problem.restrict">
 <a class="viewcode-back" href="../../reference/api/fips.Problem.restrict.html#fips.Problem.restrict">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">restrict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">keep</span><span class="p">:</span> <span class="n">Space</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;Problem&quot;</span><span class="p">:</span>
-<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">restrict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">keep</span><span class="p">:</span> <span class="n">Space</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"Problem"</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Return the problem on part of the state, the rest held at its prior.</span>
 
 <span class="sd">        Use it to solve for some of the state only, such as the cells the</span>
 <span class="sd">        observations see well, and keep every other element at its prior</span>
 <span class="sd">        value. Which elements to keep is your choice: for example, the cells</span>
-<span class="sd">        whose total sensitivity is above a percentile of all cells&#39;</span>
-<span class="sd">        (:func:`fips.aggregate.sum` of the forward operator&#39;s absolute column</span>
+<span class="sd">        whose total sensitivity is above a percentile of all cells'</span>
+<span class="sd">        (:func:`fips.aggregate.sum` of the forward operator's absolute column</span>
 <span class="sd">        sums, grouped by cell, gives that total).</span>
 
 <span class="sd">        The dropped elements still add to the observations, at their prior</span>
-<span class="sd">        values: :math:`H_r x_{0,r}` (the forward operator&#39;s columns for them</span>
+<span class="sd">        values: :math:`H_r x_{0,r}` (the forward operator's columns for them</span>
 <span class="sd">        times their prior) is added to the offset. The prior, the prior</span>
 <span class="sd">        covariance and the forward operator are cut to the kept labels; the</span>
 <span class="sd">        covariance keeps its form, so a Kronecker covariance stays as its</span>
-<span class="sd">        factors. The dropped elements&#39; prior uncertainty is not added to the</span>
+<span class="sd">        factors. The dropped elements' prior uncertainty is not added to the</span>
 <span class="sd">        model-data mismatch: they are held exactly at the prior.</span>
 
 <span class="sd">        After solving, ``post.estimate.combine_first(problem.prior)`` puts</span>
@@ -734,7 +736,7 @@
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        keep : Space</span>
-<span class="sd">            The state of the new problem: blocks of the prior&#39;s space, each</span>
+<span class="sd">            The state of the new problem: blocks of the prior's space, each</span>
 <span class="sd">            with some of its labels (in any order; the new problem has them</span>
 <span class="sd">            in this order). A block of the prior not in `keep` is held at the</span>
 <span class="sd">            prior whole.</span>
@@ -743,7 +745,7 @@
 <span class="sd">        -------</span>
 <span class="sd">        Problem</span>
 <span class="sd">            The restricted problem (of the same class). The observations and</span>
-<span class="sd">            their covariance are unchanged; its offset is this problem&#39;s</span>
+<span class="sd">            their covariance are unchanged; its offset is this problem's</span>
 <span class="sd">            offset (zero if none) plus the contribution of the elements left</span>
 <span class="sd">            out.</span>
 
@@ -761,13 +763,13 @@
 <span class="sd">        &gt;&gt;&gt; import numpy as np</span>
 <span class="sd">        &gt;&gt;&gt; import pandas as pd</span>
 <span class="sd">        &gt;&gt;&gt; import fips</span>
-<span class="sd">        &gt;&gt;&gt; cells = pd.Index([&quot;a&quot;, &quot;b&quot;, &quot;c&quot;], name=&quot;cell&quot;)</span>
-<span class="sd">        &gt;&gt;&gt; obs_id = pd.Index([&quot;o1&quot;, &quot;o2&quot;], name=&quot;obs_id&quot;)</span>
+<span class="sd">        &gt;&gt;&gt; cells = pd.Index(["a", "b", "c"], name="cell")</span>
+<span class="sd">        &gt;&gt;&gt; obs_id = pd.Index(["o1", "o2"], name="obs_id")</span>
 <span class="sd">        &gt;&gt;&gt; prior = fips.Vector.from_series(</span>
-<span class="sd">        ...     pd.Series([1.0, 2.0, 3.0], index=cells), block=&quot;flux&quot;</span>
+<span class="sd">        ...     pd.Series([1.0, 2.0, 3.0], index=cells), block="flux"</span>
 <span class="sd">        ... )</span>
 <span class="sd">        &gt;&gt;&gt; obs = fips.Vector.from_series(</span>
-<span class="sd">        ...     pd.Series([4.0, 5.0], index=obs_id), block=&quot;co2&quot;</span>
+<span class="sd">        ...     pd.Series([4.0, 5.0], index=obs_id), block="co2"</span>
 <span class="sd">        ... )</span>
 <span class="sd">        &gt;&gt;&gt; H = np.array([[1.0, 1.0, 1e-6], [0.0, 1.0, 1e-6]])</span>
 <span class="sd">        &gt;&gt;&gt; problem = fips.Problem(</span>
@@ -777,17 +779,17 @@
 <span class="sd">        ...     obs_cov=fips.Independent().with_std(0.5),</span>
 <span class="sd">        ...     forward=fips.Operator(H, obs.space, prior.space),</span>
 <span class="sd">        ... )</span>
-<span class="sd">        &gt;&gt;&gt; small = problem.restrict(fips.Space({&quot;flux&quot;: cells[:2]}))</span>
+<span class="sd">        &gt;&gt;&gt; small = problem.restrict(fips.Space({"flux": cells[:2]}))</span>
 <span class="sd">        &gt;&gt;&gt; small.offset.values</span>
 <span class="sd">        array([3.e-06, 3.e-06])</span>
 <span class="sd">        &gt;&gt;&gt; post = fips.solve(small)</span>
 <span class="sd">        &gt;&gt;&gt; post.estimate.combine_first(problem.prior).values.round(3)</span>
 <span class="sd">        array([0.034, 4.207, 3.   ])</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">keep</span><span class="p">,</span> <span class="n">Space</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;keep must be a Space, got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">keep</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"keep must be a Space, got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">keep</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">."</span><span class="p">)</span>
         <span class="n">state</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_prior</span><span class="o">.</span><span class="n">space</span>
-        <span class="n">kept</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">_subset</span><span class="p">(</span><span class="n">keep</span><span class="p">,</span> <span class="s2">&quot;The space to keep&quot;</span><span class="p">)</span>
+        <span class="n">kept</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">_subset</span><span class="p">(</span><span class="n">keep</span><span class="p">,</span> <span class="s2">"The space to keep"</span><span class="p">)</span>
         <span class="n">left_out</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">state</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">)</span>
         <span class="n">left_out</span><span class="p">[</span><span class="n">kept</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="n">H</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_forward</span><span class="o">.</span><span class="n">data</span>
@@ -818,8 +820,8 @@
 
 <div class="viewcode-block" id="Problem.aggregate">
 <a class="viewcode-back" href="../../reference/api/fips.Problem.aggregate.html#fips.Problem.aggregate">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">aggregate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">W</span><span class="p">:</span> <span class="n">Operator</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;Problem&quot;</span><span class="p">:</span>
-<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">aggregate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">W</span><span class="p">:</span> <span class="n">Operator</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"Problem"</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Return the problem of aggregated observations.</span>
 
 <span class="sd">        Each input on the observations goes through the same aggregation</span>
@@ -831,8 +833,8 @@
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        W : Operator</span>
-<span class="sd">            The aggregation, such as :func:`fips.aggregate.mean`&#39;s: its</span>
-<span class="sd">            columns the observations&#39; labels (in any order), its rows the</span>
+<span class="sd">            The aggregation, such as :func:`fips.aggregate.mean`'s: its</span>
+<span class="sd">            columns the observations' labels (in any order), its rows the</span>
 <span class="sd">            aggregated observations.</span>
 
 <span class="sd">        Returns</span>
@@ -846,7 +848,7 @@
 <span class="sd">        TypeError</span>
 <span class="sd">            If `W` is not an Operator.</span>
 <span class="sd">        ValueError</span>
-<span class="sd">            If the columns of `W` do not have exactly the observations&#39;</span>
+<span class="sd">            If the columns of `W` do not have exactly the observations'</span>
 <span class="sd">            labels.</span>
 
 <span class="sd">        Examples</span>
@@ -854,12 +856,12 @@
 <span class="sd">        &gt;&gt;&gt; import numpy as np</span>
 <span class="sd">        &gt;&gt;&gt; import pandas as pd</span>
 <span class="sd">        &gt;&gt;&gt; import fips</span>
-<span class="sd">        &gt;&gt;&gt; times = pd.date_range(&quot;2020-01-01&quot;, periods=4, freq=&quot;12h&quot;, name=&quot;obs_time&quot;)</span>
+<span class="sd">        &gt;&gt;&gt; times = pd.date_range("2020-01-01", periods=4, freq="12h", name="obs_time")</span>
 <span class="sd">        &gt;&gt;&gt; obs = fips.Vector.from_series(</span>
-<span class="sd">        ...     pd.Series([1.0, 2.0, 3.0, 4.0], index=times), block=&quot;co2&quot;</span>
+<span class="sd">        ...     pd.Series([1.0, 2.0, 3.0, 4.0], index=times), block="co2"</span>
 <span class="sd">        ... )</span>
 <span class="sd">        &gt;&gt;&gt; prior = fips.Vector.from_series(</span>
-<span class="sd">        ...     pd.Series(0.0, index=pd.Index([&quot;a&quot;], name=&quot;cell&quot;)), block=&quot;flux&quot;</span>
+<span class="sd">        ...     pd.Series(0.0, index=pd.Index(["a"], name="cell")), block="flux"</span>
 <span class="sd">        ... )</span>
 <span class="sd">        &gt;&gt;&gt; problem = fips.Problem(</span>
 <span class="sd">        ...     prior=prior,</span>
@@ -869,20 +871,20 @@
 <span class="sd">        ...     forward=fips.Operator(np.ones((4, 1)), obs.space, prior.space),</span>
 <span class="sd">        ... )</span>
 <span class="sd">        &gt;&gt;&gt; W = fips.aggregate.mean(</span>
-<span class="sd">        ...     obs.space, by=pd.Grouper(level=&quot;obs_time&quot;, freq=&quot;1D&quot;)</span>
+<span class="sd">        ...     obs.space, by=pd.Grouper(level="obs_time", freq="1D")</span>
 <span class="sd">        ... )</span>
 <span class="sd">        &gt;&gt;&gt; daily = problem.aggregate(W)</span>
 <span class="sd">        &gt;&gt;&gt; daily.obs.values, daily.obs_cov.variances.values</span>
 <span class="sd">        (array([1.5, 3.5]), array([0.5, 0.5]))</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">W</span><span class="p">,</span> <span class="n">Operator</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;An aggregation is an Operator, not </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">W</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">: build one &quot;</span>
-                <span class="s2">&quot;with fips.aggregate.mean or fips.aggregate.sum.&quot;</span>
+                <span class="sa">f</span><span class="s2">"An aggregation is an Operator, not </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">W</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">: build one "</span>
+                <span class="s2">"with fips.aggregate.mean or fips.aggregate.sum."</span>
             <span class="p">)</span>
         <span class="n">observed</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_obs</span><span class="o">.</span><span class="n">space</span>
         <span class="n">form</span> <span class="o">=</span> <span class="n">W</span><span class="o">.</span><span class="n">_on</span><span class="p">(</span>
-            <span class="n">W</span><span class="o">.</span><span class="n">rows</span><span class="p">,</span> <span class="n">observed</span><span class="p">,</span> <span class="s2">&quot;the aggregation&quot;</span><span class="p">,</span> <span class="p">(</span><span class="s2">&quot;its rows&quot;</span><span class="p">,</span> <span class="s2">&quot;the observations&quot;</span><span class="p">)</span>
+            <span class="n">W</span><span class="o">.</span><span class="n">rows</span><span class="p">,</span> <span class="n">observed</span><span class="p">,</span> <span class="s2">"the aggregation"</span><span class="p">,</span> <span class="p">(</span><span class="s2">"its rows"</span><span class="p">,</span> <span class="s2">"the observations"</span><span class="p">)</span>
         <span class="p">)</span>
         <span class="n">rows</span> <span class="o">=</span> <span class="n">W</span><span class="o">.</span><span class="n">rows</span>
         <span class="n">offset</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_offset</span>
@@ -907,34 +909,34 @@
 
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_offset_values</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the offset&#39;s values, zeros where there is none.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Return the offset's values, zeros where there is none."""</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_offset</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_obs</span><span class="p">))</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_offset</span><span class="o">.</span><span class="n">values</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the two spaces.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;Problem(state: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_prior</span><span class="o">.</span><span class="n">space</span><span class="si">!r}</span><span class="s2">, obs: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_obs</span><span class="o">.</span><span class="n">space</span><span class="si">!r}</span><span class="s2">)&quot;</span>
+<span class="w">        </span><span class="sd">"""Return the two spaces."""</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">"Problem(state: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_prior</span><span class="o">.</span><span class="n">space</span><span class="si">!r}</span><span class="s2">, obs: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_obs</span><span class="o">.</span><span class="n">space</span><span class="si">!r}</span><span class="s2">)"</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">__getstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the inputs, already on their spaces.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Return the inputs, already on their spaces."""</span>
         <span class="k">return</span> <span class="p">{</span>
-            <span class="s2">&quot;prior&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_prior</span><span class="p">,</span>
-            <span class="s2">&quot;prior_cov&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_prior_cov</span><span class="p">,</span>
-            <span class="s2">&quot;obs&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_obs</span><span class="p">,</span>
-            <span class="s2">&quot;obs_cov&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_obs_cov</span><span class="p">,</span>
-            <span class="s2">&quot;forward&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_forward</span><span class="p">,</span>
-            <span class="s2">&quot;offset&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_offset</span><span class="p">,</span>
+            <span class="s2">"prior"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_prior</span><span class="p">,</span>
+            <span class="s2">"prior_cov"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_prior_cov</span><span class="p">,</span>
+            <span class="s2">"obs"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_obs</span><span class="p">,</span>
+            <span class="s2">"obs_cov"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_obs_cov</span><span class="p">,</span>
+            <span class="s2">"forward"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_forward</span><span class="p">,</span>
+            <span class="s2">"offset"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_offset</span><span class="p">,</span>
         <span class="p">}</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">__setstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Restore from :meth:`__getstate__`; the labels were checked when it was built.&quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_prior</span> <span class="o">=</span> <span class="n">state</span><span class="p">[</span><span class="s2">&quot;prior&quot;</span><span class="p">]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_prior_cov</span> <span class="o">=</span> <span class="n">state</span><span class="p">[</span><span class="s2">&quot;prior_cov&quot;</span><span class="p">]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_obs</span> <span class="o">=</span> <span class="n">state</span><span class="p">[</span><span class="s2">&quot;obs&quot;</span><span class="p">]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_obs_cov</span> <span class="o">=</span> <span class="n">state</span><span class="p">[</span><span class="s2">&quot;obs_cov&quot;</span><span class="p">]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_forward</span> <span class="o">=</span> <span class="n">state</span><span class="p">[</span><span class="s2">&quot;forward&quot;</span><span class="p">]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_offset</span> <span class="o">=</span> <span class="n">state</span><span class="p">[</span><span class="s2">&quot;offset&quot;</span><span class="p">]</span></div>
+<span class="w">        </span><span class="sd">"""Restore from :meth:`__getstate__`; the labels were checked when it was built."""</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_prior</span> <span class="o">=</span> <span class="n">state</span><span class="p">[</span><span class="s2">"prior"</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_prior_cov</span> <span class="o">=</span> <span class="n">state</span><span class="p">[</span><span class="s2">"prior_cov"</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_obs</span> <span class="o">=</span> <span class="n">state</span><span class="p">[</span><span class="s2">"obs"</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_obs_cov</span> <span class="o">=</span> <span class="n">state</span><span class="p">[</span><span class="s2">"obs_cov"</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_forward</span> <span class="o">=</span> <span class="n">state</span><span class="p">[</span><span class="s2">"forward"</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_offset</span> <span class="o">=</span> <span class="n">state</span><span class="p">[</span><span class="s2">"offset"</span><span class="p">]</span></div>
 
 </pre></div>
 
@@ -965,8 +967,8 @@
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script defer src="../../_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0"></script>
-<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0"></script>
+  <script defer src="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be"></script>
+<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be"></script>
 
   <footer class="bd-footer">
 <div class="bd-footer__inner bd-page-width">
@@ -986,7 +988,7 @@
         <div class="footer-item">
 
   <p class="sphinx-version">
-    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.1.0.
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.2.0.
   </p>
 </div>
       
@@ -999,7 +1001,7 @@
         <div class="footer-item">
 <p class="theme-version">
   <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
-  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.22.0.
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.23.0.
 </p></div>
       
     </div>

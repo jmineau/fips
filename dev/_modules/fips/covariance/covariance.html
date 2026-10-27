@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>fips.covariance.covariance &#8212; fips 0.2.0b2.dev8+g22c2598c9 documentation</title>
+    <title>fips.covariance.covariance &#8212; fips 0.2.0b2.dev9+g9dded00bd documentation</title>
   
   
   
@@ -25,29 +25,30 @@
   </noscript>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="../../../_static/styles/theme.css?digest=64cc4de3f052d77215f0" rel="stylesheet" />
-<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=64cc4de3f052d77215f0" rel="stylesheet" />
+  <link href="../../../_static/styles/theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
+<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
 
     <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../../_static/plot_directive.css" />
     <link rel="stylesheet" type="text/css" href="../../../_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sphinx_autodoc_typehints.css?v=057ac668" />
     <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../../../_static/custom.css?v=4b8357b6" />
   
   <!-- So that users can add custom icons -->
-  <script defer src="../../../_static/scripts/fontawesome.js?digest=64cc4de3f052d77215f0"></script>
+  <script defer src="../../../_static/scripts/fontawesome.js?digest=18bd87630a240e9c25be"></script>
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0" />
-<link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0" />
+  <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
+<link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../../_static/documentation_options.js?v=3193467b"></script>
+    <script src="../../../_static/documentation_options.js?v=46a0216e"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../../../_static/copybutton.js?v=f281be69"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = '_modules/fips/covariance/covariance';</script>
     <script>
-        DOCUMENTATION_OPTIONS.theme_version = '0.22.0';
+        DOCUMENTATION_OPTIONS.theme_version = '0.23.0';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://jmineau.github.io/fips/switcher.json';
         DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'dev';
         DOCUMENTATION_OPTIONS.show_version_warning_banner =
@@ -57,6 +58,7 @@
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="0.2" />
   
@@ -130,8 +132,8 @@
       
     
     
-    <img src="../../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b2.dev8+g22c2598c9 documentation - Home"/>
-    <img src="../../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b2.dev8+g22c2598c9 documentation - Home"/>
+    <img src="../../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b2.dev9+g9dded00bd documentation - Home"/>
+    <img src="../../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b2.dev9+g9dded00bd documentation - Home"/>
   
   
 </a></div>
@@ -419,7 +421,7 @@
                 <article class="bd-article">
                   
   <h1>Source code for fips.covariance.covariance</h1><div class="highlight"><pre>
-<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span></span><span class="sd">"""</span>
 <span class="sd">Covariances: symmetric operators from a space to itself.</span>
 
 <span class="sd">A :class:`Covariance` is a symmetric :class:`~fips.Operator` from a space to</span>
@@ -427,7 +429,7 @@
 <span class="sd">log-determinant, quadratic form and square root a covariance needs. The</span>
 <span class="sd">correlation models of :mod:`fips.covariance` make one from the labels</span>
 <span class="sd">(``model.with_std(std)``).</span>
-<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">"""</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Container</span><span class="p">,</span> <span class="n">Mapping</span>
@@ -455,22 +457,22 @@
 
 
 <span class="k">class</span><span class="w"> </span><span class="nc">_Model</span><span class="p">(</span><span class="n">Protocol</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;A covariance model, as :meth:`Covariance.block_diag` sees one: it builds a covariance on a space.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""A covariance model, as :meth:`Covariance.block_diag` sees one: it builds a covariance on a space."""</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">build</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">space</span><span class="p">:</span> <span class="n">Space</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;Covariance&quot;</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the covariance on `space`.&quot;&quot;&quot;</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">build</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">space</span><span class="p">:</span> <span class="n">Space</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"Covariance"</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return the covariance on `space`."""</span>
         <span class="o">...</span>
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">_side_by_side</span><span class="p">(</span><span class="n">parts</span><span class="p">:</span> <span class="s2">&quot;list[Covariance]&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">LinearOperator</span><span class="p">,</span> <span class="n">Space</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the block diagonal form of `parts`, and the space of their blocks in order.&quot;&quot;&quot;</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_side_by_side</span><span class="p">(</span><span class="n">parts</span><span class="p">:</span> <span class="s2">"list[Covariance]"</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">LinearOperator</span><span class="p">,</span> <span class="n">Space</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Return the block diagonal form of `parts`, and the space of their blocks in order."""</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">parts</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;block_diag needs at least one covariance.&quot;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"block_diag needs at least one covariance."</span><span class="p">)</span>
     <span class="n">blocks</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="k">for</span> <span class="n">part</span> <span class="ow">in</span> <span class="n">parts</span><span class="p">:</span>
         <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">part</span><span class="o">.</span><span class="n">space</span><span class="o">.</span><span class="n">names</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">blocks</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Two blocks are named </span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s2">.&quot;</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Two blocks are named </span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s2">."</span><span class="p">)</span>
             <span class="n">blocks</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">part</span><span class="o">.</span><span class="n">space</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
     <span class="n">forms</span> <span class="o">=</span> <span class="p">[</span><span class="n">part</span><span class="o">.</span><span class="n">data</span> <span class="k">for</span> <span class="n">part</span> <span class="ow">in</span> <span class="n">parts</span><span class="p">]</span>
     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">forms</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
@@ -482,14 +484,14 @@
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_check_symmetric</span><span class="p">(</span><span class="n">form</span><span class="p">:</span> <span class="n">LinearOperator</span><span class="p">,</span> <span class="n">space</span><span class="p">:</span> <span class="n">Space</span><span class="p">,</span> <span class="n">start</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Raise a ValueError if a dense or sparse form (or block of one) is not symmetric.</span>
 
 <span class="sd">    The check is ``max|A - A^T| &lt;= 1e-10 * max|A|``, without forming a dense</span>
 <span class="sd">    matrix from a sparse one. A diagonal form is symmetric; a block diagonal</span>
 <span class="sd">    one is checked block by block; a Kronecker form checked its factors when</span>
 <span class="sd">    it was built; any other form is not checked.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">form</span><span class="p">,</span> <span class="n">BlockDiagonalOperator</span><span class="p">):</span>
         <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="n">form</span><span class="o">.</span><span class="n">blocks</span><span class="p">:</span>
             <span class="n">_check_symmetric</span><span class="p">(</span><span class="n">block</span><span class="p">,</span> <span class="n">space</span><span class="p">,</span> <span class="n">start</span><span class="p">)</span>
@@ -505,24 +507,24 @@
         <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">a_ij</span><span class="p">,</span> <span class="n">a_ji</span><span class="p">,</span> <span class="n">scale</span> <span class="o">=</span> <span class="n">found</span>
         <span class="n">row</span><span class="p">,</span> <span class="n">col</span> <span class="o">=</span> <span class="p">(</span><span class="n">_plain</span><span class="p">(</span><span class="n">space</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="n">start</span> <span class="o">+</span> <span class="n">k</span><span class="p">])</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">))</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;A covariance must be symmetric, but the entry at (</span><span class="si">{</span><span class="n">row</span><span class="si">!r}</span><span class="s2">, </span><span class="si">{</span><span class="n">col</span><span class="si">!r}</span><span class="s2">) &quot;</span>
-            <span class="sa">f</span><span class="s2">&quot;is </span><span class="si">{</span><span class="n">a_ij</span><span class="si">:</span><span class="s2">.6g</span><span class="si">}</span><span class="s2"> and the one at (</span><span class="si">{</span><span class="n">col</span><span class="si">!r}</span><span class="s2">, </span><span class="si">{</span><span class="n">row</span><span class="si">!r}</span><span class="s2">) is &quot;</span>
-            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">a_ji</span><span class="si">:</span><span class="s2">.6g</span><span class="si">}</span><span class="s2">: a difference of </span><span class="si">{</span><span class="nb">abs</span><span class="p">(</span><span class="n">a_ij</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">a_ji</span><span class="p">)</span><span class="si">:</span><span class="s2">.3g</span><span class="si">}</span><span class="s2">, the largest, &quot;</span>
-            <span class="sa">f</span><span class="s2">&quot;more than 1e-10 of the largest entry (</span><span class="si">{</span><span class="n">scale</span><span class="si">:</span><span class="s2">.3g</span><span class="si">}</span><span class="s2">). Give the &quot;</span>
-            <span class="s2">&quot;whole matrix (both triangles), or (A + A.T) / 2 if the difference &quot;</span>
-            <span class="s2">&quot;is roundoff.&quot;</span>
+            <span class="sa">f</span><span class="s2">"A covariance must be symmetric, but the entry at (</span><span class="si">{</span><span class="n">row</span><span class="si">!r}</span><span class="s2">, </span><span class="si">{</span><span class="n">col</span><span class="si">!r}</span><span class="s2">) "</span>
+            <span class="sa">f</span><span class="s2">"is </span><span class="si">{</span><span class="n">a_ij</span><span class="si">:</span><span class="s2">.6g</span><span class="si">}</span><span class="s2"> and the one at (</span><span class="si">{</span><span class="n">col</span><span class="si">!r}</span><span class="s2">, </span><span class="si">{</span><span class="n">row</span><span class="si">!r}</span><span class="s2">) is "</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">a_ji</span><span class="si">:</span><span class="s2">.6g</span><span class="si">}</span><span class="s2">: a difference of </span><span class="si">{</span><span class="nb">abs</span><span class="p">(</span><span class="n">a_ij</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">a_ji</span><span class="p">)</span><span class="si">:</span><span class="s2">.3g</span><span class="si">}</span><span class="s2">, the largest, "</span>
+            <span class="sa">f</span><span class="s2">"more than 1e-10 of the largest entry (</span><span class="si">{</span><span class="n">scale</span><span class="si">:</span><span class="s2">.3g</span><span class="si">}</span><span class="s2">). Give the "</span>
+            <span class="s2">"whole matrix (both triangles), or (A + A.T) / 2 if the difference "</span>
+            <span class="s2">"is roundoff."</span>
         <span class="p">)</span>
 
 
 <div class="viewcode-block" id="Covariance">
 <a class="viewcode-back" href="../../../reference/api/fips.Covariance.html#fips.Covariance">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">Covariance</span><span class="p">(</span><span class="n">Operator</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    A covariance: a symmetric operator from a :class:`~fips.Space` to itself.</span>
 
-<span class="sd">    The matrix is kept in its cheapest form, as an :class:`Operator`&#39;s is: a</span>
+<span class="sd">    The matrix is kept in its cheapest form, as an :class:`Operator`'s is: a</span>
 <span class="sd">    diagonal covariance is its variances, a Kronecker one its factors, a</span>
-<span class="sd">    block diagonal one each block in its own form. On top of an operator&#39;s</span>
+<span class="sd">    block diagonal one each block in its own form. On top of an operator's</span>
 <span class="sd">    methods it gives the :attr:`variances` and, for a positive-definite</span>
 <span class="sd">    covariance, :meth:`solve`, :meth:`logdet`, :meth:`quadratic_form` and</span>
 <span class="sd">    :meth:`sqrt`, each done the way its form makes cheap.</span>
@@ -536,7 +538,7 @@
 <span class="sd">    space : Space</span>
 <span class="sd">        The labels of both axes.</span>
 <span class="sd">    name : str, optional</span>
-<span class="sd">        What the covariance is (&quot;prior_cov&quot;, &quot;obs_cov&quot;, ...).</span>
+<span class="sd">        What the covariance is ("prior_cov", "obs_cov", ...).</span>
 
 <span class="sd">    Raises</span>
 <span class="sd">    ------</span>
@@ -564,16 +566,16 @@
 <span class="sd">    &gt;&gt;&gt; import numpy as np</span>
 <span class="sd">    &gt;&gt;&gt; import pandas as pd</span>
 <span class="sd">    &gt;&gt;&gt; from fips import Covariance, Space, Vector</span>
-<span class="sd">    &gt;&gt;&gt; space = Space({&quot;flux&quot;: pd.Index([&quot;a&quot;, &quot;b&quot;], name=&quot;cell&quot;)})</span>
+<span class="sd">    &gt;&gt;&gt; space = Space({"flux": pd.Index(["a", "b"], name="cell")})</span>
 <span class="sd">    &gt;&gt;&gt; S = Covariance(np.array([[2.0, 1.0], [1.0, 2.0]]), space)</span>
 <span class="sd">    &gt;&gt;&gt; S.variances.values</span>
 <span class="sd">    array([2., 2.])</span>
 <span class="sd">    &gt;&gt;&gt; S.solve(Vector([3.0, 3.0], space)).values</span>
 <span class="sd">    array([1., 1.])</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="n">_block_diag_models</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="n">Callable</span><span class="p">[[</span><span class="nb">tuple</span><span class="p">,</span> <span class="nb">dict</span><span class="p">,</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">],</span> <span class="n">_Model</span><span class="p">]]</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Makes the model :meth:`block_diag` gives when a part is a model; :mod:`fips.covariance.models` sets it.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Makes the model :meth:`block_diag` gives when a part is a model; :mod:`fips.covariance.models` sets it."""</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">LinearOperatorLike</span><span class="p">,</span> <span class="n">space</span><span class="p">:</span> <span class="n">Space</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">space</span><span class="p">,</span> <span class="n">space</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
@@ -583,14 +585,14 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">_computed</span><span class="p">(</span>
         <span class="bp">cls</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">LinearOperatorLike</span><span class="p">,</span> <span class="n">space</span><span class="p">:</span> <span class="n">Space</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Self</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Return a covariance fips made from covariances or models, without the symmetry check.</span>
 
 <span class="sd">        A sum, a reordering, a block diagonal or a product such as</span>
 <span class="sd">        ``W S W^T`` of symmetric matrices is symmetric up to roundoff, which in</span>
-<span class="sd">        a posterior covariance can be more than the check&#39;s 1e-10; what a</span>
+<span class="sd">        a posterior covariance can be more than the check's 1e-10; what a</span>
 <span class="sd">        caller hands over goes through ``Covariance(...)``, which checks it.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="n">cov</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="fm">__new__</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span>
         <span class="n">Operator</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">cov</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">space</span><span class="p">,</span> <span class="n">space</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">cov</span>
@@ -599,13 +601,13 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">_build</span><span class="p">(</span>
         <span class="bp">cls</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">LinearOperatorLike</span><span class="p">,</span> <span class="n">rows</span><span class="p">:</span> <span class="n">Space</span><span class="p">,</span> <span class="n">cols</span><span class="p">:</span> <span class="n">Space</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Self</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return a covariance on `rows`, with its columns put in the order of the rows.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Return a covariance on `rows`, with its columns put in the order of the rows."""</span>
         <span class="k">if</span> <span class="n">rows</span> <span class="o">!=</span> <span class="n">cols</span><span class="p">:</span>
             <span class="k">try</span><span class="p">:</span>
                 <span class="n">order</span> <span class="o">=</span> <span class="n">rows</span><span class="o">.</span><span class="n">align</span><span class="p">(</span><span class="n">cols</span><span class="p">)</span>
             <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                    <span class="sa">f</span><span class="s2">&quot;A covariance has the same labels on both axes. </span><span class="si">{</span><span class="n">err</span><span class="si">}</span><span class="s2">&quot;</span>
+                    <span class="sa">f</span><span class="s2">"A covariance has the same labels on both axes. </span><span class="si">{</span><span class="n">err</span><span class="si">}</span><span class="s2">"</span>
                 <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="kc">None</span>
             <span class="n">data</span> <span class="o">=</span> <span class="n">as_linear_operator</span><span class="p">(</span><span class="n">data</span><span class="p">)</span><span class="o">.</span><span class="n">_select</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">rows</span><span class="p">)),</span> <span class="n">order</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">rows</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
@@ -618,17 +620,17 @@
         <span class="n">rows</span><span class="p">:</span> <span class="n">Space</span><span class="p">,</span>
         <span class="n">cols</span><span class="p">:</span> <span class="n">Space</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Raise if a block of a covariance built from blocks lacks a variance.</span>
 
 <span class="sd">        A variance is the entry of a label on the diagonal, which only the</span>
-<span class="sd">        block&#39;s own pair ``(block, block)`` can give. A pair that does not</span>
+<span class="sd">        block's own pair ``(block, block)`` can give. A pair that does not</span>
 <span class="sd">        cover every label of its block (or is not there) would leave those</span>
 <span class="sd">        entries 0 and the covariance singular, so it raises, naming them. An</span>
 <span class="sd">        unlabeled pair already has one row and column per label. Rows and</span>
 <span class="sd">        columns on other blocks are not a covariance at all, and</span>
 <span class="sd">        :meth:`_build` says so.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">if</span> <span class="nb">set</span><span class="p">(</span><span class="n">rows</span><span class="o">.</span><span class="n">names</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">set</span><span class="p">(</span><span class="n">cols</span><span class="o">.</span><span class="n">names</span><span class="p">):</span>
             <span class="k">return</span>
         <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="n">rows</span><span class="o">.</span><span class="n">names</span><span class="p">:</span>
@@ -637,39 +639,39 @@
                 <span class="k">continue</span>
             <span class="k">if</span> <span class="n">pair</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">labeled</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                    <span class="sa">f</span><span class="s2">&quot;Block </span><span class="si">{</span><span class="n">block</span><span class="si">!r}</span><span class="s2"> has no </span><span class="si">{</span><span class="n">pair</span><span class="si">!r}</span><span class="s2"> pair, so its &quot;</span>
-                    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">rows</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">block</span><span class="p">))</span><span class="si">}</span><span class="s2"> variances would be 0. Give the &quot;</span>
-                    <span class="s2">&quot;pair, with a variance for every label.&quot;</span>
+                    <span class="sa">f</span><span class="s2">"Block </span><span class="si">{</span><span class="n">block</span><span class="si">!r}</span><span class="s2"> has no </span><span class="si">{</span><span class="n">pair</span><span class="si">!r}</span><span class="s2"> pair, so its "</span>
+                    <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">rows</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">block</span><span class="p">))</span><span class="si">}</span><span class="s2"> variances would be 0. Give the "</span>
+                    <span class="s2">"pair, with a variance for every label."</span>
                 <span class="p">)</span>
-            <span class="k">for</span> <span class="n">axis</span><span class="p">,</span> <span class="n">space</span> <span class="ow">in</span> <span class="p">((</span><span class="s2">&quot;rows&quot;</span><span class="p">,</span> <span class="n">rows</span><span class="p">),</span> <span class="p">(</span><span class="s2">&quot;columns&quot;</span><span class="p">,</span> <span class="n">cols</span><span class="p">)):</span>
-                <span class="n">have</span> <span class="o">=</span> <span class="n">labeled</span><span class="p">[</span><span class="n">pair</span><span class="p">]</span><span class="o">.</span><span class="n">rows</span> <span class="k">if</span> <span class="n">axis</span> <span class="o">==</span> <span class="s2">&quot;rows&quot;</span> <span class="k">else</span> <span class="n">labeled</span><span class="p">[</span><span class="n">pair</span><span class="p">]</span><span class="o">.</span><span class="n">cols</span>
+            <span class="k">for</span> <span class="n">axis</span><span class="p">,</span> <span class="n">space</span> <span class="ow">in</span> <span class="p">((</span><span class="s2">"rows"</span><span class="p">,</span> <span class="n">rows</span><span class="p">),</span> <span class="p">(</span><span class="s2">"columns"</span><span class="p">,</span> <span class="n">cols</span><span class="p">)):</span>
+                <span class="n">have</span> <span class="o">=</span> <span class="n">labeled</span><span class="p">[</span><span class="n">pair</span><span class="p">]</span><span class="o">.</span><span class="n">rows</span> <span class="k">if</span> <span class="n">axis</span> <span class="o">==</span> <span class="s2">"rows"</span> <span class="k">else</span> <span class="n">labeled</span><span class="p">[</span><span class="n">pair</span><span class="p">]</span><span class="o">.</span><span class="n">cols</span>
                 <span class="n">lacking</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">_difference</span><span class="p">(</span><span class="n">space</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">block</span><span class="p">),</span> <span class="n">have</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">block</span><span class="p">))</span>
                 <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">lacking</span><span class="p">):</span>
                     <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                        <span class="sa">f</span><span class="s2">&quot;The </span><span class="si">{</span><span class="n">axis</span><span class="si">}</span><span class="s2"> of the matrix of </span><span class="si">{</span><span class="n">pair</span><span class="si">!r}</span><span class="s2"> lack &quot;</span>
-                        <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">lacking</span><span class="p">)</span><span class="si">}</span><span class="s2"> of the </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">space</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">block</span><span class="p">))</span><span class="si">}</span><span class="s2"> labels &quot;</span>
-                        <span class="sa">f</span><span class="s2">&quot;of block </span><span class="si">{</span><span class="n">block</span><span class="si">!r}</span><span class="s2">: </span><span class="si">{</span><span class="n">_listed</span><span class="p">(</span><span class="n">lacking</span><span class="p">)</span><span class="si">}</span><span class="s2">. A label without &quot;</span>
-                        <span class="s2">&quot;a row and column there gets a variance of 0, which makes &quot;</span>
-                        <span class="s2">&quot;the covariance singular. Give the pair every label of &quot;</span>
-                        <span class="s2">&quot;the block.&quot;</span>
+                        <span class="sa">f</span><span class="s2">"The </span><span class="si">{</span><span class="n">axis</span><span class="si">}</span><span class="s2"> of the matrix of </span><span class="si">{</span><span class="n">pair</span><span class="si">!r}</span><span class="s2"> lack "</span>
+                        <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">lacking</span><span class="p">)</span><span class="si">}</span><span class="s2"> of the </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">space</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">block</span><span class="p">))</span><span class="si">}</span><span class="s2"> labels "</span>
+                        <span class="sa">f</span><span class="s2">"of block </span><span class="si">{</span><span class="n">block</span><span class="si">!r}</span><span class="s2">: </span><span class="si">{</span><span class="n">_listed</span><span class="p">(</span><span class="n">lacking</span><span class="p">)</span><span class="si">}</span><span class="s2">. A label without "</span>
+                        <span class="s2">"a row and column there gets a variance of 0, which makes "</span>
+                        <span class="s2">"the covariance singular. Give the pair every label of "</span>
+                        <span class="s2">"the block."</span>
                     <span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_like</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">LinearOperatorLike</span><span class="p">,</span> <span class="n">rows</span><span class="p">:</span> <span class="n">Space</span><span class="p">,</span> <span class="n">cols</span><span class="p">:</span> <span class="n">Space</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Operator</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return a covariance when the two axes are one space, else an operator.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Return a covariance when the two axes are one space, else an operator."""</span>
         <span class="k">if</span> <span class="n">rows</span> <span class="ow">is</span> <span class="n">cols</span> <span class="ow">or</span> <span class="n">rows</span> <span class="o">==</span> <span class="n">cols</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">Covariance</span><span class="o">.</span><span class="n">_computed</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">rows</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_name</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">Operator</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">rows</span><span class="p">,</span> <span class="n">cols</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_name</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the name, shape and form, then the space.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Return the name, shape and form, then the space."""</span>
         <span class="k">return</span> <span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;Covariance(name=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_name</span><span class="si">!r}</span><span class="s2">, shape=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">, &quot;</span>
-            <span class="sa">f</span><span class="s2">&quot;form=</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">)</span><span class="se">\n</span><span class="s2">  space: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_rows</span><span class="si">!r}</span><span class="s2">&quot;</span>
+            <span class="sa">f</span><span class="s2">"Covariance(name=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_name</span><span class="si">!r}</span><span class="s2">, shape=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">, "</span>
+            <span class="sa">f</span><span class="s2">"form=</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">)</span><span class="se">\n</span><span class="s2">  space: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_rows</span><span class="si">!r}</span><span class="s2">"</span>
         <span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">space</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Space</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;The labels of both axes.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""The labels of both axes."""</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rows</span>
 
 <div class="viewcode-block" id="Covariance.diagonal">
@@ -677,11 +679,11 @@
     <span class="nd">@classmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">diagonal</span><span class="p">(</span>
         <span class="bp">cls</span><span class="p">,</span>
-        <span class="n">values</span><span class="p">:</span> <span class="s2">&quot;float | npt.ArrayLike | Vector&quot;</span><span class="p">,</span>
+        <span class="n">values</span><span class="p">:</span> <span class="s2">"float | npt.ArrayLike | Vector"</span><span class="p">,</span>
         <span class="n">space</span><span class="p">:</span> <span class="n">Space</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Self</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Build a diagonal covariance from its variances.</span>
 
 <span class="sd">        The covariance is kept as its diagonal, so it costs one number per</span>
@@ -694,10 +696,10 @@
 <span class="sd">            label; a :class:`~fips.Vector` brings its own space.</span>
 <span class="sd">        space : Space, optional</span>
 <span class="sd">            The labels. Required for a scalar or an array; for a Vector it</span>
-<span class="sd">            must be left out, or have exactly the vector&#39;s labels (the</span>
+<span class="sd">            must be left out, or have exactly the vector's labels (the</span>
 <span class="sd">            variances are put in its order).</span>
 <span class="sd">        name : str, optional</span>
-<span class="sd">            The covariance&#39;s name.</span>
+<span class="sd">            The covariance's name.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
@@ -708,13 +710,13 @@
 <span class="sd">        ------</span>
 <span class="sd">        ValueError</span>
 <span class="sd">            If a scalar or an array comes without a space, or `values` is not</span>
-<span class="sd">            a scalar or 1D, or has a length other than the space&#39;s.</span>
+<span class="sd">            a scalar or 1D, or has a length other than the space's.</span>
 
 <span class="sd">        Examples</span>
 <span class="sd">        --------</span>
 <span class="sd">        &gt;&gt;&gt; import pandas as pd</span>
 <span class="sd">        &gt;&gt;&gt; from fips import Covariance, Space</span>
-<span class="sd">        &gt;&gt;&gt; space = Space({&quot;co2&quot;: pd.Index([&quot;a&quot;, &quot;b&quot;, &quot;c&quot;], name=&quot;site&quot;)})</span>
+<span class="sd">        &gt;&gt;&gt; space = Space({"co2": pd.Index(["a", "b", "c"], name="site")})</span>
 <span class="sd">        &gt;&gt;&gt; S = Covariance.diagonal(0.25, space)</span>
 <span class="sd">        &gt;&gt;&gt; S.dense()</span>
 <span class="sd">        array([[0.25, 0.  , 0.  ],</span>
@@ -722,24 +724,24 @@
 <span class="sd">               [0.  , 0.  , 0.25]])</span>
 <span class="sd">        &gt;&gt;&gt; Covariance.diagonal(S.variances).variances.values</span>
 <span class="sd">        array([0.25, 0.25, 0.25])</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">Vector</span><span class="p">):</span>
             <span class="n">vector</span> <span class="o">=</span> <span class="n">values</span> <span class="k">if</span> <span class="n">space</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">values</span><span class="o">.</span><span class="n">align</span><span class="p">(</span><span class="n">space</span><span class="p">)</span>
             <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">DiagonalOperator</span><span class="o">.</span><span class="n">_adopt</span><span class="p">(</span><span class="n">vector</span><span class="o">.</span><span class="n">values</span><span class="p">),</span> <span class="n">vector</span><span class="o">.</span><span class="n">space</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">space</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="s2">&quot;A diagonal from a scalar or an array needs `space`, its labels.&quot;</span>
+                <span class="s2">"A diagonal from a scalar or an array needs `space`, its labels."</span>
             <span class="p">)</span>
         <span class="n">diagonal</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">diagonal</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
             <span class="n">diagonal</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">space</span><span class="p">),</span> <span class="nb">float</span><span class="p">(</span><span class="n">diagonal</span><span class="p">))</span>
         <span class="k">elif</span> <span class="n">diagonal</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;The variances must be a scalar or 1D, got shape </span><span class="si">{</span><span class="n">diagonal</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">.&quot;</span>
+                <span class="sa">f</span><span class="s2">"The variances must be a scalar or 1D, got shape </span><span class="si">{</span><span class="n">diagonal</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">."</span>
             <span class="p">)</span>
         <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">diagonal</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">space</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;Got </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">diagonal</span><span class="p">)</span><span class="si">}</span><span class="s2"> variances for a space of </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">space</span><span class="p">)</span><span class="si">}</span><span class="s2"> labels.&quot;</span>
+                <span class="sa">f</span><span class="s2">"Got </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">diagonal</span><span class="p">)</span><span class="si">}</span><span class="s2"> variances for a space of </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">space</span><span class="p">)</span><span class="si">}</span><span class="s2"> labels."</span>
             <span class="p">)</span>
         <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">DiagonalOperator</span><span class="p">(</span><span class="n">diagonal</span><span class="p">),</span> <span class="n">space</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span></div>
 
@@ -749,11 +751,11 @@
     <span class="nd">@classmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">block_diag</span><span class="p">(</span>
         <span class="bp">cls</span><span class="p">,</span>
-        <span class="o">*</span><span class="n">covariances</span><span class="p">:</span> <span class="s2">&quot;Covariance&quot;</span><span class="p">,</span>
+        <span class="o">*</span><span class="n">covariances</span><span class="p">:</span> <span class="s2">"Covariance"</span><span class="p">,</span>
         <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="o">**</span><span class="n">blocks</span><span class="p">:</span> <span class="s2">&quot;Covariance | _Model&quot;</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;Self | _Model&quot;</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+        <span class="o">**</span><span class="n">blocks</span><span class="p">:</span> <span class="s2">"Covariance | _Model"</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"Self | _Model"</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Put independent covariances side by side: each on its own blocks, zero between.</span>
 
 <span class="sd">        Each part keeps its form (a Kronecker block stays factors, a diagonal</span>
@@ -764,13 +766,13 @@
 <span class="sd">        *covariances : Covariance</span>
 <span class="sd">            Covariances that know their blocks, in order.</span>
 <span class="sd">        name : str, optional</span>
-<span class="sd">            The covariance&#39;s name. So a block called ``&quot;name&quot;`` cannot be</span>
+<span class="sd">            The covariance's name. So a block called ``"name"`` cannot be</span>
 <span class="sd">            given by keyword: build its part on the block and give the</span>
 <span class="sd">            Covariance in order.</span>
 <span class="sd">        **blocks : Covariance or CovarianceModel</span>
 <span class="sd">            Parts named by block, after the positional ones: a covariance on</span>
 <span class="sd">            that one block, or a :class:`~fips.covariance.CovarianceModel` (as</span>
-<span class="sd">            ``model.with_std(std)``), which gets the block&#39;s labels when built.</span>
+<span class="sd">            ``model.with_std(std)``), which gets the block's labels when built.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
@@ -783,7 +785,7 @@
 <span class="sd">        ------</span>
 <span class="sd">        TypeError</span>
 <span class="sd">            If `name` is a covariance or a model: a part for a block called</span>
-<span class="sd">            ``&quot;name&quot;``, which the keyword cannot take.</span>
+<span class="sd">            ``"name"``, which the keyword cannot take.</span>
 <span class="sd">        ValueError</span>
 <span class="sd">            If no part is given, two have a block of one name, or a covariance</span>
 <span class="sd">            given as `block=` is on another block.</span>
@@ -792,25 +794,25 @@
 <span class="sd">        --------</span>
 <span class="sd">        &gt;&gt;&gt; import pandas as pd</span>
 <span class="sd">        &gt;&gt;&gt; from fips import Covariance, Independent, Space</span>
-<span class="sd">        &gt;&gt;&gt; cells = Space({&quot;flux&quot;: pd.Index([&quot;a&quot;, &quot;b&quot;], name=&quot;cell&quot;)})</span>
-<span class="sd">        &gt;&gt;&gt; sites = Space({&quot;bias&quot;: pd.Index([&quot;A&quot;], name=&quot;site&quot;)})</span>
+<span class="sd">        &gt;&gt;&gt; cells = Space({"flux": pd.Index(["a", "b"], name="cell")})</span>
+<span class="sd">        &gt;&gt;&gt; sites = Space({"bias": pd.Index(["A"], name="site")})</span>
 <span class="sd">        &gt;&gt;&gt; flux = Covariance.diagonal(4.0, cells)</span>
 <span class="sd">        &gt;&gt;&gt; bias = Covariance.diagonal(1.0, sites)</span>
 <span class="sd">        &gt;&gt;&gt; S = Covariance.block_diag(flux, bias)</span>
 <span class="sd">        &gt;&gt;&gt; S.space</span>
-<span class="sd">        Space(flux: 2 x [&#39;cell&#39;], bias: 1 x [&#39;site&#39;])</span>
+<span class="sd">        Space(flux: 2 x ['cell'], bias: 1 x ['site'])</span>
 <span class="sd">        &gt;&gt;&gt; S.variances.values</span>
 <span class="sd">        array([4., 4., 1.])</span>
 <span class="sd">        &gt;&gt;&gt; model = Covariance.block_diag(flux, bias=Independent().with_std(2.0))</span>
 <span class="sd">        &gt;&gt;&gt; model.build(S.space).variances.values</span>
 <span class="sd">        array([4., 4., 4.])</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">Covariance</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="s2">&quot;build&quot;</span><span class="p">):</span>
+<span class="sd">        """</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">Covariance</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="s2">"build"</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
-                <span class="s2">&quot;block_diag&#39;s `name` is the covariance&#39;s name, so it cannot &quot;</span>
-                <span class="s2">&quot;take the part of a block called &#39;name&#39;. Build that part on its &quot;</span>
-                <span class="s2">&quot;block (model.build(Space({&#39;name&#39;: labels}))) and give the &quot;</span>
-                <span class="s2">&quot;Covariance in order, before the parts named by block.&quot;</span>
+                <span class="s2">"block_diag's `name` is the covariance's name, so it cannot "</span>
+                <span class="s2">"take the part of a block called 'name'. Build that part on its "</span>
+                <span class="s2">"block (model.build(Space({'name': labels}))) and give the "</span>
+                <span class="s2">"Covariance in order, before the parts named by block."</span>
             <span class="p">)</span>
         <span class="n">parts</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Covariance</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">part</span> <span class="ow">in</span> <span class="p">(</span><span class="o">*</span><span class="n">covariances</span><span class="p">,</span> <span class="o">*</span><span class="n">blocks</span><span class="o">.</span><span class="n">values</span><span class="p">()):</span>
@@ -819,86 +821,86 @@
             <span class="n">parts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">part</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">cov</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">blocks</span><span class="p">,</span> <span class="n">parts</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">covariances</span><span class="p">)</span> <span class="p">:],</span> <span class="n">strict</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
             <span class="k">if</span> <span class="n">cov</span><span class="o">.</span><span class="n">space</span><span class="o">.</span><span class="n">names</span> <span class="o">!=</span> <span class="p">(</span><span class="n">key</span><span class="p">,):</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;The covariance given as </span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">= is on </span><span class="si">{</span><span class="n">cov</span><span class="o">.</span><span class="n">space</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"The covariance given as </span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">= is on </span><span class="si">{</span><span class="n">cov</span><span class="o">.</span><span class="n">space</span><span class="si">}</span><span class="s2">."</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_computed</span><span class="p">(</span><span class="o">*</span><span class="n">_side_by_side</span><span class="p">(</span><span class="n">parts</span><span class="p">),</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span></div>
 
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">variances</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Vector</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        The variances: the diagonal, as a vector on the covariance&#39;s space.</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        The variances: the diagonal, as a vector on the covariance's space.</span>
 
 <span class="sd">        Read from the form without forming the matrix (from the variances of</span>
 <span class="sd">        a diagonal covariance, the factors of a Kronecker one).</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">Vector</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="o">.</span><span class="n">diagonal</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rows</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;variance&quot;</span><span class="p">)</span>
+<span class="sd">        """</span>
+        <span class="k">return</span> <span class="n">Vector</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="o">.</span><span class="n">diagonal</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rows</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">"variance"</span><span class="p">)</span>
 
 <div class="viewcode-block" id="Covariance.solve">
 <a class="viewcode-back" href="../../../reference/api/fips.Covariance.solve.html#fips.Covariance.solve">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">solve</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">b</span><span class="p">:</span> <span class="s2">&quot;Vector | Operator&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;Vector | Operator&quot;</span><span class="p">:</span>
-<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">solve</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">b</span><span class="p">:</span> <span class="s2">"Vector | Operator"</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"Vector | Operator"</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Return :math:`S^{-1} b`, for a positive-definite covariance :math:`S`.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        b : Vector or Operator</span>
-<span class="sd">            A vector on the covariance&#39;s space, or an operator whose rows are</span>
+<span class="sd">            A vector on the covariance's space, or an operator whose rows are</span>
 <span class="sd">            on it (both in any order).</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        Vector or Operator</span>
-<span class="sd">            The solution, on the covariance&#39;s space (and `b`&#39;s columns).</span>
+<span class="sd">            The solution, on the covariance's space (and `b`'s columns).</span>
 
 <span class="sd">        Raises</span>
 <span class="sd">        ------</span>
 <span class="sd">        TypeError</span>
 <span class="sd">            If `b` is an array: it has no labels to check.</span>
 <span class="sd">        ValueError</span>
-<span class="sd">            If the labels of `b` do not match the covariance&#39;s.</span>
+<span class="sd">            If the labels of `b` do not match the covariance's.</span>
 <span class="sd">        numpy.linalg.LinAlgError</span>
 <span class="sd">            If the covariance is singular.</span>
 
 <span class="sd">        See Also</span>
 <span class="sd">        --------</span>
 <span class="sd">        fips.linalg.LinearOperator.solve : How each form solves.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">Vector</span><span class="p">):</span>
             <span class="k">return</span> <span class="n">Vector</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">b</span><span class="o">.</span><span class="n">align</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_rows</span><span class="p">)</span><span class="o">.</span><span class="n">values</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rows</span><span class="p">)</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">Operator</span><span class="p">):</span>
             <span class="n">rhs</span> <span class="o">=</span> <span class="n">b</span><span class="o">.</span><span class="n">_on</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_rows</span><span class="p">,</span> <span class="n">b</span><span class="o">.</span><span class="n">cols</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">Operator</span><span class="p">(</span><span class="n">_adopt</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">rhs</span><span class="p">)),</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rows</span><span class="p">,</span> <span class="n">b</span><span class="o">.</span><span class="n">cols</span><span class="p">)</span>
         <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;Covariance.solve takes a Vector or an Operator, not </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">b</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">: &quot;</span>
-            <span class="s2">&quot;an array has no labels to check. Use cov.data.solve(b) to solve &quot;</span>
-            <span class="s2">&quot;by position.&quot;</span>
+            <span class="sa">f</span><span class="s2">"Covariance.solve takes a Vector or an Operator, not </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">b</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">: "</span>
+            <span class="s2">"an array has no labels to check. Use cov.data.solve(b) to solve "</span>
+            <span class="s2">"by position."</span>
         <span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="Covariance.logdet">
 <a class="viewcode-back" href="../../../reference/api/fips.Covariance.logdet.html#fips.Covariance.logdet">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">logdet</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Return ``log(det(S))``, from the form&#39;s factors (see :meth:`fips.linalg.LinearOperator.logdet`).</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Return ``log(det(S))``, from the form's factors (see :meth:`fips.linalg.LinearOperator.logdet`).</span>
 
 <span class="sd">        Raises</span>
 <span class="sd">        ------</span>
 <span class="sd">        numpy.linalg.LinAlgError</span>
 <span class="sd">            If the covariance is not positive-definite.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="o">.</span><span class="n">logdet</span><span class="p">()</span></div>
 
 
 <div class="viewcode-block" id="Covariance.quadratic_form">
 <a class="viewcode-back" href="../../../reference/api/fips.Covariance.quadratic_form.html#fips.Covariance.quadratic_form">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">quadratic_form</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">Vector</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Return :math:`x^T S^{-1} x`, the squared Mahalanobis length of `x`.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        x : Vector</span>
-<span class="sd">            A vector on the covariance&#39;s space, in any order.</span>
+<span class="sd">            A vector on the covariance's space, in any order.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
@@ -908,7 +910,7 @@
 <span class="sd">        Raises</span>
 <span class="sd">        ------</span>
 <span class="sd">        ValueError</span>
-<span class="sd">            If the labels of `x` do not match the covariance&#39;s.</span>
+<span class="sd">            If the labels of `x` do not match the covariance's.</span>
 <span class="sd">        numpy.linalg.LinAlgError</span>
 <span class="sd">            If the covariance is singular.</span>
 
@@ -916,11 +918,11 @@
 <span class="sd">        --------</span>
 <span class="sd">        &gt;&gt;&gt; import pandas as pd</span>
 <span class="sd">        &gt;&gt;&gt; from fips import Covariance, Space, Vector</span>
-<span class="sd">        &gt;&gt;&gt; space = Space({&quot;co2&quot;: pd.Index([&quot;a&quot;, &quot;b&quot;], name=&quot;site&quot;)})</span>
+<span class="sd">        &gt;&gt;&gt; space = Space({"co2": pd.Index(["a", "b"], name="site")})</span>
 <span class="sd">        &gt;&gt;&gt; S = Covariance.diagonal([4.0, 1.0], space)</span>
 <span class="sd">        &gt;&gt;&gt; S.quadratic_form(Vector([2.0, 1.0], space))</span>
 <span class="sd">        2.0</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="n">values</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">align</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_rows</span><span class="p">)</span><span class="o">.</span><span class="n">values</span>
         <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">values</span> <span class="o">@</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">values</span><span class="p">))</span></div>
 
@@ -928,25 +930,25 @@
 <div class="viewcode-block" id="Covariance.sqrt">
 <a class="viewcode-back" href="../../../reference/api/fips.Covariance.sqrt.html#fips.Covariance.sqrt">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">sqrt</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Operator</span><span class="p">:</span>
-<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Return a square root :math:`L`, with :math:`L L^T = S`.</span>
 
 <span class="sd">        A diagonal covariance gives the diagonal of standard deviations, a</span>
 <span class="sd">        block diagonal one the root of each block, any other form the lower</span>
 <span class="sd">        Cholesky factor of its dense matrix. :math:`L` maps independent unit</span>
-<span class="sd">        variables, one per label, to the covariance&#39;s space: ``L @ w`` with</span>
+<span class="sd">        variables, one per label, to the covariance's space: ``L @ w`` with</span>
 <span class="sd">        ``w`` standard normal is a draw from :math:`N(0, S)`.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        Operator</span>
-<span class="sd">            :math:`L`, with the covariance&#39;s space on both axes.</span>
+<span class="sd">            :math:`L`, with the covariance's space on both axes.</span>
 
 <span class="sd">        Raises</span>
 <span class="sd">        ------</span>
 <span class="sd">        numpy.linalg.LinAlgError</span>
 <span class="sd">            If the covariance is not positive-definite.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">return</span> <span class="n">Operator</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rows</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rows</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_name</span><span class="p">)</span></div>
 </div>
 
@@ -979,8 +981,8 @@
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script defer src="../../../_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0"></script>
-<script defer src="../../../_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0"></script>
+  <script defer src="../../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be"></script>
+<script defer src="../../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be"></script>
 
   <footer class="bd-footer">
 <div class="bd-footer__inner bd-page-width">
@@ -1000,7 +1002,7 @@
         <div class="footer-item">
 
   <p class="sphinx-version">
-    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.1.0.
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.2.0.
   </p>
 </div>
       
@@ -1013,7 +1015,7 @@
         <div class="footer-item">
 <p class="theme-version">
   <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
-  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.22.0.
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.23.0.
 </p></div>
       
     </div>

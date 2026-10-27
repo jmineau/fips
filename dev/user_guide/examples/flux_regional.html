@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>A regional flux inversion &#8212; fips 0.2.0b2.dev8+g22c2598c9 documentation</title>
+    <title>A regional flux inversion &#8212; fips 0.2.0b2.dev9+g9dded00bd documentation</title>
   
   
   
@@ -26,29 +26,30 @@
   </noscript>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="../../_static/styles/theme.css?digest=64cc4de3f052d77215f0" rel="stylesheet" />
-<link href="../../_static/styles/pydata-sphinx-theme.css?digest=64cc4de3f052d77215f0" rel="stylesheet" />
+  <link href="../../_static/styles/theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
 
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../_static/plot_directive.css" />
     <link rel="stylesheet" type="text/css" href="../../_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx_autodoc_typehints.css?v=057ac668" />
     <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../../_static/custom.css?v=4b8357b6" />
   
   <!-- So that users can add custom icons -->
-  <script defer src="../../_static/scripts/fontawesome.js?digest=64cc4de3f052d77215f0"></script>
+  <script defer src="../../_static/scripts/fontawesome.js?digest=18bd87630a240e9c25be"></script>
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0" />
-<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0" />
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../_static/documentation_options.js?v=3193467b"></script>
+    <script src="../../_static/documentation_options.js?v=46a0216e"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../../_static/copybutton.js?v=f281be69"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'user_guide/examples/flux_regional';</script>
     <script>
-        DOCUMENTATION_OPTIONS.theme_version = '0.22.0';
+        DOCUMENTATION_OPTIONS.theme_version = '0.23.0';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://jmineau.github.io/fips/switcher.json';
         DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'dev';
         DOCUMENTATION_OPTIONS.show_version_warning_banner =
@@ -60,6 +61,7 @@
     <link rel="next" title="API Reference" href="../../reference/index.html" />
     <link rel="prev" title="Gravity: density below the surface" href="gravity_2d.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="0.2" />
   
@@ -133,8 +135,8 @@
       
     
     
-    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b2.dev8+g22c2598c9 documentation - Home"/>
-    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b2.dev8+g22c2598c9 documentation - Home"/>
+    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b2.dev9+g9dded00bd documentation - Home"/>
+    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b2.dev9+g9dded00bd documentation - Home"/>
   
   
 </a></div>
@@ -491,12 +493,12 @@ time and in space, and the <strong>observation covariance</strong> is independen
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">lons</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="o">-</span><span class="mf">111.975</span><span class="p">,</span> <span class="o">-</span><span class="mf">111.5</span><span class="p">,</span> <span class="mf">0.05</span><span class="p">),</span> <span class="mi">3</span><span class="p">)</span>
 <span class="n">lats</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mf">40.525</span><span class="p">,</span> <span class="mf">41.0</span><span class="p">,</span> <span class="mf">0.05</span><span class="p">),</span> <span class="mi">3</span><span class="p">)</span>
-<span class="n">months</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">date_range</span><span class="p">(</span><span class="s2">&quot;2024-01-01&quot;</span><span class="p">,</span> <span class="n">periods</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span> <span class="n">freq</span><span class="o">=</span><span class="s2">&quot;MS&quot;</span><span class="p">)</span>
-<span class="n">days</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">date_range</span><span class="p">(</span><span class="s2">&quot;2024-01-01&quot;</span><span class="p">,</span> <span class="s2">&quot;2024-12-31&quot;</span><span class="p">,</span> <span class="n">freq</span><span class="o">=</span><span class="s2">&quot;D&quot;</span><span class="p">)</span>
+<span class="n">months</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">date_range</span><span class="p">(</span><span class="s2">"2024-01-01"</span><span class="p">,</span> <span class="n">periods</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span> <span class="n">freq</span><span class="o">=</span><span class="s2">"MS"</span><span class="p">)</span>
+<span class="n">days</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">date_range</span><span class="p">(</span><span class="s2">"2024-01-01"</span><span class="p">,</span> <span class="s2">"2024-12-31"</span><span class="p">,</span> <span class="n">freq</span><span class="o">=</span><span class="s2">"D"</span><span class="p">)</span>
 
 <span class="n">sites</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
-    <span class="p">{</span><span class="s2">&quot;lon&quot;</span><span class="p">:</span> <span class="n">rng</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="o">-</span><span class="mf">112.0</span><span class="p">,</span> <span class="o">-</span><span class="mf">111.5</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="s2">&quot;lat&quot;</span><span class="p">:</span> <span class="n">rng</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mf">40.5</span><span class="p">,</span> <span class="mf">41.0</span><span class="p">,</span> <span class="mi">3</span><span class="p">)},</span>
-    <span class="n">index</span><span class="o">=</span><span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">([</span><span class="s2">&quot;site_a&quot;</span><span class="p">,</span> <span class="s2">&quot;site_b&quot;</span><span class="p">,</span> <span class="s2">&quot;site_c&quot;</span><span class="p">],</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;site&quot;</span><span class="p">),</span>
+    <span class="p">{</span><span class="s2">"lon"</span><span class="p">:</span> <span class="n">rng</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="o">-</span><span class="mf">112.0</span><span class="p">,</span> <span class="o">-</span><span class="mf">111.5</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="s2">"lat"</span><span class="p">:</span> <span class="n">rng</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mf">40.5</span><span class="p">,</span> <span class="mf">41.0</span><span class="p">,</span> <span class="mi">3</span><span class="p">)},</span>
+    <span class="n">index</span><span class="o">=</span><span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">([</span><span class="s2">"site_a"</span><span class="p">,</span> <span class="s2">"site_b"</span><span class="p">,</span> <span class="s2">"site_c"</span><span class="p">],</span> <span class="n">name</span><span class="o">=</span><span class="s2">"site"</span><span class="p">),</span>
 <span class="p">)</span>
 <span class="n">sites</span>
 </pre></div>
@@ -559,12 +561,12 @@ observations are labeled by <code class="docutils literal notranslate"><span cla
 <code class="docutils literal notranslate"><span class="pre">concentration</span></code>.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">cells</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">MultiIndex</span><span class="o">.</span><span class="n">from_product</span><span class="p">([</span><span class="n">months</span><span class="p">,</span> <span class="n">lats</span><span class="p">,</span> <span class="n">lons</span><span class="p">],</span> <span class="n">names</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;time&quot;</span><span class="p">,</span> <span class="s2">&quot;lat&quot;</span><span class="p">,</span> <span class="s2">&quot;lon&quot;</span><span class="p">])</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">cells</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">MultiIndex</span><span class="o">.</span><span class="n">from_product</span><span class="p">([</span><span class="n">months</span><span class="p">,</span> <span class="n">lats</span><span class="p">,</span> <span class="n">lons</span><span class="p">],</span> <span class="n">names</span><span class="o">=</span><span class="p">[</span><span class="s2">"time"</span><span class="p">,</span> <span class="s2">"lat"</span><span class="p">,</span> <span class="s2">"lon"</span><span class="p">])</span>
 <span class="n">prior</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Vector</span><span class="o">.</span><span class="n">from_series</span><span class="p">(</span>
-    <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="mf">0.05</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">cells</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;prior&quot;</span><span class="p">),</span> <span class="n">block</span><span class="o">=</span><span class="s2">&quot;flux&quot;</span>
+    <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="mf">0.05</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">cells</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">"prior"</span><span class="p">),</span> <span class="n">block</span><span class="o">=</span><span class="s2">"flux"</span>
 <span class="p">)</span>
 
-<span class="n">obs_labels</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">MultiIndex</span><span class="o">.</span><span class="n">from_product</span><span class="p">([</span><span class="n">sites</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">days</span><span class="p">],</span> <span class="n">names</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;site&quot;</span><span class="p">,</span> <span class="s2">&quot;obs_time&quot;</span><span class="p">])</span>
+<span class="n">obs_labels</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">MultiIndex</span><span class="o">.</span><span class="n">from_product</span><span class="p">([</span><span class="n">sites</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">days</span><span class="p">],</span> <span class="n">names</span><span class="o">=</span><span class="p">[</span><span class="s2">"site"</span><span class="p">,</span> <span class="s2">"obs_time"</span><span class="p">])</span>
 <span class="nb">len</span><span class="p">(</span><span class="n">cells</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">obs_labels</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -587,7 +589,7 @@ of <code class="docutils literal notranslate"><span class="pre">cells</span></co
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">grid_lat</span><span class="p">,</span> <span class="n">grid_lon</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span>
-    <span class="n">lats</span><span class="p">,</span> <span class="n">lons</span><span class="p">,</span> <span class="n">indexing</span><span class="o">=</span><span class="s2">&quot;ij&quot;</span>
+    <span class="n">lats</span><span class="p">,</span> <span class="n">lons</span><span class="p">,</span> <span class="n">indexing</span><span class="o">=</span><span class="s2">"ij"</span>
 <span class="p">)</span>  <span class="c1"># in the order of `cells` within a month</span>
 <span class="n">n_cells</span> <span class="o">=</span> <span class="n">grid_lat</span><span class="o">.</span><span class="n">size</span>
 <span class="n">rows</span><span class="p">,</span> <span class="n">cols</span><span class="p">,</span> <span class="n">values</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[],</span> <span class="p">[]</span>
@@ -595,7 +597,7 @@ of <code class="docutils literal notranslate"><span class="pre">cells</span></co
     <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">,</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">obs_labels</span><span class="p">),</span> <span class="mi">2</span><span class="p">)</span>
 <span class="p">)</span>  <span class="c1"># degrees, one shift per site and day</span>
 <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">site</span><span class="p">,</span> <span class="n">day</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">obs_labels</span><span class="p">):</span>
-    <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">sites</span><span class="o">.</span><span class="n">at</span><span class="p">[</span><span class="n">site</span><span class="p">,</span> <span class="s2">&quot;lon&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="n">upwind</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">sites</span><span class="o">.</span><span class="n">at</span><span class="p">[</span><span class="n">site</span><span class="p">,</span> <span class="s2">&quot;lat&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="n">upwind</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>
+    <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">sites</span><span class="o">.</span><span class="n">at</span><span class="p">[</span><span class="n">site</span><span class="p">,</span> <span class="s2">"lon"</span><span class="p">]</span> <span class="o">+</span> <span class="n">upwind</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">sites</span><span class="o">.</span><span class="n">at</span><span class="p">[</span><span class="n">site</span><span class="p">,</span> <span class="s2">"lat"</span><span class="p">]</span> <span class="o">+</span> <span class="n">upwind</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>
     <span class="n">distance</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hypot</span><span class="p">(</span><span class="n">grid_lon</span> <span class="o">-</span> <span class="n">x</span><span class="p">,</span> <span class="n">grid_lat</span> <span class="o">-</span> <span class="n">y</span><span class="p">)</span>
     <span class="n">month</span> <span class="o">=</span> <span class="n">day</span><span class="o">.</span><span class="n">month</span> <span class="o">-</span> <span class="mi">1</span>
     <span class="n">rows</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="n">n_cells</span><span class="p">,</span> <span class="n">i</span><span class="p">))</span>
@@ -606,7 +608,7 @@ of <code class="docutils literal notranslate"><span class="pre">cells</span></co
     <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">obs_labels</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">cells</span><span class="p">)),</span>
 <span class="p">)</span>
 
-<span class="n">obs_space</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Space</span><span class="p">({</span><span class="s2">&quot;concentration&quot;</span><span class="p">:</span> <span class="n">obs_labels</span><span class="p">})</span>
+<span class="n">obs_space</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Space</span><span class="p">({</span><span class="s2">"concentration"</span><span class="p">:</span> <span class="n">obs_labels</span><span class="p">})</span>
 <span class="n">forward</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Operator</span><span class="p">(</span><span class="n">jacobian</span><span class="p">,</span> <span class="n">obs_space</span><span class="p">,</span> <span class="n">prior</span><span class="o">.</span><span class="n">space</span><span class="p">)</span>
 <span class="n">forward</span><span class="o">.</span><span class="n">data</span>
 </pre></div>
@@ -633,7 +635,7 @@ noise.</p>
 <span class="p">)</span>
 <span class="n">season</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">+</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="p">(</span><span class="n">months</span><span class="o">.</span><span class="n">dayofyear</span> <span class="o">-</span> <span class="mi">80</span><span class="p">)</span> <span class="o">/</span> <span class="mf">365.25</span><span class="p">)</span>
 <span class="n">truth</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Vector</span><span class="p">(</span>
-    <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">s</span> <span class="o">*</span> <span class="n">spatial</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">season</span><span class="p">]),</span> <span class="n">prior</span><span class="o">.</span><span class="n">space</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;truth&quot;</span>
+    <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">s</span> <span class="o">*</span> <span class="n">spatial</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">season</span><span class="p">]),</span> <span class="n">prior</span><span class="o">.</span><span class="n">space</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">"truth"</span>
 <span class="p">)</span>
 
 <span class="n">background</span> <span class="o">=</span> <span class="mf">1.9</span>
@@ -642,8 +644,14 @@ noise.</p>
 <span class="n">obs</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Vector</span><span class="p">(</span>
     <span class="n">observed</span><span class="o">.</span><span class="n">values</span> <span class="o">+</span> <span class="n">background</span> <span class="o">+</span> <span class="n">rng</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">noise</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">obs_labels</span><span class="p">)),</span>
     <span class="n">obs_space</span><span class="p">,</span>
-    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;observed&quot;</span><span class="p">,</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">"observed"</span><span class="p">,</span>
 <span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/tmp/ipykernel_2431/320684116.py:6: Pandas4Warning: DatetimeIndex.dayofyear is deprecated and will be removed in a future version. Use DatetimeIndex.day_of_year instead.
+  season = 1.0 + 0.5 * np.sin(2 * np.pi * (months.dayofyear - 80) / 365.25)
 </pre></div>
 </div>
 </div>
@@ -659,8 +667,8 @@ matrix. The observation errors are independent.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">prior_cov</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Kronecker</span><span class="p">(</span>
-    <span class="n">fips</span><span class="o">.</span><span class="n">Exponential</span><span class="p">(</span><span class="s2">&quot;time&quot;</span><span class="p">,</span> <span class="s2">&quot;60D&quot;</span><span class="p">),</span>
-    <span class="n">fips</span><span class="o">.</span><span class="n">Exponential</span><span class="p">([</span><span class="s2">&quot;lat&quot;</span><span class="p">,</span> <span class="s2">&quot;lon&quot;</span><span class="p">],</span> <span class="mf">20.0</span><span class="p">,</span> <span class="n">metric</span><span class="o">=</span><span class="s2">&quot;haversine&quot;</span><span class="p">),</span>
+    <span class="n">fips</span><span class="o">.</span><span class="n">Exponential</span><span class="p">(</span><span class="s2">"time"</span><span class="p">,</span> <span class="s2">"60D"</span><span class="p">),</span>
+    <span class="n">fips</span><span class="o">.</span><span class="n">Exponential</span><span class="p">([</span><span class="s2">"lat"</span><span class="p">,</span> <span class="s2">"lon"</span><span class="p">],</span> <span class="mf">20.0</span><span class="p">,</span> <span class="n">metric</span><span class="o">=</span><span class="s2">"haversine"</span><span class="p">),</span>
 <span class="p">)</span><span class="o">.</span><span class="n">with_std</span><span class="p">(</span><span class="mf">0.25</span><span class="p">)</span>
 <span class="n">obs_cov</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Independent</span><span class="p">()</span><span class="o">.</span><span class="n">with_std</span><span class="p">(</span><span class="n">noise</span><span class="p">)</span>
 </pre></div>
@@ -723,8 +731,8 @@ fluxes do not explain.</p>
       <td>1.0</td>
       <td>1200</td>
       <td>1098</td>
-      <td>280.013505</td>
-      <td>995.421276</td>
+      <td>280.013504</td>
+      <td>995.421265</td>
       <td>0.906577</td>
       <td>1.0</td>
       <td>0.001724</td>
@@ -742,15 +750,15 @@ yearly means are one line each.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">means</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="s2">&quot;Truth&quot;</span><span class="p">:</span> <span class="n">truth</span><span class="p">[</span><span class="s2">&quot;flux&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">to_xarray</span><span class="p">()</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="s2">&quot;time&quot;</span><span class="p">),</span>
-    <span class="s2">&quot;Prior&quot;</span><span class="p">:</span> <span class="n">problem</span><span class="o">.</span><span class="n">prior</span><span class="p">[</span><span class="s2">&quot;flux&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">to_xarray</span><span class="p">()</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="s2">&quot;time&quot;</span><span class="p">),</span>
-    <span class="s2">&quot;Posterior&quot;</span><span class="p">:</span> <span class="n">post</span><span class="o">.</span><span class="n">estimate</span><span class="p">[</span><span class="s2">&quot;flux&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">to_xarray</span><span class="p">()</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="s2">&quot;time&quot;</span><span class="p">),</span>
+    <span class="s2">"Truth"</span><span class="p">:</span> <span class="n">truth</span><span class="p">[</span><span class="s2">"flux"</span><span class="p">]</span><span class="o">.</span><span class="n">to_xarray</span><span class="p">()</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="s2">"time"</span><span class="p">),</span>
+    <span class="s2">"Prior"</span><span class="p">:</span> <span class="n">problem</span><span class="o">.</span><span class="n">prior</span><span class="p">[</span><span class="s2">"flux"</span><span class="p">]</span><span class="o">.</span><span class="n">to_xarray</span><span class="p">()</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="s2">"time"</span><span class="p">),</span>
+    <span class="s2">"Posterior"</span><span class="p">:</span> <span class="n">post</span><span class="o">.</span><span class="n">estimate</span><span class="p">[</span><span class="s2">"flux"</span><span class="p">]</span><span class="o">.</span><span class="n">to_xarray</span><span class="p">()</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="s2">"time"</span><span class="p">),</span>
 <span class="p">}</span>
 <span class="n">vmax</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">max</span><span class="p">())</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">means</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
 <span class="n">fig</span><span class="p">,</span> <span class="n">axes</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">ncols</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">15</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span> <span class="n">sharey</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="k">for</span> <span class="n">ax</span><span class="p">,</span> <span class="p">(</span><span class="n">title</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">axes</span><span class="p">,</span> <span class="n">means</span><span class="o">.</span><span class="n">items</span><span class="p">(),</span> <span class="n">strict</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
-    <span class="n">data</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="s2">&quot;lon&quot;</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="s2">&quot;lat&quot;</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s2">&quot;Reds&quot;</span><span class="p">,</span> <span class="n">vmin</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">vmax</span><span class="o">=</span><span class="n">vmax</span><span class="p">)</span>
-    <span class="n">ax</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">sites</span><span class="p">[</span><span class="s2">&quot;lon&quot;</span><span class="p">],</span> <span class="n">sites</span><span class="p">[</span><span class="s2">&quot;lat&quot;</span><span class="p">],</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;blue&quot;</span><span class="p">,</span> <span class="n">edgecolors</span><span class="o">=</span><span class="s2">&quot;black&quot;</span><span class="p">,</span> <span class="n">zorder</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+    <span class="n">data</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="s2">"lon"</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="s2">"lat"</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s2">"Reds"</span><span class="p">,</span> <span class="n">vmin</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">vmax</span><span class="o">=</span><span class="n">vmax</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">sites</span><span class="p">[</span><span class="s2">"lon"</span><span class="p">],</span> <span class="n">sites</span><span class="p">[</span><span class="s2">"lat"</span><span class="p">],</span> <span class="n">color</span><span class="o">=</span><span class="s2">"blue"</span><span class="p">,</span> <span class="n">edgecolors</span><span class="o">=</span><span class="s2">"black"</span><span class="p">,</span> <span class="n">zorder</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
     <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="n">title</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -766,17 +774,17 @@ yearly means are one line each.</p>
 one site over the year.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">at_site</span><span class="p">(</span><span class="n">vector</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">site</span><span class="o">=</span><span class="s2">&quot;site_a&quot;</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return one site&#39;s concentrations over time, as a Series named for the legend.&quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="n">vector</span><span class="o">.</span><span class="n">to_series</span><span class="p">()</span><span class="o">.</span><span class="n">droplevel</span><span class="p">(</span><span class="s2">&quot;block&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">xs</span><span class="p">(</span><span class="n">site</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="s2">&quot;site&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">at_site</span><span class="p">(</span><span class="n">vector</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">site</span><span class="o">=</span><span class="s2">"site_a"</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return one site's concentrations over time, as a Series named for the legend."""</span>
+    <span class="k">return</span> <span class="n">vector</span><span class="o">.</span><span class="n">to_series</span><span class="p">()</span><span class="o">.</span><span class="n">droplevel</span><span class="p">(</span><span class="s2">"block"</span><span class="p">)</span><span class="o">.</span><span class="n">xs</span><span class="p">(</span><span class="n">site</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="s2">"site"</span><span class="p">)</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
 
 
 <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plot_comparison</span><span class="p">(</span>
-    <span class="n">at_site</span><span class="p">(</span><span class="n">problem</span><span class="o">.</span><span class="n">obs</span><span class="p">,</span> <span class="s2">&quot;observed&quot;</span><span class="p">),</span>
-    <span class="n">at_site</span><span class="p">(</span><span class="n">problem</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">problem</span><span class="o">.</span><span class="n">prior</span><span class="p">),</span> <span class="s2">&quot;prior&quot;</span><span class="p">),</span>
-    <span class="n">at_site</span><span class="p">(</span><span class="n">post</span><span class="o">.</span><span class="n">modeled_obs</span><span class="p">,</span> <span class="s2">&quot;posterior&quot;</span><span class="p">),</span>
+    <span class="n">at_site</span><span class="p">(</span><span class="n">problem</span><span class="o">.</span><span class="n">obs</span><span class="p">,</span> <span class="s2">"observed"</span><span class="p">),</span>
+    <span class="n">at_site</span><span class="p">(</span><span class="n">problem</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">problem</span><span class="o">.</span><span class="n">prior</span><span class="p">),</span> <span class="s2">"prior"</span><span class="p">),</span>
+    <span class="n">at_site</span><span class="p">(</span><span class="n">post</span><span class="o">.</span><span class="n">modeled_obs</span><span class="p">,</span> <span class="s2">"posterior"</span><span class="p">),</span>
 <span class="p">)</span>
-<span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;CH₄ (ppm)&quot;</span><span class="p">);</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">"CH₄ (ppm)"</span><span class="p">);</span>
 </pre></div>
 </div>
 </div>
@@ -794,21 +802,21 @@ posterior covariance. <code class="docutils literal notranslate"><span class="pr
 with a band of one standard deviation each, and the truth.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">W</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">aggregate</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">prior</span><span class="o">.</span><span class="n">space</span><span class="p">,</span> <span class="n">by</span><span class="o">=</span><span class="s2">&quot;time&quot;</span><span class="p">)</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">W</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">aggregate</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">prior</span><span class="o">.</span><span class="n">space</span><span class="p">,</span> <span class="n">by</span><span class="o">=</span><span class="s2">"time"</span><span class="p">)</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">total</span><span class="p">(</span><span class="n">vector</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the domain total of each month, as a Series named for the legend.&quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="p">(</span><span class="n">W</span> <span class="o">@</span> <span class="n">vector</span><span class="p">)</span><span class="o">.</span><span class="n">to_series</span><span class="p">()</span><span class="o">.</span><span class="n">droplevel</span><span class="p">(</span><span class="s2">&quot;block&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+<span class="w">    </span><span class="sd">"""Return the domain total of each month, as a Series named for the legend."""</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">W</span> <span class="o">@</span> <span class="n">vector</span><span class="p">)</span><span class="o">.</span><span class="n">to_series</span><span class="p">()</span><span class="o">.</span><span class="n">droplevel</span><span class="p">(</span><span class="s2">"block"</span><span class="p">)</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
 
 
 <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plot_comparison</span><span class="p">(</span>
-    <span class="n">total</span><span class="p">(</span><span class="n">truth</span><span class="p">,</span> <span class="s2">&quot;truth&quot;</span><span class="p">),</span>
-    <span class="n">total</span><span class="p">(</span><span class="n">problem</span><span class="o">.</span><span class="n">prior</span><span class="p">,</span> <span class="s2">&quot;prior&quot;</span><span class="p">),</span>
-    <span class="n">total</span><span class="p">(</span><span class="n">post</span><span class="o">.</span><span class="n">estimate</span><span class="p">,</span> <span class="s2">&quot;posterior&quot;</span><span class="p">),</span>
+    <span class="n">total</span><span class="p">(</span><span class="n">truth</span><span class="p">,</span> <span class="s2">"truth"</span><span class="p">),</span>
+    <span class="n">total</span><span class="p">(</span><span class="n">problem</span><span class="o">.</span><span class="n">prior</span><span class="p">,</span> <span class="s2">"prior"</span><span class="p">),</span>
+    <span class="n">total</span><span class="p">(</span><span class="n">post</span><span class="o">.</span><span class="n">estimate</span><span class="p">,</span> <span class="s2">"posterior"</span><span class="p">),</span>
     <span class="n">errors</span><span class="o">=</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="n">W</span> <span class="o">@</span> <span class="n">problem</span><span class="o">.</span><span class="n">prior_cov</span> <span class="o">@</span> <span class="n">W</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">post</span><span class="o">.</span><span class="n">cov</span><span class="p">(</span><span class="n">W</span><span class="p">)],</span>
 <span class="p">)</span>
-<span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;domain total flux (µmol/m²/s, summed over cells)&quot;</span><span class="p">);</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">"domain total flux (µmol/m²/s, summed over cells)"</span><span class="p">);</span>
 </pre></div>
 </div>
 </div>
@@ -1158,8 +1166,8 @@ where it stays at the prior.</p>
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script defer src="../../_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0"></script>
-<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0"></script>
+  <script defer src="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be"></script>
+<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be"></script>
 
   <footer class="bd-footer">
 <div class="bd-footer__inner bd-page-width">
@@ -1179,7 +1187,7 @@ where it stays at the prior.</p>
         <div class="footer-item">
 
   <p class="sphinx-version">
-    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.1.0.
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.2.0.
   </p>
 </div>
       
@@ -1192,7 +1200,7 @@ where it stays at the prior.</p>
         <div class="footer-item">
 <p class="theme-version">
   <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
-  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.22.0.
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.23.0.
 </p></div>
       
     </div>

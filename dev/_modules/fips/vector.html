@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>fips.vector &#8212; fips 0.2.0b2.dev8+g22c2598c9 documentation</title>
+    <title>fips.vector &#8212; fips 0.2.0b2.dev9+g9dded00bd documentation</title>
   
   
   
@@ -25,29 +25,30 @@
   </noscript>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="../../_static/styles/theme.css?digest=64cc4de3f052d77215f0" rel="stylesheet" />
-<link href="../../_static/styles/pydata-sphinx-theme.css?digest=64cc4de3f052d77215f0" rel="stylesheet" />
+  <link href="../../_static/styles/theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
 
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../_static/plot_directive.css" />
     <link rel="stylesheet" type="text/css" href="../../_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx_autodoc_typehints.css?v=057ac668" />
     <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../../_static/custom.css?v=4b8357b6" />
   
   <!-- So that users can add custom icons -->
-  <script defer src="../../_static/scripts/fontawesome.js?digest=64cc4de3f052d77215f0"></script>
+  <script defer src="../../_static/scripts/fontawesome.js?digest=18bd87630a240e9c25be"></script>
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0" />
-<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0" />
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../_static/documentation_options.js?v=3193467b"></script>
+    <script src="../../_static/documentation_options.js?v=46a0216e"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../../_static/copybutton.js?v=f281be69"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = '_modules/fips/vector';</script>
     <script>
-        DOCUMENTATION_OPTIONS.theme_version = '0.22.0';
+        DOCUMENTATION_OPTIONS.theme_version = '0.23.0';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://jmineau.github.io/fips/switcher.json';
         DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'dev';
         DOCUMENTATION_OPTIONS.show_version_warning_banner =
@@ -57,6 +58,7 @@
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="0.2" />
   
@@ -130,8 +132,8 @@
       
     
     
-    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b2.dev8+g22c2598c9 documentation - Home"/>
-    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b2.dev8+g22c2598c9 documentation - Home"/>
+    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b2.dev9+g9dded00bd documentation - Home"/>
+    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b2.dev9+g9dded00bd documentation - Home"/>
   
   
 </a></div>
@@ -419,14 +421,14 @@
                 <article class="bd-article">
                   
   <h1>Source code for fips.vector</h1><div class="highlight"><pre>
-<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span></span><span class="sd">"""</span>
 <span class="sd">Vectors: values on a space.</span>
 
 <span class="sd">A :class:`Vector` holds one value for each label of a :class:`~fips.Space`:</span>
 <span class="sd">a prior state, the observations, an offset, a posterior estimate or its</span>
-<span class="sd">variances. The values are a NumPy array and the labels are the space&#39;s; a</span>
+<span class="sd">variances. The values are a NumPy array and the labels are the space's; a</span>
 <span class="sd">:class:`pandas.Series` is what :meth:`Vector.to_series` gives.</span>
-<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">"""</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Mapping</span>
 
@@ -441,27 +443,27 @@
 <div class="viewcode-block" id="Vector">
 <a class="viewcode-back" href="../../reference/api/fips.Vector.html#fips.Vector">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">Vector</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Values on a :class:`~fips.Space`, one for each label.</span>
 
 <span class="sd">    A vector is read-only: its values cannot be changed in place, and every</span>
 <span class="sd">    method returns a new vector. Labels are kept as given: they are not</span>
 <span class="sd">    converted to numbers and not rounded unless :meth:`round_labels` is</span>
 <span class="sd">    called. A vector of one block is what a single state or observation</span>
-<span class="sd">    component is (``Vector.from_series(series, block=&quot;flux&quot;)``); several</span>
+<span class="sd">    component is (``Vector.from_series(series, block="flux")``); several</span>
 <span class="sd">    blocks are put together with :meth:`from_blocks`.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    values : array-like</span>
-<span class="sd">        One number for each label of `space`, in the space&#39;s order. A</span>
+<span class="sd">        One number for each label of `space`, in the space's order. A</span>
 <span class="sd">        :class:`pandas.Series` is refused here, since its own labels would be</span>
 <span class="sd">        ignored: use :meth:`from_series`. So is a :class:`Vector`: use</span>
 <span class="sd">        :meth:`align` to put it on other labels, or its :attr:`values`.</span>
 <span class="sd">    space : Space</span>
 <span class="sd">        The labels.</span>
 <span class="sd">    name : str, optional</span>
-<span class="sd">        What the values are (&quot;prior&quot;, &quot;obs&quot;, ...). A name that is not a</span>
+<span class="sd">        What the values are ("prior", "obs", ...). A name that is not a</span>
 <span class="sd">        string is converted to one.</span>
 
 <span class="sd">    Raises</span>
@@ -470,7 +472,7 @@
 <span class="sd">        If `values` is a pandas object or a Vector.</span>
 <span class="sd">    ValueError</span>
 <span class="sd">        If `values` is not one-dimensional, its length differs from the</span>
-<span class="sd">        space&#39;s, or a value is NaN (the message names its labels).</span>
+<span class="sd">        space's, or a value is NaN (the message names its labels).</span>
 
 <span class="sd">    See Also</span>
 <span class="sd">    --------</span>
@@ -483,46 +485,46 @@
 <span class="sd">    &gt;&gt;&gt; from fips import Vector</span>
 <span class="sd">    &gt;&gt;&gt; prior = Vector.from_blocks(</span>
 <span class="sd">    ...     {</span>
-<span class="sd">    ...         &quot;flux&quot;: pd.Series([1.0, 2.0], index=pd.Index([1, 2], name=&quot;cell&quot;)),</span>
-<span class="sd">    ...         &quot;bias&quot;: pd.Series([0.0], index=pd.Index([&quot;A&quot;], name=&quot;site&quot;)),</span>
+<span class="sd">    ...         "flux": pd.Series([1.0, 2.0], index=pd.Index([1, 2], name="cell")),</span>
+<span class="sd">    ...         "bias": pd.Series([0.0], index=pd.Index(["A"], name="site")),</span>
 <span class="sd">    ...     },</span>
-<span class="sd">    ...     name=&quot;prior&quot;,</span>
+<span class="sd">    ...     name="prior",</span>
 <span class="sd">    ... )</span>
 <span class="sd">    &gt;&gt;&gt; prior.values</span>
 <span class="sd">    array([1., 2., 0.])</span>
-<span class="sd">    &gt;&gt;&gt; prior[&quot;flux&quot;].values</span>
+<span class="sd">    &gt;&gt;&gt; prior["flux"].values</span>
 <span class="sd">    array([1., 2.])</span>
-<span class="sd">    &gt;&gt;&gt; prior[&quot;flux&quot;].space.select(&quot;flux&quot;)</span>
-<span class="sd">    Index([1, 2], dtype=&#39;int64&#39;, name=&#39;cell&#39;)</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    &gt;&gt;&gt; prior["flux"].space.select("flux")</span>
+<span class="sd">    Index([1, 2], dtype='int64', name='cell')</span>
+<span class="sd">    """</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">values</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">,</span> <span class="n">space</span><span class="p">:</span> <span class="n">Space</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">)):</span>
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
-                <span class="s2">&quot;Vector takes the values as an array, in the space&#39;s order. &quot;</span>
-                <span class="s2">&quot;Build a vector from a Series with Vector.from_series, which &quot;</span>
-                <span class="s2">&quot;reads its labels.&quot;</span>
+                <span class="s2">"Vector takes the values as an array, in the space's order. "</span>
+                <span class="s2">"Build a vector from a Series with Vector.from_series, which "</span>
+                <span class="s2">"reads its labels."</span>
             <span class="p">)</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">Vector</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
-                <span class="s2">&quot;Vector takes the values, not a Vector, whose labels would be &quot;</span>
-                <span class="s2">&quot;ignored. To put a vector on other labels (in any order), use &quot;</span>
-                <span class="s2">&quot;v.align(space); for its values by position, v.values.&quot;</span>
+                <span class="s2">"Vector takes the values, not a Vector, whose labels would be "</span>
+                <span class="s2">"ignored. To put a vector on other labels (in any order), use "</span>
+                <span class="s2">"v.align(space); for its values by position, v.values."</span>
             <span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">space</span><span class="p">,</span> <span class="n">Space</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;space must be a Space, got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">space</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"space must be a Space, got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">space</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">."</span><span class="p">)</span>
         <span class="n">array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">array</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;A vector&#39;s values are 1D, got shape </span><span class="si">{</span><span class="n">array</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"A vector's values are 1D, got shape </span><span class="si">{</span><span class="n">array</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">."</span><span class="p">)</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">array</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">space</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;Got </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">array</span><span class="p">)</span><span class="si">}</span><span class="s2"> values for a space of </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">space</span><span class="p">)</span><span class="si">}</span><span class="s2"> labels.&quot;</span>
+                <span class="sa">f</span><span class="s2">"Got </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">array</span><span class="p">)</span><span class="si">}</span><span class="s2"> values for a space of </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">space</span><span class="p">)</span><span class="si">}</span><span class="s2"> labels."</span>
             <span class="p">)</span>
         <span class="n">nan</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">array</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">nan</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;The values are NaN at </span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="n">nan</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span><span class="si">}</span><span class="s2"> labels: &quot;</span>
-                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">_listed</span><span class="p">(</span><span class="n">space</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="n">nan</span><span class="p">])</span><span class="si">}</span><span class="s2">.&quot;</span>
+                <span class="sa">f</span><span class="s2">"The values are NaN at </span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="n">nan</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span><span class="si">}</span><span class="s2"> labels: "</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">_listed</span><span class="p">(</span><span class="n">space</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="n">nan</span><span class="p">])</span><span class="si">}</span><span class="s2">."</span>
             <span class="p">)</span>
         <span class="n">array</span><span class="o">.</span><span class="n">flags</span><span class="o">.</span><span class="n">writeable</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_values</span> <span class="o">=</span> <span class="n">array</span>
@@ -532,8 +534,8 @@
 <div class="viewcode-block" id="Vector.from_series">
 <a class="viewcode-back" href="../../reference/api/fips.Vector.from_series.html#fips.Vector.from_series">[docs]</a>
     <span class="nd">@classmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">from_series</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">series</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span> <span class="n">block</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;Vector&quot;</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">from_series</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">series</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span> <span class="n">block</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"Vector"</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Build a vector from a Series, reading its labels.</span>
 
 <span class="sd">        Parameters</span>
@@ -541,7 +543,7 @@
 <span class="sd">        series : pd.Series</span>
 <span class="sd">            Numeric values. With a ``block`` level in its index, the vector has</span>
 <span class="sd">            those blocks (see :meth:`Space.from_index`); without one, it has</span>
-<span class="sd">            one block, named by `block`. The Series&#39; name is the vector&#39;s.</span>
+<span class="sd">            one block, named by `block`. The Series' name is the vector's.</span>
 <span class="sd">        block : str, optional</span>
 <span class="sd">            The name of the one block, for a Series without a ``block``</span>
 <span class="sd">            level.</span>
@@ -549,7 +551,7 @@
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        Vector</span>
-<span class="sd">            The values on the Series&#39; labels. With a ``block`` level, the rows</span>
+<span class="sd">            The values on the Series' labels. With a ``block`` level, the rows</span>
 <span class="sd">            of each block are put together, in the order the blocks first</span>
 <span class="sd">            appear.</span>
 
@@ -565,27 +567,27 @@
 <span class="sd">        &gt;&gt;&gt; import pandas as pd</span>
 <span class="sd">        &gt;&gt;&gt; from fips import Vector</span>
 <span class="sd">        &gt;&gt;&gt; obs = pd.Series(</span>
-<span class="sd">        ...     [410.2, 412.8], index=pd.Index([&quot;A&quot;, &quot;B&quot;], name=&quot;site&quot;), name=&quot;obs&quot;</span>
+<span class="sd">        ...     [410.2, 412.8], index=pd.Index(["A", "B"], name="site"), name="obs"</span>
 <span class="sd">        ... )</span>
-<span class="sd">        &gt;&gt;&gt; Vector.from_series(obs, block=&quot;co2&quot;).index</span>
-<span class="sd">        MultiIndex([(&#39;co2&#39;, &#39;A&#39;),</span>
-<span class="sd">                    (&#39;co2&#39;, &#39;B&#39;)],</span>
-<span class="sd">                   names=[&#39;block&#39;, &#39;site&#39;])</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        &gt;&gt;&gt; Vector.from_series(obs, block="co2").index</span>
+<span class="sd">        MultiIndex([('co2', 'A'),</span>
+<span class="sd">                    ('co2', 'B')],</span>
+<span class="sd">                   names=['block', 'site'])</span>
+<span class="sd">        """</span>
         <span class="n">index</span> <span class="o">=</span> <span class="n">series</span><span class="o">.</span><span class="n">index</span>
-        <span class="k">if</span> <span class="s2">&quot;block&quot;</span> <span class="ow">in</span> <span class="n">index</span><span class="o">.</span><span class="n">names</span><span class="p">:</span>
+        <span class="k">if</span> <span class="s2">"block"</span> <span class="ow">in</span> <span class="n">index</span><span class="o">.</span><span class="n">names</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">block</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                    <span class="s2">&quot;The Series has a &#39;block&#39; level, which names its blocks; &quot;</span>
-                    <span class="s2">&quot;leave `block` out.&quot;</span>
+                    <span class="s2">"The Series has a 'block' level, which names its blocks; "</span>
+                    <span class="s2">"leave `block` out."</span>
                 <span class="p">)</span>
             <span class="n">space</span><span class="p">,</span> <span class="n">order</span> <span class="o">=</span> <span class="n">Space</span><span class="o">.</span><span class="n">_regroup</span><span class="p">(</span><span class="n">index</span><span class="p">)</span>
             <span class="n">values</span> <span class="o">=</span> <span class="n">series</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)[</span><span class="n">order</span><span class="p">]</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">block</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                    <span class="s2">&quot;A Series without a &#39;block&#39; level needs `block`, the name &quot;</span>
-                    <span class="s2">&quot;of its one block.&quot;</span>
+                    <span class="s2">"A Series without a 'block' level needs `block`, the name "</span>
+                    <span class="s2">"of its one block."</span>
                 <span class="p">)</span>
             <span class="n">space</span> <span class="o">=</span> <span class="n">Space</span><span class="p">({</span><span class="n">block</span><span class="p">:</span> <span class="n">index</span><span class="p">})</span>
             <span class="n">values</span> <span class="o">=</span> <span class="n">series</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
@@ -597,25 +599,25 @@
 <a class="viewcode-back" href="../../reference/api/fips.Vector.from_blocks.html#fips.Vector.from_blocks">[docs]</a>
     <span class="nd">@classmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">from_blocks</span><span class="p">(</span>
-        <span class="bp">cls</span><span class="p">,</span> <span class="n">blocks</span><span class="p">:</span> <span class="s2">&quot;Mapping[str, pd.Series | Vector]&quot;</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;Vector&quot;</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+        <span class="bp">cls</span><span class="p">,</span> <span class="n">blocks</span><span class="p">:</span> <span class="s2">"Mapping[str, pd.Series | Vector]"</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"Vector"</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Build a vector from one Series (or vector of one block) for each block.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        blocks : mapping of str to pd.Series or Vector</span>
-<span class="sd">            Each block&#39;s name mapped to its values, in the order the blocks</span>
-<span class="sd">            should have: a Series labeled by the block&#39;s own index (no</span>
+<span class="sd">            Each block's name mapped to its values, in the order the blocks</span>
+<span class="sd">            should have: a Series labeled by the block's own index (no</span>
 <span class="sd">            ``block`` level), or a :class:`Vector` of one block (its labels</span>
 <span class="sd">            and values; the key names the block).</span>
 <span class="sd">        name : str, optional</span>
-<span class="sd">            The vector&#39;s name.</span>
+<span class="sd">            The vector's name.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        Vector</span>
-<span class="sd">            The values of every block, on the :class:`Space` of the blocks&#39;</span>
+<span class="sd">            The values of every block, on the :class:`Space` of the blocks'</span>
 <span class="sd">            indexes.</span>
 
 <span class="sd">        Raises</span>
@@ -629,18 +631,18 @@
 <span class="sd">        &gt;&gt;&gt; import pandas as pd</span>
 <span class="sd">        &gt;&gt;&gt; from fips import Vector</span>
 <span class="sd">        &gt;&gt;&gt; f = Vector.from_blocks(</span>
-<span class="sd">        ...     {&quot;flux&quot;: pd.Series([1.0, 2.0], index=pd.Index([1, 2], name=&quot;cell&quot;))}</span>
+<span class="sd">        ...     {"flux": pd.Series([1.0, 2.0], index=pd.Index([1, 2], name="cell"))}</span>
 <span class="sd">        ... )</span>
 <span class="sd">        &gt;&gt;&gt; f.space</span>
-<span class="sd">        Space(flux: 2 x [&#39;cell&#39;])</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        Space(flux: 2 x ['cell'])</span>
+<span class="sd">        """</span>
         <span class="n">labels</span><span class="p">,</span> <span class="n">values</span> <span class="o">=</span> <span class="p">{},</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">part</span> <span class="ow">in</span> <span class="n">blocks</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">part</span><span class="p">,</span> <span class="n">Vector</span><span class="p">):</span>
                 <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">part</span><span class="o">.</span><span class="n">space</span><span class="o">.</span><span class="n">names</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
                     <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                        <span class="sa">f</span><span class="s2">&quot;The vector given for block </span><span class="si">{</span><span class="n">key</span><span class="si">!r}</span><span class="s2"> has the blocks &quot;</span>
-                        <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">list</span><span class="p">(</span><span class="n">part</span><span class="o">.</span><span class="n">space</span><span class="o">.</span><span class="n">names</span><span class="p">)</span><span class="si">}</span><span class="s2">; give one block.&quot;</span>
+                        <span class="sa">f</span><span class="s2">"The vector given for block </span><span class="si">{</span><span class="n">key</span><span class="si">!r}</span><span class="s2"> has the blocks "</span>
+                        <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">list</span><span class="p">(</span><span class="n">part</span><span class="o">.</span><span class="n">space</span><span class="o">.</span><span class="n">names</span><span class="p">)</span><span class="si">}</span><span class="s2">; give one block."</span>
                     <span class="p">)</span>
                 <span class="n">labels</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">part</span><span class="o">.</span><span class="n">space</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">part</span><span class="o">.</span><span class="n">space</span><span class="o">.</span><span class="n">names</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
                 <span class="n">values</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">part</span><span class="o">.</span><span class="n">values</span><span class="p">)</span>
@@ -652,50 +654,50 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">values</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;The values, one for each label, in the space&#39;s order (read-only).&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""The values, one for each label, in the space's order (read-only)."""</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_values</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">space</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Space</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;The labels of the values.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""The labels of the values."""</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_space</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">name</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;What the values are: a string, or None.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""What the values are: a string, or None."""</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_name</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">index</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">MultiIndex</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;The labels as one MultiIndex with the ``block`` level first (:attr:`Space.index`).&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""The labels as one MultiIndex with the ``block`` level first (:attr:`Space.index`)."""</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_space</span><span class="o">.</span><span class="n">index</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the number of values.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Return the number of values."""</span>
         <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_values</span><span class="p">)</span>
 
 <div class="viewcode-block" id="Vector.__getitem__">
 <a class="viewcode-back" href="../../reference/api/fips.Vector.__getitem__.html#fips.Vector.__getitem__">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">block</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;Vector&quot;</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">block</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"Vector"</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Return the vector of one block.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        block : str</span>
-<span class="sd">            The block&#39;s name.</span>
+<span class="sd">            The block's name.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        Vector</span>
-<span class="sd">            The block&#39;s values on a space of that one block, labeled as the</span>
+<span class="sd">            The block's values on a space of that one block, labeled as the</span>
 <span class="sd">            block was given.</span>
 
 <span class="sd">        Raises</span>
 <span class="sd">        ------</span>
 <span class="sd">        KeyError</span>
 <span class="sd">            If the vector has no block of that name.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="n">labels</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_space</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">block</span><span class="p">)</span>
         <span class="n">values</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_values</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_space</span><span class="o">.</span><span class="n">slice</span><span class="p">(</span><span class="n">block</span><span class="p">)]</span>
         <span class="k">return</span> <span class="n">Vector</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">Space</span><span class="p">({</span><span class="n">block</span><span class="p">:</span> <span class="n">labels</span><span class="p">}),</span> <span class="n">name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_name</span><span class="p">)</span></div>
@@ -704,7 +706,7 @@
 <div class="viewcode-block" id="Vector.to_series">
 <a class="viewcode-back" href="../../reference/api/fips.Vector.to_series.html#fips.Vector.to_series">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">to_series</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">block</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Return the values as a Series: the whole vector, or one block on its own labels.</span>
 
 <span class="sd">        Parameters</span>
@@ -712,7 +714,7 @@
 <span class="sd">        block : str, optional</span>
 <span class="sd">            The name of a block. Without it, the Series has every block and</span>
 <span class="sd">            is labeled by :attr:`index`, with the ``block`` level first. With</span>
-<span class="sd">            it, the Series has that block&#39;s values only, labeled as the block</span>
+<span class="sd">            it, the Series has that block's values only, labeled as the block</span>
 <span class="sd">            was given (``space.select(block)``: its own levels and dtypes, no</span>
 <span class="sd">            ``block`` level), ready for pandas or ``to_xarray``.</span>
 
@@ -736,19 +738,19 @@
 <span class="sd">        &gt;&gt;&gt; from fips import Space, Vector</span>
 <span class="sd">        &gt;&gt;&gt; space = Space(</span>
 <span class="sd">        ...     {</span>
-<span class="sd">        ...         &quot;flux&quot;: pd.Index([1, 2], name=&quot;cell&quot;),</span>
-<span class="sd">        ...         &quot;bias&quot;: pd.Index([&quot;A&quot;], name=&quot;site&quot;),</span>
+<span class="sd">        ...         "flux": pd.Index([1, 2], name="cell"),</span>
+<span class="sd">        ...         "bias": pd.Index(["A"], name="site"),</span>
 <span class="sd">        ...     }</span>
 <span class="sd">        ... )</span>
-<span class="sd">        &gt;&gt;&gt; v = Vector([0.5, 1.5, 2.0], space, name=&quot;prior&quot;)</span>
-<span class="sd">        &gt;&gt;&gt; v.to_series(&quot;flux&quot;)</span>
+<span class="sd">        &gt;&gt;&gt; v = Vector([0.5, 1.5, 2.0], space, name="prior")</span>
+<span class="sd">        &gt;&gt;&gt; v.to_series("flux")</span>
 <span class="sd">        cell</span>
 <span class="sd">        1    0.5</span>
 <span class="sd">        2    1.5</span>
 <span class="sd">        Name: prior, dtype: float64</span>
 <span class="sd">        &gt;&gt;&gt; v.to_series().index.names</span>
-<span class="sd">        FrozenList([&#39;block&#39;, &#39;cell&#39;, &#39;site&#39;])</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        FrozenList(['block', 'cell', 'site'])</span>
+<span class="sd">        """</span>
         <span class="k">if</span> <span class="n">block</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_values</span><span class="p">),</span> <span class="n">index</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_name</span><span class="p">)</span>
         <span class="n">values</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_values</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_space</span><span class="o">.</span><span class="n">slice</span><span class="p">(</span><span class="n">block</span><span class="p">)]</span>
@@ -760,14 +762,14 @@
 <div class="viewcode-block" id="Vector.to_xarray">
 <a class="viewcode-back" href="../../reference/api/fips.Vector.to_xarray.html#fips.Vector.to_xarray">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">to_xarray</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span> <span class="o">|</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Return the values as xarray, each block on its own levels.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        xarray.DataArray or xarray.Dataset</span>
 <span class="sd">            For a vector of one block, a DataArray with a dimension for each</span>
-<span class="sd">            of the block&#39;s levels (and no ``block`` dimension), named after</span>
+<span class="sd">            of the block's levels (and no ``block`` dimension), named after</span>
 <span class="sd">            the block. For several blocks, a Dataset with one such variable</span>
 <span class="sd">            per block.</span>
 
@@ -778,12 +780,12 @@
 <span class="sd">        &gt;&gt;&gt; flux = pd.Series(</span>
 <span class="sd">        ...     [1.0, 2.0, 3.0, 4.0],</span>
 <span class="sd">        ...     index=pd.MultiIndex.from_product(</span>
-<span class="sd">        ...         [[40.0, 41.0], [-112.0, -111.0]], names=[&quot;lat&quot;, &quot;lon&quot;]</span>
+<span class="sd">        ...         [[40.0, 41.0], [-112.0, -111.0]], names=["lat", "lon"]</span>
 <span class="sd">        ...     ),</span>
 <span class="sd">        ... )</span>
-<span class="sd">        &gt;&gt;&gt; Vector.from_series(flux, block=&quot;flux&quot;).to_xarray().dims</span>
-<span class="sd">        (&#39;lat&#39;, &#39;lon&#39;)</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        &gt;&gt;&gt; Vector.from_series(flux, block="flux").to_xarray().dims</span>
+<span class="sd">        ('lat', 'lon')</span>
+<span class="sd">        """</span>
         <span class="n">arrays</span> <span class="o">=</span> <span class="p">{</span>
             <span class="n">block</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_values</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_space</span><span class="o">.</span><span class="n">slice</span><span class="p">(</span><span class="n">block</span><span class="p">)],</span>
@@ -799,8 +801,8 @@
 
 <div class="viewcode-block" id="Vector.align">
 <a class="viewcode-back" href="../../reference/api/fips.Vector.align.html#fips.Vector.align">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">align</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">space</span><span class="p">:</span> <span class="n">Space</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;Vector&quot;</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">align</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">space</span><span class="p">:</span> <span class="n">Space</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"Vector"</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Return the values on `space`, which must have exactly the same labels.</span>
 
 <span class="sd">        Parameters</span>
@@ -817,17 +819,17 @@
 <span class="sd">        Raises</span>
 <span class="sd">        ------</span>
 <span class="sd">        ValueError</span>
-<span class="sd">            If `space` and the vector&#39;s space do not have the same labels; the</span>
+<span class="sd">            If `space` and the vector's space do not have the same labels; the</span>
 <span class="sd">            message names those missing from either.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">return</span> <span class="n">Vector</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_values</span><span class="p">[</span><span class="n">space</span><span class="o">.</span><span class="n">align</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_space</span><span class="p">)],</span> <span class="n">space</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_name</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="Vector.combine_first">
 <a class="viewcode-back" href="../../reference/api/fips.Vector.combine_first.html#fips.Vector.combine_first">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">combine_first</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s2">&quot;Vector&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;Vector&quot;</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Return `other` with this vector&#39;s values where this vector has the label.</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">combine_first</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s2">"Vector"</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"Vector"</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Return `other` with this vector's values where this vector has the label.</span>
 
 <span class="sd">        The values of a smaller vector put back on a larger space: the</span>
 <span class="sd">        estimate of a problem restricted to some of the state</span>
@@ -838,12 +840,12 @@
 <span class="sd">        ----------</span>
 <span class="sd">        other : Vector</span>
 <span class="sd">            The values for the labels this vector lacks. Every label of this</span>
-<span class="sd">            vector must be one of `other`&#39;s.</span>
+<span class="sd">            vector must be one of `other`'s.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        Vector</span>
-<span class="sd">            On `other`&#39;s space, named as this vector.</span>
+<span class="sd">            On `other`'s space, named as this vector.</span>
 
 <span class="sd">        Raises</span>
 <span class="sd">        ------</span>
@@ -854,17 +856,17 @@
 <span class="sd">        --------</span>
 <span class="sd">        &gt;&gt;&gt; import pandas as pd</span>
 <span class="sd">        &gt;&gt;&gt; from fips import Vector</span>
-<span class="sd">        &gt;&gt;&gt; cells = pd.Index([&quot;a&quot;, &quot;b&quot;, &quot;c&quot;], name=&quot;cell&quot;)</span>
+<span class="sd">        &gt;&gt;&gt; cells = pd.Index(["a", "b", "c"], name="cell")</span>
 <span class="sd">        &gt;&gt;&gt; prior = Vector.from_series(</span>
-<span class="sd">        ...     pd.Series([1.0, 2.0, 3.0], index=cells), block=&quot;flux&quot;</span>
+<span class="sd">        ...     pd.Series([1.0, 2.0, 3.0], index=cells), block="flux"</span>
 <span class="sd">        ... )</span>
 <span class="sd">        &gt;&gt;&gt; part = Vector.from_series(</span>
-<span class="sd">        ...     pd.Series([20.0], index=cells[[1]], name=&quot;estimate&quot;), block=&quot;flux&quot;</span>
+<span class="sd">        ...     pd.Series([20.0], index=cells[[1]], name="estimate"), block="flux"</span>
 <span class="sd">        ... )</span>
 <span class="sd">        &gt;&gt;&gt; part.combine_first(prior).values</span>
 <span class="sd">        array([ 1., 20.,  3.])</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">positions</span> <span class="o">=</span> <span class="n">other</span><span class="o">.</span><span class="n">space</span><span class="o">.</span><span class="n">_subset</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_space</span><span class="p">,</span> <span class="s2">&quot;This vector&quot;</span><span class="p">)</span>
+<span class="sd">        """</span>
+        <span class="n">positions</span> <span class="o">=</span> <span class="n">other</span><span class="o">.</span><span class="n">space</span><span class="o">.</span><span class="n">_subset</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_space</span><span class="p">,</span> <span class="s2">"This vector"</span><span class="p">)</span>
         <span class="n">values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">other</span><span class="o">.</span><span class="n">values</span><span class="p">)</span>
         <span class="n">values</span><span class="p">[</span><span class="n">positions</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_values</span>
         <span class="k">return</span> <span class="n">Vector</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">space</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_name</span><span class="p">)</span></div>
@@ -872,8 +874,8 @@
 
 <div class="viewcode-block" id="Vector.round_labels">
 <a class="viewcode-back" href="../../reference/api/fips.Vector.round_labels.html#fips.Vector.round_labels">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">round_labels</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">decimals</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;Vector&quot;</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">round_labels</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">decimals</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"Vector"</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Return the vector with its float labels rounded (:meth:`Space.round_labels`).</span>
 
 <span class="sd">        Parameters</span>
@@ -890,26 +892,26 @@
 <span class="sd">        ------</span>
 <span class="sd">        ValueError</span>
 <span class="sd">            If rounding makes two labels of a block equal.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">return</span> <span class="n">Vector</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_values</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_space</span><span class="o">.</span><span class="n">round_labels</span><span class="p">(</span><span class="n">decimals</span><span class="p">),</span> <span class="n">name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_name</span><span class="p">)</span></div>
 
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the name and space, then the values as a Series.&quot;&quot;&quot;</span>
-        <span class="n">header</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Vector(name=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_name</span><span class="si">!r}</span><span class="s2">, </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_space</span><span class="si">!r}</span><span class="s2">)</span><span class="se">\n</span><span class="s2">&quot;</span>
+<span class="w">        </span><span class="sd">"""Return the name and space, then the values as a Series."""</span>
+        <span class="n">header</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"Vector(name=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_name</span><span class="si">!r}</span><span class="s2">, </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_space</span><span class="si">!r}</span><span class="s2">)</span><span class="se">\n</span><span class="s2">"</span>
         <span class="k">return</span> <span class="n">header</span> <span class="o">+</span> <span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">to_series</span><span class="p">())</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">__getstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Pickle the values, the space and the name.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;values&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_values</span><span class="p">,</span> <span class="s2">&quot;space&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_space</span><span class="p">,</span> <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_name</span><span class="p">}</span>
+<span class="w">        </span><span class="sd">"""Pickle the values, the space and the name."""</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">"values"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_values</span><span class="p">,</span> <span class="s2">"space"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_space</span><span class="p">,</span> <span class="s2">"name"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_name</span><span class="p">}</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">__setstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Restore from :meth:`__getstate__`, read-only again.&quot;&quot;&quot;</span>
-        <span class="n">values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">state</span><span class="p">[</span><span class="s2">&quot;values&quot;</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+<span class="w">        </span><span class="sd">"""Restore from :meth:`__getstate__`, read-only again."""</span>
+        <span class="n">values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">state</span><span class="p">[</span><span class="s2">"values"</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
         <span class="n">values</span><span class="o">.</span><span class="n">flags</span><span class="o">.</span><span class="n">writeable</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_values</span> <span class="o">=</span> <span class="n">values</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_space</span> <span class="o">=</span> <span class="n">state</span><span class="p">[</span><span class="s2">&quot;space&quot;</span><span class="p">]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_name</span> <span class="o">=</span> <span class="n">state</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_space</span> <span class="o">=</span> <span class="n">state</span><span class="p">[</span><span class="s2">"space"</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_name</span> <span class="o">=</span> <span class="n">state</span><span class="p">[</span><span class="s2">"name"</span><span class="p">]</span></div>
 
 </pre></div>
 
@@ -940,8 +942,8 @@
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script defer src="../../_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0"></script>
-<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0"></script>
+  <script defer src="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be"></script>
+<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be"></script>
 
   <footer class="bd-footer">
 <div class="bd-footer__inner bd-page-width">
@@ -961,7 +963,7 @@
         <div class="footer-item">
 
   <p class="sphinx-version">
-    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.1.0.
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.2.0.
   </p>
 </div>
       
@@ -974,7 +976,7 @@
         <div class="footer-item">
 <p class="theme-version">
   <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
-  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.22.0.
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.23.0.
 </p></div>
       
     </div>

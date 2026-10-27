@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>fips.operator &#8212; fips 0.2.0b2.dev8+g22c2598c9 documentation</title>
+    <title>fips.operator &#8212; fips 0.2.0b2.dev9+g9dded00bd documentation</title>
   
   
   
@@ -25,29 +25,30 @@
   </noscript>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="../../_static/styles/theme.css?digest=64cc4de3f052d77215f0" rel="stylesheet" />
-<link href="../../_static/styles/pydata-sphinx-theme.css?digest=64cc4de3f052d77215f0" rel="stylesheet" />
+  <link href="../../_static/styles/theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
 
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../_static/plot_directive.css" />
     <link rel="stylesheet" type="text/css" href="../../_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx_autodoc_typehints.css?v=057ac668" />
     <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../../_static/custom.css?v=4b8357b6" />
   
   <!-- So that users can add custom icons -->
-  <script defer src="../../_static/scripts/fontawesome.js?digest=64cc4de3f052d77215f0"></script>
+  <script defer src="../../_static/scripts/fontawesome.js?digest=18bd87630a240e9c25be"></script>
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0" />
-<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0" />
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../_static/documentation_options.js?v=3193467b"></script>
+    <script src="../../_static/documentation_options.js?v=46a0216e"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../../_static/copybutton.js?v=f281be69"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = '_modules/fips/operator';</script>
     <script>
-        DOCUMENTATION_OPTIONS.theme_version = '0.22.0';
+        DOCUMENTATION_OPTIONS.theme_version = '0.23.0';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://jmineau.github.io/fips/switcher.json';
         DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'dev';
         DOCUMENTATION_OPTIONS.show_version_warning_banner =
@@ -57,6 +58,7 @@
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="0.2" />
   
@@ -130,8 +132,8 @@
       
     
     
-    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b2.dev8+g22c2598c9 documentation - Home"/>
-    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b2.dev8+g22c2598c9 documentation - Home"/>
+    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b2.dev9+g9dded00bd documentation - Home"/>
+    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b2.dev9+g9dded00bd documentation - Home"/>
   
   
 </a></div>
@@ -419,7 +421,7 @@
                 <article class="bd-article">
                   
   <h1>Source code for fips.operator</h1><div class="highlight"><pre>
-<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span></span><span class="sd">"""</span>
 <span class="sd">Operators: matrices with a space of labels on each axis.</span>
 
 <span class="sd">An :class:`Operator` is a linear map from one :class:`~fips.Space` (its</span>
@@ -432,7 +434,7 @@
 
 <span class="sd">A DataFrame is a way in (:meth:`Operator.from_frame`) and a way out</span>
 <span class="sd">(:meth:`Operator.to_frame`), not the store.</span>
-<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">"""</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Container</span><span class="p">,</span> <span class="n">Hashable</span><span class="p">,</span> <span class="n">Mapping</span>
@@ -459,12 +461,12 @@
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_stored_values</span><span class="p">(</span><span class="n">form</span><span class="p">:</span> <span class="n">LinearOperator</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Return the values a form stores: a dense one&#39;s array, a sparse one&#39;s entries, a diagonal.</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Return the values a form stores: a dense one's array, a sparse one's entries, a diagonal.</span>
 
-<span class="sd">    A block diagonal form gives its blocks&#39; values; any other form (Kronecker</span>
+<span class="sd">    A block diagonal form gives its blocks' values; any other form (Kronecker</span>
 <span class="sd">    factors, which check themselves when built) gives none.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">form</span><span class="p">,</span> <span class="n">DenseOperator</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">form</span><span class="o">.</span><span class="n">array</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">form</span><span class="p">,</span> <span class="n">SparseOperator</span><span class="p">):</span>
@@ -479,32 +481,32 @@
 <span class="k">def</span><span class="w"> </span><span class="nf">_axis_space</span><span class="p">(</span>
     <span class="n">index</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">,</span> <span class="n">block</span><span class="p">:</span> <span class="n">Hashable</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">axis</span><span class="p">:</span> <span class="nb">str</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Space</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Return the space of one axis of a frame, and the order that puts the frame&#39;s labels in it.</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Return the space of one axis of a frame, and the order that puts the frame's labels in it.</span>
 
 <span class="sd">    With a ``block`` level, the blocks come from it (:meth:`Space.from_index`)</span>
 <span class="sd">    and the rows of each block are put together; without one, the axis is the</span>
 <span class="sd">    one block named `block`.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">argument</span> <span class="o">=</span> <span class="s2">&quot;row_block&quot;</span> <span class="k">if</span> <span class="n">axis</span> <span class="o">==</span> <span class="s2">&quot;rows&quot;</span> <span class="k">else</span> <span class="s2">&quot;col_block&quot;</span>
-    <span class="k">if</span> <span class="s2">&quot;block&quot;</span> <span class="ow">in</span> <span class="n">index</span><span class="o">.</span><span class="n">names</span><span class="p">:</span>
+<span class="sd">    """</span>
+    <span class="n">argument</span> <span class="o">=</span> <span class="s2">"row_block"</span> <span class="k">if</span> <span class="n">axis</span> <span class="o">==</span> <span class="s2">"rows"</span> <span class="k">else</span> <span class="s2">"col_block"</span>
+    <span class="k">if</span> <span class="s2">"block"</span> <span class="ow">in</span> <span class="n">index</span><span class="o">.</span><span class="n">names</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">block</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;The frame&#39;s </span><span class="si">{</span><span class="n">axis</span><span class="si">}</span><span class="s2"> have a &#39;block&#39; level, which names their &quot;</span>
-                <span class="sa">f</span><span class="s2">&quot;blocks; leave `</span><span class="si">{</span><span class="n">argument</span><span class="si">}</span><span class="s2">` out.&quot;</span>
+                <span class="sa">f</span><span class="s2">"The frame's </span><span class="si">{</span><span class="n">axis</span><span class="si">}</span><span class="s2"> have a 'block' level, which names their "</span>
+                <span class="sa">f</span><span class="s2">"blocks; leave `</span><span class="si">{</span><span class="n">argument</span><span class="si">}</span><span class="s2">` out."</span>
             <span class="p">)</span>
         <span class="k">return</span> <span class="n">Space</span><span class="o">.</span><span class="n">_regroup</span><span class="p">(</span><span class="n">index</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">block</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;The frame&#39;s </span><span class="si">{</span><span class="n">axis</span><span class="si">}</span><span class="s2"> have no &#39;block&#39; level, so `</span><span class="si">{</span><span class="n">argument</span><span class="si">}</span><span class="s2">` must &quot;</span>
-            <span class="s2">&quot;name their one block.&quot;</span>
+            <span class="sa">f</span><span class="s2">"The frame's </span><span class="si">{</span><span class="n">axis</span><span class="si">}</span><span class="s2"> have no 'block' level, so `</span><span class="si">{</span><span class="n">argument</span><span class="si">}</span><span class="s2">` must "</span>
+            <span class="s2">"name their one block."</span>
         <span class="p">)</span>
     <span class="k">return</span> <span class="n">Space</span><span class="p">({</span><span class="nb">str</span><span class="p">(</span><span class="n">block</span><span class="p">):</span> <span class="n">index</span><span class="p">}),</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">index</span><span class="p">))</span>
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">_frame_matrix</span><span class="p">(</span><span class="n">frame</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;np.ndarray | sp.csr_array&quot;</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Return a frame&#39;s entries as an array, or as a CSR array if a column is pandas-sparse.</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_frame_matrix</span><span class="p">(</span><span class="n">frame</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"np.ndarray | sp.csr_array"</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Return a frame's entries as an array, or as a CSR array if a column is pandas-sparse.</span>
 
 <span class="sd">    The implicit entries of a sparse column are zeros: its fill value must be</span>
 <span class="sd">    0 or NaN (pandas 3 fills a frame from ``from_spmatrix`` with NaN).</span>
@@ -513,7 +515,7 @@
 <span class="sd">    ------</span>
 <span class="sd">    ValueError</span>
 <span class="sd">        If a sparse column has another fill value, or an entry is NaN.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">any</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">dt</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">SparseDtype</span><span class="p">)</span> <span class="k">for</span> <span class="n">dt</span> <span class="ow">in</span> <span class="n">frame</span><span class="o">.</span><span class="n">dtypes</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">frame</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
     <span class="n">rows</span><span class="p">,</span> <span class="n">cols</span><span class="p">,</span> <span class="n">values</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[],</span> <span class="p">[]</span>
@@ -523,9 +525,9 @@
             <span class="n">fill</span> <span class="o">=</span> <span class="n">array</span><span class="o">.</span><span class="n">fill_value</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">fill</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">pd</span><span class="o">.</span><span class="n">isna</span><span class="p">(</span><span class="n">fill</span><span class="p">)):</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                    <span class="sa">f</span><span class="s2">&quot;Column </span><span class="si">{</span><span class="n">label</span><span class="si">!r}</span><span class="s2"> is sparse with fill value </span><span class="si">{</span><span class="n">fill</span><span class="si">!r}</span><span class="s2">. fips &quot;</span>
-                    <span class="s2">&quot;reads the entries a sparse column does not store as zeros, &quot;</span>
-                    <span class="s2">&quot;so its fill value must be 0 (or NaN).&quot;</span>
+                    <span class="sa">f</span><span class="s2">"Column </span><span class="si">{</span><span class="n">label</span><span class="si">!r}</span><span class="s2"> is sparse with fill value </span><span class="si">{</span><span class="n">fill</span><span class="si">!r}</span><span class="s2">. fips "</span>
+                    <span class="s2">"reads the entries a sparse column does not store as zeros, "</span>
+                    <span class="s2">"so its fill value must be 0 (or NaN)."</span>
                 <span class="p">)</span>
             <span class="n">stored</span> <span class="o">=</span> <span class="n">array</span><span class="o">.</span><span class="n">sp_index</span><span class="o">.</span><span class="n">indices</span>
             <span class="n">entries</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">array</span><span class="o">.</span><span class="n">sp_values</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
@@ -543,9 +545,9 @@
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_permuted</span><span class="p">(</span>
-    <span class="n">matrix</span><span class="p">:</span> <span class="s2">&quot;np.ndarray | sp.csr_array&quot;</span><span class="p">,</span> <span class="n">rows</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">cols</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;np.ndarray | sp.csr_array&quot;</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return `matrix` with its rows taken in the order `rows` and its columns in the order `cols`.&quot;&quot;&quot;</span>
+    <span class="n">matrix</span><span class="p">:</span> <span class="s2">"np.ndarray | sp.csr_array"</span><span class="p">,</span> <span class="n">rows</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">cols</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"np.ndarray | sp.csr_array"</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Return `matrix` with its rows taken in the order `rows` and its columns in the order `cols`."""</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">sp</span><span class="o">.</span><span class="n">issparse</span><span class="p">(</span><span class="n">matrix</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">matrix</span><span class="p">)[</span><span class="n">np</span><span class="o">.</span><span class="n">ix_</span><span class="p">(</span><span class="n">rows</span><span class="p">,</span> <span class="n">cols</span><span class="p">)]</span>
     <span class="n">new_row</span><span class="p">,</span> <span class="n">new_col</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty_like</span><span class="p">(</span><span class="n">rows</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">empty_like</span><span class="p">(</span><span class="n">cols</span><span class="p">)</span>
@@ -557,7 +559,7 @@
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_where</span><span class="p">(</span><span class="n">target</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">,</span> <span class="n">given</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">,</span> <span class="n">block</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">what</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Return where each label of `given` is among the labels `target` of `block`.</span>
 
 <span class="sd">    Raises</span>
@@ -565,44 +567,44 @@
 <span class="sd">    ValueError</span>
 <span class="sd">        If `given` has other levels than `target`, or a label `target` does</span>
 <span class="sd">        not have; the message names them.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="k">if</span> <span class="nb">set</span><span class="p">(</span><span class="n">given</span><span class="o">.</span><span class="n">names</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">set</span><span class="p">(</span><span class="n">target</span><span class="o">.</span><span class="n">names</span><span class="p">):</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;The </span><span class="si">{</span><span class="n">what</span><span class="si">}</span><span class="s2"> of block </span><span class="si">{</span><span class="n">block</span><span class="si">!r}</span><span class="s2"> have levels </span><span class="si">{</span><span class="nb">list</span><span class="p">(</span><span class="n">given</span><span class="o">.</span><span class="n">names</span><span class="p">)</span><span class="si">}</span><span class="s2">; the &quot;</span>
-            <span class="sa">f</span><span class="s2">&quot;block has </span><span class="si">{</span><span class="nb">list</span><span class="p">(</span><span class="n">target</span><span class="o">.</span><span class="n">names</span><span class="p">)</span><span class="si">}</span><span class="s2">.&quot;</span>
+            <span class="sa">f</span><span class="s2">"The </span><span class="si">{</span><span class="n">what</span><span class="si">}</span><span class="s2"> of block </span><span class="si">{</span><span class="n">block</span><span class="si">!r}</span><span class="s2"> have levels </span><span class="si">{</span><span class="nb">list</span><span class="p">(</span><span class="n">given</span><span class="o">.</span><span class="n">names</span><span class="p">)</span><span class="si">}</span><span class="s2">; the "</span>
+            <span class="sa">f</span><span class="s2">"block has </span><span class="si">{</span><span class="nb">list</span><span class="p">(</span><span class="n">target</span><span class="o">.</span><span class="n">names</span><span class="p">)</span><span class="si">}</span><span class="s2">."</span>
         <span class="p">)</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">given</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">MultiIndex</span><span class="p">)</span> <span class="ow">and</span> <span class="n">given</span><span class="o">.</span><span class="n">names</span> <span class="o">!=</span> <span class="n">target</span><span class="o">.</span><span class="n">names</span><span class="p">:</span>
         <span class="n">given</span> <span class="o">=</span> <span class="n">given</span><span class="o">.</span><span class="n">reorder_levels</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">target</span><span class="o">.</span><span class="n">names</span><span class="p">))</span>
     <span class="n">found</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">get_indexer</span><span class="p">(</span><span class="n">given</span><span class="p">)</span>
     <span class="k">if</span> <span class="p">(</span><span class="n">found</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;The </span><span class="si">{</span><span class="n">what</span><span class="si">}</span><span class="s2"> of block </span><span class="si">{</span><span class="n">block</span><span class="si">!r}</span><span class="s2"> have labels the block does not &quot;</span>
-            <span class="sa">f</span><span class="s2">&quot;have: </span><span class="si">{</span><span class="n">_listed</span><span class="p">(</span><span class="n">given</span><span class="p">[</span><span class="n">found</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">0</span><span class="p">])</span><span class="si">}</span><span class="s2">.&quot;</span>
+            <span class="sa">f</span><span class="s2">"The </span><span class="si">{</span><span class="n">what</span><span class="si">}</span><span class="s2"> of block </span><span class="si">{</span><span class="n">block</span><span class="si">!r}</span><span class="s2"> have labels the block does not "</span>
+            <span class="sa">f</span><span class="s2">"have: </span><span class="si">{</span><span class="n">_listed</span><span class="p">(</span><span class="n">given</span><span class="p">[</span><span class="n">found</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">0</span><span class="p">])</span><span class="si">}</span><span class="s2">."</span>
         <span class="p">)</span>
     <span class="k">return</span> <span class="n">found</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_difference</span><span class="p">(</span><span class="n">first</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the labels only in `first` and those only in `other`, two labelings of one block with the same levels (in any order).&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Return the labels only in `first` and those only in `other`, two labelings of one block with the same levels (in any order)."""</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">MultiIndex</span><span class="p">)</span> <span class="ow">and</span> <span class="n">other</span><span class="o">.</span><span class="n">names</span> <span class="o">!=</span> <span class="n">first</span><span class="o">.</span><span class="n">names</span><span class="p">:</span>
         <span class="n">other</span> <span class="o">=</span> <span class="n">other</span><span class="o">.</span><span class="n">reorder_levels</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">first</span><span class="o">.</span><span class="n">names</span><span class="p">))</span>
     <span class="k">return</span> <span class="n">first</span><span class="p">[</span><span class="o">~</span><span class="n">first</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">other</span><span class="p">)],</span> <span class="n">other</span><span class="p">[</span><span class="o">~</span><span class="n">other</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">first</span><span class="p">)]</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_placed</span><span class="p">(</span>
-    <span class="n">op</span><span class="p">:</span> <span class="s2">&quot;Operator&quot;</span><span class="p">,</span> <span class="n">rows</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">,</span> <span class="n">cols</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span>
+    <span class="n">op</span><span class="p">:</span> <span class="s2">"Operator"</span><span class="p">,</span> <span class="n">rows</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">,</span> <span class="n">cols</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LinearOperator</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Return the form of `op` (on one row and one column block) placed on the labels `rows` and `cols`.</span>
 
 <span class="sd">    A label `op` has no entry for is a zero row or column. When `op` covers</span>
 <span class="sd">    every label, its form is kept (reordered); otherwise it is sparse if it</span>
 <span class="sd">    was (or is diagonal), dense if not.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="n">r</span><span class="p">,</span> <span class="n">c</span> <span class="o">=</span> <span class="n">key</span>
-    <span class="n">where</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;matrix of (</span><span class="si">{</span><span class="n">r</span><span class="si">!r}</span><span class="s2">, </span><span class="si">{</span><span class="n">c</span><span class="si">!r}</span><span class="s2">)&quot;</span>
-    <span class="n">r_pos</span> <span class="o">=</span> <span class="n">_where</span><span class="p">(</span><span class="n">rows</span><span class="p">,</span> <span class="n">op</span><span class="o">.</span><span class="n">rows</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">r</span><span class="p">),</span> <span class="n">r</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;rows of the </span><span class="si">{</span><span class="n">where</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-    <span class="n">c_pos</span> <span class="o">=</span> <span class="n">_where</span><span class="p">(</span><span class="n">cols</span><span class="p">,</span> <span class="n">op</span><span class="o">.</span><span class="n">cols</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">c</span><span class="p">),</span> <span class="n">c</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;columns of the </span><span class="si">{</span><span class="n">where</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">where</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"matrix of (</span><span class="si">{</span><span class="n">r</span><span class="si">!r}</span><span class="s2">, </span><span class="si">{</span><span class="n">c</span><span class="si">!r}</span><span class="s2">)"</span>
+    <span class="n">r_pos</span> <span class="o">=</span> <span class="n">_where</span><span class="p">(</span><span class="n">rows</span><span class="p">,</span> <span class="n">op</span><span class="o">.</span><span class="n">rows</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">r</span><span class="p">),</span> <span class="n">r</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"rows of the </span><span class="si">{</span><span class="n">where</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+    <span class="n">c_pos</span> <span class="o">=</span> <span class="n">_where</span><span class="p">(</span><span class="n">cols</span><span class="p">,</span> <span class="n">op</span><span class="o">.</span><span class="n">cols</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">c</span><span class="p">),</span> <span class="n">c</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"columns of the </span><span class="si">{</span><span class="n">where</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
     <span class="n">form</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">data</span>
     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">r_pos</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">rows</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">c_pos</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">cols</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">array_equal</span><span class="p">(</span><span class="n">r_pos</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">rows</span><span class="p">)))</span> <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">array_equal</span><span class="p">(</span>
@@ -632,7 +634,7 @@
 <div class="viewcode-block" id="Operator">
 <a class="viewcode-back" href="../../reference/api/fips.Operator.html#fips.Operator">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">Operator</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    A matrix with a :class:`~fips.Space` of labels on each axis.</span>
 
 <span class="sd">    The matrix is kept in its cheapest form (:attr:`data`, one of the forms</span>
@@ -663,7 +665,7 @@
 <span class="sd">    cols : Space</span>
 <span class="sd">        The labels of the columns.</span>
 <span class="sd">    name : str, optional</span>
-<span class="sd">        What the matrix is (&quot;forward&quot;, &quot;prior_cov&quot;, ...). A name that is not</span>
+<span class="sd">        What the matrix is ("forward", "prior_cov", ...). A name that is not</span>
 <span class="sd">        a string is converted to one.</span>
 
 <span class="sd">    Raises</span>
@@ -685,18 +687,18 @@
 <span class="sd">    &gt;&gt;&gt; import numpy as np</span>
 <span class="sd">    &gt;&gt;&gt; import pandas as pd</span>
 <span class="sd">    &gt;&gt;&gt; from fips import Operator, Space, Vector</span>
-<span class="sd">    &gt;&gt;&gt; state = Space({&quot;flux&quot;: pd.Index([&quot;a&quot;, &quot;b&quot;], name=&quot;cell&quot;)})</span>
-<span class="sd">    &gt;&gt;&gt; obs = Space({&quot;co2&quot;: pd.Index([1, 2, 3], name=&quot;obs_id&quot;)})</span>
+<span class="sd">    &gt;&gt;&gt; state = Space({"flux": pd.Index(["a", "b"], name="cell")})</span>
+<span class="sd">    &gt;&gt;&gt; obs = Space({"co2": pd.Index([1, 2, 3], name="obs_id")})</span>
 <span class="sd">    &gt;&gt;&gt; H = Operator(np.array([[1.0, 0.0], [0.0, 1.0], [1.0, 1.0]]), obs, state)</span>
 <span class="sd">    &gt;&gt;&gt; H.shape</span>
 <span class="sd">    (3, 2)</span>
 <span class="sd">    &gt;&gt;&gt; x = Vector([2.0, 3.0], state)</span>
 <span class="sd">    &gt;&gt;&gt; (H @ x).values</span>
 <span class="sd">    array([2., 3., 5.])</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="n">__array_ufunc__</span> <span class="o">=</span> <span class="kc">None</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;NumPy defers to the operator&#39;s own arithmetic, which checks labels.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""NumPy defers to the operator's own arithmetic, which checks labels."""</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
@@ -707,28 +709,28 @@
     <span class="p">):</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">)):</span>
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2"> takes the matrix as an array, in the &quot;</span>
-                <span class="s2">&quot;spaces&#39; order. Build one from a DataFrame with &quot;</span>
-                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">.from_frame, which reads its labels.&quot;</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2"> takes the matrix as an array, in the "</span>
+                <span class="s2">"spaces' order. Build one from a DataFrame with "</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">.from_frame, which reads its labels."</span>
             <span class="p">)</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">Operator</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2"> takes a matrix, not a labeled &quot;</span>
-                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">data</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">, whose labels would be ignored. To put an &quot;</span>
-                <span class="s2">&quot;operator on other labels (in any order), use op.align(rows, &quot;</span>
-                <span class="s2">&quot;cols); for its matrix by position, op.data.&quot;</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2"> takes a matrix, not a labeled "</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">data</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">, whose labels would be ignored. To put an "</span>
+                <span class="s2">"operator on other labels (in any order), use op.align(rows, "</span>
+                <span class="s2">"cols); for its matrix by position, op.data."</span>
             <span class="p">)</span>
-        <span class="k">for</span> <span class="n">space</span><span class="p">,</span> <span class="n">what</span> <span class="ow">in</span> <span class="p">((</span><span class="n">rows</span><span class="p">,</span> <span class="s2">&quot;rows&quot;</span><span class="p">),</span> <span class="p">(</span><span class="n">cols</span><span class="p">,</span> <span class="s2">&quot;cols&quot;</span><span class="p">)):</span>
+        <span class="k">for</span> <span class="n">space</span><span class="p">,</span> <span class="n">what</span> <span class="ow">in</span> <span class="p">((</span><span class="n">rows</span><span class="p">,</span> <span class="s2">"rows"</span><span class="p">),</span> <span class="p">(</span><span class="n">cols</span><span class="p">,</span> <span class="s2">"cols"</span><span class="p">)):</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">space</span><span class="p">,</span> <span class="n">Space</span><span class="p">):</span>
-                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">what</span><span class="si">}</span><span class="s2"> must be a Space, got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">space</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">what</span><span class="si">}</span><span class="s2"> must be a Space, got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">space</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">."</span><span class="p">)</span>
         <span class="n">form</span> <span class="o">=</span> <span class="n">as_linear_operator</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">form</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">rows</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">cols</span><span class="p">)):</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;The matrix has shape </span><span class="si">{</span><span class="n">form</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">, but the spaces have &quot;</span>
-                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">rows</span><span class="p">)</span><span class="si">}</span><span class="s2"> rows and </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">cols</span><span class="p">)</span><span class="si">}</span><span class="s2"> columns.&quot;</span>
+                <span class="sa">f</span><span class="s2">"The matrix has shape </span><span class="si">{</span><span class="n">form</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">, but the spaces have "</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">rows</span><span class="p">)</span><span class="si">}</span><span class="s2"> rows and </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">cols</span><span class="p">)</span><span class="si">}</span><span class="s2"> columns."</span>
             <span class="p">)</span>
         <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">_stored_values</span><span class="p">(</span><span class="n">form</span><span class="p">))</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;The matrix has NaN entries.&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"The matrix has NaN entries."</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_data</span> <span class="o">=</span> <span class="n">form</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_rows</span> <span class="o">=</span> <span class="n">rows</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_cols</span> <span class="o">=</span> <span class="n">cols</span>
@@ -738,11 +740,11 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">_build</span><span class="p">(</span>
         <span class="bp">cls</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">LinearOperatorLike</span><span class="p">,</span> <span class="n">rows</span><span class="p">:</span> <span class="n">Space</span><span class="p">,</span> <span class="n">cols</span><span class="p">:</span> <span class="n">Space</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Self</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return an instance of this class on `rows` and `cols`; a constructor&#39;s last step.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Return an instance of this class on `rows` and `cols`; a constructor's last step."""</span>
         <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">rows</span><span class="p">,</span> <span class="n">cols</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_like</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">LinearOperatorLike</span><span class="p">,</span> <span class="n">rows</span><span class="p">:</span> <span class="n">Space</span><span class="p">,</span> <span class="n">cols</span><span class="p">:</span> <span class="n">Space</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;Operator&quot;</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return an operator like this one (its class where the spaces allow, its name) with new data or labels.&quot;&quot;&quot;</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_like</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">LinearOperatorLike</span><span class="p">,</span> <span class="n">rows</span><span class="p">:</span> <span class="n">Space</span><span class="p">,</span> <span class="n">cols</span><span class="p">:</span> <span class="n">Space</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"Operator"</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return an operator like this one (its class where the spaces allow, its name) with new data or labels."""</span>
         <span class="k">return</span> <span class="n">Operator</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">rows</span><span class="p">,</span> <span class="n">cols</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_name</span><span class="p">)</span>
 
 <div class="viewcode-block" id="Operator.from_frame">
@@ -755,7 +757,7 @@
         <span class="n">col_block</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Self</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Build an operator from a DataFrame, reading its labels.</span>
 
 <span class="sd">        Parameters</span>
@@ -770,12 +772,12 @@
 <span class="sd">        row_block, col_block : str, optional</span>
 <span class="sd">            The name of the one block of an axis without a ``block`` level.</span>
 <span class="sd">        name : str, optional</span>
-<span class="sd">            The operator&#39;s name.</span>
+<span class="sd">            The operator's name.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        Operator</span>
-<span class="sd">            The matrix on the spaces of the frame&#39;s labels.</span>
+<span class="sd">            The matrix on the spaces of the frame's labels.</span>
 
 <span class="sd">        Raises</span>
 <span class="sd">        ------</span>
@@ -791,22 +793,22 @@
 <span class="sd">        &gt;&gt;&gt; from fips import Operator</span>
 <span class="sd">        &gt;&gt;&gt; frame = pd.DataFrame(</span>
 <span class="sd">        ...     [[1.0, 0.5], [0.0, 2.0]],</span>
-<span class="sd">        ...     index=pd.Index([&quot;o1&quot;, &quot;o2&quot;], name=&quot;obs_id&quot;),</span>
-<span class="sd">        ...     columns=pd.Index([&quot;a&quot;, &quot;b&quot;], name=&quot;cell&quot;),</span>
+<span class="sd">        ...     index=pd.Index(["o1", "o2"], name="obs_id"),</span>
+<span class="sd">        ...     columns=pd.Index(["a", "b"], name="cell"),</span>
 <span class="sd">        ... )</span>
-<span class="sd">        &gt;&gt;&gt; H = Operator.from_frame(frame, row_block=&quot;co2&quot;, col_block=&quot;flux&quot;)</span>
+<span class="sd">        &gt;&gt;&gt; H = Operator.from_frame(frame, row_block="co2", col_block="flux")</span>
 <span class="sd">        &gt;&gt;&gt; H.rows</span>
-<span class="sd">        Space(co2: 2 x [&#39;obs_id&#39;])</span>
+<span class="sd">        Space(co2: 2 x ['obs_id'])</span>
 <span class="sd">        &gt;&gt;&gt; H.to_frame().index.names</span>
-<span class="sd">        FrozenList([&#39;block&#39;, &#39;obs_id&#39;])</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        FrozenList(['block', 'obs_id'])</span>
+<span class="sd">        """</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">frame</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;from_frame takes a DataFrame, got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">frame</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">.&quot;</span>
+                <span class="sa">f</span><span class="s2">"from_frame takes a DataFrame, got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">frame</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">."</span>
             <span class="p">)</span>
-        <span class="n">rows</span><span class="p">,</span> <span class="n">row_order</span> <span class="o">=</span> <span class="n">_axis_space</span><span class="p">(</span><span class="n">frame</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">row_block</span><span class="p">,</span> <span class="s2">&quot;rows&quot;</span><span class="p">)</span>
-        <span class="n">cols</span><span class="p">,</span> <span class="n">col_order</span> <span class="o">=</span> <span class="n">_axis_space</span><span class="p">(</span><span class="n">frame</span><span class="o">.</span><span class="n">columns</span><span class="p">,</span> <span class="n">col_block</span><span class="p">,</span> <span class="s2">&quot;columns&quot;</span><span class="p">)</span>
-        <span class="c1"># the permuted matrix is a new array, not a view of the frame&#39;s</span>
+        <span class="n">rows</span><span class="p">,</span> <span class="n">row_order</span> <span class="o">=</span> <span class="n">_axis_space</span><span class="p">(</span><span class="n">frame</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">row_block</span><span class="p">,</span> <span class="s2">"rows"</span><span class="p">)</span>
+        <span class="n">cols</span><span class="p">,</span> <span class="n">col_order</span> <span class="o">=</span> <span class="n">_axis_space</span><span class="p">(</span><span class="n">frame</span><span class="o">.</span><span class="n">columns</span><span class="p">,</span> <span class="n">col_block</span><span class="p">,</span> <span class="s2">"columns"</span><span class="p">)</span>
+        <span class="c1"># the permuted matrix is a new array, not a view of the frame's</span>
         <span class="n">matrix</span> <span class="o">=</span> <span class="n">_adopt</span><span class="p">(</span><span class="n">_permuted</span><span class="p">(</span><span class="n">_frame_matrix</span><span class="p">(</span><span class="n">frame</span><span class="p">),</span> <span class="n">row_order</span><span class="p">,</span> <span class="n">col_order</span><span class="p">))</span>
         <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_build</span><span class="p">(</span><span class="n">matrix</span><span class="p">,</span> <span class="n">rows</span><span class="p">,</span> <span class="n">cols</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span></div>
 
@@ -821,57 +823,57 @@
         <span class="n">cols</span><span class="p">:</span> <span class="n">Space</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Self</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Build an operator from its blocks, each named by its row and its column block.</span>
 
 <span class="sd">        A pair of blocks that is not given is zero. A labeled block is placed</span>
-<span class="sd">        by its labels: it may cover part of its blocks&#39; labels (the rest is</span>
+<span class="sd">        by its labels: it may cover part of its blocks' labels (the rest is</span>
 <span class="sd">        zero), as a transport Jacobian covers the cells a footprint touched.</span>
 <span class="sd">        A :class:`~fips.Covariance` may not (see ``Raises``): its variances</span>
-<span class="sd">        are the diagonal of the blocks&#39; own pairs, so each of those must</span>
-<span class="sd">        cover its block&#39;s labels.</span>
+<span class="sd">        are the diagonal of the blocks' own pairs, so each of those must</span>
+<span class="sd">        cover its block's labels.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        blocks : mapping of (str, str) to a matrix</span>
 <span class="sd">            Each ``(row_block, col_block)`` pair mapped to its matrix, labeled</span>
 <span class="sd">            or not. Labeled: a DataFrame (dense or pandas-sparse) whose index</span>
-<span class="sd">            and columns are the blocks&#39; own labels (no ``block`` level); a</span>
+<span class="sd">            and columns are the blocks' own labels (no ``block`` level); a</span>
 <span class="sd">            tuple ``(matrix, row_labels, col_labels)`` of an array or a SciPy</span>
 <span class="sd">            sparse matrix and two pandas Indexes; or an :class:`Operator` on</span>
 <span class="sd">            a row space of the one block ``row_block`` and a column space of</span>
 <span class="sd">            the one block ``col_block``. Unlabeled: an array, a SciPy sparse</span>
 <span class="sd">            matrix or a form of :mod:`fips.linalg`, whose rows and columns are</span>
-<span class="sd">            in the order of the blocks&#39; labels in `rows` and `cols`. An array</span>
+<span class="sd">            in the order of the blocks' labels in `rows` and `cols`. An array</span>
 <span class="sd">            or a sparse matrix is copied, as for :class:`Operator`.</span>
 <span class="sd">        rows, cols : Space, optional</span>
-<span class="sd">            The labels of the rows and columns. By default each block&#39;s labels</span>
+<span class="sd">            The labels of the rows and columns. By default each block's labels</span>
 <span class="sd">            are those of the labeled matrices in its row or column, which must</span>
 <span class="sd">            then have the same labels (in any order); a matrix that covers</span>
-<span class="sd">            part of a block is placed by giving the block&#39;s labels here. An</span>
-<span class="sd">            unlabeled matrix needs its blocks&#39; labels from here or from a</span>
+<span class="sd">            part of a block is placed by giving the block's labels here. An</span>
+<span class="sd">            unlabeled matrix needs its blocks' labels from here or from a</span>
 <span class="sd">            labeled matrix in the same row or column block.</span>
 <span class="sd">        name : str, optional</span>
-<span class="sd">            The operator&#39;s name.</span>
+<span class="sd">            The operator's name.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        Operator</span>
 <span class="sd">            The assembled matrix: sparse if every block is sparse (or</span>
 <span class="sd">            diagonal), dense otherwise. A labeled block keeps its form</span>
-<span class="sd">            when it covers its blocks&#39; labels (a pandas-sparse frame is</span>
+<span class="sd">            when it covers its blocks' labels (a pandas-sparse frame is</span>
 <span class="sd">            sparse); a single block that covers both spaces keeps its form.</span>
 
 <span class="sd">        Raises</span>
 <span class="sd">        ------</span>
 <span class="sd">        ValueError</span>
-<span class="sd">            If a pair is given twice, a block&#39;s labels are found nowhere, two</span>
+<span class="sd">            If a pair is given twice, a block's labels are found nowhere, two</span>
 <span class="sd">            labeled matrices of a block have different labels and `rows` or</span>
 <span class="sd">            `cols` does not give them, a labeled matrix has a label its block</span>
 <span class="sd">            does not have (the message names it), a labeled matrix is on</span>
 <span class="sd">            other blocks than its key names, or an unlabeled matrix has the</span>
 <span class="sd">            wrong shape. For a :class:`~fips.Covariance` also: a block has no</span>
-<span class="sd">            pair of its own (``(&quot;flux&quot;, &quot;flux&quot;)``), or that pair lacks a</span>
+<span class="sd">            pair of its own (``("flux", "flux")``), or that pair lacks a</span>
 <span class="sd">            label of the block on its rows or its columns. That label would get</span>
 <span class="sd">            a variance of 0, so the message names it; give the pair a row and</span>
 <span class="sd">            a column for every label.</span>
@@ -881,67 +883,67 @@
 <span class="sd">        &gt;&gt;&gt; import numpy as np</span>
 <span class="sd">        &gt;&gt;&gt; import pandas as pd</span>
 <span class="sd">        &gt;&gt;&gt; from fips import Operator, Space</span>
-<span class="sd">        &gt;&gt;&gt; obs = pd.Index([&quot;o1&quot;, &quot;o2&quot;], name=&quot;obs_id&quot;)</span>
+<span class="sd">        &gt;&gt;&gt; obs = pd.Index(["o1", "o2"], name="obs_id")</span>
 <span class="sd">        &gt;&gt;&gt; H = Operator.from_blocks(</span>
 <span class="sd">        ...     {</span>
-<span class="sd">        ...         (&quot;co2&quot;, &quot;flux&quot;): pd.DataFrame(</span>
+<span class="sd">        ...         ("co2", "flux"): pd.DataFrame(</span>
 <span class="sd">        ...             [[1.0, 0.5], [0.0, 2.0]],</span>
 <span class="sd">        ...             index=obs,</span>
-<span class="sd">        ...             columns=pd.Index([&quot;a&quot;, &quot;b&quot;], name=&quot;cell&quot;),</span>
+<span class="sd">        ...             columns=pd.Index(["a", "b"], name="cell"),</span>
 <span class="sd">        ...         ),</span>
-<span class="sd">        ...         (&quot;co2&quot;, &quot;bias&quot;): pd.DataFrame(</span>
-<span class="sd">        ...             1.0, index=obs, columns=pd.Index([&quot;A&quot;], name=&quot;site&quot;)</span>
+<span class="sd">        ...         ("co2", "bias"): pd.DataFrame(</span>
+<span class="sd">        ...             1.0, index=obs, columns=pd.Index(["A"], name="site")</span>
 <span class="sd">        ...         ),</span>
 <span class="sd">        ...     }</span>
 <span class="sd">        ... )</span>
 <span class="sd">        &gt;&gt;&gt; H.cols</span>
-<span class="sd">        Space(flux: 2 x [&#39;cell&#39;], bias: 1 x [&#39;site&#39;])</span>
+<span class="sd">        Space(flux: 2 x ['cell'], bias: 1 x ['site'])</span>
 <span class="sd">        &gt;&gt;&gt; H.dense()</span>
 <span class="sd">        array([[1. , 0.5, 1. ],</span>
 <span class="sd">               [0. , 2. , 1. ]])</span>
 
 <span class="sd">        A Jacobian of the cells a footprint touched, placed on every cell:</span>
 
-<span class="sd">        &gt;&gt;&gt; cells = Space({&quot;flux&quot;: pd.Index([&quot;a&quot;, &quot;b&quot;, &quot;c&quot;], name=&quot;cell&quot;)})</span>
+<span class="sd">        &gt;&gt;&gt; cells = Space({"flux": pd.Index(["a", "b", "c"], name="cell")})</span>
 <span class="sd">        &gt;&gt;&gt; J = pd.DataFrame(</span>
-<span class="sd">        ...     [[0.5], [0.2]], index=obs, columns=pd.Index([&quot;c&quot;], name=&quot;cell&quot;)</span>
+<span class="sd">        ...     [[0.5], [0.2]], index=obs, columns=pd.Index(["c"], name="cell")</span>
 <span class="sd">        ... )</span>
-<span class="sd">        &gt;&gt;&gt; Operator.from_blocks({(&quot;co2&quot;, &quot;flux&quot;): J}, cols=cells).dense()</span>
+<span class="sd">        &gt;&gt;&gt; Operator.from_blocks({("co2", "flux"): J}, cols=cells).dense()</span>
 <span class="sd">        array([[0. , 0. , 0.5],</span>
 <span class="sd">               [0. , 0. , 0.2]])</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="n">labeled</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="n">Operator</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="n">unlabeled</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="n">LinearOperator</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">block</span> <span class="ow">in</span> <span class="n">blocks</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="n">r</span><span class="p">,</span> <span class="n">c</span> <span class="o">=</span> <span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">part</span><span class="p">)</span> <span class="k">for</span> <span class="n">part</span> <span class="ow">in</span> <span class="n">key</span><span class="p">)</span>
             <span class="k">if</span> <span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">c</span><span class="p">)</span> <span class="ow">in</span> <span class="n">labeled</span> <span class="ow">or</span> <span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">c</span><span class="p">)</span> <span class="ow">in</span> <span class="n">unlabeled</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;The pair (</span><span class="si">{</span><span class="n">r</span><span class="si">!r}</span><span class="s2">, </span><span class="si">{</span><span class="n">c</span><span class="si">!r}</span><span class="s2">) is given twice.&quot;</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"The pair (</span><span class="si">{</span><span class="n">r</span><span class="si">!r}</span><span class="s2">, </span><span class="si">{</span><span class="n">c</span><span class="si">!r}</span><span class="s2">) is given twice."</span><span class="p">)</span>
             <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">block</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">):</span>
                 <span class="n">block</span> <span class="o">=</span> <span class="n">Operator</span><span class="o">.</span><span class="n">from_frame</span><span class="p">(</span><span class="n">block</span><span class="p">,</span> <span class="n">row_block</span><span class="o">=</span><span class="n">r</span><span class="p">,</span> <span class="n">col_block</span><span class="o">=</span><span class="n">c</span><span class="p">)</span>
             <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">block</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
                 <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">block</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">3</span><span class="p">:</span>
                     <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                        <span class="sa">f</span><span class="s2">&quot;The matrix of (</span><span class="si">{</span><span class="n">r</span><span class="si">!r}</span><span class="s2">, </span><span class="si">{</span><span class="n">c</span><span class="si">!r}</span><span class="s2">) is a tuple of </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">block</span><span class="p">)</span><span class="si">}</span><span class="s2">; a &quot;</span>
-                        <span class="s2">&quot;labeled matrix is (matrix, row_labels, col_labels).&quot;</span>
+                        <span class="sa">f</span><span class="s2">"The matrix of (</span><span class="si">{</span><span class="n">r</span><span class="si">!r}</span><span class="s2">, </span><span class="si">{</span><span class="n">c</span><span class="si">!r}</span><span class="s2">) is a tuple of </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">block</span><span class="p">)</span><span class="si">}</span><span class="s2">; a "</span>
+                        <span class="s2">"labeled matrix is (matrix, row_labels, col_labels)."</span>
                     <span class="p">)</span>
                 <span class="n">matrix</span><span class="p">,</span> <span class="n">row_labels</span><span class="p">,</span> <span class="n">col_labels</span> <span class="o">=</span> <span class="n">block</span>
                 <span class="n">block</span> <span class="o">=</span> <span class="n">Operator</span><span class="p">(</span><span class="n">matrix</span><span class="p">,</span> <span class="n">Space</span><span class="p">({</span><span class="n">r</span><span class="p">:</span> <span class="n">row_labels</span><span class="p">}),</span> <span class="n">Space</span><span class="p">({</span><span class="n">c</span><span class="p">:</span> <span class="n">col_labels</span><span class="p">}))</span>
             <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">block</span><span class="p">,</span> <span class="n">Operator</span><span class="p">):</span>
                 <span class="k">if</span> <span class="n">block</span><span class="o">.</span><span class="n">rows</span><span class="o">.</span><span class="n">names</span> <span class="o">!=</span> <span class="p">(</span><span class="n">r</span><span class="p">,)</span> <span class="ow">or</span> <span class="n">block</span><span class="o">.</span><span class="n">cols</span><span class="o">.</span><span class="n">names</span> <span class="o">!=</span> <span class="p">(</span><span class="n">c</span><span class="p">,):</span>
                     <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                        <span class="sa">f</span><span class="s2">&quot;The matrix of (</span><span class="si">{</span><span class="n">r</span><span class="si">!r}</span><span class="s2">, </span><span class="si">{</span><span class="n">c</span><span class="si">!r}</span><span class="s2">) is on rows </span><span class="si">{</span><span class="n">block</span><span class="o">.</span><span class="n">rows</span><span class="o">.</span><span class="n">names</span><span class="si">}</span><span class="s2"> &quot;</span>
-                        <span class="sa">f</span><span class="s2">&quot;and columns </span><span class="si">{</span><span class="n">block</span><span class="o">.</span><span class="n">cols</span><span class="o">.</span><span class="n">names</span><span class="si">}</span><span class="s2">; it must be on the one &quot;</span>
-                        <span class="s2">&quot;block its key names.&quot;</span>
+                        <span class="sa">f</span><span class="s2">"The matrix of (</span><span class="si">{</span><span class="n">r</span><span class="si">!r}</span><span class="s2">, </span><span class="si">{</span><span class="n">c</span><span class="si">!r}</span><span class="s2">) is on rows </span><span class="si">{</span><span class="n">block</span><span class="o">.</span><span class="n">rows</span><span class="o">.</span><span class="n">names</span><span class="si">}</span><span class="s2"> "</span>
+                        <span class="sa">f</span><span class="s2">"and columns </span><span class="si">{</span><span class="n">block</span><span class="o">.</span><span class="n">cols</span><span class="o">.</span><span class="n">names</span><span class="si">}</span><span class="s2">; it must be on the one "</span>
+                        <span class="s2">"block its key names."</span>
                     <span class="p">)</span>
                 <span class="n">labeled</span><span class="p">[(</span><span class="n">r</span><span class="p">,</span> <span class="n">c</span><span class="p">)]</span> <span class="o">=</span> <span class="n">block</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">unlabeled</span><span class="p">[(</span><span class="n">r</span><span class="p">,</span> <span class="n">c</span><span class="p">)]</span> <span class="o">=</span> <span class="n">as_linear_operator</span><span class="p">(</span><span class="n">block</span><span class="p">)</span>
 
         <span class="k">def</span><span class="w"> </span><span class="nf">labels</span><span class="p">(</span><span class="n">given</span><span class="p">:</span> <span class="n">Space</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">axis</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Space</span><span class="p">:</span>
-<span class="w">            </span><span class="sd">&quot;&quot;&quot;Return the space of one axis: `given`, or the labeled blocks&#39; labels.&quot;&quot;&quot;</span>
+<span class="w">            </span><span class="sd">"""Return the space of one axis: `given`, or the labeled blocks' labels."""</span>
             <span class="k">if</span> <span class="n">given</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="k">return</span> <span class="n">given</span>
-            <span class="n">keyword</span> <span class="o">=</span> <span class="s2">&quot;rows&quot;</span> <span class="k">if</span> <span class="n">axis</span> <span class="o">==</span> <span class="mi">0</span> <span class="k">else</span> <span class="s2">&quot;cols&quot;</span>
+            <span class="n">keyword</span> <span class="o">=</span> <span class="s2">"rows"</span> <span class="k">if</span> <span class="n">axis</span> <span class="o">==</span> <span class="mi">0</span> <span class="k">else</span> <span class="s2">"cols"</span>
             <span class="n">found</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
             <span class="n">first</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
             <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">op</span> <span class="ow">in</span> <span class="n">labeled</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
@@ -954,21 +956,21 @@
                     <span class="k">continue</span>  <span class="c1"># placing it raises, naming the levels</span>
                 <span class="n">only_first</span><span class="p">,</span> <span class="n">only_this</span> <span class="o">=</span> <span class="n">_difference</span><span class="p">(</span><span class="n">found</span><span class="p">[</span><span class="n">key</span><span class="p">[</span><span class="n">axis</span><span class="p">]],</span> <span class="n">index</span><span class="p">)</span>
                 <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">only_first</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">only_this</span><span class="p">):</span>
-                    <span class="n">what</span> <span class="o">=</span> <span class="s2">&quot;rows&quot;</span> <span class="k">if</span> <span class="n">axis</span> <span class="o">==</span> <span class="mi">0</span> <span class="k">else</span> <span class="s2">&quot;columns&quot;</span>
+                    <span class="n">what</span> <span class="o">=</span> <span class="s2">"rows"</span> <span class="k">if</span> <span class="n">axis</span> <span class="o">==</span> <span class="mi">0</span> <span class="k">else</span> <span class="s2">"columns"</span>
                     <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                        <span class="sa">f</span><span class="s2">&quot;The </span><span class="si">{</span><span class="n">what</span><span class="si">}</span><span class="s2"> of the matrices of </span><span class="si">{</span><span class="n">first</span><span class="p">[</span><span class="n">key</span><span class="p">[</span><span class="n">axis</span><span class="p">]]</span><span class="si">}</span><span class="s2"> and &quot;</span>
-                        <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2"> differ: </span><span class="si">{</span><span class="n">_listed</span><span class="p">(</span><span class="n">only_first</span><span class="p">)</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="s1">&#39;none&#39;</span><span class="si">}</span><span class="s2"> only in &quot;</span>
-                        <span class="sa">f</span><span class="s2">&quot;the first, </span><span class="si">{</span><span class="n">_listed</span><span class="p">(</span><span class="n">only_this</span><span class="p">)</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="s1">&#39;none&#39;</span><span class="si">}</span><span class="s2"> only in the &quot;</span>
-                        <span class="sa">f</span><span class="s2">&quot;second. Without `</span><span class="si">{</span><span class="n">keyword</span><span class="si">}</span><span class="s2">`, the labeled matrices of a &quot;</span>
-                        <span class="sa">f</span><span class="s2">&quot;block must have the same labels; to place a matrix &quot;</span>
-                        <span class="sa">f</span><span class="s2">&quot;that covers part of block </span><span class="si">{</span><span class="n">key</span><span class="p">[</span><span class="n">axis</span><span class="p">]</span><span class="si">!r}</span><span class="s2">, give its &quot;</span>
-                        <span class="sa">f</span><span class="s2">&quot;labels in `</span><span class="si">{</span><span class="n">keyword</span><span class="si">}</span><span class="s2">`.&quot;</span>
+                        <span class="sa">f</span><span class="s2">"The </span><span class="si">{</span><span class="n">what</span><span class="si">}</span><span class="s2"> of the matrices of </span><span class="si">{</span><span class="n">first</span><span class="p">[</span><span class="n">key</span><span class="p">[</span><span class="n">axis</span><span class="p">]]</span><span class="si">}</span><span class="s2"> and "</span>
+                        <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2"> differ: </span><span class="si">{</span><span class="n">_listed</span><span class="p">(</span><span class="n">only_first</span><span class="p">)</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="s1">'none'</span><span class="si">}</span><span class="s2"> only in "</span>
+                        <span class="sa">f</span><span class="s2">"the first, </span><span class="si">{</span><span class="n">_listed</span><span class="p">(</span><span class="n">only_this</span><span class="p">)</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="s1">'none'</span><span class="si">}</span><span class="s2"> only in the "</span>
+                        <span class="sa">f</span><span class="s2">"second. Without `</span><span class="si">{</span><span class="n">keyword</span><span class="si">}</span><span class="s2">`, the labeled matrices of a "</span>
+                        <span class="sa">f</span><span class="s2">"block must have the same labels; to place a matrix "</span>
+                        <span class="sa">f</span><span class="s2">"that covers part of block </span><span class="si">{</span><span class="n">key</span><span class="p">[</span><span class="n">axis</span><span class="p">]</span><span class="si">!r}</span><span class="s2">, give its "</span>
+                        <span class="sa">f</span><span class="s2">"labels in `</span><span class="si">{</span><span class="n">keyword</span><span class="si">}</span><span class="s2">`."</span>
                     <span class="p">)</span>
             <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">[</span><span class="o">*</span><span class="n">labeled</span><span class="p">,</span> <span class="o">*</span><span class="n">unlabeled</span><span class="p">]:</span>
                 <span class="k">if</span> <span class="n">key</span><span class="p">[</span><span class="n">axis</span><span class="p">]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">found</span><span class="p">:</span>
                     <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                        <span class="sa">f</span><span class="s2">&quot;Block </span><span class="si">{</span><span class="n">key</span><span class="p">[</span><span class="n">axis</span><span class="p">]</span><span class="si">!r}</span><span class="s2"> has no labels: give a labeled matrix &quot;</span>
-                        <span class="sa">f</span><span class="s2">&quot;for one of its pairs, or `</span><span class="si">{</span><span class="n">keyword</span><span class="si">}</span><span class="s2">`.&quot;</span>
+                        <span class="sa">f</span><span class="s2">"Block </span><span class="si">{</span><span class="n">key</span><span class="p">[</span><span class="n">axis</span><span class="p">]</span><span class="si">!r}</span><span class="s2"> has no labels: give a labeled matrix "</span>
+                        <span class="sa">f</span><span class="s2">"for one of its pairs, or `</span><span class="si">{</span><span class="n">keyword</span><span class="si">}</span><span class="s2">`."</span>
                     <span class="p">)</span>
             <span class="n">order</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">dict</span><span class="o">.</span><span class="n">fromkeys</span><span class="p">(</span><span class="n">key</span><span class="p">[</span><span class="n">axis</span><span class="p">]</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">blocks</span><span class="p">))</span>
             <span class="k">return</span> <span class="n">Space</span><span class="p">({</span><span class="nb">str</span><span class="p">(</span><span class="n">b</span><span class="p">):</span> <span class="n">found</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">b</span><span class="p">)]</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">order</span><span class="p">})</span>
@@ -983,8 +985,8 @@
             <span class="n">shape</span> <span class="o">=</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">row_space</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">r</span><span class="p">)),</span> <span class="nb">len</span><span class="p">(</span><span class="n">col_space</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">c</span><span class="p">)))</span>
             <span class="k">if</span> <span class="n">form</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="n">shape</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                    <span class="sa">f</span><span class="s2">&quot;The matrix of (</span><span class="si">{</span><span class="n">r</span><span class="si">!r}</span><span class="s2">, </span><span class="si">{</span><span class="n">c</span><span class="si">!r}</span><span class="s2">) has shape </span><span class="si">{</span><span class="n">form</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">; its &quot;</span>
-                    <span class="sa">f</span><span class="s2">&quot;blocks have </span><span class="si">{</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2"> and </span><span class="si">{</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s2"> labels.&quot;</span>
+                    <span class="sa">f</span><span class="s2">"The matrix of (</span><span class="si">{</span><span class="n">r</span><span class="si">!r}</span><span class="s2">, </span><span class="si">{</span><span class="n">c</span><span class="si">!r}</span><span class="s2">) has shape </span><span class="si">{</span><span class="n">form</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">; its "</span>
+                    <span class="sa">f</span><span class="s2">"blocks have </span><span class="si">{</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2"> and </span><span class="si">{</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s2"> labels."</span>
                 <span class="p">)</span>
             <span class="n">forms</span><span class="p">[(</span><span class="n">r</span><span class="p">,</span> <span class="n">c</span><span class="p">)]</span> <span class="o">=</span> <span class="n">form</span>
 
@@ -1004,7 +1006,7 @@
                         <span class="n">grid</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">csr_array</span><span class="p">(</span>
                             <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">row_space</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">r</span><span class="p">)),</span> <span class="nb">len</span><span class="p">(</span><span class="n">col_space</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">c</span><span class="p">)))</span>
                         <span class="p">)</span>
-            <span class="n">matrix</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">csr_array</span><span class="p">(</span><span class="n">sp</span><span class="o">.</span><span class="n">bmat</span><span class="p">(</span><span class="n">grid</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;csr&quot;</span><span class="p">))</span>
+            <span class="n">matrix</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">csr_array</span><span class="p">(</span><span class="n">sp</span><span class="o">.</span><span class="n">bmat</span><span class="p">(</span><span class="n">grid</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">"csr"</span><span class="p">))</span>
             <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_build</span><span class="p">(</span><span class="n">_adopt</span><span class="p">(</span><span class="n">matrix</span><span class="p">),</span> <span class="n">row_space</span><span class="p">,</span> <span class="n">col_space</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
         <span class="n">dense</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">row_space</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">col_space</span><span class="p">)))</span>
         <span class="k">for</span> <span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">c</span><span class="p">),</span> <span class="n">form</span> <span class="ow">in</span> <span class="n">forms</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
@@ -1015,52 +1017,52 @@
     <span class="nd">@classmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_check_blocks</span><span class="p">(</span>
         <span class="bp">cls</span><span class="p">,</span>
-        <span class="n">labeled</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="s2">&quot;Operator&quot;</span><span class="p">],</span>
+        <span class="n">labeled</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="s2">"Operator"</span><span class="p">],</span>
         <span class="n">unlabeled</span><span class="p">:</span> <span class="n">Container</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]],</span>
         <span class="n">rows</span><span class="p">:</span> <span class="n">Space</span><span class="p">,</span>
         <span class="n">cols</span><span class="p">:</span> <span class="n">Space</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Raise if the labeled blocks of :meth:`from_blocks` do not suit this class; an operator takes any.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Raise if the labeled blocks of :meth:`from_blocks` do not suit this class; an operator takes any."""</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">data</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LinearOperator</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        The matrix, in its form (a :mod:`fips.linalg` operator, without labels).</span>
 
 <span class="sd">        The rows are in the order of :attr:`rows` and the columns in the</span>
-<span class="sd">        order of :attr:`cols`. The form&#39;s arrays are read-only.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        order of :attr:`cols`. The form's arrays are read-only.</span>
+<span class="sd">        """</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">rows</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Space</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;The labels of the rows.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""The labels of the rows."""</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rows</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">cols</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Space</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;The labels of the columns.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""The labels of the columns."""</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cols</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">name</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;What the matrix is: a string, or None.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""What the matrix is: a string, or None."""</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_name</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">shape</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;The number of rows and of columns.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""The number of rows and of columns."""</span>
         <span class="k">return</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_rows</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_cols</span><span class="p">))</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">T</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;Operator&quot;</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;The transpose: the columns become the rows, labels and all.&quot;&quot;&quot;</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">T</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"Operator"</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""The transpose: the columns become the rows, labels and all."""</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_like</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="o">.</span><span class="n">_transpose</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cols</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rows</span><span class="p">)</span>
 
 <div class="viewcode-block" id="Operator.__getitem__">
 <a class="viewcode-back" href="../../reference/api/fips.Operator.__getitem__.html#fips.Operator.__getitem__">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="s2">&quot;Operator&quot;</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="s2">"Operator"</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Return the block of one row block and one column block.</span>
 
 <span class="sd">        Parameters</span>
@@ -1080,7 +1082,7 @@
 <span class="sd">        ------</span>
 <span class="sd">        KeyError</span>
 <span class="sd">            If either space has no block of that name.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="n">r</span><span class="p">,</span> <span class="n">c</span> <span class="o">=</span> <span class="n">key</span>
         <span class="n">rs</span><span class="p">,</span> <span class="n">cs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rows</span><span class="o">.</span><span class="n">slice</span><span class="p">(</span><span class="n">r</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cols</span><span class="o">.</span><span class="n">slice</span><span class="p">(</span><span class="n">c</span><span class="p">)</span>
         <span class="n">form</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="o">.</span><span class="n">_select</span><span class="p">(</span>
@@ -1096,29 +1098,29 @@
         <span class="n">rows</span><span class="p">:</span> <span class="n">Space</span><span class="p">,</span>
         <span class="n">cols</span><span class="p">:</span> <span class="n">Space</span><span class="p">,</span>
         <span class="n">what</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">of</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">),</span>
+        <span class="n">of</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="s2">""</span><span class="p">,</span> <span class="s2">""</span><span class="p">),</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LinearOperator</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Return the form with its rows and columns in the order of `rows` and `cols`.</span>
 
 <span class="sd">        Both are exact joins (:meth:`Space.align`): a label on one side and</span>
 <span class="sd">        not the other raises, and the message names it. It calls the two</span>
-<span class="sd">        spaces &quot;the spaces&quot; unless the caller says what this operator is for:</span>
-<span class="sd">        `what` names the operator (``&quot;forward&quot;``) and `of` what its rows and</span>
-<span class="sd">        its columns must match (``(&quot;the observations&quot;, &quot;the prior&quot;)``), as in</span>
-<span class="sd">        &quot;The rows of forward and the observations do not have the same labels&quot;.</span>
+<span class="sd">        spaces "the spaces" unless the caller says what this operator is for:</span>
+<span class="sd">        `what` names the operator (``"forward"``) and `of` what its rows and</span>
+<span class="sd">        its columns must match (``("the observations", "the prior")``), as in</span>
+<span class="sd">        "The rows of forward and the observations do not have the same labels".</span>
 
 <span class="sd">        Raises</span>
 <span class="sd">        ------</span>
 <span class="sd">        ValueError</span>
-<span class="sd">            If `rows` or `cols` do not have exactly this operator&#39;s labels.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">            If `rows` or `cols` do not have exactly this operator's labels.</span>
+<span class="sd">        """</span>
         <span class="k">if</span> <span class="n">what</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">words</span> <span class="o">=</span> <span class="p">[(</span><span class="s2">&quot;the other space&quot;</span><span class="p">,</span> <span class="s2">&quot;The spaces&quot;</span><span class="p">)]</span> <span class="o">*</span> <span class="mi">2</span>
+            <span class="n">words</span> <span class="o">=</span> <span class="p">[(</span><span class="s2">"the other space"</span><span class="p">,</span> <span class="s2">"The spaces"</span><span class="p">)]</span> <span class="o">*</span> <span class="mi">2</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">words</span> <span class="o">=</span> <span class="p">[</span>
-                <span class="p">(</span><span class="sa">f</span><span class="s2">&quot;the </span><span class="si">{</span><span class="n">axis</span><span class="si">}</span><span class="s2"> of </span><span class="si">{</span><span class="n">what</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;The </span><span class="si">{</span><span class="n">axis</span><span class="si">}</span><span class="s2"> of </span><span class="si">{</span><span class="n">what</span><span class="si">}</span><span class="s2"> and </span><span class="si">{</span><span class="n">match</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-                <span class="k">for</span> <span class="n">axis</span><span class="p">,</span> <span class="n">match</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">((</span><span class="s2">&quot;rows&quot;</span><span class="p">,</span> <span class="s2">&quot;columns&quot;</span><span class="p">),</span> <span class="n">of</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="p">(</span><span class="sa">f</span><span class="s2">"the </span><span class="si">{</span><span class="n">axis</span><span class="si">}</span><span class="s2"> of </span><span class="si">{</span><span class="n">what</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"The </span><span class="si">{</span><span class="n">axis</span><span class="si">}</span><span class="s2"> of </span><span class="si">{</span><span class="n">what</span><span class="si">}</span><span class="s2"> and </span><span class="si">{</span><span class="n">match</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">axis</span><span class="p">,</span> <span class="n">match</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">((</span><span class="s2">"rows"</span><span class="p">,</span> <span class="s2">"columns"</span><span class="p">),</span> <span class="n">of</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
             <span class="p">]</span>
         <span class="n">r</span> <span class="o">=</span> <span class="kc">None</span> <span class="k">if</span> <span class="n">rows</span> <span class="ow">is</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rows</span> <span class="k">else</span> <span class="n">rows</span><span class="o">.</span><span class="n">_align</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_rows</span><span class="p">,</span> <span class="o">*</span><span class="n">words</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
         <span class="k">if</span> <span class="n">cols</span> <span class="ow">is</span> <span class="n">rows</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cols</span> <span class="ow">is</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rows</span><span class="p">:</span>
@@ -1135,8 +1137,8 @@
 
 <div class="viewcode-block" id="Operator.align">
 <a class="viewcode-back" href="../../reference/api/fips.Operator.align.html#fips.Operator.align">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">align</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rows</span><span class="p">:</span> <span class="n">Space</span><span class="p">,</span> <span class="n">cols</span><span class="p">:</span> <span class="n">Space</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;Operator&quot;</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">align</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rows</span><span class="p">:</span> <span class="n">Space</span><span class="p">,</span> <span class="n">cols</span><span class="p">:</span> <span class="n">Space</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"Operator"</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Return the operator on `rows` and `cols`, which must have exactly its labels.</span>
 
 <span class="sd">        Parameters</span>
@@ -1153,16 +1155,16 @@
 <span class="sd">        Raises</span>
 <span class="sd">        ------</span>
 <span class="sd">        ValueError</span>
-<span class="sd">            If a space does not have the same labels as the operator&#39;s; the</span>
+<span class="sd">            If a space does not have the same labels as the operator's; the</span>
 <span class="sd">            message names those missing from either.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_like</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_on</span><span class="p">(</span><span class="n">rows</span><span class="p">,</span> <span class="n">cols</span><span class="p">),</span> <span class="n">rows</span><span class="p">,</span> <span class="n">cols</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="Operator.round_labels">
 <a class="viewcode-back" href="../../reference/api/fips.Operator.round_labels.html#fips.Operator.round_labels">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">round_labels</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">decimals</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;Operator&quot;</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">round_labels</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">decimals</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"Operator"</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Return the operator with its float labels rounded (:meth:`Space.round_labels`).</span>
 
 <span class="sd">        Parameters</span>
@@ -1179,7 +1181,7 @@
 <span class="sd">        ------</span>
 <span class="sd">        ValueError</span>
 <span class="sd">            If rounding makes two labels of a block equal.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="n">rows</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rows</span><span class="o">.</span><span class="n">round_labels</span><span class="p">(</span><span class="n">decimals</span><span class="p">)</span>
         <span class="n">cols</span> <span class="o">=</span> <span class="n">rows</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cols</span> <span class="ow">is</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rows</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cols</span><span class="o">.</span><span class="n">round_labels</span><span class="p">(</span><span class="n">decimals</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_like</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="p">,</span> <span class="n">rows</span><span class="p">,</span> <span class="n">cols</span><span class="p">)</span></div>
@@ -1187,22 +1189,22 @@
 
 <div class="viewcode-block" id="Operator.__matmul__">
 <a class="viewcode-back" href="../../reference/api/fips.Operator.__matmul__.html#fips.Operator.__matmul__">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="fm">__matmul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s2">&quot;Operator | Vector&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;Operator | Vector&quot;</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__matmul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s2">"Operator | Vector"</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"Operator | Vector"</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Return the product with an operator or a vector, aligned by label.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        other : Operator or Vector</span>
 <span class="sd">            An operator whose rows, or a vector whose space, have exactly the</span>
-<span class="sd">            labels of this operator&#39;s columns, in any order.</span>
+<span class="sd">            labels of this operator's columns, in any order.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        Operator or Vector</span>
-<span class="sd">            An operator on this one&#39;s rows and `other`&#39;s columns, in the</span>
+<span class="sd">            An operator on this one's rows and `other`'s columns, in the</span>
 <span class="sd">            cheapest form that is exact (:mod:`fips.linalg`), or a vector on</span>
-<span class="sd">            this one&#39;s rows.</span>
+<span class="sd">            this one's rows.</span>
 
 <span class="sd">        Raises</span>
 <span class="sd">        ------</span>
@@ -1211,27 +1213,27 @@
 <span class="sd">            :attr:`data` by it to compute by position.</span>
 <span class="sd">        ValueError</span>
 <span class="sd">            If the labels do not match exactly.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">Vector</span><span class="p">):</span>
             <span class="n">values</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span> <span class="o">@</span> <span class="n">other</span><span class="o">.</span><span class="n">align</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_cols</span><span class="p">)</span><span class="o">.</span><span class="n">values</span>
             <span class="k">return</span> <span class="n">Vector</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rows</span><span class="p">)</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">Operator</span><span class="p">):</span>
-            <span class="c1"># Put this operator&#39;s columns in the order of the other&#39;s rows:</span>
+            <span class="c1"># Put this operator's columns in the order of the other's rows:</span>
             <span class="c1"># the other may be a form (Kronecker) that a reordering would densify</span>
             <span class="n">left</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_on</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_rows</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">rows</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">Operator</span><span class="p">(</span><span class="n">left</span> <span class="o">@</span> <span class="n">other</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rows</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">cols</span><span class="p">)</span>
         <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;An Operator multiplies an Operator or a Vector, not &quot;</span>
-            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">other</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">: an array has no labels to check. Use &quot;</span>
-            <span class="s2">&quot;op.data @ x to compute by position.&quot;</span>
+            <span class="sa">f</span><span class="s2">"An Operator multiplies an Operator or a Vector, not "</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">other</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">: an array has no labels to check. Use "</span>
+            <span class="s2">"op.data @ x to compute by position."</span>
         <span class="p">)</span></div>
 
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_combine</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s2">&quot;Operator&quot;</span><span class="p">,</span> <span class="n">sign</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;Operator&quot;</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return ``self + sign * other``, with `other` aligned to this operator&#39;s labels.&quot;&quot;&quot;</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_combine</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s2">"Operator"</span><span class="p">,</span> <span class="n">sign</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"Operator"</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return ``self + sign * other``, with `other` aligned to this operator's labels."""</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">Operator</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;An Operator adds an Operator, not </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">other</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">.&quot;</span>
+                <span class="sa">f</span><span class="s2">"An Operator adds an Operator, not </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">other</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">."</span>
             <span class="p">)</span>
         <span class="n">theirs</span> <span class="o">=</span> <span class="n">other</span><span class="o">.</span><span class="n">_on</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_rows</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cols</span><span class="p">)</span>
         <span class="n">total</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span> <span class="o">+</span> <span class="n">theirs</span> <span class="k">if</span> <span class="n">sign</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span> <span class="o">-</span> <span class="n">theirs</span>
@@ -1246,8 +1248,8 @@
 
 <div class="viewcode-block" id="Operator.__add__">
 <a class="viewcode-back" href="../../reference/api/fips.Operator.__add__.html#fips.Operator.__add__">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="fm">__add__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s2">&quot;Operator&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;Operator&quot;</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the sum with an operator on the same labels (in any order).&quot;&quot;&quot;</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__add__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s2">"Operator"</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"Operator"</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return the sum with an operator on the same labels (in any order)."""</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">Operator</span><span class="p">):</span>
             <span class="c1"># a covariance model adds itself (CovarianceModel.__radd__); for</span>
             <span class="c1"># anything else Python raises a TypeError</span>
@@ -1257,56 +1259,56 @@
 
 <div class="viewcode-block" id="Operator.__sub__">
 <a class="viewcode-back" href="../../reference/api/fips.Operator.__sub__.html#fips.Operator.__sub__">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="fm">__sub__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s2">&quot;Operator&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;Operator&quot;</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the difference with an operator on the same labels (in any order).&quot;&quot;&quot;</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__sub__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s2">"Operator"</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"Operator"</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return the difference with an operator on the same labels (in any order)."""</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_combine</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.0</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="Operator.__mul__">
 <a class="viewcode-back" href="../../reference/api/fips.Operator.__mul__.html#fips.Operator.__mul__">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="fm">__mul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scalar</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;Operator&quot;</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the operator times a scalar, in the same form.&quot;&quot;&quot;</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__mul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scalar</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"Operator"</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return the operator times a scalar, in the same form."""</span>
         <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">ndim</span><span class="p">(</span><span class="n">scalar</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;An Operator is multiplied by a scalar with &#39;*&#39;; use &#39;@&#39;.&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">"An Operator is multiplied by a scalar with '*'; use '@'."</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_like</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_data</span> <span class="o">*</span> <span class="nb">float</span><span class="p">(</span><span class="n">scalar</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rows</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cols</span><span class="p">)</span></div>
 
 
-    <span class="k">def</span><span class="w"> </span><span class="fm">__rmul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scalar</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;Operator&quot;</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return a scalar times the operator.&quot;&quot;&quot;</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__rmul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scalar</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"Operator"</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return a scalar times the operator."""</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__mul__</span><span class="p">(</span><span class="n">scalar</span><span class="p">)</span>
 
 <div class="viewcode-block" id="Operator.__truediv__">
 <a class="viewcode-back" href="../../reference/api/fips.Operator.__truediv__.html#fips.Operator.__truediv__">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="fm">__truediv__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scalar</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;Operator&quot;</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the operator divided by a scalar.&quot;&quot;&quot;</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__truediv__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scalar</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"Operator"</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return the operator divided by a scalar."""</span>
         <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">ndim</span><span class="p">(</span><span class="n">scalar</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;An Operator can only be divided by a scalar.&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">"An Operator can only be divided by a scalar."</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_like</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_data</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="n">scalar</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rows</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cols</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="Operator.__neg__">
 <a class="viewcode-back" href="../../reference/api/fips.Operator.__neg__.html#fips.Operator.__neg__">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="fm">__neg__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;Operator&quot;</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return ``-self``.&quot;&quot;&quot;</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__neg__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"Operator"</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return ``-self``."""</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_like</span><span class="p">(</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rows</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cols</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="Operator.dense">
 <a class="viewcode-back" href="../../reference/api/fips.Operator.dense.html#fips.Operator.dense">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">dense</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Return the matrix as a new dense array, rows and columns in the spaces&#39; order.</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Return the matrix as a new dense array, rows and columns in the spaces' order.</span>
 
 <span class="sd">        This forms the full matrix, whatever its form.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="Operator.sparse">
 <a class="viewcode-back" href="../../reference/api/fips.Operator.sparse.html#fips.Operator.sparse">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">sparse</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">sp</span><span class="o">.</span><span class="n">csr_array</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Return the matrix as a new SciPy CSR array, rows and columns in the spaces&#39; order.</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Return the matrix as a new SciPy CSR array, rows and columns in the spaces' order.</span>
 
 <span class="sd">        A sparse or diagonal operator (or a block diagonal one of those) gives</span>
 <span class="sd">        its stored entries without forming the dense matrix. Any other form</span>
@@ -1329,14 +1331,14 @@
 <span class="sd">        &gt;&gt;&gt; import pandas as pd</span>
 <span class="sd">        &gt;&gt;&gt; import scipy.sparse as sp</span>
 <span class="sd">        &gt;&gt;&gt; from fips import Operator, Space</span>
-<span class="sd">        &gt;&gt;&gt; obs = Space({&quot;co2&quot;: pd.Index([1, 2], name=&quot;obs_id&quot;)})</span>
-<span class="sd">        &gt;&gt;&gt; state = Space({&quot;flux&quot;: pd.Index([&quot;a&quot;, &quot;b&quot;, &quot;c&quot;], name=&quot;cell&quot;)})</span>
+<span class="sd">        &gt;&gt;&gt; obs = Space({"co2": pd.Index([1, 2], name="obs_id")})</span>
+<span class="sd">        &gt;&gt;&gt; state = Space({"flux": pd.Index(["a", "b", "c"], name="cell")})</span>
 <span class="sd">        &gt;&gt;&gt; H = Operator(sp.csr_array([[1.0, 0.0, 0.0], [0.0, 0.0, 2.0]]), obs, state)</span>
 <span class="sd">        &gt;&gt;&gt; H.sparse().nnz</span>
 <span class="sd">        2</span>
 <span class="sd">        &gt;&gt;&gt; abs(H.sparse()).sum(axis=0)</span>
 <span class="sd">        array([1., 0., 2.])</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="n">stored</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="o">.</span><span class="n">_csr</span><span class="p">()</span>
         <span class="k">if</span> <span class="n">stored</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">sp</span><span class="o">.</span><span class="n">csr_array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dense</span><span class="p">())</span>
@@ -1344,40 +1346,40 @@
 
 
     <span class="k">def</span><span class="w"> </span><span class="nf">__array__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Return the dense matrix, so NumPy functions take an operator as its matrix.</span>
 
-<span class="sd">        ``np.asarray(op)`` is a dense operator&#39;s own read-only array (any</span>
+<span class="sd">        ``np.asarray(op)`` is a dense operator's own read-only array (any</span>
 <span class="sd">        other form builds a new one); ``np.array(op)`` is a writable copy.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="o">.</span><span class="n">__array__</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="n">copy</span><span class="p">)</span>
 
 <div class="viewcode-block" id="Operator.to_frame">
 <a class="viewcode-back" href="../../reference/api/fips.Operator.to_frame.html#fips.Operator.to_frame">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">to_frame</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Return the matrix as a dense DataFrame.</span>
 
-<span class="sd">        The index is :attr:`rows`&#39;s :attr:`~Space.index` and the columns</span>
-<span class="sd">        :attr:`cols`&#39;s, each with the ``block`` level first. This forms the</span>
+<span class="sd">        The index is :attr:`rows`'s :attr:`~Space.index` and the columns</span>
+<span class="sd">        :attr:`cols`'s, each with the ``block`` level first. This forms the</span>
 <span class="sd">        full matrix, whatever its form.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        pd.DataFrame</span>
 <span class="sd">            A copy of the matrix, labeled.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">dense</span><span class="p">(),</span> <span class="n">index</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_rows</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_cols</span><span class="o">.</span><span class="n">index</span>
         <span class="p">)</span></div>
 
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the name, shape and form, then each space.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Return the name, shape and form, then each space."""</span>
         <span class="k">return</span> <span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">(name=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_name</span><span class="si">!r}</span><span class="s2">, shape=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">, &quot;</span>
-            <span class="sa">f</span><span class="s2">&quot;form=</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">)</span><span class="se">\n</span><span class="s2">&quot;</span>
-            <span class="sa">f</span><span class="s2">&quot;  rows: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_rows</span><span class="si">!r}</span><span class="se">\n</span><span class="s2">  cols: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_cols</span><span class="si">!r}</span><span class="s2">&quot;</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">(name=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_name</span><span class="si">!r}</span><span class="s2">, shape=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">, "</span>
+            <span class="sa">f</span><span class="s2">"form=</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">)</span><span class="se">\n</span><span class="s2">"</span>
+            <span class="sa">f</span><span class="s2">"  rows: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_rows</span><span class="si">!r}</span><span class="se">\n</span><span class="s2">  cols: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_cols</span><span class="si">!r}</span><span class="s2">"</span>
         <span class="p">)</span></div>
 
 </pre></div>
@@ -1409,8 +1411,8 @@
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script defer src="../../_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0"></script>
-<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0"></script>
+  <script defer src="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be"></script>
+<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be"></script>
 
   <footer class="bd-footer">
 <div class="bd-footer__inner bd-page-width">
@@ -1430,7 +1432,7 @@
         <div class="footer-item">
 
   <p class="sphinx-version">
-    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.1.0.
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.2.0.
   </p>
 </div>
       
@@ -1443,7 +1445,7 @@
         <div class="footer-item">
 <p class="theme-version">
   <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
-  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.22.0.
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.23.0.
 </p></div>
       
     </div>

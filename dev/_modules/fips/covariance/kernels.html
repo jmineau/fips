@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>fips.covariance.kernels &#8212; fips 0.2.0b2.dev8+g22c2598c9 documentation</title>
+    <title>fips.covariance.kernels &#8212; fips 0.2.0b2.dev9+g9dded00bd documentation</title>
   
   
   
@@ -25,29 +25,30 @@
   </noscript>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="../../../_static/styles/theme.css?digest=64cc4de3f052d77215f0" rel="stylesheet" />
-<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=64cc4de3f052d77215f0" rel="stylesheet" />
+  <link href="../../../_static/styles/theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
+<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
 
     <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../../_static/plot_directive.css" />
     <link rel="stylesheet" type="text/css" href="../../../_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sphinx_autodoc_typehints.css?v=057ac668" />
     <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../../../_static/custom.css?v=4b8357b6" />
   
   <!-- So that users can add custom icons -->
-  <script defer src="../../../_static/scripts/fontawesome.js?digest=64cc4de3f052d77215f0"></script>
+  <script defer src="../../../_static/scripts/fontawesome.js?digest=18bd87630a240e9c25be"></script>
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0" />
-<link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0" />
+  <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
+<link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../../_static/documentation_options.js?v=3193467b"></script>
+    <script src="../../../_static/documentation_options.js?v=46a0216e"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../../../_static/copybutton.js?v=f281be69"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = '_modules/fips/covariance/kernels';</script>
     <script>
-        DOCUMENTATION_OPTIONS.theme_version = '0.22.0';
+        DOCUMENTATION_OPTIONS.theme_version = '0.23.0';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://jmineau.github.io/fips/switcher.json';
         DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'dev';
         DOCUMENTATION_OPTIONS.show_version_warning_banner =
@@ -57,6 +58,7 @@
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="0.2" />
   
@@ -130,8 +132,8 @@
       
     
     
-    <img src="../../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b2.dev8+g22c2598c9 documentation - Home"/>
-    <img src="../../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b2.dev8+g22c2598c9 documentation - Home"/>
+    <img src="../../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b2.dev9+g9dded00bd documentation - Home"/>
+    <img src="../../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b2.dev9+g9dded00bd documentation - Home"/>
   
   
 </a></div>
@@ -419,14 +421,14 @@
                 <article class="bd-article">
                   
   <h1>Source code for fips.covariance.kernels</h1><div class="highlight"><pre>
-<span></span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">Kernels: correlations of the labels&#39; coordinates.</span>
+<span></span><span class="sd">"""</span>
+<span class="sd">Kernels: correlations of the labels' coordinates.</span>
 
 <span class="sd">:class:`Exponential`, :class:`Gaussian` and :class:`Matern` fall from one</span>
 <span class="sd">with the distance along some levels (a time, a line, a distance on the</span>
 <span class="sd">Earth); :class:`Constant` is one at any distance. ``within=`` keeps any of</span>
 <span class="sd">them inside groups of labels (the same site and day): zero between groups.</span>
-<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">"""</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">abstractmethod</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Sequence</span>
@@ -447,32 +449,32 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">fips.linalg</span><span class="w"> </span><span class="kn">import</span> <span class="n">DenseOperator</span><span class="p">,</span> <span class="n">LinearOperator</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">fips.linalg.forms</span><span class="w"> </span><span class="kn">import</span> <span class="n">_DENSE_FILL</span><span class="p">,</span> <span class="n">_adopt</span>
 
-<span class="n">_METRICS</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;euclidean&quot;</span><span class="p">,</span> <span class="s2">&quot;haversine&quot;</span><span class="p">,</span> <span class="s2">&quot;chordal&quot;</span><span class="p">)</span>
-<span class="sd">&quot;&quot;&quot;The distances a kernel can measure: a straight line, and two on the Earth (km).&quot;&quot;&quot;</span>
+<span class="n">_METRICS</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"euclidean"</span><span class="p">,</span> <span class="s2">"haversine"</span><span class="p">,</span> <span class="s2">"chordal"</span><span class="p">)</span>
+<span class="sd">"""The distances a kernel can measure: a straight line, and two on the Earth (km)."""</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_split</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return a ``within`` entry as its level and its datetime attribute (or None).&quot;&quot;&quot;</span>
-    <span class="n">level</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">attribute</span> <span class="o">=</span> <span class="n">name</span><span class="o">.</span><span class="n">partition</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="sd">"""Return a ``within`` entry as its level and its datetime attribute (or None)."""</span>
+    <span class="n">level</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">attribute</span> <span class="o">=</span> <span class="n">name</span><span class="o">.</span><span class="n">partition</span><span class="p">(</span><span class="s2">"."</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">level</span><span class="p">,</span> <span class="p">(</span><span class="n">attribute</span> <span class="ow">or</span> <span class="kc">None</span><span class="p">)</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_key</span><span class="p">(</span><span class="n">coords</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return each row&#39;s label for one ``within`` entry.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Return each row's label for one ``within`` entry."""</span>
     <span class="n">level</span><span class="p">,</span> <span class="n">attribute</span> <span class="o">=</span> <span class="n">_split</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
     <span class="n">values</span> <span class="o">=</span> <span class="n">coords</span><span class="p">[</span><span class="n">level</span><span class="p">]</span>
     <span class="k">if</span> <span class="n">attribute</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">values</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">pd</span><span class="o">.</span><span class="n">api</span><span class="o">.</span><span class="n">types</span><span class="o">.</span><span class="n">is_datetime64_any_dtype</span><span class="p">(</span><span class="n">values</span><span class="p">):</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;within=</span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s2"> reads the </span><span class="si">{</span><span class="n">attribute</span><span class="si">!r}</span><span class="s2"> of level </span><span class="si">{</span><span class="n">level</span><span class="si">!r}</span><span class="s2">, &quot;</span>
-            <span class="sa">f</span><span class="s2">&quot;which does not hold datetimes (</span><span class="si">{</span><span class="n">values</span><span class="o">.</span><span class="n">dtype</span><span class="si">}</span><span class="s2">).&quot;</span>
+            <span class="sa">f</span><span class="s2">"within=</span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s2"> reads the </span><span class="si">{</span><span class="n">attribute</span><span class="si">!r}</span><span class="s2"> of level </span><span class="si">{</span><span class="n">level</span><span class="si">!r}</span><span class="s2">, "</span>
+            <span class="sa">f</span><span class="s2">"which does not hold datetimes (</span><span class="si">{</span><span class="n">values</span><span class="o">.</span><span class="n">dtype</span><span class="si">}</span><span class="s2">)."</span>
         <span class="p">)</span>
     <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">DatetimeIndex</span><span class="p">(</span><span class="n">values</span><span class="p">),</span> <span class="n">attribute</span><span class="p">))</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_ends</span><span class="p">(</span><span class="n">values</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">rows</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">cols</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">|</span> <span class="kc">None</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the two sides of the differences between rows: every two rows (as a column and a row), or the pairs `rows` and `cols` name.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Return the two sides of the differences between rows: every two rows (as a column and a row), or the pairs `rows` and `cols` name."""</span>
     <span class="k">if</span> <span class="n">rows</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">cols</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">values</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">],</span> <span class="n">values</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="p">:]</span>
     <span class="k">return</span> <span class="n">values</span><span class="p">[</span><span class="n">rows</span><span class="p">],</span> <span class="n">values</span><span class="p">[</span><span class="n">cols</span><span class="p">]</span>
@@ -481,38 +483,38 @@
 <span class="k">def</span><span class="w"> </span><span class="nf">_within_pairs</span><span class="p">(</span>
     <span class="n">coords</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">within</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Return the positions of every pair of rows in the same group, as rows and columns.</span>
 
 <span class="sd">    A group is the rows that agree on every `within` entry. The pairs come group</span>
 <span class="sd">    by group (groups in order of first appearance), and in each group row by row:</span>
-<span class="sd">    the entries of one dense block of the group&#39;s members, in order.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    the entries of one dense block of the group's members, in order.</span>
+<span class="sd">    """</span>
     <span class="n">keys</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="n">name</span><span class="p">:</span> <span class="n">_key</span><span class="p">(</span><span class="n">coords</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">within</span><span class="p">})</span>
     <span class="n">groups</span> <span class="o">=</span> <span class="n">keys</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">within</span><span class="p">),</span> <span class="n">sort</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">dropna</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">ngroup</span><span class="p">()</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
-    <span class="n">order</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">groups</span><span class="p">,</span> <span class="n">kind</span><span class="o">=</span><span class="s2">&quot;stable&quot;</span><span class="p">)</span>  <span class="c1"># the members of each group, together</span>
+    <span class="n">order</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">groups</span><span class="p">,</span> <span class="n">kind</span><span class="o">=</span><span class="s2">"stable"</span><span class="p">)</span>  <span class="c1"># the members of each group, together</span>
     <span class="n">sizes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">bincount</span><span class="p">(</span><span class="n">groups</span><span class="p">)</span>
-    <span class="n">size</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="n">sizes</span><span class="p">,</span> <span class="n">sizes</span><span class="p">)</span>  <span class="c1"># the size of each member&#39;s group</span>
+    <span class="n">size</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="n">sizes</span><span class="p">,</span> <span class="n">sizes</span><span class="p">)</span>  <span class="c1"># the size of each member's group</span>
     <span class="n">begin</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span>
         <span class="n">np</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span><span class="n">sizes</span><span class="p">)</span> <span class="o">-</span> <span class="n">sizes</span><span class="p">,</span> <span class="n">sizes</span>
     <span class="p">)</span>  <span class="c1"># where its group begins in `order`</span>
-    <span class="n">start</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span><span class="n">size</span><span class="p">)</span> <span class="o">-</span> <span class="n">size</span>  <span class="c1"># where each member&#39;s run of pairs begins</span>
+    <span class="n">start</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span><span class="n">size</span><span class="p">)</span> <span class="o">-</span> <span class="n">size</span>  <span class="c1"># where each member's run of pairs begins</span>
     <span class="n">rows</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="n">order</span><span class="p">,</span> <span class="n">size</span><span class="p">)</span>  <span class="c1"># each member, once for each member of its group</span>
-    <span class="c1"># in each run, the group&#39;s members in order: the position within the run, from the group&#39;s begin</span>
+    <span class="c1"># in each run, the group's members in order: the position within the run, from the group's begin</span>
     <span class="n">cols</span> <span class="o">=</span> <span class="n">order</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">rows</span><span class="p">))</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="n">start</span> <span class="o">-</span> <span class="n">begin</span><span class="p">,</span> <span class="n">size</span><span class="p">)]</span>
     <span class="k">return</span> <span class="n">rows</span><span class="p">,</span> <span class="n">cols</span>
 
 
 <span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">init</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">_Kernel</span><span class="p">(</span><span class="n">CorrelationModel</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;A correlation that is a function of the labels&#39; coordinates, within groups of labels.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""A correlation that is a function of the labels' coordinates, within groups of labels."""</span>
 
     <span class="n">within</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;The levels on which two labels must be the same to be correlated (``&quot;time.hour&quot;`` is an attribute of a datetime level).&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""The levels on which two labels must be the same to be correlated (``"time.hour"`` is an attribute of a datetime level)."""</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_set_within</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">within</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Check and set :attr:`within`.&quot;&quot;&quot;</span>
-        <span class="n">names</span> <span class="o">=</span> <span class="n">_names</span><span class="p">(</span><span class="n">within</span><span class="p">,</span> <span class="s2">&quot;within&quot;</span><span class="p">)</span>
+<span class="w">        </span><span class="sd">"""Check and set :attr:`within`."""</span>
+        <span class="n">names</span> <span class="o">=</span> <span class="n">_names</span><span class="p">(</span><span class="n">within</span><span class="p">,</span> <span class="s2">"within"</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">names</span><span class="p">:</span>
             <span class="n">level</span><span class="p">,</span> <span class="n">attribute</span> <span class="o">=</span> <span class="n">_split</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">attribute</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -520,32 +522,32 @@
             <span class="n">value</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">DatetimeIndex</span><span class="p">([]),</span> <span class="n">attribute</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="n">level</span> <span class="ow">or</span> <span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="nb">callable</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                    <span class="sa">f</span><span class="s2">&quot;within=</span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s2">: a dotted name is a level and an attribute &quot;</span>
-                    <span class="s2">&quot;of its datetimes, as &#39;obs_time.date&#39; or &#39;time.hour&#39;.&quot;</span>
+                    <span class="sa">f</span><span class="s2">"within=</span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s2">: a dotted name is a level and an attribute "</span>
+                    <span class="s2">"of its datetimes, as 'obs_time.date' or 'time.hour'."</span>
                 <span class="p">)</span>
-        <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;within&quot;</span><span class="p">,</span> <span class="n">names</span><span class="p">)</span>
+        <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">"within"</span><span class="p">,</span> <span class="n">names</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_reads</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return :attr:`levels` and the levels of :attr:`within`.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Return :attr:`levels` and the levels of :attr:`within`."""</span>
         <span class="n">grouped</span> <span class="o">=</span> <span class="p">(</span><span class="n">_split</span><span class="p">(</span><span class="n">name</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">within</span><span class="p">)</span>
         <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">dict</span><span class="o">.</span><span class="n">fromkeys</span><span class="p">((</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">levels</span><span class="p">,</span> <span class="o">*</span><span class="n">grouped</span><span class="p">)))</span>
 
     <span class="nd">@abstractmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_unmasked</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">coords</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the correlation between every two rows of `coords`, ignoring ``within``.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Return the correlation between every two rows of `coords`, ignoring ``within``."""</span>
 
     <span class="nd">@abstractmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_paired</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">coords</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">rows</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">cols</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the correlation between row ``rows[p]`` and row ``cols[p]`` of `coords` for each p, ignoring ``within``.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Return the correlation between row ``rows[p]`` and row ``cols[p]`` of `coords` for each p, ignoring ``within``."""</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">correlation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">coords</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the correlation between the rows of `coords`, zero between groups (see :meth:`CorrelationModel.correlation`).&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Return the correlation between the rows of `coords`, zero between groups (see :meth:`CorrelationModel.correlation`)."""</span>
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_form</span><span class="p">(</span><span class="n">coords</span><span class="p">))</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_form</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">coords</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LinearOperator</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the correlation; with ``within``, sparse, with every pair of a group built at once.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Return the correlation; with ``within``, sparse, with every pair of a group built at once."""</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">within</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">DenseOperator</span><span class="o">.</span><span class="n">_adopt</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_unmasked</span><span class="p">(</span><span class="n">coords</span><span class="p">))</span>
         <span class="n">rows</span><span class="p">,</span> <span class="n">cols</span> <span class="o">=</span> <span class="n">_within_pairs</span><span class="p">(</span><span class="n">coords</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">within</span><span class="p">)</span>
@@ -562,15 +564,15 @@
 <a class="viewcode-back" href="../../../reference/api/fips.Constant.html#fips.Constant">[docs]</a>
 <span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">init</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">Constant</span><span class="p">(</span><span class="n">_Kernel</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    A correlation of one between every two labels (of a group, with `within`).</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    within : str or sequence of str, optional</span>
 <span class="sd">        Correlate only labels that are the same on these levels; labels of</span>
-<span class="sd">        different groups are independent. ``&quot;level.attribute&quot;`` groups by an</span>
-<span class="sd">        attribute of a datetime level (``&quot;obs_time.date&quot;``).</span>
+<span class="sd">        different groups are independent. ``"level.attribute"`` groups by an</span>
+<span class="sd">        attribute of a datetime level (``"obs_time.date"``).</span>
 
 <span class="sd">    Examples</span>
 <span class="sd">    --------</span>
@@ -579,83 +581,83 @@
 <span class="sd">    &gt;&gt;&gt; import pandas as pd</span>
 <span class="sd">    &gt;&gt;&gt; from fips import Constant, Space</span>
 <span class="sd">    &gt;&gt;&gt; times = pd.to_datetime(</span>
-<span class="sd">    ...     [&quot;2024-01-01 10:00&quot;, &quot;2024-01-01 14:00&quot;, &quot;2024-01-02 10:00&quot;]</span>
+<span class="sd">    ...     ["2024-01-01 10:00", "2024-01-01 14:00", "2024-01-02 10:00"]</span>
 <span class="sd">    ... )</span>
-<span class="sd">    &gt;&gt;&gt; obs = pd.MultiIndex.from_product([[&quot;A&quot;], times], names=[&quot;site&quot;, &quot;obs_time&quot;])</span>
-<span class="sd">    &gt;&gt;&gt; model = Constant(within=[&quot;site&quot;, &quot;obs_time.date&quot;])</span>
-<span class="sd">    &gt;&gt;&gt; model.with_std(1.0).build(Space({&quot;co2&quot;: obs})).dense()</span>
+<span class="sd">    &gt;&gt;&gt; obs = pd.MultiIndex.from_product([["A"], times], names=["site", "obs_time"])</span>
+<span class="sd">    &gt;&gt;&gt; model = Constant(within=["site", "obs_time.date"])</span>
+<span class="sd">    &gt;&gt;&gt; model.with_std(1.0).build(Space({"co2": obs})).dense()</span>
 <span class="sd">    array([[1., 1., 0.],</span>
 <span class="sd">           [1., 1., 0.],</span>
 <span class="sd">           [0., 0., 1.]])</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="n">levels</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="p">(),</span> <span class="nb">repr</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;No levels, since the correlation is one at any distance.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""No levels, since the correlation is one at any distance."""</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">within</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_set_within</span><span class="p">(</span><span class="n">within</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_unmasked</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">coords</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return a matrix of ones.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Return a matrix of ones."""</span>
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">coords</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">coords</span><span class="p">)))</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_paired</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">coords</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">rows</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">cols</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return a one for each pair.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Return a one for each pair."""</span>
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">rows</span><span class="p">))</span></div>
 
 
 
 <span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">init</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">_Decay</span><span class="p">(</span><span class="n">_Kernel</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;A correlation that decays with the distance along some levels.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""A correlation that decays with the distance along some levels."""</span>
 
-    <span class="n">scale</span><span class="p">:</span> <span class="s2">&quot;float | pd.Timedelta&quot;</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;The length scale, a time for a datetime or timedelta level, else in the levels&#39; units (km on the Earth).&quot;&quot;&quot;</span>
+    <span class="n">scale</span><span class="p">:</span> <span class="s2">"float | pd.Timedelta"</span>
+<span class="w">    </span><span class="sd">"""The length scale, a time for a datetime or timedelta level, else in the levels' units (km on the Earth)."""</span>
     <span class="n">metric</span><span class="p">:</span> <span class="nb">str</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;How the distance is measured, ``&quot;euclidean&quot;``, ``&quot;haversine&quot;`` or ``&quot;chordal&quot;``.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""How the distance is measured, ``"euclidean"``, ``"haversine"`` or ``"chordal"``."""</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">levels</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
-        <span class="n">scale</span><span class="p">:</span> <span class="s2">&quot;float | str | pd.Timedelta&quot;</span><span class="p">,</span>
+        <span class="n">scale</span><span class="p">:</span> <span class="s2">"float | str | pd.Timedelta"</span><span class="p">,</span>
         <span class="o">*</span><span class="p">,</span>
         <span class="n">within</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">metric</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;euclidean&quot;</span><span class="p">,</span>
+        <span class="n">metric</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"euclidean"</span><span class="p">,</span>
     <span class="p">):</span>
-        <span class="n">names</span> <span class="o">=</span> <span class="n">_names</span><span class="p">(</span><span class="n">levels</span><span class="p">,</span> <span class="s2">&quot;levels&quot;</span><span class="p">)</span>
+        <span class="n">names</span> <span class="o">=</span> <span class="n">_names</span><span class="p">(</span><span class="n">levels</span><span class="p">,</span> <span class="s2">"levels"</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">names</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2"> needs at least one level.&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2"> needs at least one level."</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">metric</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">_METRICS</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;metric must be one of </span><span class="si">{</span><span class="n">_METRICS</span><span class="si">}</span><span class="s2">, got </span><span class="si">{</span><span class="n">metric</span><span class="si">!r}</span><span class="s2">.&quot;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">metric</span> <span class="o">!=</span> <span class="s2">&quot;euclidean&quot;</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">names</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"metric must be one of </span><span class="si">{</span><span class="n">_METRICS</span><span class="si">}</span><span class="s2">, got </span><span class="si">{</span><span class="n">metric</span><span class="si">!r}</span><span class="s2">."</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">metric</span> <span class="o">!=</span> <span class="s2">"euclidean"</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">names</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;metric=</span><span class="si">{</span><span class="n">metric</span><span class="si">!r}</span><span class="s2"> reads two levels, latitude then longitude; &quot;</span>
-                <span class="sa">f</span><span class="s2">&quot;got </span><span class="si">{</span><span class="nb">list</span><span class="p">(</span><span class="n">names</span><span class="p">)</span><span class="si">}</span><span class="s2">.&quot;</span>
+                <span class="sa">f</span><span class="s2">"metric=</span><span class="si">{</span><span class="n">metric</span><span class="si">!r}</span><span class="s2"> reads two levels, latitude then longitude; "</span>
+                <span class="sa">f</span><span class="s2">"got </span><span class="si">{</span><span class="nb">list</span><span class="p">(</span><span class="n">names</span><span class="p">)</span><span class="si">}</span><span class="s2">."</span>
             <span class="p">)</span>
-        <span class="k">if</span> <span class="n">metric</span> <span class="o">==</span> <span class="s2">&quot;haversine&quot;</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_valid_on_sphere</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">metric</span> <span class="o">==</span> <span class="s2">"haversine"</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_valid_on_sphere</span><span class="p">():</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;A </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2"> correlation of the great-circle distance &quot;</span>
-                <span class="s2">&quot;is not positive-definite; use metric=&#39;chordal&#39;.&quot;</span>
+                <span class="sa">f</span><span class="s2">"A </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2"> correlation of the great-circle distance "</span>
+                <span class="s2">"is not positive-definite; use metric='chordal'."</span>
             <span class="p">)</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">scale</span><span class="p">,</span> <span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">Timedelta</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">timedelta64</span><span class="p">)):</span>
             <span class="n">value</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Timedelta</span><span class="p">(</span><span class="n">scale</span><span class="p">)</span>
             <span class="n">positive</span> <span class="o">=</span> <span class="n">value</span> <span class="o">&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">Timedelta</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">metric</span> <span class="o">!=</span> <span class="s2">&quot;euclidean&quot;</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;metric=</span><span class="si">{</span><span class="n">metric</span><span class="si">!r}</span><span class="s2"> takes a scale in km, not a time.&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">metric</span> <span class="o">!=</span> <span class="s2">"euclidean"</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"metric=</span><span class="si">{</span><span class="n">metric</span><span class="si">!r}</span><span class="s2"> takes a scale in km, not a time."</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">value</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">scale</span><span class="p">)</span>
             <span class="n">positive</span> <span class="o">=</span> <span class="mi">0</span> <span class="o">&lt;</span> <span class="n">value</span> <span class="o">&lt;</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">positive</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;The scale must be positive and finite, got </span><span class="si">{</span><span class="n">scale</span><span class="si">!r}</span><span class="s2">.&quot;</span><span class="p">)</span>
-        <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;levels&quot;</span><span class="p">,</span> <span class="n">names</span><span class="p">)</span>
-        <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;scale&quot;</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
-        <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;metric&quot;</span><span class="p">,</span> <span class="n">metric</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"The scale must be positive and finite, got </span><span class="si">{</span><span class="n">scale</span><span class="si">!r}</span><span class="s2">."</span><span class="p">)</span>
+        <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">"levels"</span><span class="p">,</span> <span class="n">names</span><span class="p">)</span>
+        <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">"scale"</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+        <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">"metric"</span><span class="p">,</span> <span class="n">metric</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_set_within</span><span class="p">(</span><span class="n">within</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_valid_on_sphere</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return whether a correlation of the great-circle distance is positive-definite.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Return whether a correlation of the great-circle distance is positive-definite."""</span>
         <span class="k">return</span> <span class="kc">True</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_distance</span><span class="p">(</span>
@@ -664,29 +666,29 @@
         <span class="n">rows</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">cols</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Return the distance between rows, divided by the scale.</span>
 
 <span class="sd">        A matrix between every two rows of `coords`; with `rows` and `cols`, a</span>
 <span class="sd">        vector with the distance from row ``rows[p]`` to row ``cols[p]``.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">metric</span> <span class="o">!=</span> <span class="s2">&quot;euclidean&quot;</span><span class="p">:</span>
+<span class="sd">        """</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">metric</span> <span class="o">!=</span> <span class="s2">"euclidean"</span><span class="p">:</span>
             <span class="n">lat</span><span class="p">,</span> <span class="n">lon</span> <span class="o">=</span> <span class="p">(</span><span class="n">coords</span><span class="p">[</span><span class="n">level</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span> <span class="k">for</span> <span class="n">level</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">levels</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">rows</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">cols</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="n">term</span> <span class="o">=</span> <span class="n">_half_angle_term</span><span class="p">(</span><span class="n">lat</span><span class="p">,</span> <span class="n">lon</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">term</span> <span class="o">=</span> <span class="n">_half_angle_pairs</span><span class="p">(</span><span class="n">lat</span><span class="p">,</span> <span class="n">lon</span><span class="p">,</span> <span class="n">rows</span><span class="p">,</span> <span class="n">cols</span><span class="p">)</span>
-            <span class="n">measure</span> <span class="o">=</span> <span class="n">_great_circle</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">metric</span> <span class="o">==</span> <span class="s2">&quot;haversine&quot;</span> <span class="k">else</span> <span class="n">_chord</span>
+            <span class="n">measure</span> <span class="o">=</span> <span class="n">_great_circle</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">metric</span> <span class="o">==</span> <span class="s2">"haversine"</span> <span class="k">else</span> <span class="n">_chord</span>
             <span class="k">return</span> <span class="n">measure</span><span class="p">(</span><span class="n">term</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">scale</span>
         <span class="n">first</span> <span class="o">=</span> <span class="n">coords</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">levels</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
         <span class="n">lags</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">api</span><span class="o">.</span><span class="n">types</span><span class="o">.</span><span class="n">is_timedelta64_dtype</span><span class="p">(</span><span class="n">first</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">lags</span> <span class="ow">or</span> <span class="n">pd</span><span class="o">.</span><span class="n">api</span><span class="o">.</span><span class="n">types</span><span class="o">.</span><span class="n">is_datetime64_any_dtype</span><span class="p">(</span><span class="n">first</span><span class="p">):</span>
             <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">levels</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">scale</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">Timedelta</span><span class="p">):</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                    <span class="sa">f</span><span class="s2">&quot;Level </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">levels</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">!r}</span><span class="s2"> holds &quot;</span>
-                    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="s1">&#39;timedeltas&#39;</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">lags</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="s1">&#39;datetimes&#39;</span><span class="si">}</span><span class="s2">: a model measures &quot;</span>
-                    <span class="s2">&quot;time along that one level, with a scale that is a time &quot;</span>
-                    <span class="s2">&quot;(as &#39;30D&#39;).&quot;</span>
+                    <span class="sa">f</span><span class="s2">"Level </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">levels</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">!r}</span><span class="s2"> holds "</span>
+                    <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="s1">'timedeltas'</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">lags</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="s1">'datetimes'</span><span class="si">}</span><span class="s2">: a model measures "</span>
+                    <span class="s2">"time along that one level, with a scale that is a time "</span>
+                    <span class="s2">"(as '30D')."</span>
                 <span class="p">)</span>
             <span class="k">if</span> <span class="n">lags</span><span class="p">:</span>
                 <span class="n">t</span> <span class="o">=</span> <span class="n">first</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
@@ -697,8 +699,8 @@
             <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">a</span> <span class="o">-</span> <span class="n">b</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">scale</span><span class="o">.</span><span class="n">to_timedelta64</span><span class="p">()</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">scale</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">Timedelta</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;The scale is a time, but the levels </span><span class="si">{</span><span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">levels</span><span class="p">)</span><span class="si">}</span><span class="s2"> do not &quot;</span>
-                <span class="s2">&quot;hold datetimes or timedeltas.&quot;</span>
+                <span class="sa">f</span><span class="s2">"The scale is a time, but the levels </span><span class="si">{</span><span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">levels</span><span class="p">)</span><span class="si">}</span><span class="s2"> do not "</span>
+                <span class="s2">"hold datetimes or timedeltas."</span>
             <span class="p">)</span>
         <span class="n">x</span> <span class="o">=</span> <span class="n">coords</span><span class="p">[</span><span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">levels</span><span class="p">)]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
@@ -711,16 +713,16 @@
 
     <span class="nd">@abstractmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_decay</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">distance</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the correlation at a distance (divided by the scale), for any shape of array.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Return the correlation at a distance (divided by the scale), for any shape of array."""</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_unmasked</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">coords</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the correlation between every two rows of `coords`, ignoring ``within``.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Return the correlation between every two rows of `coords`, ignoring ``within``."""</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_decay</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_distance</span><span class="p">(</span><span class="n">coords</span><span class="p">))</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_paired</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">coords</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">rows</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">cols</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the correlation of each pair of rows, ignoring ``within``.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Return the correlation of each pair of rows, ignoring ``within``."""</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_decay</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_distance</span><span class="p">(</span><span class="n">coords</span><span class="p">,</span> <span class="n">rows</span><span class="p">,</span> <span class="n">cols</span><span class="p">))</span>
 
 
@@ -728,7 +730,7 @@
 <a class="viewcode-back" href="../../../reference/api/fips.Exponential.html#fips.Exponential">[docs]</a>
 <span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">init</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">Exponential</span><span class="p">(</span><span class="n">_Decay</span><span class="p">):</span>
-<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">    An exponential correlation, :math:`\exp(-d / \ell)` at a distance :math:`d`.</span>
 
 <span class="sd">    Parameters</span>
@@ -736,19 +738,19 @@
 <span class="sd">    levels : str or sequence of str</span>
 <span class="sd">        The levels the distance is measured along: one datetime or timedelta</span>
 <span class="sd">        level (a time), numeric levels (a straight line), or latitude and</span>
-<span class="sd">        longitude with ``metric=&quot;haversine&quot;`` or ``&quot;chordal&quot;``.</span>
+<span class="sd">        longitude with ``metric="haversine"`` or ``"chordal"``.</span>
 <span class="sd">    scale : float, str or pd.Timedelta</span>
-<span class="sd">        The length scale :math:`\ell`, positive: a time (``&quot;30D&quot;``) for a</span>
-<span class="sd">        datetime or timedelta level, else a number in the levels&#39; units (km</span>
+<span class="sd">        The length scale :math:`\ell`, positive: a time (``"30D"``) for a</span>
+<span class="sd">        datetime or timedelta level, else a number in the levels' units (km</span>
 <span class="sd">        on the Earth).</span>
 <span class="sd">    within : str or sequence of str, optional</span>
 <span class="sd">        Correlate only labels that are the same on these levels (the matrix</span>
-<span class="sd">        is then sparse). ``&quot;level.attribute&quot;`` is an attribute of a datetime</span>
-<span class="sd">        level: ``&quot;obs_time.date&quot;`` cuts the correlation at midnight, and</span>
-<span class="sd">        ``&quot;time.hour&quot;`` keeps it to the same hour of day.</span>
-<span class="sd">    metric : {&quot;euclidean&quot;, &quot;haversine&quot;, &quot;chordal&quot;}, default &quot;euclidean&quot;</span>
-<span class="sd">        How the distance is measured. ``&quot;haversine&quot;`` (great-circle) and</span>
-<span class="sd">        ``&quot;chordal&quot;`` (through the Earth) read the levels as latitude and</span>
+<span class="sd">        is then sparse). ``"level.attribute"`` is an attribute of a datetime</span>
+<span class="sd">        level: ``"obs_time.date"`` cuts the correlation at midnight, and</span>
+<span class="sd">        ``"time.hour"`` keeps it to the same hour of day.</span>
+<span class="sd">    metric : {"euclidean", "haversine", "chordal"}, default "euclidean"</span>
+<span class="sd">        How the distance is measured. ``"haversine"`` (great-circle) and</span>
+<span class="sd">        ``"chordal"`` (through the Earth) read the levels as latitude and</span>
 <span class="sd">        longitude in degrees, in that order, and give kilometers.</span>
 
 <span class="sd">    Raises</span>
@@ -764,17 +766,17 @@
 
 <span class="sd">    &gt;&gt;&gt; from fips import Exponential, Kronecker</span>
 <span class="sd">    &gt;&gt;&gt; model = Kronecker(</span>
-<span class="sd">    ...     Exponential(&quot;time&quot;, &quot;30D&quot;),</span>
-<span class="sd">    ...     Exponential([&quot;lat&quot;, &quot;lon&quot;], 20.0, metric=&quot;haversine&quot;),</span>
+<span class="sd">    ...     Exponential("time", "30D"),</span>
+<span class="sd">    ...     Exponential(["lat", "lon"], 20.0, metric="haversine"),</span>
 <span class="sd">    ... )</span>
 
 <span class="sd">    Errors correlated over 2.8 hours at one site, never across midnight:</span>
 
-<span class="sd">    &gt;&gt;&gt; mdm = Exponential(&quot;obs_time&quot;, &quot;2.8h&quot;, within=[&quot;site&quot;, &quot;obs_time.date&quot;])</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    &gt;&gt;&gt; mdm = Exponential("obs_time", "2.8h", within=["site", "obs_time.date"])</span>
+<span class="sd">    """</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_decay</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">distance</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return ``exp(-d / scale)``.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Return ``exp(-d / scale)``."""</span>
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">distance</span><span class="p">)</span></div>
 
 
@@ -783,11 +785,11 @@
 <a class="viewcode-back" href="../../../reference/api/fips.Gaussian.html#fips.Gaussian">[docs]</a>
 <span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">init</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">Gaussian</span><span class="p">(</span><span class="n">_Decay</span><span class="p">):</span>
-<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">    A Gaussian correlation, :math:`\exp(-d^2 / (2 \ell^2))` at a distance :math:`d`.</span>
 
 <span class="sd">    The limit of :class:`Matern` as :math:`\nu \to \infty`: very smooth. On</span>
-<span class="sd">    the Earth it takes ``metric=&quot;chordal&quot;`` (with the great-circle distance it</span>
+<span class="sd">    the Earth it takes ``metric="chordal"`` (with the great-circle distance it</span>
 <span class="sd">    is not positive-definite).</span>
 
 <span class="sd">    Parameters</span>
@@ -798,29 +800,29 @@
 <span class="sd">        The length scale :math:`\ell`, positive.</span>
 <span class="sd">    within : str or sequence of str, optional</span>
 <span class="sd">        Correlate only labels the same on these levels (see :class:`Exponential`).</span>
-<span class="sd">    metric : {&quot;euclidean&quot;, &quot;chordal&quot;}, default &quot;euclidean&quot;</span>
+<span class="sd">    metric : {"euclidean", "chordal"}, default "euclidean"</span>
 <span class="sd">        How the distance is measured (see :class:`Exponential`).</span>
 
 <span class="sd">    Raises</span>
 <span class="sd">    ------</span>
 <span class="sd">    ValueError</span>
-<span class="sd">        As :class:`Exponential`, and for ``metric=&quot;haversine&quot;``.</span>
+<span class="sd">        As :class:`Exponential`, and for ``metric="haversine"``.</span>
 
 <span class="sd">    Examples</span>
 <span class="sd">    --------</span>
 <span class="sd">    &gt;&gt;&gt; import pandas as pd</span>
 <span class="sd">    &gt;&gt;&gt; from fips import Gaussian</span>
-<span class="sd">    &gt;&gt;&gt; Gaussian(&quot;x&quot;, 1.0).correlation(pd.DataFrame({&quot;x&quot;: [0.0, 1.0]})).round(4)</span>
+<span class="sd">    &gt;&gt;&gt; Gaussian("x", 1.0).correlation(pd.DataFrame({"x": [0.0, 1.0]})).round(4)</span>
 <span class="sd">    array([[1.    , 0.6065],</span>
 <span class="sd">           [0.6065, 1.    ]])</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_valid_on_sphere</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return False: not positive-definite on the great-circle distance.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Return False: not positive-definite on the great-circle distance."""</span>
         <span class="k">return</span> <span class="kc">False</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_decay</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">distance</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return ``exp(-d**2 / (2 scale**2))``.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Return ``exp(-d**2 / (2 scale**2))``."""</span>
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mf">0.5</span> <span class="o">*</span> <span class="n">distance</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span></div>
 
 
@@ -829,7 +831,7 @@
 <a class="viewcode-back" href="../../../reference/api/fips.Matern.html#fips.Matern">[docs]</a>
 <span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">init</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">Matern</span><span class="p">(</span><span class="n">_Decay</span><span class="p">):</span>
-<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">    A Matérn correlation, of smoothness :math:`\nu`.</span>
 
 <span class="sd">    .. math::</span>
@@ -851,9 +853,9 @@
 <span class="sd">        The smoothness :math:`\nu`, in (0, 50]: past that, use :class:`Gaussian`.</span>
 <span class="sd">    within : str or sequence of str, optional</span>
 <span class="sd">        Correlate only labels the same on these levels (see :class:`Exponential`).</span>
-<span class="sd">    metric : {&quot;euclidean&quot;, &quot;haversine&quot;, &quot;chordal&quot;}, default &quot;euclidean&quot;</span>
+<span class="sd">    metric : {"euclidean", "haversine", "chordal"}, default "euclidean"</span>
 <span class="sd">        How the distance is measured (see :class:`Exponential`);</span>
-<span class="sd">        ``&quot;haversine&quot;`` only for :math:`\nu \le 1/2` (positive-definite there).</span>
+<span class="sd">        ``"haversine"`` only for :math:`\nu \le 1/2` (positive-definite there).</span>
 
 <span class="sd">    Raises</span>
 <span class="sd">    ------</span>
@@ -864,44 +866,44 @@
 <span class="sd">    --------</span>
 <span class="sd">    &gt;&gt;&gt; import pandas as pd</span>
 <span class="sd">    &gt;&gt;&gt; from fips import Matern</span>
-<span class="sd">    &gt;&gt;&gt; coords = pd.DataFrame({&quot;x&quot;: [0.0, 1.0]})</span>
-<span class="sd">    &gt;&gt;&gt; Matern(&quot;x&quot;, 1.0, nu=0.5).correlation(coords).round(4)</span>
+<span class="sd">    &gt;&gt;&gt; coords = pd.DataFrame({"x": [0.0, 1.0]})</span>
+<span class="sd">    &gt;&gt;&gt; Matern("x", 1.0, nu=0.5).correlation(coords).round(4)</span>
 <span class="sd">    array([[1.    , 0.3679],</span>
 <span class="sd">           [0.3679, 1.    ]])</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="n">nu</span><span class="p">:</span> <span class="nb">float</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;The smoothness, 1/2 for the exponential and smoother as it grows.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""The smoothness, 1/2 for the exponential and smoother as it grows."""</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">levels</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
-        <span class="n">scale</span><span class="p">:</span> <span class="s2">&quot;float | str | pd.Timedelta&quot;</span><span class="p">,</span>
+        <span class="n">scale</span><span class="p">:</span> <span class="s2">"float | str | pd.Timedelta"</span><span class="p">,</span>
         <span class="n">nu</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.5</span><span class="p">,</span>
         <span class="o">*</span><span class="p">,</span>
         <span class="n">within</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">metric</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;euclidean&quot;</span><span class="p">,</span>
+        <span class="n">metric</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"euclidean"</span><span class="p">,</span>
     <span class="p">):</span>
         <span class="n">nu</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">nu</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="mi">0</span> <span class="o">&lt;</span> <span class="n">nu</span> <span class="o">&lt;=</span> <span class="mi">50</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;nu must be in (0, 50] (Gaussian is the limit), got </span><span class="si">{</span><span class="n">nu</span><span class="si">}</span><span class="s2">.&quot;</span>
+                <span class="sa">f</span><span class="s2">"nu must be in (0, 50] (Gaussian is the limit), got </span><span class="si">{</span><span class="n">nu</span><span class="si">}</span><span class="s2">."</span>
             <span class="p">)</span>
-        <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;nu&quot;</span><span class="p">,</span> <span class="n">nu</span><span class="p">)</span>
+        <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">"nu"</span><span class="p">,</span> <span class="n">nu</span><span class="p">)</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">levels</span><span class="p">,</span> <span class="n">scale</span><span class="p">,</span> <span class="n">within</span><span class="o">=</span><span class="n">within</span><span class="p">,</span> <span class="n">metric</span><span class="o">=</span><span class="n">metric</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_valid_on_sphere</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return whether nu &lt;= 1/2, where the great-circle distance is allowed.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Return whether nu &lt;= 1/2, where the great-circle distance is allowed."""</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">nu</span> <span class="o">&lt;=</span> <span class="mf">0.5</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_decay</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">distance</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the Matérn correlation, through logarithms so that no term overflows.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Return the Matérn correlation, through logarithms so that no term overflows."""</span>
         <span class="n">r</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mf">2.0</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">nu</span><span class="p">)</span> <span class="o">*</span> <span class="n">distance</span>
         <span class="n">out</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones_like</span><span class="p">(</span><span class="n">r</span><span class="p">)</span>
         <span class="n">apart</span> <span class="o">=</span> <span class="n">r</span> <span class="o">&gt;</span> <span class="mi">0</span>
         <span class="n">x</span> <span class="o">=</span> <span class="n">r</span><span class="p">[</span><span class="n">apart</span><span class="p">]</span>
         <span class="n">k</span> <span class="o">=</span> <span class="n">kve</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nu</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
-        <span class="k">with</span> <span class="n">np</span><span class="o">.</span><span class="n">errstate</span><span class="p">(</span><span class="n">divide</span><span class="o">=</span><span class="s2">&quot;ignore&quot;</span><span class="p">):</span>  <span class="c1"># K_nu underflows to 0 far away</span>
+        <span class="k">with</span> <span class="n">np</span><span class="o">.</span><span class="n">errstate</span><span class="p">(</span><span class="n">divide</span><span class="o">=</span><span class="s2">"ignore"</span><span class="p">):</span>  <span class="c1"># K_nu underflows to 0 far away</span>
             <span class="n">log_c</span> <span class="o">=</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">nu</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mf">2.0</span><span class="p">)</span> <span class="o">-</span> <span class="n">gammaln</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nu</span><span class="p">)</span>
             <span class="n">c</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">log_c</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">nu</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">k</span><span class="p">)</span> <span class="o">-</span> <span class="n">x</span><span class="p">)</span>
         <span class="c1"># K_nu overflows only for a large nu at a tiny r, where C = 1 - r^2 / (4 (nu - 1))</span>
@@ -939,8 +941,8 @@
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script defer src="../../../_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0"></script>
-<script defer src="../../../_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0"></script>
+  <script defer src="../../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be"></script>
+<script defer src="../../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be"></script>
 
   <footer class="bd-footer">
 <div class="bd-footer__inner bd-page-width">
@@ -960,7 +962,7 @@
         <div class="footer-item">
 
   <p class="sphinx-version">
-    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.1.0.
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.2.0.
   </p>
 </div>
       
@@ -973,7 +975,7 @@
         <div class="footer-item">
 <p class="theme-version">
   <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
-  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.22.0.
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.23.0.
 </p></div>
       
     </div>

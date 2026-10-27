@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>fips.methods &#8212; fips 0.2.0b2.dev8+g22c2598c9 documentation</title>
+    <title>fips.methods &#8212; fips 0.2.0b2.dev9+g9dded00bd documentation</title>
   
   
   
@@ -25,29 +25,30 @@
   </noscript>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="../../_static/styles/theme.css?digest=64cc4de3f052d77215f0" rel="stylesheet" />
-<link href="../../_static/styles/pydata-sphinx-theme.css?digest=64cc4de3f052d77215f0" rel="stylesheet" />
+  <link href="../../_static/styles/theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
 
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../_static/plot_directive.css" />
     <link rel="stylesheet" type="text/css" href="../../_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx_autodoc_typehints.css?v=057ac668" />
     <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../../_static/custom.css?v=4b8357b6" />
   
   <!-- So that users can add custom icons -->
-  <script defer src="../../_static/scripts/fontawesome.js?digest=64cc4de3f052d77215f0"></script>
+  <script defer src="../../_static/scripts/fontawesome.js?digest=18bd87630a240e9c25be"></script>
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0" />
-<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0" />
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../_static/documentation_options.js?v=3193467b"></script>
+    <script src="../../_static/documentation_options.js?v=46a0216e"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../../_static/copybutton.js?v=f281be69"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = '_modules/fips/methods';</script>
     <script>
-        DOCUMENTATION_OPTIONS.theme_version = '0.22.0';
+        DOCUMENTATION_OPTIONS.theme_version = '0.23.0';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://jmineau.github.io/fips/switcher.json';
         DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'dev';
         DOCUMENTATION_OPTIONS.show_version_warning_banner =
@@ -57,6 +58,7 @@
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="0.2" />
   
@@ -130,8 +132,8 @@
       
     
     
-    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b2.dev8+g22c2598c9 documentation - Home"/>
-    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b2.dev8+g22c2598c9 documentation - Home"/>
+    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b2.dev9+g9dded00bd documentation - Home"/>
+    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b2.dev9+g9dded00bd documentation - Home"/>
   
   
 </a></div>
@@ -419,13 +421,13 @@
                 <article class="bd-article">
                   
   <h1>Source code for fips.methods</h1><div class="highlight"><pre>
-<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span></span><span class="sd">"""</span>
 <span class="sd">Solving an inverse problem: :func:`solve` and the methods it can use.</span>
 
 <span class="sd">Each method is registered under a name with the dataclass of its options,</span>
 <span class="sd">declared once: :func:`solve` checks the options a caller passes against it</span>
 <span class="sd">before anything is computed, and an unknown method or option raises with the</span>
-<span class="sd">names it knows. The one method is ``&quot;analytic&quot;`` (:mod:`fips.methods.analytic`),</span>
+<span class="sd">names it knows. The one method is ``"analytic"`` (:mod:`fips.methods.analytic`),</span>
 <span class="sd">the closed-form Gaussian posterior.</span>
 
 <span class="sd">A method is a module here with three things, and a line in ``_METHODS``</span>
@@ -435,7 +437,7 @@
 <span class="sd">  factor; :class:`~fips.posterior.Options`) and any others it needs;</span>
 <span class="sd">- its solution, the object it keeps from a solve, which answers the questions</span>
 <span class="sd">  of :class:`~fips.posterior.Solution` with unlabeled arrays in the order of</span>
-<span class="sd">  the problem&#39;s spaces: ``estimate()``, ``variances()``, ``cov(W)``,</span>
+<span class="sd">  the problem's spaces: ``estimate()``, ``variances()``, ``cov(W)``,</span>
 <span class="sd">  ``gain(W)``, ``dofs()`` and ``chi2()``. It may also have</span>
 <span class="sd">  ``with_gamma(gamma)`` and ``with_data(problem)``, which give another</span>
 <span class="sd">  solution without solving again, and ``estimate_is_mean = True`` when its</span>
@@ -447,7 +449,7 @@
 <span class="sd">The :class:`~fips.Posterior` puts the labels on, keeps each output, and</span>
 <span class="sd">writes everything else (the averaging kernel, the innovation covariance,</span>
 <span class="sd">Desroziers, leverage, the scalars, the summary) from those answers and the</span>
-<span class="sd">problem, so a new method gets them all. The analytic method&#39;s solution is</span>
+<span class="sd">problem, so a new method gets them all. The analytic method's solution is</span>
 <span class="sd">``Whitened`` or ``Information``, the factorization of its whitened</span>
 <span class="sd">(``m x m``) or information (``n x n``) system, whichever its size calls for.</span>
 <span class="sd">A lognormal method would keep its estimate (the mode) and the Gaussian of the log state around</span>
@@ -456,7 +458,7 @@
 <span class="sd">sample mean and covariance (``estimate_is_mean = True``). Neither can change</span>
 <span class="sd">gamma without solving again, so neither has ``with_gamma``. A method imports</span>
 <span class="sd">:mod:`fips.posterior`; :mod:`fips.posterior` never imports a method.</span>
-<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">"""</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span>
@@ -472,35 +474,35 @@
 
 <span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">_Method</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;A registered method: the dataclass of its options and the function that solves.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""A registered method: the dataclass of its options and the function that solves."""</span>
 
     <span class="n">options</span><span class="p">:</span> <span class="nb">type</span>
     <span class="n">solve</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">Problem</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">Posterior</span><span class="p">]</span>
 
 
-<span class="n">_METHODS</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">_Method</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;analytic&quot;</span><span class="p">:</span> <span class="n">_Method</span><span class="p">(</span><span class="n">AnalyticOptions</span><span class="p">,</span> <span class="n">_analytic</span><span class="p">)}</span>
-<span class="sd">&quot;&quot;&quot;The methods by name.&quot;&quot;&quot;</span>
+<span class="n">_METHODS</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">_Method</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"analytic"</span><span class="p">:</span> <span class="n">_Method</span><span class="p">(</span><span class="n">AnalyticOptions</span><span class="p">,</span> <span class="n">_analytic</span><span class="p">)}</span>
+<span class="sd">"""The methods by name."""</span>
 
 
 <div class="viewcode-block" id="available_methods">
 <a class="viewcode-back" href="../../reference/api/fips.available_methods.html#fips.available_methods">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">available_methods</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Return the names of the methods :func:`solve` can use.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
 <span class="sd">    list of str</span>
-<span class="sd">        The registered names, such as ``&quot;analytic&quot;``.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">        The registered names, such as ``"analytic"``.</span>
+<span class="sd">    """</span>
     <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">_METHODS</span><span class="p">)</span></div>
 
 
 
 <div class="viewcode-block" id="solve">
 <a class="viewcode-back" href="../../reference/api/fips.solve.html#fips.solve">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">solve</span><span class="p">(</span><span class="n">problem</span><span class="p">:</span> <span class="n">Problem</span><span class="p">,</span> <span class="n">method</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;analytic&quot;</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Posterior</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">solve</span><span class="p">(</span><span class="n">problem</span><span class="p">:</span> <span class="n">Problem</span><span class="p">,</span> <span class="n">method</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"analytic"</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Posterior</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Solve an inverse problem and return its posterior.</span>
 
 <span class="sd">    The problem is not changed.</span>
@@ -509,11 +511,11 @@
 <span class="sd">    ----------</span>
 <span class="sd">    problem : Problem</span>
 <span class="sd">        The problem to solve.</span>
-<span class="sd">    method : str, default &quot;analytic&quot;</span>
-<span class="sd">        The name of a method (see :func:`available_methods`). ``&quot;analytic&quot;``</span>
+<span class="sd">    method : str, default "analytic"</span>
+<span class="sd">        The name of a method (see :func:`available_methods`). ``"analytic"``</span>
 <span class="sd">        is the closed-form Gaussian posterior.</span>
 <span class="sd">    **options</span>
-<span class="sd">        The method&#39;s options, by name: for ``&quot;analytic&quot;``, ``gamma`` (see</span>
+<span class="sd">        The method's options, by name: for ``"analytic"``, ``gamma`` (see</span>
 <span class="sd">        :class:`~fips.methods.analytic.AnalyticOptions`).</span>
 
 <span class="sd">    Returns</span>
@@ -539,11 +541,11 @@
 <span class="sd">    &gt;&gt;&gt; import numpy as np</span>
 <span class="sd">    &gt;&gt;&gt; import pandas as pd</span>
 <span class="sd">    &gt;&gt;&gt; import fips</span>
-<span class="sd">    &gt;&gt;&gt; cells = pd.Index([&quot;a&quot;, &quot;b&quot;], name=&quot;cell&quot;)</span>
-<span class="sd">    &gt;&gt;&gt; obs_id = pd.Index([&quot;o1&quot;, &quot;o2&quot;, &quot;o3&quot;], name=&quot;obs_id&quot;)</span>
-<span class="sd">    &gt;&gt;&gt; prior = fips.Vector.from_series(pd.Series(0.0, index=cells), block=&quot;flux&quot;)</span>
+<span class="sd">    &gt;&gt;&gt; cells = pd.Index(["a", "b"], name="cell")</span>
+<span class="sd">    &gt;&gt;&gt; obs_id = pd.Index(["o1", "o2", "o3"], name="obs_id")</span>
+<span class="sd">    &gt;&gt;&gt; prior = fips.Vector.from_series(pd.Series(0.0, index=cells), block="flux")</span>
 <span class="sd">    &gt;&gt;&gt; obs = fips.Vector.from_series(</span>
-<span class="sd">    ...     pd.Series([1.0, 2.0, 3.0], index=obs_id), block=&quot;co2&quot;</span>
+<span class="sd">    ...     pd.Series([1.0, 2.0, 3.0], index=obs_id), block="co2"</span>
 <span class="sd">    ... )</span>
 <span class="sd">    &gt;&gt;&gt; problem = fips.Problem(</span>
 <span class="sd">    ...     prior=prior,</span>
@@ -560,24 +562,24 @@
 <span class="sd">    &gt;&gt;&gt; fips.solve(problem, gama=0.5)</span>
 <span class="sd">    Traceback (most recent call last):</span>
 <span class="sd">    ...</span>
-<span class="sd">    ValueError: Method &#39;analytic&#39; has no option &#39;gama&#39;; its options are: gamma.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    ValueError: Method 'analytic' has no option 'gama'; its options are: gamma.</span>
+<span class="sd">    """</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="n">Problem</span><span class="p">):</span>
-        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;solve takes a Problem, got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">problem</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"solve takes a Problem, got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">problem</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">."</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">method</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">_METHODS</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;Unknown method </span><span class="si">{</span><span class="n">method</span><span class="si">!r}</span><span class="s2">; the methods are: &quot;</span>
-            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">available_methods</span><span class="p">())</span><span class="si">}</span><span class="s2">.&quot;</span>
+            <span class="sa">f</span><span class="s2">"Unknown method </span><span class="si">{</span><span class="n">method</span><span class="si">!r}</span><span class="s2">; the methods are: "</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">available_methods</span><span class="p">())</span><span class="si">}</span><span class="s2">."</span>
         <span class="p">)</span>
     <span class="n">registered</span> <span class="o">=</span> <span class="n">_METHODS</span><span class="p">[</span><span class="n">method</span><span class="p">]</span>
     <span class="n">known</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">fields</span><span class="p">(</span><span class="n">registered</span><span class="o">.</span><span class="n">options</span><span class="p">)]</span>
     <span class="n">unknown</span> <span class="o">=</span> <span class="p">[</span><span class="n">name</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">options</span> <span class="k">if</span> <span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">known</span><span class="p">]</span>
     <span class="k">if</span> <span class="n">unknown</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;Method </span><span class="si">{</span><span class="n">method</span><span class="si">!r}</span><span class="s2"> has no option </span><span class="si">{</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">repr</span><span class="p">,</span><span class="w"> </span><span class="n">unknown</span><span class="p">))</span><span class="si">}</span><span class="s2">; &quot;</span>
-            <span class="sa">f</span><span class="s2">&quot;its options are: </span><span class="si">{</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">known</span><span class="p">)</span><span class="si">}</span><span class="s2">.&quot;</span>
+            <span class="sa">f</span><span class="s2">"Method </span><span class="si">{</span><span class="n">method</span><span class="si">!r}</span><span class="s2"> has no option </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">repr</span><span class="p">,</span><span class="w"> </span><span class="n">unknown</span><span class="p">))</span><span class="si">}</span><span class="s2">; "</span>
+            <span class="sa">f</span><span class="s2">"its options are: </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">known</span><span class="p">)</span><span class="si">}</span><span class="s2">."</span>
         <span class="p">)</span>
-    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Solving with the </span><span class="si">%s</span><span class="s2"> method...&quot;</span><span class="p">,</span> <span class="n">method</span><span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">"Solving with the </span><span class="si">%s</span><span class="s2"> method..."</span><span class="p">,</span> <span class="n">method</span><span class="p">)</span>
     <span class="n">posterior</span> <span class="o">=</span> <span class="n">registered</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="n">registered</span><span class="o">.</span><span class="n">options</span><span class="p">(</span><span class="o">**</span><span class="n">options</span><span class="p">))</span>
     <span class="n">_</span> <span class="o">=</span> <span class="n">posterior</span><span class="o">.</span><span class="n">estimate</span>  <span class="c1"># solve now</span>
     <span class="k">return</span> <span class="n">posterior</span></div>
@@ -611,8 +613,8 @@
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script defer src="../../_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0"></script>
-<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0"></script>
+  <script defer src="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be"></script>
+<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be"></script>
 
   <footer class="bd-footer">
 <div class="bd-footer__inner bd-page-width">
@@ -632,7 +634,7 @@
         <div class="footer-item">
 
   <p class="sphinx-version">
-    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.1.0.
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.2.0.
   </p>
 </div>
       
@@ -645,7 +647,7 @@
         <div class="footer-item">
 <p class="theme-version">
   <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
-  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.22.0.
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.23.0.
 </p></div>
       
     </div>

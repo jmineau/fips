@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>fips.covariance.models &#8212; fips 0.2.0b2.dev8+g22c2598c9 documentation</title>
+    <title>fips.covariance.models &#8212; fips 0.2.0b2.dev9+g9dded00bd documentation</title>
   
   
   
@@ -25,29 +25,30 @@
   </noscript>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="../../../_static/styles/theme.css?digest=64cc4de3f052d77215f0" rel="stylesheet" />
-<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=64cc4de3f052d77215f0" rel="stylesheet" />
+  <link href="../../../_static/styles/theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
+<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
 
     <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../../_static/plot_directive.css" />
     <link rel="stylesheet" type="text/css" href="../../../_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sphinx_autodoc_typehints.css?v=057ac668" />
     <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../../../_static/custom.css?v=4b8357b6" />
   
   <!-- So that users can add custom icons -->
-  <script defer src="../../../_static/scripts/fontawesome.js?digest=64cc4de3f052d77215f0"></script>
+  <script defer src="../../../_static/scripts/fontawesome.js?digest=18bd87630a240e9c25be"></script>
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0" />
-<link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0" />
+  <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
+<link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../../_static/documentation_options.js?v=3193467b"></script>
+    <script src="../../../_static/documentation_options.js?v=46a0216e"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../../../_static/copybutton.js?v=f281be69"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = '_modules/fips/covariance/models';</script>
     <script>
-        DOCUMENTATION_OPTIONS.theme_version = '0.22.0';
+        DOCUMENTATION_OPTIONS.theme_version = '0.23.0';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://jmineau.github.io/fips/switcher.json';
         DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'dev';
         DOCUMENTATION_OPTIONS.show_version_warning_banner =
@@ -57,6 +58,7 @@
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="0.2" />
   
@@ -130,8 +132,8 @@
       
     
     
-    <img src="../../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b2.dev8+g22c2598c9 documentation - Home"/>
-    <img src="../../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b2.dev8+g22c2598c9 documentation - Home"/>
+    <img src="../../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b2.dev9+g9dded00bd documentation - Home"/>
+    <img src="../../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b2.dev9+g9dded00bd documentation - Home"/>
   
   
 </a></div>
@@ -419,11 +421,11 @@
                 <article class="bd-article">
                   
   <h1>Source code for fips.covariance.models</h1><div class="highlight"><pre>
-<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span></span><span class="sd">"""</span>
 <span class="sd">Correlation models and covariance models: a covariance written before its labels.</span>
 
 <span class="sd">A :class:`CorrelationModel` says how correlated two labels are, read from the</span>
-<span class="sd">levels of a space&#39;s labels. :class:`Independent` is the identity,</span>
+<span class="sd">levels of a space's labels. :class:`Independent` is the identity,</span>
 <span class="sd">:class:`Kronecker` the product of models on separate levels, kept as factors,</span>
 <span class="sd">and the kernels of :mod:`fips.covariance.kernels` (:class:`~fips.Exponential`,</span>
 <span class="sd">:class:`~fips.Gaussian`, :class:`~fips.Matern`, :class:`~fips.Constant`)</span>
@@ -432,14 +434,14 @@
 <span class="sd">A model becomes a covariance with :meth:`~CorrelationModel.with_std`: given the</span>
 <span class="sd">standard deviations as a :class:`~fips.Vector`, it is a</span>
 <span class="sd">:class:`~fips.Covariance` at once; given a number, or a pandas Series on a</span>
-<span class="sd">block&#39;s labels, it is a :class:`CovarianceModel`: everything a covariance needs</span>
+<span class="sd">block's labels, it is a :class:`CovarianceModel`: everything a covariance needs</span>
 <span class="sd">except the :class:`~fips.Space` it lives on. A sum of them, or</span>
 <span class="sd">:meth:`Covariance.block_diag &lt;fips.Covariance.block_diag&gt;` of parts some of</span>
 <span class="sd">which are models, is one too. :meth:`CovarianceModel.build` puts it on a space</span>
 <span class="sd">and gives the :class:`~fips.Covariance`, in its cheapest form (Kronecker</span>
 <span class="sd">factors stay factors, an independent model is a diagonal, a model ``within``</span>
 <span class="sd">groups is sparse).</span>
-<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">"""</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">ABC</span><span class="p">,</span> <span class="n">abstractmethod</span>
@@ -467,15 +469,15 @@
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_names</span><span class="p">(</span><span class="n">value</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">what</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return level names as a tuple, checking that each is a string named once.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Return level names as a tuple, checking that each is a string named once."""</span>
     <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">return</span> <span class="p">()</span>
     <span class="n">names</span> <span class="o">=</span> <span class="p">(</span><span class="n">value</span><span class="p">,)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">else</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
     <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">names</span><span class="p">:</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">name</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">what</span><span class="si">}</span><span class="s2"> must be level names (strings), got </span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s2">.&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">what</span><span class="si">}</span><span class="s2"> must be level names (strings), got </span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s2">."</span><span class="p">)</span>
     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">names</span><span class="p">))</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">names</span><span class="p">):</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">what</span><span class="si">}</span><span class="s2"> names a level twice: </span><span class="si">{</span><span class="nb">list</span><span class="p">(</span><span class="n">names</span><span class="p">)</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">what</span><span class="si">}</span><span class="s2"> names a level twice: </span><span class="si">{</span><span class="nb">list</span><span class="p">(</span><span class="n">names</span><span class="p">)</span><span class="si">}</span><span class="s2">."</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">names</span>
 
 
@@ -483,13 +485,13 @@
 <a class="viewcode-back" href="../../../reference/api/fips.covariance.CorrelationModel.html#fips.CorrelationModel">[docs]</a>
 <span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">init</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">CorrelationModel</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    A correlation model: how correlated two labels are, from their coordinates.</span>
 
 <span class="sd">    The base of :class:`Exponential`, :class:`Gaussian`, :class:`Matern`,</span>
 <span class="sd">    :class:`Constant`, :class:`Independent` and :class:`Kronecker`. A model</span>
 <span class="sd">    has no labels of its own: :meth:`with_std` scales it into a covariance,</span>
-<span class="sd">    which reads the model&#39;s levels from the labels of the space it is put on.</span>
+<span class="sd">    which reads the model's levels from the labels of the space it is put on.</span>
 
 <span class="sd">    A new model is a frozen dataclass that subclasses this one, names the</span>
 <span class="sd">    levels it reads in :attr:`levels` and implements :meth:`correlation`.</span>
@@ -497,20 +499,20 @@
 <span class="sd">    See Also</span>
 <span class="sd">    --------</span>
 <span class="sd">    fips.covariance.CovarianceModel : A model with its standard deviations.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="n">levels</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;The levels of the labels the correlation is a function of.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""The levels of the labels the correlation is a function of."""</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_reads</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return every level the model reads: :attr:`levels`, and any it groups by.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Return every level the model reads: :attr:`levels`, and any it groups by."""</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">levels</span>
 
 <div class="viewcode-block" id="CorrelationModel.correlation">
 <a class="viewcode-back" href="../../../reference/api/fips.covariance.CorrelationModel.correlation.html#fips.CorrelationModel.correlation">[docs]</a>
     <span class="nd">@abstractmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">correlation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">coords</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Return the correlation between the rows of `coords`.</span>
 
 <span class="sd">        Parameters</span>
@@ -522,27 +524,27 @@
 <span class="sd">        -------</span>
 <span class="sd">        np.ndarray</span>
 <span class="sd">            The ``n x n`` correlation matrix, one on the diagonal.</span>
-<span class="sd">        &quot;&quot;&quot;</span></div>
+<span class="sd">        """</span></div>
 
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_form</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">coords</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LinearOperator</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the correlation of the rows of `coords` in its cheapest form.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Return the correlation of the rows of `coords` in its cheapest form."""</span>
         <span class="k">return</span> <span class="n">DenseOperator</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">correlation</span><span class="p">(</span><span class="n">coords</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">))</span>
 
     <span class="nd">@overload</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">with_std</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">std</span><span class="p">:</span> <span class="n">Vector</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;Covariance&quot;</span><span class="p">:</span>  <span class="c1"># noqa: D418</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;With a Vector: the covariance on its space.&quot;&quot;&quot;</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">with_std</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">std</span><span class="p">:</span> <span class="n">Vector</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"Covariance"</span><span class="p">:</span>  <span class="c1"># noqa: D418</span>
+<span class="w">        </span><span class="sd">"""With a Vector: the covariance on its space."""</span>
 
     <span class="nd">@overload</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">with_std</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">std</span><span class="p">:</span> <span class="s2">&quot;float | pd.Series&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;CovarianceModel&quot;</span><span class="p">:</span>  <span class="c1"># noqa: D418</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;With a number or a Series: a model to build on a space.&quot;&quot;&quot;</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">with_std</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">std</span><span class="p">:</span> <span class="s2">"float | pd.Series"</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"CovarianceModel"</span><span class="p">:</span>  <span class="c1"># noqa: D418</span>
+<span class="w">        </span><span class="sd">"""With a number or a Series: a model to build on a space."""</span>
 
 <div class="viewcode-block" id="CorrelationModel.with_std">
 <a class="viewcode-back" href="../../../reference/api/fips.covariance.CorrelationModel.with_std.html#fips.CorrelationModel.with_std">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">with_std</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">std</span><span class="p">:</span> <span class="s2">&quot;float | pd.Series | Vector&quot;</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;Covariance | CovarianceModel&quot;</span><span class="p">:</span>
-<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">std</span><span class="p">:</span> <span class="s2">"float | pd.Series | Vector"</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"Covariance | CovarianceModel"</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Return the covariance of this correlation with standard deviations `std`.</span>
 
 <span class="sd">        Entry ``(i, j)`` is ``std[i] * C[i, j] * std[j]``. This is the one</span>
@@ -554,7 +556,7 @@
 <span class="sd">            The standard deviation of each label, not negative. A number is</span>
 <span class="sd">            the same for every label. A Series is indexed by the labels of</span>
 <span class="sd">            the one block the covariance is built on, without a ``block``</span>
-<span class="sd">            level (``vector[&quot;flux&quot;]``&#39;s labels, ``space.select(&quot;flux&quot;)``),</span>
+<span class="sd">            level (``vector["flux"]``'s labels, ``space.select("flux")``),</span>
 <span class="sd">            and is lined up with them by label when the model is built. A</span>
 <span class="sd">            :class:`~fips.Vector` brings its own space. A plain array is</span>
 <span class="sd">            refused: it has no labels, so nothing would say which value is</span>
@@ -575,7 +577,7 @@
 <span class="sd">            number, a Series or a Vector.</span>
 <span class="sd">        ValueError</span>
 <span class="sd">            If a standard deviation is negative or not finite, or the</span>
-<span class="sd">            Series&#39; index has a ``block`` level, an unnamed level or a label</span>
+<span class="sd">            Series' index has a ``block`` level, an unnamed level or a label</span>
 <span class="sd">            twice.</span>
 
 <span class="sd">        See Also</span>
@@ -586,9 +588,9 @@
 <span class="sd">        --------</span>
 <span class="sd">        &gt;&gt;&gt; import pandas as pd</span>
 <span class="sd">        &gt;&gt;&gt; from fips import Exponential, Space, Vector</span>
-<span class="sd">        &gt;&gt;&gt; x = pd.Index([0.0, 1.0, 2.0], name=&quot;x&quot;)</span>
-<span class="sd">        &gt;&gt;&gt; space = Space({&quot;flux&quot;: x})</span>
-<span class="sd">        &gt;&gt;&gt; S = Exponential(&quot;x&quot;, 1.0).with_std(2.0).build(space)</span>
+<span class="sd">        &gt;&gt;&gt; x = pd.Index([0.0, 1.0, 2.0], name="x")</span>
+<span class="sd">        &gt;&gt;&gt; space = Space({"flux": x})</span>
+<span class="sd">        &gt;&gt;&gt; S = Exponential("x", 1.0).with_std(2.0).build(space)</span>
 <span class="sd">        &gt;&gt;&gt; S.dense().round(3)</span>
 <span class="sd">        array([[4.   , 1.472, 0.541],</span>
 <span class="sd">               [1.472, 4.   , 1.472],</span>
@@ -597,15 +599,15 @@
 <span class="sd">        A Series is read by label, whatever its order:</span>
 
 <span class="sd">        &gt;&gt;&gt; std = pd.Series([2.0, 1.0, 1.0], index=x[::-1])</span>
-<span class="sd">        &gt;&gt;&gt; Exponential(&quot;x&quot;, 1.0).with_std(std).build(space).variances.values</span>
+<span class="sd">        &gt;&gt;&gt; Exponential("x", 1.0).with_std(std).build(space).variances.values</span>
 <span class="sd">        array([1., 1., 4.])</span>
 
 <span class="sd">        A Vector is a covariance at once:</span>
 
 <span class="sd">        &gt;&gt;&gt; std = Vector([1.0, 1.0, 2.0], space)</span>
-<span class="sd">        &gt;&gt;&gt; Exponential(&quot;x&quot;, 1.0).with_std(std).variances.values</span>
+<span class="sd">        &gt;&gt;&gt; Exponential("x", 1.0).with_std(std).variances.values</span>
 <span class="sd">        array([1., 1., 4.])</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">std</span><span class="p">,</span> <span class="n">Vector</span><span class="p">):</span>
             <span class="k">return</span> <span class="n">Covariance</span><span class="o">.</span><span class="n">_computed</span><span class="p">(</span>
                 <span class="n">_scaled_form</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">std</span><span class="o">.</span><span class="n">space</span><span class="p">,</span> <span class="n">_checked_std</span><span class="p">(</span><span class="n">std</span><span class="o">.</span><span class="n">values</span><span class="p">)),</span> <span class="n">std</span><span class="o">.</span><span class="n">space</span>
@@ -619,7 +621,7 @@
 <a class="viewcode-back" href="../../../reference/api/fips.Independent.html#fips.Independent">[docs]</a>
 <span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">init</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">Independent</span><span class="p">(</span><span class="n">CorrelationModel</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    The identity correlation: each label is correlated with itself only.</span>
 
 <span class="sd">    By label, not by coordinates: two labels at the same place and time are</span>
@@ -631,14 +633,14 @@
 <span class="sd">    --------</span>
 <span class="sd">    &gt;&gt;&gt; import pandas as pd</span>
 <span class="sd">    &gt;&gt;&gt; from fips import Independent, Space</span>
-<span class="sd">    &gt;&gt;&gt; space = Space({&quot;co2&quot;: pd.Index([&quot;a&quot;, &quot;b&quot;], name=&quot;site&quot;)})</span>
+<span class="sd">    &gt;&gt;&gt; space = Space({"co2": pd.Index(["a", "b"], name="site")})</span>
 <span class="sd">    &gt;&gt;&gt; Independent().with_std(0.5).build(space).dense()</span>
 <span class="sd">    array([[0.25, 0.  ],</span>
 <span class="sd">           [0.  , 0.25]])</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="n">levels</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="p">(),</span> <span class="nb">repr</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;No levels, since the identity reads none.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""No levels, since the identity reads none."""</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">pass</span>
@@ -646,7 +648,7 @@
 <div class="viewcode-block" id="Independent.correlation">
 <a class="viewcode-back" href="../../../reference/api/fips.Independent.correlation.html#fips.Independent.correlation">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">correlation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">coords</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Return the identity matrix, one row per row of `coords`.</span>
 
 <span class="sd">        Parameters</span>
@@ -658,12 +660,12 @@
 <span class="sd">        -------</span>
 <span class="sd">        np.ndarray</span>
 <span class="sd">            The identity.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">coords</span><span class="p">))</span></div>
 
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_form</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">coords</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LinearOperator</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the identity as a diagonal.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Return the identity as a diagonal."""</span>
         <span class="k">return</span> <span class="n">DiagonalOperator</span><span class="o">.</span><span class="n">_adopt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">coords</span><span class="p">)))</span></div>
 
 
@@ -672,15 +674,15 @@
 <a class="viewcode-back" href="../../../reference/api/fips.Kronecker.html#fips.Kronecker">[docs]</a>
 <span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">init</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">Kronecker</span><span class="p">(</span><span class="n">CorrelationModel</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    The product of correlation models on separate levels, kept as its factors.</span>
 
-<span class="sd">    The correlation of two labels is the product of the factors&#39;</span>
+<span class="sd">    The correlation of two labels is the product of the factors'</span>
 <span class="sd">    correlations of them. Each factor reads its own levels (no level is read</span>
 <span class="sd">    by two) and is evaluated once, on the unique coordinates of its levels:</span>
 <span class="sd">    the covariance is a :class:`~fips.linalg.KroneckerOperator`, never</span>
 <span class="sd">    the ``n x n`` matrix. The labels can be in any order and any subset of</span>
-<span class="sd">    the product of the factors&#39; coordinates, but each label must have its own</span>
+<span class="sd">    the product of the factors' coordinates, but each label must have its own</span>
 <span class="sd">    combination of them.</span>
 
 <span class="sd">    Parameters</span>
@@ -700,53 +702,53 @@
 <span class="sd">    &gt;&gt;&gt; import pandas as pd</span>
 <span class="sd">    &gt;&gt;&gt; from fips import Exponential, Kronecker, Space</span>
 <span class="sd">    &gt;&gt;&gt; labels = pd.MultiIndex.from_product(</span>
-<span class="sd">    ...     [pd.date_range(&quot;2024-01-01&quot;, periods=3), [40.0, 40.5], [-112.0]],</span>
-<span class="sd">    ...     names=[&quot;time&quot;, &quot;lat&quot;, &quot;lon&quot;],</span>
+<span class="sd">    ...     [pd.date_range("2024-01-01", periods=3), [40.0, 40.5], [-112.0]],</span>
+<span class="sd">    ...     names=["time", "lat", "lon"],</span>
 <span class="sd">    ... )</span>
 <span class="sd">    &gt;&gt;&gt; model = Kronecker(</span>
-<span class="sd">    ...     Exponential(&quot;time&quot;, &quot;2D&quot;),</span>
-<span class="sd">    ...     Exponential([&quot;lat&quot;, &quot;lon&quot;], 50.0, metric=&quot;haversine&quot;),</span>
+<span class="sd">    ...     Exponential("time", "2D"),</span>
+<span class="sd">    ...     Exponential(["lat", "lon"], 50.0, metric="haversine"),</span>
 <span class="sd">    ... )</span>
-<span class="sd">    &gt;&gt;&gt; S_0 = model.with_std(0.5).build(Space({&quot;flux&quot;: labels}))</span>
+<span class="sd">    &gt;&gt;&gt; S_0 = model.with_std(0.5).build(Space({"flux": labels}))</span>
 <span class="sd">    &gt;&gt;&gt; S_0.data</span>
 <span class="sd">    &lt;6x6 KroneckerOperator with dtype=float64&gt;</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="n">factors</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">CorrelationModel</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;The factors, each a model on its own levels.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""The factors, each a model on its own levels."""</span>
     <span class="n">levels</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="nb">repr</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">compare</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;The levels the factors read, factor by factor.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""The levels the factors read, factor by factor."""</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">factors</span><span class="p">:</span> <span class="n">CorrelationModel</span><span class="p">):</span>
         <span class="n">flat</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">CorrelationModel</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">factor</span> <span class="ow">in</span> <span class="n">factors</span><span class="p">:</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">factor</span><span class="p">,</span> <span class="n">CorrelationModel</span><span class="p">):</span>
                 <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
-                    <span class="sa">f</span><span class="s2">&quot;Kronecker takes correlation models, got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">factor</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">.&quot;</span>
+                    <span class="sa">f</span><span class="s2">"Kronecker takes correlation models, got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">factor</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">."</span>
                 <span class="p">)</span>
             <span class="n">flat</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">factor</span><span class="o">.</span><span class="n">factors</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">factor</span><span class="p">,</span> <span class="n">Kronecker</span><span class="p">)</span> <span class="k">else</span> <span class="p">[</span><span class="n">factor</span><span class="p">])</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">flat</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Kronecker needs at least two factors.&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"Kronecker needs at least two factors."</span><span class="p">)</span>
         <span class="n">seen</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">CorrelationModel</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="k">for</span> <span class="n">factor</span> <span class="ow">in</span> <span class="n">flat</span><span class="p">:</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="n">factor</span><span class="o">.</span><span class="n">_reads</span><span class="p">():</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                    <span class="sa">f</span><span class="s2">&quot;A Kronecker factor must read a level; </span><span class="si">{</span><span class="n">factor</span><span class="si">!r}</span><span class="s2"> reads none.&quot;</span>
+                    <span class="sa">f</span><span class="s2">"A Kronecker factor must read a level; </span><span class="si">{</span><span class="n">factor</span><span class="si">!r}</span><span class="s2"> reads none."</span>
                 <span class="p">)</span>
             <span class="k">for</span> <span class="n">level</span> <span class="ow">in</span> <span class="n">factor</span><span class="o">.</span><span class="n">_reads</span><span class="p">():</span>
                 <span class="k">if</span> <span class="n">level</span> <span class="ow">in</span> <span class="n">seen</span><span class="p">:</span>
                     <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                        <span class="sa">f</span><span class="s2">&quot;Level </span><span class="si">{</span><span class="n">level</span><span class="si">!r}</span><span class="s2"> is read by two factors, </span><span class="si">{</span><span class="n">seen</span><span class="p">[</span><span class="n">level</span><span class="p">]</span><span class="si">!r}</span><span class="s2"> &quot;</span>
-                        <span class="sa">f</span><span class="s2">&quot;and </span><span class="si">{</span><span class="n">factor</span><span class="si">!r}</span><span class="s2">: the factors must read separate levels.&quot;</span>
+                        <span class="sa">f</span><span class="s2">"Level </span><span class="si">{</span><span class="n">level</span><span class="si">!r}</span><span class="s2"> is read by two factors, </span><span class="si">{</span><span class="n">seen</span><span class="p">[</span><span class="n">level</span><span class="p">]</span><span class="si">!r}</span><span class="s2"> "</span>
+                        <span class="sa">f</span><span class="s2">"and </span><span class="si">{</span><span class="n">factor</span><span class="si">!r}</span><span class="s2">: the factors must read separate levels."</span>
                     <span class="p">)</span>
                 <span class="n">seen</span><span class="p">[</span><span class="n">level</span><span class="p">]</span> <span class="o">=</span> <span class="n">factor</span>
-        <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;factors&quot;</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">flat</span><span class="p">))</span>
-        <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;levels&quot;</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">seen</span><span class="p">))</span>
+        <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">"factors"</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">flat</span><span class="p">))</span>
+        <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">"levels"</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">seen</span><span class="p">))</span>
 
 <div class="viewcode-block" id="Kronecker.correlation">
 <a class="viewcode-back" href="../../../reference/api/fips.Kronecker.correlation.html#fips.Kronecker.correlation">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">correlation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">coords</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Return the correlation between the rows of `coords`, as a dense matrix.</span>
 
 <span class="sd">        Parameters</span>
@@ -757,25 +759,25 @@
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        np.ndarray</span>
-<span class="sd">            The ``n x n`` product of the factors&#39; correlations.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">            The ``n x n`` product of the factors' correlations.</span>
+<span class="sd">        """</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_form</span><span class="p">(</span><span class="n">coords</span><span class="p">)</span><span class="o">.</span><span class="n">dense</span><span class="p">()</span></div>
 
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_form</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">coords</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">KroneckerOperator</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Return the correlation as its factors, and each row&#39;s position in them.</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Return the correlation as its factors, and each row's position in them.</span>
 
 <span class="sd">        Each factor is evaluated on the unique coordinates of its levels, in</span>
 <span class="sd">        the order they first appear in `coords`.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="n">repeated</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">coords</span><span class="o">.</span><span class="n">duplicated</span><span class="p">(</span><span class="n">subset</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">levels</span><span class="p">))</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span>
         <span class="k">if</span> <span class="n">repeated</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;A Kronecker model needs each label to have its own combination &quot;</span>
-                <span class="sa">f</span><span class="s2">&quot;of the factors&#39; levels </span><span class="si">{</span><span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">levels</span><span class="p">)</span><span class="si">}</span><span class="s2">, but </span><span class="si">{</span><span class="n">repeated</span><span class="si">}</span><span class="s2"> &quot;</span>
-                <span class="s2">&quot;labels repeat one. Labels that differ only on another level &quot;</span>
-                <span class="s2">&quot;would be perfectly correlated.&quot;</span>
+                <span class="sa">f</span><span class="s2">"A Kronecker model needs each label to have its own combination "</span>
+                <span class="sa">f</span><span class="s2">"of the factors' levels </span><span class="si">{</span><span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">levels</span><span class="p">)</span><span class="si">}</span><span class="s2">, but </span><span class="si">{</span><span class="n">repeated</span><span class="si">}</span><span class="s2"> "</span>
+                <span class="s2">"labels repeat one. Labels that differ only on another level "</span>
+                <span class="s2">"would be perfectly correlated."</span>
             <span class="p">)</span>
         <span class="n">matrices</span><span class="p">,</span> <span class="n">positions</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">factor</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">factors</span><span class="p">:</span>
@@ -786,8 +788,8 @@
             <span class="n">matrix</span> <span class="o">=</span> <span class="n">factor</span><span class="o">.</span><span class="n">_form</span><span class="p">(</span><span class="n">unique</span><span class="p">)</span><span class="o">.</span><span class="n">dense</span><span class="p">()</span>
             <span class="k">if</span> <span class="n">matrix</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">unique</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">unique</span><span class="p">)):</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">factor</span><span class="si">!r}</span><span class="s2"> gave a matrix of shape </span><span class="si">{</span><span class="n">matrix</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2"> for &quot;</span>
-                    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">unique</span><span class="p">)</span><span class="si">}</span><span class="s2"> unique coordinates.&quot;</span>
+                    <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">factor</span><span class="si">!r}</span><span class="s2"> gave a matrix of shape </span><span class="si">{</span><span class="n">matrix</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2"> for "</span>
+                    <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">unique</span><span class="p">)</span><span class="si">}</span><span class="s2"> unique coordinates."</span>
                 <span class="p">)</span>
             <span class="n">matrices</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">matrix</span><span class="p">)</span>
             <span class="n">positions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pos</span><span class="p">)</span>
@@ -796,8 +798,8 @@
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_coords</span><span class="p">(</span><span class="n">space</span><span class="p">:</span> <span class="n">Space</span><span class="p">,</span> <span class="n">levels</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Return the labels of `space` on `levels`, one row per label, in the space&#39;s order.</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Return the labels of `space` on `levels`, one row per label, in the space's order.</span>
 
 <span class="sd">    Raises</span>
 <span class="sd">    ------</span>
@@ -806,28 +808,28 @@
 <span class="sd">    ValueError</span>
 <span class="sd">        If a block of the space does not have a level: the model would read</span>
 <span class="sd">        a missing label there.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="n">needed</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">dict</span><span class="o">.</span><span class="n">fromkeys</span><span class="p">(</span><span class="n">levels</span><span class="p">))</span>
     <span class="k">for</span> <span class="n">level</span> <span class="ow">in</span> <span class="n">needed</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">level</span> <span class="o">==</span> <span class="s2">&quot;block&quot;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">level</span> <span class="o">==</span> <span class="s2">"block"</span><span class="p">:</span>
             <span class="k">continue</span>
         <span class="k">if</span> <span class="n">level</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">space</span><span class="o">.</span><span class="n">levels</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;The model reads level </span><span class="si">{</span><span class="n">level</span><span class="si">!r}</span><span class="s2">, which the space does not &quot;</span>
-                <span class="sa">f</span><span class="s2">&quot;have; its levels are </span><span class="si">{</span><span class="n">_listed</span><span class="p">(</span><span class="n">space</span><span class="o">.</span><span class="n">levels</span><span class="p">)</span><span class="si">}</span><span class="s2">.&quot;</span>
+                <span class="sa">f</span><span class="s2">"The model reads level </span><span class="si">{</span><span class="n">level</span><span class="si">!r}</span><span class="s2">, which the space does not "</span>
+                <span class="sa">f</span><span class="s2">"have; its levels are </span><span class="si">{</span><span class="n">_listed</span><span class="p">(</span><span class="n">space</span><span class="o">.</span><span class="n">levels</span><span class="p">)</span><span class="si">}</span><span class="s2">."</span>
             <span class="p">)</span>
         <span class="n">lacking</span> <span class="o">=</span> <span class="p">[</span><span class="n">b</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">space</span><span class="o">.</span><span class="n">names</span> <span class="k">if</span> <span class="n">level</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">space</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">b</span><span class="p">)</span><span class="o">.</span><span class="n">names</span><span class="p">]</span>
         <span class="k">if</span> <span class="n">lacking</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;The model reads level </span><span class="si">{</span><span class="n">level</span><span class="si">!r}</span><span class="s2">, which block(s) &quot;</span>
-                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">_listed</span><span class="p">(</span><span class="n">lacking</span><span class="p">)</span><span class="si">}</span><span class="s2"> do not have. Put independent blocks side &quot;</span>
-                <span class="s2">&quot;by side with Covariance.block_diag.&quot;</span>
+                <span class="sa">f</span><span class="s2">"The model reads level </span><span class="si">{</span><span class="n">level</span><span class="si">!r}</span><span class="s2">, which block(s) "</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">_listed</span><span class="p">(</span><span class="n">lacking</span><span class="p">)</span><span class="si">}</span><span class="s2"> do not have. Put independent blocks side "</span>
+                <span class="s2">"by side with Covariance.block_diag."</span>
             <span class="p">)</span>
     <span class="k">return</span> <span class="n">space</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">to_frame</span><span class="p">(</span><span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">)[</span><span class="n">needed</span><span class="p">]</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_scaled</span><span class="p">(</span><span class="n">form</span><span class="p">:</span> <span class="n">LinearOperator</span><span class="p">,</span> <span class="n">std</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LinearOperator</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return ``D C D`` for the correlation `form` and ``D = diag(std)``, keeping the form.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Return ``D C D`` for the correlation `form` and ``D = diag(std)``, keeping the form."""</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">form</span><span class="p">,</span> <span class="n">KroneckerOperator</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">KroneckerOperator</span><span class="o">.</span><span class="n">_adopt</span><span class="p">(</span>
             <span class="n">form</span><span class="o">.</span><span class="n">factors</span><span class="p">,</span> <span class="n">std</span><span class="o">=</span><span class="n">form</span><span class="o">.</span><span class="n">std</span> <span class="o">*</span> <span class="n">std</span><span class="p">,</span> <span class="n">positions</span><span class="o">=</span><span class="n">form</span><span class="o">.</span><span class="n">positions</span>
@@ -842,13 +844,13 @@
         <span class="p">)</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">form</span><span class="p">,</span> <span class="n">DenseOperator</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">DenseOperator</span><span class="o">.</span><span class="n">_adopt</span><span class="p">(</span><span class="n">std</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="n">form</span><span class="o">.</span><span class="n">array</span> <span class="o">*</span> <span class="n">std</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="p">:])</span>
-    <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Cannot scale a </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">form</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>  <span class="c1"># pragma: no cover</span>
+    <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Cannot scale a </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">form</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">."</span><span class="p">)</span>  <span class="c1"># pragma: no cover</span>
 
 
 <div class="viewcode-block" id="CovarianceModel">
 <a class="viewcode-back" href="../../../reference/api/fips.covariance.CovarianceModel.html#fips.CovarianceModel">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">CovarianceModel</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    A covariance without its labels: it becomes a Covariance on a space.</span>
 
 <span class="sd">    What :meth:`~fips.covariance.CorrelationModel.with_std` gives for a number</span>
@@ -868,23 +870,23 @@
 
 <span class="sd">    &gt;&gt;&gt; import pandas as pd</span>
 <span class="sd">    &gt;&gt;&gt; from fips import Exponential, Independent, Space</span>
-<span class="sd">    &gt;&gt;&gt; times = pd.date_range(&quot;2024-01-01 22:00&quot;, periods=4, freq=&quot;h&quot;)</span>
-<span class="sd">    &gt;&gt;&gt; obs = Space({&quot;co2&quot;: pd.Index(times, name=&quot;obs_time&quot;)})</span>
+<span class="sd">    &gt;&gt;&gt; times = pd.date_range("2024-01-01 22:00", periods=4, freq="h")</span>
+<span class="sd">    &gt;&gt;&gt; obs = Space({"co2": pd.Index(times, name="obs_time")})</span>
 <span class="sd">    &gt;&gt;&gt; S_z = Independent().with_std(0.1) + Exponential(</span>
-<span class="sd">    ...     &quot;obs_time&quot;, &quot;2.8h&quot;, within=&quot;obs_time.date&quot;</span>
+<span class="sd">    ...     "obs_time", "2.8h", within="obs_time.date"</span>
 <span class="sd">    ... ).with_std(0.5)</span>
 <span class="sd">    &gt;&gt;&gt; S_z.build(obs).dense().round(3)</span>
 <span class="sd">    array([[0.26 , 0.175, 0.   , 0.   ],</span>
 <span class="sd">           [0.175, 0.26 , 0.   , 0.   ],</span>
 <span class="sd">           [0.   , 0.   , 0.26 , 0.175],</span>
 <span class="sd">           [0.   , 0.   , 0.175, 0.26 ]])</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
 <div class="viewcode-block" id="CovarianceModel.build">
 <a class="viewcode-back" href="../../../reference/api/fips.covariance.CovarianceModel.build.html#fips.CovarianceModel.build">[docs]</a>
     <span class="nd">@abstractmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">build</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">space</span><span class="p">:</span> <span class="n">Space</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Covariance</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Return the covariance on `space`.</span>
 
 <span class="sd">        Parameters</span>
@@ -893,7 +895,7 @@
 <span class="sd">            The labels the covariance is put on. Each model reads its levels</span>
 <span class="sd">            from them; a covariance given as a part is aligned to them.</span>
 <span class="sd">        name : str, optional</span>
-<span class="sd">            The covariance&#39;s name.</span>
+<span class="sd">            The covariance's name.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
@@ -908,103 +910,103 @@
 <span class="sd">            the model names is not in the space.</span>
 <span class="sd">        ValueError</span>
 <span class="sd">            If a block lacks a level a model reads, the labels of a Series</span>
-<span class="sd">            of standard deviations are not the space&#39;s (or the space has</span>
+<span class="sd">            of standard deviations are not the space's (or the space has</span>
 <span class="sd">            more than one block), or the labels of a covariance given as a</span>
-<span class="sd">            part do not match the space&#39;s.</span>
-<span class="sd">        &quot;&quot;&quot;</span></div>
+<span class="sd">            part do not match the space's.</span>
+<span class="sd">        """</span></div>
 
 
 <div class="viewcode-block" id="CovarianceModel.__add__">
 <a class="viewcode-back" href="../../../reference/api/fips.covariance.CovarianceModel.__add__.html#fips.CovarianceModel.__add__">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="fm">__add__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s2">&quot;CovarianceModel | Covariance&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;CovarianceModel&quot;</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the sum with a covariance model or a covariance.&quot;&quot;&quot;</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__add__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s2">"CovarianceModel | Covariance"</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"CovarianceModel"</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return the sum with a covariance model or a covariance."""</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="p">(</span><span class="n">CovarianceModel</span><span class="p">,</span> <span class="n">Covariance</span><span class="p">)):</span>
             <span class="k">return</span> <span class="bp">NotImplemented</span>
         <span class="k">return</span> <span class="n">_Sum</span><span class="p">((</span><span class="o">*</span><span class="n">_terms</span><span class="p">(</span><span class="bp">self</span><span class="p">),</span> <span class="o">*</span><span class="n">_terms</span><span class="p">(</span><span class="n">other</span><span class="p">)))</span></div>
 
 
-    <span class="k">def</span><span class="w"> </span><span class="fm">__radd__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s2">&quot;CovarianceModel | Covariance&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;CovarianceModel&quot;</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the sum of a covariance and this model.&quot;&quot;&quot;</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__radd__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s2">"CovarianceModel | Covariance"</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"CovarianceModel"</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return the sum of a covariance and this model."""</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="p">(</span><span class="n">CovarianceModel</span><span class="p">,</span> <span class="n">Covariance</span><span class="p">)):</span>
             <span class="k">return</span> <span class="bp">NotImplemented</span>
         <span class="k">return</span> <span class="n">_Sum</span><span class="p">((</span><span class="o">*</span><span class="n">_terms</span><span class="p">(</span><span class="n">other</span><span class="p">),</span> <span class="o">*</span><span class="n">_terms</span><span class="p">(</span><span class="bp">self</span><span class="p">)))</span></div>
 
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">_terms</span><span class="p">(</span><span class="n">part</span><span class="p">:</span> <span class="s2">&quot;CovarianceModel | Covariance&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the terms of a sum, or the one term.&quot;&quot;&quot;</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_terms</span><span class="p">(</span><span class="n">part</span><span class="p">:</span> <span class="s2">"CovarianceModel | Covariance"</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Return the terms of a sum, or the one term."""</span>
     <span class="k">return</span> <span class="n">part</span><span class="o">.</span><span class="n">terms</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">part</span><span class="p">,</span> <span class="n">_Sum</span><span class="p">)</span> <span class="k">else</span> <span class="p">(</span><span class="n">part</span><span class="p">,)</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_check_space</span><span class="p">(</span><span class="n">space</span><span class="p">:</span> <span class="n">Space</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Raise a TypeError unless `space` is a Space.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Raise a TypeError unless `space` is a Space."""</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">space</span><span class="p">,</span> <span class="n">Space</span><span class="p">):</span>
-        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;build takes a Space, got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">space</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"build takes a Space, got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">space</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">."</span><span class="p">)</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_checked_std</span><span class="p">(</span><span class="n">values</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return `values` as a read-only float array, after checking they are finite and not negative.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Return `values` as a read-only float array, after checking they are finite and not negative."""</span>
     <span class="n">values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">values</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">()</span> <span class="ow">or</span> <span class="p">(</span><span class="n">values</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;The standard deviations must be finite and not negative.&quot;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"The standard deviations must be finite and not negative."</span><span class="p">)</span>
     <span class="n">values</span><span class="o">.</span><span class="n">flags</span><span class="o">.</span><span class="n">writeable</span> <span class="o">=</span> <span class="kc">False</span>
     <span class="k">return</span> <span class="n">values</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_scaled_form</span><span class="p">(</span>
-    <span class="n">model</span><span class="p">:</span> <span class="s2">&quot;CorrelationModel&quot;</span><span class="p">,</span> <span class="n">space</span><span class="p">:</span> <span class="n">Space</span><span class="p">,</span> <span class="n">std</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
+    <span class="n">model</span><span class="p">:</span> <span class="s2">"CorrelationModel"</span><span class="p">,</span> <span class="n">space</span><span class="p">:</span> <span class="n">Space</span><span class="p">,</span> <span class="n">std</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LinearOperator</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the form of ``D C D`` on `space`, for the standard deviations `std` in its order.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Return the form of ``D C D`` on `space`, for the standard deviations `std` in its order."""</span>
     <span class="k">return</span> <span class="n">_scaled</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">_form</span><span class="p">(</span><span class="n">_coords</span><span class="p">(</span><span class="n">space</span><span class="p">,</span> <span class="n">model</span><span class="o">.</span><span class="n">_reads</span><span class="p">())),</span> <span class="n">std</span><span class="p">)</span>
 
 
 <span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">eq</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">_Scaled</span><span class="p">(</span><span class="n">CovarianceModel</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;A correlation model times its standard deviations: ``D C D``.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""A correlation model times its standard deviations: ``D C D``."""</span>
 
-    <span class="n">model</span><span class="p">:</span> <span class="s2">&quot;CorrelationModel&quot;</span>
-    <span class="n">std</span><span class="p">:</span> <span class="s2">&quot;float | pd.Series&quot;</span>
+    <span class="n">model</span><span class="p">:</span> <span class="s2">"CorrelationModel"</span>
+    <span class="n">std</span><span class="p">:</span> <span class="s2">"float | pd.Series"</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">std</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">std</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">std</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">):</span>
             <span class="n">index</span> <span class="o">=</span> <span class="n">std</span><span class="o">.</span><span class="n">index</span>
-            <span class="k">if</span> <span class="s2">&quot;block&quot;</span> <span class="ow">in</span> <span class="n">index</span><span class="o">.</span><span class="n">names</span><span class="p">:</span>
+            <span class="k">if</span> <span class="s2">"block"</span> <span class="ow">in</span> <span class="n">index</span><span class="o">.</span><span class="n">names</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                    <span class="s2">&quot;The Series of standard deviations has a &#39;block&#39; level, which &quot;</span>
-                    <span class="s2">&quot;names its blocks: pass Vector.from_series(std) to with_std, &quot;</span>
-                    <span class="s2">&quot;or a Series on one block&#39;s labels.&quot;</span>
+                    <span class="s2">"The Series of standard deviations has a 'block' level, which "</span>
+                    <span class="s2">"names its blocks: pass Vector.from_series(std) to with_std, "</span>
+                    <span class="s2">"or a Series on one block's labels."</span>
                 <span class="p">)</span>
             <span class="k">if</span> <span class="kc">None</span> <span class="ow">in</span> <span class="n">index</span><span class="o">.</span><span class="n">names</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                    <span class="s2">&quot;Every level of the Series of standard deviations must be &quot;</span>
-                    <span class="s2">&quot;named, as the block&#39;s levels are.&quot;</span>
+                    <span class="s2">"Every level of the Series of standard deviations must be "</span>
+                    <span class="s2">"named, as the block's levels are."</span>
                 <span class="p">)</span>
             <span class="k">if</span> <span class="n">index</span><span class="o">.</span><span class="n">has_duplicates</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                    <span class="s2">&quot;The Series of standard deviations has a label twice: &quot;</span>
-                    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">_listed</span><span class="p">(</span><span class="n">index</span><span class="p">[</span><span class="n">index</span><span class="o">.</span><span class="n">duplicated</span><span class="p">()]</span><span class="o">.</span><span class="n">unique</span><span class="p">())</span><span class="si">}</span><span class="s2">.&quot;</span>
+                    <span class="s2">"The Series of standard deviations has a label twice: "</span>
+                    <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">_listed</span><span class="p">(</span><span class="n">index</span><span class="p">[</span><span class="n">index</span><span class="o">.</span><span class="n">duplicated</span><span class="p">()]</span><span class="o">.</span><span class="n">unique</span><span class="p">())</span><span class="si">}</span><span class="s2">."</span>
                 <span class="p">)</span>
             <span class="n">std</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">_checked_std</span><span class="p">(</span><span class="n">std</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()),</span> <span class="n">index</span><span class="o">=</span><span class="n">index</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">std</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
         <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">std</span><span class="p">,</span> <span class="n">Real</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">std</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="ow">and</span> <span class="n">std</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">0</span><span class="p">):</span>
             <span class="n">std</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">_checked_std</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">std</span><span class="p">)))</span>
         <span class="k">elif</span> <span class="n">np</span><span class="o">.</span><span class="n">ndim</span><span class="p">(</span><span class="n">std</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
-                <span class="s2">&quot;with_std takes a number, a pandas Series on the block&#39;s labels, &quot;</span>
-                <span class="sa">f</span><span class="s2">&quot;or a Vector, not a </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">std</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">: an array has no labels, &quot;</span>
-                <span class="s2">&quot;so nothing says which standard deviation is whose. Pass a Series &quot;</span>
-                <span class="s2">&quot;indexed by the block&#39;s labels (pd.Series(std, index=labels)) or &quot;</span>
-                <span class="s2">&quot;a Vector.&quot;</span>
+                <span class="s2">"with_std takes a number, a pandas Series on the block's labels, "</span>
+                <span class="sa">f</span><span class="s2">"or a Vector, not a </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">std</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">: an array has no labels, "</span>
+                <span class="s2">"so nothing says which standard deviation is whose. Pass a Series "</span>
+                <span class="s2">"indexed by the block's labels (pd.Series(std, index=labels)) or "</span>
+                <span class="s2">"a Vector."</span>
             <span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
-                <span class="s2">&quot;with_std takes a number, a pandas Series on the block&#39;s labels, &quot;</span>
-                <span class="sa">f</span><span class="s2">&quot;or a Vector, got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">std</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">.&quot;</span>
+                <span class="s2">"with_std takes a number, a pandas Series on the block's labels, "</span>
+                <span class="sa">f</span><span class="s2">"or a Vector, got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">std</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">."</span>
             <span class="p">)</span>
-        <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;std&quot;</span><span class="p">,</span> <span class="n">std</span><span class="p">)</span>
+        <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">"std"</span><span class="p">,</span> <span class="n">std</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">build</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">space</span><span class="p">:</span> <span class="n">Space</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Covariance</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the covariance on `space` (see :meth:`CovarianceModel.build`).&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Return the covariance on `space` (see :meth:`CovarianceModel.build`)."""</span>
         <span class="n">_check_space</span><span class="p">(</span><span class="n">space</span><span class="p">)</span>
         <span class="n">std</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">std</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">std</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">):</span>
@@ -1016,43 +1018,43 @@
         <span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return how the model was made.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Return how the model was made."""</span>
         <span class="n">std</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;&lt;Series of </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">std</span><span class="p">)</span><span class="si">}</span><span class="s2"> values&gt;&quot;</span>
+            <span class="sa">f</span><span class="s2">"&lt;Series of </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">std</span><span class="p">)</span><span class="si">}</span><span class="s2"> values&gt;"</span>
             <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">std</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">)</span>
             <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">std</span>
         <span class="p">)</span>
-        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="si">!r}</span><span class="s2">.with_std(</span><span class="si">{</span><span class="n">std</span><span class="si">}</span><span class="s2">)&quot;</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="si">!r}</span><span class="s2">.with_std(</span><span class="si">{</span><span class="n">std</span><span class="si">}</span><span class="s2">)"</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_by_label</span><span class="p">(</span><span class="n">labels</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">,</span> <span class="n">space</span><span class="p">:</span> <span class="n">Space</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Return where each label of `space`, a space of one block, is in `labels`.</span>
 
 <span class="sd">    Raises</span>
 <span class="sd">    ------</span>
 <span class="sd">    ValueError</span>
-<span class="sd">        If the space has more than one block, or `labels` are not the block&#39;s</span>
+<span class="sd">        If the space has more than one block, or `labels` are not the block's</span>
 <span class="sd">        labels (one missing or extra, or other levels); the message names them.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">space</span><span class="o">.</span><span class="n">names</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-            <span class="s2">&quot;A Series of standard deviations is on one block&#39;s labels, and the &quot;</span>
-            <span class="sa">f</span><span class="s2">&quot;space has the blocks </span><span class="si">{</span><span class="n">_listed</span><span class="p">(</span><span class="n">space</span><span class="o">.</span><span class="n">names</span><span class="p">)</span><span class="si">}</span><span class="s2">. Give each block its &quot;</span>
-            <span class="s2">&quot;own model, Covariance.block_diag(&quot;</span>
-            <span class="o">+</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">block</span><span class="si">}</span><span class="s2">=...&quot;</span> <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="n">space</span><span class="o">.</span><span class="n">names</span><span class="p">)</span>
-            <span class="o">+</span> <span class="s2">&quot;), or pass a Vector.&quot;</span>
+            <span class="s2">"A Series of standard deviations is on one block's labels, and the "</span>
+            <span class="sa">f</span><span class="s2">"space has the blocks </span><span class="si">{</span><span class="n">_listed</span><span class="p">(</span><span class="n">space</span><span class="o">.</span><span class="n">names</span><span class="p">)</span><span class="si">}</span><span class="s2">. Give each block its "</span>
+            <span class="s2">"own model, Covariance.block_diag("</span>
+            <span class="o">+</span> <span class="s2">", "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">block</span><span class="si">}</span><span class="s2">=..."</span> <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="n">space</span><span class="o">.</span><span class="n">names</span><span class="p">)</span>
+            <span class="o">+</span> <span class="s2">"), or pass a Vector."</span>
         <span class="p">)</span>
     <span class="n">block</span> <span class="o">=</span> <span class="n">space</span><span class="o">.</span><span class="n">names</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
     <span class="k">return</span> <span class="n">space</span><span class="o">.</span><span class="n">_align</span><span class="p">(</span>
         <span class="n">Space</span><span class="p">({</span><span class="n">block</span><span class="p">:</span> <span class="n">labels</span><span class="p">}),</span>
-        <span class="s2">&quot;the standard deviations&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;The space and the Series of standard deviations&quot;</span><span class="p">,</span>
+        <span class="s2">"the standard deviations"</span><span class="p">,</span>
+        <span class="s2">"The space and the Series of standard deviations"</span><span class="p">,</span>
     <span class="p">)</span>
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">_on</span><span class="p">(</span><span class="n">part</span><span class="p">:</span> <span class="s2">&quot;CovarianceModel | Covariance&quot;</span><span class="p">,</span> <span class="n">space</span><span class="p">:</span> <span class="n">Space</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Covariance</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return `part` on `space`: a model built there, a covariance aligned to it.&quot;&quot;&quot;</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_on</span><span class="p">(</span><span class="n">part</span><span class="p">:</span> <span class="s2">"CovarianceModel | Covariance"</span><span class="p">,</span> <span class="n">space</span><span class="p">:</span> <span class="n">Space</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Covariance</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Return `part` on `space`: a model built there, a covariance aligned to it."""</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">part</span><span class="p">,</span> <span class="n">Covariance</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">Covariance</span><span class="o">.</span><span class="n">_computed</span><span class="p">(</span><span class="n">part</span><span class="o">.</span><span class="n">_on</span><span class="p">(</span><span class="n">space</span><span class="p">,</span> <span class="n">space</span><span class="p">),</span> <span class="n">space</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">part</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">space</span><span class="p">)</span>
@@ -1060,12 +1062,12 @@
 
 <span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">eq</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">_Sum</span><span class="p">(</span><span class="n">CovarianceModel</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;A sum of covariance models (and covariances), each built on the same space.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""A sum of covariance models (and covariances), each built on the same space."""</span>
 
     <span class="n">terms</span><span class="p">:</span> <span class="nb">tuple</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">build</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">space</span><span class="p">:</span> <span class="n">Space</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Covariance</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the sum on `space` (see :meth:`CovarianceModel.build`).&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Return the sum on `space` (see :meth:`CovarianceModel.build`)."""</span>
         <span class="n">_check_space</span><span class="p">(</span><span class="n">space</span><span class="p">)</span>
         <span class="n">total</span> <span class="o">=</span> <span class="n">_on</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">terms</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">space</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">term</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">terms</span><span class="p">[</span><span class="mi">1</span><span class="p">:]:</span>
@@ -1073,28 +1075,28 @@
         <span class="k">return</span> <span class="n">Covariance</span><span class="o">.</span><span class="n">_computed</span><span class="p">(</span><span class="n">total</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">space</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the terms joined by ``+``.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="s2">&quot; + &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="n">term</span><span class="p">)</span> <span class="k">for</span> <span class="n">term</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">terms</span><span class="p">)</span>
+<span class="w">        </span><span class="sd">"""Return the terms joined by ``+``."""</span>
+        <span class="k">return</span> <span class="s2">" + "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="n">term</span><span class="p">)</span> <span class="k">for</span> <span class="n">term</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">terms</span><span class="p">)</span>
 
 
 <span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">eq</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">_BlockDiagonal</span><span class="p">(</span><span class="n">CovarianceModel</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Independent parts side by side, each on its own blocks of the space.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Independent parts side by side, each on its own blocks of the space."""</span>
 
     <span class="n">parts</span><span class="p">:</span> <span class="nb">tuple</span>  <span class="c1"># of (block names, CovarianceModel or Covariance)</span>
     <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">build</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">space</span><span class="p">:</span> <span class="n">Space</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Covariance</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the block-diagonal covariance on `space` (see :meth:`CovarianceModel.build`).&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Return the block-diagonal covariance on `space` (see :meth:`CovarianceModel.build`)."""</span>
         <span class="n">_check_space</span><span class="p">(</span><span class="n">space</span><span class="p">)</span>
         <span class="n">named</span> <span class="o">=</span> <span class="p">[</span><span class="n">block</span> <span class="k">for</span> <span class="n">names</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">parts</span> <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="n">names</span><span class="p">]</span>
         <span class="n">missing</span> <span class="o">=</span> <span class="p">[</span><span class="n">block</span> <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="n">space</span><span class="o">.</span><span class="n">names</span> <span class="k">if</span> <span class="n">block</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">named</span><span class="p">]</span>
         <span class="n">extra</span> <span class="o">=</span> <span class="p">[</span><span class="n">block</span> <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="n">named</span> <span class="k">if</span> <span class="n">block</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">space</span><span class="p">]</span>
         <span class="k">if</span> <span class="n">missing</span> <span class="ow">or</span> <span class="n">extra</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="s2">&quot;The block diagonal covariance and the space must have the same &quot;</span>
-                <span class="sa">f</span><span class="s2">&quot;blocks; the space has </span><span class="si">{</span><span class="n">_listed</span><span class="p">(</span><span class="n">space</span><span class="o">.</span><span class="n">names</span><span class="p">)</span><span class="si">}</span><span class="s2">, the parts cover &quot;</span>
-                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">_listed</span><span class="p">(</span><span class="n">named</span><span class="p">)</span><span class="si">}</span><span class="s2">.&quot;</span>
+                <span class="s2">"The block diagonal covariance and the space must have the same "</span>
+                <span class="sa">f</span><span class="s2">"blocks; the space has </span><span class="si">{</span><span class="n">_listed</span><span class="p">(</span><span class="n">space</span><span class="o">.</span><span class="n">names</span><span class="p">)</span><span class="si">}</span><span class="s2">, the parts cover "</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">_listed</span><span class="p">(</span><span class="n">named</span><span class="p">)</span><span class="si">}</span><span class="s2">."</span>
             <span class="p">)</span>
         <span class="n">built</span> <span class="o">=</span> <span class="p">[</span>
             <span class="n">_on</span><span class="p">(</span><span class="n">part</span><span class="p">,</span> <span class="n">Space</span><span class="p">({</span><span class="n">b</span><span class="p">:</span> <span class="n">space</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">b</span><span class="p">)</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">names</span><span class="p">}))</span>
@@ -1102,41 +1104,41 @@
         <span class="p">]</span>
         <span class="n">form</span><span class="p">,</span> <span class="n">joined</span> <span class="o">=</span> <span class="n">_side_by_side</span><span class="p">(</span><span class="n">built</span><span class="p">)</span>
         <span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="k">if</span> <span class="n">name</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">name</span>
-        <span class="k">if</span> <span class="n">joined</span><span class="o">.</span><span class="n">names</span> <span class="o">!=</span> <span class="n">space</span><span class="o">.</span><span class="n">names</span><span class="p">:</span>  <span class="c1"># put the blocks in the space&#39;s order</span>
+        <span class="k">if</span> <span class="n">joined</span><span class="o">.</span><span class="n">names</span> <span class="o">!=</span> <span class="n">space</span><span class="o">.</span><span class="n">names</span><span class="p">:</span>  <span class="c1"># put the blocks in the space's order</span>
             <span class="n">form</span> <span class="o">=</span> <span class="n">Covariance</span><span class="o">.</span><span class="n">_computed</span><span class="p">(</span><span class="n">form</span><span class="p">,</span> <span class="n">joined</span><span class="p">)</span><span class="o">.</span><span class="n">_on</span><span class="p">(</span><span class="n">space</span><span class="p">,</span> <span class="n">space</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">Covariance</span><span class="o">.</span><span class="n">_computed</span><span class="p">(</span><span class="n">form</span><span class="p">,</span> <span class="n">space</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the parts by block.&quot;&quot;&quot;</span>
-        <span class="n">parts</span> <span class="o">=</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="s1">&#39;+&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">names</span><span class="p">)</span><span class="si">}</span><span class="s2">=</span><span class="si">{</span><span class="n">part</span><span class="si">!r}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">names</span><span class="p">,</span> <span class="n">part</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">parts</span><span class="p">)</span>
-        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;Covariance.block_diag(</span><span class="si">{</span><span class="n">parts</span><span class="si">}</span><span class="s2">)&quot;</span>
+<span class="w">        </span><span class="sd">"""Return the parts by block."""</span>
+        <span class="n">parts</span> <span class="o">=</span> <span class="s2">", "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="s1">'+'</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">names</span><span class="p">)</span><span class="si">}</span><span class="s2">=</span><span class="si">{</span><span class="n">part</span><span class="si">!r}</span><span class="s2">"</span> <span class="k">for</span> <span class="n">names</span><span class="p">,</span> <span class="n">part</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">parts</span><span class="p">)</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">"Covariance.block_diag(</span><span class="si">{</span><span class="n">parts</span><span class="si">}</span><span class="s2">)"</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_block_diagonal</span><span class="p">(</span>
     <span class="n">covariances</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">,</span> <span class="n">blocks</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_BlockDiagonal</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the model :meth:`Covariance.block_diag &lt;fips.Covariance.block_diag&gt;` gives when a part is a model.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Return the model :meth:`Covariance.block_diag &lt;fips.Covariance.block_diag&gt;` gives when a part is a model."""</span>
     <span class="n">parts</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="n">Covariance</span> <span class="o">|</span> <span class="n">CovarianceModel</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">for</span> <span class="n">cov</span> <span class="ow">in</span> <span class="n">covariances</span><span class="p">:</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">cov</span><span class="p">,</span> <span class="n">Covariance</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
-                <span class="s2">&quot;block_diag takes Covariances in order, and covariance models &quot;</span>
-                <span class="sa">f</span><span class="s2">&quot;by block name (flux=...); got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">cov</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">.&quot;</span>
+                <span class="s2">"block_diag takes Covariances in order, and covariance models "</span>
+                <span class="sa">f</span><span class="s2">"by block name (flux=...); got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">cov</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">."</span>
             <span class="p">)</span>
         <span class="n">parts</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">cov</span><span class="o">.</span><span class="n">space</span><span class="o">.</span><span class="n">names</span><span class="p">,</span> <span class="n">cov</span><span class="p">))</span>
     <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">part</span> <span class="ow">in</span> <span class="n">blocks</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">part</span><span class="p">,</span> <span class="n">Covariance</span><span class="p">)</span> <span class="ow">and</span> <span class="n">part</span><span class="o">.</span><span class="n">space</span><span class="o">.</span><span class="n">names</span> <span class="o">!=</span> <span class="p">(</span><span class="n">key</span><span class="p">,):</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;The covariance given as </span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">= is on </span><span class="si">{</span><span class="n">part</span><span class="o">.</span><span class="n">space</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"The covariance given as </span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">= is on </span><span class="si">{</span><span class="n">part</span><span class="o">.</span><span class="n">space</span><span class="si">}</span><span class="s2">."</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">part</span><span class="p">,</span> <span class="p">(</span><span class="n">Covariance</span><span class="p">,</span> <span class="n">CovarianceModel</span><span class="p">)):</span>
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;block_diag takes a Covariance or a CovarianceModel as </span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">=, &quot;</span>
-                <span class="sa">f</span><span class="s2">&quot;got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">part</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">.&quot;</span>
+                <span class="sa">f</span><span class="s2">"block_diag takes a Covariance or a CovarianceModel as </span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">=, "</span>
+                <span class="sa">f</span><span class="s2">"got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">part</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">."</span>
             <span class="p">)</span>
         <span class="n">parts</span><span class="o">.</span><span class="n">append</span><span class="p">(((</span><span class="nb">str</span><span class="p">(</span><span class="n">key</span><span class="p">),),</span> <span class="n">part</span><span class="p">))</span>
     <span class="n">names</span> <span class="o">=</span> <span class="p">[</span><span class="n">block</span> <span class="k">for</span> <span class="n">blocks_of_part</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">parts</span> <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="n">blocks_of_part</span><span class="p">]</span>
     <span class="n">twice</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">({</span><span class="n">block</span> <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="n">names</span> <span class="k">if</span> <span class="n">names</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="n">block</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">})</span>
     <span class="k">if</span> <span class="n">twice</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Two parts have a block named </span><span class="si">{</span><span class="n">_listed</span><span class="p">(</span><span class="n">twice</span><span class="p">)</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Two parts have a block named </span><span class="si">{</span><span class="n">_listed</span><span class="p">(</span><span class="n">twice</span><span class="p">)</span><span class="si">}</span><span class="s2">."</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">_BlockDiagonal</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="n">parts</span><span class="p">),</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
 
 
@@ -1172,8 +1174,8 @@
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script defer src="../../../_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0"></script>
-<script defer src="../../../_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0"></script>
+  <script defer src="../../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be"></script>
+<script defer src="../../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be"></script>
 
   <footer class="bd-footer">
 <div class="bd-footer__inner bd-page-width">
@@ -1193,7 +1195,7 @@
         <div class="footer-item">
 
   <p class="sphinx-version">
-    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.1.0.
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.2.0.
   </p>
 </div>
       
@@ -1206,7 +1208,7 @@
         <div class="footer-item">
 <p class="theme-version">
   <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
-  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.22.0.
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.23.0.
 </p></div>
       
     </div>
