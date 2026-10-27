@@ -200,11 +200,11 @@ dependency needs a reason, proposed first.
   included**: `aggregate._key_labels` reads each label's bin from
   `size().index`; do the same wherever one frequency key is grouped.
 - **The analytic method has two forms and chooses by size, with no option.**
-  With fewer state elements than observations and an `S_z` that is diagonal,
-  sparse or block diagonal (its inverse cheap to apply), it takes the
+  With fewer state elements than observations and an `S_z` that is dense,
+  diagonal, sparse or block diagonal (not Kronecker), it takes the
   information form (`Information`): `S_0 = R R^T` by the form's own `sqrt`
   (through the factors for a Kronecker `S_0`), and it eigendecomposes the
-  `n x n` matrix `R^T H^T S_z^-1 H R`, holding nothing `m x m`. Otherwise,
+  `n x n` matrix `R^T H^T S_z^-1 H R`, holding no `m x m` of its own. Otherwise,
   or when `S_0` has no Cholesky factor, the whitened form. Both give the same
   posterior; the oracle and `tests/test_whitened.py` run every case in both
   (the `analytic_form` fixture replaces `_choose`). Both decompose with

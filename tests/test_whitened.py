@@ -44,6 +44,7 @@ from fips.linalg import (
     as_linear_operator,
 )
 from fips.methods.analytic import Information, Whitened
+from fips.posterior import Posterior
 
 RTOL = 1e-10
 GAMMAS = [0.1, 0.5, 1.0, 3.0, 20.0]
@@ -817,14 +818,16 @@ def _mismatch(kind: str, m: int, rng) -> object:
         (1, 3, 8, "diagonal", Information),
         (1, 3, 8, "sparse", Information),
         (1, 3, 8, "block diagonal", Information),
-        (1, 3, 8, "dense", Whitened),
+        (1, 3, 8, "dense", Information),
         (1, 3, 8, "Kronecker", Whitened),
+        (2, 4, 8, "dense", Whitened),  # n = m
+        (3, 4, 7, "dense", Whitened),  # n > m
         (2, 4, 8, "diagonal", Whitened),  # n = m
         (3, 4, 7, "diagonal", Whitened),  # n > m
     ],
 )
 def test_the_form_is_chosen_by_size(n_time, n_cell, m, mismatch, chosen, caplog):
-    """The information form when ``n < m`` and ``S_z`` is cheap to invert; else the whitened form. Logged at DEBUG."""
+    """The information form when ``n < m`` and ``S_z`` is dense, diagonal, sparse or block diagonal; else the whitened form. Logged at DEBUG."""
     z, x_0, H, S_0, _, c = _arrays("dense", 0, n_time=n_time, n_cell=n_cell, m=m)
     S_z = _mismatch(mismatch, m, np.random.default_rng(1))
     with caplog.at_level(logging.DEBUG, logger="fips.methods.analytic"):
@@ -840,6 +843,33 @@ def test_the_form_is_chosen_by_size(n_time, n_cell, m, mismatch, chosen, caplog)
     for name, value in _outputs(post).items():
         if name in expected:
             _close(value, expected[name], name)
+
+
+@pytest.mark.parametrize("gamma", GAMMAS)
+@pytest.mark.parametrize("seed", range(3))
+def test_a_dense_mismatch_with_fewer_states_than_observations(gamma, seed):
+    """``n < m`` and a dense ``S_z`` (not chosen by a fixture): the information form, with the closed form's outputs and the same ones as the whitened form."""
+    args = _arrays("dense", seed, n_time=2, n_cell=3, m=20)
+    problem = _problem(*args)
+    post = fips.solve(problem, gamma=gamma)
+    assert type(post._solution) is Information
+    outputs = _outputs(post)
+    for name, expected in _closed_form(*args, gamma).items():
+        _close(outputs[name], expected, f"{name}, gamma {gamma}")
+    whitened = _outputs(
+        Posterior(problem, Whitened.factor(problem, gamma), post.options)
+    )
+    for name, value in outputs.items():
+        _close(value, whitened[name], f"{name} against the whitened form")
+
+
+def test_a_dense_mismatch_that_is_not_positive_definite_raises():
+    """The information form applies ``S_z^-1``, so a dense ``S_z`` it is chosen for must be positive-definite: a clear error, not a wrong answer."""
+    z, x_0, H, S_0, _, c = _arrays("dense", 0, n_time=1, n_cell=3, m=8)
+    with pytest.raises(
+        LinAlgError, match="model-data mismatch is not positive-definite"
+    ):
+        fips.solve(_problem(z, x_0, H, S_0, np.ones((8, 8)), c))
 
 
 def test_a_prior_without_a_square_root_takes_the_whitened_form(caplog):
@@ -862,18 +892,20 @@ def test_a_large_whitened_solve_warns(caplog, monkeypatch):
     monkeypatch.setattr("fips.methods.analytic._LARGE_M", 5)
     rng = np.random.default_rng(2)
     z, x_0, H, S_0, S_z, c = _arrays("dense", 0, n_time=1, n_cell=3, m=8)
+    S_z = _mismatch("Kronecker", 8, rng)  # the one form the information form refuses
     with caplog.at_level(logging.WARNING, logger="fips.methods.analytic"):
         fips.solve(_problem(z, x_0, H, S_0, S_z, c))
     (record,) = caplog.records
     assert "m = 8 observations, more than twice the n = 3 state elements" in (
         record.message
     )
-    assert "the model-data mismatch is a DenseOperator" in record.message
+    assert "the model-data mismatch is a KroneckerOperator" in record.message
     quiet = {
-        "information form": (
+        "information form, diagonal": (
             _arrays("dense", 0, 1, 3, 8),
             _mismatch("diagonal", 8, rng),
         ),
+        "information form, dense": (_arrays("dense", 0, 1, 3, 8), None),
         "m = 2 n": (_arrays("dense", 0, 1, 4, 8), None),
     }
     for what, ((z, x_0, H, S_0, S_z, c), other) in quiet.items():
@@ -883,9 +915,9 @@ def test_a_large_whitened_solve_warns(caplog, monkeypatch):
         assert not caplog.records, what
     monkeypatch.undo()
     caplog.clear()
-    z, x_0, H, S_0, S_z, c = _arrays("dense", 0, n_time=1, n_cell=3, m=8)
+    z, x_0, H, S_0, _, c = _arrays("dense", 0, n_time=1, n_cell=3, m=8)
     with caplog.at_level(logging.WARNING, logger="fips.methods.analytic"):
-        fips.solve(_problem(z, x_0, H, S_0, S_z, c))
+        fips.solve(_problem(z, x_0, H, S_0, _mismatch("Kronecker", 8, rng), c))
     assert not caplog.records, "below the default _LARGE_M"
 
 

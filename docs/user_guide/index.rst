@@ -331,11 +331,12 @@ a Kronecker covariance), and the estimate, the variances, the DOFS and the
 chi-squared from the factors, without forming anything :math:`n \times n`. The
 information form works in the state's size: it eigendecomposes an
 :math:`n \times n` matrix built from :math:`H`, a square root of :math:`S_0` and
-:math:`S_z^{-1}`, and forms nothing :math:`m \times m`. It is used when there
-are fewer state elements than observations and :math:`S_z` is diagonal, sparse
-or block diagonal, so that its inverse is cheap to apply; otherwise the
-whitened form. In both, the full posterior covariance (``post.cov()``), the
-gain and the averaging kernel are formed only when they are read, once each.
+:math:`S_z^{-1}`, and forms no :math:`m \times m` matrix of its own (a dense
+:math:`S_z` is applied through its Cholesky factor). It is used when there
+are fewer state elements than observations and :math:`S_z` is dense,
+diagonal, sparse or block diagonal; otherwise the whitened form. In both, the
+full posterior covariance (``post.cov()``), the gain and the averaging
+kernel are formed only when they are read, once each.
 
 .. ipython:: python
 
