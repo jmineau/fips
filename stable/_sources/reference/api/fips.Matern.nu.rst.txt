@@ -1,0 +1,6 @@
+fips.Matern.nu
+==============
+
+.. currentmodule:: fips
+
+.. autoattribute:: Matern.nu

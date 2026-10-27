@@ -1,0 +1,48 @@
+﻿fips.Posterior
+==============
+
+.. currentmodule:: fips
+
+.. autoclass:: Posterior
+   :no-members:
+
+
+
+
+.. rubric:: Attributes
+
+.. autosummary::
+   :toctree:
+
+   ~Posterior.chi2
+   ~Posterior.dofs
+   ~Posterior.estimate
+   ~Posterior.innovation_cov
+   ~Posterior.kalman_gain
+   ~Posterior.mean
+   ~Posterior.modeled_obs
+   ~Posterior.options
+   ~Posterior.problem
+   ~Posterior.r2
+   ~Posterior.reduced_chi2
+   ~Posterior.rmse
+   ~Posterior.uncertainty_reduction
+   ~Posterior.variances
+
+
+
+.. rubric:: Methods
+
+.. autosummary::
+   :toctree:
+
+   ~Posterior.averaging_kernel
+   ~Posterior.cov
+   ~Posterior.desroziers
+   ~Posterior.leverage
+   ~Posterior.summary
+   ~Posterior.with_data
+   ~Posterior.with_gamma
+
+
+

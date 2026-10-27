@@ -1,0 +1,29 @@
+﻿fips.linalg.LinearOperator
+==========================
+
+.. currentmodule:: fips.linalg
+
+.. autoclass:: LinearOperator
+   :no-members:
+   :show-inheritance:
+
+
+
+
+
+
+.. rubric:: Methods
+
+.. autosummary::
+   :toctree:
+
+   ~LinearOperator.dense
+   ~LinearOperator.diagonal
+   ~LinearOperator.dot
+   ~LinearOperator.logdet
+   ~LinearOperator.solve
+   ~LinearOperator.sqrt
+   ~LinearOperator.trace
+
+
+

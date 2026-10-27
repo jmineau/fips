@@ -1,6 +1,0 @@
-fips.Estimator.H
-================
-
-.. currentmodule:: fips
-
-.. autoattribute:: Estimator.H

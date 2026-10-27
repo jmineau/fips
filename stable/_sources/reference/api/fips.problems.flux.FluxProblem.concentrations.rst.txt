@@ -1,6 +1,0 @@
-fips.problems.flux.FluxProblem.concentrations
-=============================================
-
-.. currentmodule:: fips.problems.flux
-
-.. autoproperty:: FluxProblem.concentrations

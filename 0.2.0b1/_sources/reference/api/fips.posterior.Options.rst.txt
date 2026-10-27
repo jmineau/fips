@@ -1,0 +1,23 @@
+﻿fips.posterior.Options
+======================
+
+.. currentmodule:: fips.posterior
+
+.. autoclass:: Options
+   :no-members:
+   :show-inheritance:
+
+
+
+
+.. rubric:: Attributes
+
+.. autosummary::
+   :toctree:
+
+   ~Options.gamma
+
+
+
+
+

@@ -1,0 +1,39 @@
+﻿fips.Gaussian
+=============
+
+.. currentmodule:: fips
+
+.. autoclass:: Gaussian
+   :no-members:
+   :show-inheritance:
+
+
+
+
+.. rubric:: Attributes
+
+.. autosummary::
+   :toctree:
+
+   ~Gaussian.metric
+   ~Gaussian.scale
+   ~Gaussian.within
+
+
+
+.. rubric:: Methods
+
+.. autosummary::
+   :toctree:
+
+   ~Gaussian.correlation
+
+
+
+
+.. rubric:: Inherited
+
+
+From :class:`~.CorrelationModel`: :py:obj:`~.CorrelationModel.levels`, :py:obj:`~.CorrelationModel.with_std`
+
+

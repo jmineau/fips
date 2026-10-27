@@ -1,0 +1,6 @@
+fips.Kronecker.factors
+======================
+
+.. currentmodule:: fips
+
+.. autoattribute:: Kronecker.factors

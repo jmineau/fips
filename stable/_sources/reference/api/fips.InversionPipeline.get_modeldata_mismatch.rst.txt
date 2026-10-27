@@ -1,6 +1,0 @@
-fips.InversionPipeline.get\_modeldata\_mismatch
-===============================================
-
-.. currentmodule:: fips
-
-.. automethod:: InversionPipeline.get_modeldata_mismatch

@@ -1,6 +1,0 @@
-fips.base.Structure.xs
-======================
-
-.. currentmodule:: fips.base
-
-.. automethod:: Structure.xs

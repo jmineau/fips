@@ -1,0 +1,6 @@
+fips.linalg.SparseOperator.matrix
+=================================
+
+.. currentmodule:: fips.linalg
+
+.. autoattribute:: SparseOperator.matrix

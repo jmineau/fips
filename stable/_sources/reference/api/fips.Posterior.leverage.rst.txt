@@ -1,0 +1,6 @@
+fips.Posterior.leverage
+=======================
+
+.. currentmodule:: fips
+
+.. automethod:: Posterior.leverage

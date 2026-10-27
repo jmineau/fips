@@ -1,0 +1,6 @@
+fips.Posterior.variances
+========================
+
+.. currentmodule:: fips
+
+.. autoproperty:: Posterior.variances

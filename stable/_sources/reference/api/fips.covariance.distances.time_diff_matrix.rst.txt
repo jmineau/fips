@@ -1,0 +1,6 @@
+﻿fips.covariance.distances.time\_diff\_matrix
+============================================
+
+.. currentmodule:: fips.covariance.distances
+
+.. autofunction:: time_diff_matrix

@@ -1,6 +1,0 @@
-fips.InverseProblem.desroziers
-==============================
-
-.. currentmodule:: fips
-
-.. autoproperty:: InverseProblem.desroziers

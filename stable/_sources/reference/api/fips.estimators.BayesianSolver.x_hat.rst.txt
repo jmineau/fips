@@ -1,6 +1,0 @@
-fips.estimators.BayesianSolver.x\_hat
-=====================================
-
-.. currentmodule:: fips.estimators
-
-.. autoproperty:: BayesianSolver.x_hat

@@ -1,6 +1,0 @@
-fips.Estimator.DOFS
-===================
-
-.. currentmodule:: fips
-
-.. autoproperty:: Estimator.DOFS

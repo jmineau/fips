@@ -1,0 +1,1141 @@
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>fips.space &#8212; fips 0.2.0b1 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=64cc4de3f052d77215f0" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=64cc4de3f052d77215f0" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../_static/plot_directive.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../_static/custom.css?v=4b8357b6" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="../../_static/scripts/fontawesome.js?digest=64cc4de3f052d77215f0"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0" />
+
+    <script src="../../_static/documentation_options.js?v=3804d0ff"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/fips/space';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.22.0';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://jmineau.github.io/fips/switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.2.0b1';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner =
+            true;
+        </script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.2" />
+  
+    
+    <script src="../../_static/searchtools.js"></script>
+    <script src="../../_static/language_data.js"></script>
+    <script src="../../searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button type="button" class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class=" navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b1 documentation - Home"/>
+    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b1 documentation - Home"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class=" navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../getting_started/index.html">
+    Getting Started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../user_guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../reference/index.html">
+    API Reference
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+      
+        <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/jmineau/fips" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar hide-on-wide">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../getting_started/index.html">
+    Getting Started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../user_guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../reference/index.html">
+    API Reference
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-3"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-3"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-3"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-3">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+        
+          <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/jmineau/fips" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../index.html" class="nav-link">Module code</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">fips.space</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for fips.space</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Spaces: the labels of a state, of the observations, or of a matrix&#39;s axis.</span>
+
+<span class="sd">A :class:`Space` is an ordered set of named blocks, each labeled by its own</span>
+<span class="sd">pandas index. Together they make one :class:`pandas.MultiIndex` with a</span>
+<span class="sd">``block`` level first. Blocks may have different levels: a level a block does</span>
+<span class="sd">not have is missing (NaN) on that block&#39;s rows. This module is the one place</span>
+<span class="sd">that pads those levels and strips them again.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Hashable</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Iterator</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">,</span> <span class="n">Sequence</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">functools</span><span class="w"> </span><span class="kn">import</span> <span class="n">cached_property</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+
+<span class="n">_SHOWN</span> <span class="o">=</span> <span class="mi">5</span>
+<span class="sd">&quot;&quot;&quot;How many labels an error message lists.&quot;&quot;&quot;</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_rounded</span><span class="p">(</span><span class="n">index</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">,</span> <span class="n">decimals</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return `index` with each float level rounded to `decimals` places; other levels as they are.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">level</span><span class="p">(</span><span class="n">values</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return one level, rounded if it holds floats.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">pd</span><span class="o">.</span><span class="n">api</span><span class="o">.</span><span class="n">types</span><span class="o">.</span><span class="n">is_float_dtype</span><span class="p">(</span><span class="n">values</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">values</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(),</span> <span class="n">decimals</span><span class="p">),</span> <span class="n">name</span><span class="o">=</span><span class="n">values</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">values</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">index</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">MultiIndex</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">MultiIndex</span><span class="o">.</span><span class="n">from_arrays</span><span class="p">(</span>
+            <span class="p">[</span><span class="n">level</span><span class="p">(</span><span class="n">index</span><span class="o">.</span><span class="n">get_level_values</span><span class="p">(</span><span class="n">i</span><span class="p">))</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">index</span><span class="o">.</span><span class="n">nlevels</span><span class="p">)],</span>
+            <span class="n">names</span><span class="o">=</span><span class="n">index</span><span class="o">.</span><span class="n">names</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="n">level</span><span class="p">(</span><span class="n">index</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_plain</span><span class="p">(</span><span class="n">label</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return ``label`` with NumPy scalars as Python ones, so it prints as typed.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">label</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">_plain</span><span class="p">(</span><span class="n">part</span><span class="p">)</span> <span class="k">for</span> <span class="n">part</span> <span class="ow">in</span> <span class="n">label</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">label</span><span class="o">.</span><span class="n">item</span><span class="p">()</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">label</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">generic</span><span class="p">)</span> <span class="k">else</span> <span class="n">label</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_listed</span><span class="p">(</span><span class="n">labels</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the first few of ``labels`` as text, saying how many were left out.&quot;&quot;&quot;</span>
+    <span class="n">labels</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">labels</span><span class="p">)</span>
+    <span class="n">text</span> <span class="o">=</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="n">_plain</span><span class="p">(</span><span class="n">label</span><span class="p">))</span> <span class="k">for</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">labels</span><span class="p">[:</span><span class="n">_SHOWN</span><span class="p">])</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">labels</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">_SHOWN</span><span class="p">:</span>
+        <span class="n">text</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot; and </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">labels</span><span class="p">)</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">_SHOWN</span><span class="si">}</span><span class="s2"> more&quot;</span>
+    <span class="k">return</span> <span class="n">text</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_first_duplicates</span><span class="p">(</span><span class="n">index</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the first position of each label that appears more than once in ``index``.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">flatnonzero</span><span class="p">(</span>
+        <span class="n">index</span><span class="o">.</span><span class="n">duplicated</span><span class="p">(</span><span class="n">keep</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span> <span class="o">&amp;</span> <span class="o">~</span><span class="n">index</span><span class="o">.</span><span class="n">duplicated</span><span class="p">(</span><span class="n">keep</span><span class="o">=</span><span class="s2">&quot;first&quot;</span><span class="p">)</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_has_missing</span><span class="p">(</span><span class="n">index</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return True if any label of ``index`` (on any level) is missing.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">index</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">MultiIndex</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">any</span><span class="p">((</span><span class="n">codes</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">any</span><span class="p">()</span> <span class="k">for</span> <span class="n">codes</span> <span class="ow">in</span> <span class="n">index</span><span class="o">.</span><span class="n">codes</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="n">index</span><span class="o">.</span><span class="n">hasnans</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_sorted</span><span class="p">(</span><span class="n">values</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the unique ``values`` sorted, or as they are when they do not sort (mixed types).&quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">values</span><span class="o">.</span><span class="n">sort_values</span><span class="p">()</span>
+    <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">values</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_checked_block</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">index</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return ``index``, after checking that it can label the block ``name``.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">index</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;The labels of block </span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s2"> must be a pandas Index, got &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">index</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">.&quot;</span>
+        <span class="p">)</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">index</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">MultiIndex</span><span class="p">)</span> <span class="ow">and</span> <span class="n">index</span><span class="o">.</span><span class="n">nlevels</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">index</span> <span class="o">=</span> <span class="n">index</span><span class="o">.</span><span class="n">get_level_values</span><span class="p">(</span>
+            <span class="mi">0</span>
+        <span class="p">)</span>  <span class="c1"># one level is a plain Index, as from_index gives</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">index</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Block </span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s2"> has no labels.&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="kc">None</span> <span class="ow">in</span> <span class="n">index</span><span class="o">.</span><span class="n">names</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Every level of block </span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s2"> must be named.&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="s2">&quot;block&quot;</span> <span class="ow">in</span> <span class="n">index</span><span class="o">.</span><span class="n">names</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Block </span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s2"> has a &#39;block&#39; level; the block&#39;s name is its key.&quot;</span>
+        <span class="p">)</span>
+    <span class="k">if</span> <span class="n">_has_missing</span><span class="p">(</span><span class="n">index</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Block </span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s2"> has missing (NaN) labels. A level a block does not &quot;</span>
+            <span class="s2">&quot;have is missing on its rows, so a block&#39;s own labels cannot be.&quot;</span>
+        <span class="p">)</span>
+    <span class="n">firsts</span> <span class="o">=</span> <span class="n">_first_duplicates</span><span class="p">(</span><span class="n">index</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">firsts</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Block </span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s2"> has duplicate labels: </span><span class="si">{</span><span class="n">_listed</span><span class="p">(</span><span class="n">index</span><span class="p">[</span><span class="n">firsts</span><span class="p">])</span><span class="si">}</span><span class="s2">. &quot;</span>
+            <span class="s2">&quot;Each label must be unique.&quot;</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="n">index</span>
+
+
+<div class="viewcode-block" id="Space">
+<a class="viewcode-back" href="../../reference/api/fips.Space.html#fips.Space">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">Space</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    An ordered set of named blocks, each labeled by its own pandas index.</span>
+
+<span class="sd">    A space labels a state vector, the observations, or one axis of a</span>
+<span class="sd">    matrix. Each block keeps the index it was given, with its own levels and</span>
+<span class="sd">    dtypes; :attr:`index` puts them together as one</span>
+<span class="sd">    :class:`pandas.MultiIndex` with a ``block`` level first. A level that one</span>
+<span class="sd">    block has and another does not is missing (NaN) on the other block&#39;s rows.</span>
+<span class="sd">    The labels are never changed: they are not converted to numbers and not</span>
+<span class="sd">    rounded (see :meth:`round_labels`).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    blocks : mapping of str to pd.Index</span>
+<span class="sd">        The blocks in order, each name mapped to its labels. A name that is</span>
+<span class="sd">        not a string is converted to one. Every level must be named, no level</span>
+<span class="sd">        may be called ``block``, and a block&#39;s labels must be unique and not</span>
+<span class="sd">        missing.</span>
+<span class="sd">    levels : sequence of str, optional</span>
+<span class="sd">        The order of the levels after ``block`` in :attr:`index`: every level</span>
+<span class="sd">        of every block, once. By default, the order in which they first</span>
+<span class="sd">        appear.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        If two blocks have the same name, a block has no labels, an unnamed</span>
+<span class="sd">        level, a ``block`` level, a missing label or a label twice, or</span>
+<span class="sd">        `levels` does not name each level once.</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    Vector : Values on a space.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; import pandas as pd</span>
+<span class="sd">    &gt;&gt;&gt; from fips import Space</span>
+<span class="sd">    &gt;&gt;&gt; space = Space(</span>
+<span class="sd">    ...     {</span>
+<span class="sd">    ...         &quot;flux&quot;: pd.Index([1, 2], name=&quot;cell&quot;),</span>
+<span class="sd">    ...         &quot;bias&quot;: pd.Index([&quot;A&quot;], name=&quot;site&quot;),</span>
+<span class="sd">    ...     }</span>
+<span class="sd">    ... )</span>
+<span class="sd">    &gt;&gt;&gt; space.index</span>
+<span class="sd">    MultiIndex([(&#39;flux&#39;, 1.0, nan),</span>
+<span class="sd">                (&#39;flux&#39;, 2.0, nan),</span>
+<span class="sd">                (&#39;bias&#39;, nan, &#39;A&#39;)],</span>
+<span class="sd">               names=[&#39;block&#39;, &#39;cell&#39;, &#39;site&#39;])</span>
+
+<span class="sd">    The padding shows ``cell`` as floats, but the level keeps its integers,</span>
+<span class="sd">    and a block comes back as it was given:</span>
+
+<span class="sd">    &gt;&gt;&gt; space.index.levels[1]</span>
+<span class="sd">    Index([1, 2], dtype=&#39;int64&#39;, name=&#39;cell&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; space.select(&quot;flux&quot;)</span>
+<span class="sd">    Index([1, 2], dtype=&#39;int64&#39;, name=&#39;cell&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; space.slice(&quot;bias&quot;)</span>
+<span class="sd">    slice(2, 3, None)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">blocks</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">],</span>
+        <span class="n">levels</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Hashable</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="n">checked</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">index</span> <span class="ow">in</span> <span class="n">blocks</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">checked</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Two blocks are named </span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s2">.&quot;</span><span class="p">)</span>
+            <span class="n">checked</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">_checked_block</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">index</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">checked</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;A space needs at least one block.&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_blocks</span> <span class="o">=</span> <span class="n">checked</span>
+
+        <span class="n">seen</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Hashable</span><span class="p">]</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span>
+            <span class="nb">dict</span><span class="o">.</span><span class="n">fromkeys</span><span class="p">(</span><span class="n">n</span> <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="n">checked</span><span class="o">.</span><span class="n">values</span><span class="p">()</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">index</span><span class="o">.</span><span class="n">names</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">order</span> <span class="o">=</span> <span class="n">seen</span> <span class="k">if</span> <span class="n">levels</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">list</span><span class="p">(</span><span class="n">levels</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">order</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">seen</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">set</span><span class="p">(</span><span class="n">order</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">set</span><span class="p">(</span><span class="n">seen</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;levels must name each level of the blocks once: </span><span class="si">{</span><span class="n">seen</span><span class="si">}</span><span class="s2">, got </span><span class="si">{</span><span class="n">order</span><span class="si">}</span><span class="s2">.&quot;</span>
+            <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_levels</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">order</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Space.from_index">
+<a class="viewcode-back" href="../../reference/api/fips.Space.from_index.html#fips.Space.from_index">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">from_index</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">index</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;Space&quot;</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Build the space an index with a ``block`` level describes.</span>
+
+<span class="sd">        Each block gets the levels it has labels on; a level that is missing</span>
+<span class="sd">        (NaN) on every row of a block is padding and is dropped. A block&#39;s</span>
+<span class="sd">        labels keep the order of its rows in `index`, and the blocks the</span>
+<span class="sd">        order in which they first appear. The levels keep their order in</span>
+<span class="sd">        `index`.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        index : pd.MultiIndex</span>
+<span class="sd">            Labels with a ``block`` level, such as :attr:`index` or the index</span>
+<span class="sd">            of a :class:`~fips.Vector`.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Space</span>
+<span class="sd">            The space whose blocks the index holds.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            If `index` has no ``block`` level, a row has no block name, a</span>
+<span class="sd">            block has no other level, or a block has labels on a level for</span>
+<span class="sd">            some of its rows and not for others.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; import pandas as pd</span>
+<span class="sd">        &gt;&gt;&gt; from fips import Space</span>
+<span class="sd">        &gt;&gt;&gt; index = pd.MultiIndex.from_tuples(</span>
+<span class="sd">        ...     [(&quot;flux&quot;, 1.0, None), (&quot;flux&quot;, 2.0, None), (&quot;bias&quot;, None, &quot;A&quot;)],</span>
+<span class="sd">        ...     names=[&quot;block&quot;, &quot;cell&quot;, &quot;site&quot;],</span>
+<span class="sd">        ... )</span>
+<span class="sd">        &gt;&gt;&gt; Space.from_index(index).select(&quot;bias&quot;)</span>
+<span class="sd">        Index([&#39;A&#39;], dtype=&#39;str&#39;, name=&#39;site&#39;)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">index</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">MultiIndex</span><span class="p">)</span> <span class="ow">or</span> <span class="s2">&quot;block&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">index</span><span class="o">.</span><span class="n">names</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;The index must be a MultiIndex with a &#39;block&#39; level.&quot;</span><span class="p">)</span>
+        <span class="n">at</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">index</span><span class="o">.</span><span class="n">names</span><span class="p">)</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="s2">&quot;block&quot;</span><span class="p">)</span>
+        <span class="n">block_codes</span> <span class="o">=</span> <span class="n">index</span><span class="o">.</span><span class="n">codes</span><span class="p">[</span><span class="n">at</span><span class="p">]</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">block_codes</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Every label must name its block; some have none.&quot;</span><span class="p">)</span>
+        <span class="n">others</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">index</span><span class="o">.</span><span class="n">nlevels</span><span class="p">)</span> <span class="k">if</span> <span class="n">i</span> <span class="o">!=</span> <span class="n">at</span><span class="p">]</span>
+
+        <span class="n">_</span><span class="p">,</span> <span class="n">firsts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">block_codes</span><span class="p">,</span> <span class="n">return_index</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">blocks</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">used</span><span class="p">:</span> <span class="nb">set</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">code</span> <span class="ow">in</span> <span class="n">block_codes</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">firsts</span><span class="p">)]:</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">index</span><span class="o">.</span><span class="n">levels</span><span class="p">[</span><span class="n">at</span><span class="p">][</span><span class="n">code</span><span class="p">])</span>
+            <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">blocks</span><span class="p">:</span>  <span class="c1"># two block labels with one string, as 1 and &quot;1&quot;</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Two blocks are named </span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s2">.&quot;</span><span class="p">)</span>
+            <span class="n">rows</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">flatnonzero</span><span class="p">(</span><span class="n">block_codes</span> <span class="o">==</span> <span class="n">code</span><span class="p">)</span>
+            <span class="n">arrays</span><span class="p">,</span> <span class="n">names</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">others</span><span class="p">:</span>
+                <span class="n">codes</span> <span class="o">=</span> <span class="n">index</span><span class="o">.</span><span class="n">codes</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">rows</span><span class="p">]</span>
+                <span class="n">missing</span> <span class="o">=</span> <span class="n">codes</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span>
+                <span class="k">if</span> <span class="n">missing</span><span class="o">.</span><span class="n">all</span><span class="p">():</span>  <span class="c1"># padding: a level this block does not have</span>
+                    <span class="k">continue</span>
+                <span class="k">if</span> <span class="n">missing</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">&quot;Block </span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s2"> has labels on level </span><span class="si">{</span><span class="n">index</span><span class="o">.</span><span class="n">names</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="si">!r}</span><span class="s2"> &quot;</span>
+                        <span class="sa">f</span><span class="s2">&quot;for some of its rows and not for others &quot;</span>
+                        <span class="sa">f</span><span class="s2">&quot;(</span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="n">missing</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span><span class="si">}</span><span class="s2"> of </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">rows</span><span class="p">)</span><span class="si">}</span><span class="s2"> missing).&quot;</span>
+                    <span class="p">)</span>
+                <span class="n">arrays</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">index</span><span class="o">.</span><span class="n">levels</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">take</span><span class="p">(</span><span class="n">codes</span><span class="p">))</span>
+                <span class="n">names</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">index</span><span class="o">.</span><span class="n">names</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+                <span class="n">used</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">index</span><span class="o">.</span><span class="n">names</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">arrays</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Block </span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s2"> has no level besides &#39;block&#39;.&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">arrays</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">blocks</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">(</span><span class="n">arrays</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">name</span><span class="o">=</span><span class="n">names</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">blocks</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">MultiIndex</span><span class="o">.</span><span class="n">from_arrays</span><span class="p">(</span><span class="n">arrays</span><span class="p">,</span> <span class="n">names</span><span class="o">=</span><span class="n">names</span><span class="p">)</span>
+        <span class="n">levels</span> <span class="o">=</span> <span class="p">[</span><span class="n">index</span><span class="o">.</span><span class="n">names</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">others</span> <span class="k">if</span> <span class="n">index</span><span class="o">.</span><span class="n">names</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="ow">in</span> <span class="n">used</span><span class="p">]</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">blocks</span><span class="p">,</span> <span class="n">levels</span><span class="o">=</span><span class="n">levels</span><span class="p">)</span></div>
+
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_regroup</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">index</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="s2">&quot;Space&quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the space of `index` (:meth:`from_index`), and the order that puts the rows of each block together.&quot;&quot;&quot;</span>
+        <span class="n">space</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">from_index</span><span class="p">(</span><span class="n">index</span><span class="p">)</span>
+        <span class="n">rank</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">factorize</span><span class="p">(</span><span class="n">index</span><span class="o">.</span><span class="n">get_level_values</span><span class="p">(</span><span class="s2">&quot;block&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">str</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">space</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">rank</span><span class="p">,</span> <span class="n">kind</span><span class="o">=</span><span class="s2">&quot;stable&quot;</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">names</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The names of the blocks, in order.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_blocks</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">levels</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Hashable</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The names of the levels after ``block`` in :attr:`index`, in order.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_levels</span>
+
+<div class="viewcode-block" id="Space.offsets">
+<a class="viewcode-back" href="../../reference/api/fips.Space.offsets.html#fips.Space.offsets">[docs]</a>
+    <span class="nd">@cached_property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">offsets</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Where each block starts in :attr:`index`, and the total length last.</span>
+
+<span class="sd">        Block ``k`` is ``offsets[k]:offsets[k + 1]``.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">sizes</span> <span class="o">=</span> <span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">index</span><span class="p">)</span> <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_blocks</span><span class="o">.</span><span class="n">values</span><span class="p">()]</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([[</span><span class="mi">0</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span><span class="n">sizes</span><span class="p">)])</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">intp</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Space.slice">
+<a class="viewcode-back" href="../../reference/api/fips.Space.slice.html#fips.Space.slice">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">slice</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">block</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">slice</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the positions of `block` in :attr:`index`, as a slice.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        block : str</span>
+<span class="sd">            The name of a block; a name that is not a string is compared as</span>
+<span class="sd">            one, as the space keeps it (``0`` is block ``&quot;0&quot;``).</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        slice</span>
+<span class="sd">            ``index[space.slice(block)]`` are the block&#39;s labels.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">k</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_position</span><span class="p">(</span><span class="n">block</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">slice</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">offsets</span><span class="p">[</span><span class="n">k</span><span class="p">]),</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">offsets</span><span class="p">[</span><span class="n">k</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]))</span></div>
+
+
+<div class="viewcode-block" id="Space.select">
+<a class="viewcode-back" href="../../reference/api/fips.Space.select.html#fips.Space.select">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">select</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">block</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the labels of `block`, as the block was given.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        block : str</span>
+<span class="sd">            The name of a block; a name that is not a string is compared as</span>
+<span class="sd">            one (``0`` is block ``&quot;0&quot;``).</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        pd.Index</span>
+<span class="sd">            The block&#39;s labels, with its own levels and dtypes and no</span>
+<span class="sd">            ``block`` level.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        KeyError</span>
+<span class="sd">            If the space has no block of that name.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_blocks</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">names</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_position</span><span class="p">(</span><span class="n">block</span><span class="p">)]]</span></div>
+
+
+<div class="viewcode-block" id="Space.index">
+<a class="viewcode-back" href="../../reference/api/fips.Space.index.html#fips.Space.index">[docs]</a>
+    <span class="nd">@cached_property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">index</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">MultiIndex</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The labels of every block as one MultiIndex, with the ``block`` level first.</span>
+
+<span class="sd">        A level a block does not have is missing (NaN) on its rows; each</span>
+<span class="sd">        level keeps its dtype (an integer level stays integer).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Built from levels and codes, so that a block lacking a level gets</span>
+        <span class="c1"># code -1 (missing) and the level keeps its dtype. Each level is</span>
+        <span class="c1"># sorted, as MultiIndex.from_arrays makes it: pandas 2.0&#39;s sort_index</span>
+        <span class="c1"># turns a missing code into an invalid cast when it re-sorts a level.</span>
+        <span class="n">blocks</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_blocks</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+        <span class="n">in_order</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_blocks</span><span class="p">),</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;block&quot;</span><span class="p">)</span>
+        <span class="n">names</span> <span class="o">=</span> <span class="n">_sorted</span><span class="p">(</span><span class="n">in_order</span><span class="p">)</span>
+        <span class="n">level_values</span> <span class="o">=</span> <span class="p">[</span><span class="n">names</span><span class="p">]</span>
+        <span class="n">codes</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="n">names</span><span class="o">.</span><span class="n">get_indexer</span><span class="p">(</span><span class="n">in_order</span><span class="p">),</span> <span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">b</span><span class="p">)</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">blocks</span><span class="p">])]</span>
+        <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_levels</span><span class="p">:</span>
+            <span class="c1"># Each block&#39;s labels on this level, by block position (None: lacks it)</span>
+            <span class="n">labels</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="n">b</span><span class="o">.</span><span class="n">get_level_values</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">b</span><span class="o">.</span><span class="n">names</span><span class="p">)</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">name</span><span class="p">))</span>
+                <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">b</span><span class="o">.</span><span class="n">names</span>
+                <span class="k">else</span> <span class="kc">None</span>
+                <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">blocks</span>
+            <span class="p">]</span>
+            <span class="n">having</span> <span class="o">=</span> <span class="p">[</span><span class="n">values</span> <span class="k">for</span> <span class="n">values</span> <span class="ow">in</span> <span class="n">labels</span> <span class="k">if</span> <span class="n">values</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">]</span>
+            <span class="n">values</span> <span class="o">=</span> <span class="n">_sorted</span><span class="p">(</span><span class="n">having</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">having</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span><span class="o">.</span><span class="n">unique</span><span class="p">())</span>
+            <span class="n">level_codes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">),</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">intp</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">block_labels</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">labels</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">block_labels</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">start</span><span class="p">,</span> <span class="n">stop</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">offsets</span><span class="p">[</span><span class="n">k</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">offsets</span><span class="p">[</span><span class="n">k</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>
+                    <span class="n">level_codes</span><span class="p">[</span><span class="n">start</span><span class="p">:</span><span class="n">stop</span><span class="p">]</span> <span class="o">=</span> <span class="n">values</span><span class="o">.</span><span class="n">get_indexer</span><span class="p">(</span><span class="n">block_labels</span><span class="p">)</span>
+            <span class="n">level_values</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">values</span><span class="p">)</span>
+            <span class="n">codes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">level_codes</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">MultiIndex</span><span class="p">(</span>
+            <span class="c1"># pandas-stubs take levels as sequences that are not str (an Index</span>
+            <span class="c1"># does not match that protocol) and codes as int sequences, not</span>
+            <span class="c1"># arrays; pandas takes both</span>
+            <span class="c1"># pyrefly: ignore[bad-argument-type]</span>
+            <span class="n">levels</span><span class="o">=</span><span class="n">level_values</span><span class="p">,</span>
+            <span class="c1"># pyrefly: ignore[bad-argument-type]</span>
+            <span class="n">codes</span><span class="o">=</span><span class="n">codes</span><span class="p">,</span>
+            <span class="n">names</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;block&quot;</span><span class="p">,</span> <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">_levels</span><span class="p">],</span>
+            <span class="n">verify_integrity</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the number of labels, over every block.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">offsets</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Iterate over the block names.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">iter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_blocks</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__contains__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">block</span><span class="p">:</span> <span class="nb">object</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return True if the space has a block of that name (compared as a string, as the names are kept).&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">block</span><span class="p">)</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_blocks</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="nb">object</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return True if `other` has the same blocks, in the same order, with equal labels.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">Space</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">NotImplemented</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">names</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">names</span> <span class="ow">and</span> <span class="nb">all</span><span class="p">(</span>
+            <span class="n">mine</span><span class="o">.</span><span class="n">equals</span><span class="p">(</span><span class="n">other</span><span class="o">.</span><span class="n">_blocks</span><span class="p">[</span><span class="n">name</span><span class="p">])</span> <span class="ow">and</span> <span class="n">mine</span><span class="o">.</span><span class="n">names</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">_blocks</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">names</span>
+            <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">mine</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_blocks</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the blocks with their sizes and levels.&quot;&quot;&quot;</span>
+        <span class="n">blocks</span> <span class="o">=</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">index</span><span class="p">)</span><span class="si">}</span><span class="s2"> x </span><span class="si">{</span><span class="nb">list</span><span class="p">(</span><span class="n">index</span><span class="o">.</span><span class="n">names</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">index</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_blocks</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;Space(</span><span class="si">{</span><span class="n">blocks</span><span class="si">}</span><span class="s2">)&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">__getstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Pickle the blocks and the level order (the cached index is rebuilt).&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;blocks&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_blocks</span><span class="p">,</span> <span class="s2">&quot;levels&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_levels</span><span class="p">}</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">__setstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Restore from :meth:`__getstate__`.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_blocks</span> <span class="o">=</span> <span class="n">state</span><span class="p">[</span><span class="s2">&quot;blocks&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_levels</span> <span class="o">=</span> <span class="n">state</span><span class="p">[</span><span class="s2">&quot;levels&quot;</span><span class="p">]</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_position</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">block</span><span class="p">:</span> <span class="n">Hashable</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the position of `block` among the blocks, or raise a KeyError naming them.</span>
+
+<span class="sd">        The name is compared as a string, as the space keeps it: block ``0``</span>
+<span class="sd">        is block ``&quot;0&quot;``.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">names</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">block</span><span class="p">))</span>
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;No block named </span><span class="si">{</span><span class="n">block</span><span class="si">!r}</span><span class="s2">; the blocks are </span><span class="si">{</span><span class="n">_listed</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">names</span><span class="p">)</span><span class="si">}</span><span class="s2">.&quot;</span>
+            <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="kc">None</span>
+
+<div class="viewcode-block" id="Space.align">
+<a class="viewcode-back" href="../../reference/api/fips.Space.align.html#fips.Space.align">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">align</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s2">&quot;Space&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return where each label of this space is in `other`: an exact join.</span>
+
+<span class="sd">        The two spaces must have the same blocks and, in each block, the same</span>
+<span class="sd">        labels; their order may differ, and so may the order of a block&#39;s</span>
+<span class="sd">        levels. ``values_on_other[space.align(other)]`` puts values that</span>
+<span class="sd">        follow `other` in this space&#39;s order.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        other : Space</span>
+<span class="sd">            The space to look the labels up in.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        np.ndarray</span>
+<span class="sd">            For each label of this space, in order, its position in</span>
+<span class="sd">            ``other.index``.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            If a block is in one space and not the other, a block has other</span>
+<span class="sd">            levels in `other`, or a label is in one and not the other. The</span>
+<span class="sd">            message names them (the first few of each).</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; import pandas as pd</span>
+<span class="sd">        &gt;&gt;&gt; from fips import Space</span>
+<span class="sd">        &gt;&gt;&gt; a = Space({&quot;flux&quot;: pd.Index([1, 2, 3], name=&quot;cell&quot;)})</span>
+<span class="sd">        &gt;&gt;&gt; b = Space({&quot;flux&quot;: pd.Index([3, 1, 2], name=&quot;cell&quot;)})</span>
+<span class="sd">        &gt;&gt;&gt; a.align(b)</span>
+<span class="sd">        array([1, 2, 0])</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_align</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="s2">&quot;the other space&quot;</span><span class="p">,</span> <span class="s2">&quot;The spaces&quot;</span><span class="p">)</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_align</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s2">&quot;Space&quot;</span><span class="p">,</span> <span class="n">called</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">pair</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return :meth:`align`&#39;s positions; the message calls `other` `called` and the two `pair`.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            As :meth:`align` does, naming the spaces as given.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">problems</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">missing</span> <span class="o">=</span> <span class="p">[</span><span class="n">b</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">names</span> <span class="k">if</span> <span class="n">b</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">other</span><span class="p">]</span>
+        <span class="n">extra</span> <span class="o">=</span> <span class="p">[</span><span class="n">b</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">other</span><span class="o">.</span><span class="n">names</span> <span class="k">if</span> <span class="n">b</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">missing</span><span class="p">:</span>
+            <span class="n">problems</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;blocks missing from </span><span class="si">{</span><span class="n">called</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">_listed</span><span class="p">(</span><span class="n">missing</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">extra</span><span class="p">:</span>
+            <span class="n">problems</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;blocks only in </span><span class="si">{</span><span class="n">called</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">_listed</span><span class="p">(</span><span class="n">extra</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="n">positions</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">names</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">other</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="n">mine</span><span class="p">,</span> <span class="n">theirs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_blocks</span><span class="p">[</span><span class="n">name</span><span class="p">],</span> <span class="n">other</span><span class="o">.</span><span class="n">_blocks</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
+            <span class="k">if</span> <span class="nb">set</span><span class="p">(</span><span class="n">mine</span><span class="o">.</span><span class="n">names</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">set</span><span class="p">(</span><span class="n">theirs</span><span class="o">.</span><span class="n">names</span><span class="p">):</span>
+                <span class="n">problems</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;block </span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s2"> has levels </span><span class="si">{</span><span class="nb">list</span><span class="p">(</span><span class="n">mine</span><span class="o">.</span><span class="n">names</span><span class="p">)</span><span class="si">}</span><span class="s2"> here and &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">list</span><span class="p">(</span><span class="n">theirs</span><span class="o">.</span><span class="n">names</span><span class="p">)</span><span class="si">}</span><span class="s2"> in </span><span class="si">{</span><span class="n">called</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="p">)</span>
+                <span class="k">continue</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">theirs</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">MultiIndex</span><span class="p">)</span> <span class="ow">and</span> <span class="n">theirs</span><span class="o">.</span><span class="n">names</span> <span class="o">!=</span> <span class="n">mine</span><span class="o">.</span><span class="n">names</span><span class="p">:</span>
+                <span class="n">theirs</span> <span class="o">=</span> <span class="n">theirs</span><span class="o">.</span><span class="n">reorder_levels</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">mine</span><span class="o">.</span><span class="n">names</span><span class="p">))</span>
+            <span class="n">found</span> <span class="o">=</span> <span class="n">theirs</span><span class="o">.</span><span class="n">get_indexer</span><span class="p">(</span><span class="n">mine</span><span class="p">)</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">found</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+                <span class="n">problems</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;labels of block </span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s2"> missing from </span><span class="si">{</span><span class="n">called</span><span class="si">}</span><span class="s2">: &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">_listed</span><span class="p">(</span><span class="n">mine</span><span class="p">[</span><span class="n">found</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">0</span><span class="p">])</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="p">)</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">theirs</span><span class="p">)</span> <span class="o">&gt;</span> <span class="p">(</span><span class="n">found</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">():</span>
+                <span class="n">unmatched</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">theirs</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">)</span>
+                <span class="n">unmatched</span><span class="p">[</span><span class="n">found</span><span class="p">[</span><span class="n">found</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">False</span>
+                <span class="n">problems</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;labels of block </span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s2"> only in </span><span class="si">{</span><span class="n">called</span><span class="si">}</span><span class="s2">: &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">_listed</span><span class="p">(</span><span class="n">theirs</span><span class="p">[</span><span class="n">unmatched</span><span class="p">])</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="p">)</span>
+            <span class="n">positions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">found</span> <span class="o">+</span> <span class="n">other</span><span class="o">.</span><span class="n">slice</span><span class="p">(</span><span class="n">name</span><span class="p">)</span><span class="o">.</span><span class="n">start</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">problems</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">pair</span><span class="si">}</span><span class="s2"> do not have the same labels: &quot;</span> <span class="o">+</span> <span class="s2">&quot;; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">problems</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;.&quot;</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">positions</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_subset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sub</span><span class="p">:</span> <span class="s2">&quot;Space&quot;</span><span class="p">,</span> <span class="n">called</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return where each label of `sub` is in this space; `sub` must hold some of its labels.</span>
+
+<span class="sd">        Every block of `sub` must be a block here, with the same levels (in</span>
+<span class="sd">        any order), and every label of it must be among that block&#39;s. The</span>
+<span class="sd">        message calls `sub` `called`.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            If a block or a label of `sub` is not here, naming them.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">problems</span><span class="p">,</span> <span class="n">positions</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[]</span>
+        <span class="n">unknown</span> <span class="o">=</span> <span class="p">[</span><span class="n">b</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">sub</span><span class="o">.</span><span class="n">names</span> <span class="k">if</span> <span class="n">b</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">unknown</span><span class="p">:</span>
+            <span class="n">problems</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;blocks not in the space: </span><span class="si">{</span><span class="n">_listed</span><span class="p">(</span><span class="n">unknown</span><span class="p">)</span><span class="si">}</span><span class="s2"> &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;(its blocks are </span><span class="si">{</span><span class="n">_listed</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">names</span><span class="p">)</span><span class="si">}</span><span class="s2">)&quot;</span>
+            <span class="p">)</span>
+        <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">sub</span><span class="o">.</span><span class="n">names</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="n">mine</span><span class="p">,</span> <span class="n">theirs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_blocks</span><span class="p">[</span><span class="n">name</span><span class="p">],</span> <span class="n">sub</span><span class="o">.</span><span class="n">_blocks</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
+            <span class="k">if</span> <span class="nb">set</span><span class="p">(</span><span class="n">mine</span><span class="o">.</span><span class="n">names</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">set</span><span class="p">(</span><span class="n">theirs</span><span class="o">.</span><span class="n">names</span><span class="p">):</span>
+                <span class="n">problems</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;block </span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s2"> has levels </span><span class="si">{</span><span class="nb">list</span><span class="p">(</span><span class="n">theirs</span><span class="o">.</span><span class="n">names</span><span class="p">)</span><span class="si">}</span><span class="s2"> there and &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">list</span><span class="p">(</span><span class="n">mine</span><span class="o">.</span><span class="n">names</span><span class="p">)</span><span class="si">}</span><span class="s2"> in the space&quot;</span>
+                <span class="p">)</span>
+                <span class="k">continue</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">mine</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">MultiIndex</span><span class="p">)</span> <span class="ow">and</span> <span class="n">mine</span><span class="o">.</span><span class="n">names</span> <span class="o">!=</span> <span class="n">theirs</span><span class="o">.</span><span class="n">names</span><span class="p">:</span>
+                <span class="n">mine</span> <span class="o">=</span> <span class="n">mine</span><span class="o">.</span><span class="n">reorder_levels</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">theirs</span><span class="o">.</span><span class="n">names</span><span class="p">))</span>
+            <span class="n">found</span> <span class="o">=</span> <span class="n">mine</span><span class="o">.</span><span class="n">get_indexer</span><span class="p">(</span><span class="n">theirs</span><span class="p">)</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">found</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+                <span class="n">problems</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;labels of block </span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s2"> not in the space: &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">_listed</span><span class="p">(</span><span class="n">theirs</span><span class="p">[</span><span class="n">found</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">0</span><span class="p">])</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="p">)</span>
+            <span class="n">positions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">found</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">slice</span><span class="p">(</span><span class="n">name</span><span class="p">)</span><span class="o">.</span><span class="n">start</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">problems</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">called</span><span class="si">}</span><span class="s2"> is not part of the space: &quot;</span> <span class="o">+</span> <span class="s2">&quot;; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">problems</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;.&quot;</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">positions</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Space.round_labels">
+<a class="viewcode-back" href="../../reference/api/fips.Space.round_labels.html#fips.Space.round_labels">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">round_labels</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">decimals</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;Space&quot;</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the space with every float level rounded to `decimals` places.</span>
+
+<span class="sd">        fips never rounds labels on its own. Round them on purpose when two</span>
+<span class="sd">        sources give the same coordinate with different float noise (a grid</span>
+<span class="sd">        written by two programs, say), so that their labels match.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        decimals : int</span>
+<span class="sd">            Number of decimal places. Levels that are not floats are kept.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Space</span>
+<span class="sd">            The space with rounded labels.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            If rounding makes two labels of a block equal. The message names</span>
+<span class="sd">            the labels that merged.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; import pandas as pd</span>
+<span class="sd">        &gt;&gt;&gt; from fips import Space</span>
+<span class="sd">        &gt;&gt;&gt; space = Space({&quot;flux&quot;: pd.Index([40.7600001, 40.77], name=&quot;lat&quot;)})</span>
+<span class="sd">        &gt;&gt;&gt; space.round_labels(4).select(&quot;flux&quot;)</span>
+<span class="sd">        Index([40.76, 40.77], dtype=&#39;float64&#39;, name=&#39;lat&#39;)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">blocks</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">index</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_blocks</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">rounded</span> <span class="o">=</span> <span class="n">_rounded</span><span class="p">(</span><span class="n">index</span><span class="p">,</span> <span class="n">decimals</span><span class="p">)</span>
+            <span class="n">firsts</span> <span class="o">=</span> <span class="n">_first_duplicates</span><span class="p">(</span><span class="n">rounded</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">firsts</span><span class="p">):</span>
+                <span class="n">merged</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="k">for</span> <span class="n">first</span> <span class="ow">in</span> <span class="n">firsts</span><span class="p">[:</span><span class="n">_SHOWN</span><span class="p">]:</span>
+                    <span class="n">label</span> <span class="o">=</span> <span class="n">rounded</span><span class="p">[[</span><span class="n">first</span><span class="p">]]</span>
+                    <span class="n">sources</span> <span class="o">=</span> <span class="n">index</span><span class="p">[</span><span class="n">rounded</span><span class="o">.</span><span class="n">get_indexer_for</span><span class="p">(</span><span class="n">label</span><span class="p">)]</span>
+                    <span class="n">merged</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">_listed</span><span class="p">(</span><span class="n">sources</span><span class="p">)</span><span class="si">}</span><span class="s2"> become </span><span class="si">{</span><span class="n">_listed</span><span class="p">(</span><span class="n">label</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="n">more</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;; </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">firsts</span><span class="p">)</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">_SHOWN</span><span class="si">}</span><span class="s2"> more&quot;</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">firsts</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">_SHOWN</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Rounding to </span><span class="si">{</span><span class="n">decimals</span><span class="si">}</span><span class="s2"> decimals merges labels of block &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s2">: </span><span class="si">{</span><span class="s1">&#39;; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">merged</span><span class="p">)</span><span class="si">}{</span><span class="n">more</span><span class="si">}</span><span class="s2">.&quot;</span>
+                <span class="p">)</span>
+            <span class="n">blocks</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">rounded</span>
+        <span class="k">return</span> <span class="n">Space</span><span class="p">(</span><span class="n">blocks</span><span class="p">,</span> <span class="n">levels</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_levels</span><span class="p">)</span></div>
+</div>
+
+</pre></div>
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0"></script>
+<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2025-2026, James Mineau.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.1.0.
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.22.0.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

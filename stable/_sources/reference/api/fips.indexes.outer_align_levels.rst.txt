@@ -1,6 +1,0 @@
-﻿fips.indexes.outer\_align\_levels
-=================================
-
-.. currentmodule:: fips.indexes
-
-.. autofunction:: outer_align_levels

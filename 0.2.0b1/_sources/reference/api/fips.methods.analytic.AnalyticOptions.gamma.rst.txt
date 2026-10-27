@@ -1,0 +1,6 @@
+fips.methods.analytic.AnalyticOptions.gamma
+===========================================
+
+.. currentmodule:: fips.methods.analytic
+
+.. autoattribute:: AnalyticOptions.gamma

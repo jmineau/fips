@@ -1,0 +1,38 @@
+﻿fips.Kronecker
+==============
+
+.. currentmodule:: fips
+
+.. autoclass:: Kronecker
+   :no-members:
+   :show-inheritance:
+
+
+
+
+.. rubric:: Attributes
+
+.. autosummary::
+   :toctree:
+
+   ~Kronecker.factors
+   ~Kronecker.levels
+
+
+
+.. rubric:: Methods
+
+.. autosummary::
+   :toctree:
+
+   ~Kronecker.correlation
+
+
+
+
+.. rubric:: Inherited
+
+
+From :class:`~.CorrelationModel`: :py:obj:`~.CorrelationModel.with_std`
+
+

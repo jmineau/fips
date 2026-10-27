@@ -1,0 +1,6 @@
+fips.linalg.KroneckerOperator.diagonal
+======================================
+
+.. currentmodule:: fips.linalg
+
+.. automethod:: KroneckerOperator.diagonal

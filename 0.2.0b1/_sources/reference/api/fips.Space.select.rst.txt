@@ -1,0 +1,6 @@
+fips.Space.select
+=================
+
+.. currentmodule:: fips
+
+.. automethod:: Space.select

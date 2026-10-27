@@ -1,0 +1,6 @@
+fips.Operator.T
+===============
+
+.. currentmodule:: fips
+
+.. autoproperty:: Operator.T

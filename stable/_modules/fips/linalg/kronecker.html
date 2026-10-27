@@ -1,0 +1,1072 @@
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>fips.linalg.kronecker &#8212; fips 0.2.0b1 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../_static/styles/theme.css?digest=64cc4de3f052d77215f0" rel="stylesheet" />
+<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=64cc4de3f052d77215f0" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/plot_directive.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/custom.css?v=4b8357b6" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="../../../_static/scripts/fontawesome.js?digest=64cc4de3f052d77215f0"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0" />
+<link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0" />
+
+    <script src="../../../_static/documentation_options.js?v=3804d0ff"></script>
+    <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../../_static/copybutton.js?v=f281be69"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/fips/linalg/kronecker';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.22.0';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://jmineau.github.io/fips/switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.2.0b1';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner =
+            true;
+        </script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.2" />
+  
+    
+    <script src="../../../_static/searchtools.js"></script>
+    <script src="../../../_static/language_data.js"></script>
+    <script src="../../../searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button type="button" class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class=" navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b1 documentation - Home"/>
+    <img src="../../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b1 documentation - Home"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class=" navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../getting_started/index.html">
+    Getting Started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../user_guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../reference/index.html">
+    API Reference
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+      
+        <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/jmineau/fips" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar hide-on-wide">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../getting_started/index.html">
+    Getting Started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../user_guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../reference/index.html">
+    API Reference
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-3"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-3"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-3"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-3">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+        
+          <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/jmineau/fips" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../../index.html" class="nav-link">Module code</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">fips.linalg.kronecker</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for fips.linalg.kronecker</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Kronecker covariances: a covariance kept as the product of its marginal correlations.</span>
+
+<span class="sd">A covariance over a grid of times and places is often the product of a</span>
+<span class="sd">correlation in time and one in space. :class:`KroneckerOperator` keeps the</span>
+<span class="sd">two (or more) factors and never forms the ``n x n`` matrix: products, solves,</span>
+<span class="sd">the diagonal and the log-determinant go through the factors. It is one of the</span>
+<span class="sd">forms of :mod:`fips.linalg`, so a :class:`~fips.Covariance` holds one as it</span>
+<span class="sd">holds a dense or a diagonal matrix.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">math</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Sequence</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">functools</span><span class="w"> </span><span class="kn">import</span> <span class="n">cached_property</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Self</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy.typing</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">npt</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">numpy.linalg</span><span class="w"> </span><span class="kn">import</span> <span class="n">LinAlgError</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">scipy</span><span class="w"> </span><span class="kn">import</span> <span class="n">sparse</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">fips.linalg.forms</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">DenseOperator</span><span class="p">,</span>
+    <span class="n">LinearOperator</span><span class="p">,</span>
+    <span class="n">_as_array</span><span class="p">,</span>
+    <span class="n">_asymmetry</span><span class="p">,</span>
+    <span class="n">_cholesky</span><span class="p">,</span>
+    <span class="n">_read_only</span><span class="p">,</span>
+    <span class="n">_solve_psd</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<span class="n">_CHUNK</span> <span class="o">=</span> <span class="mi">2</span><span class="o">**</span><span class="mi">24</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">How many entries of the product grid a :class:`KroneckerOperator` product holds at once.</span>
+
+<span class="sd">A product with many columns (``H @ S_0`` has one per observation) runs over</span>
+<span class="sd">blocks of columns, so its work arrays stay near 128 MB (float64) whatever the</span>
+<span class="sd">number of columns.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+
+<div class="viewcode-block" id="KroneckerOperator">
+<a class="viewcode-back" href="../../../reference/api/fips.linalg.KroneckerOperator.html#fips.linalg.KroneckerOperator">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">KroneckerOperator</span><span class="p">(</span><span class="n">LinearOperator</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A covariance kept as the Kronecker product of its marginal correlations.</span>
+
+<span class="sd">    .. math::</span>
+
+<span class="sd">        S = D \, P \, (C_1 \otimes C_2 \otimes \dots \otimes C_K) \, P^T D</span>
+
+<span class="sd">    Each factor :math:`C_k` is the correlation matrix of one marginal (the</span>
+<span class="sd">    times, or the grid cells), :math:`P` picks the rows of the full product</span>
+<span class="sd">    that the operator has, in its order (any subset of the product, in any</span>
+<span class="sd">    order), and :math:`D` is the diagonal of standard deviations. Entry</span>
+<span class="sd">    ``(i, j)`` is ``std[i] * std[j] * prod_k C_k[pos_k[i], pos_k[j]]``.</span>
+
+<span class="sd">    The ``n x n`` matrix is never formed unless :meth:`dense` is called. A</span>
+<span class="sd">    product with ``p`` columns costs ``N * (N_1 + ... + N_K)`` per column,</span>
+<span class="sd">    where ``N_k`` is the size of factor k and ``N`` their product, and holds</span>
+<span class="sd">    work arrays of about ``N`` entries per column. That is less than the dense</span>
+<span class="sd">    matrix as long as the rows fill most of the product.</span>
+
+<span class="sd">    The operator copies the factors, the standard deviations and the positions</span>
+<span class="sd">    it is given, and the copies are read-only: changing the arrays afterwards</span>
+<span class="sd">    leaves the operator as it was.</span>
+
+<span class="sd">    A :class:`~fips.Kronecker` model builds one from the labels of a</span>
+<span class="sd">    space, and :class:`~fips.Covariance` puts it behind them.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    factors : sequence of 2D array-like</span>
+<span class="sd">        The marginal correlation matrices :math:`C_k`, square, symmetric and</span>
+<span class="sd">        positive-definite (positive-definite only for :meth:`solve`).</span>
+<span class="sd">    std : float or 1D array-like, default 1.0</span>
+<span class="sd">        The standard deviation of each row; a scalar is the same for every row.</span>
+<span class="sd">    positions : sequence of 1D array-like of int, optional</span>
+<span class="sd">        For each factor, the position of each row in that factor (``pos_k``).</span>
+<span class="sd">        If not given, the rows are the full product in order, the first</span>
+<span class="sd">        factor varying slowest, as ``np.kron`` lays it out.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        If there is no factor, a factor is not square, not finite or not</span>
+<span class="sd">        symmetric (to 1e-10 of its largest entry), the positions do not match</span>
+<span class="sd">        the factors (one array per factor, all the same length, each within</span>
+<span class="sd">        its factor), two rows have the same positions, or a standard deviation</span>
+<span class="sd">        is negative or not finite.</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    fips.Kronecker : The correlation model whose covariance this is.</span>
+<span class="sd">    fips.Covariance : A labeled covariance, which holds a form.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; import numpy as np</span>
+<span class="sd">    &gt;&gt;&gt; from fips.linalg import KroneckerOperator</span>
+<span class="sd">    &gt;&gt;&gt; C_time = np.array([[1.0, 0.5], [0.5, 1.0]])</span>
+<span class="sd">    &gt;&gt;&gt; C_space = np.array([[1.0, 0.2, 0.0], [0.2, 1.0, 0.2], [0.0, 0.2, 1.0]])</span>
+<span class="sd">    &gt;&gt;&gt; S = KroneckerOperator([C_time, C_space], std=2.0)</span>
+<span class="sd">    &gt;&gt;&gt; S.shape</span>
+<span class="sd">    (6, 6)</span>
+<span class="sd">    &gt;&gt;&gt; np.allclose(S.dense(), 4.0 * np.kron(C_time, C_space))</span>
+<span class="sd">    True</span>
+<span class="sd">    &gt;&gt;&gt; x = np.arange(6.0)</span>
+<span class="sd">    &gt;&gt;&gt; np.allclose(S.solve(S @ x), x)</span>
+<span class="sd">    True</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">factors</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;The marginal correlation matrices, one per marginal, read-only.&quot;&quot;&quot;</span>
+    <span class="n">positions</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;For each factor, the position of each row in it (``pos_k``), read-only.&quot;&quot;&quot;</span>
+    <span class="n">std</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;The standard deviation of each row, read-only.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">factors</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">],</span>
+        <span class="n">std</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
+        <span class="n">positions</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_hold</span><span class="p">(</span>
+            <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">C</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span> <span class="k">for</span> <span class="n">C</span> <span class="ow">in</span> <span class="n">factors</span><span class="p">],</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">std</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">),</span>
+            <span class="kc">None</span> <span class="k">if</span> <span class="n">positions</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">positions</span><span class="p">],</span>
+        <span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_adopt</span><span class="p">(</span>
+        <span class="bp">cls</span><span class="p">,</span>
+        <span class="n">factors</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">],</span>
+        <span class="n">std</span><span class="p">:</span> <span class="s2">&quot;float | np.ndarray&quot;</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
+        <span class="n">positions</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Self</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the operator that holds these arrays themselves, which fips made or are read-only, without copying them.&quot;&quot;&quot;</span>
+        <span class="n">form</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="fm">__new__</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span>
+        <span class="n">form</span><span class="o">.</span><span class="n">_hold</span><span class="p">(</span><span class="n">factors</span><span class="p">,</span> <span class="n">std</span><span class="p">,</span> <span class="n">positions</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">form</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_hold</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">factors</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">],</span>
+        <span class="n">std</span><span class="p">:</span> <span class="s2">&quot;float | np.ndarray&quot;</span><span class="p">,</span>
+        <span class="n">positions</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Check the factors, the standard deviations and the positions, and hold them, read-only.&quot;&quot;&quot;</span>
+        <span class="n">mats</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">C</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span> <span class="k">for</span> <span class="n">C</span> <span class="ow">in</span> <span class="n">factors</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">mats</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;A KroneckerOperator needs at least one factor.&quot;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">C</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">mats</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">C</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">2</span> <span class="ow">or</span> <span class="n">C</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="n">C</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Each factor must be square; got shape </span><span class="si">{</span><span class="n">C</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">C</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">():</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;The factors must be finite.&quot;</span><span class="p">)</span>
+            <span class="n">found</span> <span class="o">=</span> <span class="n">_asymmetry</span><span class="p">(</span><span class="n">C</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">found</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">a_ij</span><span class="p">,</span> <span class="n">a_ji</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">found</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Factor </span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s2"> is not symmetric: its entry (</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">j</span><span class="si">}</span><span class="s2">) is &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">a_ij</span><span class="si">:</span><span class="s2">.6g</span><span class="si">}</span><span class="s2"> and (</span><span class="si">{</span><span class="n">j</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">) is </span><span class="si">{</span><span class="n">a_ji</span><span class="si">:</span><span class="s2">.6g</span><span class="si">}</span><span class="s2">.&quot;</span>
+                <span class="p">)</span>
+        <span class="n">sizes</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">C</span><span class="p">)</span> <span class="k">for</span> <span class="n">C</span> <span class="ow">in</span> <span class="n">mats</span><span class="p">)</span>
+        <span class="n">size</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">sizes</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">positions</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">pos</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">unravel_index</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">size</span><span class="p">),</span> <span class="n">sizes</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">pos</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">positions</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">pos</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">mats</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Got </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">pos</span><span class="p">)</span><span class="si">}</span><span class="s2"> arrays of positions for </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">mats</span><span class="p">)</span><span class="si">}</span><span class="s2"> factors.&quot;</span>
+                <span class="p">)</span>
+            <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">1</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">pos</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">pos</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;The positions must be 1D arrays of one length.&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">issubdtype</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">integer</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">pos</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;The positions must be integers.&quot;</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">p</span><span class="p">,</span> <span class="n">n_k</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">pos</span><span class="p">,</span> <span class="n">sizes</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">min</span><span class="p">()</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">p</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">&gt;=</span> <span class="n">n_k</span><span class="p">):</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">&quot;A position is outside its factor, which has </span><span class="si">{</span><span class="n">n_k</span><span class="si">}</span><span class="s2"> rows.&quot;</span>
+                    <span class="p">)</span>
+        <span class="n">rows</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ravel_multi_index</span><span class="p">(</span><span class="n">pos</span><span class="p">,</span> <span class="n">sizes</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">rows</span><span class="p">))</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">rows</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;Two rows have the same position in every factor; they would be &quot;</span>
+                <span class="s2">&quot;perfectly correlated.&quot;</span>
+            <span class="p">)</span>
+
+        <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">rows</span><span class="p">)</span>
+        <span class="n">std</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">std</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">std</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">std</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="nb">float</span><span class="p">(</span><span class="n">std</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">std</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="p">(</span><span class="n">n</span><span class="p">,):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;std must be a scalar or have </span><span class="si">{</span><span class="n">n</span><span class="si">}</span><span class="s2"> entries.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">std</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">()</span> <span class="ow">or</span> <span class="p">(</span><span class="n">std</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;The standard deviations must be finite and not negative.&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">factors</span> <span class="o">=</span> <span class="n">mats</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">positions</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">intp</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">pos</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">std</span> <span class="o">=</span> <span class="n">std</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_freeze</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sizes</span> <span class="o">=</span> <span class="n">sizes</span>
+        <span class="c1"># The rows&#39; places in the product grid, or None when they are the</span>
+        <span class="c1"># whole grid in order (no scatter or gather needed)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_rows</span> <span class="o">=</span> <span class="kc">None</span> <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">array_equal</span><span class="p">(</span><span class="n">rows</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">size</span><span class="p">))</span> <span class="k">else</span> <span class="n">rows</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">((</span><span class="n">n</span><span class="p">,</span> <span class="n">n</span><span class="p">))</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_freeze</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Make the factors, the positions and the standard deviations read-only.&quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">array</span> <span class="ow">in</span> <span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">factors</span><span class="p">,</span> <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">positions</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">std</span><span class="p">):</span>
+            <span class="n">_read_only</span><span class="p">(</span><span class="n">array</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_size</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The number of entries of the full product, ``N``.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">math</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_sizes</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_scatter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Y</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Put the rows of `Y` at their places in the product grid, zeros elsewhere.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rows</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">ascontiguousarray</span><span class="p">(</span><span class="n">Y</span><span class="p">)</span>
+        <span class="n">Z</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">_size</span><span class="p">,</span> <span class="n">Y</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+        <span class="n">Z</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_rows</span><span class="p">]</span> <span class="o">=</span> <span class="n">Y</span>
+        <span class="k">return</span> <span class="n">Z</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_gather</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Z</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Take the operator&#39;s rows out of the product grid `Z`.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">Z</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rows</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">Z</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_rows</span><span class="p">]</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_through</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Z</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">matrices</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return ``(M_1 kron ... kron M_K) Z`` for `Z` on the product grid.</span>
+
+<span class="sd">        Each matrix is applied along its own axis of the grid, never their</span>
+<span class="sd">        Kronecker product.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">q</span> <span class="o">=</span> <span class="n">Z</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">M</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">matrices</span><span class="p">):</span>
+            <span class="n">outer</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_sizes</span><span class="p">[:</span><span class="n">k</span><span class="p">])</span>
+            <span class="n">Z</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="n">M</span><span class="p">,</span> <span class="n">Z</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">outer</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sizes</span><span class="p">[</span><span class="n">k</span><span class="p">],</span> <span class="o">-</span><span class="mi">1</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">Z</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">q</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_by_columns</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">func</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return `func` applied to `X` (an array or a SciPy sparse matrix), a block of columns at a time.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">sparse</span><span class="o">.</span><span class="n">issparse</span><span class="p">(</span><span class="n">X</span><span class="p">):</span>
+            <span class="n">X</span> <span class="o">=</span> <span class="n">sparse</span><span class="o">.</span><span class="n">csc_array</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+        <span class="n">step</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">_CHUNK</span> <span class="o">//</span> <span class="bp">self</span><span class="o">.</span><span class="n">_size</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">step</span><span class="p">):</span>
+            <span class="n">block</span> <span class="o">=</span> <span class="n">X</span><span class="p">[:,</span> <span class="n">j</span> <span class="p">:</span> <span class="n">j</span> <span class="o">+</span> <span class="n">step</span><span class="p">]</span>
+            <span class="n">block</span> <span class="o">=</span> <span class="n">block</span><span class="o">.</span><span class="n">toarray</span><span class="p">()</span> <span class="k">if</span> <span class="n">sparse</span><span class="o">.</span><span class="n">issparse</span><span class="p">(</span><span class="n">block</span><span class="p">)</span> <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">block</span><span class="p">)</span>
+            <span class="n">out</span><span class="p">[:,</span> <span class="n">j</span> <span class="p">:</span> <span class="n">j</span> <span class="o">+</span> <span class="n">step</span><span class="p">]</span> <span class="o">=</span> <span class="n">func</span><span class="p">(</span><span class="n">block</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="kc">False</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">out</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_matmat</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return ``self @ X`` through the factors.&quot;&quot;&quot;</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">std</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">]</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">apply</span><span class="p">(</span><span class="n">Y</span><span class="p">):</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;Return ``S Y`` for a block of columns.&quot;&quot;&quot;</span>
+            <span class="k">return</span> <span class="n">s</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gather</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_through</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_scatter</span><span class="p">(</span><span class="n">s</span> <span class="o">*</span> <span class="n">Y</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">factors</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_by_columns</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">apply</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_transpose</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the transpose: the same rows, each factor transposed.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">KroneckerOperator</span><span class="o">.</span><span class="n">_adopt</span><span class="p">(</span>
+            <span class="p">[</span><span class="n">C</span><span class="o">.</span><span class="n">T</span> <span class="k">for</span> <span class="n">C</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">factors</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">std</span><span class="p">,</span> <span class="n">positions</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">positions</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_elementwise</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">func</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the operator times a scalar; a positive scalar keeps the factors.&quot;&quot;&quot;</span>
+        <span class="n">scale</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">func</span><span class="p">(</span><span class="mf">1.0</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">scale</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">KroneckerOperator</span><span class="o">.</span><span class="n">_adopt</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">factors</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">std</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">scale</span><span class="p">),</span> <span class="n">positions</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">positions</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="n">DenseOperator</span><span class="o">.</span><span class="n">_adopt</span><span class="p">(</span><span class="n">func</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dense</span><span class="p">()))</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_select</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rows</span><span class="p">,</span> <span class="n">cols</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the entries at `rows` and `cols`; the same rows and columns (none of them -1) keep the factors.&quot;&quot;&quot;</span>
+        <span class="n">rows</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">rows</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">intp</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">array_equal</span><span class="p">(</span><span class="n">rows</span><span class="p">,</span> <span class="n">cols</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">rows</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">():</span>
+            <span class="k">return</span> <span class="n">KroneckerOperator</span><span class="o">.</span><span class="n">_adopt</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">factors</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">std</span><span class="p">[</span><span class="n">rows</span><span class="p">],</span>
+                <span class="n">positions</span><span class="o">=</span><span class="p">[</span><span class="n">p</span><span class="p">[</span><span class="n">rows</span><span class="p">]</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">positions</span><span class="p">],</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">_select</span><span class="p">(</span><span class="n">rows</span><span class="p">,</span> <span class="n">cols</span><span class="p">)</span>
+
+<div class="viewcode-block" id="KroneckerOperator.dense">
+<a class="viewcode-back" href="../../../reference/api/fips.linalg.KroneckerOperator.dense.html#fips.linalg.KroneckerOperator.dense">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">dense</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the operator as a dense NumPy array.</span>
+
+<span class="sd">        Entry ``(i, j)`` is ``std[i] * std[j] * prod_k C_k[pos_k[i], pos_k[j]]``,</span>
+<span class="sd">        computed factor by factor, then scaled by the standard deviations.</span>
+<span class="sd">        This forms the ``n x n`` matrix.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        np.ndarray</span>
+<span class="sd">            The full matrix.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">C</span><span class="p">,</span> <span class="n">p</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">factors</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">positions</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">corr</span> <span class="o">=</span> <span class="n">C</span><span class="o">.</span><span class="n">take</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">take</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">C</span><span class="p">,</span> <span class="n">p</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">factors</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span> <span class="bp">self</span><span class="o">.</span><span class="n">positions</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span> <span class="n">strict</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+            <span class="n">corr</span> <span class="o">*=</span> <span class="n">C</span><span class="o">.</span><span class="n">take</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">take</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">corr</span> <span class="o">*=</span> <span class="bp">self</span><span class="o">.</span><span class="n">std</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">]</span>
+        <span class="n">corr</span> <span class="o">*=</span> <span class="bp">self</span><span class="o">.</span><span class="n">std</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="p">:]</span>
+        <span class="k">return</span> <span class="n">corr</span></div>
+
+
+<div class="viewcode-block" id="KroneckerOperator.diagonal">
+<a class="viewcode-back" href="../../../reference/api/fips.linalg.KroneckerOperator.diagonal.html#fips.linalg.KroneckerOperator.diagonal">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">diagonal</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the main diagonal, ``std**2 * prod_k diag(C_k)[pos_k]``.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        np.ndarray</span>
+<span class="sd">            The variances, without forming the matrix.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">d</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diagonal</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">factors</span><span class="p">[</span><span class="mi">0</span><span class="p">])[</span><span class="bp">self</span><span class="o">.</span><span class="n">positions</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">C</span><span class="p">,</span> <span class="n">p</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">factors</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span> <span class="bp">self</span><span class="o">.</span><span class="n">positions</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span> <span class="n">strict</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+            <span class="n">d</span> <span class="o">*=</span> <span class="n">np</span><span class="o">.</span><span class="n">diagonal</span><span class="p">(</span><span class="n">C</span><span class="p">)[</span><span class="n">p</span><span class="p">]</span>
+        <span class="n">d</span> <span class="o">*=</span> <span class="bp">self</span><span class="o">.</span><span class="n">std</span>
+        <span class="n">d</span> <span class="o">*=</span> <span class="bp">self</span><span class="o">.</span><span class="n">std</span>
+        <span class="k">return</span> <span class="n">d</span></div>
+
+
+<div class="viewcode-block" id="KroneckerOperator.logdet">
+<a class="viewcode-back" href="../../../reference/api/fips.linalg.KroneckerOperator.logdet.html#fips.linalg.KroneckerOperator.logdet">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">logdet</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the log-determinant through the factors.</span>
+
+<span class="sd">        When the rows are the whole product, in any order,</span>
+<span class="sd">        :math:`\log\det S = 2 \sum_i \log s_i + \sum_k (N / N_k) \log\det C_k`,</span>
+<span class="sd">        where :math:`s` are the standard deviations, :math:`N_k` the size of</span>
+<span class="sd">        factor k and :math:`N` their product. For a strict subset of the</span>
+<span class="sd">        product the dense matrix is factored.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        float</span>
+<span class="sd">            ``log(det(S))``.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        numpy.linalg.LinAlgError</span>
+<span class="sd">            If a factor is not positive-definite or a standard deviation is zero.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">_size</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">logdet</span><span class="p">()</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">std</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">LinAlgError</span><span class="p">(</span>
+                <span class="s2">&quot;A standard deviation is zero, so the operator is singular.&quot;</span>
+            <span class="p">)</span>
+        <span class="n">total</span> <span class="o">=</span> <span class="mf">2.0</span> <span class="o">*</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">std</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span>
+        <span class="k">for</span> <span class="n">C</span><span class="p">,</span> <span class="n">n_k</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">factors</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sizes</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+            <span class="n">total</span> <span class="o">+=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_size</span> <span class="o">//</span> <span class="n">n_k</span><span class="p">)</span> <span class="o">*</span> <span class="n">DenseOperator</span><span class="o">.</span><span class="n">_adopt</span><span class="p">(</span><span class="n">C</span><span class="p">)</span><span class="o">.</span><span class="n">logdet</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">total</span></div>
+
+
+<div class="viewcode-block" id="KroneckerOperator.sqrt">
+<a class="viewcode-back" href="../../../reference/api/fips.linalg.KroneckerOperator.sqrt.html#fips.linalg.KroneckerOperator.sqrt">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">sqrt</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LinearOperator</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return a square root :math:`R` with :math:`R R^T` equal to the operator, through the factors.</span>
+
+<span class="sd">        When the rows are the whole product, in any order,</span>
+<span class="sd">        :math:`R = D P (L_1 \otimes \dots \otimes L_K) P^T`, where</span>
+<span class="sd">        :math:`L_k` is the lower Cholesky factor of :math:`C_k`: since</span>
+<span class="sd">        :math:`P` is then a permutation, :math:`R R^T = S`. It is applied</span>
+<span class="sd">        through the factors, as the operator is, and never formed. For a</span>
+<span class="sd">        strict subset of the product, :math:`P^T P` is not the identity, so</span>
+<span class="sd">        the dense matrix is factored (:meth:`LinearOperator.sqrt`).</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        LinearOperator</span>
+<span class="sd">            :math:`R`, square.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        numpy.linalg.LinAlgError</span>
+<span class="sd">            If a factor is not positive-definite or a standard deviation is zero.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">_size</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">sqrt</span><span class="p">()</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">std</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">LinAlgError</span><span class="p">(</span>
+                <span class="s2">&quot;A standard deviation is zero, so the operator is singular.&quot;</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="n">_KroneckerRoot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">_cholesky</span><span class="p">(</span><span class="n">C</span><span class="p">)</span> <span class="k">for</span> <span class="n">C</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">factors</span><span class="p">))</span></div>
+
+
+    <span class="nd">@cached_property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_inverses</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The inverse of each factor, each factored once (Cholesky, or ``LDL^T`` with a warning).&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">_solve_psd</span><span class="p">(</span><span class="n">C</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">C</span><span class="p">)))</span> <span class="k">for</span> <span class="n">C</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">factors</span><span class="p">)</span>
+
+    <span class="nd">@cached_property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_complement</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The product grid&#39;s missing entries, and the inverse&#39;s columns at them.</span>
+
+<span class="sd">        For rows that are a strict subset of the product: ``W = G[:, missing]``,</span>
+<span class="sd">        where ``G`` is the inverse of the full product&#39;s correlation.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">kept</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_size</span><span class="p">)</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rows</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rows</span>
+        <span class="n">missing</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">setdiff1d</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_size</span><span class="p">),</span> <span class="n">kept</span><span class="p">)</span>
+        <span class="n">E</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">_size</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">missing</span><span class="p">)))</span>
+        <span class="n">E</span><span class="p">[</span><span class="n">missing</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">missing</span><span class="p">))]</span> <span class="o">=</span> <span class="mf">1.0</span>
+        <span class="k">return</span> <span class="n">missing</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_through</span><span class="p">(</span><span class="n">E</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_inverses</span><span class="p">)</span>
+
+    <span class="nd">@cached_property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_norm</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;An upper bound on the 2-norm of the rows&#39; correlation: the product of the factors&#39; 2-norms.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">math</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">C</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span> <span class="k">for</span> <span class="n">C</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">factors</span><span class="p">)</span>
+
+<div class="viewcode-block" id="KroneckerOperator.solve">
+<a class="viewcode-back" href="../../../reference/api/fips.linalg.KroneckerOperator.solve.html#fips.linalg.KroneckerOperator.solve">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">solve</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">B</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Solve ``self @ X = B`` through the factors.</span>
+
+<span class="sd">        Each factor is factored once (Cholesky, or a symmetric ``LDL^T``</span>
+<span class="sd">        with a logged warning when roundoff has tipped it off</span>
+<span class="sd">        positive-definite) and the factorization is kept. When the rows are</span>
+<span class="sd">        the whole product, in any order, the inverse is</span>
+<span class="sd">        :math:`D^{-1} P (C_1^{-1} \otimes \dots \otimes C_K^{-1}) P^T D^{-1}`.</span>
+
+<span class="sd">        When the rows are a strict subset of the product, with ``d`` entries</span>
+<span class="sd">        of the product missing, the inverse of the kept rows&#39; correlation is</span>
+<span class="sd">        the Schur complement :math:`G_{kk} - G_{kd} G_{dd}^{-1} G_{dk}` of</span>
+<span class="sd">        the full product&#39;s inverse :math:`G`, at the cost of ``d`` products</span>
+<span class="sd">        with the factors&#39; inverses and one ``d x d`` solve. That is the</span>
+<span class="sd">        inverse in exact arithmetic, but in floating point it loses accuracy</span>
+<span class="sd">        when the factors are ill-conditioned (the complement subtracts large</span>
+<span class="sd">        terms of :math:`G`). So the solve checks its result: when the</span>
+<span class="sd">        backward error of any column, :math:`\|R y - c\| / (\|R\| \|y\| +</span>
+<span class="sd">        \|c\|)` for the rows&#39; correlation :math:`R`, is larger than</span>
+<span class="sd">        ``n * eps`` (the bound a dense Cholesky solve meets), it logs a</span>
+<span class="sd">        warning and solves the dense matrix instead. When the complement</span>
+<span class="sd">        would hold more than the dense matrix (``N d &gt; n^2``), the dense</span>
+<span class="sd">        matrix is solved from the start.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        B : array-like, SciPy sparse matrix or Operator</span>
+<span class="sd">            The right-hand side: a vector, or a matrix with as many rows as the</span>
+<span class="sd">            operator.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        np.ndarray</span>
+<span class="sd">            ``X``, dense, with the shape of `B`.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        numpy.linalg.LinAlgError</span>
+<span class="sd">            If a standard deviation is zero: the operator is singular.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">std</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">LinAlgError</span><span class="p">(</span>
+                <span class="s2">&quot;A standard deviation is zero, so the operator is singular.&quot;</span>
+            <span class="p">)</span>
+        <span class="n">B</span> <span class="o">=</span> <span class="n">_as_array</span><span class="p">(</span><span class="n">B</span><span class="p">)</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_size</span> <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_size</span> <span class="o">-</span> <span class="n">n</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">n</span> <span class="o">*</span> <span class="n">n</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                <span class="s2">&quot;Solving the </span><span class="si">%d</span><span class="s2"> x </span><span class="si">%d</span><span class="s2"> Kronecker covariance densely: its rows fill &quot;</span>
+                <span class="s2">&quot;too little of the product for the factored solve.&quot;</span><span class="p">,</span>
+                <span class="n">n</span><span class="p">,</span>
+                <span class="n">n</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">return</span> <span class="n">_solve_psd</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dense</span><span class="p">(),</span> <span class="n">B</span><span class="p">)</span>
+
+        <span class="n">inv_s</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">std</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">]</span>
+        <span class="n">tol</span> <span class="o">=</span> <span class="n">n</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">finfo</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span><span class="o">.</span><span class="n">eps</span>
+        <span class="n">worst</span> <span class="o">=</span> <span class="mf">0.0</span>  <span class="c1"># the largest backward error of the Schur complement</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">apply</span><span class="p">(</span><span class="n">Y</span><span class="p">):</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;Return ``S^-1 Y`` for a block of columns.&quot;&quot;&quot;</span>
+            <span class="k">nonlocal</span> <span class="n">worst</span>
+            <span class="n">c</span> <span class="o">=</span> <span class="n">inv_s</span> <span class="o">*</span> <span class="n">Y</span>  <span class="c1"># the right-hand side in the correlation&#39;s units</span>
+            <span class="n">Z</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_through</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_scatter</span><span class="p">(</span><span class="n">c</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">_inverses</span><span class="p">)</span>
+            <span class="n">y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gather</span><span class="p">(</span><span class="n">Z</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">n</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">_size</span><span class="p">:</span>  <span class="c1"># a strict subset: the Schur complement</span>
+                <span class="n">missing</span><span class="p">,</span> <span class="n">W</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_complement</span>
+                <span class="n">y</span> <span class="o">=</span> <span class="n">y</span> <span class="o">-</span> <span class="n">W</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_rows</span><span class="p">]</span> <span class="o">@</span> <span class="n">_solve_psd</span><span class="p">(</span><span class="n">W</span><span class="p">[</span><span class="n">missing</span><span class="p">],</span> <span class="n">Z</span><span class="p">[</span><span class="n">missing</span><span class="p">])</span>
+                <span class="n">Ry</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gather</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_through</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_scatter</span><span class="p">(</span><span class="n">y</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">factors</span><span class="p">))</span>
+                <span class="n">scale</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_norm</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span>
+                    <span class="n">c</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span>
+                <span class="p">)</span>
+                <span class="n">error</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">Ry</span> <span class="o">-</span> <span class="n">c</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+                <span class="n">worst</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">worst</span><span class="p">,</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">error</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="n">scale</span><span class="p">,</span> <span class="mf">1e-300</span><span class="p">))))</span>
+            <span class="k">return</span> <span class="n">inv_s</span> <span class="o">*</span> <span class="n">y</span>
+
+        <span class="n">X</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_by_columns</span><span class="p">(</span><span class="n">B</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">]</span> <span class="k">if</span> <span class="n">B</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">1</span> <span class="k">else</span> <span class="n">B</span><span class="p">,</span> <span class="n">apply</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">worst</span> <span class="o">&gt;</span> <span class="n">tol</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                <span class="s2">&quot;The factored solve of the </span><span class="si">%d</span><span class="s2"> x </span><span class="si">%d</span><span class="s2"> Kronecker covariance lost &quot;</span>
+                <span class="s2">&quot;accuracy (backward error </span><span class="si">%.1e</span><span class="s2">, more than </span><span class="si">%.1e</span><span class="s2">), likely from &quot;</span>
+                <span class="s2">&quot;ill-conditioned factors; solving the dense matrix instead.&quot;</span><span class="p">,</span>
+                <span class="n">n</span><span class="p">,</span>
+                <span class="n">n</span><span class="p">,</span>
+                <span class="n">worst</span><span class="p">,</span>
+                <span class="n">tol</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">return</span> <span class="n">_solve_psd</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dense</span><span class="p">(),</span> <span class="n">B</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">X</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="n">B</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">1</span> <span class="k">else</span> <span class="n">X</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">__getstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the state for pickling, without the cached inverses.&quot;&quot;&quot;</span>
+        <span class="n">state</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__getstate__</span><span class="p">()</span>
+        <span class="n">state</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;_inverses&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">state</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;_complement&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">state</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;_norm&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">state</span></div>
+
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">_KroneckerRoot</span><span class="p">(</span><span class="n">LinearOperator</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The square root :math:`R = D P (L_1 \otimes \dots \otimes L_K) P^T` of a :class:`KroneckerOperator` (:meth:`KroneckerOperator.sqrt`).</span>
+
+<span class="sd">    It is applied through the Cholesky factors :math:`L_k` with the</span>
+<span class="sd">    operator&#39;s own grid (its rows are the whole product, in any order). Its</span>
+<span class="sd">    transpose, :math:`P (L_1^T \otimes \dots \otimes L_K^T) P^T D`, is the</span>
+<span class="sd">    same root applied the other way.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">of</span><span class="p">:</span> <span class="n">KroneckerOperator</span><span class="p">,</span>
+        <span class="n">roots</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
+        <span class="n">transposed</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_of</span> <span class="o">=</span> <span class="n">of</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_roots</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">_read_only</span><span class="p">(</span><span class="n">L</span><span class="p">)</span> <span class="k">for</span> <span class="n">L</span> <span class="ow">in</span> <span class="n">roots</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_transposed</span> <span class="o">=</span> <span class="n">transposed</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">of</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_matmat</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return ``R @ X``, or ``R^T @ X`` for the transpose, through the factors.&quot;&quot;&quot;</span>
+        <span class="n">of</span><span class="p">,</span> <span class="n">s</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_of</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_of</span><span class="o">.</span><span class="n">std</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">]</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_transposed</span><span class="p">:</span>
+            <span class="n">roots</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">L</span><span class="o">.</span><span class="n">T</span> <span class="k">for</span> <span class="n">L</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_roots</span><span class="p">)</span>
+
+            <span class="k">def</span><span class="w"> </span><span class="nf">apply</span><span class="p">(</span><span class="n">Y</span><span class="p">):</span>
+<span class="w">                </span><span class="sd">&quot;&quot;&quot;Return ``R^T Y`` for a block of columns.&quot;&quot;&quot;</span>
+                <span class="k">return</span> <span class="n">of</span><span class="o">.</span><span class="n">_gather</span><span class="p">(</span><span class="n">of</span><span class="o">.</span><span class="n">_through</span><span class="p">(</span><span class="n">of</span><span class="o">.</span><span class="n">_scatter</span><span class="p">(</span><span class="n">s</span> <span class="o">*</span> <span class="n">Y</span><span class="p">),</span> <span class="n">roots</span><span class="p">))</span>
+
+        <span class="k">else</span><span class="p">:</span>
+
+            <span class="k">def</span><span class="w"> </span><span class="nf">apply</span><span class="p">(</span><span class="n">Y</span><span class="p">):</span>
+<span class="w">                </span><span class="sd">&quot;&quot;&quot;Return ``R Y`` for a block of columns.&quot;&quot;&quot;</span>
+                <span class="k">return</span> <span class="n">s</span> <span class="o">*</span> <span class="n">of</span><span class="o">.</span><span class="n">_gather</span><span class="p">(</span><span class="n">of</span><span class="o">.</span><span class="n">_through</span><span class="p">(</span><span class="n">of</span><span class="o">.</span><span class="n">_scatter</span><span class="p">(</span><span class="n">Y</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">_roots</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">of</span><span class="o">.</span><span class="n">_by_columns</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">apply</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_transpose</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the transpose, the same factors applied the other way.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">_KroneckerRoot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_of</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_roots</span><span class="p">,</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_transposed</span><span class="p">)</span>
+</pre></div>
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../../_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0"></script>
+<script defer src="../../../_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2025-2026, James Mineau.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.1.0.
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.22.0.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

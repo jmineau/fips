@@ -1,6 +1,0 @@
-fips.Matrix.data
-================
-
-.. currentmodule:: fips
-
-.. autoattribute:: Matrix.data

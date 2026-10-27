@@ -1,0 +1,6 @@
+fips.Posterior.options
+======================
+
+.. currentmodule:: fips
+
+.. autoproperty:: Posterior.options

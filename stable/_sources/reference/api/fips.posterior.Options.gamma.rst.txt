@@ -1,0 +1,6 @@
+fips.posterior.Options.gamma
+============================
+
+.. currentmodule:: fips.posterior
+
+.. autoproperty:: Options.gamma

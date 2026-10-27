@@ -1,0 +1,6 @@
+fips.Vector.combine\_first
+==========================
+
+.. currentmodule:: fips
+
+.. automethod:: Vector.combine_first

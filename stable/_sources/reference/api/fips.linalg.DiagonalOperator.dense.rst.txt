@@ -1,0 +1,6 @@
+fips.linalg.DiagonalOperator.dense
+==================================
+
+.. currentmodule:: fips.linalg
+
+.. automethod:: DiagonalOperator.dense

@@ -1,6 +1,0 @@
-fips.base.Structure.data
-========================
-
-.. currentmodule:: fips.base
-
-.. autoattribute:: Structure.data

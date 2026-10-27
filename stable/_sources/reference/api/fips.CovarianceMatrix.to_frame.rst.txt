@@ -1,6 +1,0 @@
-﻿fips.CovarianceMatrix.to\_frame
-===============================
-
-.. currentmodule:: fips
-
-.. automethod:: CovarianceMatrix.to_frame

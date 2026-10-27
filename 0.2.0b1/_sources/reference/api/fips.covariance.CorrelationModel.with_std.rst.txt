@@ -1,0 +1,6 @@
+fips.covariance.CorrelationModel.with\_std
+==========================================
+
+.. currentmodule:: fips.covariance
+
+.. automethod:: CorrelationModel.with_std

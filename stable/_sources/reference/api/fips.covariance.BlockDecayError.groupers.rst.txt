@@ -1,6 +1,0 @@
-fips.covariance.BlockDecayError.groupers
-========================================
-
-.. currentmodule:: fips.covariance
-
-.. autoattribute:: BlockDecayError.groupers

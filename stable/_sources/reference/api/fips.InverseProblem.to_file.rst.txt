@@ -1,6 +1,0 @@
-﻿fips.InverseProblem.to\_file
-============================
-
-.. currentmodule:: fips
-
-.. automethod:: InverseProblem.to_file

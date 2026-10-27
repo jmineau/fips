@@ -1,6 +1,0 @@
-fips.Estimator.leverage
-=======================
-
-.. currentmodule:: fips
-
-.. automethod:: Estimator.leverage

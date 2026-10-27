@@ -1,6 +1,0 @@
-fips.problems.flux.FluxProblem.jacobian
-=======================================
-
-.. currentmodule:: fips.problems.flux
-
-.. autoproperty:: FluxProblem.jacobian

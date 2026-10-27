@@ -1,6 +1,0 @@
-fips.Vector.data
-================
-
-.. currentmodule:: fips
-
-.. autoattribute:: Vector.data

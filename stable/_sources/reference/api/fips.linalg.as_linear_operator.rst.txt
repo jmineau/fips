@@ -1,0 +1,6 @@
+﻿fips.linalg.as\_linear\_operator
+================================
+
+.. currentmodule:: fips.linalg
+
+.. autofunction:: as_linear_operator

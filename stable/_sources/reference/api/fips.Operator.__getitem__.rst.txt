@@ -1,0 +1,6 @@
+﻿fips.Operator.\_\_getitem\_\_
+=============================
+
+.. currentmodule:: fips
+
+.. automethod:: Operator.__getitem__

@@ -1,6 +1,0 @@
-﻿fips.MatrixBlock.index
-======================
-
-.. currentmodule:: fips
-
-.. autoproperty:: MatrixBlock.index

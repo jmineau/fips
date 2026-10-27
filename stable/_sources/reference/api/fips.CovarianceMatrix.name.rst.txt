@@ -1,6 +1,0 @@
-﻿fips.CovarianceMatrix.name
-==========================
-
-.. currentmodule:: fips
-
-.. autoattribute:: CovarianceMatrix.name

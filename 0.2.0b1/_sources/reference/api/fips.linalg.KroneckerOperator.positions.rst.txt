@@ -1,0 +1,6 @@
+fips.linalg.KroneckerOperator.positions
+=======================================
+
+.. currentmodule:: fips.linalg
+
+.. autoattribute:: KroneckerOperator.positions

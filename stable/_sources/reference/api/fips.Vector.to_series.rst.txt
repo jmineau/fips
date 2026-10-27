@@ -1,4 +1,4 @@
-﻿fips.Vector.to\_series
+fips.Vector.to\_series
 ======================
 
 .. currentmodule:: fips

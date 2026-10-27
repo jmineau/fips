@@ -1,0 +1,384 @@
+{
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "id": "cell-00",
+   "metadata": {},
+   "source": [
+    "# A regional flux inversion\n",
+    "\n",
+    "Methane measured at a few sites depends on the emissions upwind of them. This\n",
+    "notebook finds a year of monthly methane fluxes on a 10 x 10 grid from daily\n",
+    "concentrations at three sites. The data are synthetic: a known truth (two\n",
+    "emission hotspots with a seasonal cycle) makes the observations, so the\n",
+    "estimate can be compared with it.\n",
+    "\n",
+    "In the words of the [terminology](../../getting_started/terminology.rst):\n",
+    "\n",
+    "- the **state** is the flux of each grid cell in each month (µmol/m²/s), a\n",
+    "  block named `flux` labeled by `(time, lat, lon)`;\n",
+    "- the **observations** are daily concentrations at each site (ppm), a block\n",
+    "  named `concentration` labeled by `(site, obs_time)`;\n",
+    "- the **forward operator** is the transport: how much a unit flux in a cell\n",
+    "  raises the concentration at a site (here a made-up footprint that decays\n",
+    "  with distance), and it is sparse, since a day sees only its own month;\n",
+    "- the **offset** is the background concentration the fluxes do not explain;\n",
+    "- the **prior** is a uniform flux, with a **prior covariance** correlated in\n",
+    "  time and in space, and the **observation covariance** is independent noise."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "cell-01",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "import matplotlib.pyplot as plt\n",
+    "import numpy as np\n",
+    "import pandas as pd\n",
+    "import scipy.sparse as sp\n",
+    "\n",
+    "import fips\n",
+    "from fips.visualization import plot_comparison\n",
+    "\n",
+    "rng = np.random.default_rng(42)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "cell-02",
+   "metadata": {},
+   "source": [
+    "## The grid, the sites and the times"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "cell-03",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "lons = np.round(np.arange(-111.975, -111.5, 0.05), 3)\n",
+    "lats = np.round(np.arange(40.525, 41.0, 0.05), 3)\n",
+    "months = pd.date_range(\"2024-01-01\", periods=12, freq=\"MS\")\n",
+    "days = pd.date_range(\"2024-01-01\", \"2024-12-31\", freq=\"D\")\n",
+    "\n",
+    "sites = pd.DataFrame(\n",
+    "    {\"lon\": rng.uniform(-112.0, -111.5, 3), \"lat\": rng.uniform(40.5, 41.0, 3)},\n",
+    "    index=pd.Index([\"site_a\", \"site_b\", \"site_c\"], name=\"site\"),\n",
+    ")\n",
+    "sites"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "cell-04",
+   "metadata": {},
+   "source": [
+    "## Labels and vectors\n",
+    "\n",
+    "The state is a flux for every month and cell, labeled by `(time, lat, lon)`;\n",
+    "the prior is a uniform 0.05 µmol/m²/s, in a block named `flux`. The\n",
+    "observations are labeled by `(site, obs_time)`, in a block named\n",
+    "`concentration`."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "cell-05",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "cells = pd.MultiIndex.from_product([months, lats, lons], names=[\"time\", \"lat\", \"lon\"])\n",
+    "prior = fips.Vector.from_series(\n",
+    "    pd.Series(0.05, index=cells, name=\"prior\"), block=\"flux\"\n",
+    ")\n",
+    "\n",
+    "obs_labels = pd.MultiIndex.from_product([sites.index, days], names=[\"site\", \"obs_time\"])\n",
+    "len(cells), len(obs_labels)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "cell-06",
+   "metadata": {},
+   "source": [
+    "## The forward operator\n",
+    "\n",
+    "A day's concentration at a site sees only the fluxes of that day's month, so\n",
+    "most of the matrix is zero, and it is built sparse. Each day, a site sees the\n",
+    "cells around a point upwind of it (the wind changes from day to day), and its\n",
+    "sensitivity to a cell decays with the distance from that point. `fips.Operator` labels the\n",
+    "matrix by position: rows in the order of `obs_labels`, columns in the order\n",
+    "of `cells`."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "cell-07",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "grid_lat, grid_lon = np.meshgrid(\n",
+    "    lats, lons, indexing=\"ij\"\n",
+    ")  # in the order of `cells` within a month\n",
+    "n_cells = grid_lat.size\n",
+    "rows, cols, values = [], [], []\n",
+    "upwind = rng.normal(\n",
+    "    0.0, 0.1, (len(obs_labels), 2)\n",
+    ")  # degrees, one shift per site and day\n",
+    "for i, (site, day) in enumerate(obs_labels):\n",
+    "    x, y = sites.at[site, \"lon\"] + upwind[i, 0], sites.at[site, \"lat\"] + upwind[i, 1]\n",
+    "    distance = np.hypot(grid_lon - x, grid_lat - y)\n",
+    "    month = day.month - 1\n",
+    "    rows.append(np.full(n_cells, i))\n",
+    "    cols.append(month * n_cells + np.arange(n_cells))\n",
+    "    values.append(np.exp(-0.5 * (distance.ravel() / 0.15) ** 2))\n",
+    "jacobian = sp.csr_array(\n",
+    "    (np.concatenate(values), (np.concatenate(rows), np.concatenate(cols))),\n",
+    "    shape=(len(obs_labels), len(cells)),\n",
+    ")\n",
+    "\n",
+    "obs_space = fips.Space({\"concentration\": obs_labels})\n",
+    "forward = fips.Operator(jacobian, obs_space, prior.space)\n",
+    "forward.data"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "cell-08",
+   "metadata": {},
+   "source": [
+    "## A truth, and the observations it makes\n",
+    "\n",
+    "Two hotspots with a seasonal cycle, peaking in summer. The observations are\n",
+    "the forward operator times the truth, plus a background of 1.9 ppm, plus\n",
+    "noise."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "cell-09",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "hotspots = [(-111.8, 40.75), (-111.6, 40.6)]\n",
+    "spatial = sum(\n",
+    "    np.exp(-0.5 * ((grid_lon - x) ** 2 + (grid_lat - y) ** 2) / 0.1**2)\n",
+    "    for x, y in hotspots\n",
+    ")\n",
+    "season = 1.0 + 0.5 * np.sin(2 * np.pi * (months.dayofyear - 80) / 365.25)\n",
+    "truth = fips.Vector(\n",
+    "    np.concatenate([s * spatial.ravel() for s in season]), prior.space, name=\"truth\"\n",
+    ")\n",
+    "\n",
+    "background = 1.9\n",
+    "noise = 0.002\n",
+    "observed = forward @ truth\n",
+    "obs = fips.Vector(\n",
+    "    observed.values + background + rng.normal(0.0, noise, len(obs_labels)),\n",
+    "    obs_space,\n",
+    "    name=\"observed\",\n",
+    ")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "cell-10",
+   "metadata": {},
+   "source": [
+    "## The covariances\n",
+    "\n",
+    "The prior's errors are alike for nearby cells and nearby months: a\n",
+    "`Kronecker` product of an exponential correlation in time (over 60 days) and\n",
+    "one in space (over 20 km along the great circle), with a standard deviation\n",
+    "of 0.25 µmol/m²/s. It is kept as its two factors, never as the 1200 x 1200\n",
+    "matrix. The observation errors are independent."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "cell-11",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "prior_cov = fips.Kronecker(\n",
+    "    fips.Exponential(\"time\", \"60D\"),\n",
+    "    fips.Exponential([\"lat\", \"lon\"], 20.0, metric=\"haversine\"),\n",
+    ").with_std(0.25)\n",
+    "obs_cov = fips.Independent().with_std(noise)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "cell-12",
+   "metadata": {},
+   "source": [
+    "## The problem and its solution\n",
+    "\n",
+    "The background is the problem's offset: the part of the observations the\n",
+    "fluxes do not explain."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "cell-13",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "problem = fips.Problem(\n",
+    "    prior=prior,\n",
+    "    prior_cov=prior_cov,\n",
+    "    obs=obs,\n",
+    "    obs_cov=obs_cov,\n",
+    "    forward=forward,\n",
+    "    offset=background,\n",
+    ")\n",
+    "post = fips.solve(problem)\n",
+    "post.summary()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "cell-14",
+   "metadata": {},
+   "source": [
+    "## Maps\n",
+    "\n",
+    "`to_xarray()` puts the flux block on its levels, `(time, lat, lon)`, so the\n",
+    "yearly means are one line each."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "cell-15",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "means = {\n",
+    "    \"Truth\": truth[\"flux\"].to_xarray().mean(\"time\"),\n",
+    "    \"Prior\": problem.prior[\"flux\"].to_xarray().mean(\"time\"),\n",
+    "    \"Posterior\": post.estimate[\"flux\"].to_xarray().mean(\"time\"),\n",
+    "}\n",
+    "vmax = max(float(m.max()) for m in means.values())\n",
+    "fig, axes = plt.subplots(ncols=3, figsize=(15, 4), sharey=True)\n",
+    "for ax, (title, data) in zip(axes, means.items(), strict=True):\n",
+    "    data.plot(ax=ax, x=\"lon\", y=\"lat\", cmap=\"Reds\", vmin=0, vmax=vmax)\n",
+    "    ax.scatter(sites[\"lon\"], sites[\"lat\"], color=\"blue\", edgecolors=\"black\", zorder=5)\n",
+    "    ax.set_title(title)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "cell-16",
+   "metadata": {},
+   "source": [
+    "## The fit at one site\n",
+    "\n",
+    "The observations, what the prior predicts and what the estimate predicts, at\n",
+    "one site over the year."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "cell-17",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "def at_site(vector, name, site=\"site_a\"):\n",
+    "    \"\"\"Return one site's concentrations over time, as a Series named for the legend.\"\"\"\n",
+    "    return vector.to_series().droplevel(\"block\").xs(site, level=\"site\").rename(name)\n",
+    "\n",
+    "\n",
+    "fig, ax = plot_comparison(\n",
+    "    at_site(problem.obs, \"observed\"),\n",
+    "    at_site(problem.predict(problem.prior), \"prior\"),\n",
+    "    at_site(post.modeled_obs, \"posterior\"),\n",
+    ")\n",
+    "ax.set_ylabel(\"CH₄ (ppm)\");"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "cell-18",
+   "metadata": {},
+   "source": [
+    "## Monthly totals and their uncertainty\n",
+    "\n",
+    "The question is often about an aggregate: the flux summed over the domain each\n",
+    "month. `fips.aggregate.sum` builds the aggregation, and `post.cov(W)` is the\n",
+    "posterior covariance of the totals, computed without the full 1200 x 1200\n",
+    "posterior covariance. `plot_comparison` draws the prior and the posterior\n",
+    "with a band of one standard deviation each, and the truth."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "cell-19",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "W = fips.aggregate.sum(prior.space, by=\"time\")\n",
+    "\n",
+    "\n",
+    "def total(vector, name):\n",
+    "    \"\"\"Return the domain total of each month, as a Series named for the legend.\"\"\"\n",
+    "    return (W @ vector).to_series().droplevel(\"block\").rename(name)\n",
+    "\n",
+    "\n",
+    "fig, ax = plot_comparison(\n",
+    "    total(truth, \"truth\"),\n",
+    "    total(problem.prior, \"prior\"),\n",
+    "    total(post.estimate, \"posterior\"),\n",
+    "    errors=[None, W @ problem.prior_cov @ W.T, post.cov(W)],\n",
+    ")\n",
+    "ax.set_ylabel(\"domain total flux (µmol/m²/s, summed over cells)\");"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "cell-20",
+   "metadata": {},
+   "source": [
+    "## Which months the data constrain\n",
+    "\n",
+    "The averaging kernel of the totals says how the estimated total of each month\n",
+    "responds to its true total: near 1 where the observations decide it, near 0\n",
+    "where it stays at the prior."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "cell-21",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "post.averaging_kernel(W).to_frame().round(2)"
+   ]
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "Python 3",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "name": "python",
+   "pygments_lexer": "ipython3"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 5
+}

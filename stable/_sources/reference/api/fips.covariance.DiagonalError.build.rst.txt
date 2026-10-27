@@ -1,6 +1,0 @@
-fips.covariance.DiagonalError.build
-===================================
-
-.. currentmodule:: fips.covariance
-
-.. automethod:: DiagonalError.build

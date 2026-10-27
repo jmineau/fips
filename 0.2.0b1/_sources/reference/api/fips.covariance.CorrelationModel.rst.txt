@@ -1,0 +1,31 @@
+﻿fips.covariance.CorrelationModel
+================================
+
+.. currentmodule:: fips.covariance
+
+.. autoclass:: CorrelationModel
+   :no-members:
+   :show-inheritance:
+
+
+
+
+.. rubric:: Attributes
+
+.. autosummary::
+   :toctree:
+
+   ~CorrelationModel.levels
+
+
+
+.. rubric:: Methods
+
+.. autosummary::
+   :toctree:
+
+   ~CorrelationModel.correlation
+   ~CorrelationModel.with_std
+
+
+

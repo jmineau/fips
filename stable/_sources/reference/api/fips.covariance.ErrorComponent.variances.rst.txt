@@ -1,6 +1,0 @@
-fips.covariance.ErrorComponent.variances
-========================================
-
-.. currentmodule:: fips.covariance
-
-.. autoattribute:: ErrorComponent.variances

@@ -1,0 +1,6 @@
+fips.Operator.from\_blocks
+==========================
+
+.. currentmodule:: fips
+
+.. automethod:: Operator.from_blocks

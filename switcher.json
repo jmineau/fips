@@ -5,9 +5,14 @@
     "url": "https://jmineau.github.io/fips/dev/"
   },
   {
-    "name": "0.1.0b9 (latest)",
-    "version": "0.1.0b9",
+    "name": "0.2.0b1 (latest)",
+    "version": "0.2.0b1",
     "url": "https://jmineau.github.io/fips/stable/",
     "preferred": true
+  },
+  {
+    "name": "0.1.0b9",
+    "version": "0.1.0b9",
+    "url": "https://jmineau.github.io/fips/0.1.0b9/"
   }
 ]

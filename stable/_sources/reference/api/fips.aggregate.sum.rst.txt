@@ -1,0 +1,6 @@
+﻿fips.aggregate.sum
+==================
+
+.. currentmodule:: fips.aggregate
+
+.. autofunction:: sum

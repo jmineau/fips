@@ -1,6 +1,0 @@
-fips.Estimator.A
-================
-
-.. currentmodule:: fips
-
-.. autoproperty:: Estimator.A

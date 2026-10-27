@@ -1,6 +1,0 @@
-﻿fips.Matrix.\_\_add\_\_
-=======================
-
-.. currentmodule:: fips
-
-.. automethod:: Matrix.__add__

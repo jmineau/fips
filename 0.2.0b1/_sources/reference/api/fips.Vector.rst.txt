@@ -1,0 +1,38 @@
+﻿fips.Vector
+===========
+
+.. currentmodule:: fips
+
+.. autoclass:: Vector
+   :no-members:
+
+
+
+
+.. rubric:: Attributes
+
+.. autosummary::
+   :toctree:
+
+   ~Vector.index
+   ~Vector.name
+   ~Vector.space
+   ~Vector.values
+
+
+
+.. rubric:: Methods
+
+.. autosummary::
+   :toctree:
+
+   ~Vector.align
+   ~Vector.combine_first
+   ~Vector.from_blocks
+   ~Vector.from_series
+   ~Vector.round_labels
+   ~Vector.to_series
+   ~Vector.to_xarray
+
+
+

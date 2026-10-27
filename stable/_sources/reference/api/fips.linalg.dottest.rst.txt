@@ -1,0 +1,6 @@
+﻿fips.linalg.dottest
+===================
+
+.. currentmodule:: fips.linalg
+
+.. autofunction:: dottest

@@ -1,6 +1,0 @@
-fips.base.Structure.copy
-========================
-
-.. currentmodule:: fips.base
-
-.. automethod:: Structure.copy

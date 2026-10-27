@@ -1,0 +1,6 @@
+fips.Posterior.mean
+===================
+
+.. currentmodule:: fips
+
+.. autoproperty:: Posterior.mean

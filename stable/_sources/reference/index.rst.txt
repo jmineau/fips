@@ -1,18 +1,17 @@
 API Reference
 =============
 
-This reference provides detailed documentation for all public classes, functions, and modules in FIPS.
+Every public class, function and attribute of fips, by topic, in the order a
+problem uses them. The words are defined in :doc:`/getting_started/terminology`.
 
 .. toctree::
    :maxdepth: 2
 
-   blocks
-   multiblocks
-   operators
+   space
+   operator
    covariance
-   inverse
-   estimators
-   pipeline
-   base
-   utilities/index
-   problems/index
+   problem
+   posterior
+   aggregate
+   visualization
+   linalg

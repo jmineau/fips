@@ -1,0 +1,6 @@
+fips.Space.index
+================
+
+.. currentmodule:: fips
+
+.. autoproperty:: Space.index

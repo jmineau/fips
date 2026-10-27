@@ -1,0 +1,6 @@
+fips.linalg.DenseOperator.trace
+===============================
+
+.. currentmodule:: fips.linalg
+
+.. automethod:: DenseOperator.trace

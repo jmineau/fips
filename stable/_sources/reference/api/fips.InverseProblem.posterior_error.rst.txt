@@ -1,6 +1,0 @@
-fips.InverseProblem.posterior\_error
-====================================
-
-.. currentmodule:: fips
-
-.. autoproperty:: InverseProblem.posterior_error

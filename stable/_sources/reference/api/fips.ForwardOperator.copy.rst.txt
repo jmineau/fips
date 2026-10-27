@@ -1,6 +1,0 @@
-﻿fips.ForwardOperator.copy
-=========================
-
-.. currentmodule:: fips
-
-.. automethod:: ForwardOperator.copy

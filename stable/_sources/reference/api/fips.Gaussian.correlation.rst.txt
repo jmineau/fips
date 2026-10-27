@@ -1,0 +1,6 @@
+fips.Gaussian.correlation
+=========================
+
+.. currentmodule:: fips
+
+.. automethod:: Gaussian.correlation

@@ -1,0 +1,6 @@
+fips.posterior.Solution.gain
+============================
+
+.. currentmodule:: fips.posterior
+
+.. automethod:: Solution.gain

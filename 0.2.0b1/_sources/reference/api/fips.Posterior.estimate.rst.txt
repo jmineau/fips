@@ -1,0 +1,6 @@
+fips.Posterior.estimate
+=======================
+
+.. currentmodule:: fips
+
+.. autoproperty:: Posterior.estimate

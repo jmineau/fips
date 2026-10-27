@@ -1,0 +1,915 @@
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>A First Problem &#8212; fips 0.2.0b1 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=64cc4de3f052d77215f0" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=64cc4de3f052d77215f0" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../_static/plot_directive.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=4b8357b6" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="../_static/scripts/fontawesome.js?digest=64cc4de3f052d77215f0"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0" />
+
+    <script src="../_static/documentation_options.js?v=3804d0ff"></script>
+    <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=f281be69"></script>
+    <script>window.MathJax = {"options": {"processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'getting_started/first_problem';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.22.0';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://jmineau.github.io/fips/switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.2.0b1';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner =
+            true;
+        </script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Terminology" href="terminology.html" />
+    <link rel="prev" title="Installation" href="installation.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.2" />
+  
+    
+    <script src="../_static/searchtools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <script src="../searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button type="button" class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class=" navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b1 documentation - Home"/>
+    <img src="../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b1 documentation - Home"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class=" navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="index.html">
+    Getting Started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../user_guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../reference/index.html">
+    API Reference
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+      
+        <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/jmineau/fips" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button type="button" class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="index.html">
+    Getting Started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../user_guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../reference/index.html">
+    API Reference
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-3"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-3"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-3"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-3">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+        
+          <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/jmineau/fips" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item pst-sidebar-collapse"><button type="button" id="pst-collapse-sidebar-button" aria-expanded="true" aria-controls="pst-primary-sidebar">
+  <svg class="pst-icon" role="img" aria-hidden="true" focusable="false" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+    <path fill="currentColor" d="M3 15.5C2.36232 15.5 1.74874 15.2564 1.28478 14.8189C0.820828 14.3815 0.541576 13.7832 0.504167 13.1467L0.5 13L0.5 3C0.499965 2.36232 0.743605 1.74874 1.18107 1.28478C1.61854 0.820828 2.21676 0.541576 2.85333 0.504167L3 0.5L13 0.5C13.6377 0.499965 14.2513 0.743605 14.7152 1.18107C15.1792 1.61854 15.4584 2.21676 15.4958 2.85333L15.5 3L15.5 13C15.5 13.6377 15.2564 14.2513 14.8189 14.7152C14.3815 15.1792 13.7832 15.4584 13.1467 15.4958L13 15.5L3 15.5ZM3 13.8333L10.5 13.8333L10.5 2.16667L3 2.16667C2.79589 2.16669 2.59889 2.24163 2.44636 2.37726C2.29383 2.5129 2.19638 2.69979 2.1725 2.9025L2.16667 3L2.16667 13C2.16669 13.2041 2.24163 13.4011 2.37726 13.5536C2.5129 13.7062 2.69979 13.8036 2.9025 13.8275L3 13.8333ZM6.65583 10.325L6.5775 10.2558L4.91083 8.58917C4.76735 8.44567 4.68116 8.25476 4.66843 8.05223C4.65569 7.84971 4.71729 7.6495 4.84167 7.48917L4.91083 7.41083L6.5775 5.74417C6.72747 5.59471 6.9287 5.50794 7.14032 5.50148C7.35194 5.49502 7.55809 5.56935 7.7169 5.70937C7.8757 5.8494 7.97525 6.04463 7.99533 6.25539C8.01541 6.46616 7.95451 6.67667 7.825 6.84417L7.75583 6.9225L6.67917 8L7.75583 9.0775C7.89931 9.22099 7.98551 9.41191 7.99824 9.61443C8.01097 9.81695 7.94938 10.0172 7.825 10.1775L7.75583 10.2558C7.61234 10.3993 7.42142 10.4855 7.2189 10.4982C7.01638 10.511 6.81617 10.4494 6.65583 10.325Z"/>
+  </svg>
+  <span class="pst-collapse-sidebar-label">Collapse Sidebar</span>
+  <span class="pst-expand-sidebar-label">Expand Sidebar</span>
+</button></div>
+        <div class="sidebar-primary-item">
+
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1 current active"><a aria-current="page" class="current reference internal" href="#">A First Problem</a></li>
+<li class="toctree-l1"><a class="reference internal" href="terminology.html">Terminology</a></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="index.html" class="nav-link">Getting Started</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">A First Problem</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="a-first-problem">
+<h1>A First Problem<a class="headerlink" href="#a-first-problem" title="Link to this heading">#</a></h1>
+<p>This page solves one small problem from start to finish, meeting fips’s
+objects in the order you use them: the labels and values of a vector, the
+forward operator, the covariances, the problem, and its posterior. The words
+(state, observation, forward operator, prior, …) are defined once in
+<a class="reference internal" href="terminology.html"><span class="doc">Terminology</span></a>.</p>
+<section id="id1">
+<h2>A first problem<a class="headerlink" href="#id1" title="Link to this heading">#</a></h2>
+<p>Six rays cross a line of four cells, and each ray’s travel time is measured. A
+ray’s time is the sum, over the cells it crosses, of its length in the cell
+times the cell’s slowness (the inverse of a speed). The state is the slowness
+of the four cells; the observations are the six times; the forward operator
+holds the lengths. We know roughly what the slowness is (the prior: 0.25 s/km
+everywhere, give or take 0.05) and how well the times are measured (to 0.01 s).</p>
+</section>
+<section id="labels-and-vectors">
+<h2>Labels and vectors<a class="headerlink" href="#labels-and-vectors" title="Link to this heading">#</a></h2>
+<p>fips keeps the labels of your data beside the numbers and matches everything
+by label, never by position. The labels of a state or of the observations are
+a <a class="reference internal" href="../reference/api/fips.Space.html#fips.Space" title="fips.Space"><code class="xref py py-class docutils literal notranslate"><span class="pre">Space</span></code></a>: named blocks, each labeled by its own pandas index. A
+<a class="reference internal" href="../reference/api/fips.Vector.html#fips.Vector" title="fips.Vector"><code class="xref py py-class docutils literal notranslate"><span class="pre">Vector</span></code></a> is values on a space. A pandas Series you already have
+becomes a vector of one block with <a class="reference internal" href="../reference/api/fips.Vector.from_series.html#fips.Vector.from_series" title="fips.Vector.from_series"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Vector.from_series</span></code></a>:</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [1]: </span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+<span class="gp">In [2]: </span><span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+
+<span class="gp">In [3]: </span><span class="kn">import</span><span class="w"> </span><span class="nn">fips</span>
+
+<span class="gp">In [4]: </span><span class="n">cells</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">([</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">1.5</span><span class="p">,</span> <span class="mf">2.5</span><span class="p">,</span> <span class="mf">3.5</span><span class="p">],</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;x&quot;</span><span class="p">)</span>  <span class="c1"># where each cell is, km</span>
+
+<span class="gp">In [5]: </span><span class="n">prior</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Vector</span><span class="o">.</span><span class="n">from_series</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="mf">0.25</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">cells</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;prior&quot;</span><span class="p">),</span> <span class="n">block</span><span class="o">=</span><span class="s2">&quot;slowness&quot;</span><span class="p">)</span>
+
+<span class="gp">In [6]: </span><span class="n">prior</span><span class="o">.</span><span class="n">space</span>
+<span class="gh">Out[6]: </span><span class="go">Space(slowness: 4 x [&#39;x&#39;])</span>
+
+<span class="gp">In [7]: </span><span class="n">rays</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">],</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;ray&quot;</span><span class="p">)</span>
+
+<span class="gp">In [8]: </span><span class="n">times</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">([</span><span class="mf">0.53</span><span class="p">,</span> <span class="mf">0.76</span><span class="p">,</span> <span class="mf">1.02</span><span class="p">,</span> <span class="mf">0.25</span><span class="p">,</span> <span class="mf">0.48</span><span class="p">,</span> <span class="mf">0.80</span><span class="p">],</span> <span class="n">index</span><span class="o">=</span><span class="n">rays</span><span class="p">)</span>
+
+<span class="gp">In [9]: </span><span class="n">obs</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Vector</span><span class="o">.</span><span class="n">from_series</span><span class="p">(</span><span class="n">times</span><span class="p">,</span> <span class="n">block</span><span class="o">=</span><span class="s2">&quot;time&quot;</span><span class="p">)</span>
+
+<span class="gp">In [10]: </span><span class="n">obs</span><span class="o">.</span><span class="n">to_series</span><span class="p">()</span>
+<span class="gh">Out[10]: </span>
+<span class="go">block  ray</span>
+<span class="go">time   1      0.53</span>
+<span class="go">       2      0.76</span>
+<span class="go">       3      1.02</span>
+<span class="go">       4      0.25</span>
+<span class="go">       5      0.48</span>
+<span class="go">       6      0.80</span>
+<span class="go">dtype: float64</span>
+</pre></div>
+</div>
+<p>A vector is read-only, and <a class="reference internal" href="../reference/api/fips.Vector.to_series.html#fips.Vector.to_series" title="fips.Vector.to_series"><code class="xref py py-meth docutils literal notranslate"><span class="pre">to_series()</span></code></a> gives it back to
+pandas, with a <code class="docutils literal notranslate"><span class="pre">block</span></code> level first.</p>
+</section>
+<section id="the-forward-operator">
+<h2>The forward operator<a class="headerlink" href="#the-forward-operator" title="Link to this heading">#</a></h2>
+<p>The forward operator maps a state to the observations it would produce. In
+fips it is an <a class="reference internal" href="../reference/api/fips.Operator.html#fips.Operator" title="fips.Operator"><code class="xref py py-class docutils literal notranslate"><span class="pre">Operator</span></code></a>: a matrix with a space on each axis, the
+observations’ on its rows and the state’s on its columns. A labeled DataFrame
+becomes one with <a class="reference internal" href="../reference/api/fips.Operator.from_frame.html#fips.Operator.from_frame" title="fips.Operator.from_frame"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Operator.from_frame</span></code></a>, which
+names the block of each axis:</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [11]: </span><span class="n">lengths</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
+<span class="gp">   ....: </span>    <span class="p">[[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]],</span>
+<span class="gp">   ....: </span>    <span class="n">index</span><span class="o">=</span><span class="n">rays</span><span class="p">,</span>
+<span class="gp">   ....: </span>    <span class="n">columns</span><span class="o">=</span><span class="n">cells</span><span class="p">,</span>
+<span class="gp">   ....: </span>    <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span>
+<span class="gp">   ....: </span><span class="p">)</span>
+<span class="gp">   ....: </span>
+
+<span class="gp">In [12]: </span><span class="n">forward</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Operator</span><span class="o">.</span><span class="n">from_frame</span><span class="p">(</span><span class="n">lengths</span><span class="p">,</span> <span class="n">row_block</span><span class="o">=</span><span class="s2">&quot;time&quot;</span><span class="p">,</span> <span class="n">col_block</span><span class="o">=</span><span class="s2">&quot;slowness&quot;</span><span class="p">)</span>
+
+<span class="gp">In [13]: </span><span class="p">(</span><span class="n">forward</span> <span class="o">@</span> <span class="n">prior</span><span class="p">)</span><span class="o">.</span><span class="n">to_series</span><span class="p">()</span>
+<span class="gh">Out[13]: </span>
+<span class="go">block  ray</span>
+<span class="go">time   1      0.50</span>
+<span class="go">       2      0.75</span>
+<span class="go">       3      1.00</span>
+<span class="go">       4      0.25</span>
+<span class="go">       5      0.50</span>
+<span class="go">       6      0.75</span>
+<span class="go">dtype: float64</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">forward</span> <span class="pre">&#64;</span> <span class="pre">prior</span></code> is the travel times the prior predicts, a vector on the
+observations’ space. A product checks the labels it meets on: the columns of
+<code class="docutils literal notranslate"><span class="pre">forward</span></code> and the labels of <code class="docutils literal notranslate"><span class="pre">prior</span></code> must be the same, in any order.</p>
+</section>
+<section id="covariances">
+<h2>Covariances<a class="headerlink" href="#covariances" title="Link to this heading">#</a></h2>
+<p>A covariance says how far a vector may be off, and how its errors go
+together. Independent errors with one standard deviation are a diagonal, which
+<a class="reference internal" href="../reference/api/fips.Independent.html#fips.Independent" title="fips.Independent"><code class="xref py py-class docutils literal notranslate"><span class="pre">Independent</span></code></a> writes down. Errors that are alike for nearby
+cells are a correlation model times standard deviations: here
+<a class="reference internal" href="../reference/api/fips.Exponential.html#fips.Exponential" title="fips.Exponential"><code class="xref py py-class docutils literal notranslate"><span class="pre">Exponential</span></code></a> correlates two cells by their distance along <code class="docutils literal notranslate"><span class="pre">x</span></code>,
+over 1 km. <code class="docutils literal notranslate"><span class="pre">with_std</span></code> turns a correlation model into a covariance model:</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [14]: </span><span class="n">obs_cov</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Independent</span><span class="p">()</span><span class="o">.</span><span class="n">with_std</span><span class="p">(</span><span class="mf">0.01</span><span class="p">)</span>
+
+<span class="gp">In [15]: </span><span class="n">prior_cov</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Exponential</span><span class="p">(</span><span class="s2">&quot;x&quot;</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span><span class="o">.</span><span class="n">with_std</span><span class="p">(</span><span class="mf">0.05</span><span class="p">)</span>
+
+<span class="gp">In [16]: </span><span class="n">prior_cov</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">prior</span><span class="o">.</span><span class="n">space</span><span class="p">)</span><span class="o">.</span><span class="n">dense</span><span class="p">()</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+<span class="gh">Out[16]: </span>
+<span class="go">array([[0.0025 , 0.00092, 0.00034, 0.00012],</span>
+<span class="go">       [0.00092, 0.0025 , 0.00092, 0.00034],</span>
+<span class="go">       [0.00034, 0.00092, 0.0025 , 0.00092],</span>
+<span class="go">       [0.00012, 0.00034, 0.00092, 0.0025 ]])</span>
+</pre></div>
+</div>
+<p>A covariance model is a covariance waiting for its labels: <code class="docutils literal notranslate"><span class="pre">build</span></code> puts it on
+a space and gives a <a class="reference internal" href="../reference/api/fips.Covariance.html#fips.Covariance" title="fips.Covariance"><code class="xref py py-class docutils literal notranslate"><span class="pre">Covariance</span></code></a>. You rarely call it yourself,
+since a problem builds its covariance models on the prior’s and the
+observations’ spaces. <a class="reference internal" href="../user_guide/index.html#covariance-models"><span class="std std-ref">Covariance models</span></a> in the User Guide has the other
+kernels, Kronecker products and correlations within groups.</p>
+</section>
+<section id="the-problem">
+<h2>The problem<a class="headerlink" href="#the-problem" title="Link to this heading">#</a></h2>
+<p>A <a class="reference internal" href="../reference/api/fips.Problem.html#fips.Problem" title="fips.Problem"><code class="xref py py-class docutils literal notranslate"><span class="pre">Problem</span></code></a> puts the inputs together and checks their labels once:
+the forward operator, the covariances and the offset must have exactly the
+labels of the observations or of the prior, in any order:</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [17]: </span><span class="n">problem</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Problem</span><span class="p">(</span>
+<span class="gp">   ....: </span>    <span class="n">prior</span><span class="o">=</span><span class="n">prior</span><span class="p">,</span> <span class="n">prior_cov</span><span class="o">=</span><span class="n">prior_cov</span><span class="p">,</span> <span class="n">obs</span><span class="o">=</span><span class="n">obs</span><span class="p">,</span> <span class="n">obs_cov</span><span class="o">=</span><span class="n">obs_cov</span><span class="p">,</span> <span class="n">forward</span><span class="o">=</span><span class="n">forward</span>
+<span class="gp">   ....: </span><span class="p">)</span>
+<span class="gp">   ....: </span>
+
+<span class="gp">In [18]: </span><span class="n">problem</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">problem</span><span class="o">.</span><span class="n">prior</span><span class="p">)</span><span class="o">.</span><span class="n">to_series</span><span class="p">()</span>
+<span class="gh">Out[18]: </span>
+<span class="go">block  ray</span>
+<span class="go">time   1      0.50</span>
+<span class="go">       2      0.75</span>
+<span class="go">       3      1.00</span>
+<span class="go">       4      0.25</span>
+<span class="go">       5      0.50</span>
+<span class="go">       6      0.75</span>
+<span class="go">dtype: float64</span>
+</pre></div>
+</div>
+<p><a class="reference internal" href="../reference/api/fips.Problem.predict.html#fips.Problem.predict" title="fips.Problem.predict"><code class="xref py py-meth docutils literal notranslate"><span class="pre">predict()</span></code></a> is <span class="math notranslate nohighlight">\(H x + c\)</span> for any state. A label on one
+side only is an error that names it, so a typo or a missing row cannot be
+filled in silently:</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [19]: </span><span class="n">five_rays</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Operator</span><span class="o">.</span><span class="n">from_frame</span><span class="p">(</span><span class="n">lengths</span><span class="o">.</span><span class="n">iloc</span><span class="p">[:</span><span class="mi">5</span><span class="p">],</span> <span class="n">row_block</span><span class="o">=</span><span class="s2">&quot;time&quot;</span><span class="p">,</span> <span class="n">col_block</span><span class="o">=</span><span class="s2">&quot;slowness&quot;</span><span class="p">)</span>
+
+<span class="gp">In [20]: </span><span class="k">try</span><span class="p">:</span>
+<span class="gp">   ....: </span>    <span class="n">fips</span><span class="o">.</span><span class="n">Problem</span><span class="p">(</span><span class="n">prior</span><span class="p">,</span> <span class="n">prior_cov</span><span class="p">,</span> <span class="n">obs</span><span class="p">,</span> <span class="n">obs_cov</span><span class="p">,</span> <span class="n">five_rays</span><span class="p">)</span>
+<span class="gp">   ....: </span><span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
+<span class="gp">   ....: </span>    <span class="nb">print</span><span class="p">(</span><span class="n">error</span><span class="p">)</span>
+<span class="gp">   ....: </span>
+<span class="go">The rows of forward and the observations do not have the same labels: labels of block &#39;time&#39; missing from the rows of forward: 6.</span>
+</pre></div>
+</div>
+</section>
+<section id="solving">
+<h2>Solving<a class="headerlink" href="#solving" title="Link to this heading">#</a></h2>
+<p><a class="reference internal" href="../reference/api/fips.solve.html#fips.solve" title="fips.solve"><code class="xref py py-func docutils literal notranslate"><span class="pre">fips.solve()</span></code></a> solves the problem and returns its
+<a class="reference internal" href="../reference/api/fips.Posterior.html#fips.Posterior" title="fips.Posterior"><code class="xref py py-class docutils literal notranslate"><span class="pre">Posterior</span></code></a>; the problem itself is not changed. The posterior has
+the estimate, on the prior’s labels, and its uncertainty:</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [21]: </span><span class="n">post</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">problem</span><span class="p">)</span>
+
+<span class="gp">In [22]: </span><span class="n">post</span><span class="o">.</span><span class="n">estimate</span><span class="o">.</span><span class="n">to_series</span><span class="p">()</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="gh">Out[22]: </span>
+<span class="go">block     x  </span>
+<span class="go">slowness  0.5    0.223</span>
+<span class="go">          1.5    0.308</span>
+<span class="go">          2.5    0.234</span>
+<span class="go">          3.5    0.252</span>
+<span class="go">Name: estimate, dtype: float64</span>
+
+<span class="gp">In [23]: </span><span class="n">post</span><span class="o">.</span><span class="n">variances</span><span class="o">.</span><span class="n">to_series</span><span class="p">()</span><span class="o">.</span><span class="n">pow</span><span class="p">(</span><span class="mf">0.5</span><span class="p">)</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
+<span class="gh">Out[23]: </span>
+<span class="go">block     x  </span>
+<span class="go">slowness  0.5    0.0113</span>
+<span class="go">          1.5    0.0117</span>
+<span class="go">          2.5    0.0095</span>
+<span class="go">          3.5    0.0076</span>
+<span class="go">Name: variance, dtype: float64</span>
+
+<span class="gp">In [24]: </span><span class="n">post</span><span class="o">.</span><span class="n">cov</span><span class="p">()</span><span class="o">.</span><span class="n">to_frame</span><span class="p">()</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">6</span><span class="p">)</span>
+<span class="gh">Out[24]: </span>
+<span class="go">block         slowness                              </span>
+<span class="go">x                  0.5       1.5       2.5       3.5</span>
+<span class="go">block    x                                          </span>
+<span class="go">slowness 0.5  0.000129 -0.000102 -0.000004  0.000022</span>
+<span class="go">         1.5 -0.000102  0.000136 -0.000041 -0.000012</span>
+<span class="go">         2.5 -0.000004 -0.000041  0.000090 -0.000045</span>
+<span class="go">         3.5  0.000022 -0.000012 -0.000045  0.000058</span>
+</pre></div>
+</div>
+<p>Nothing larger than the observations is formed until you ask for it: the
+estimate and the variances come from a factorization of an <span class="math notranslate nohighlight">\(m \times m\)</span>
+matrix, and <code class="docutils literal notranslate"><span class="pre">post.cov()</span></code> forms the <span class="math notranslate nohighlight">\(n \times n\)</span> covariance only when it
+is read. The diagnostics of the solve are attributes, and
+<a class="reference internal" href="../reference/api/fips.Posterior.summary.html#fips.Posterior.summary" title="fips.Posterior.summary"><code class="xref py py-meth docutils literal notranslate"><span class="pre">summary()</span></code></a> gives them as one row:</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [25]: </span><span class="n">post</span><span class="o">.</span><span class="n">dofs</span>
+<span class="gh">Out[25]: </span><span class="go">3.730423119548721</span>
+
+<span class="gp">In [26]: </span><span class="n">post</span><span class="o">.</span><span class="n">reduced_chi2</span>
+<span class="gh">Out[26]: </span><span class="go">0.7008648058617578</span>
+
+<span class="gp">In [27]: </span><span class="n">post</span><span class="o">.</span><span class="n">summary</span><span class="p">()</span>
+<span class="gh">Out[27]: </span>
+<span class="go">   gamma  n_state  n_obs  ...        r2      rmse  uncertainty_reduction</span>
+<span class="go">0    1.0        4      6  ...  0.999798  0.004321                0.79668</span>
+
+<span class="go">[1 rows x 9 columns]</span>
+</pre></div>
+</div>
+<p>The method is <code class="docutils literal notranslate"><span class="pre">&quot;analytic&quot;</span></code> by default, and its one option is the
+regularization factor <code class="docutils literal notranslate"><span class="pre">gamma</span></code> (the solve uses <span class="math notranslate nohighlight">\(S_z / \gamma\)</span>).
+<a class="reference internal" href="../reference/api/fips.Posterior.with_gamma.html#fips.Posterior.with_gamma" title="fips.Posterior.with_gamma"><code class="xref py py-meth docutils literal notranslate"><span class="pre">with_gamma()</span></code></a> gives another gamma’s posterior from the same
+factorization, without solving again:</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [28]: </span><span class="n">fips</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="n">gamma</span><span class="o">=</span><span class="mf">4.0</span><span class="p">)</span><span class="o">.</span><span class="n">options</span>
+<span class="gh">Out[28]: </span><span class="go">AnalyticOptions(gamma=4.0)</span>
+
+<span class="gp">In [29]: </span><span class="n">post</span><span class="o">.</span><span class="n">with_gamma</span><span class="p">(</span><span class="mf">4.0</span><span class="p">)</span><span class="o">.</span><span class="n">dofs</span>
+<span class="gh">Out[29]: </span><span class="go">3.924866834535852</span>
+</pre></div>
+</div>
+</section>
+<section id="a-second-block">
+<h2>A second block<a class="headerlink" href="#a-second-block" title="Link to this heading">#</a></h2>
+<p>The rays were timed by two instruments whose clocks may each be off by a
+delay. The delays are unknown too, so they are a second block of the state.
+<a class="reference internal" href="../reference/api/fips.Vector.from_blocks.html#fips.Vector.from_blocks" title="fips.Vector.from_blocks"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Vector.from_blocks</span></code></a> puts blocks together, each
+with its own labels:</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [30]: </span><span class="n">instruments</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">([</span><span class="s2">&quot;east&quot;</span><span class="p">,</span> <span class="s2">&quot;west&quot;</span><span class="p">],</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;instrument&quot;</span><span class="p">)</span>
+
+<span class="gp">In [31]: </span><span class="n">prior2</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Vector</span><span class="o">.</span><span class="n">from_blocks</span><span class="p">(</span>
+<span class="gp">   ....: </span>    <span class="p">{</span><span class="s2">&quot;slowness&quot;</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="mf">0.25</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">cells</span><span class="p">),</span> <span class="s2">&quot;delay&quot;</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">instruments</span><span class="p">)}</span>
+<span class="gp">   ....: </span><span class="p">)</span>
+<span class="gp">   ....: </span>
+
+<span class="gp">In [32]: </span><span class="n">prior2</span><span class="o">.</span><span class="n">space</span>
+<span class="gh">Out[32]: </span><span class="go">Space(slowness: 4 x [&#39;x&#39;], delay: 2 x [&#39;instrument&#39;])</span>
+</pre></div>
+</div>
+<p>The forward operator is built from its blocks, each named by the observation
+block it maps to and the state block it maps from, and placed on the spaces by
+its labels (<a class="reference internal" href="../reference/api/fips.Operator.from_blocks.html#fips.Operator.from_blocks" title="fips.Operator.from_blocks"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Operator.from_blocks</span></code></a>); a pair
+of blocks left out is zero. Rays 1 to 3 were timed east, 4 to 6 west:</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [33]: </span><span class="n">timer</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
+<span class="gp">   ....: </span>    <span class="p">[[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]],</span>
+<span class="gp">   ....: </span>    <span class="n">index</span><span class="o">=</span><span class="n">rays</span><span class="p">,</span>
+<span class="gp">   ....: </span>    <span class="n">columns</span><span class="o">=</span><span class="n">instruments</span><span class="p">,</span>
+<span class="gp">   ....: </span>    <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span>
+<span class="gp">   ....: </span><span class="p">)</span>
+<span class="gp">   ....: </span>
+
+<span class="gp">In [34]: </span><span class="n">forward2</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Operator</span><span class="o">.</span><span class="n">from_blocks</span><span class="p">(</span>
+<span class="gp">   ....: </span>    <span class="p">{(</span><span class="s2">&quot;time&quot;</span><span class="p">,</span> <span class="s2">&quot;slowness&quot;</span><span class="p">):</span> <span class="n">lengths</span><span class="p">,</span> <span class="p">(</span><span class="s2">&quot;time&quot;</span><span class="p">,</span> <span class="s2">&quot;delay&quot;</span><span class="p">):</span> <span class="n">timer</span><span class="p">},</span>
+<span class="gp">   ....: </span>    <span class="n">rows</span><span class="o">=</span><span class="n">obs</span><span class="o">.</span><span class="n">space</span><span class="p">,</span>
+<span class="gp">   ....: </span>    <span class="n">cols</span><span class="o">=</span><span class="n">prior2</span><span class="o">.</span><span class="n">space</span><span class="p">,</span>
+<span class="gp">   ....: </span><span class="p">)</span>
+<span class="gp">   ....: </span>
+</pre></div>
+</div>
+<p>The prior covariance has a part for each block, independent of each other:
+<a class="reference internal" href="../reference/api/fips.Covariance.block_diag.html#fips.Covariance.block_diag" title="fips.Covariance.block_diag"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Covariance.block_diag</span></code></a> takes them by block
+name:</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [35]: </span><span class="n">prior_cov2</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Covariance</span><span class="o">.</span><span class="n">block_diag</span><span class="p">(</span>
+<span class="gp">   ....: </span>    <span class="n">slowness</span><span class="o">=</span><span class="n">fips</span><span class="o">.</span><span class="n">Exponential</span><span class="p">(</span><span class="s2">&quot;x&quot;</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span><span class="o">.</span><span class="n">with_std</span><span class="p">(</span><span class="mf">0.05</span><span class="p">),</span>
+<span class="gp">   ....: </span>    <span class="n">delay</span><span class="o">=</span><span class="n">fips</span><span class="o">.</span><span class="n">Independent</span><span class="p">()</span><span class="o">.</span><span class="n">with_std</span><span class="p">(</span><span class="mf">0.02</span><span class="p">),</span>
+<span class="gp">   ....: </span><span class="p">)</span>
+<span class="gp">   ....: </span>
+
+<span class="gp">In [36]: </span><span class="n">post2</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">fips</span><span class="o">.</span><span class="n">Problem</span><span class="p">(</span><span class="n">prior2</span><span class="p">,</span> <span class="n">prior_cov2</span><span class="p">,</span> <span class="n">obs</span><span class="p">,</span> <span class="n">obs_cov</span><span class="p">,</span> <span class="n">forward2</span><span class="p">))</span>
+
+<span class="gp">In [37]: </span><span class="n">post2</span><span class="o">.</span><span class="n">estimate</span><span class="p">[</span><span class="s2">&quot;delay&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">to_series</span><span class="p">()</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="gh">Out[37]: </span>
+<span class="go">block  instrument</span>
+<span class="go">delay  east         -0.008</span>
+<span class="go">       west         -0.004</span>
+<span class="go">Name: estimate, dtype: float64</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">post2.estimate[&quot;delay&quot;]</span></code> reads one block by name, as a vector of its own.</p>
+</section>
+<section id="the-posterior-of-a-total">
+<h2>The posterior of a total<a class="headerlink" href="#the-posterior-of-a-total" title="Link to this heading">#</a></h2>
+<p>Often the question is about an aggregate of the state: the mean slowness of
+each half of the line, a regional total, a monthly mean. An aggregation
+<span class="math notranslate nohighlight">\(W\)</span> (<code class="xref py py-mod docutils literal notranslate"><span class="pre">fips.aggregate</span></code>) groups the labels of a space;
+<code class="docutils literal notranslate"><span class="pre">post.cov(W)</span></code> is the posterior covariance of the aggregates, computed without
+the full covariance:</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [38]: </span><span class="n">halves</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">([</span><span class="s2">&quot;near&quot;</span><span class="p">,</span> <span class="s2">&quot;near&quot;</span><span class="p">,</span> <span class="s2">&quot;far&quot;</span><span class="p">,</span> <span class="s2">&quot;far&quot;</span><span class="p">],</span> <span class="n">index</span><span class="o">=</span><span class="n">cells</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;half&quot;</span><span class="p">)</span>
+
+<span class="gp">In [39]: </span><span class="n">W</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">aggregate</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">prior2</span><span class="o">.</span><span class="n">space</span><span class="p">,</span> <span class="n">by</span><span class="o">=</span><span class="n">halves</span><span class="p">,</span> <span class="n">blocks</span><span class="o">=</span><span class="s2">&quot;slowness&quot;</span><span class="p">)</span>
+
+<span class="gp">In [40]: </span><span class="p">(</span><span class="n">W</span> <span class="o">@</span> <span class="n">post2</span><span class="o">.</span><span class="n">estimate</span><span class="p">)</span><span class="o">.</span><span class="n">to_series</span><span class="p">()</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="gh">Out[40]: </span>
+<span class="go">block     half  instrument</span>
+<span class="go">slowness  far   nan           0.244</span>
+<span class="go">          near  nan           0.269</span>
+<span class="go">delay     nan   east         -0.008</span>
+<span class="go">                west         -0.004</span>
+<span class="go">dtype: float64</span>
+
+<span class="gp">In [41]: </span><span class="n">post2</span><span class="o">.</span><span class="n">cov</span><span class="p">(</span><span class="n">W</span><span class="p">)[</span><span class="s2">&quot;slowness&quot;</span><span class="p">,</span> <span class="s2">&quot;slowness&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">to_frame</span><span class="p">()</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">6</span><span class="p">)</span>
+<span class="gh">Out[41]: </span>
+<span class="go">block          slowness          </span>
+<span class="go">half                far      near</span>
+<span class="go">block    half                    </span>
+<span class="go">slowness far   0.000033 -0.000015</span>
+<span class="go">         near -0.000015  0.000101</span>
+</pre></div>
+</div>
+</section>
+<section id="plotting">
+<h2>Plotting<a class="headerlink" href="#plotting" title="Link to this heading">#</a></h2>
+<p>fips draws one plot, <a class="reference internal" href="../reference/api/fips.visualization.plot_comparison.html#fips.visualization.plot_comparison" title="fips.visualization.plot_comparison"><code class="xref py py-func docutils literal notranslate"><span class="pre">plot_comparison()</span></code></a> (it needs the
+<code class="docutils literal notranslate"><span class="pre">viz</span></code> extra): several vectors on one axes, with a band of one standard
+deviation from each covariance. Anything else is drawn from
+<a class="reference internal" href="../reference/api/fips.Vector.to_series.html#fips.Vector.to_series" title="fips.Vector.to_series"><code class="xref py py-meth docutils literal notranslate"><span class="pre">to_series()</span></code></a> or <a class="reference internal" href="../reference/api/fips.Vector.to_xarray.html#fips.Vector.to_xarray" title="fips.Vector.to_xarray"><code class="xref py py-meth docutils literal notranslate"><span class="pre">to_xarray()</span></code></a> with pandas or
+xarray.</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [42]: </span><span class="kn">from</span><span class="w"> </span><span class="nn">fips.visualization</span><span class="w"> </span><span class="kn">import</span> <span class="n">plot_comparison</span>
+
+<span class="gp">In [43]: </span><span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plot_comparison</span><span class="p">(</span>
+<span class="gp">   ....: </span>    <span class="n">problem</span><span class="o">.</span><span class="n">prior</span><span class="p">,</span>
+<span class="gp">   ....: </span>    <span class="n">post</span><span class="o">.</span><span class="n">estimate</span><span class="p">,</span>
+<span class="gp">   ....: </span>    <span class="n">errors</span><span class="o">=</span><span class="p">[</span><span class="n">problem</span><span class="o">.</span><span class="n">prior_cov</span><span class="p">,</span> <span class="n">post</span><span class="o">.</span><span class="n">cov</span><span class="p">()],</span>
+<span class="gp">   ....: </span><span class="p">)</span>
+<span class="gp">   ....: </span>
+</pre></div>
+</div>
+<a class="reference internal image-reference" href="../_images/getting_started_comparison.png"><img alt="../_images/getting_started_comparison.png" src="../_images/getting_started_comparison.png" style="width: 5in;" />
+</a>
+</section>
+<section id="what-s-next">
+<h2>What’s next<a class="headerlink" href="#what-s-next" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="../user_guide/index.html"><span class="doc">User Guide</span></a>, the User Guide: each object in more depth, covariance models,
+sparse matrices, offsets, aggregated observations, part of the state held at
+its prior, and repeated inversions.</p></li>
+<li><p><a class="reference internal" href="../user_guide/examples/index.html"><span class="doc">Examples</span></a>: two worked problems, gravity and a regional flux
+inversion.</p></li>
+<li><p><a class="reference internal" href="../reference/index.html"><span class="doc">API Reference</span></a>: every class, function and attribute.</p></li>
+</ul>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="installation.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Installation</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="terminology.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Terminology</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id1">A first problem</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#labels-and-vectors">Labels and vectors</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-forward-operator">The forward operator</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#covariances">Covariances</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-problem">The problem</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#solving">Solving</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#a-second-block">A second block</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-posterior-of-a-total">The posterior of a total</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#plotting">Plotting</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#what-s-next">What’s next</a></li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+
+  <div class="tocsection sourcelink">
+    <a href="../_sources/getting_started/first_problem.rst.txt">
+      <i class="fa-solid fa-file-lines"></i> Show Source
+    </a>
+  </div>
+</div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0"></script>
+<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2025-2026, James Mineau.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.1.0.
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.22.0.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

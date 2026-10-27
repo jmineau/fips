@@ -1,0 +1,6 @@
+fips.Operator.name
+==================
+
+.. currentmodule:: fips
+
+.. autoproperty:: Operator.name

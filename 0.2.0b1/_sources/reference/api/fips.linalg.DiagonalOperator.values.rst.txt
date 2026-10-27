@@ -1,0 +1,6 @@
+fips.linalg.DiagonalOperator.values
+===================================
+
+.. currentmodule:: fips.linalg
+
+.. autoattribute:: DiagonalOperator.values

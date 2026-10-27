@@ -1,0 +1,1002 @@
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Gravity: density below the surface &#8212; fips 0.2.0b1 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=64cc4de3f052d77215f0" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=64cc4de3f052d77215f0" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../_static/plot_directive.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../_static/custom.css?v=4b8357b6" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="../../_static/scripts/fontawesome.js?digest=64cc4de3f052d77215f0"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0" />
+
+    <script src="../../_static/documentation_options.js?v=3804d0ff"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'user_guide/examples/gravity_2d';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.22.0';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://jmineau.github.io/fips/switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.2.0b1';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner =
+            true;
+        </script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="A regional flux inversion" href="flux_regional.html" />
+    <link rel="prev" title="Examples" href="index.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.2" />
+  
+    
+    <script src="../../_static/searchtools.js"></script>
+    <script src="../../_static/language_data.js"></script>
+    <script src="../../searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button type="button" class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class=" navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b1 documentation - Home"/>
+    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b1 documentation - Home"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class=" navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../getting_started/index.html">
+    Getting Started
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../reference/index.html">
+    API Reference
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+      
+        <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/jmineau/fips" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button type="button" class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../getting_started/index.html">
+    Getting Started
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="../index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../reference/index.html">
+    API Reference
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-3"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-3"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-3"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-3">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+        
+          <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/jmineau/fips" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item pst-sidebar-collapse"><button type="button" id="pst-collapse-sidebar-button" aria-expanded="true" aria-controls="pst-primary-sidebar">
+  <svg class="pst-icon" role="img" aria-hidden="true" focusable="false" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+    <path fill="currentColor" d="M3 15.5C2.36232 15.5 1.74874 15.2564 1.28478 14.8189C0.820828 14.3815 0.541576 13.7832 0.504167 13.1467L0.5 13L0.5 3C0.499965 2.36232 0.743605 1.74874 1.18107 1.28478C1.61854 0.820828 2.21676 0.541576 2.85333 0.504167L3 0.5L13 0.5C13.6377 0.499965 14.2513 0.743605 14.7152 1.18107C15.1792 1.61854 15.4584 2.21676 15.4958 2.85333L15.5 3L15.5 13C15.5 13.6377 15.2564 14.2513 14.8189 14.7152C14.3815 15.1792 13.7832 15.4584 13.1467 15.4958L13 15.5L3 15.5ZM3 13.8333L10.5 13.8333L10.5 2.16667L3 2.16667C2.79589 2.16669 2.59889 2.24163 2.44636 2.37726C2.29383 2.5129 2.19638 2.69979 2.1725 2.9025L2.16667 3L2.16667 13C2.16669 13.2041 2.24163 13.4011 2.37726 13.5536C2.5129 13.7062 2.69979 13.8036 2.9025 13.8275L3 13.8333ZM6.65583 10.325L6.5775 10.2558L4.91083 8.58917C4.76735 8.44567 4.68116 8.25476 4.66843 8.05223C4.65569 7.84971 4.71729 7.6495 4.84167 7.48917L4.91083 7.41083L6.5775 5.74417C6.72747 5.59471 6.9287 5.50794 7.14032 5.50148C7.35194 5.49502 7.55809 5.56935 7.7169 5.70937C7.8757 5.8494 7.97525 6.04463 7.99533 6.25539C8.01541 6.46616 7.95451 6.67667 7.825 6.84417L7.75583 6.9225L6.67917 8L7.75583 9.0775C7.89931 9.22099 7.98551 9.41191 7.99824 9.61443C8.01097 9.81695 7.94938 10.0172 7.825 10.1775L7.75583 10.2558C7.61234 10.3993 7.42142 10.4855 7.2189 10.4982C7.01638 10.511 6.81617 10.4494 6.65583 10.325Z"/>
+  </svg>
+  <span class="pst-collapse-sidebar-label">Collapse Sidebar</span>
+  <span class="pst-expand-sidebar-label">Expand Sidebar</span>
+</button></div>
+        <div class="sidebar-primary-item">
+
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="index.html">Examples</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2 current active"><a aria-current="page" class="current reference internal" href="#">Gravity: density below the surface</a></li>
+<li class="toctree-l2"><a class="reference internal" href="flux_regional.html">A regional flux inversion</a></li>
+</ul>
+</details></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../index.html" class="nav-link">User Guide</a></li>
+    
+    
+    <li class="breadcrumb-item"><a href="index.html" class="nav-link">Examples</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Gravity: density below the surface</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section class="tex2jax_ignore mathjax_ignore" id="gravity-density-below-the-surface">
+<h1>Gravity: density below the surface<a class="headerlink" href="#gravity-density-below-the-surface" title="Link to this heading">#</a></h1>
+<p>Gravity measured along a line at the surface depends on how dense the ground
+is below it. This notebook finds the density anomaly of 40 buried prisms (a
+10 x 4 grid, 1000 m across and 25 to 250 m deep) from the vertical gravity
+measured at 41 points above them.</p>
+<p>In the words of the <a class="reference internal" href="../../getting_started/terminology.html"><span class="std std-doc">terminology</span></a>:</p>
+<ul class="simple">
+<li><p>the <strong>state</strong> is the density anomaly of each prism (g/cm³);</p></li>
+<li><p>the <strong>observations</strong> are the gravity anomalies at the surface (mGal);</p></li>
+<li><p>the <strong>forward operator</strong> is Newton’s law for a rectangular prism: the
+gravity at each point from a unit density in each prism;</p></li>
+<li><p>the <strong>prior</strong> is no anomaly anywhere, with a <strong>prior covariance</strong> that makes
+neighboring prisms alike, and the <strong>observation covariance</strong> says the
+measurements are good to 1% of the largest signal.</p></li>
+</ul>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">fips</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fips.visualization</span><span class="w"> </span><span class="kn">import</span> <span class="n">plot_comparison</span>
+</pre></div>
+</div>
+</div>
+</div>
+<section id="the-data-and-the-geometry">
+<h2>The data and the geometry<a class="headerlink" href="#the-data-and-the-geometry" title="Link to this heading">#</a></h2>
+<p>The observed gravity anomalies, and where the prisms are.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">gravity</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+    <span class="p">[</span>
+        <span class="mf">6.5112333e-03</span><span class="p">,</span>
+        <span class="mf">7.1144759e-03</span><span class="p">,</span>
+        <span class="mf">7.8050213e-03</span><span class="p">,</span>
+        <span class="mf">8.6004187e-03</span><span class="p">,</span>
+        <span class="mf">9.5228049e-03</span><span class="p">,</span>
+        <span class="mf">1.0600394e-02</span><span class="p">,</span>
+        <span class="mf">1.1869543e-02</span><span class="p">,</span>
+        <span class="mf">1.3377636e-02</span><span class="p">,</span>
+        <span class="mf">1.5187140e-02</span><span class="p">,</span>
+        <span class="mf">1.7381291e-02</span><span class="p">,</span>
+        <span class="mf">2.0071869e-02</span><span class="p">,</span>
+        <span class="mf">2.3409173e-02</span><span class="p">,</span>
+        <span class="mf">2.7592423e-02</span><span class="p">,</span>
+        <span class="mf">3.2872699e-02</span><span class="p">,</span>
+        <span class="mf">3.9524661e-02</span><span class="p">,</span>
+        <span class="mf">4.7739666e-02</span><span class="p">,</span>
+        <span class="mf">5.7427097e-02</span><span class="p">,</span>
+        <span class="mf">6.8126652e-02</span><span class="p">,</span>
+        <span class="mf">7.9261565e-02</span><span class="p">,</span>
+        <span class="mf">9.0330964e-02</span><span class="p">,</span>
+        <span class="mf">1.0070638e-01</span><span class="p">,</span>
+        <span class="mf">1.0950167e-01</span><span class="p">,</span>
+        <span class="mf">1.1588202e-01</span><span class="p">,</span>
+        <span class="mf">1.1936106e-01</span><span class="p">,</span>
+        <span class="mf">1.1961197e-01</span><span class="p">,</span>
+        <span class="mf">1.1617789e-01</span><span class="p">,</span>
+        <span class="mf">1.0868957e-01</span><span class="p">,</span>
+        <span class="mf">9.7370419e-02</span><span class="p">,</span>
+        <span class="mf">8.3429883e-02</span><span class="p">,</span>
+        <span class="mf">6.9002570e-02</span><span class="p">,</span>
+        <span class="mf">5.6079733e-02</span><span class="p">,</span>
+        <span class="mf">4.5525921e-02</span><span class="p">,</span>
+        <span class="mf">3.7267881e-02</span><span class="p">,</span>
+        <span class="mf">3.0880404e-02</span><span class="p">,</span>
+        <span class="mf">2.5919366e-02</span><span class="p">,</span>
+        <span class="mf">2.2024198e-02</span><span class="p">,</span>
+        <span class="mf">1.8925481e-02</span><span class="p">,</span>
+        <span class="mf">1.6427182e-02</span><span class="p">,</span>
+        <span class="mf">1.4387142e-02</span><span class="p">,</span>
+        <span class="mf">1.2701558e-02</span><span class="p">,</span>
+        <span class="mf">1.1293783e-02</span><span class="p">,</span>
+    <span class="p">]</span>
+<span class="p">)</span>  <span class="c1"># mGal</span>
+<span class="n">stations</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1000</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">gravity</span><span class="p">))</span>  <span class="c1"># where gravity was measured, m</span>
+
+<span class="n">x_edges</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1000</span><span class="p">,</span> <span class="mi">11</span><span class="p">)</span>  <span class="c1"># the prisms&#39; edges across, m</span>
+<span class="n">depth_edges</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">25</span><span class="p">,</span> <span class="mi">250</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>  <span class="c1"># and down, m</span>
+<span class="n">x_centers</span> <span class="o">=</span> <span class="p">(</span><span class="n">x_edges</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">x_edges</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span> <span class="o">/</span> <span class="mi">2</span>
+<span class="n">depth_centers</span> <span class="o">=</span> <span class="p">(</span><span class="n">depth_edges</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">depth_edges</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span> <span class="o">/</span> <span class="mi">2</span>
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="labels-and-vectors">
+<h2>Labels and vectors<a class="headerlink" href="#labels-and-vectors" title="Link to this heading">#</a></h2>
+<p>fips keeps a label beside every number. Each prism is labeled by where it is,
+its <code class="docutils literal notranslate"><span class="pre">x</span></code> and its <code class="docutils literal notranslate"><span class="pre">depth</span></code>; each observation by its <code class="docutils literal notranslate"><span class="pre">x</span></code>. A <code class="docutils literal notranslate"><span class="pre">Vector</span></code> is values on
+such labels: the prior is no anomaly in any prism, in a block named
+<code class="docutils literal notranslate"><span class="pre">density</span></code>, and the observations are a block named <code class="docutils literal notranslate"><span class="pre">gravity</span></code>.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">prisms</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">MultiIndex</span><span class="o">.</span><span class="n">from_product</span><span class="p">([</span><span class="n">x_centers</span><span class="p">,</span> <span class="n">depth_centers</span><span class="p">],</span> <span class="n">names</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;x&quot;</span><span class="p">,</span> <span class="s2">&quot;depth&quot;</span><span class="p">])</span>
+<span class="n">prior</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Vector</span><span class="o">.</span><span class="n">from_series</span><span class="p">(</span>
+    <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">prisms</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;prior&quot;</span><span class="p">),</span> <span class="n">block</span><span class="o">=</span><span class="s2">&quot;density&quot;</span>
+<span class="p">)</span>
+
+<span class="n">points</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">(</span><span class="n">stations</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;x&quot;</span><span class="p">)</span>
+<span class="n">obs</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Vector</span><span class="o">.</span><span class="n">from_series</span><span class="p">(</span>
+    <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">gravity</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">points</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;observed&quot;</span><span class="p">),</span> <span class="n">block</span><span class="o">=</span><span class="s2">&quot;gravity&quot;</span>
+<span class="p">)</span>
+<span class="n">prior</span><span class="o">.</span><span class="n">space</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Space(density: 40 x [&#39;x&#39;, &#39;depth&#39;])
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="the-forward-operator">
+<h2>The forward operator<a class="headerlink" href="#the-forward-operator" title="Link to this heading">#</a></h2>
+<p>The gravity of a rectangular prism of unit density has a closed form. The
+matrix has one row per observation and one column per prism, in the order of
+the labels above (<code class="docutils literal notranslate"><span class="pre">x</span></code> outer, <code class="docutils literal notranslate"><span class="pre">depth</span></code> inner), so <code class="docutils literal notranslate"><span class="pre">fips.Operator</span></code> puts the
+observations’ labels on its rows and the prisms’ on its columns.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">G</span> <span class="o">=</span> <span class="mf">6.67e-4</span>  <span class="c1"># the gravitational constant, in units that give mGal</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">prism_integral</span><span class="p">(</span><span class="n">dx</span><span class="p">,</span> <span class="n">dz</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the indefinite integral of the vertical gravity of a 2D prism.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">dz</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">arctan</span><span class="p">(</span><span class="n">dx</span> <span class="o">/</span> <span class="n">dz</span><span class="p">)</span> <span class="o">+</span> <span class="n">dx</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">dz</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">dx</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">prism_gravity</span><span class="p">(</span><span class="n">stations</span><span class="p">,</span> <span class="n">x_edges</span><span class="p">,</span> <span class="n">depth_edges</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the gravity at each station of a unit density in each prism (stations x prisms).&quot;&quot;&quot;</span>
+    <span class="n">columns</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">x1</span><span class="p">,</span> <span class="n">x2</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">x_edges</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">x_edges</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span> <span class="n">strict</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">z1</span><span class="p">,</span> <span class="n">z2</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">depth_edges</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">depth_edges</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span> <span class="n">strict</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+            <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="n">x1</span> <span class="o">-</span> <span class="n">stations</span><span class="p">,</span> <span class="n">x2</span> <span class="o">-</span> <span class="n">stations</span>
+            <span class="n">columns</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="mi">2</span>
+                <span class="o">*</span> <span class="n">G</span>
+                <span class="o">*</span> <span class="p">(</span>
+                    <span class="n">prism_integral</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">z2</span><span class="p">)</span>
+                    <span class="o">-</span> <span class="n">prism_integral</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">z1</span><span class="p">)</span>
+                    <span class="o">-</span> <span class="n">prism_integral</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">z2</span><span class="p">)</span>
+                    <span class="o">+</span> <span class="n">prism_integral</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">z1</span><span class="p">)</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">column_stack</span><span class="p">(</span><span class="n">columns</span><span class="p">)</span>
+
+
+<span class="n">forward</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Operator</span><span class="p">(</span>
+    <span class="n">prism_gravity</span><span class="p">(</span><span class="n">stations</span><span class="p">,</span> <span class="n">x_edges</span><span class="p">,</span> <span class="n">depth_edges</span><span class="p">),</span> <span class="n">obs</span><span class="o">.</span><span class="n">space</span><span class="p">,</span> <span class="n">prior</span><span class="o">.</span><span class="n">space</span>
+<span class="p">)</span>
+<span class="n">forward</span><span class="o">.</span><span class="n">shape</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>(41, 40)
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="the-covariances">
+<h2>The covariances<a class="headerlink" href="#the-covariances" title="Link to this heading">#</a></h2>
+<p>Neighboring prisms should be alike: the prior covariance correlates two prisms
+by their distance across (over 200 m) and in depth (over 100 m), with a
+standard deviation of 0.5 g/cm³. It is a <code class="docutils literal notranslate"><span class="pre">Kronecker</span></code> product of two
+exponential correlations, kept as its two small factors. The observations’
+errors are independent, at 1% of the largest signal.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">prior_cov</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Kronecker</span><span class="p">(</span>
+    <span class="n">fips</span><span class="o">.</span><span class="n">Exponential</span><span class="p">(</span><span class="s2">&quot;x&quot;</span><span class="p">,</span> <span class="mf">200.0</span><span class="p">),</span> <span class="n">fips</span><span class="o">.</span><span class="n">Exponential</span><span class="p">(</span><span class="s2">&quot;depth&quot;</span><span class="p">,</span> <span class="mf">100.0</span><span class="p">)</span>
+<span class="p">)</span><span class="o">.</span><span class="n">with_std</span><span class="p">(</span><span class="mf">0.5</span><span class="p">)</span>
+<span class="n">obs_cov</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Independent</span><span class="p">()</span><span class="o">.</span><span class="n">with_std</span><span class="p">(</span><span class="mf">0.01</span> <span class="o">*</span> <span class="n">gravity</span><span class="o">.</span><span class="n">max</span><span class="p">())</span>
+</pre></div>
+</div>
+</div>
+</div>
+</section>
+<section id="the-problem-and-its-solution">
+<h2>The problem and its solution<a class="headerlink" href="#the-problem-and-its-solution" title="Link to this heading">#</a></h2>
+<p>A <code class="docutils literal notranslate"><span class="pre">Problem</span></code> puts the inputs together and checks that every label matches.
+<code class="docutils literal notranslate"><span class="pre">fips.solve</span></code> returns the <code class="docutils literal notranslate"><span class="pre">Posterior</span></code>: the estimate, its uncertainty and the
+diagnostics of the solve.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">problem</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Problem</span><span class="p">(</span>
+    <span class="n">prior</span><span class="o">=</span><span class="n">prior</span><span class="p">,</span> <span class="n">prior_cov</span><span class="o">=</span><span class="n">prior_cov</span><span class="p">,</span> <span class="n">obs</span><span class="o">=</span><span class="n">obs</span><span class="p">,</span> <span class="n">obs_cov</span><span class="o">=</span><span class="n">obs_cov</span><span class="p">,</span> <span class="n">forward</span><span class="o">=</span><span class="n">forward</span>
+<span class="p">)</span>
+<span class="n">post</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">problem</span><span class="p">)</span>
+<span class="n">post</span><span class="o">.</span><span class="n">summary</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_html"><div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>gamma</th>
+      <th>n_state</th>
+      <th>n_obs</th>
+      <th>dofs</th>
+      <th>chi2</th>
+      <th>reduced_chi2</th>
+      <th>r2</th>
+      <th>rmse</th>
+      <th>uncertainty_reduction</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>1.0</td>
+      <td>40</td>
+      <td>41</td>
+      <td>16.05898</td>
+      <td>2.723385</td>
+      <td>0.066424</td>
+      <td>0.999982</td>
+      <td>0.000162</td>
+      <td>0.456763</td>
+    </tr>
+  </tbody>
+</table>
+</div></div></div>
+</div>
+<p>The DOFS say how many independent pieces of information the 41 measurements
+give about the 40 prisms. The reduced chi-squared is near 1 when the
+covariances fit the data; here it is well below, because these synthetic
+observations have no noise at all.</p>
+</section>
+<section id="the-fit-to-the-data">
+<h2>The fit to the data<a class="headerlink" href="#the-fit-to-the-data" title="Link to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">plot_comparison</span></code> draws the observations, what the prior predicts
+(<code class="docutils literal notranslate"><span class="pre">problem.predict</span></code>, the forward operator times the prior) and what the
+estimate predicts (<code class="docutils literal notranslate"><span class="pre">post.modeled_obs</span></code>) on one axes.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">named</span><span class="p">(</span><span class="n">vector</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return a vector of one block as a Series on its own labels, named for the legend.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">vector</span><span class="o">.</span><span class="n">to_series</span><span class="p">()</span><span class="o">.</span><span class="n">droplevel</span><span class="p">(</span><span class="s2">&quot;block&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+
+
+<span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plot_comparison</span><span class="p">(</span>
+    <span class="n">named</span><span class="p">(</span><span class="n">problem</span><span class="o">.</span><span class="n">obs</span><span class="p">,</span> <span class="s2">&quot;observed&quot;</span><span class="p">),</span>
+    <span class="n">named</span><span class="p">(</span><span class="n">problem</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">problem</span><span class="o">.</span><span class="n">prior</span><span class="p">),</span> <span class="s2">&quot;prior&quot;</span><span class="p">),</span>
+    <span class="n">named</span><span class="p">(</span><span class="n">post</span><span class="o">.</span><span class="n">modeled_obs</span><span class="p">,</span> <span class="s2">&quot;posterior&quot;</span><span class="p">),</span>
+<span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">xlabel</span><span class="o">=</span><span class="s2">&quot;x (m)&quot;</span><span class="p">,</span> <span class="n">ylabel</span><span class="o">=</span><span class="s2">&quot;gravity (mGal)&quot;</span><span class="p">);</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<img alt="../../_images/78899f35263c86731615f9453251592381cc2ed6cd46a9c7fec8a2bb54047c41.png" src="../../_images/78899f35263c86731615f9453251592381cc2ed6cd46a9c7fec8a2bb54047c41.png" />
+</div>
+</div>
+</section>
+<section id="the-density-below">
+<h2>The density below<a class="headerlink" href="#the-density-below" title="Link to this heading">#</a></h2>
+<p>The estimate and its standard deviation, as maps of the prisms:
+<code class="docutils literal notranslate"><span class="pre">to_xarray()</span></code> puts a block on its levels, <code class="docutils literal notranslate"><span class="pre">x</span></code> and <code class="docutils literal notranslate"><span class="pre">depth</span></code>.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">estimate</span> <span class="o">=</span> <span class="n">post</span><span class="o">.</span><span class="n">estimate</span><span class="p">[</span><span class="s2">&quot;density&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">to_xarray</span><span class="p">()</span>
+<span class="n">std</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">post</span><span class="o">.</span><span class="n">variances</span><span class="p">[</span><span class="s2">&quot;density&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">to_xarray</span><span class="p">())</span>
+
+<span class="n">fig</span><span class="p">,</span> <span class="n">axes</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">6</span><span class="p">),</span> <span class="n">sharex</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">estimate</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
+    <span class="n">ax</span><span class="o">=</span><span class="n">axes</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+    <span class="n">x</span><span class="o">=</span><span class="s2">&quot;x&quot;</span><span class="p">,</span>
+    <span class="n">y</span><span class="o">=</span><span class="s2">&quot;depth&quot;</span><span class="p">,</span>
+    <span class="n">yincrease</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">cmap</span><span class="o">=</span><span class="s2">&quot;Greys&quot;</span><span class="p">,</span>
+    <span class="n">cbar_kwargs</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;label&quot;</span><span class="p">:</span> <span class="s2">&quot;density (g/cm³)&quot;</span><span class="p">},</span>
+<span class="p">)</span>
+<span class="n">axes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;Posterior estimate&quot;</span><span class="p">)</span>
+<span class="n">std</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
+    <span class="n">ax</span><span class="o">=</span><span class="n">axes</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+    <span class="n">x</span><span class="o">=</span><span class="s2">&quot;x&quot;</span><span class="p">,</span>
+    <span class="n">y</span><span class="o">=</span><span class="s2">&quot;depth&quot;</span><span class="p">,</span>
+    <span class="n">yincrease</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">cmap</span><span class="o">=</span><span class="s2">&quot;viridis&quot;</span><span class="p">,</span>
+    <span class="n">cbar_kwargs</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;label&quot;</span><span class="p">:</span> <span class="s2">&quot;std (g/cm³)&quot;</span><span class="p">},</span>
+<span class="p">)</span>
+<span class="n">axes</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;Posterior standard deviation&quot;</span><span class="p">);</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<img alt="../../_images/8049ee54896fd4198cce70f61206054a4940bc9069f3b7569a29b70bd4c8bfc2.png" src="../../_images/8049ee54896fd4198cce70f61206054a4940bc9069f3b7569a29b70bd4c8bfc2.png" />
+</div>
+</div>
+</section>
+<section id="how-much-to-trust-the-data">
+<h2>How much to trust the data<a class="headerlink" href="#how-much-to-trust-the-data" title="Link to this heading">#</a></h2>
+<p>The regularization factor <code class="docutils literal notranslate"><span class="pre">gamma</span></code> divides the observation covariance: above
+1 the solve trusts the data more, below 1 the prior. The posterior keeps its
+factorization, so <code class="docutils literal notranslate"><span class="pre">with_gamma</span></code> gives each gamma’s posterior without solving
+again, and the rows of <code class="docutils literal notranslate"><span class="pre">summary()</span></code> stack into a table.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span>
+    <span class="p">[</span><span class="n">post</span><span class="o">.</span><span class="n">with_gamma</span><span class="p">(</span><span class="n">g</span><span class="p">)</span><span class="o">.</span><span class="n">summary</span><span class="p">()</span> <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="p">(</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">3.0</span><span class="p">,</span> <span class="mf">10.0</span><span class="p">)],</span>
+    <span class="n">ignore_index</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_html"><div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>gamma</th>
+      <th>n_state</th>
+      <th>n_obs</th>
+      <th>dofs</th>
+      <th>chi2</th>
+      <th>reduced_chi2</th>
+      <th>r2</th>
+      <th>rmse</th>
+      <th>uncertainty_reduction</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>0.1</td>
+      <td>40</td>
+      <td>41</td>
+      <td>12.410882</td>
+      <td>1.221866</td>
+      <td>0.029802</td>
+      <td>0.999911</td>
+      <td>0.000363</td>
+      <td>0.391886</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>0.3</td>
+      <td>40</td>
+      <td>41</td>
+      <td>13.865537</td>
+      <td>1.808107</td>
+      <td>0.044100</td>
+      <td>0.999946</td>
+      <td>0.000282</td>
+      <td>0.419185</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>1.0</td>
+      <td>40</td>
+      <td>41</td>
+      <td>16.058980</td>
+      <td>2.723385</td>
+      <td>0.066424</td>
+      <td>0.999982</td>
+      <td>0.000162</td>
+      <td>0.456763</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>3.0</td>
+      <td>40</td>
+      <td>41</td>
+      <td>18.042533</td>
+      <td>3.426285</td>
+      <td>0.083568</td>
+      <td>0.999996</td>
+      <td>0.000076</td>
+      <td>0.491897</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>10.0</td>
+      <td>40</td>
+      <td>41</td>
+      <td>19.627809</td>
+      <td>3.867133</td>
+      <td>0.094320</td>
+      <td>0.999999</td>
+      <td>0.000030</td>
+      <td>0.522448</td>
+    </tr>
+  </tbody>
+</table>
+</div></div></div>
+</div>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="index.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Examples</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="flux_regional.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">A regional flux inversion</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-data-and-the-geometry">The data and the geometry</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#labels-and-vectors">Labels and vectors</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-forward-operator">The forward operator</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-covariances">The covariances</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-problem-and-its-solution">The problem and its solution</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-fit-to-the-data">The fit to the data</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-density-below">The density below</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#how-much-to-trust-the-data">How much to trust the data</a></li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+
+  <div class="tocsection sourcelink">
+    <a href="../../_sources/user_guide/examples/gravity_2d.ipynb.txt">
+      <i class="fa-solid fa-file-lines"></i> Show Source
+    </a>
+  </div>
+</div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0"></script>
+<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2025-2026, James Mineau.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.1.0.
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.22.0.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

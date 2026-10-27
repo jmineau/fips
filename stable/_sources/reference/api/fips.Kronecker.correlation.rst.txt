@@ -1,0 +1,6 @@
+fips.Kronecker.correlation
+==========================
+
+.. currentmodule:: fips
+
+.. automethod:: Kronecker.correlation

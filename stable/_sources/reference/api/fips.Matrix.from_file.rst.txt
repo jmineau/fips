@@ -1,6 +1,0 @@
-﻿fips.Matrix.from\_file
-======================
-
-.. currentmodule:: fips
-
-.. automethod:: Matrix.from_file

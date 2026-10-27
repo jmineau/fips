@@ -1,0 +1,6 @@
+fips.posterior.Solution.dofs
+============================
+
+.. currentmodule:: fips.posterior
+
+.. automethod:: Solution.dofs

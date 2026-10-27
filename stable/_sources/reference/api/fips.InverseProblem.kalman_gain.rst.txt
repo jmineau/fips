@@ -1,6 +1,0 @@
-fips.InverseProblem.kalman\_gain
-================================
-
-.. currentmodule:: fips
-
-.. autoproperty:: InverseProblem.kalman_gain

@@ -1,6 +1,0 @@
-fips.Matrix.scale
-=================
-
-.. currentmodule:: fips
-
-.. automethod:: Matrix.scale

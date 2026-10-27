@@ -1,0 +1,6 @@
+fips.Vector.space
+=================
+
+.. currentmodule:: fips
+
+.. autoproperty:: Vector.space
