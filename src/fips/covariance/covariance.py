@@ -492,10 +492,13 @@ class Covariance(Operator):
         Return a square root :math:`L`, with :math:`L L^T = S`.
 
         A diagonal covariance gives the diagonal of standard deviations, a
-        block diagonal one the root of each block, any other form the lower
-        Cholesky factor of its dense matrix. :math:`L` maps independent unit
-        variables, one per label, to the covariance's space: ``L @ w`` with
-        ``w`` standard normal is a draw from :math:`N(0, S)`.
+        block diagonal one the root of each block, and a Kronecker one whose
+        rows are its whole grid a root applied through its factors. Any
+        other form, a Kronecker one on a subset of its grid among them, gives
+        the lower Cholesky factor of its dense matrix.
+        :math:`L` maps independent unit variables, one per label, to the
+        covariance's space: ``L @ w`` with ``w`` standard normal is a draw
+        from :math:`N(0, S)`.
 
         Returns
         -------
