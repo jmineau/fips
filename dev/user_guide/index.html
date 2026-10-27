@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>User Guide &#8212; fips 0.2.0b2.dev2+ga63107831 documentation</title>
+    <title>User Guide &#8212; fips 0.2.0b2.dev3+g1b15b0726 documentation</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0" />
 
-    <script src="../_static/documentation_options.js?v=25e754a7"></script>
+    <script src="../_static/documentation_options.js?v=6e7a49aa"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -135,8 +135,8 @@
       
     
     
-    <img src="../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b2.dev2+ga63107831 documentation - Home"/>
-    <img src="../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b2.dev2+ga63107831 documentation - Home"/>
+    <img src="../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b2.dev3+g1b15b0726 documentation - Home"/>
+    <img src="../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b2.dev3+g1b15b0726 documentation - Home"/>
   
   
 </a></div>
@@ -864,11 +864,12 @@ chi-squared from the factors, without forming anything <span class="math notrans
 information form works in the state’s size: it eigendecomposes an
 <span class="math notranslate nohighlight">\(n \times n\)</span> matrix built from <span class="math notranslate nohighlight">\(H\)</span>, a square root of <span class="math notranslate nohighlight">\(S_0\)</span> and
 <span class="math notranslate nohighlight">\(S_z^{-1}\)</span>, and forms no <span class="math notranslate nohighlight">\(m \times m\)</span> matrix of its own (a dense
-<span class="math notranslate nohighlight">\(S_z\)</span> is applied through its Cholesky factor). It is used when there
-are fewer state elements than observations and <span class="math notranslate nohighlight">\(S_z\)</span> is dense,
-diagonal, sparse or block diagonal; otherwise the whitened form. In both, the
-full posterior covariance (<code class="docutils literal notranslate"><span class="pre">post.cov()</span></code>), the gain and the averaging
-kernel are formed only when they are read, once each.</p>
+<span class="math notranslate nohighlight">\(S_z\)</span> is applied through its Cholesky factor, a Kronecker one through
+its factors). It is used when there are fewer state elements than
+observations and <span class="math notranslate nohighlight">\(S_z\)</span> is dense, diagonal, sparse, block diagonal or
+Kronecker; otherwise the whitened form. In both, the full posterior
+covariance (<code class="docutils literal notranslate"><span class="pre">post.cov()</span></code>), the gain and the averaging kernel are formed
+only when they are read, once each.</p>
 <div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [46]: </span><span class="n">rng</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
 
 <span class="gp">In [47]: </span><span class="n">obs_labels</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">MultiIndex</span><span class="o">.</span><span class="n">from_product</span><span class="p">([[</span><span class="s2">&quot;conc&quot;</span><span class="p">],</span> <span class="nb">range</span><span class="p">(</span><span class="mi">15</span><span class="p">)],</span> <span class="n">names</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;block&quot;</span><span class="p">,</span> <span class="s2">&quot;obs_id&quot;</span><span class="p">])</span>
