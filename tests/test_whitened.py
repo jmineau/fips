@@ -891,7 +891,11 @@ def test_the_cholesky_matches_at_size(form, n, m, gamma, weak):
     cholesky, eigen = _both(problem, form, gamma)
     got, expected = _every_output(cholesky), _every_output(eigen)
     for name, value in got.items():
-        _close(value, expected[name], name)
+        # Desroziers multiplies the residual by the innovation. Strongly observed
+        # at gamma 100 the residual is 5 % of the innovation, and each path's is
+        # 1e-10 of its size from an extended-precision solve (measured): the two
+        # agree to 1e-9 there (macOS's BLAS showed 2e-9 at one observation)
+        _close(value, expected[name], name, rtol=1e-9 if name == "desroziers" else RTOL)
     if weak:
         assert got["dofs"] < 0.05 * n
 
