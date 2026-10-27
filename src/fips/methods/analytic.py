@@ -10,12 +10,12 @@ forms, chosen by the problem's size, which give the same posterior:
 - ``Information`` whitens the state with the prior error covariance and
   eigendecomposes an ``n x n`` matrix (``n`` state elements). It applies the
   inverse of the model-data mismatch, which it can for a mismatch that is
-  dense, diagonal, sparse or block diagonal.
+  dense, diagonal, sparse, block diagonal or Kronecker.
 
 The information form is used when there are fewer state elements than
-observations and the mismatch is dense, diagonal, sparse or block diagonal
-(and the prior error covariance has a square root); otherwise the whitened
-form (``_choose``). The factors depend neither on the regularization factor
+observations and the mismatch is dense, diagonal, sparse, block diagonal or
+Kronecker (and the prior error covariance has a square root); otherwise the
+whitened form (``_choose``). The factors depend neither on the regularization factor
 :math:`\gamma` nor on the values of the observations, so the posterior of
 another :math:`\gamma` (``post.with_gamma``) or of other observations
 (``post.with_data``) shares them instead of solving again.
@@ -40,6 +40,7 @@ from fips.linalg import (
     BlockDiagonalOperator,
     DenseOperator,
     DiagonalOperator,
+    KroneckerOperator,
     LinearOperator,
     SparseOperator,
 )
@@ -60,13 +61,21 @@ took 2 s at ``m = 2,205``, 25 s at ``5,000``, 85 s at ``7,500`` and 203 s at
 than twice ``n``, a solve above this size says why.
 """
 
-_INVERTIBLE = (DenseOperator, DiagonalOperator, SparseOperator, BlockDiagonalOperator)
+_INVERTIBLE = (
+    DenseOperator,
+    DiagonalOperator,
+    SparseOperator,
+    BlockDiagonalOperator,
+    KroneckerOperator,
+)
 """
 The forms of the model-data mismatch whose inverse the information form applies.
 
 A dense mismatch is applied through its Cholesky factor. The whitened form
 needs that factor too, so the information form saves the ``m x m``
-eigendecomposition and the ``m x m`` products.
+eigendecomposition and the ``m x m`` products. A Kronecker mismatch is applied
+through its factors; the whitened form would form it as a dense ``m x m``
+matrix.
 """
 
 
@@ -328,14 +337,14 @@ class Information:
 
     ``_analytic`` factors its problem into this once (:meth:`factor`) when
     there are fewer state elements than observations and the model-data
-    mismatch is dense, diagonal, sparse or block diagonal; otherwise into
-    :class:`Whitened`. It eigendecomposes an
+    mismatch is dense, diagonal, sparse, block diagonal or Kronecker;
+    otherwise into :class:`Whitened`. It eigendecomposes an
     :math:`n \times n` matrix instead of an :math:`m \times m` one, and gives
     the same posterior. The factors depend neither on gamma nor on the
     values of the observations, so :meth:`with_gamma` and :meth:`with_data`
     share them. It holds one :math:`n \times n` array; it forms nothing
     :math:`m \times m` of its own (a dense mismatch is factored by Cholesky
-    inside each solve with it). The arrays are read-only, also after a
+    inside each solve with it; a Kronecker one is applied through its factors). The arrays are read-only, also after a
     pickle or a copy.
 
     With :math:`S_0 = R R^T` the prior error covariance (:math:`R` its square
@@ -395,7 +404,7 @@ class Information:
         :math:`H R` is formed in the cheapest form of its factors (through a
         Kronecker :math:`S_0`'s factors), then dense (:math:`m \times n`), and
         :math:`S_z^{-1}` is applied by its form's solve (for a dense
-        :math:`S_z`, by Cholesky).
+        :math:`S_z`, by Cholesky; for a Kronecker one, through its factors).
 
         Parameters
         ----------
@@ -593,8 +602,8 @@ def _choose(problem: Problem) -> tuple[type, str]:
     Return the form to factor `problem` in, and why.
 
     The information form when there are fewer state elements than
-    observations and the model-data mismatch is dense, diagonal, sparse or
-    block diagonal; otherwise the whitened form. The tests replace this
+    observations and the model-data mismatch is dense, diagonal, sparse, block
+    diagonal or Kronecker; otherwise the whitened form. The tests replace this
     function to hold both forms to the same outputs.
     """
     m, n = problem.forward.data.shape
@@ -607,8 +616,8 @@ def _choose(problem: Problem) -> tuple[type, str]:
     if not isinstance(S_z, _INVERTIBLE):
         return Whitened, (
             f"the model-data mismatch is a {type(S_z).__name__}, which the "
-            "information form does not take (it takes dense, diagonal, sparse and "
-            "block diagonal)"
+            "information form does not take (it takes dense, diagonal, sparse, "
+            "block diagonal and Kronecker)"
         )
     return Information, (
         f"the n = {n} state elements are fewer than the m = {m} observations, and "
