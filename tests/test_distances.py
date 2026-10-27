@@ -59,8 +59,8 @@ def test_time_diff_matrix():
     expected_ns = pd.Timedelta("2h")
 
     assert diffs.shape == (2, 2)
-    assert diffs[0, 0] == 0
-    assert diffs[1, 1] == 0
+    assert diffs[0, 0] == pd.Timedelta(0)
+    assert diffs[1, 1] == pd.Timedelta(0)
     assert diffs[0, 1] == expected_ns
     assert diffs[1, 0] == expected_ns
 
