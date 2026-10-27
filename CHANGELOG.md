@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0b1] - 2026-10-27
+
 fips 0.2 replaces the pandas-backed structures of 0.1 with labeled linear
 algebra: a `Space` of labels, values on it (`Vector`), matrices between spaces
 (`Operator`, `Covariance`) kept in their cheapest form, covariances written as
