@@ -18,12 +18,6 @@ estimator gave, to 1e-10 and on the paper-1 reference run to 6e-14.
 
 ### Added
 
-- **Two helpers for code that moves from the old API.** `Vector.to_series(block)`
-  gives one block's values on its own labels, without the `block` level
-  (`post.estimate.to_series("flux")`; with no block it is the whole vector, as
-  before). `Operator.sparse()` gives the matrix as a new SciPy CSR array, from
-  the stored entries of a sparse or diagonal form, as `dense()` gives a dense
-  one. ([#82](https://github.com/jmineau/fips/issues/82))
 - **`Space` and `Vector`.** A `Space` is the labels of a state, of the
   observations or of one axis of a matrix: ordered named blocks, each labeled by
   its own pandas index, together one `MultiIndex` with the `block` level first
@@ -31,7 +25,8 @@ estimator gave, to 1e-10 and on the paper-1 reference run to 6e-14.
   `select(block)`, `slice(block)`, `offsets`, `from_index`, `align(other)` (an
   exact join that names the labels on one side only) and `round_labels`. A
   `Vector` is read-only values on a space: `from_series`, `from_blocks`,
-  `v["flux"]` (a `Vector` of that block, labeled as it was given), `to_series`,
+  `v["flux"]` (a `Vector` of that block, labeled as it was given), `to_series`
+  (`to_series("flux")` gives one block on its own labels, without the `block` level),
   `to_xarray`, `align`, `combine_first` and `round_labels`. ([#82](https://github.com/jmineau/fips/issues/82))
 - **`Operator`, a matrix with a `Space` on each axis**, in its cheapest form (a
   dense array, a SciPy sparse matrix, a diagonal, Kronecker factors):
@@ -40,13 +35,16 @@ estimator gave, to 1e-10 and on the paper-1 reference run to 6e-14.
   labeled block is placed by its labels: a label it has no entry for is zero, a
   label the space lacks raises, a sparse block stays sparse), `op["co2",
   "flux"]`, `op @ vector`, `op @ op`, `+`, `-`, a scalar `*` or `/`, `T`,
-  `align`, `round_labels`, `dense()` and `to_frame()`. Products and sums first
-  match the labels they meet on, in any order. ([#82](https://github.com/jmineau/fips/issues/82))
+  `align`, `round_labels`, `dense()`, `sparse()` (a SciPy CSR array) and
+  `to_frame()`. Products and sums first match the labels they meet on, in any
+  order. ([#82](https://github.com/jmineau/fips/issues/82))
 - **`Covariance`, an `Operator` from a space to itself**, with
   `Covariance.diagonal(variances, space)` (kept as the diagonal),
   `Covariance.block_diag` (each part keeps its form; parts by block name
   too), `variances`, `solve`, `logdet`, `quadratic_form` and `sqrt`, each done
-  the way its form makes cheap. ([#82](https://github.com/jmineau/fips/issues/82))
+  the way its form makes cheap. A dense or sparse matrix that is not symmetric
+  (its largest `|A - A^T|` past 1e-10 of its largest entry) raises, naming the two
+  entries. ([#82](https://github.com/jmineau/fips/issues/82))
 - **`fips.linalg`, the unlabeled forms**: `DenseOperator`, `SparseOperator`,
   `DiagonalOperator`, `BlockDiagonalOperator` and `KroneckerOperator`
   (a covariance kept as its factors, for any row order and any subset of the
@@ -54,7 +52,9 @@ estimator gave, to 1e-10 and on the paper-1 reference run to 6e-14.
   `trace`, `solve`, `logdet` and `sqrt`; `A @ B` and `A + B` keep the cheapest
   exact form, and a sparse product past a quarter full is dense.
   `as_linear_operator` and `dottest`. A form copies its input and makes the copy
-  read-only. ([#82](https://github.com/jmineau/fips/issues/82), [#6](https://github.com/jmineau/fips/issues/6))
+  read-only. A large product of a sparse matrix and a dense one runs on threads,
+  SciPy's result bit for bit: the CPUs the process may run on (a Slurm job's, not
+  the node's), and no more than `OMP_NUM_THREADS` when that is set. ([#82](https://github.com/jmineau/fips/issues/82), [#6](https://github.com/jmineau/fips/issues/6))
 - **Covariance models**, exported from `fips`: a correlation model times
   standard deviations, `model.with_std(std)`. `Exponential`, `Gaussian` and
   `Matern` decay with the distance along some levels (a datetime level with a
@@ -103,13 +103,8 @@ estimator gave, to 1e-10 and on the paper-1 reference run to 6e-14.
   `m x m` one, holds `n x n` instead of `m x m`, and gives the same posterior
   (both forms are held to the closed-form oracle at 1e-10; `with_gamma` and
   `with_data` work in both). Otherwise, and when `S_0` has no Cholesky
-  factor, the whitened form solves as before, bit for bit. There is no option:
-  the choice is logged at DEBUG. The warning about a large solve now fires
-  only for a whitened solve with more than 5,000 observations and more than
-  twice as many observations as state elements, and says why the information
-  form was not used (before, every solve with `m > n` and `m >= 1000`
-  warned). `KroneckerOperator.sqrt` gives its root through the factors when
-  its rows are the whole product.
+  factor, the whitened form (under Changed). There is no option: the choice
+  is logged at DEBUG.
   With `n = 300`, `m = 10,000` and a diagonal `S_z` on one core, a solve
   with the variances, DOFS and chi-squared takes 0.14 s at a 238 MB peak
   (194 s and 3.4 GB in the whitened form); at `n = 500`, `m = 5,000` a
@@ -121,15 +116,10 @@ estimator gave, to 1e-10 and on the paper-1 reference run to 6e-14.
   that maps a level's values to groups). **`fips.offset_block(obs_space, by)`**:
   a block of unknown offsets for the state, one per group of observations, with
   the forward block that adds each to its observations. ([#82](https://github.com/jmineau/fips/issues/82), [#28](https://github.com/jmineau/fips/issues/28))
-- **Oracle tests** (`tests/test_oracle.py`): every method against the
-  closed-form Gaussian posterior, and the permutation test (inputs in any order
-  give the same labeled posterior). ([#82](https://github.com/jmineau/fips/issues/82))
-- **Documentation for 0.2**: the README leads with a small problem from no
-  particular field; the getting-started guide, the user guide, the terminology
-  (each word defined once) and both example notebooks are rewritten on the new
-  objects; every public attribute has a reference page. The documentation has
-  three sections: Getting Started (installation, a first problem, the
-  terminology), the User Guide (with the examples) and the API Reference. ([#82](https://github.com/jmineau/fips/issues/82), [#14](https://github.com/jmineau/fips/issues/14))
+- **Documentation for 0.2**, in three sections: Getting Started (installation, a
+  first problem, the terminology), the User Guide (with both example notebooks)
+  and the API Reference, with a page for every public attribute. All of it is
+  rewritten on the new objects. ([#82](https://github.com/jmineau/fips/issues/82), [#14](https://github.com/jmineau/fips/issues/14))
 
 ### Changed
 
@@ -139,7 +129,10 @@ estimator gave, to 1e-10 and on the paper-1 reference run to 6e-14.
   of the information form, under Added, when that is smaller and the
   observation covariance allows it), and derives the estimate, the variances,
   the DOFS and the chi-squared from the factors without forming anything
-  `n x n` in the whitened form. A sum `H S_0 H^T + S_z` that roundoff has tipped off
+  `n x n` in the whitened form. It eigendecomposes with LAPACK's `evd` driver,
+  which many equal eigenvalues do not slow down (SciPy's default `evr` took
+  13 times as long on such a matrix), and with `evr` when there is not memory
+  for `evd`'s workspace. A sum `H S_0 H^T + S_z` that roundoff has tipped off
   positive-definite no longer matters, but the observation covariance itself
   must be positive-definite (one that is not raises `LinAlgError`). A whitened
   solve with more than 5,000 observations and more than twice as many
@@ -174,57 +167,11 @@ estimator gave, to 1e-10 and on the paper-1 reference run to 6e-14.
   no longer a dependency. ([#82](https://github.com/jmineau/fips/issues/82))
 - **fips logs and never prints**: the solve's records go to the `fips.methods`
   logger, and statistics are returned (`Posterior.summary()`). ([#8](https://github.com/jmineau/fips/issues/8))
-- **A kernel's `within=` is built for all its groups at once.** `Exponential`,
-  `Gaussian`, `Matern` and `Constant` with `within=` (the correlated part of a
-  model-data mismatch, as errors shared by a site's observations on one day)
-  used to select each group's rows with pandas and evaluate the kernel on a
-  small matrix, group by group. They now list every pair of labels in the same
-  group, all groups together, and evaluate the kernel once on the distances of
-  those pairs. The matrix is the same bit for bit, for every kernel, metric and
-  kind of level. With 11,000 hourly observations in 2,752 groups of a site and a
-  day, an `Exponential` builds in 0.009 s instead of 1.1 s and a `Constant` in
-  0.008 s instead of 0.45 s; with 40,000 observations in 0.03 s instead of
-  4.1 s and 1.6 s. `Problem()` for such a problem takes 0.04 s instead of 1.6 s.
-  A few very large groups take about as long as before (an `Exponential` of 7
-  groups of 1,570 observations 1.6 s instead of 1.2 s) in a fifth less memory.
-  Nothing in the API changes.
-- **The analytic solve's eigendecomposition uses LAPACK's `evd` driver, and
-  redoes it with `evr` when there is not enough memory.** Both forms of the
-  solve eigendecompose one symmetric matrix (`m x m` or `n x n`) with SciPy's
-  `eigh`, whose default driver (`evr`) slows down when many eigenvalues are
-  equal, as they are in the whitened form's `m x m` matrix when there are
-  fewer state elements than observations (it has rank `n`, so `m - n`
-  eigenvalues are zero). `evd` is not slowed by that: with `m = 6,000` on 8
-  cores, a matrix with three quarters of its eigenvalues zero took 235.7 s with
-  `evr` and 17.9 s with `evd`, and one with all distinct eigenvalues 20.0 s and
-  19.2 s. `evd` needs more workspace: at `m = 10,000` the peak above the matrix
-  itself is 1.52 GB with `evr` and 2.30 GB with `evd`. When SciPy cannot
-  allocate it, it raises `MemoryError` before the decomposition starts, and
-  the solve redoes it with `evr`, as before, logging one INFO line. There is
-  no option. The estimates of the two drivers agree to 1.8e-13, not bit for
-  bit: the eigenvectors are rounded differently.
-- **A large product of a sparse matrix and a dense one runs on threads.**
-  SciPy multiplies a sparse matrix by a dense one on a single thread, and the
-  solve does it with `H S_0 H^T` (a dense matrix times `H^T`) and, for a sparse
-  `H`, with `H @ X`. Above about ten million multiply-adds, `SparseOperator`
-  now gives each thread a block of the sparse matrix's rows; the result is
-  SciPy's bit for bit (every row's sum is the same, in the same order), in the
-  same memory layout. The threads are the CPUs the process may run on (a Slurm
-  job's, not the node's), and no more than `OMP_NUM_THREADS` when that is
-  set, as for NumPy's BLAS: `OMP_NUM_THREADS=1` keeps a run on one thread, as
-  before. On 8 threads, `H S_0 H^T` with 96,000 state elements and 2,751
-  observations takes 1.6 s instead of 10.4 s, and with 18,720 state elements and
-  10,003 observations 2.8 s instead of 25 s; the whole solve takes 17.4 s
-  instead of 20.7 s and, with the 10,003, 87 s instead of 92 to 97 s. Nothing in
-  the API changes.
-- **The distance functions drop the options nothing used and are typed.**
+- **The distance functions drop the options nothing used.**
   `haversine_matrix(lats, lons)` takes degrees and gives kilometers on a sphere
   of radius 6371 km: its `deg=` and `earth_radius=` are gone (for radians, pass
   `np.degrees(lats)`), and `time_diff_matrix(times)` always gives the absolute
-  differences: its `absolute=` is gone. The fips kernels passed none of them.
-  `haversine_matrix` and `chordal_matrix` share the one half-angle term they
-  both write, and every distance function has annotations. No distance
-  changes. ([#82](https://github.com/jmineau/fips/issues/82))
+  differences: its `absolute=` is gone. No distance changes. ([#82](https://github.com/jmineau/fips/issues/82))
 
 ### Removed
 
@@ -277,40 +224,11 @@ Bugs of 0.1.0b9 that the objects replacing them do not have:
   and mixed up the bins of labels out of time order; `fips.aggregate` does not.
   ([#98](https://github.com/jmineau/fips/issues/98))
 - The README's multi-block example raised. ([#93](https://github.com/jmineau/fips/issues/93))
-- **Labels at every door** (the branch review's fixes;
-  [#82](https://github.com/jmineau/fips/issues/82)):
-  `Covariance` refuses a dense or sparse matrix that is not symmetric (its
-  largest `|A - A^T|` past 1e-10 of its largest entry; the message names the
-  two entries), and `KroneckerOperator` a factor that is not: an upper
-  triangle used to solve silently to a wrong answer. `Operator(op, rows,
-  cols)`, `Covariance(cov, space)` and `Vector(v, space)` refuse a labeled
-  object, whose labels they ignored, and point to `align` or `.data` /
-  `.values`. `plot_comparison` draws `truth` by label, as it does `errors`
-  (it drew it by position). `Operator.from_blocks` without `rows`/`cols`
-  raises when two labeled matrices of a block have different labels, in
-  either order of the keys (the first one's labels won). `v[0]` finds a
-  block named `0` (kept as `"0"`); `Covariance.block_diag(name=model)` raises
-  that `name` is the covariance's name; a mapping to NaN in `aggregate`
-  names the mapping; `Exponential("lag", "1h")` and the other decay kernels
-  take a timedelta level.
+- `plot_comparison` drew `truth` by position; it draws it by label, as it
+  does `errors`. ([#82](https://github.com/jmineau/fips/issues/82))
 - `haversine_matrix` gave NaN for some exactly antipodal points: the
   half-angle term is clipped to [0, 1] against roundoff, as `chordal_matrix`'s
   already was. ([#108](https://github.com/jmineau/fips/issues/108))
-- **Leftovers of the posterior redesign** (the branch review's fixes;
-  [#82](https://github.com/jmineau/fips/issues/82)): the arrays of the
-  analytic method's factors (`Whitened`) are read-only, also after a pickle or
-  a copy (they were writable and shared by `with_gamma` and `with_data`).
-  `with_data` builds its problem with the constructor, and one `Operator._on`
-  puts an operator on two spaces. No number changes.
-- **The `fips.linalg` forms pickle and copy on SciPy 1.18.** A
-  `KroneckerOperator` (and so a `Covariance`, `Problem` or `Posterior` holding
-  one) failed to pickle with "cannot pickle 'module' object", and a dense,
-  sparse, diagonal or block diagonal form that had been through a pickle or a
-  copy raised on its first product. SciPy 1.18 keeps its array namespace in
-  each operator; a form's pickle now leaves SciPy's own attributes out and
-  loading sets them again, so a pickle written on any SciPy version loads on
-  any other. The lock's SciPy is 1.18.1 on Python 3.12 and newer (1.17.1 on
-  3.11), so CI runs both. ([#113](https://github.com/jmineau/fips/issues/113))
 - **`Posterior.r2` is the R² of the enhancement**, `corr(z - c, H x_hat)²`:
   the observations less the offset `c`, against `H x_hat`. 0.1.0b9's
   `Estimator.R2`, documented as `corr(z, H x_hat)²`, computed
