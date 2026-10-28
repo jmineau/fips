@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>fips.posterior &#8212; fips 0.2.0b2.dev17+g343503d12 documentation</title>
+    <title>fips.posterior &#8212; fips 0.2.0b2.dev18+g4cf391a19 documentation</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../_static/documentation_options.js?v=bac470ef"></script>
+    <script src="../../_static/documentation_options.js?v=b2404d6c"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -132,8 +132,8 @@
       
     
     
-    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b2.dev17+g343503d12 documentation - Home"/>
-    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b2.dev17+g343503d12 documentation - Home"/>
+    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b2.dev18+g4cf391a19 documentation - Home"/>
+    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b2.dev18+g4cf391a19 documentation - Home"/>
   
   
 </a></div>
@@ -449,6 +449,7 @@
 <span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">numpy.linalg</span><span class="w"> </span><span class="kn">import</span> <span class="n">LinAlgError</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">scipy.linalg</span><span class="w"> </span><span class="kn">import</span> <span class="n">inv</span><span class="p">,</span> <span class="n">solve</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">scipy.special</span><span class="w"> </span><span class="kn">import</span> <span class="n">ndtr</span><span class="p">,</span> <span class="n">ndtri</span>  <span class="c1"># the normal CDF and its inverse</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">fips.covariance</span><span class="w"> </span><span class="kn">import</span> <span class="n">Covariance</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">fips.linalg</span><span class="w"> </span><span class="kn">import</span> <span class="n">LinearOperator</span>
@@ -484,7 +485,11 @@
 
 <span class="sd">    And a solution whose :meth:`estimate` is the posterior mean says so with a</span>
 <span class="sd">    class attribute ``estimate_is_mean = True``; without it, a posterior has</span>
-<span class="sd">    no :attr:`~Posterior.mean`.</span>
+<span class="sd">    no :attr:`~Posterior.mean`. One whose estimate is linear in the</span>
+<span class="sd">    observations, :math:`\hat{x} = x_0 + K (z - H x_0 - c)` with the</span>
+<span class="sd">    :math:`K` of :meth:`gain` whatever the values of :math:`z`, says so with</span>
+<span class="sd">    ``estimate_is_linear = True``; without it, a posterior has no</span>
+<span class="sd">    :meth:`~Posterior.recovery`.</span>
 
 <span class="sd">    See Also</span>
 <span class="sd">    --------</span>
@@ -624,10 +629,11 @@
 <span class="sd">    (:attr:`innovation_cov`); what needs neither is on the</span>
 <span class="sd">    :class:`~fips.Problem` (:meth:`~fips.Problem.predict`).</span>
 
-<span class="sd">    Every member works for every method, except three that need more of the</span>
+<span class="sd">    Every member works for every method, except four that need more of the</span>
 <span class="sd">    method than a :class:`Solution` gives: :attr:`mean` (where the estimate is</span>
 <span class="sd">    the mean), :meth:`with_gamma` and :meth:`with_data` (where the method can</span>
-<span class="sd">    answer without solving again). The analytic method has all three.</span>
+<span class="sd">    answer without solving again), and :meth:`recovery` (where the estimate is</span>
+<span class="sd">    linear in the observations). The analytic method has all four.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -1444,6 +1450,257 @@
         <span class="n">post</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)(</span><span class="n">new</span><span class="p">,</span> <span class="n">resolve</span><span class="p">(</span><span class="n">new</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">_options</span><span class="p">)</span>
         <span class="n">_</span> <span class="o">=</span> <span class="n">post</span><span class="o">.</span><span class="n">estimate</span>
         <span class="k">return</span> <span class="n">post</span></div>
+
+
+    <span class="c1"># -- the error of the estimate in a world ----------------------------------</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_on_labels</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">world</span><span class="p">:</span> <span class="n">Problem</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Problem</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Return `world` with its inputs in the order of this posterior's labels.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        TypeError</span>
+<span class="sd">            If `world` is not a Problem.</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            If its state or observations do not have exactly the labels of</span>
+<span class="sd">            this posterior's; the message names those on one side only.</span>
+<span class="sd">        """</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">world</span><span class="p">,</span> <span class="n">Problem</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"world must be a Problem, got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">world</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">."</span><span class="p">)</span>
+        <span class="n">state</span><span class="p">,</span> <span class="n">observed</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_problem</span><span class="o">.</span><span class="n">prior</span><span class="o">.</span><span class="n">space</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_problem</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">space</span>
+        <span class="k">if</span> <span class="n">world</span><span class="o">.</span><span class="n">prior</span><span class="o">.</span><span class="n">space</span> <span class="o">==</span> <span class="n">state</span> <span class="ow">and</span> <span class="n">world</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">space</span> <span class="o">==</span> <span class="n">observed</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">world</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">_align</span><span class="p">(</span>
+            <span class="n">world</span><span class="o">.</span><span class="n">prior</span><span class="o">.</span><span class="n">space</span><span class="p">,</span>
+            <span class="s2">"the world's state"</span><span class="p">,</span>
+            <span class="s2">"The world's state and the posterior's"</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">o</span> <span class="o">=</span> <span class="n">observed</span><span class="o">.</span><span class="n">_align</span><span class="p">(</span>
+            <span class="n">world</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">space</span><span class="p">,</span>
+            <span class="s2">"the world's observations"</span><span class="p">,</span>
+            <span class="s2">"The world's observations and the posterior's"</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="c1"># Problem puts the operators, covariances and offset on these spaces</span>
+        <span class="k">return</span> <span class="n">Problem</span><span class="p">(</span>
+            <span class="n">prior</span><span class="o">=</span><span class="n">Vector</span><span class="p">(</span><span class="n">world</span><span class="o">.</span><span class="n">prior</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="n">s</span><span class="p">],</span> <span class="n">state</span><span class="p">),</span>
+            <span class="n">prior_cov</span><span class="o">=</span><span class="n">world</span><span class="o">.</span><span class="n">prior_cov</span><span class="p">,</span>
+            <span class="n">obs</span><span class="o">=</span><span class="n">Vector</span><span class="p">(</span><span class="n">world</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="n">o</span><span class="p">],</span> <span class="n">observed</span><span class="p">),</span>
+            <span class="n">obs_cov</span><span class="o">=</span><span class="n">world</span><span class="o">.</span><span class="n">obs_cov</span><span class="p">,</span>
+            <span class="n">forward</span><span class="o">=</span><span class="n">world</span><span class="o">.</span><span class="n">forward</span><span class="p">,</span>
+            <span class="n">offset</span><span class="o">=</span><span class="n">world</span><span class="o">.</span><span class="n">offset</span><span class="p">,</span>
+        <span class="p">)</span>
+
+<div class="viewcode-block" id="Posterior.recovery">
+<a class="viewcode-back" href="../../reference/api/fips.Posterior.recovery.html#fips.Posterior.recovery">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">recovery</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">world</span><span class="p">:</span> <span class="n">Problem</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">truth</span><span class="p">:</span> <span class="n">Vector</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">W</span><span class="p">:</span> <span class="n">Operator</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">level</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.95</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">        Return how well the estimate recovers the truth when the data come from `world`: exactly, without sampling.</span>
+
+<span class="sd">        The exact answer of the Monte Carlo loop over ``world.simulate(rng)``</span>
+<span class="sd">        and :meth:`with_data`. The estimate is linear in the observations,</span>
+<span class="sd">        :math:`\hat{x} = x_0 + K (z - H x_0 - c)`, with the gain :math:`K` of</span>
+<span class="sd">        this posterior (its problem's :math:`H`, :math:`c`, :math:`S_0` and</span>
+<span class="sd">        :math:`S_z / \gamma`). When the world makes the data, with a truth</span>
+<span class="sd">        :math:`x \sim N(\mu, P)` (its prior, or a given `truth` with</span>
+<span class="sd">        :math:`P = 0`) and observations :math:`z = H_w x + c_w + e`,</span>
+<span class="sd">        :math:`e \sim N(0, R_w)` (its forward operator, offset and model-data</span>
+<span class="sd">        mismatch, not divided by :math:`\gamma`), the error</span>
+<span class="sd">        :math:`\hat{x} - x` is Gaussian, with</span>
+
+<span class="sd">        .. math::</span>
+
+<span class="sd">            b = (x_0 - \mu) + K (H_w \mu + c_w - H x_0 - c), \qquad</span>
+<span class="sd">            V = (K H_w - I) P (K H_w - I)^T + K R_w K^T.</span>
+
+<span class="sd">        For an aggregation :math:`W`, :math:`W b` and :math:`W V W^T`, from</span>
+<span class="sd">        :math:`W K` (``k x m``) and :math:`W K H_w - W` (``k x n``), with</span>
+<span class="sd">        :math:`P` and :math:`R_w` applied to ``k`` columns in their own forms</span>
+<span class="sd">        (through the factors of a Kronecker covariance): nothing</span>
+<span class="sd">        :math:`n \times n` or :math:`m \times m` beyond what the posterior</span>
+<span class="sd">        holds. With the world the problem itself and :math:`\gamma = 1`, the</span>
+<span class="sd">        bias is zero and :math:`V` is :math:`\hat{S}` (in Joseph form), so</span>
+<span class="sd">        ``std`` equals ``posterior_std``.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        world : Problem, optional</span>
+<span class="sd">            The problem that makes the data, with exactly this posterior's</span>
+<span class="sd">            state and observation labels (in any order); its own observations</span>
+<span class="sd">            are not used. By default the posterior's problem. A world on</span>
+<span class="sd">            other state labels (the whole state where the solve was</span>
+<span class="sd">            restricted) is not taken: use ``world.simulate`` and</span>
+<span class="sd">            :meth:`with_data` in a loop.</span>
+<span class="sd">        truth : Vector, optional</span>
+<span class="sd">            A fixed truth, on the state's labels in any order, instead of the</span>
+<span class="sd">            world's prior (another inventory, 1.5 times the prior). Only the</span>
+<span class="sd">            observation error is then random.</span>
+<span class="sd">        W : Operator, optional</span>
+<span class="sd">            An aggregation, as :meth:`cov` takes it: one row per total. By</span>
+<span class="sd">            default, one row per state element.</span>
+<span class="sd">        level : float, default 0.95</span>
+<span class="sd">            The probability of the posterior's interval that ``coverage``</span>
+<span class="sd">            is computed for, :math:`\hat{x} \pm z_{level} \hat{\sigma}`.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        pandas.DataFrame</span>
+<span class="sd">            One row per aggregate (or state element), on the aggregation's</span>
+<span class="sd">            rows (or the state's labels): ``prior`` (:math:`W x_0`),</span>
+<span class="sd">            ``truth`` (:math:`W \mu`), ``estimate`` (the expected</span>
+<span class="sd">            :math:`W \hat{x}`), ``bias`` (``estimate - truth``), ``std`` (the</span>
+<span class="sd">            standard deviation of the error, :math:`\sqrt{\operatorname{diag}</span>
+<span class="sd">            W V W^T}`), ``posterior_std`` (what the posterior claims,</span>
+<span class="sd">            :math:`\sqrt{\operatorname{diag} W \hat{S} W^T}`) and ``coverage``</span>
+<span class="sd">            (the probability that the `level` interval of the posterior holds</span>
+<span class="sd">            the truth, for an error :math:`N(\text{bias}, \text{std}^2)`).</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        TypeError</span>
+<span class="sd">            If the method's estimate is not linear in the observations (its</span>
+<span class="sd">            solution does not set ``estimate_is_linear``), or `world` is not</span>
+<span class="sd">            a Problem, or `truth` not a Vector.</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            If the world's state or observations, the truth or the columns of</span>
+<span class="sd">            `W` do not have exactly this posterior's labels (the message names</span>
+<span class="sd">            those on one side only), or `level` is not between 0 and 1.</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        --------</span>
+<span class="sd">        fips.Problem.simulate : One draw of a truth and its observations.</span>
+<span class="sd">        with_data : The posterior of one draw's observations.</span>
+<span class="sd">        cov : The posterior covariance, of the state or of aggregates.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        Paper 1's experiment: a truth of 1.5 times the prior, observed without</span>
+<span class="sd">        noise, and the fraction of the true change of each monthly total that</span>
+<span class="sd">        the inversion recovers. The expected estimate is the one from</span>
+<span class="sd">        noise-free observations, since the noise has mean zero; ``std`` is the</span>
+<span class="sd">        spread the noise adds.</span>
+
+<span class="sd">        &gt;&gt;&gt; import numpy as np</span>
+<span class="sd">        &gt;&gt;&gt; import pandas as pd</span>
+<span class="sd">        &gt;&gt;&gt; import fips</span>
+<span class="sd">        &gt;&gt;&gt; state = pd.MultiIndex.from_product(</span>
+<span class="sd">        ...     [pd.Index([1, 2], name="month"), pd.Index(["a", "b"], name="cell")]</span>
+<span class="sd">        ... )</span>
+<span class="sd">        &gt;&gt;&gt; prior = fips.Vector.from_series(pd.Series(1.0, index=state), block="flux")</span>
+<span class="sd">        &gt;&gt;&gt; obs = fips.Vector.from_series(</span>
+<span class="sd">        ...     pd.Series(0.0, index=pd.RangeIndex(6, name="obs_id")), block="ch4"</span>
+<span class="sd">        ... )</span>
+<span class="sd">        &gt;&gt;&gt; rng = np.random.default_rng(0)</span>
+<span class="sd">        &gt;&gt;&gt; problem = fips.Problem(</span>
+<span class="sd">        ...     prior=prior,</span>
+<span class="sd">        ...     prior_cov=fips.Independent().with_std(0.5),</span>
+<span class="sd">        ...     obs=obs,</span>
+<span class="sd">        ...     obs_cov=fips.Independent().with_std(1.0),</span>
+<span class="sd">        ...     forward=fips.Operator(</span>
+<span class="sd">        ...         rng.uniform(0.0, 1.0, (6, 4)), obs.space, prior.space</span>
+<span class="sd">        ...     ),</span>
+<span class="sd">        ... )</span>
+<span class="sd">        &gt;&gt;&gt; post = fips.solve(problem)</span>
+<span class="sd">        &gt;&gt;&gt; monthly = fips.aggregate.sum(prior.space, by="month")</span>
+<span class="sd">        &gt;&gt;&gt; truth = fips.Vector(prior.values * 1.5, prior.space)</span>
+<span class="sd">        &gt;&gt;&gt; table = post.recovery(truth=truth, W=monthly)</span>
+<span class="sd">        &gt;&gt;&gt; table = table.droplevel("block")</span>
+<span class="sd">        &gt;&gt;&gt; table.round(3).reset_index()</span>
+<span class="sd">           month  prior  truth  estimate   bias    std  posterior_std  coverage</span>
+<span class="sd">        0      1    2.0    3.0     2.667 -0.333  0.309          0.528     0.988</span>
+<span class="sd">        1      2    2.0    3.0     2.538 -0.462  0.285          0.586     0.992</span>
+<span class="sd">        &gt;&gt;&gt; moved = table["estimate"] - table["prior"]</span>
+<span class="sd">        &gt;&gt;&gt; needed = table["truth"] - table["prior"]</span>
+<span class="sd">        &gt;&gt;&gt; (moved / needed).round(3).tolist()  # the recovered fraction</span>
+<span class="sd">        [0.667, 0.538]</span>
+
+<span class="sd">        In its own world (the default), an inversion at :math:`\gamma = 1` has</span>
+<span class="sd">        no bias, and its intervals hold the truth as often as they claim:</span>
+
+<span class="sd">        &gt;&gt;&gt; honest = post.recovery(W=monthly).droplevel("block")</span>
+<span class="sd">        &gt;&gt;&gt; honest[["bias", "std", "posterior_std", "coverage"]].round(3).reset_index()</span>
+<span class="sd">           month  bias    std  posterior_std  coverage</span>
+<span class="sd">        0      1   0.0  0.528          0.528      0.95</span>
+<span class="sd">        1      2   0.0  0.586          0.586      0.95</span>
+<span class="sd">        """</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_solution</span><span class="p">,</span> <span class="s2">"estimate_is_linear"</span><span class="p">,</span> <span class="kc">False</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                <span class="s2">"The method that solved this problem does not give an estimate "</span>
+                <span class="sa">f</span><span class="s2">"linear in the observations (</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_solution</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2"> does "</span>
+                <span class="s2">"not set estimate_is_linear), so its error has no closed form: "</span>
+                <span class="s2">"use Problem.simulate and with_data in a loop."</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="mf">0.0</span> <span class="o">&lt;</span> <span class="n">level</span> <span class="o">&lt;</span> <span class="mf">1.0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"level must be between 0 and 1, got </span><span class="si">{</span><span class="n">level</span><span class="si">}</span><span class="s2">."</span><span class="p">)</span>
+        <span class="n">problem</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_problem</span>
+        <span class="n">world</span> <span class="o">=</span> <span class="n">problem</span> <span class="k">if</span> <span class="n">world</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">_on_labels</span><span class="p">(</span><span class="n">world</span><span class="p">)</span>
+        <span class="n">state</span> <span class="o">=</span> <span class="n">problem</span><span class="o">.</span><span class="n">prior</span><span class="o">.</span><span class="n">space</span>
+        <span class="k">if</span> <span class="n">truth</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">mu</span><span class="p">,</span> <span class="n">P</span> <span class="o">=</span> <span class="n">world</span><span class="o">.</span><span class="n">prior</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="n">world</span><span class="o">.</span><span class="n">prior_cov</span><span class="o">.</span><span class="n">data</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">truth</span><span class="p">,</span> <span class="n">Vector</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"truth must be a Vector, got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">truth</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">."</span><span class="p">)</span>
+            <span class="n">mu</span> <span class="o">=</span> <span class="n">truth</span><span class="o">.</span><span class="n">values</span>
+            <span class="k">if</span> <span class="n">truth</span><span class="o">.</span><span class="n">space</span> <span class="o">!=</span> <span class="n">state</span><span class="p">:</span>
+                <span class="n">mu</span> <span class="o">=</span> <span class="n">mu</span><span class="p">[</span><span class="n">state</span><span class="o">.</span><span class="n">_align</span><span class="p">(</span><span class="n">truth</span><span class="o">.</span><span class="n">space</span><span class="p">,</span> <span class="s2">"truth"</span><span class="p">,</span> <span class="s2">"The truth and the prior"</span><span class="p">)]</span>
+            <span class="n">P</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># a fixed truth has no spread</span>
+        <span class="c1"># The world's mean data minus what the problem's prior predicts</span>
+        <span class="n">d</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">world</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">Vector</span><span class="p">(</span><span class="n">mu</span><span class="p">,</span> <span class="n">state</span><span class="p">))</span><span class="o">.</span><span class="n">values</span>
+            <span class="o">-</span> <span class="n">problem</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">problem</span><span class="o">.</span><span class="n">prior</span><span class="p">)</span><span class="o">.</span><span class="n">values</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">W</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">WK</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_solution</span><span class="o">.</span><span class="n">gain</span><span class="p">()</span>  <span class="c1"># n x m</span>
+            <span class="n">Wx0</span><span class="p">,</span> <span class="n">Wmu</span> <span class="o">=</span> <span class="n">problem</span><span class="o">.</span><span class="n">prior</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="n">mu</span>
+            <span class="n">posterior_var</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">variances</span><span class="o">.</span><span class="n">values</span>
+            <span class="n">Wt</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">state</span><span class="p">))</span>  <span class="c1"># n x n: the per-element case</span>
+            <span class="n">index</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">index</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">W_form</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_aggregation</span><span class="p">(</span><span class="n">W</span><span class="p">)</span>
+            <span class="n">WK</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_solution</span><span class="o">.</span><span class="n">gain</span><span class="p">(</span><span class="n">W_form</span><span class="p">)</span>  <span class="c1"># k x m</span>
+            <span class="n">Wx0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">W_form</span> <span class="o">@</span> <span class="n">problem</span><span class="o">.</span><span class="n">prior</span><span class="o">.</span><span class="n">values</span><span class="p">)</span>
+            <span class="n">Wmu</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">W_form</span> <span class="o">@</span> <span class="n">mu</span><span class="p">)</span>
+            <span class="n">posterior_var</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cov</span><span class="p">(</span><span class="n">W</span><span class="p">)</span><span class="o">.</span><span class="n">variances</span><span class="o">.</span><span class="n">values</span>
+            <span class="n">Wt</span> <span class="o">=</span> <span class="n">W_form</span><span class="o">.</span><span class="n">_transpose</span><span class="p">()</span><span class="o">.</span><span class="n">dense</span><span class="p">()</span>  <span class="c1"># n x k</span>
+            <span class="n">index</span> <span class="o">=</span> <span class="n">W</span><span class="o">.</span><span class="n">rows</span><span class="o">.</span><span class="n">index</span>
+
+        <span class="n">estimate</span> <span class="o">=</span> <span class="n">Wx0</span> <span class="o">+</span> <span class="n">WK</span> <span class="o">@</span> <span class="n">d</span>
+        <span class="n">bias</span> <span class="o">=</span> <span class="n">estimate</span> <span class="o">-</span> <span class="n">Wmu</span>
+        <span class="c1"># diag(W K R_w K^T W^T), with R_w applied to k columns in its form</span>
+        <span class="n">KT</span> <span class="o">=</span> <span class="n">WK</span><span class="o">.</span><span class="n">T</span>  <span class="c1"># m x k</span>
+        <span class="n">variance</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s2">"ik,ik-&gt;k"</span><span class="p">,</span> <span class="n">KT</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">world</span><span class="o">.</span><span class="n">obs_cov</span><span class="o">.</span><span class="n">data</span> <span class="o">@</span> <span class="n">KT</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">P</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># G^T = (W K H_w - W)^T = H_w^T (W K)^T - W^T, n x k</span>
+            <span class="n">Gt</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">world</span><span class="o">.</span><span class="n">forward</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">_transpose</span><span class="p">()</span> <span class="o">@</span> <span class="n">KT</span><span class="p">)</span> <span class="o">-</span> <span class="n">Wt</span>
+            <span class="n">variance</span> <span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s2">"ik,ik-&gt;k"</span><span class="p">,</span> <span class="n">Gt</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">P</span> <span class="o">@</span> <span class="n">Gt</span><span class="p">))</span>
+        <span class="n">std</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="n">variance</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">))</span>  <span class="c1"># roundoff can leave -0</span>
+        <span class="n">posterior_std</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="n">posterior_var</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">))</span>
+
+        <span class="n">half</span> <span class="o">=</span> <span class="n">ndtri</span><span class="p">(</span><span class="mf">0.5</span> <span class="o">+</span> <span class="n">level</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="n">posterior_std</span>  <span class="c1"># half the interval</span>
+        <span class="k">with</span> <span class="n">np</span><span class="o">.</span><span class="n">errstate</span><span class="p">(</span><span class="n">divide</span><span class="o">=</span><span class="s2">"ignore"</span><span class="p">,</span> <span class="n">invalid</span><span class="o">=</span><span class="s2">"ignore"</span><span class="p">):</span>
+            <span class="n">random</span> <span class="o">=</span> <span class="n">ndtr</span><span class="p">((</span><span class="n">half</span> <span class="o">-</span> <span class="n">bias</span><span class="p">)</span> <span class="o">/</span> <span class="n">std</span><span class="p">)</span> <span class="o">-</span> <span class="n">ndtr</span><span class="p">((</span><span class="o">-</span><span class="n">half</span> <span class="o">-</span> <span class="n">bias</span><span class="p">)</span> <span class="o">/</span> <span class="n">std</span><span class="p">)</span>
+        <span class="c1"># An error with no spread is inside the interval or not</span>
+        <span class="n">coverage</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">std</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span> <span class="n">random</span><span class="p">,</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">bias</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="n">half</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
+            <span class="p">{</span>
+                <span class="s2">"prior"</span><span class="p">:</span> <span class="n">Wx0</span><span class="p">,</span>
+                <span class="s2">"truth"</span><span class="p">:</span> <span class="n">Wmu</span><span class="p">,</span>
+                <span class="s2">"estimate"</span><span class="p">:</span> <span class="n">estimate</span><span class="p">,</span>
+                <span class="s2">"bias"</span><span class="p">:</span> <span class="n">bias</span><span class="p">,</span>
+                <span class="s2">"std"</span><span class="p">:</span> <span class="n">std</span><span class="p">,</span>
+                <span class="s2">"posterior_std"</span><span class="p">:</span> <span class="n">posterior_std</span><span class="p">,</span>
+                <span class="s2">"coverage"</span><span class="p">:</span> <span class="n">coverage</span><span class="p">,</span>
+            <span class="p">},</span>
+            <span class="n">index</span><span class="o">=</span><span class="n">index</span><span class="p">,</span>
+        <span class="p">)</span></div>
 </div>
 
 </pre></div>

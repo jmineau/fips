@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>User Guide &#8212; fips 0.2.0b2.dev17+g343503d12 documentation</title>
+    <title>User Guide &#8212; fips 0.2.0b2.dev18+g4cf391a19 documentation</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../_static/documentation_options.js?v=bac470ef"></script>
+    <script src="../_static/documentation_options.js?v=b2404d6c"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -137,8 +137,8 @@
       
     
     
-    <img src="../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b2.dev17+g343503d12 documentation - Home"/>
-    <img src="../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b2.dev17+g343503d12 documentation - Home"/>
+    <img src="../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b2.dev18+g4cf391a19 documentation - Home"/>
+    <img src="../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b2.dev18+g4cf391a19 documentation - Home"/>
   
   
 </a></div>
@@ -984,6 +984,22 @@ product, so a Monte Carlo is a loop you write. If the inversion is honest, the
 <span class="gh">Out[60]: </span><span class="go">array([0.97, 0.94, 0.94, 0.96])</span>
 </pre></div>
 </div>
+<p>The estimate is linear in the observations, so the loop has an exact answer:
+<a class="reference internal" href="../reference/api/fips.Posterior.recovery.html#fips.Posterior.recovery" title="fips.Posterior.recovery"><code class="xref py py-meth docutils literal notranslate"><span class="pre">post.recovery</span></code></a> gives, for each total, the
+mean and spread of the error and the probability that the interval holds the
+truth, without sampling. <code class="docutils literal notranslate"><span class="pre">post.recovery(world,</span> <span class="pre">W=W)</span></code> does the same for data
+from another world on the same labels, and <code class="docutils literal notranslate"><span class="pre">truth=</span></code> fixes the truth, as in
+<code class="docutils literal notranslate"><span class="pre">simulate</span></code>:</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [61]: </span><span class="n">post</span><span class="o">.</span><span class="n">recovery</span><span class="p">(</span><span class="n">W</span><span class="o">=</span><span class="n">W</span><span class="p">)[[</span><span class="s2">"truth"</span><span class="p">,</span> <span class="s2">"estimate"</span><span class="p">,</span> <span class="s2">"std"</span><span class="p">,</span> <span class="s2">"posterior_std"</span><span class="p">,</span> <span class="s2">"coverage"</span><span class="p">]]</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="gh">Out[61]: </span>
+<span class="go">                  truth  estimate    std  posterior_std  coverage</span>
+<span class="go">block time                                                       </span>
+<span class="go">flux  2024-01-01    4.0       4.0  0.789          0.789      0.95</span>
+<span class="go">      2024-01-08    4.0       4.0  0.590          0.590      0.95</span>
+<span class="go">      2024-01-15    4.0       4.0  0.643          0.643      0.95</span>
+<span class="go">      2024-01-22    4.0       4.0  0.713          0.713      0.95</span>
+</pre></div>
+</div>
 <p>The data come from a world, and the inversion you run on them has its own
 assumptions. There are four kinds of world:</p>
 <ul class="simple">
@@ -1005,11 +1021,11 @@ extra): several vectors or Series on one axes, with a band of one standard
 deviation from each covariance, and an optional truth. Maps and anything else
 are drawn from <a class="reference internal" href="../reference/api/fips.Vector.to_series.html#fips.Vector.to_series" title="fips.Vector.to_series"><code class="xref py py-meth docutils literal notranslate"><span class="pre">to_series()</span></code></a> and
 <a class="reference internal" href="../reference/api/fips.Vector.to_xarray.html#fips.Vector.to_xarray" title="fips.Vector.to_xarray"><code class="xref py py-meth docutils literal notranslate"><span class="pre">to_xarray()</span></code></a> with pandas, xarray or matplotlib:</p>
-<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [61]: </span><span class="kn">from</span><span class="w"> </span><span class="nn">fips.visualization</span><span class="w"> </span><span class="kn">import</span> <span class="n">plot_comparison</span>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [62]: </span><span class="kn">from</span><span class="w"> </span><span class="nn">fips.visualization</span><span class="w"> </span><span class="kn">import</span> <span class="n">plot_comparison</span>
 
-<span class="gp">In [62]: </span><span class="n">weekly</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">aggregate</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">problem</span><span class="o">.</span><span class="n">prior</span><span class="o">.</span><span class="n">space</span><span class="p">,</span> <span class="n">by</span><span class="o">=</span><span class="s2">"time"</span><span class="p">)</span>
+<span class="gp">In [63]: </span><span class="n">weekly</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">aggregate</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">problem</span><span class="o">.</span><span class="n">prior</span><span class="o">.</span><span class="n">space</span><span class="p">,</span> <span class="n">by</span><span class="o">=</span><span class="s2">"time"</span><span class="p">)</span>
 
-<span class="gp">In [63]: </span><span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plot_comparison</span><span class="p">(</span>
+<span class="gp">In [64]: </span><span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plot_comparison</span><span class="p">(</span>
 <span class="gp">   ....: </span>    <span class="p">(</span><span class="n">weekly</span> <span class="o">@</span> <span class="n">problem</span><span class="o">.</span><span class="n">prior</span><span class="p">)</span><span class="o">.</span><span class="n">to_series</span><span class="p">()</span><span class="o">.</span><span class="n">droplevel</span><span class="p">(</span><span class="s2">"block"</span><span class="p">)</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="s2">"prior"</span><span class="p">),</span>
 <span class="gp">   ....: </span>    <span class="p">(</span><span class="n">weekly</span> <span class="o">@</span> <span class="n">post</span><span class="o">.</span><span class="n">estimate</span><span class="p">)</span><span class="o">.</span><span class="n">to_series</span><span class="p">()</span><span class="o">.</span><span class="n">droplevel</span><span class="p">(</span><span class="s2">"block"</span><span class="p">)</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="s2">"posterior"</span><span class="p">),</span>
 <span class="gp">   ....: </span>    <span class="n">errors</span><span class="o">=</span><span class="p">[</span><span class="n">weekly</span> <span class="o">@</span> <span class="n">problem</span><span class="o">.</span><span class="n">prior_cov</span> <span class="o">@</span> <span class="n">weekly</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">post</span><span class="o">.</span><span class="n">cov</span><span class="p">(</span><span class="n">weekly</span><span class="p">)],</span>

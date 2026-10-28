@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>fips.methods &#8212; fips 0.2.0b2.dev17+g343503d12 documentation</title>
+    <title>fips.methods &#8212; fips 0.2.0b2.dev18+g4cf391a19 documentation</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../_static/documentation_options.js?v=bac470ef"></script>
+    <script src="../../_static/documentation_options.js?v=b2404d6c"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -132,8 +132,8 @@
       
     
     
-    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b2.dev17+g343503d12 documentation - Home"/>
-    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b2.dev17+g343503d12 documentation - Home"/>
+    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b2.dev18+g4cf391a19 documentation - Home"/>
+    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b2.dev18+g4cf391a19 documentation - Home"/>
   
   
 </a></div>
@@ -440,9 +440,11 @@
 <span class="sd">  the problem's spaces: ``estimate()``, ``variances()``, ``cov(W)``,</span>
 <span class="sd">  ``gain(W)``, ``dofs()`` and ``chi2()``. It may also have</span>
 <span class="sd">  ``with_gamma(gamma)`` and ``with_data(problem)``, which give another</span>
-<span class="sd">  solution without solving again, and ``estimate_is_mean = True`` when its</span>
-<span class="sd">  estimate is the posterior mean; a posterior whose solution lacks one of</span>
-<span class="sd">  them raises when that feature is asked for;</span>
+<span class="sd">  solution without solving again, ``estimate_is_mean = True`` when its</span>
+<span class="sd">  estimate is the posterior mean, and ``estimate_is_linear = True`` when its</span>
+<span class="sd">  estimate is :math:`x_0 + K (z - H x_0 - c)` with the gain of ``gain()``</span>
+<span class="sd">  (what ``Posterior.recovery`` needs); a posterior whose solution lacks one</span>
+<span class="sd">  of them raises when that feature is asked for;</span>
 <span class="sd">- a function from a :class:`~fips.Problem` and the options to</span>
 <span class="sd">  ``Posterior(problem, solution, options)``.</span>
 
@@ -454,7 +456,8 @@
 <span class="sd">(``m x m``) or information (``n x n``) system, whichever its size calls for.</span>
 <span class="sd">A lognormal method would keep its estimate (the mode) and the Gaussian of the log state around</span>
 <span class="sd">it, and answer from those carried back to the state (the gain of the problem</span>
-<span class="sd">linearized at the mode; no ``estimate_is_mean``); an ensemble method would keep its posterior ensemble and answer from the</span>
+<span class="sd">linearized at the mode; no ``estimate_is_mean``, and no ``estimate_is_linear``, since the mode is</span>
+<span class="sd">not linear in the data); an ensemble method would keep its posterior ensemble and answer from the</span>
 <span class="sd">sample mean and covariance (``estimate_is_mean = True``). Neither can change</span>
 <span class="sd">gamma without solving again, so neither has ``with_gamma``. A method imports</span>
 <span class="sd">:mod:`fips.posterior`; :mod:`fips.posterior` never imports a method.</span>

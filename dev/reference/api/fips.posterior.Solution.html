@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>fips.posterior.Solution &#8212; fips 0.2.0b2.dev17+g343503d12 documentation</title>
+    <title>fips.posterior.Solution &#8212; fips 0.2.0b2.dev18+g4cf391a19 documentation</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../_static/documentation_options.js?v=bac470ef"></script>
+    <script src="../../_static/documentation_options.js?v=b2404d6c"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -137,8 +137,8 @@
       
     
     
-    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b2.dev17+g343503d12 documentation - Home"/>
-    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b2.dev17+g343503d12 documentation - Home"/>
+    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b2.dev18+g4cf391a19 documentation - Home"/>
+    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b2.dev18+g4cf391a19 documentation - Home"/>
   
   
 </a></div>
@@ -616,6 +616,7 @@
 <li class="toctree-l3"><a class="reference internal" href="fips.Posterior.cov.html">fips.Posterior.cov</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.Posterior.desroziers.html">fips.Posterior.desroziers</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.Posterior.leverage.html">fips.Posterior.leverage</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fips.Posterior.recovery.html">fips.Posterior.recovery</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.Posterior.summary.html">fips.Posterior.summary</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.Posterior.with_data.html">fips.Posterior.with_data</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.Posterior.with_gamma.html">fips.Posterior.with_gamma</a></li>
@@ -642,6 +643,7 @@
 <li class="toctree-l2"><a class="reference internal" href="fips.Posterior.summary.html">fips.Posterior.summary</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.Posterior.with_gamma.html">fips.Posterior.with_gamma</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.Posterior.with_data.html">fips.Posterior.with_data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fips.Posterior.recovery.html">fips.Posterior.recovery</a></li>
 <li class="toctree-l2 current active has-children"><a aria-current="page" class="current reference internal" href="#">fips.posterior.Solution</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l3"><a class="reference internal" href="fips.posterior.Solution.chi2.html">fips.posterior.Solution.chi2</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.posterior.Solution.cov.html">fips.posterior.Solution.cov</a></li>
@@ -838,7 +840,11 @@ problem with other values of the observations, without solving again
 </ul>
 <p>And a solution whose <a class="reference internal" href="fips.posterior.Solution.estimate.html#fips.posterior.Solution.estimate" title="fips.posterior.Solution.estimate"><code class="xref py py-meth docutils literal notranslate"><span class="pre">estimate()</span></code></a> is the posterior mean says so with a
 class attribute <code class="docutils literal notranslate"><span class="pre">estimate_is_mean</span> <span class="pre">=</span> <span class="pre">True</span></code>; without it, a posterior has
-no <code class="xref py py-attr docutils literal notranslate"><span class="pre">mean</span></code>.</p>
+no <code class="xref py py-attr docutils literal notranslate"><span class="pre">mean</span></code>. One whose estimate is linear in the
+observations, <span class="math notranslate nohighlight">\(\hat{x} = x_0 + K (z - H x_0 - c)\)</span> with the
+<span class="math notranslate nohighlight">\(K\)</span> of <a class="reference internal" href="fips.posterior.Solution.gain.html#fips.posterior.Solution.gain" title="fips.posterior.Solution.gain"><code class="xref py py-meth docutils literal notranslate"><span class="pre">gain()</span></code></a> whatever the values of <span class="math notranslate nohighlight">\(z\)</span>, says so with
+<code class="docutils literal notranslate"><span class="pre">estimate_is_linear</span> <span class="pre">=</span> <span class="pre">True</span></code>; without it, a posterior has no
+<code class="xref py py-meth docutils literal notranslate"><span class="pre">recovery()</span></code>.</p>
 <div class="admonition seealso">
 <p class="admonition-title">See also</p>
 <dl class="simple">

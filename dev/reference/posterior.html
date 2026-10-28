@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Solving and Posterior &#8212; fips 0.2.0b2.dev17+g343503d12 documentation</title>
+    <title>Solving and Posterior &#8212; fips 0.2.0b2.dev18+g4cf391a19 documentation</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../_static/documentation_options.js?v=bac470ef"></script>
+    <script src="../_static/documentation_options.js?v=b2404d6c"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -137,8 +137,8 @@
       
     
     
-    <img src="../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b2.dev17+g343503d12 documentation - Home"/>
-    <img src="../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b2.dev17+g343503d12 documentation - Home"/>
+    <img src="../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b2.dev18+g4cf391a19 documentation - Home"/>
+    <img src="../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b2.dev18+g4cf391a19 documentation - Home"/>
   
   
 </a></div>
@@ -616,6 +616,7 @@
 <li class="toctree-l3"><a class="reference internal" href="api/fips.Posterior.cov.html">fips.Posterior.cov</a></li>
 <li class="toctree-l3"><a class="reference internal" href="api/fips.Posterior.desroziers.html">fips.Posterior.desroziers</a></li>
 <li class="toctree-l3"><a class="reference internal" href="api/fips.Posterior.leverage.html">fips.Posterior.leverage</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/fips.Posterior.recovery.html">fips.Posterior.recovery</a></li>
 <li class="toctree-l3"><a class="reference internal" href="api/fips.Posterior.summary.html">fips.Posterior.summary</a></li>
 <li class="toctree-l3"><a class="reference internal" href="api/fips.Posterior.with_data.html">fips.Posterior.with_data</a></li>
 <li class="toctree-l3"><a class="reference internal" href="api/fips.Posterior.with_gamma.html">fips.Posterior.with_gamma</a></li>
@@ -642,6 +643,7 @@
 <li class="toctree-l2"><a class="reference internal" href="api/fips.Posterior.summary.html">fips.Posterior.summary</a></li>
 <li class="toctree-l2"><a class="reference internal" href="api/fips.Posterior.with_gamma.html">fips.Posterior.with_gamma</a></li>
 <li class="toctree-l2"><a class="reference internal" href="api/fips.Posterior.with_data.html">fips.Posterior.with_data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/fips.Posterior.recovery.html">fips.Posterior.recovery</a></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="api/fips.posterior.Solution.html">fips.posterior.Solution</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l3"><a class="reference internal" href="api/fips.posterior.Solution.chi2.html">fips.posterior.Solution.chi2</a></li>
 <li class="toctree-l3"><a class="reference internal" href="api/fips.posterior.Solution.cov.html">fips.posterior.Solution.cov</a></li>
@@ -980,6 +982,21 @@ factorization in either form.</p>
 </table>
 </div>
 </section>
+<section id="recovering-a-known-truth">
+<h2>Recovering a known truth<a class="headerlink" href="#recovering-a-known-truth" title="Link to this heading">#</a></h2>
+<p>The exact mean and spread of the estimate’s error when the data come from a
+world (the problem itself, a fixed truth, or another <a class="reference internal" href="api/fips.Problem.html#fips.Problem" title="fips.Problem"><code class="xref py py-class docutils literal notranslate"><span class="pre">Problem</span></code></a> on the
+same labels): the answer of a Monte Carlo loop over <a class="reference internal" href="api/fips.Problem.simulate.html#fips.Problem.simulate" title="fips.Problem.simulate"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Problem.simulate()</span></code></a>
+and <a class="reference internal" href="api/fips.Posterior.with_data.html#fips.Posterior.with_data" title="fips.Posterior.with_data"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Posterior.with_data()</span></code></a>, without sampling.</p>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="api/fips.Posterior.recovery.html#fips.Posterior.recovery" title="fips.Posterior.recovery"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Posterior.recovery</span></code></a>([world, truth, W, level])</p></td>
+<td><p>Return how well the estimate recovers the truth when the data come from <cite>world</cite>: exactly, without sampling.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
 <section id="serialization">
 <h2>Serialization<a class="headerlink" href="#serialization" title="Link to this heading">#</a></h2>
 <p>A posterior pickles with the standard library (<code class="docutils literal notranslate"><span class="pre">pickle.dump(post,</span> <span class="pre">file)</span></code>):
@@ -1084,6 +1101,7 @@ added is in the docstring of <code class="xref py py-mod docutils literal notran
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#operators">Operators</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#diagnostics">Diagnostics</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#reusing-the-factorization">Reusing the factorization</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#recovering-a-known-truth">Recovering a known truth</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#serialization">Serialization</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#writing-a-method">Writing a method</a></li>
 </ul>

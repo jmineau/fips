@@ -40,6 +40,7 @@
    ~Posterior.cov
    ~Posterior.desroziers
    ~Posterior.leverage
+   ~Posterior.recovery
    ~Posterior.summary
    ~Posterior.with_data
    ~Posterior.with_gamma
