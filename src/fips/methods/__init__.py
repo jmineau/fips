@@ -17,9 +17,11 @@ below:
   the problem's spaces: ``estimate()``, ``variances()``, ``cov(W)``,
   ``gain(W)``, ``dofs()`` and ``chi2()``. It may also have
   ``with_gamma(gamma)`` and ``with_data(problem)``, which give another
-  solution without solving again, and ``estimate_is_mean = True`` when its
-  estimate is the posterior mean; a posterior whose solution lacks one of
-  them raises when that feature is asked for;
+  solution without solving again, ``estimate_is_mean = True`` when its
+  estimate is the posterior mean, and ``estimate_is_linear = True`` when its
+  estimate is :math:`x_0 + K (z - H x_0 - c)` with the gain of ``gain()``
+  (what ``Posterior.recovery`` needs); a posterior whose solution lacks one
+  of them raises when that feature is asked for;
 - a function from a :class:`~fips.Problem` and the options to
   ``Posterior(problem, solution, options)``.
 
@@ -31,7 +33,8 @@ problem, so a new method gets them all. The analytic method's solution is
 (``m x m``) or information (``n x n``) system, whichever its size calls for.
 A lognormal method would keep its estimate (the mode) and the Gaussian of the log state around
 it, and answer from those carried back to the state (the gain of the problem
-linearized at the mode; no ``estimate_is_mean``); an ensemble method would keep its posterior ensemble and answer from the
+linearized at the mode; no ``estimate_is_mean``, and no ``estimate_is_linear``, since the mode is
+not linear in the data); an ensemble method would keep its posterior ensemble and answer from the
 sample mean and covariance (``estimate_is_mean = True``). Neither can change
 gamma without solving again, so neither has ``with_gamma``. A method imports
 :mod:`fips.posterior`; :mod:`fips.posterior` never imports a method.

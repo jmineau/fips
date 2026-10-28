@@ -26,6 +26,7 @@ import numpy as np
 import pandas as pd
 from numpy.linalg import LinAlgError
 from scipy.linalg import inv, solve
+from scipy.special import ndtr, ndtri  # the normal CDF and its inverse
 
 from fips.covariance import Covariance
 from fips.linalg import LinearOperator
@@ -59,7 +60,11 @@ class Solution(Protocol):
 
     And a solution whose :meth:`estimate` is the posterior mean says so with a
     class attribute ``estimate_is_mean = True``; without it, a posterior has
-    no :attr:`~Posterior.mean`.
+    no :attr:`~Posterior.mean`. One whose estimate is linear in the
+    observations, :math:`\hat{x} = x_0 + K (z - H x_0 - c)` with the
+    :math:`K` of :meth:`gain` whatever the values of :math:`z`, says so with
+    ``estimate_is_linear = True``; without it, a posterior has no
+    :meth:`~Posterior.recovery`.
 
     See Also
     --------
@@ -175,10 +180,11 @@ class Posterior:
     (:attr:`innovation_cov`); what needs neither is on the
     :class:`~fips.Problem` (:meth:`~fips.Problem.predict`).
 
-    Every member works for every method, except three that need more of the
+    Every member works for every method, except four that need more of the
     method than a :class:`Solution` gives: :attr:`mean` (where the estimate is
     the mean), :meth:`with_gamma` and :meth:`with_data` (where the method can
-    answer without solving again). The analytic method has all three.
+    answer without solving again), and :meth:`recovery` (where the estimate is
+    linear in the observations). The analytic method has all four.
 
     Parameters
     ----------
@@ -960,3 +966,251 @@ class Posterior:
         post = type(self)(new, resolve(new), self._options)
         _ = post.estimate
         return post
+
+    # -- the error of the estimate in a world ----------------------------------
+
+    def _on_labels(self, world: Problem) -> Problem:
+        """
+        Return `world` with its inputs in the order of this posterior's labels.
+
+        Raises
+        ------
+        TypeError
+            If `world` is not a Problem.
+        ValueError
+            If its state or observations do not have exactly the labels of
+            this posterior's; the message names those on one side only.
+        """
+        if not isinstance(world, Problem):
+            raise TypeError(f"world must be a Problem, got {type(world).__name__}.")
+        state, observed = self._problem.prior.space, self._problem.obs.space
+        if world.prior.space == state and world.obs.space == observed:
+            return world
+        s = state._align(
+            world.prior.space,
+            "the world's state",
+            "The world's state and the posterior's",
+        )
+        o = observed._align(
+            world.obs.space,
+            "the world's observations",
+            "The world's observations and the posterior's",
+        )
+        # Problem puts the operators, covariances and offset on these spaces
+        return Problem(
+            prior=Vector(world.prior.values[s], state),
+            prior_cov=world.prior_cov,
+            obs=Vector(world.obs.values[o], observed),
+            obs_cov=world.obs_cov,
+            forward=world.forward,
+            offset=world.offset,
+        )
+
+    def recovery(
+        self,
+        world: Problem | None = None,
+        *,
+        truth: Vector | None = None,
+        W: Operator | None = None,
+        level: float = 0.95,
+    ) -> pd.DataFrame:
+        r"""
+        Return how well the estimate recovers the truth when the data come from `world`: exactly, without sampling.
+
+        The exact answer of the Monte Carlo loop over ``world.simulate(rng)``
+        and :meth:`with_data`. The estimate is linear in the observations,
+        :math:`\hat{x} = x_0 + K (z - H x_0 - c)`, with the gain :math:`K` of
+        this posterior (its problem's :math:`H`, :math:`c`, :math:`S_0` and
+        :math:`S_z / \gamma`). When the world makes the data, with a truth
+        :math:`x \sim N(\mu, P)` (its prior, or a given `truth` with
+        :math:`P = 0`) and observations :math:`z = H_w x + c_w + e`,
+        :math:`e \sim N(0, R_w)` (its forward operator, offset and model-data
+        mismatch, not divided by :math:`\gamma`), the error
+        :math:`\hat{x} - x` is Gaussian, with
+
+        .. math::
+
+            b = (x_0 - \mu) + K (H_w \mu + c_w - H x_0 - c), \qquad
+            V = (K H_w - I) P (K H_w - I)^T + K R_w K^T.
+
+        For an aggregation :math:`W`, :math:`W b` and :math:`W V W^T`, from
+        :math:`W K` (``k x m``) and :math:`W K H_w - W` (``k x n``), with
+        :math:`P` and :math:`R_w` applied to ``k`` columns in their own forms
+        (through the factors of a Kronecker covariance): nothing
+        :math:`n \times n` or :math:`m \times m` beyond what the posterior
+        holds. With the world the problem itself and :math:`\gamma = 1`, the
+        bias is zero and :math:`V` is :math:`\hat{S}` (in Joseph form), so
+        ``std`` equals ``posterior_std``.
+
+        Parameters
+        ----------
+        world : Problem, optional
+            The problem that makes the data, with exactly this posterior's
+            state and observation labels (in any order); its own observations
+            are not used. By default the posterior's problem. A world on
+            other state labels (the whole state where the solve was
+            restricted) is not taken: use ``world.simulate`` and
+            :meth:`with_data` in a loop.
+        truth : Vector, optional
+            A fixed truth, on the state's labels in any order, instead of the
+            world's prior (another inventory, 1.5 times the prior). Only the
+            observation error is then random.
+        W : Operator, optional
+            An aggregation, as :meth:`cov` takes it: one row per total. By
+            default, one row per state element.
+        level : float, default 0.95
+            The probability of the posterior's interval that ``coverage``
+            is computed for, :math:`\hat{x} \pm z_{level} \hat{\sigma}`.
+
+        Returns
+        -------
+        pandas.DataFrame
+            One row per aggregate (or state element), on the aggregation's
+            rows (or the state's labels): ``prior`` (:math:`W x_0`),
+            ``truth`` (:math:`W \mu`), ``estimate`` (the expected
+            :math:`W \hat{x}`), ``bias`` (``estimate - truth``), ``std`` (the
+            standard deviation of the error, :math:`\sqrt{\operatorname{diag}
+            W V W^T}`), ``posterior_std`` (what the posterior claims,
+            :math:`\sqrt{\operatorname{diag} W \hat{S} W^T}`) and ``coverage``
+            (the probability that the `level` interval of the posterior holds
+            the truth, for an error :math:`N(\text{bias}, \text{std}^2)`).
+
+        Raises
+        ------
+        TypeError
+            If the method's estimate is not linear in the observations (its
+            solution does not set ``estimate_is_linear``), or `world` is not
+            a Problem, or `truth` not a Vector.
+        ValueError
+            If the world's state or observations, the truth or the columns of
+            `W` do not have exactly this posterior's labels (the message names
+            those on one side only), or `level` is not between 0 and 1.
+
+        See Also
+        --------
+        fips.Problem.simulate : One draw of a truth and its observations.
+        with_data : The posterior of one draw's observations.
+        cov : The posterior covariance, of the state or of aggregates.
+
+        Examples
+        --------
+        Paper 1's experiment: a truth of 1.5 times the prior, observed without
+        noise, and the fraction of the true change of each monthly total that
+        the inversion recovers. The expected estimate is the one from
+        noise-free observations, since the noise has mean zero; ``std`` is the
+        spread the noise adds.
+
+        >>> import numpy as np
+        >>> import pandas as pd
+        >>> import fips
+        >>> state = pd.MultiIndex.from_product(
+        ...     [pd.Index([1, 2], name="month"), pd.Index(["a", "b"], name="cell")]
+        ... )
+        >>> prior = fips.Vector.from_series(pd.Series(1.0, index=state), block="flux")
+        >>> obs = fips.Vector.from_series(
+        ...     pd.Series(0.0, index=pd.RangeIndex(6, name="obs_id")), block="ch4"
+        ... )
+        >>> rng = np.random.default_rng(0)
+        >>> problem = fips.Problem(
+        ...     prior=prior,
+        ...     prior_cov=fips.Independent().with_std(0.5),
+        ...     obs=obs,
+        ...     obs_cov=fips.Independent().with_std(1.0),
+        ...     forward=fips.Operator(
+        ...         rng.uniform(0.0, 1.0, (6, 4)), obs.space, prior.space
+        ...     ),
+        ... )
+        >>> post = fips.solve(problem)
+        >>> monthly = fips.aggregate.sum(prior.space, by="month")
+        >>> truth = fips.Vector(prior.values * 1.5, prior.space)
+        >>> table = post.recovery(truth=truth, W=monthly)
+        >>> table = table.droplevel("block")
+        >>> table.round(3).reset_index()
+           month  prior  truth  estimate   bias    std  posterior_std  coverage
+        0      1    2.0    3.0     2.667 -0.333  0.309          0.528     0.988
+        1      2    2.0    3.0     2.538 -0.462  0.285          0.586     0.992
+        >>> moved = table["estimate"] - table["prior"]
+        >>> needed = table["truth"] - table["prior"]
+        >>> (moved / needed).round(3).tolist()  # the recovered fraction
+        [0.667, 0.538]
+
+        In its own world (the default), an inversion at :math:`\gamma = 1` has
+        no bias, and its intervals hold the truth as often as they claim:
+
+        >>> honest = post.recovery(W=monthly).droplevel("block")
+        >>> honest[["bias", "std", "posterior_std", "coverage"]].round(3).reset_index()
+           month  bias    std  posterior_std  coverage
+        0      1   0.0  0.528          0.528      0.95
+        1      2   0.0  0.586          0.586      0.95
+        """
+        if not getattr(self._solution, "estimate_is_linear", False):
+            raise TypeError(
+                "The method that solved this problem does not give an estimate "
+                f"linear in the observations ({type(self._solution).__name__} does "
+                "not set estimate_is_linear), so its error has no closed form: "
+                "use Problem.simulate and with_data in a loop."
+            )
+        if not 0.0 < level < 1.0:
+            raise ValueError(f"level must be between 0 and 1, got {level}.")
+        problem = self._problem
+        world = problem if world is None else self._on_labels(world)
+        state = problem.prior.space
+        if truth is None:
+            mu, P = world.prior.values, world.prior_cov.data
+        else:
+            if not isinstance(truth, Vector):
+                raise TypeError(f"truth must be a Vector, got {type(truth).__name__}.")
+            mu = truth.values
+            if truth.space != state:
+                mu = mu[state._align(truth.space, "truth", "The truth and the prior")]
+            P = None  # a fixed truth has no spread
+        # The world's mean data minus what the problem's prior predicts
+        d = (
+            world.predict(Vector(mu, state)).values
+            - problem.predict(problem.prior).values
+        )
+
+        if W is None:
+            WK = self._solution.gain()  # n x m
+            Wx0, Wmu = problem.prior.values, mu
+            posterior_var = self.variances.values
+            Wt = np.eye(len(state))  # n x n: the per-element case
+            index = state.index
+        else:
+            W_form = self._aggregation(W)
+            WK = self._solution.gain(W_form)  # k x m
+            Wx0 = np.asarray(W_form @ problem.prior.values)
+            Wmu = np.asarray(W_form @ mu)
+            posterior_var = self.cov(W).variances.values
+            Wt = W_form._transpose().dense()  # n x k
+            index = W.rows.index
+
+        estimate = Wx0 + WK @ d
+        bias = estimate - Wmu
+        # diag(W K R_w K^T W^T), with R_w applied to k columns in its form
+        KT = WK.T  # m x k
+        variance = np.einsum("ik,ik->k", KT, np.asarray(world.obs_cov.data @ KT))
+        if P is not None:
+            # G^T = (W K H_w - W)^T = H_w^T (W K)^T - W^T, n x k
+            Gt = np.asarray(world.forward.data._transpose() @ KT) - Wt
+            variance += np.einsum("ik,ik->k", Gt, np.asarray(P @ Gt))
+        std = np.sqrt(np.maximum(variance, 0.0))  # roundoff can leave -0
+        posterior_std = np.sqrt(np.maximum(posterior_var, 0.0))
+
+        half = ndtri(0.5 + level / 2) * posterior_std  # half the interval
+        with np.errstate(divide="ignore", invalid="ignore"):
+            random = ndtr((half - bias) / std) - ndtr((-half - bias) / std)
+        # An error with no spread is inside the interval or not
+        coverage = np.where(std > 0, random, (np.abs(bias) <= half).astype(float))
+        return pd.DataFrame(
+            {
+                "prior": Wx0,
+                "truth": Wmu,
+                "estimate": estimate,
+                "bias": bias,
+                "std": std,
+                "posterior_std": posterior_std,
+                "coverage": coverage,
+            },
+            index=index,
+        )

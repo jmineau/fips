@@ -109,6 +109,18 @@ Reusing the factorization
    Posterior.with_gamma
    Posterior.with_data
 
+Recovering a known truth
+~~~~~~~~~~~~~~~~~~~~~~~~
+The exact mean and spread of the estimate's error when the data come from a
+world (the problem itself, a fixed truth, or another :class:`Problem` on the
+same labels): the answer of a Monte Carlo loop over :meth:`Problem.simulate`
+and :meth:`Posterior.with_data`, without sampling.
+
+.. autosummary::
+   :toctree: api/
+
+   Posterior.recovery
+
 Serialization
 ~~~~~~~~~~~~~
 A posterior pickles with the standard library (``pickle.dump(post, file)``):

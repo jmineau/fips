@@ -337,6 +337,7 @@ class Problem:
         predict : The observations without the error.
         Covariance.sample : The draw of the truth and of the error.
         Posterior.with_data : The posterior of other observations, one product.
+        Posterior.recovery : The exact mean and spread of the error over such trials.
 
         Notes
         -----
