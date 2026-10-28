@@ -377,8 +377,9 @@ matrices. Here, the total flux of each week:
 depend neither on gamma nor on the values of the observations, so
 ``post.with_gamma(g)`` is ``fips.solve(problem, gamma=g)`` at the cost of a few
 products, and ``post.with_data(obs)`` the posterior of other observations at
-the same labels (a bootstrap, synthetic observations of a known truth). A sweep
-over gamma factors once, and the rows of :meth:`~fips.Posterior.summary` stack:
+the same labels (a bootstrap, :ref:`synthetic observations of a known truth
+<synthetic-data>`). A sweep over gamma factors once, and the rows of
+:meth:`~fips.Posterior.summary` stack:
 
 .. ipython:: python
 
@@ -389,6 +390,50 @@ observation error variances the residuals diagnose with those the solve used,
 per observation or averaged over groups; :attr:`~fips.Posterior.reduced_chi2`
 is near 1 when the covariances are right; :meth:`~fips.Posterior.leverage`
 says which observations weigh most on a state.
+
+
+.. _synthetic-data:
+
+Synthetic truth and observations
+--------------------------------
+
+To test an inversion on data whose answer you know, make the data from the
+problem. :meth:`Problem.simulate <fips.Problem.simulate>` returns ``(truth,
+obs)``, two vectors: a truth drawn from the prior, :math:`x \sim N(x_0, S_0)`,
+and the observations it would give, :math:`z = H x + c + e` with :math:`e \sim
+N(0, S_z)`; :meth:`~fips.Problem.predict` is the same without the error. Its
+draws are :meth:`Covariance.sample <fips.Covariance.sample>`, which draws from
+:math:`N(0, S)` without forming :math:`S` where its form has a cheaper root.
+``rng`` is a seed or a :class:`numpy.random.Generator` (one generator passed to
+every call gives independent trials), and a ``truth=`` of your own (another
+inventory, 1.5 times the prior, on the prior's labels in any order) replaces
+the draw. A trial is the solve on other data, ``post.with_data(obs)``, one
+product, so a Monte Carlo is a loop you write. If the inversion is honest, the
+95% interval of each total holds the truth in about 95% of the trials:
+
+.. ipython:: python
+
+   rng = np.random.default_rng(0)
+   sd = np.sqrt(post.cov(W).variances.values)  # what the posterior claims
+   inside = []
+   for _ in range(500):
+       truth, obs = problem.simulate(rng)
+       estimate = post.with_data(obs).estimate
+       inside.append(np.abs((W @ estimate).values - (W @ truth).values) <= 1.96 * sd)
+   np.mean(inside, axis=0).round(2)
+
+The data come from a world, and the inversion you run on them has its own
+assumptions. There are four kinds of world:
+
+- **The problem itself**: ``problem.simulate(rng)``, as above, tests that the
+  inversion is honest.
+- **A chosen truth**: ``problem.simulate(rng, truth=inventory)`` tests how much
+  of another inventory the inversion recovers.
+- **Another observing system**: a separate :class:`~fips.Problem` with other
+  observations and its own solve, compared on the uncertainty of the totals.
+- **One input wrong**: the :class:`~fips.Problem` your own code builds with one
+  input changed (a background, the mismatch), then ``world.simulate(rng)`` and
+  ``post.with_data(obs)``, which solves its data with your assumptions.
 
 
 Plotting
