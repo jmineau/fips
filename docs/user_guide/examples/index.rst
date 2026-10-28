@@ -11,6 +11,7 @@ code produces.
 
    gravity_2d
    flux_regional
+   synthetic_truth
 
 :doc:`gravity_2d`
    The density of buried prisms from the gravity measured above them: a small,
@@ -21,3 +22,8 @@ code produces.
    A year of monthly methane fluxes on a grid from daily concentrations at three
    sites: a sparse forward operator, a background as the offset, maps from
    ``to_xarray``, and the posterior of monthly totals.
+
+:doc:`synthetic_truth`
+   Does the inversion recover a known flux? A world makes the data and the
+   inversion solves them: coverage of the monthly totals, a mismatch assumed too
+   small or too large, a bias on one site, and a truth of 1.5 times the prior.
