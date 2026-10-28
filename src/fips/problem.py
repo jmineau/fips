@@ -9,7 +9,8 @@ spaces: :func:`fips.solve` then computes by position.
 
 The problem is the question, and the :class:`~fips.Posterior` that
 :func:`fips.solve` returns is the answer. The problem holds what needs no
-solve and no ``m x m`` matrix (:meth:`Problem.predict`), and makes other
+solve and no ``m x m`` matrix (:meth:`Problem.predict`, and
+:meth:`Problem.simulate` for a synthetic truth and its observations), and makes other
 problems from itself (:meth:`Problem.aggregate`, :meth:`Problem.restrict`);
 the posterior holds what depends on the solve or on the ``m x m`` matrix it
 factors.
@@ -279,6 +280,120 @@ class Problem:
             values = values[state._align(x.space, "x", "x and the prior")]
         predicted = self._forward.data @ values + self._offset_values()
         return Vector(predicted, self._obs.space)
+
+    def simulate(
+        self,
+        rng: "int | np.random.Generator | None" = None,
+        truth: "Vector | None" = None,
+    ) -> tuple[Vector, Vector]:
+        r"""
+        Return a truth and the observations it would give, :math:`H x + c + e`.
+
+        The problem as a world that makes data: the truth is drawn from the
+        prior, :math:`x \sim N(x_0, S_0)`, and the observations are its
+        noise-free prediction (:meth:`predict`) plus an error drawn from the
+        model-data mismatch, :math:`e \sim N(0, S_z)`. Solving the problem on
+        these observations, ``post.with_data(obs)``, and comparing the estimate
+        with the truth tests an inversion on data whose answer is known; a
+        loop of them over one generator is a Monte Carlo of how often the
+        posterior's intervals hold the truth.
+
+        Parameters
+        ----------
+        rng : int, numpy.random.Generator or None, default None
+            A seed, or the generator to draw from (used as given, so one
+            generator passed to every call gives independent trials). None
+            draws from fresh entropy. It goes through
+            :func:`numpy.random.default_rng`, as SciPy's ``rng`` argument
+            does. The truth is drawn first and the error second, so a given
+            `truth` draws the error alone.
+        truth : Vector, optional
+            A state to use as the truth instead of drawing one, on the prior's
+            labels in any order: another inventory, 1.5 times the prior. Its
+            observations still carry the error.
+
+        Returns
+        -------
+        truth : Vector
+            The truth, on the prior's space (the given one, put in the prior's
+            order).
+        obs : Vector
+            The synthetic observations, on the observations' space and named
+            as the problem's. They are ready for
+            :meth:`Posterior.with_data <fips.Posterior.with_data>`.
+
+        Raises
+        ------
+        TypeError
+            If `truth` is not a Vector.
+        ValueError
+            If `truth` does not have exactly the prior's labels; the message
+            names those on one side only.
+        numpy.linalg.LinAlgError
+            If a covariance has a clearly negative eigenvalue.
+
+        See Also
+        --------
+        predict : The observations without the error.
+        Covariance.sample : The draw of the truth and of the error.
+        Posterior.with_data : The posterior of other observations, one product.
+
+        Notes
+        -----
+        The problem's own observations are not used, only their labels and
+        name. A different world (another background, another forward operator,
+        an observation error four times the assumed one) is another
+        :class:`Problem`, made the way the first was with one input changed:
+        ``world.simulate(rng)`` gives its data, and ``post.with_data(obs)``
+        solves them with the assumptions of `post`'s problem.
+
+        Examples
+        --------
+        >>> import numpy as np
+        >>> import pandas as pd
+        >>> import fips
+        >>> cells = pd.Index(["a", "b"], name="cell")
+        >>> obs_id = pd.Index(["o1", "o2", "o3"], name="obs_id")
+        >>> prior = fips.Vector.from_series(pd.Series(0.0, index=cells), block="flux")
+        >>> obs = fips.Vector.from_series(pd.Series(0.0, index=obs_id), block="co2")
+        >>> problem = fips.Problem(
+        ...     prior=prior,
+        ...     prior_cov=fips.Independent().with_std(1.0),
+        ...     obs=obs,
+        ...     obs_cov=fips.Independent().with_std(0.1),
+        ...     forward=fips.Operator(
+        ...         np.array([[1.0, 0.0], [0.0, 1.0], [1.0, 1.0]]),
+        ...         obs.space,
+        ...         prior.space,
+        ...     ),
+        ... )
+        >>> truth, synthetic = problem.simulate(rng=0)
+        >>> truth.values.round(2)
+        array([ 0.13, -0.13])
+        >>> synthetic.values.round(2)
+        array([ 0.19, -0.12, -0.06])
+        >>> fips.solve(problem).with_data(synthetic).estimate.values.round(2)
+        array([ 0.15, -0.16])
+        """
+        rng = np.random.default_rng(rng)
+        state = self._prior.space
+        if truth is None:
+            draw = self._prior_cov.sample(rng)
+            truth = Vector(self._prior.values + draw.values, state)
+        else:
+            values = _vector(truth, "truth").values
+            if truth.space is not state:
+                values = values[
+                    state._align(truth.space, "truth", "The truth and the prior")
+                ]
+            truth = Vector(values, state, name=truth.name)
+        noise = self._obs_cov.sample(rng)
+        obs = Vector(
+            self._forward.data @ truth.values + self._offset_values() + noise.values,
+            self._obs.space,
+            name=self._obs.name,
+        )
+        return truth, obs
 
     def restrict(self, keep: Space) -> "Problem":
         r"""
