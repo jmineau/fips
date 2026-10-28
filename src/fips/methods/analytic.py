@@ -132,6 +132,9 @@ class _Factors:
     it at the new gamma: :math:`w_k = \gamma / (\gamma \lambda_k + 1)`.
     """
 
+    estimate_is_linear: ClassVar[bool] = True
+    r"""The estimate is linear in the observations, :math:`x_0 + K (z - H x_0 - c)` with the gain :math:`K` of ``gain``."""
+
     problem: Problem
     """The problem that was factored."""
     gamma: float

@@ -23,6 +23,7 @@ import numpy as np
 import pandas as pd
 import pytest
 import scipy.sparse as sp
+from scipy.stats import norm
 
 import fips
 from fips import (
@@ -1176,3 +1177,223 @@ def test_posterior_of_state_aggregates(method, average):
         sc["A"] * 7,
         "W A W*",
     )
+
+
+# ---------------------------------------------------------------------------
+# 5. Recovery: the error of the estimate when the data come from a world
+# ---------------------------------------------------------------------------
+
+
+@dataclass
+class RecoveryForm:
+    """The columns of ``post.recovery``, from the formulas."""
+
+    prior: np.ndarray
+    truth: np.ndarray
+    estimate: np.ndarray
+    bias: np.ndarray
+    std: np.ndarray
+    posterior_std: np.ndarray
+    coverage: np.ndarray
+    scale_x: float
+    scale_std: float
+
+
+def recovery_closed_form(
+    case: Case, gamma: float, world: dict, W: np.ndarray | None, level: float
+) -> RecoveryForm:
+    """
+    Return the mean and spread of ``x_hat - x`` when the data come from `world`, written out.
+
+    ``x_hat = x_0 + K (z - H x_0 - c)`` with ``K`` the gain at ``S_z / gamma``;
+    the world draws ``x ~ N(mu, P)`` and ``z = H_w x + c_w + e``,
+    ``e ~ N(0, R_w)``. With explicit inverses, the formulas as printed.
+    """
+    inv = np.linalg.inv
+    x_0, H, S_0, c = case.x_0, case.H, case.S_0, case.c
+    mu, P, H_w, c_w, R_w = (world[k] for k in ("mu", "P", "H", "c", "R"))
+    n = len(x_0)
+    K = S_0 @ H.T @ inv(H @ S_0 @ H.T + case.S_z / gamma)
+    b = (x_0 - mu) + K @ (H_w @ mu + c_w - H @ x_0 - c)
+    A = K @ H_w - np.eye(n)
+    V = A @ P @ A.T + K @ R_w @ K.T
+    S_hat = inv(H.T @ inv(case.S_z / gamma) @ H + inv(S_0))
+    W = np.eye(n) if W is None else W
+    bias = W @ b
+    std = np.sqrt(np.diag(W @ V @ W.T))
+    posterior_std = np.sqrt(np.diag(W @ S_hat @ W.T))
+    half = norm.ppf(0.5 + level / 2) * posterior_std
+    coverage = norm.cdf((half - bias) / std) - norm.cdf((-half - bias) / std)
+    a, d = np.abs, H_w @ mu + c_w - H @ x_0 - c
+    a_W = a(W).sum(axis=1).max()
+    return RecoveryForm(
+        prior=W @ x_0,
+        truth=W @ mu,
+        estimate=W @ (mu + b),
+        bias=bias,
+        std=std,
+        posterior_std=posterior_std,
+        coverage=coverage,
+        scale_x=a_W * max(a(x_0).max(), a(mu).max(), (a(K) @ a(d)).max()),
+        scale_std=a_W
+        * np.sqrt((a(A) @ a(P) @ a(A.T)).max() + (a(K) @ a(R_w) @ a(K.T)).max()),
+    )
+
+
+def _world_arrays(case: Case, seed: int, kind: str) -> dict:
+    """
+    Return the arrays of a world on the case's labels.
+
+    ``"itself"`` is the case's own problem; ``"other"`` changes every input
+    (prior mean and covariance, forward operator, offset, mismatch), as a
+    mis-specified world does.
+    """
+    if kind == "itself":
+        return {"mu": case.x_0, "P": case.S_0, "H": case.H, "c": case.c, "R": case.S_z}
+    rng = np.random.default_rng(500 + seed)
+    n, m = len(case.x_0), len(case.c)
+    return {
+        "mu": case.x_0 + rng.normal(0.0, 1.0, n),
+        "P": random_spd(rng, n),
+        "H": case.H + 0.3 * rng.standard_normal((m, n)),
+        "c": case.c + rng.normal(0.0, 0.5, m),
+        "R": 4.0 * case.S_z,
+    }
+
+
+def _world_problem(case: Case, world: dict, shuffle: np.random.Generator | None):
+    """Return the world as a Problem on the case's labels, each input in its own order if `shuffle`."""
+    s, o = case.state_index, case.obs_index
+
+    def series(values, index):
+        out = pd.Series(values, index=index)
+        return out if shuffle is None else _shuffled(out, shuffle)
+
+    def frame(values, index, columns):
+        out = pd.DataFrame(values, index=index, columns=columns)
+        return out if shuffle is None else _shuffled(out, shuffle)
+
+    return Problem(
+        prior=Vector.from_series(series(world["mu"], s)),
+        prior_cov=Covariance.from_frame(frame(world["P"], s, s)),
+        obs=Vector.from_series(series(np.zeros(len(o)), o)),
+        obs_cov=Covariance.from_frame(frame(world["R"], o, o)),
+        forward=Operator.from_frame(frame(world["H"], o, s)),
+        offset=Vector.from_series(series(world["c"], o)),
+    )
+
+
+def _two_regions(case: Case) -> tuple[Operator, np.ndarray, pd.Index]:
+    """Return the sum of the even and of the odd cells, its matrix in the case's order, and its rows."""
+    n = len(case.x_0)
+    regions = pd.Series(
+        np.arange(n) % 2,
+        index=pd.Index([f"c{j}" for j in range(n)], name="cell"),
+        name="region",
+    )
+    W = fips.aggregate.sum(case.state_space, by=regions)
+    W_pos = W.to_frame().reindex(columns=case.state_index).to_numpy()
+    return W, W_pos, W.rows.index
+
+
+def _check_recovery(table: pd.DataFrame, expected: RecoveryForm, index, what: str):
+    """Compare the columns of a recovery table with the closed form, in the order of `index`."""
+    assert list(table.columns) == [
+        "prior",
+        "truth",
+        "estimate",
+        "bias",
+        "std",
+        "posterior_std",
+        "coverage",
+    ], what
+    assert table.index.equals(index), f"{what}: wrong index"
+    for column in ("prior", "truth", "estimate", "bias"):
+        assert_close(
+            table[column],
+            getattr(expected, column),
+            expected.scale_x,
+            f"{what}: {column}",
+        )
+    for column in ("std", "posterior_std"):
+        assert_close(
+            table[column],
+            getattr(expected, column),
+            expected.scale_std,
+            f"{what}: {column}",
+        )
+    assert_close(table["coverage"], expected.coverage, 1.0, f"{what}: coverage")
+
+
+@pytest.mark.usefixtures("analytic_form")
+@pytest.mark.parametrize("gamma", [1.0, 4.0])
+@pytest.mark.parametrize("aggregated", [False, True], ids=["state", "W"])
+@pytest.mark.parametrize("world_kind", ["itself", "other"])
+@pytest.mark.parametrize("truth_kind", ["drawn", "fixed"])
+@pytest.mark.parametrize("n, m", [(3, 10), (7, 4)])
+def test_recovery_closed_form(gamma, aggregated, world_kind, truth_kind, n, m):
+    """
+    ``post.recovery`` equals the closed form of the error's mean and spread.
+
+    For a world that is the problem itself or one with every input changed,
+    a truth drawn from the world's prior or fixed (``P = 0``), per state
+    element or per aggregate, at gamma 1 and 4. The odd seeds give the world
+    in its own label order.
+    """
+    for seed in range(4):
+        case = Case.random(seed, n, m)
+        s_index = case.state_index
+        post = solve(case.problem(), gamma=gamma)
+        world = _world_arrays(case, seed, world_kind)
+        shuffle = np.random.default_rng(seed) if seed % 2 else None
+        world_problem = _world_problem(case, world, shuffle)
+        truth = None
+        if truth_kind == "fixed":
+            rng = np.random.default_rng(900 + seed)
+            fixed = world["mu"] * rng.uniform(0.5, 1.5, n)
+            truth = Vector.from_series(
+                _shuffled(pd.Series(fixed, index=case.state_index), rng)
+            )
+            world = {**world, "mu": fixed, "P": np.zeros((n, n))}
+        W, W_pos, index = _two_regions(case) if aggregated else (None, None, s_index)
+        expected = recovery_closed_form(case, gamma, world, W_pos, 0.9)
+        table = post.recovery(world_problem, truth=truth, W=W, level=0.9)
+        _check_recovery(table, expected, index, f"seed {seed}")
+
+
+@pytest.mark.usefixtures("analytic_form")
+@pytest.mark.parametrize("aggregated", [False, True], ids=["state", "W"])
+@pytest.mark.parametrize("n, m", [(3, 10), (7, 4)])
+def test_recovery_in_its_own_world_is_the_posterior(aggregated, n, m):
+    """
+    With the world the problem itself at gamma 1, the bias is zero and the spread is S_hat's.
+
+    ``(K H - I) S_0 (K H - I)^T + K S_z K^T`` is the Joseph form of
+    S_hat, so ``std`` equals ``posterior_std`` and the interval
+    holds the truth with the probability it claims; the default world and
+    the problem passed as the world give the same table.
+    """
+    for seed in range(4):
+        case = Case.random(seed, n, m)
+        post = solve(case.problem())
+        W, W_pos, _ = _two_regions(case) if aggregated else (None, None, None)
+        table = post.recovery(W=W, level=0.8)
+        itself = _world_arrays(case, seed, "itself")
+        expected = recovery_closed_form(case, 1.0, itself, W_pos, 0.8)
+        assert_close(table["bias"], 0.0, expected.scale_x, f"seed {seed}: bias")
+        assert_close(
+            table["std"],
+            table["posterior_std"],
+            expected.scale_std,
+            f"seed {seed}: std",
+        )
+        assert_close(
+            table["posterior_std"],
+            expected.posterior_std,
+            expected.scale_std,
+            f"seed {seed}: posterior_std",
+        )
+        assert_close(table["coverage"], 0.8, 1.0, f"seed {seed}: coverage")
+        pd.testing.assert_frame_equal(
+            post.recovery(post.problem, W=W, level=0.8), table
+        )

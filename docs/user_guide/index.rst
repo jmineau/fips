@@ -422,6 +422,17 @@ product, so a Monte Carlo is a loop you write. If the inversion is honest, the
        inside.append(np.abs((W @ estimate).values - (W @ truth).values) <= 1.96 * sd)
    np.mean(inside, axis=0).round(2)
 
+The estimate is linear in the observations, so the loop has an exact answer:
+:meth:`post.recovery <fips.Posterior.recovery>` gives, for each total, the
+mean and spread of the error and the probability that the interval holds the
+truth, without sampling. ``post.recovery(world, W=W)`` does the same for data
+from another world on the same labels, and ``truth=`` fixes the truth, as in
+``simulate``:
+
+.. ipython:: python
+
+   post.recovery(W=W)[["truth", "estimate", "std", "posterior_std", "coverage"]].round(3)
+
 The data come from a world, and the inversion you run on them has its own
 assumptions. There are four kinds of world:
 
