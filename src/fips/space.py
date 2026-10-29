@@ -230,8 +230,8 @@ class Space:
         ...     [("flux", 1.0, None), ("flux", 2.0, None), ("bias", None, "A")],
         ...     names=["block", "cell", "site"],
         ... )
-        >>> Space.from_index(index).select("bias")
-        Index(['A'], dtype='str', name='site')
+        >>> Space.from_index(index).select("bias").tolist()
+        ['A']
         """
         if not isinstance(index, pd.MultiIndex) or "block" not in index.names:
             raise ValueError("The index must be a MultiIndex with a 'block' level.")
