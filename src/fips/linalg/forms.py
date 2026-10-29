@@ -951,8 +951,8 @@ class DiagonalOperator(LinearOperator):
         _read_only(self.values)
 
     def _matvec(self, x):
-        """Return ``self @ x`` for a vector."""
-        return self.values * x
+        """Return ``self @ x`` for a vector, given as ``(n,)`` or ``(n, 1)`` (SciPy before 1.18 sends a column here)."""
+        return self.values * np.ravel(x)
 
     def _matmat(self, X):
         """Return ``self @ X``: each row of `X` scaled."""
