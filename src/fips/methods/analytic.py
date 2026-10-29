@@ -622,26 +622,34 @@ class Information(_Factors):
         with :math:`Z = S_z^{-1} H G` (``m x n``, formed once), so
         :math:`P_{gg} = \gamma \big((S_z^{-1})_{gg} - Z_g \operatorname{diag}(w) Z_g^T\big)`.
         The block :math:`(S_z^{-1})_{gg}` is read from a diagonal
-        :math:`S_z`, from one inverse of a dense one, and otherwise from a
-        solve with the group's columns of the identity, in the form's own way.
+        :math:`S_z`, and otherwise from a solve with the group's columns of
+        the identity (``m x m_g``) after one factorization of :math:`S_z`,
+        made for all groups: no inverse of :math:`S_z` is formed.
         """
         _, Z = self._weighted_obs()
         w = self.weights()
         S_z = self.problem.obs_cov.data
-        m = S_z.shape[0]
-        inverse = S_z.solve(np.eye(m)) if isinstance(S_z, DenseOperator) else None
-        blocks = []
-        for rows in groups:
-            if isinstance(S_z, DiagonalOperator):
-                S_inv = np.diag(1.0 / S_z.values[rows])
-            elif inverse is not None:
-                S_inv = inverse[np.ix_(rows, rows)]
-            else:
+        if isinstance(S_z, DiagonalOperator):
+            values = S_z.values
+
+            def inverse_block(rows: np.ndarray) -> np.ndarray:
+                """Return the block of the diagonal's inverse."""
+                return np.diag(1.0 / values[rows])
+
+        else:
+            m = S_z.shape[0]
+            solve = S_z._solver()
+
+            def inverse_block(rows: np.ndarray) -> np.ndarray:
+                """Return the block of the inverse, from a solve with the group's columns of the identity."""
                 E = np.zeros((m, len(rows)))
                 E[rows, np.arange(len(rows))] = 1.0
-                S_inv = np.asarray(S_z.solve(E))[rows]
+                return np.asarray(solve(E))[rows]
+
+        blocks = []
+        for rows in groups:
             Z_g = Z[rows]
-            blocks.append(self.gamma * (S_inv - (Z_g * w) @ Z_g.T))
+            blocks.append(self.gamma * (inverse_block(rows) - (Z_g * w) @ Z_g.T))
         return blocks
 
     def self_sensitivity(self) -> np.ndarray:
