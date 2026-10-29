@@ -438,6 +438,113 @@ class Posterior:
         values = self._solution.cov(self._aggregation(W))
         return Covariance._computed(_adopt(values), W.rows, name="posterior_cov")
 
+    def uncertainty(self, W: Operator | None = None) -> pd.DataFrame:
+        r"""
+        Return the prior and posterior uncertainty of each aggregate, and how much the observations reduce it.
+
+        The standard deviation of each row of :math:`W x` before the
+        observations, :math:`\sqrt{\operatorname{diag} W S_0 W^T}`, and after,
+        :math:`\sqrt{\operatorname{diag} W \hat{S} W^T}`, from
+        :meth:`Covariance.aggregate <fips.Covariance.aggregate>` and
+        :meth:`cov`, neither forming an ``n x n`` matrix. A row of `W` can be
+        any linear combination of the state: a total, a mean, or a combination
+        of totals such as a trend or the difference of two seasons (``C @ W``,
+        with ``C`` the weights of the rows of ``W``), whose uncertainty
+        includes the covariance between the totals.
+
+        Parameters
+        ----------
+        W : Operator, optional
+            An aggregation, as :meth:`cov` takes it: one row per aggregate. By
+            default, one row per state element.
+
+        Returns
+        -------
+        pandas.DataFrame
+            One row per aggregate, on the aggregation's rows (or the state's
+            labels): ``prior_std``, ``posterior_std`` and ``reduction``,
+            :math:`1 - \sigma_{posterior} / \sigma_{prior}` (a fraction; NaN
+            where the prior standard deviation is 0).
+
+        Raises
+        ------
+        TypeError
+            If `W` is not an Operator.
+        ValueError
+            If the columns of `W` do not have exactly the state's labels.
+
+        See Also
+        --------
+        cov : The posterior covariance, of the state or of aggregates.
+        fips.Covariance.aggregate : The prior covariance of aggregates, ``problem.prior_cov.aggregate(W)``.
+        uncertainty_reduction : One number for the whole state.
+
+        Examples
+        --------
+        Two months of two cells, observed six times; the total of each month,
+        and the change from the first month to the second:
+
+        >>> import numpy as np
+        >>> import pandas as pd
+        >>> import fips
+        >>> state = pd.MultiIndex.from_product(
+        ...     [pd.Index([1, 2], name="month"), pd.Index(["a", "b"], name="cell")]
+        ... )
+        >>> prior = fips.Vector.from_series(pd.Series(1.0, index=state), block="flux")
+        >>> obs = fips.Vector.from_series(
+        ...     pd.Series(0.0, index=pd.RangeIndex(6, name="obs_id")), block="ch4"
+        ... )
+        >>> rng = np.random.default_rng(0)
+        >>> problem = fips.Problem(
+        ...     prior=prior,
+        ...     prior_cov=fips.Independent().with_std(0.5),
+        ...     obs=obs,
+        ...     obs_cov=fips.Independent().with_std(1.0),
+        ...     forward=fips.Operator(
+        ...         rng.uniform(0.0, 1.0, (6, 4)), obs.space, prior.space
+        ...     ),
+        ... )
+        >>> post = fips.solve(problem)
+        >>> monthly = fips.aggregate.sum(prior.space, by="month")
+        >>> post.uncertainty(monthly).droplevel("block").round(3).reset_index()
+           month  prior_std  posterior_std  reduction
+        0      1      0.707          0.528      0.253
+        1      2      0.707          0.586      0.171
+        >>> change = fips.Operator(
+        ...     np.array([[-1.0, 1.0]]),
+        ...     fips.Space({"change": pd.Index(["2 - 1"], name="months")}),
+        ...     monthly.rows,
+        ... )
+        >>> post.uncertainty(change @ monthly).round(3).reset_index()
+            block months  prior_std  posterior_std  reduction
+        0  change  2 - 1        1.0          0.921      0.079
+
+        The change is more uncertain than either month's total: the two
+        totals' posterior errors are negatively correlated (the observations
+        see their sum better than how it splits), and the covariance between
+        the rows enters the change's variance.
+        """
+        if W is None:
+            prior = self._problem.prior_cov.variances.values
+            posterior = self.variances.values
+            index = self._problem.prior.index
+        else:
+            posterior = self.cov(W).variances.values  # checks W against the state
+            prior = self._problem.prior_cov.aggregate(W).variances.values
+            index = W.rows.index
+        prior_std = np.sqrt(np.maximum(prior, 0.0))  # roundoff can leave -0
+        posterior_std = np.sqrt(np.maximum(posterior, 0.0))
+        with np.errstate(divide="ignore", invalid="ignore"):
+            reduction = np.where(prior_std > 0, 1.0 - posterior_std / prior_std, np.nan)
+        return pd.DataFrame(
+            {
+                "prior_std": prior_std,
+                "posterior_std": posterior_std,
+                "reduction": reduction,
+            },
+            index=index,
+        )
+
     @cached_property
     def kalman_gain(self) -> Operator:
         r"""

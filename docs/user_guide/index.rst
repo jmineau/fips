@@ -362,16 +362,40 @@ and keeps it, so a sweep over ``gamma`` pays for one eigendecomposition.
 
 **The posterior of aggregates.** An aggregation :math:`W` of the state (one row
 per total or mean) gives the posterior covariance of the aggregates,
-``post.cov(W)`` (:math:`W \hat{S} W^T`), and their averaging kernel,
-``post.averaging_kernel(W)`` (:math:`W A W^*`, with :math:`W^*` the
-pseudo-inverse of :math:`W`), neither forming the :math:`n \times n`
-matrices. Here, the total flux of each week:
+``post.cov(W)`` (:math:`W \hat{S} W^T`), their prior covariance,
+``problem.prior_cov.aggregate(W)`` (:math:`W S_0 W^T`), and their averaging
+kernel, ``post.averaging_kernel(W)`` (:math:`W A W^*`, with :math:`W^*` the
+pseudo-inverse of :math:`W`), none forming the :math:`n \times n` matrices.
+:meth:`~fips.Posterior.uncertainty` puts the two standard deviations of each
+aggregate side by side, with the fraction the observations take off. Here, the
+total flux of each week:
 
 .. ipython:: python
 
    W = fips.aggregate.sum(problem.prior.space, by="time")
    post.cov(W).to_frame().round(4)
+   post.uncertainty(W).round(3)
    post.averaging_kernel(W).dense().diagonal().round(3)
+
+A row of :math:`W` is any linear combination of the state, so a combination of
+totals is a row too: ``C @ W``, with ``C`` the weights of the rows of ``W``. Its
+uncertainty includes the covariance between the totals: the change from one
+week to the next is not the root of the two weeks' variances summed:
+
+.. ipython:: python
+
+   change = fips.Operator(
+       np.array([[-1.0, 1.0, 0.0, 0.0]]),
+       fips.Space({"change": pd.Index(["week 2 - week 1"], name="what")}),
+       W.rows,
+   )
+   post.uncertainty(change @ W).round(3)
+
+``dropna=True`` on :func:`fips.aggregate.sum` and :func:`~fips.aggregate.mean`
+picks part of the state: labels a key cannot place are left out instead of
+raising (a Series that maps only a region's cells gives the region's total, an
+interval of one year that year's), and so are the blocks not named in
+``blocks`` (a bias block next to the fluxes).
 
 **Another gamma or other observations, without a new solve.** The factors
 depend neither on gamma nor on the values of the observations, so
@@ -466,7 +490,7 @@ are drawn from :meth:`~fips.Vector.to_series` and
    fig, ax = plot_comparison(
        (weekly @ problem.prior).to_series().droplevel("block").rename("prior"),
        (weekly @ post.estimate).to_series().droplevel("block").rename("posterior"),
-       errors=[weekly @ problem.prior_cov @ weekly.T, post.cov(weekly)],
+       errors=[problem.prior_cov.aggregate(weekly), post.cov(weekly)],
    )
 
 
