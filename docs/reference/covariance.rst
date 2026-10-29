@@ -58,6 +58,7 @@ Linear algebra
    Covariance.logdet
    Covariance.quadratic_form
    Covariance.sqrt
+   Covariance.aggregate
 
 Random draws
 ~~~~~~~~~~~~
