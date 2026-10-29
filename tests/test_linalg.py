@@ -153,6 +153,15 @@ class TestEachForm:
         Bop = SparseOperator(sp.csr_matrix(B))
         np.testing.assert_allclose(op.solve(Bop), np.linalg.solve(A, B), rtol=1e-10)
 
+    def test_solver_gives_the_same_as_solve(self, form):
+        """``_solver()`` factors once and then solves vectors and matrices as ``solve`` does."""
+        rng = np.random.default_rng(3)
+        op = make(form, square(form, rng))
+        substitute = op._solver()
+        b, B = rng.standard_normal(6), rng.standard_normal((6, 4))
+        for rhs in (b, B, B[:, :1], B[:, 2:]):
+            np.testing.assert_allclose(substitute(rhs), op.solve(rhs), rtol=1e-12)
+
     def test_logdet(self, form):
         """``logdet`` matches NumPy's ``slogdet`` of the dense matrix."""
         A = square(form, np.random.default_rng(13))
@@ -281,6 +290,16 @@ def test_dense_solve_keeps_ldl_fallback(caplog):
     A = np.array([[1.0, 2.0], [2.0, 1.0]])  # symmetric, not positive-definite
     with caplog.at_level("WARNING", logger="fips.linalg"):
         x = DenseOperator(A).solve(np.array([3.0, 3.0]))
+    np.testing.assert_allclose(x, [1.0, 1.0], rtol=RTOL)
+    assert any("non-positive-definite" in r.message for r in caplog.records)
+
+
+def test_dense_solver_keeps_ldl_fallback(caplog):
+    """The solver of a dense operator that Cholesky refuses solves by ``LDL^T``, with a warning."""
+    A = np.array([[1.0, 2.0], [2.0, 1.0]])
+    with caplog.at_level("WARNING", logger="fips.linalg"):
+        substitute = DenseOperator(A)._solver()
+        x = substitute(np.array([3.0, 3.0]))
     np.testing.assert_allclose(x, [1.0, 1.0], rtol=RTOL)
     assert any("non-positive-definite" in r.message for r in caplog.records)
 

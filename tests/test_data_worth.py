@@ -16,7 +16,7 @@ import scipy.sparse as sp
 
 import fips
 from fips import Covariance, Operator, Problem, Space, Vector
-from fips.linalg import DiagonalOperator, KroneckerOperator
+from fips.linalg import DiagonalOperator, KroneckerOperator, forms
 
 # ---------------------------------------------------------------------------
 # Small problems with every form of covariance
@@ -38,7 +38,7 @@ TRAX = Space({"trax": pd.Index(range(6), name="trip")})
 OBS = Space({"insitu": INSITU.select("insitu"), "trax": TRAX.select("trax")})
 
 PRIORS = ["diagonal", "dense", "kronecker"]
-MISMATCHES = ["diagonal", "dense", "block", "kronecker"]
+MISMATCHES = ["diagonal", "dense", "sparse", "block", "kronecker"]
 
 
 def _correlation(size: int, scale: float) -> np.ndarray:
@@ -78,6 +78,15 @@ def obs_cov(kind: str, rng: np.random.Generator) -> Covariance:
         return Covariance(DiagonalOperator(rng.uniform(0.2, 0.6, m)), OBS)
     if kind == "dense":
         return Covariance(_spd(m, rng) * 0.4, OBS)
+    if (
+        kind == "sparse"
+    ):  # banded: each observation correlated with its neighbors, across sites too
+        band = sp.diags(
+            [rng.uniform(0.3, 0.5, m), 0.05 * np.ones(m - 1), 0.02 * np.ones(m - 3)],
+            [0, 1, 3],
+            format="csr",
+        )
+        return Covariance(band + sp.triu(band, k=1).T, OBS)
     if kind == "block":  # each site's hours correlated, the train independent
         hours = _correlation(len(HOURS), 2.0) * 0.3
         insitu = sp.block_diag([sp.csr_array(hours)] * len(SITES), format="csr")
@@ -582,4 +591,96 @@ def test_data_worth_allocates_nothing_n_by_n():
     assert len(table) == 3 * len(total.rows)
     assert peak < n_by_n / 2, (
         f"peak {peak / 1e6:.1f} MB, n x n is {n_by_n / 1e6:.1f} MB"
+    )
+
+
+def _many_groups(kind: str, n_groups: int, per_group: int = 8):
+    """A problem with many more observations than state elements (the information form), and its mismatch of one form."""
+    rng = np.random.default_rng(0)
+    n, m = 15, n_groups * per_group
+    state = Space({"flux": pd.RangeIndex(n, name="cell")})
+    observed = Space(
+        {
+            "conc": pd.MultiIndex.from_product(
+                [range(n_groups), range(per_group)], names=["group", "hour"]
+            )
+        }
+    )
+    if kind == "sparse":
+        band = sp.diags(
+            [np.full(m, 0.5), np.full(m - 1, 0.1), np.full(m - 5, 0.05)],
+            [0, 1, 5],
+            format="csr",
+        )
+        S_z = Covariance(band + sp.triu(band, k=1).T, observed)
+    else:
+        S_z = Covariance(_spd(m, rng) * 0.4, observed)
+    problem = Problem(
+        prior=Vector(rng.normal(size=n), state),
+        prior_cov=Covariance(DiagonalOperator(rng.uniform(0.5, 1.0, n)), state),
+        obs=Vector(rng.normal(size=m), observed),
+        obs_cov=S_z,
+        forward=Operator(rng.normal(size=(m, n)), observed, state),
+    )
+    total = Operator(
+        np.ones((1, n)), Space({"total": pd.Index(["all"], name="what")}), state
+    )
+    return problem, total
+
+
+@pytest.mark.usefixtures("analytic_form")
+@pytest.mark.parametrize("analytic_form", ["information"], indirect=True)
+@pytest.mark.parametrize("kind", ["sparse", "dense"])
+def test_the_mismatch_is_factored_once_however_many_groups(kind, monkeypatch):
+    """data_worth factors a sparse or dense S_z as often for 48 groups as for 3, a few times in all."""
+    problem, total = _many_groups(kind, n_groups=48)
+    post = fips.solve(problem)
+    calls = {"splu": 0, "_solver": 0, "_solve_psd": 0}
+
+    def count(owner, name):
+        original = getattr(owner, name)
+
+        def counted(*args, **kwargs):
+            calls[name] += 1
+            return original(*args, **kwargs)
+
+        monkeypatch.setattr(owner, name, counted)
+
+    count(forms, "splu")
+    count(forms, "_solve_psd")
+    count(forms.DenseOperator, "_solver")
+
+    by_few = np.arange(len(problem.obs)) // (len(problem.obs) // 3)
+    post.data_worth(by=by_few, W=total)
+    few = dict(calls)
+    for name in calls:
+        calls[name] = 0
+    table = post.data_worth(by="group", W=total)
+    assert len(table) == 48
+    assert calls == few
+    # Three solves with S_z for H G and the like, each factoring a sparse S_z again, and
+    # one factorization for all the groups; a dense S_z is factored for the groups only
+    # (the other solves are inside _solve_psd): never one per group
+    if kind == "sparse":
+        assert calls["splu"] == 4
+    else:
+        assert calls["_solver"] == 1
+        assert calls["_solve_psd"] == 3
+
+
+def test_a_dense_mismatch_is_not_inverted_whole():
+    """data_worth with a dense S_z holds one factor of it, not the inverse as well (m = 480, 60 groups)."""
+    problem, total = _many_groups("dense", n_groups=60)
+    m = len(problem.obs)
+    post = fips.solve(problem)
+    assert type(post._solution).__name__ == "Information"
+    tracemalloc.start()
+    try:
+        post.data_worth(by="group", W=total)
+        _, peak = tracemalloc.get_traced_memory()
+    finally:
+        tracemalloc.stop()
+    m_by_m = m * m * 8
+    assert peak < 1.5 * m_by_m, (
+        f"peak {peak / 1e6:.2f} MB, m x m is {m_by_m / 1e6:.2f} MB"
     )
