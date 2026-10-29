@@ -24,15 +24,16 @@ from typing import Any, ClassVar, Protocol
 
 import numpy as np
 import pandas as pd
+import scipy.sparse as sp
 from numpy.linalg import LinAlgError
 from scipy.linalg import inv, solve
 from scipy.special import ndtr, ndtri  # the normal CDF and its inverse
 
-from fips.covariance import Covariance
+from fips.covariance import Covariance, CovarianceModel
 from fips.linalg import LinearOperator
 from fips.linalg.forms import _adopt, _solve_psd
 from fips.operator import Operator
-from fips.problem import Problem
+from fips.problem import Problem, _covariance
 from fips.vector import Vector
 
 logger = logging.getLogger(__name__)
@@ -222,6 +223,14 @@ def _worth_table(
         },
         index=index,
     )
+
+
+def _stacked(top: LinearOperator, bottom: LinearOperator) -> LinearOperator:
+    """Return the rows of `top` above those of `bottom`, sparse if both are."""
+    a, b = top._csr(), bottom._csr()
+    if a is not None and b is not None:
+        return _adopt(sp.vstack([a, b], format="csr"))
+    return _adopt(np.vstack([top.dense(), bottom.dense()]))
 
 
 def _times_pseudo_inverse(XWt: np.ndarray, W: LinearOperator) -> np.ndarray:
@@ -692,6 +701,7 @@ class Posterior:
         See Also
         --------
         uncertainty : The prior and posterior uncertainty of each aggregate.
+        candidate_worth : What observations not in the problem would add.
         dofs : The degrees of freedom for signal, the sum of the shares.
 
         References
@@ -752,6 +762,162 @@ class Posterior:
             W.rows.index,
             np.array(var_without),
             np.tile(var_with, (len(positions), 1)),
+        )
+
+    def candidate_worth(
+        self,
+        forward: Operator,
+        obs_cov: "Covariance | CovarianceModel",
+        by: Any,
+        W: Operator,
+    ) -> pd.DataFrame:
+        r"""
+        Return what each group of candidate observations, not in the problem, would add to the certainty of each aggregate.
+
+        Candidate observations are rows of a forward operator that the
+        problem does not have (a new site, another platform, a season not yet
+        measured) and the covariance of their errors; their values are not
+        needed. For each group of candidates, the posterior standard deviation
+        of each aggregate without the group (this posterior) and with it, from
+        a rank :math:`m_c` update of :math:`\hat{S}`, without solving again:
+
+        .. math::
+
+            \hat{S}_{+c} = \hat{S} - \hat{S} H_c^T F^{-1} H_c \hat{S}, \qquad
+            F = H_c \hat{S} H_c^T + R_c / \gamma,
+
+        with :math:`H_c` the group's rows of `forward` and :math:`R_c` its
+        block of `obs_cov`. The errors of the candidates are taken to be
+        independent of the problem's observations, and are divided by the
+        regularization factor :math:`\gamma` as the problem's are, so the
+        result is the posterior of the problem solved again with the group's
+        observations added. For :math:`W`, the three blocks
+        :math:`W \hat{S} W^T`, :math:`W \hat{S} H_c^T` and
+        :math:`H_c \hat{S} H_c^T` are one :meth:`cov` of :math:`W` and
+        :math:`H_c` stacked: nothing ``n x n`` is formed. Each group is added
+        on its own, to the problem as it is.
+
+        Parameters
+        ----------
+        forward : Operator
+            The candidates' forward operator, from the state (its columns, the
+            state's labels in any order) to the candidate observations (its
+            rows, labeled as observations are, on the levels `by` groups).
+        obs_cov : Covariance or CovarianceModel
+            The covariance of the candidates' errors, on the rows of
+            `forward`; a model (``fips.Independent().with_std(5.0)``) is built
+            there. It must be positive-definite.
+        by : str, list or pandas.Grouper
+            The levels of the candidates' labels to group by, as
+            :meth:`data_worth` takes them (``"site"``).
+        W : Operator
+            An aggregation, as :meth:`cov` takes it: one row per aggregate.
+
+        Returns
+        -------
+        pandas.DataFrame
+            As :meth:`data_worth`: one row per group and aggregate, with
+            ``n_obs``, ``dofs`` (the group's share of DOFS in the problem with
+            it added, :math:`m_c - \operatorname{tr}(R_c F^{-1}) / \gamma`),
+            ``std_without`` (this posterior's), ``std_with`` (with the group
+            added) and ``reduction``, :math:`1 - \sigma_{with} /
+            \sigma_{without}`.
+
+        Raises
+        ------
+        TypeError
+            If the method's estimate is not linear in the observations (its
+            solution does not set ``estimate_is_linear``), `forward` or `W`
+            is not an Operator, or `obs_cov` is not a covariance.
+        ValueError
+            If the columns of `forward` or `W` do not have exactly the state's
+            labels, `obs_cov` is not on the rows of `forward`, or `by` puts
+            no candidate in a group.
+
+        See Also
+        --------
+        data_worth : What the groups of observations in the problem add.
+        uncertainty : The prior and posterior uncertainty of each aggregate.
+
+        Examples
+        --------
+        One flux observed four times at site A; would a candidate site B,
+        three observations with errors of the same size, help more than one
+        more observation at A?
+
+        >>> import numpy as np
+        >>> import pandas as pd
+        >>> import fips
+        >>> state = fips.Space({"flux": pd.Index(["a"], name="cell")})
+        >>> observed = fips.Space(
+        ...     {
+        ...         "co2": pd.MultiIndex.from_product(
+        ...             [["A"], range(4)], names=["site", "hour"]
+        ...         )
+        ...     }
+        ... )
+        >>> problem = fips.Problem(
+        ...     prior=fips.Vector(np.zeros(1), state),
+        ...     prior_cov=fips.Covariance.diagonal(1.0, state),
+        ...     obs=fips.Vector(np.ones(4), observed),
+        ...     obs_cov=fips.Covariance.diagonal(1.0, observed),
+        ...     forward=fips.Operator(np.ones((4, 1)), observed, state),
+        ... )
+        >>> post = fips.solve(problem)
+        >>> candidates = fips.Space(
+        ...     {
+        ...         "co2": pd.MultiIndex.from_tuples(
+        ...             [("A", 4), ("B", 0), ("B", 1), ("B", 2)], names=["site", "hour"]
+        ...         )
+        ...     }
+        ... )
+        >>> H_new = fips.Operator(np.ones((4, 1)), candidates, state)
+        >>> W = fips.Operator(np.eye(1), state, state)
+        >>> table = post.candidate_worth(
+        ...     H_new, fips.Independent().with_std(1.0), by="site", W=W
+        ... )
+        >>> table.droplevel("block").round(3).reset_index()
+          site cell  n_obs   dofs  std_without  std_with  reduction
+        0    A    a      1  0.167        0.447     0.408      0.087
+        1    B    a      3  0.375        0.447     0.354      0.209
+        """
+        if not getattr(self._solution, "estimate_is_linear", False):
+            raise TypeError(
+                "The method that solved this problem does not give an estimate "
+                f"linear in the observations ({type(self._solution).__name__} does "
+                "not set estimate_is_linear), so adding observations is not a "
+                "rank update of its covariance: solve the problem with them."
+            )
+        if not isinstance(forward, Operator):
+            raise TypeError(
+                f"forward must be an Operator, got {type(forward).__name__}."
+            )
+        state = self._problem.prior.space
+        candidates = forward.rows
+        H_c = forward._on(candidates, state, "forward", ("the candidates", "the state"))
+        R_c = _covariance(obs_cov, candidates, "obs_cov", "the candidates").data
+        groups, positions = _obs_groups(candidates.index, by)
+        W_form = self._aggregation(W)
+        k = W_form.shape[0]
+        columns = np.arange(len(state))
+        var_without, var_with, dofs = [], [], []
+        for rows in positions:
+            # W S^ W^T, W S^ H_c^T and H_c S^ H_c^T, from one aggregated covariance
+            S = self._solution.cov(_stacked(W_form, H_c._select(rows, columns)))
+            S_ww, S_wc, S_cc = S[:k, :k], S[:k, k:], S[k:, k:]
+            R_g = R_c._select(rows, rows).dense() / self._gamma
+            F = S_cc + R_g
+            Y = _solve_psd(0.5 * (F + F.T), np.hstack([S_wc.T, R_g]))
+            var_without.append(np.diagonal(S_ww))
+            var_with.append(np.diagonal(S_ww) - np.einsum("ki,ik->k", S_wc, Y[:, :k]))
+            dofs.append(len(rows) - float(np.trace(Y[:, k:])))
+        return _worth_table(
+            groups,
+            positions,
+            np.array(dofs),
+            W.rows.index,
+            np.array(var_without),
+            np.array(var_with),
         )
 
     @cached_property

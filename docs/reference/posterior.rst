@@ -124,15 +124,17 @@ and :meth:`Posterior.with_data`, without sampling.
 
 What groups of observations add
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-For each group of observations (a site, a platform, a month), the posterior
-uncertainty of aggregates of the state without the group and with it, and the
-group's share of DOFS: a rank update of the posterior covariance per group,
-without solving again and without an :math:`n \times n` matrix.
+For each group of observations (a site, a platform, a month), in the problem
+or a candidate not yet in it, the posterior uncertainty of aggregates of the
+state without the group and with it, and the group's share of DOFS: a rank
+update of the posterior covariance per group, without solving again and
+without an :math:`n \times n` matrix.
 
 .. autosummary::
    :toctree: api/
 
    Posterior.data_worth
+   Posterior.candidate_worth
 
 Serialization
 ~~~~~~~~~~~~~
