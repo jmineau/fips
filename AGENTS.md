@@ -238,7 +238,9 @@ dependency needs a reason, proposed first.
   must be positive-definite; it never factors `H S_0 H^T + S_z`. Other
   covariance solves go through `LinearOperator.solve` or `_solve_psd`
   (Cholesky, then `LDL^T` with a warning), never `scipy.linalg.solve` directly;
-  a sparse form solves with SuperLU.
+  a sparse form solves with SuperLU. A form keeps no factorization of its own
+  (Kronecker keeps its factors); a loop of solves with one `S_z` takes
+  `S_z._solver()`, which factors once and returns the substitution.
 - **A constructor refuses a labeled object.** `Operator(op, rows, cols)`,
   `Covariance(cov, space)` and `Vector(v, space)` refuse a pandas object, an
   `Operator` or a `Vector`, whose labels they would ignore: use `from_frame`,

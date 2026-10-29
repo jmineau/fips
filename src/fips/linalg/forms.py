@@ -11,6 +11,7 @@ made of other forms are in :mod:`fips.linalg.block` and
 
 import logging
 import os
+from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
 from functools import cached_property
 from typing import Self, TypeAlias
@@ -20,6 +21,7 @@ import numpy.typing as npt
 import scipy.sparse as sp
 from numpy.linalg import LinAlgError
 from scipy.linalg import cholesky, eigh, solve
+from scipy.linalg.lapack import get_lapack_funcs
 from scipy.sparse.csgraph import connected_components
 from scipy.sparse.linalg import LinearOperator as _SciPyLinearOperator
 from scipy.sparse.linalg import splu
@@ -447,6 +449,20 @@ class LinearOperator(_SciPyLinearOperator):
         """
         return _solve_psd(self.dense(), _as_array(B))
 
+    def _solver(self) -> Callable[[np.ndarray], np.ndarray]:
+        """
+        Return ``B -> self.solve(B)`` with the factorization made once, for many solves with one form.
+
+        A form that factors inside :meth:`solve` (dense, sparse, block
+        diagonal) factors here, and the function it returns only substitutes,
+        so a loop over groups of columns pays for one factorization and holds
+        no more than the right-hand side of the group at hand. The factor
+        lives as long as the function: the form itself keeps none. A form
+        that already keeps its factors (diagonal, Kronecker) returns
+        :meth:`solve`.
+        """
+        return self.solve
+
     def logdet(self) -> float:
         """
         Return the logarithm of the determinant, for a symmetric positive-definite form.
@@ -695,6 +711,28 @@ class DenseOperator(LinearOperator):
         """Solve ``self @ X = B`` by Cholesky, falling back to ``LDL^T`` (see :meth:`LinearOperator.solve`)."""
         return _solve_psd(self.array, _as_array(B))
 
+    def _solver(self) -> Callable[[np.ndarray], np.ndarray]:
+        """
+        Return the substitution of the Cholesky factor (see :meth:`LinearOperator._solver`).
+
+        When roundoff has tipped the matrix off positive-definite it returns
+        :meth:`solve`, which falls back to ``LDL^T`` with a logged warning.
+        """
+        # LAPACK directly: SciPy's cho_factor returns a C-ordered factor, and
+        # cho_solve copies it to Fortran order at every call
+        potrf, potrs = get_lapack_funcs(("potrf", "potrs"), (self.array,))
+        factor, info = potrf(self.array, lower=False, clean=False)
+        if info != 0:
+            return self.solve
+
+        def substitute(B) -> np.ndarray:
+            """Return ``self^-1 B``."""
+            B = _as_array(B)
+            X, _ = potrs(factor, B.reshape(len(B), -1), lower=False)
+            return X.reshape(B.shape)
+
+        return substitute
+
 
 class SparseOperator(LinearOperator):
     """
@@ -861,6 +899,11 @@ class SparseOperator(LinearOperator):
     def solve(self, B) -> np.ndarray:
         """Solve ``self @ X = B`` by a sparse LU factorization (see :meth:`LinearOperator.solve`)."""
         return self._lu().solve(_as_array(B))
+
+    def _solver(self) -> Callable[[np.ndarray], np.ndarray]:
+        """Return the LU factorization's substitution (see :meth:`LinearOperator._solver`)."""
+        lu = self._lu()
+        return lambda B: lu.solve(_as_array(B))
 
     def logdet(self) -> float:
         """
