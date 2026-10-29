@@ -15,11 +15,13 @@ from typing import ClassVar, Protocol, Self
 import numpy as np
 import numpy.typing as npt
 import pandas as pd
+from numpy.linalg import LinAlgError
 
 from fips.linalg import (
     BlockDiagonalOperator,
     DenseOperator,
     DiagonalOperator,
+    KroneckerOperator,
     LinearOperator,
     LinearOperatorLike,
     SparseOperator,
@@ -93,6 +95,41 @@ def _check_symmetric(form: LinearOperator, space: Space, start: int = 0) -> None
         )
 
 
+def _check_positive_semidefinite(form: LinearOperator) -> None:
+    """
+    Raise a ValueError if a form fips holds is not positive semidefinite.
+
+    The check is the form's draw root (``form._root``), built the way the form
+    makes cheapest: the square roots of a diagonal, the Cholesky factor of
+    each group of correlated rows of a sparse matrix, of each block of a block
+    diagonal one and of each factor of a Kronecker one, and of a dense matrix.
+    Where there is no Cholesky factor (a singular matrix) it is the
+    eigendecomposition, which refuses an eigenvalue below zero by more than
+    roundoff, ``n * eps * max|lambda|``. The root is kept, so a draw from the
+    covariance factors nothing again. A form of another class (a SciPy
+    operator) is not checked: its root would need its dense matrix.
+    """
+    if not isinstance(
+        form,
+        (
+            DenseOperator,
+            SparseOperator,
+            DiagonalOperator,
+            BlockDiagonalOperator,
+            KroneckerOperator,
+        ),
+    ):
+        return
+    try:
+        _ = form._root  # built, and kept for sample
+    except LinAlgError as err:
+        raise ValueError(
+            f"{err} A covariance estimated or tapered by hand can have negative "
+            "eigenvalues: build it from a correlation model, or set its negative "
+            "eigenvalues to zero before giving it."
+        ) from None
+
+
 class Covariance(Operator):
     """
     A covariance: a symmetric operator from a :class:`~fips.Space` to itself.
@@ -127,7 +164,21 @@ class Covariance(Operator):
         largest ``|A - A^T|`` is more than 1e-10 of its largest entry (the
         message names the two entries and their labels). A diagonal or
         Kronecker form is symmetric by construction, and a block diagonal one
-        is checked block by block.
+        is checked block by block. Also if the matrix is not positive
+        semidefinite: an eigenvalue is below zero by more than roundoff,
+        ``n * eps`` times the largest (the message names the smallest).
+
+    Notes
+    -----
+    The positive semidefinite check is the root :meth:`sample` draws with,
+    built here and kept: the Cholesky factor of a dense matrix (``n^3 / 3``
+    operations, and ``n x n`` more memory), of each group of correlated rows
+    of a sparse one, of each block of a block diagonal one and of each factor
+    of a Kronecker one, or the square roots of a diagonal. A singular matrix,
+    which has no Cholesky factor, is eigendecomposed instead (several times
+    the cost), with one INFO line. A covariance fips builds from a correlation
+    model or computes (a sum, a reordering, a posterior) is positive
+    semidefinite by construction and is not checked.
 
     See Also
     --------
@@ -155,6 +206,7 @@ class Covariance(Operator):
     def __init__(self, data: LinearOperatorLike, space: Space, name: str | None = None):
         super().__init__(data, space, space, name=name)
         _check_symmetric(self._data, space)
+        _check_positive_semidefinite(self._data)
 
     @classmethod
     def _computed(
@@ -283,7 +335,8 @@ class Covariance(Operator):
         ------
         ValueError
             If a scalar or an array comes without a space, or `values` is not
-            a scalar or 1D, or has a length other than the space's.
+            a scalar or 1D, or has a length other than the space's, or a
+            variance is below zero by more than roundoff.
 
         Examples
         --------
@@ -530,8 +583,10 @@ class Covariance(Operator):
         covariance), so a subset of the grid costs what the whole grid does;
         a sparse one draws each group of correlated rows (a ``within=``
         kernel's site-days) from the Cholesky factor of its own block; a dense
-        one uses its Cholesky factor. The root is built by the first draw and
-        kept, so a loop of draws factors once.
+        one uses its Cholesky factor. The root is built once and kept, so a
+        loop of draws factors once: by ``Covariance(...)``, whose positive
+        semidefinite check it is, or by the first draw of a covariance fips
+        built from a model.
 
         A semi-definite covariance, a ``Constant()`` kernel's rank-one block
         for one, has no Cholesky factor, so it is drawn from its

@@ -413,7 +413,7 @@ class KroneckerOperator(LinearOperator):
         if semidefinite:
             logger.info(
                 "A factor of the Kronecker covariance has no Cholesky factor (it "
-                "is only positive semi-definite); drawing from its "
+                "is only positive semi-definite); a draw uses its "
                 "eigendecomposition, with the eigenvalues below roundoff set to zero."
             )
         return _KroneckerDraw(self, tuple(roots))

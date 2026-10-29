@@ -12,6 +12,10 @@ form) and adds what a covariance needs: its variances, solves, the
 log-determinant, the quadratic form of its inverse, a square root and a draw
 from it. A dense or sparse matrix must be symmetric, to 1e-10 of its largest
 entry; one that is not (an upper triangle, say) raises, naming the two entries.
+A matrix given to it must also be positive semidefinite, to roundoff: one with
+a clearly negative eigenvalue raises, naming the smallest. The check builds
+the square root :meth:`Covariance.sample` draws with, and keeps it. A
+covariance a model builds is not checked.
 
 .. ipython:: python
 
