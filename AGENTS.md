@@ -135,8 +135,9 @@ checks the labels and builds the models; `fips.solve(problem)` returns the
 
 A module `methods/<name>.py` with three things: its options (a frozen dataclass
 with a `gamma` field, values checked in `__post_init__`), its solution (answers
-`posterior.Solution`; `with_gamma`, `with_data`, `estimate_is_mean` and
-`estimate_is_linear` only if it can), and a function `(problem, options) -> Posterior`. Add a line to
+`posterior.Solution`; `with_gamma`, `with_data`, `estimate_is_mean`,
+`estimate_is_linear`, and `innovation_precision` with `self_sensitivity` (for
+`Posterior.data_worth`) only if it can), and a function `(problem, options) -> Posterior`. Add a line to
 `_METHODS` in `methods/__init__.py`; its docstring says how a lognormal or an
 ensemble method fits. `tests/test_oracle.py` runs every method against the
 closed-form posterior and the permutation test.

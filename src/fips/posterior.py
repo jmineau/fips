@@ -49,7 +49,7 @@ class Solution(Protocol):
     observations (``problem.obs``). The posterior labels them, and computes
     each one once.
 
-    Two members are optional, and a posterior whose solution lacks one says
+    Four members are optional, and a posterior whose solution lacks one says
     so when it is asked for the feature:
 
     - ``with_gamma(gamma) -> Solution``: the solution at another
@@ -57,6 +57,11 @@ class Solution(Protocol):
     - ``with_data(problem) -> Solution``: the solution of `problem`, the same
       problem with other values of the observations, without solving again
       (:meth:`Posterior.with_data`).
+    - ``innovation_precision(groups) -> list[np.ndarray]``: for each array of
+      observation positions :math:`g`, the block :math:`P_{gg}` of
+      :math:`P = (H S_0 H^T + S_z/\gamma)^{-1}` (``m_g x m_g``), and
+      ``self_sensitivity() -> np.ndarray``: :math:`\operatorname{diag}(H K)`
+      (``m``), whose sum is DOFS (:meth:`Posterior.data_worth`).
 
     And a solution whose :meth:`estimate` is the posterior mean says so with a
     class attribute ``estimate_is_mean = True``; without it, a posterior has
@@ -142,6 +147,81 @@ class Options(Protocol):
     def gamma(self) -> float:
         r"""The regularization factor :math:`\gamma`: the solve divided the model-data mismatch by it."""
         ...
+
+
+def _obs_groups(index: pd.Index, by: Any) -> tuple[pd.Index, list[np.ndarray]]:
+    """
+    Return the groups `by` makes of the labels `index`, and the positions of each group's labels.
+
+    The groups are those of :meth:`pandas.DataFrame.groupby` on the labels'
+    levels, in its order; a label whose block lacks a level is in no group of
+    it, and an empty group (a time bin with no label) is left out.
+
+    Raises
+    ------
+    ValueError
+        If no label is in a group.
+    """
+    grouped = pd.DataFrame({"position": np.arange(len(index))}, index=index).groupby(
+        by
+    )["position"]
+    names = list(grouped.size().index.names)
+    keys, positions = [], []
+    for key, part in grouped:
+        if len(part):
+            if len(names) == 1 and isinstance(key, tuple) and len(key) == 1:
+                key = key[0]  # a list of one key gives one-element tuples
+            keys.append(key)
+            positions.append(part.to_numpy())
+    if not keys:
+        raise ValueError("`by` puts no observation in a group.")
+    if len(names) == 1:
+        return pd.Index(keys, name=names[0]), positions
+    return pd.MultiIndex.from_tuples(keys, names=names), positions
+
+
+def _worth_table(
+    groups: pd.Index,
+    positions: list[np.ndarray],
+    dofs: np.ndarray,
+    aggregates: pd.Index,
+    var_without: np.ndarray,
+    var_with: np.ndarray,
+) -> pd.DataFrame:
+    """
+    Return the table of what each group of observations does to each aggregate.
+
+    One row per group and aggregate (the groups' levels, then the aggregates'):
+    ``n_obs`` and ``dofs`` of the group, and the std of the aggregate without
+    and with the group (`var_without` and `var_with` are ``groups x
+    aggregates``). A group level named like a level of the aggregates (``block``)
+    is called ``obs_<name>``: an index cannot have two levels of one name.
+    """
+    names = [
+        f"obs_{name}" if name is not None and name in aggregates.names else name
+        for name in groups.names
+    ]
+    n_groups, k = var_without.shape
+    g, a = np.repeat(np.arange(n_groups), k), np.tile(np.arange(k), n_groups)
+    index = pd.MultiIndex.from_arrays(
+        [groups.get_level_values(i).take(g) for i in range(groups.nlevels)]
+        + [aggregates.get_level_values(j).take(a) for j in range(aggregates.nlevels)],
+        names=names + list(aggregates.names),
+    )
+    std_without = np.sqrt(np.maximum(var_without, 0.0)).ravel()  # roundoff: -0
+    std_with = np.sqrt(np.maximum(var_with, 0.0)).ravel()
+    with np.errstate(divide="ignore", invalid="ignore"):
+        reduction = np.where(std_without > 0, 1.0 - std_with / std_without, np.nan)
+    return pd.DataFrame(
+        {
+            "n_obs": np.repeat([len(rows) for rows in positions], k),
+            "dofs": np.repeat(dofs, k),
+            "std_without": std_without,
+            "std_with": std_with,
+            "reduction": reduction,
+        },
+        index=index,
+    )
 
 
 def _times_pseudo_inverse(XWt: np.ndarray, W: LinearOperator) -> np.ndarray:
@@ -543,6 +623,135 @@ class Posterior:
                 "reduction": reduction,
             },
             index=index,
+        )
+
+    def data_worth(self, by: Any, W: Operator) -> pd.DataFrame:
+        r"""
+        Return what each group of observations adds to the certainty of each aggregate, and its share of DOFS.
+
+        For each group (a site, a platform, a month), the posterior standard
+        deviation of each aggregate without the group's observations and with
+        them (this posterior), without solving again. Removing the
+        observations :math:`g` changes the posterior covariance by a rank
+        :math:`m_g` update,
+
+        .. math::
+
+            \hat{S}_{-g} = \hat{S} + K_g P_{gg}^{-1} K_g^T, \qquad
+            P = (H S_0 H^T + S_z/\gamma)^{-1},
+
+        with :math:`K_g` the gain's columns for the group and :math:`P_{gg}`
+        its block of :math:`P` (the block inverse of the innovation
+        covariance). It is exact whatever the model-data mismatch, also when
+        it correlates the errors of one group with another's: it is the
+        posterior of the problem without the group's rows and columns. For
+        :math:`W`, :math:`W K_g` is a part of :math:`W K` (``k x m``), so
+        nothing ``n x n`` is formed.
+
+        A group's share of DOFS is the sum of :math:`(H K)_{ii}` over its
+        observations (the observation self-sensitivity, Cardinali et al.,
+        2004); the shares of groups that hold every observation once sum to
+        :attr:`dofs`.
+
+        Parameters
+        ----------
+        by : str, list or pandas.Grouper
+            The levels of the observations' labels to group by, as
+            :meth:`desroziers` and :meth:`pandas.DataFrame.groupby` take them:
+            ``"site"``, ``"block"`` (a platform per block), ``["site",
+            pd.Grouper(level="obs_time", freq="MS")]``. Observations whose
+            block lacks a level are in no group of it (they are never
+            removed).
+        W : Operator
+            An aggregation, as :meth:`cov` takes it: one row per aggregate (a
+            regional annual total, a trend as ``C @ W``). For every state
+            element, the identity on the state's space.
+
+        Returns
+        -------
+        pandas.DataFrame
+            One row per group and aggregate, indexed by the group's levels
+            and then the aggregation's rows (a group level with the name of
+            one of those, ``block``, is called ``obs_block``): ``n_obs`` (the
+            group's observations), ``dofs`` (its share of DOFS), ``std_without``
+            (the aggregate's posterior standard deviation without the group),
+            ``std_with`` (with it: :meth:`uncertainty`'s ``posterior_std``) and
+            ``reduction``, :math:`1 - \sigma_{with} / \sigma_{without}`, the
+            fraction the group takes off on top of the other observations.
+
+        Raises
+        ------
+        TypeError
+            If `W` is not an Operator, or the method cannot give the blocks of
+            :math:`P` and the self-sensitivity (its solution lacks
+            ``innovation_precision`` or ``self_sensitivity``).
+        ValueError
+            If the columns of `W` do not have exactly the state's labels, or
+            `by` puts no observation in a group.
+
+        See Also
+        --------
+        uncertainty : The prior and posterior uncertainty of each aggregate.
+        dofs : The degrees of freedom for signal, the sum of the shares.
+
+        References
+        ----------
+        Cardinali, C., Pezzulli, S., & Andersson, E. (2004). Influence-matrix
+        diagnostic of a data assimilation system. Q.J.R. Meteorol. Soc.,
+        130, 2767-2786.
+
+        Examples
+        --------
+        One flux observed at two sites, three times at A and once at B; the
+        flux's own row (``W`` the identity):
+
+        >>> import numpy as np
+        >>> import pandas as pd
+        >>> import fips
+        >>> state = fips.Space({"flux": pd.Index(["a"], name="cell")})
+        >>> labels = pd.MultiIndex.from_tuples(
+        ...     [("A", 0), ("A", 1), ("A", 2), ("B", 0)], names=["site", "hour"]
+        ... )
+        >>> observed = fips.Space({"co2": labels})
+        >>> problem = fips.Problem(
+        ...     prior=fips.Vector(np.zeros(1), state),
+        ...     prior_cov=fips.Covariance.diagonal(1.0, state),
+        ...     obs=fips.Vector(np.ones(4), observed),
+        ...     obs_cov=fips.Covariance.diagonal(1.0, observed),
+        ...     forward=fips.Operator(np.ones((4, 1)), observed, state),
+        ... )
+        >>> post = fips.solve(problem)
+        >>> W = fips.Operator(np.eye(1), state, state)
+        >>> post.data_worth(by="site", W=W).droplevel("block").round(3).reset_index()
+          site cell  n_obs  dofs  std_without  std_with  reduction
+        0    A    a      3   0.6        0.707     0.447      0.368
+        1    B    a      1   0.2        0.500     0.447      0.106
+        """
+        precision = self._optional(
+            "innovation_precision", "the data worth of groups of observations"
+        )
+        sensitivity = self._optional(
+            "self_sensitivity", "the data worth of groups of observations"
+        )
+        groups, positions = _obs_groups(self._problem.obs.index, by)
+        W_form = self._aggregation(W)
+        WK = self._solution.gain(W_form)  # k x m
+        var_with = self.cov(W).variances.values
+        shares = sensitivity()
+        var_without, dofs = [], []
+        for P_gg, rows in zip(precision(positions), positions, strict=True):
+            WK_g = WK[:, rows]  # k x m_g
+            P_gg = 0.5 * (P_gg + P_gg.T)
+            added = np.einsum("ki,ik->k", WK_g, _solve_psd(P_gg, WK_g.T))
+            var_without.append(var_with + added)
+            dofs.append(float(shares[rows].sum()))
+        return _worth_table(
+            groups,
+            positions,
+            np.array(dofs),
+            W.rows.index,
+            np.array(var_without),
+            np.tile(var_with, (len(positions), 1)),
         )
 
     @cached_property

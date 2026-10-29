@@ -409,6 +409,22 @@ the same labels (a bootstrap, :ref:`synthetic observations of a known truth
 
    pd.concat([post.with_gamma(g).summary() for g in (0.25, 1.0, 4.0)], ignore_index=True)
 
+**What each group of observations adds.** :meth:`~fips.Posterior.data_worth`
+groups the observations by any of their levels (a site, a platform's block, a
+month by ``pd.Grouper``), as :meth:`~fips.Posterior.desroziers` does, and says
+for each group how uncertain each aggregate would be without it
+(``std_without``) and is with it (``std_with``), the fraction it takes off on
+top of the other observations (``reduction``), and its share of DOFS. Removing
+a group is a rank update of :math:`\hat{S}`, exact for any model-data
+mismatch, so no problem is solved again. For the total flux of the hourly
+problem above, observed at two sites:
+
+.. ipython:: python
+
+   hourly_post = fips.solve(hourly)
+   total = fips.aggregate.sum(hourly.prior.space, by=pd.Series("all", index=hourly.prior.space.select("flux"), name="region"))
+   hourly_post.data_worth(by="site", W=total).round(3)
+
 **Checking the covariances.** :meth:`~fips.Posterior.desroziers` compares the
 observation error variances the residuals diagnose with those the solve used,
 per observation or averaged over groups; :attr:`~fips.Posterior.reduced_chi2`
