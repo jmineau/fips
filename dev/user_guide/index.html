@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>User Guide &#8212; fips 0.2.0b2.dev20+g01bd2db28 documentation</title>
+    <title>User Guide &#8212; fips 0.2.0b2.dev21+g310e0e304 documentation</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../_static/documentation_options.js?v=19f30c3a"></script>
+    <script src="../_static/documentation_options.js?v=5689a713"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -137,8 +137,8 @@
       
     
     
-    <img src="../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b2.dev20+g01bd2db28 documentation - Home"/>
-    <img src="../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b2.dev20+g01bd2db28 documentation - Home"/>
+    <img src="../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b2.dev21+g310e0e304 documentation - Home"/>
+    <img src="../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b2.dev21+g310e0e304 documentation - Home"/>
   
   
 </a></div>
@@ -620,6 +620,20 @@ adds what a covariance needs: its <a class="reference internal" href="../referen
 <a class="reference internal" href="../reference/api/fips.Covariance.solve.html#fips.Covariance.solve" title="fips.Covariance.solve"><code class="xref py py-meth docutils literal notranslate"><span class="pre">solve()</span></code></a>, <a class="reference internal" href="../reference/api/fips.Covariance.logdet.html#fips.Covariance.logdet" title="fips.Covariance.logdet"><code class="xref py py-meth docutils literal notranslate"><span class="pre">logdet()</span></code></a>,
 <a class="reference internal" href="../reference/api/fips.Covariance.quadratic_form.html#fips.Covariance.quadratic_form" title="fips.Covariance.quadratic_form"><code class="xref py py-meth docutils literal notranslate"><span class="pre">quadratic_form()</span></code></a> (of its inverse) and
 <a class="reference internal" href="../reference/api/fips.Covariance.sqrt.html#fips.Covariance.sqrt" title="fips.Covariance.sqrt"><code class="xref py py-meth docutils literal notranslate"><span class="pre">sqrt()</span></code></a>, each done the way its form makes cheap.</p>
+<p>A matrix you give (<code class="docutils literal notranslate"><span class="pre">fips.Covariance(array,</span> <span class="pre">space)</span></code>,
+<a class="reference internal" href="../reference/api/fips.Operator.from_frame.html#fips.Operator.from_frame" title="fips.Operator.from_frame"><code class="xref py py-meth docutils literal notranslate"><span class="pre">from_frame()</span></code></a>, <a class="reference internal" href="../reference/api/fips.Operator.from_blocks.html#fips.Operator.from_blocks" title="fips.Operator.from_blocks"><code class="xref py py-meth docutils literal notranslate"><span class="pre">from_blocks()</span></code></a>, or the
+variances of <a class="reference internal" href="../reference/api/fips.Covariance.diagonal.html#fips.Covariance.diagonal" title="fips.Covariance.diagonal"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Covariance.diagonal</span></code></a>) is checked
+once, when the covariance is built: it must be symmetric, to 1e-10 of its
+largest entry, and positive semidefinite, with no eigenvalue below zero by
+more than roundoff (<code class="docutils literal notranslate"><span class="pre">n</span> <span class="pre">*</span> <span class="pre">eps</span></code> times the largest). One that is not, a
+covariance estimated or tapered by hand, say, raises, naming its smallest
+eigenvalue. The check is the square root a draw is made with
+(<a class="reference internal" href="../reference/api/fips.Covariance.sample.html#fips.Covariance.sample" title="fips.Covariance.sample"><code class="xref py py-meth docutils literal notranslate"><span class="pre">sample()</span></code></a>), built and kept: for a dense matrix, one
+Cholesky factorization and an <code class="docutils literal notranslate"><span class="pre">n</span> <span class="pre">x</span> <span class="pre">n</span></code> factor held beside it; for a sparse
+one, a factor for each group of correlated rows; for a singular matrix (zero
+variances, a <a class="reference internal" href="../reference/api/fips.Constant.html#fips.Constant" title="fips.Constant"><code class="xref py py-class docutils literal notranslate"><span class="pre">Constant</span></code></a> block), which has no Cholesky factor, an
+eigendecomposition. A covariance a model builds is positive semidefinite by
+construction and is not checked.</p>
 <p>Independent errors are a diagonal, kept as its variances, one number per
 element: <a class="reference internal" href="../reference/api/fips.Covariance.diagonal.html#fips.Covariance.diagonal" title="fips.Covariance.diagonal"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Covariance.diagonal</span></code></a> takes a scalar
 (one variance for every element), an array (one each) or a vector. Independent
@@ -989,7 +1003,9 @@ product, so a Monte Carlo is a loop you write. If the inversion is honest, the
 mean and spread of the error and the probability that the interval holds the
 truth, without sampling. <code class="docutils literal notranslate"><span class="pre">post.recovery(world,</span> <span class="pre">W=W)</span></code> does the same for data
 from another world on the same labels, and <code class="docutils literal notranslate"><span class="pre">truth=</span></code> fixes the truth, as in
-<code class="docutils literal notranslate"><span class="pre">simulate</span></code>:</p>
+<code class="docutils literal notranslate"><span class="pre">simulate</span></code>. A variance below zero by roundoff is a standard deviation of 0;
+one further below zero comes only from a covariance that is not positive
+semidefinite, and is NaN, with a warning:</p>
 <div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [61]: </span><span class="n">post</span><span class="o">.</span><span class="n">recovery</span><span class="p">(</span><span class="n">W</span><span class="o">=</span><span class="n">W</span><span class="p">)[[</span><span class="s2">"truth"</span><span class="p">,</span> <span class="s2">"estimate"</span><span class="p">,</span> <span class="s2">"std"</span><span class="p">,</span> <span class="s2">"posterior_std"</span><span class="p">,</span> <span class="s2">"coverage"</span><span class="p">]]</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
 <span class="gh">Out[61]: </span>
 <span class="go">                  truth  estimate    std  posterior_std  coverage</span>

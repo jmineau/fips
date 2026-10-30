@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>fips.Covariance &#8212; fips 0.2.0b2.dev20+g01bd2db28 documentation</title>
+    <title>fips.Covariance &#8212; fips 0.2.0b2.dev21+g310e0e304 documentation</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../_static/documentation_options.js?v=19f30c3a"></script>
+    <script src="../../_static/documentation_options.js?v=5689a713"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -137,8 +137,8 @@
       
     
     
-    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b2.dev20+g01bd2db28 documentation - Home"/>
-    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b2.dev20+g01bd2db28 documentation - Home"/>
+    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b2.dev21+g310e0e304 documentation - Home"/>
+    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b2.dev21+g310e0e304 documentation - Home"/>
   
   
 </a></div>
@@ -849,10 +849,22 @@ or a sparse matrix is copied, and the copy is read-only, as for an
     largest <code class="docutils literal notranslate"><span class="pre">|A</span> <span class="pre">-</span> <span class="pre">A^T|</span></code> is more than 1e-10 of its largest entry (the
     message names the two entries and their labels). A diagonal or
     Kronecker form is symmetric by construction, and a block diagonal one
-    is checked block by block.</p></li>
+    is checked block by block. Also if the matrix is not positive
+    semidefinite: an eigenvalue is below zero by more than roundoff,
+    <code class="docutils literal notranslate"><span class="pre">n</span> <span class="pre">*</span> <span class="pre">eps</span></code> times the largest (the message names the smallest).</p></li>
 </ul>
 </dd>
 </dl>
+<p class="rubric">Notes</p>
+<p>The positive semidefinite check is the root <a class="reference internal" href="fips.Covariance.sample.html#fips.Covariance.sample" title="fips.Covariance.sample"><code class="xref py py-meth docutils literal notranslate"><span class="pre">sample()</span></code></a> draws with,
+built here and kept: the Cholesky factor of a dense matrix (<code class="docutils literal notranslate"><span class="pre">n^3</span> <span class="pre">/</span> <span class="pre">3</span></code>
+operations, and <code class="docutils literal notranslate"><span class="pre">n</span> <span class="pre">x</span> <span class="pre">n</span></code> more memory), of each group of correlated rows
+of a sparse one, of each block of a block diagonal one and of each factor
+of a Kronecker one, or the square roots of a diagonal. A singular matrix,
+which has no Cholesky factor, is eigendecomposed instead (several times
+the cost), with one INFO line. A covariance fips builds from a correlation
+model or computes (a sum, a reordering, a posterior) is positive
+semidefinite by construction and is not checked.</p>
 <div class="admonition seealso">
 <p class="admonition-title">See also</p>
 <dl class="simple">
