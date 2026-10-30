@@ -15,10 +15,12 @@ its own machinery: the posterior asks what the method kept from the solve (a
 :class:`~fips.posterior.Solution`) for unlabeled arrays and labels them with
 the problem's spaces. The analytic method keeps the factorization of its
 whitened system (:math:`m \times m`), or of its information system
-(:math:`n \times n`) when there are fewer state elements than observations
-and the model-data mismatch is dense, diagonal, sparse, block diagonal or
-Kronecker. In the whitened form nothing :math:`n \times n` is formed unless
-the full covariance or averaging kernel is asked for. The solve factors by
+(:math:`n \times n`) when there are fewer state elements than observations,
+the model-data mismatch is dense, diagonal, sparse, block diagonal or
+Kronecker, and the prior error covariance has a square root (a
+positive-definite one does). In the whitened form nothing
+:math:`n \times n` is formed unless the full covariance or averaging kernel is
+asked for. The solve factors by
 Cholesky at its gamma; the first :meth:`Posterior.with_gamma` eigendecomposes
 once, and later ones reuse it. :meth:`Posterior.with_data` reuses the
 factorization in either form.
