@@ -913,10 +913,10 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "matplotlib", marker = "extra == 'viz'", specifier = ">=3.6.0" },
-    { name = "numpy", specifier = ">=1.22.0" },
+    { name = "numpy", specifier = ">=1.24.2" },
     { name = "pandas", specifier = ">=2.0.0" },
-    { name = "scipy", specifier = ">=1.8.0" },
-    { name = "xarray", specifier = ">=2022.3.0" },
+    { name = "scipy", specifier = ">=1.12.0" },
+    { name = "xarray", specifier = ">=2022.12.0" },
 ]
 provides-extras = ["viz"]
 

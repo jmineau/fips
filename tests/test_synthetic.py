@@ -30,6 +30,7 @@ mis-specified world and a fixed truth, within `STANDARD_ERRORS` of the trials;
 and to what it refuses and what it allocates.
 """
 
+import logging
 import tracemalloc
 
 import numpy as np
@@ -40,8 +41,9 @@ from scipy.stats import norm
 
 import fips
 from fips import Covariance, Operator, Posterior, Problem, Space, Vector
-from fips.linalg import KroneckerOperator
+from fips.linalg import DenseOperator, KroneckerOperator
 from fips.methods import analytic
+from fips.posterior import _VARIANCE_RTOL, _largest_variance, _std
 
 TRIALS = 2000
 COVERAGE_TOL = 0.03
@@ -424,6 +426,177 @@ def test_an_error_with_no_spread_is_inside_or_not():
     table = post.recovery(truth=Vector(near, STATE)).xs("bias", level="block")
     np.testing.assert_array_equal(table["std"].to_numpy(), 0.0)
     np.testing.assert_array_equal(table["coverage"].to_numpy(), [1.0, 0.0])
+
+
+def _warnings(caplog) -> list[str]:
+    """The WARNING lines fips logged."""
+    return [
+        r.getMessage()
+        for r in caplog.records
+        if r.name.startswith("fips") and r.levelno == logging.WARNING
+    ]
+
+
+def test_a_variance_below_zero_by_roundoff_is_zero_and_below_that_nan(caplog):
+    """Half the roundoff below zero is a standard deviation of 0; twice the roundoff below is NaN, with one warning."""
+    scale = np.array([4.0, 4.0, 4.0, 4.0, 100.0])
+    roundoff = _VARIANCE_RTOL * scale  # 1.5e-8 of the scale
+    variance = np.array(
+        [1.0, 0.0, -0.5 * roundoff[2], -2.0 * roundoff[3], -0.5 * roundoff[4]]
+    )
+    with caplog.at_level(logging.WARNING, logger="fips"):
+        std = _std(variance, scale, "test variances")
+    np.testing.assert_array_equal(std, [1.0, 0.0, 0.0, np.nan, 0.0])
+    (line,) = _warnings(caplog)
+    assert "1 of the 5 test variances are below zero" in line
+    assert f"{-2.0 * roundoff[3]:.3g}" in line
+
+
+def test_roundoff_is_what_a_solve_keeps_not_one_sum():
+    """
+    A variance 1e-12 of its scale below zero is roundoff: a solve of condition number 1e12 loses that much.
+
+    A sum of products is good to a few ``eps`` (2e-16), but a posterior
+    variance comes from a solve; measured (the next test's problem), the
+    whitened form's is up to 800 ``eps`` of its scale below zero. An
+    indefinite covariance gives variances 1e-6 of their scale below zero or
+    more, which are not roundoff.
+    """
+    scale = np.ones(3)
+    np.testing.assert_array_equal(
+        _std(np.array([-1e-12, -1e-9, -1e-6]), scale, "variances"), [0.0, 0.0, np.nan]
+    )
+
+
+def test_an_ill_conditioned_problem_warns_nothing(caplog):
+    """A Gaussian prior (rank deficient to roundoff) and a mismatch of condition number 1e12: digits lost, no warning."""
+    rng = np.random.default_rng(1)
+    n, m = 150, 100
+    state = Space({"flux": pd.Index(np.arange(n, dtype=float), name="x")})
+    observed = Space({"ch4": pd.Index(range(m), name="obs_id")})
+    Q, _ = np.linalg.qr(rng.standard_normal((m, m)))
+    S_z = (Q * np.logspace(0, -12, m)) @ Q.T
+    H = rng.uniform(0, 1, (m, n)) * (rng.uniform(size=(m, n)) < 0.3)
+    problem = Problem(
+        prior=Vector(np.ones(n), state),
+        prior_cov=fips.Gaussian("x", 37.5).with_std(2.0),
+        obs=Vector(rng.standard_normal(m), observed),
+        obs_cov=Covariance(0.5 * (S_z + S_z.T), observed),
+        forward=Operator(H, observed, state),
+    )
+    totals = Operator(
+        np.kron(np.eye(30), np.ones(5)),
+        Space({"total": pd.Index(range(30), name="k")}),
+        state,
+    )
+    with caplog.at_level(logging.WARNING, logger="fips"):
+        for gamma in (1.0, 3.0):
+            post = fips.solve(problem, gamma=gamma)
+            for table in (post.recovery(), post.recovery(W=totals)):
+                assert table[["std", "posterior_std"]].notna().all(axis=None)
+    assert not _warnings(caplog)
+
+
+def test_the_scale_bounds_every_covariance_with_those_variances():
+    """``(sum_i |x_i| sigma_i)^2`` is at least ``|x|^T |S| |x|``, and is it for perfectly correlated errors."""
+    rng = np.random.default_rng(3)
+    S = _spd(rng, 6, 1.0)
+    X = rng.standard_normal((6, 4))
+    bound = _largest_variance(X, DenseOperator(S))
+    terms = np.einsum("ik,ik->k", np.abs(X), np.abs(S) @ np.abs(X))
+    assert (terms <= bound * (1 + 1e-12)).all()
+    sigma = np.sqrt(np.diag(S))
+    correlated = np.outer(sigma, sigma)
+    np.testing.assert_allclose(
+        np.einsum("ik,ik->k", np.abs(X), correlated @ np.abs(X)), bound, rtol=1e-12
+    )
+    np.testing.assert_allclose(_largest_variance(None, DenseOperator(S)), np.diag(S))
+
+
+def test_recovery_of_a_prior_that_is_not_positive_semidefinite_is_nan(caplog):
+    """
+    #148: a total whose prior variance is negative is not reported as known exactly (std 0, coverage 1).
+
+    ``Covariance(...)`` refuses such a matrix, but a difference of two
+    covariances is not checked. Its posterior variance is -0.75: the standard
+    deviations and the coverage are NaN, and both are logged.
+    """
+    rng = np.random.default_rng(5)
+    n, m = 12, 6
+    Q, _ = np.linalg.qr(rng.standard_normal((n, n)))
+    q = Q[:, -1]
+    state = Space({"flux": pd.Index(range(n), name="cell")})
+    observed = Space({"ch4": pd.Index(range(m), name="obs_id")})
+    positive = (Q * np.r_[np.linspace(1.0, 2.0, n - 1), 0.0]) @ Q.T
+    positive = 0.5 * (positive + positive.T)
+    prior_cov = Covariance(positive, state) - Covariance(0.3 * np.outer(q, q), state)
+    problem = Problem(
+        prior=Vector(np.zeros(n), state),
+        prior_cov=prior_cov,
+        obs=Vector(rng.standard_normal(m), observed),
+        obs_cov=Covariance.diagonal(1.0, observed),
+        forward=Operator(rng.standard_normal((m, n)), observed, state),
+    )
+    post = fips.solve(problem)
+    W = Operator(q[None, :], Space({"total": pd.Index(["q"], name="combo")}), state)
+    assert post.cov(W).variances.values[0] < -0.5
+    with caplog.at_level(logging.WARNING, logger="fips"):
+        table = post.recovery(W=W)
+    assert table[["std", "posterior_std", "coverage"]].isna().all(axis=None)
+    lines = _warnings(caplog)
+    assert len(lines) == 2
+    assert "1 of the 1 error variances" in lines[0]
+    assert "1 of the 1 posterior variances" in lines[1]
+    caplog.clear()
+    with caplog.at_level(logging.WARNING, logger="fips"):
+        each = post.recovery()  # each element's variance is positive
+    assert not _warnings(caplog)
+    assert each[["std", "posterior_std", "coverage"]].notna().all(axis=None)
+
+
+def test_recovery_of_a_semidefinite_problem_warns_nothing(analytic_form, caplog):
+    """
+    Singular covariances (perfectly correlated cells, a bias known exactly) give totals of variance 0: roundoff, never a warning.
+
+    The whitened form takes a semidefinite prior; the information form needs
+    its square root, so there only the world's covariances are singular.
+    """
+    arrays = World()
+    pairs = np.kron(np.eye(3), np.full((2, 2), 0.49))  # each time's two cells as one
+    singular = np.block(
+        [[pairs, np.zeros((6, 2))], [np.zeros((2, 6)), np.diag([0.0, 1.0])]]
+    )
+    by_site = np.kron(np.eye(2), np.full((4, 4), 0.25))  # one error per site
+    obs_cov = np.block(
+        [[by_site, np.zeros((8, 4))], [np.zeros((4, 8)), 0.5 * np.eye(4)]]
+    )
+    if analytic_form is analytic.Whitened:
+        problem = arrays.problem(prior_cov=Covariance(singular, STATE))
+    else:
+        problem = arrays.problem()
+    world = arrays.problem(
+        prior_cov=Covariance(singular, STATE), obs_cov=Covariance(obs_cov, OBS)
+    )
+    post = fips.solve(problem)
+    # each time's cell a minus cell b, and the bias known exactly
+    rows = np.zeros((4, N))
+    for t in range(3):
+        rows[t, [2 * t, 2 * t + 1]] = [1.0, -1.0]
+    rows[3, 6] = 1.0
+    W = Operator(rows, Space({"combo": pd.Index(range(4), name="k")}), STATE)
+    with caplog.at_level(logging.WARNING, logger="fips"):
+        tables = [
+            post.recovery(W=W),
+            post.recovery(),
+            post.recovery(world, W=W),
+            post.recovery(world, truth=Vector(1.5 * arrays.x0, STATE), W=W),
+        ]
+    assert not _warnings(caplog)
+    for table in tables:
+        assert table[["std", "posterior_std", "coverage"]].notna().all(axis=None)
+    # in the world, the differences and the bias have no prior spread
+    in_world = tables[2]
+    assert (in_world["std"] >= 0).all()
 
 
 @pytest.mark.parametrize("form", ["whitened", "information"])

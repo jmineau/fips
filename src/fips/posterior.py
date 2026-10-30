@@ -164,6 +164,62 @@ def _times_pseudo_inverse(XWt: np.ndarray, W: LinearOperator) -> np.ndarray:
         ) from err
 
 
+def _largest_variance(Xt: np.ndarray | None, cov: LinearOperator) -> np.ndarray:
+    r"""
+    Return the largest variance of each column of `Xt` under any covariance with `cov`'s variances.
+
+    That is :math:`(\sum_i |x_i| \sigma_i)^2`, the variance of :math:`x^T e`
+    were the errors :math:`e` perfectly correlated. A positive semidefinite
+    :math:`S` has :math:`|S_{ij}| \le \sigma_i \sigma_j`, so this bounds
+    :math:`|x|^T |S| |x|`, the size of the terms :math:`x^T S x` is summed
+    from: the scale its roundoff is relative to. `Xt` None stands for the
+    identity (each element's own variance).
+    """
+    sigma = np.sqrt(np.maximum(cov.diagonal(), 0.0))
+    if Xt is None:
+        return sigma**2
+    return (np.abs(Xt).T @ sigma) ** 2
+
+
+_VARIANCE_RTOL = float(np.sqrt(np.finfo(float).eps))
+"""How far below zero a variance may be and be roundoff: 1.5e-8 of its scale (:func:`_std`)."""
+
+
+def _std(variance: np.ndarray, scale: np.ndarray, what: str) -> np.ndarray:
+    r"""
+    Return the square root of `variance`: 0 where it is below zero by roundoff, NaN (logged) where it is below that.
+
+    A variance :math:`x^T S x` of a positive semidefinite :math:`S` is not
+    negative, but computed it can come out below zero: by a few ``eps`` of
+    :math:`|x|^T |S| |x|` (which `scale` bounds, :func:`_largest_variance`)
+    when it is summed, and by more when it comes from a solve, which loses
+    digits with the condition number. Below zero by at most
+    ``sqrt(eps) * scale`` (1.5e-8 of it: what a double-precision solve keeps
+    up to a condition number of 1e8) is roundoff, and its square root is 0.
+    One further below zero is not: a covariance is not positive
+    semidefinite, and its square root is NaN, with one warning naming `what`.
+    """
+    roundoff = _VARIANCE_RTOL * scale
+    negative = variance < -roundoff
+    if negative.any():
+        lowest = np.unravel_index(
+            np.argmax(np.where(negative, -variance, -np.inf)), variance.shape
+        )
+        logger.warning(
+            "%d of the %d %s are below zero by more than roundoff (the lowest is "
+            "%.3g, where roundoff is %.3g); their standard deviation is NaN. A "
+            "variance is negative only when a covariance is not positive "
+            "semidefinite: check the prior error and model-data mismatch "
+            "covariances.",
+            int(negative.sum()),
+            negative.size,
+            what,
+            variance[lowest],
+            np.broadcast_to(roundoff, variance.shape)[lowest],
+        )
+    return np.sqrt(np.where(negative, np.nan, np.maximum(variance, 0.0)))
+
+
 class Posterior:
     r"""
     The solution of an inverse problem, labeled.
@@ -1181,6 +1237,12 @@ class Posterior:
             :math:`\sqrt{\operatorname{diag} W \hat{S} W^T}`) and ``coverage``
             (the probability that the `level` interval of the posterior holds
             the truth, for an error :math:`N(\text{bias}, \text{std}^2)`).
+            A variance below zero by roundoff gives a standard deviation of 0;
+            one further below zero, which only a covariance that is not
+            positive semidefinite gives, gives NaN (and a NaN ``coverage``),
+            with a warning logged. Roundoff is ``sqrt(eps)`` (1.5e-8) times
+            the largest variance the row could have under covariances with
+            the same variances, :math:`(\sum_i |x_i| \sigma_i)^2`.
 
         Raises
         ------
@@ -1297,18 +1359,24 @@ class Posterior:
         # diag(W K R_w K^T W^T), with R_w applied to k columns in its form
         KT = WK.T  # m x k
         variance = np.einsum("ik,ik->k", KT, np.asarray(world.obs_cov.data @ KT))
+        scale = _largest_variance(KT, world.obs_cov.data)
         if P is not None:
             # G^T = (W K H_w - W)^T = H_w^T (W K)^T - W^T, n x k
             Gt = np.asarray(world.forward.data._transpose() @ KT) - Wt
             variance += np.einsum("ik,ik->k", Gt, np.asarray(P @ Gt))
-        std = np.sqrt(np.maximum(variance, 0.0))  # roundoff can leave -0
-        posterior_std = np.sqrt(np.maximum(posterior_var, 0.0))
+            scale += _largest_variance(Gt, P)
+        std = _std(variance, scale, "error variances")
+        prior_scale = _largest_variance(
+            None if W is None else Wt, problem.prior_cov.data
+        )
+        posterior_std = _std(posterior_var, prior_scale, "posterior variances")
 
         half = ndtri(0.5 + level / 2) * posterior_std  # half the interval
         with np.errstate(divide="ignore", invalid="ignore"):
             random = ndtr((half - bias) / std) - ndtr((-half - bias) / std)
         # An error with no spread is inside the interval or not
         coverage = np.where(std > 0, random, (np.abs(bias) <= half).astype(float))
+        coverage[np.isnan(std) | np.isnan(posterior_std)] = np.nan
         return pd.DataFrame(
             {
                 "prior": Wx0,
