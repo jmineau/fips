@@ -42,6 +42,12 @@ becomes a vector of one block with :meth:`Vector.from_series
    obs = fips.Vector.from_series(times, block="time")
    obs.to_series()
 
+.. ipython:: python
+   :suppress:
+
+   pd.set_option("display.max_columns", None)  # show every column of a summary() table
+   pd.set_option("display.width", 110)
+
 A vector is read-only, and :meth:`~fips.Vector.to_series` gives it back to
 pandas, with a ``block`` level first.
 
@@ -134,8 +140,10 @@ the estimate, on the prior's labels, and its uncertainty:
 
 Nothing larger than the observations is formed until you ask for it: the
 estimate and the variances come from a factorization of an :math:`m \times m`
-matrix, and ``post.cov()`` forms the :math:`n \times n` covariance only when it
-is read. The diagnostics of the solve are attributes, and
+matrix (an :math:`n \times n` one when there are fewer state elements than
+observations and the observation covariance is diagonal, sparse or block
+diagonal; both hold here), and ``post.cov()`` forms the full
+:math:`n \times n` covariance only when it is read. The diagnostics of the solve are attributes, and
 :meth:`~fips.Posterior.summary` gives them as one row:
 
 .. ipython:: python
