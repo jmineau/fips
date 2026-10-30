@@ -97,8 +97,12 @@ The words
      - ``post.innovation_cov``
      - The observations minus what the prior models,
        :math:`d = z - H x_0 - c`. Its covariance,
-       :math:`H S_0 H^T + S_z / \gamma`, is the :math:`m \times m` matrix the
-       solve factors.
+       :math:`H S_0 H^T + S_z / \gamma`, is :math:`m \times m`. The solve factors
+       it, whitened by the model-data mismatch, unless there are fewer state
+       elements than observations, the mismatch is dense, diagonal, sparse,
+       block diagonal or Kronecker, and the prior error covariance has a
+       square root (a positive-definite one does): it then factors an
+       :math:`n \times n` matrix instead.
    * - **posterior**
      - :math:`\hat{x}`, :math:`\hat{S}`
      - ``fips.solve(problem)``, a :class:`~fips.Posterior`
