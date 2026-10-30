@@ -187,6 +187,7 @@ def _worth_table(
     aggregates: pd.Index,
     var_without: np.ndarray,
     var_with: np.ndarray,
+    scale: np.ndarray,
 ) -> pd.DataFrame:
     """
     Return the table of what each group of observations does to each aggregate.
@@ -194,8 +195,11 @@ def _worth_table(
     One row per group and aggregate (the groups' levels, then the aggregates'):
     ``n_obs`` and ``dofs`` of the group, and the std of the aggregate without
     and with the group (`var_without` and `var_with` are ``groups x
-    aggregates``). A group level named like a level of the aggregates (``block``)
-    is called ``obs_<name>``: an index cannot have two levels of one name.
+    aggregates``; `scale` is the largest prior variance each aggregate could
+    have, :func:`_largest_variance`, which a variance below zero is compared
+    to: :func:`_std`). A group level named like a level of the aggregates
+    (``block``) is called ``obs_<name>``: an index cannot have two levels of
+    one name.
     """
     names = [
         f"obs_{name}" if name is not None and name in aggregates.names else name
@@ -208,8 +212,8 @@ def _worth_table(
         + [aggregates.get_level_values(j).take(a) for j in range(aggregates.nlevels)],
         names=names + list(aggregates.names),
     )
-    std_without = np.sqrt(np.maximum(var_without, 0.0)).ravel()  # roundoff: -0
-    std_with = np.sqrt(np.maximum(var_with, 0.0)).ravel()
+    std_without = _std(var_without, scale, "variances without the group").ravel()
+    std_with = _std(var_with, scale, "variances with the group").ravel()
     with np.errstate(divide="ignore", invalid="ignore"):
         reduction = np.where(std_without > 0, 1.0 - std_with / std_without, np.nan)
     return pd.DataFrame(
@@ -574,6 +578,16 @@ class Posterior:
         values = self._solution.cov(self._aggregation(W))
         return Covariance._computed(_adopt(values), W.rows, name="posterior_cov")
 
+    def _prior_scale(self, W_form: LinearOperator | None) -> np.ndarray:
+        """
+        Return the largest prior variance each aggregate could have, which its roundoff is relative to.
+
+        :func:`_largest_variance` of the prior error covariance for the rows of
+        `W_form` (the state's elements for None).
+        """
+        Wt = None if W_form is None else W_form._transpose().dense()  # n x k
+        return _largest_variance(Wt, self._problem.prior_cov.data)
+
     def uncertainty(self, W: Operator | None = None) -> pd.DataFrame:
         r"""
         Return the prior and posterior uncertainty of each aggregate, and how much the observations reduce it.
@@ -667,13 +681,12 @@ class Posterior:
         if W is None:
             prior = self._problem.prior_cov.variances.values
             posterior = self.variances.values
-            scale = _largest_variance(None, self._problem.prior_cov.data)
+            scale = self._prior_scale(None)
             index = self._problem.prior.index
         else:
             posterior = self.cov(W).variances.values  # checks W against the state
             prior = self._problem.prior_cov.aggregate(W).variances.values
-            Wt = self._aggregation(W)._transpose().dense()  # n x k
-            scale = _largest_variance(Wt, self._problem.prior_cov.data)
+            scale = self._prior_scale(self._aggregation(W))
             index = W.rows.index
         prior_std = _std(prior, scale, "prior variances")
         posterior_std = _std(posterior, scale, "posterior variances")
@@ -741,6 +754,10 @@ class Posterior:
             ``std_with`` (with it: :meth:`uncertainty`'s ``posterior_std``) and
             ``reduction``, :math:`1 - \sigma_{with} / \sigma_{without}`, the
             fraction the group takes off on top of the other observations.
+            A variance below zero by more than roundoff, which only a
+            covariance that is not positive semidefinite can give, makes its
+            standard deviation and the reduction NaN, with a logged warning
+            (as in :meth:`uncertainty`).
 
         Raises
         ------
@@ -815,6 +832,7 @@ class Posterior:
             W.rows.index,
             np.array(var_without),
             np.tile(var_with, (len(positions), 1)),
+            self._prior_scale(W_form),
         )
 
     @cached_property
