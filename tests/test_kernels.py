@@ -402,6 +402,52 @@ def test_a_string_level_is_named_not_converted(model):
         model.correlation(STRINGS)
 
 
+TIMES = _coords(
+    x=[0.0, 1.0, 3.0],
+    t=pd.to_datetime(["2020-01-01", "2020-01-02", "2020-01-04"]),
+    lag=pd.to_timedelta([0, 1, 3], unit="D"),
+)
+KERNELS = [Exponential, Gaussian, lambda *a, **k: Matern(*a, 1.5, **k)]
+
+
+@pytest.mark.parametrize("make", KERNELS)
+@pytest.mark.parametrize("level", ["t", "lag"])
+@pytest.mark.parametrize("order", ["time second", "time first"])
+@pytest.mark.parametrize("scale", [1.0, "1D"])
+def test_a_time_level_is_measured_alone(make, level, order, scale):
+    """A level of times mixed with another raises whatever its position, as one first always did."""
+    levels = ["x", level] if order == "time second" else [level, "x"]
+    kind = "datetimes" if level == "t" else "timedeltas"
+    with pytest.raises(ValueError, match=f"Level '{level}' holds {kind}"):
+        make(levels, scale).correlation(TIMES)
+
+
+@pytest.mark.parametrize("level", ["t", "lag"])
+@pytest.mark.parametrize("order", ["time second", "time first"])
+@pytest.mark.parametrize(
+    "make, metric",
+    [
+        (Exponential, "haversine"),
+        (Exponential, "chordal"),
+        (Gaussian, "chordal"),
+        (lambda *a, **k: Matern(*a, 1.5, **k), "chordal"),
+    ],
+)
+def test_a_time_level_has_no_place_on_the_sphere(make, metric, level, order):
+    """A metric on the Earth cannot take a level of times as its latitude or longitude."""
+    levels = ["x", level] if order == "time second" else [level, "x"]
+    with pytest.raises(ValueError, match=f"Level '{level}' holds"):
+        make(levels, 10.0, metric=metric).correlation(TIMES)
+
+
+def test_a_time_level_alone_still_measures_time():
+    """The one case that works: a single level of times with a scale that is a time."""
+    for level in ("t", "lag"):
+        R = Exponential(level, "1D").correlation(TIMES)
+        np.testing.assert_allclose(R[0, 1], np.exp(-1.0))
+        np.testing.assert_allclose(R[0, 2], np.exp(-3.0))
+
+
 def test_scale_given_as_text_or_timedelta():
     """``"1D"``, ``pd.Timedelta`` and ``np.timedelta64`` are one scale."""
     a = Exponential("t", "1D")
