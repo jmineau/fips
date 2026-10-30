@@ -1263,12 +1263,13 @@ class Posterior:
         Return the leverage matrix of the state `x`: which observations weigh most on it.
 
         .. math::
-            L = Hx \left((Hx)^T G^{-1} Hx\right)^{-1} (Hx)^T G^{-1},
-            \qquad G = H S_0 H^T + S_z / \gamma
+            L = h \left(h^T G^{-1} h\right)^{-1} h^T G^{-1},
+            \qquad h = H x + c, \quad G = H S_0 H^T + S_z / \gamma
 
         This is the generalized-least-squares hat matrix of the one regressor
-        :math:`Hx` (which includes the offset :math:`c`): the projection onto
-        :math:`Hx` in the metric :math:`G^{-1}`. It is idempotent and its
+        :math:`h`, the observations that `x` models (:meth:`~fips.Problem.predict`,
+        which includes the offset :math:`c`): the projection onto :math:`h` in
+        the metric :math:`G^{-1}`. It is idempotent and its
         trace is 1, so its diagonal shares one unit of leverage among the
         observations; with correlated errors an entry can be negative.
 
