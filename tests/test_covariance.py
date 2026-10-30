@@ -21,6 +21,7 @@ from fips import (
     Constant,
     Covariance,
     Exponential,
+    Gaussian,
     Independent,
     Kronecker,
     Operator,
@@ -487,7 +488,8 @@ class TestAgainstNumPy:
             "diagonal": DiagonalOperator([1.0, -1.0]),
             "sparse": sp.csr_array(A),
         }[form]
-        S = Covariance(data, SITES)
+        # Covariance(...) refuses a dense or sparse A; one fips computes is not checked
+        S = Covariance._computed(data, SITES)
         assert isinstance(S.data, FORM_TYPES[form])
         with pytest.raises(np.linalg.LinAlgError):
             S.logdet()
@@ -517,10 +519,10 @@ class TestAgainstNumPy:
         if form in ("diagonal", "block"):
             assert isinstance(L.data, FORM_TYPES[form])
 
-    def test_sqrt_of_an_indefinite_covariance_raises(self):
-        """A covariance that is not positive-definite has no square root."""
-        with pytest.raises(np.linalg.LinAlgError):
-            Covariance(np.array([[1.0, 2.0], [2.0, 1.0]]), SITES).sqrt()
+    def test_sqrt_of_a_singular_covariance_raises(self):
+        """A covariance that is only semidefinite has no Cholesky square root."""
+        with pytest.raises(np.linalg.LinAlgError, match="not positive-definite"):
+            Covariance(np.array([[1.0, 1.0], [1.0, 1.0]]), SITES).sqrt()
 
 
 class TestArithmeticAndBlocks:
@@ -766,6 +768,196 @@ class TestSymmetry:
         """``Covariance(cov, space)`` would ignore the labels: it points to align and data."""
         with pytest.raises(TypeError, match=r"align\(rows, cols\).*\.data"):
             Covariance(COVS["sparse"], CELLS)
+
+
+class TestPositiveSemidefinite:
+    """
+    A covariance refuses a dense or sparse matrix with a clearly negative eigenvalue, and takes every positive semidefinite one.
+
+    The check is the draw root (``form._root``): a Cholesky factor, else an
+    eigendecomposition whose eigenvalues may be below zero by roundoff,
+    ``n * eps * max|lambda|``, and no more.
+    """
+
+    #: Eigenvalues 1 to 2 and one of -0.3: symmetric, with a positive diagonal (#148)
+    @staticmethod
+    def _indefinite(n: int = 12) -> np.ndarray:
+        rng = np.random.default_rng(5)
+        Q, _ = np.linalg.qr(rng.standard_normal((n, n)))
+        A = (Q * np.r_[np.linspace(1.0, 2.0, n - 1), -0.3]) @ Q.T
+        A = 0.5 * (A + A.T)
+        assert (np.diag(A) > 0).all()
+        return A
+
+    @staticmethod
+    def _space(n: int) -> Space:
+        return Space({"flux": pd.Index(np.arange(n, dtype=float), name="x")})
+
+    @pytest.mark.parametrize(
+        "form", ["dense", "sparse", "frame", "blocks", "block", "kronecker"]
+    )
+    def test_a_clearly_negative_eigenvalue_raises(self, form):
+        """Every way a caller's matrix comes in refuses it, naming the smallest eigenvalue."""
+        A = self._indefinite()
+        space = self._space(len(A))
+        labels = space.select("flux")
+        build = {
+            "dense": lambda: Covariance(A, space),
+            "sparse": lambda: Covariance(sp.csr_array(A), space),
+            "frame": lambda: Covariance.from_frame(
+                _frame(A, labels), row_block="flux", col_block="flux"
+            ),
+            "blocks": lambda: Covariance.from_blocks(
+                {("flux", "flux"): _frame(A, labels)}
+            ),
+            "block": lambda: Covariance(
+                BlockDiagonalOperator([np.eye(2), A]),
+                Space({"bias": SITES.select("bias"), "flux": labels}),
+            ),
+            "kronecker": lambda: Covariance(
+                KroneckerOperator([np.eye(2), A]),
+                Space(
+                    {"flux": pd.MultiIndex.from_product([SITES.select("bias"), labels])}
+                ),
+            ),
+        }[form]
+        with pytest.raises(
+            ValueError,
+            match=r"not positive semi-definite.*smallest eigenvalue is -0\.3,",
+        ):
+            build()
+
+    @pytest.mark.parametrize(
+        "form", ["dense", "sparse diagonal", "variances", "sparse"]
+    )
+    def test_the_roundoff_boundary(self, form):
+        """An eigenvalue half the roundoff below zero is taken (and drawn as zero); one twice the roundoff below is refused."""
+        n = 4
+        roundoff = n * np.finfo(float).eps * 1.0  # n eps max|lambda|, max|lambda| = 1
+        space = self._space(n)
+        for below in (0.5, 2.0):
+            w = np.array([1.0, 0.5, 0.25, -below * roundoff])
+            data = {
+                "dense": np.diag(w),  # a dense matrix, eigenvalues w exactly
+                "sparse diagonal": sp.diags_array(w).tocsr(),  # held as its diagonal
+                "variances": DiagonalOperator(w),
+                # a sparse matrix of one group of four: its eigenvalues are w
+                "sparse": sp.csr_array(np.diag(w) + 1e-300 * (1 - np.eye(n))),
+            }[form]
+            if below < 1:
+                cov = Covariance(data, space)
+                # clipped to zero, not drawn with sqrt(|lambda|) = 2e-8
+                assert abs(cov.sample(rng=0).values[3]) < 1e-12
+            else:
+                # -1.78e-15; the eigendecomposition of the sparse group, not
+                # diagonal, has a roundoff of its own (-1.55e-15)
+                with pytest.raises(
+                    ValueError, match=r"smallest eigenvalue is -1\.\d+e-15"
+                ):
+                    Covariance(data, space)
+
+    @staticmethod
+    def _grid() -> Space:
+        """Six times by five places: a Kronecker product's labels."""
+        times = pd.Index(np.arange(6.0), name="t")
+        places = pd.Index(np.arange(5.0), name="y")
+        return Space({"flux": pd.MultiIndex.from_product([times, places])})
+
+    def _semidefinite(self, case: str):
+        """A positive semidefinite matrix that fips users build, by name."""
+        rng = np.random.default_rng(11)
+        if case == "zero variances":  # half the elements are known exactly
+            A = np.zeros((30, 30))
+            A[:15, :15] = _spd(rng, 15)
+            return A
+        if case == "rank deficient":  # rank 4: 26 eigenvalues of +-roundoff
+            B = rng.standard_normal((30, 4))
+            return B @ B.T
+        if case == "constant blocks":  # Constant(within=...): rank one each
+            return np.kron(np.eye(3), np.full((10, 10), 2.0))
+        if case == "constant blocks, sparse":
+            return sp.csr_array(np.kron(np.eye(3), np.ones((10, 10))))
+        if case == "rank deficient kronecker factor":
+            t = np.arange(5.0)
+            T = np.exp(-np.abs(np.subtract.outer(t, t)) / 2.0)
+            return np.kron(np.ones((6, 6)), T)
+        if case == "zero block":
+            A = np.zeros((30, 30))  # a bias block given as 0, beside the flux block
+            A[:10, :10] = _spd(rng, 10)
+            order = rng.permutation(30)
+            return A[np.ix_(order, order)]
+        if case == "gaussian kernel":  # positive semidefinite only to roundoff
+            space = Space({"flux": pd.Index(np.arange(200.0), name="x")})
+            return Gaussian("x", 40.0).with_std(3.0).build(space).dense()
+        if case == "kronecker model, exported":
+            model = Kronecker(Exponential("t", 5.0), Exponential("y", 2.0))
+            return model.with_std(2.0).build(self._grid()).dense()
+        raise ValueError(case)
+
+    @pytest.mark.parametrize(
+        "case",
+        [
+            "zero variances",
+            "rank deficient",
+            "constant blocks",
+            "constant blocks, sparse",
+            "rank deficient kronecker factor",
+            "zero block",
+            "gaussian kernel",
+            "kronecker model, exported",
+        ],
+    )
+    def test_every_positive_semidefinite_matrix_is_taken(self, case):
+        """Singular matrices, and ones positive semidefinite only to roundoff, are covariances; the root kept is theirs."""
+        A = self._semidefinite(case)
+        dense = A.toarray() if sp.issparse(A) else A
+        if case in ("rank deficient", "gaussian kernel"):
+            assert np.linalg.eigvalsh(dense).min() < 0  # negative by roundoff
+        cov = Covariance(A, self._space(len(dense)))
+        R = cov.data._root  # kept: a draw factors nothing again
+        R = R.matrix.toarray() if isinstance(R, SparseOperator) else R.dense()
+        np.testing.assert_allclose(R @ R.T, dense, atol=1e-10 * np.abs(dense).max())
+
+    def test_the_root_is_built_once_and_kept(self, monkeypatch):
+        """The check is the root a draw uses: a draw after it factors nothing."""
+        import fips.linalg.forms as forms
+
+        cov = Covariance(_spd(np.random.default_rng(2), 6), CELLS)
+        assert "_root" in cov.data.__dict__
+
+        def refuse(A):
+            raise AssertionError("factored again")
+
+        monkeypatch.setattr(forms, "_dense_root", refuse)
+        assert np.isfinite(cov.sample(rng=0).values).all()
+
+    def test_models_and_what_fips_computes_are_not_checked(self, monkeypatch):
+        """A covariance a model builds, or fips computes, skips the check: it is positive semidefinite by construction."""
+        import fips.covariance.covariance as module
+
+        def refuse(form):
+            raise AssertionError("checked")
+
+        monkeypatch.setattr(module, "_check_positive_semidefinite", refuse)
+        space = Space(
+            {
+                "flux": pd.MultiIndex.from_product(
+                    [
+                        pd.Index(np.arange(4.0), name="t"),
+                        pd.Index(np.arange(3.0), name="y"),
+                    ]
+                ),
+                "bias": SITES.select("bias"),
+            }
+        )
+        flux = Kronecker(Exponential("t", 2.0), Exponential("y", 1.0)).with_std(1.0)
+        model = Covariance.block_diag(flux=flux, bias=Independent().with_std(0.5))
+        built = model.build(space)
+        assert isinstance(built, Covariance)
+        assert "_root" not in built.data.__dict__  # nothing factored
+        assert isinstance(built + built, Covariance)
+        constant = Constant(within="t").with_std(1.0).build(self._grid())
+        assert "_root" not in constant.data.__dict__
 
 
 # ---------------------------------------------------------------------------

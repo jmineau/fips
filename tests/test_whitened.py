@@ -169,13 +169,20 @@ def _direct(z, x_0, H, S_0, S_z, c, gamma):
     }
 
 
-def _problem(z, x_0, H, S_0, S_z, c) -> Problem:
-    """Label the arrays: one block each, numbered; each matrix keeps its form."""
+def _problem(z, x_0, H, S_0, S_z, c, *, check=True) -> Problem:
+    """
+    Label the arrays: one block each, numbered; each matrix keeps its form.
+
+    ``check=False`` builds the prior error covariance as fips builds one it
+    computes, without the checks of ``Covariance(...)``: a sum or difference
+    of covariances can be indefinite, and the method's own guard is tested
+    with one.
+    """
     state = Space({"flux": pd.Index(range(len(x_0)), name="cell")})
     obs = Space({"conc": pd.Index(range(len(z)), name="obs_id")})
     return Problem(
         prior=Vector(x_0, state),
-        prior_cov=Covariance(S_0, state),
+        prior_cov=(Covariance if check else Covariance._computed)(S_0, state),
         obs=Vector(z, obs),
         obs_cov=Covariance(S_z, obs),
         forward=Operator(H, obs, state),
@@ -725,7 +732,7 @@ def test_negative_eigenvalues_are_clipped_and_logged(caplog):
     z, x_0, H, _, S_z, c = _arrays("dense", 0, n_time=1, n_cell=3, m=3)
     S_0 = np.diag([1.0, 1.0, -0.5])
     with caplog.at_level(logging.WARNING, logger="fips.methods.analytic"):
-        post = fips.solve(_problem(z, x_0, np.eye(3), S_0, S_z, c))
+        post = fips.solve(_problem(z, x_0, np.eye(3), S_0, S_z, c, check=False))
     assert any("negative eigenvalue" in r.message for r in caplog.records)
     assert post._solution.eigenvalues is not None  # eigendecomposed, not a Cholesky
     assert (post._solution.eigenvalues >= 0).all()
@@ -920,7 +927,7 @@ def test_a_prior_that_is_not_positive_semidefinite_warns_as_before(smallest, cap
     H = rng.standard_normal((k, k))
     S_z = sp.diags(rng.uniform(0.5, 1.5, k)).tocsr()
     z, x_0 = rng.normal(size=k), np.zeros(k)
-    problem = _problem(z, x_0, H, S_0, S_z, np.zeros(k))
+    problem = _problem(z, x_0, H, S_0, S_z, np.zeros(k), check=False)
 
     def warned(factor):
         caplog.clear()
@@ -1086,10 +1093,10 @@ def test_a_kronecker_mismatch_with_fewer_states_than_observations(gamma, seed):
 
 
 def test_a_kronecker_mismatch_that_is_not_positive_definite_raises():
-    """A Kronecker ``S_z`` with a factor that is not positive-definite gives the clear error, not a wrong answer."""
+    """A Kronecker ``S_z`` with a factor that is not positive-definite (only semidefinite) gives the clear error, not a wrong answer."""
     z, x_0, H, S_0, _, c = _arrays("dense", 0, n_time=1, n_cell=3, m=8)
     rng = np.random.default_rng(0)
-    S_z = KroneckerOperator([np.array([[1.0, 2.0], [2.0, 1.0]]), _spd(rng, 4)])
+    S_z = KroneckerOperator([np.array([[1.0, 1.0], [1.0, 1.0]]), _spd(rng, 4)])
     with pytest.raises(
         LinAlgError, match="model-data mismatch is not positive-definite"
     ):

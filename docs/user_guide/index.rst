@@ -134,6 +134,21 @@ adds what a covariance needs: its :attr:`~fips.Covariance.variances`,
 :meth:`~fips.Covariance.quadratic_form` (of its inverse) and
 :meth:`~fips.Covariance.sqrt`, each done the way its form makes cheap.
 
+A matrix you give (``fips.Covariance(array, space)``,
+:meth:`~fips.Operator.from_frame`, :meth:`~fips.Operator.from_blocks`, or the
+variances of :meth:`Covariance.diagonal <fips.Covariance.diagonal>`) is checked
+once, when the covariance is built: it must be symmetric, to 1e-10 of its
+largest entry, and positive semidefinite, with no eigenvalue below zero by
+more than roundoff (``n * eps`` times the largest). One that is not, a
+covariance estimated or tapered by hand, say, raises, naming its smallest
+eigenvalue. The check is the square root a draw is made with
+(:meth:`~fips.Covariance.sample`), built and kept: for a dense matrix, one
+Cholesky factorization and an ``n x n`` factor held beside it; for a sparse
+one, a factor for each group of correlated rows; for a singular matrix (zero
+variances, a :class:`~fips.Constant` block), which has no Cholesky factor, an
+eigendecomposition. A covariance a model builds is positive semidefinite by
+construction and is not checked.
+
 Independent errors are a diagonal, kept as its variances, one number per
 element: :meth:`Covariance.diagonal <fips.Covariance.diagonal>` takes a scalar
 (one variance for every element), an array (one each) or a vector. Independent
@@ -467,7 +482,9 @@ The estimate is linear in the observations, so the loop has an exact answer:
 mean and spread of the error and the probability that the interval holds the
 truth, without sampling. ``post.recovery(world, W=W)`` does the same for data
 from another world on the same labels, and ``truth=`` fixes the truth, as in
-``simulate``:
+``simulate``. A variance below zero by roundoff is a standard deviation of 0;
+one further below zero comes only from a covariance that is not positive
+semidefinite, and is NaN, with a warning:
 
 .. ipython:: python
 
