@@ -978,6 +978,75 @@ def test_a_candidate_already_observed_twice_equals_data_worth():
         )
 
 
+def _candidates_of(problem: Problem, rows: np.ndarray) -> Operator:
+    """Candidate observations of a problem: one row per entry of `rows` (a ``len(rows) x n`` array)."""
+    space = Space({"new": pd.Index(range(len(rows)), name="candidate")})
+    return Operator(rows, space, problem.prior.space)
+
+
+def test_candidate_worth_of_a_prior_that_is_not_positive_semidefinite_is_nan(caplog):
+    """
+    #148: a total with a negative variance is not reported as known exactly (std 0, reduction 1).
+
+    The standard deviations without and with the group and the reduction are
+    NaN, and each kind of variance is logged once.
+    """
+    problem, W = _indefinite_problem()
+    post = fips.solve(problem)
+    rng = np.random.default_rng(1)
+    forward = _candidates_of(problem, rng.standard_normal((3, len(problem.prior))))
+    with caplog.at_level(logging.WARNING, logger="fips"):
+        table = post.candidate_worth(
+            forward, fips.Independent().with_std(1.0), by=np.array([0, 0, 1]), W=W
+        )
+    assert table[["std_without", "std_with", "reduction"]].isna().all(axis=None)
+    lines = _warnings(caplog)
+    assert len(lines) == 2
+    assert "2 of the 2 variances without the group" in lines[0]
+    assert "2 of the 2 variances with the group" in lines[1]
+
+
+def test_candidate_worth_variance_half_the_roundoff_below_zero_is_zero_and_twice_it_is_nan(
+    caplog,
+):
+    """The boundary is the one of ``uncertainty``: 0 within the roundoff, NaN and a warning beyond."""
+    roundoff = _VARIANCE_RTOL * BOUNDARY_SCALE
+    caplog.set_level(logging.WARNING, logger="fips")
+    groups = np.array([0, 1])
+
+    def table(delta: float) -> pd.DataFrame:
+        problem, total = _boundary_problem(delta)
+        forward = _candidates_of(problem, np.zeros((2, 2)))  # candidates see nothing
+        return fips.solve(problem).candidate_worth(
+            forward, fips.Independent().with_std(1.0), by=groups, W=total
+        )
+
+    within = table(0.5 * roundoff)
+    assert not _warnings(caplog)
+    np.testing.assert_array_equal(within[["std_without", "std_with"]], 0.0)
+    assert within["reduction"].isna().all()
+
+    beyond = table(2.0 * roundoff)
+    assert beyond[["std_without", "std_with", "reduction"]].isna().all(axis=None)
+    lines = _warnings(caplog)
+    assert len(lines) == 2  # without the group, and with it
+    assert all(f"{-2.0 * roundoff:.3g}" in line for line in lines)
+
+
+def test_candidate_worth_of_a_semidefinite_problem_warns_nothing(analytic_form, caplog):
+    """A singular prior gives rows of no spread: standard deviations 0 or finite, never a warning or a NaN."""
+    problem, W = _semidefinite_problem(analytic_form)
+    post = fips.solve(problem)
+    rng = np.random.default_rng(4)
+    forward = _candidates_of(problem, rng.uniform(0.0, 1.0, (3, len(problem.prior))))
+    with caplog.at_level(logging.WARNING, logger="fips"):
+        table = post.candidate_worth(
+            forward, fips.Independent().with_std(0.5), by=np.array([0, 1, 1]), W=W
+        )
+    assert not _warnings(caplog)
+    assert table[["std_without", "std_with"]].notna().all(axis=None)
+
+
 def test_candidate_worth_refuses_what_it_cannot_use():
     """Arrays, other labels, an error on other labels, and a method whose estimate is not linear."""
     post = fips.solve(problem_of("diagonal", "diagonal"))

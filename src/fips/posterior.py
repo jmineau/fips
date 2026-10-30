@@ -902,7 +902,10 @@ class Posterior:
             it added, :math:`m_c - \operatorname{tr}(R_c F^{-1}) / \gamma`),
             ``std_without`` (this posterior's), ``std_with`` (with the group
             added) and ``reduction``, :math:`1 - \sigma_{with} /
-            \sigma_{without}`.
+            \sigma_{without}`. A variance below zero by more than roundoff,
+            which only a covariance that is not positive semidefinite can
+            give, makes its standard deviation and the reduction NaN, with a
+            logged warning (as in :meth:`uncertainty`).
 
         Raises
         ------
@@ -999,6 +1002,7 @@ class Posterior:
             W.rows.index,
             np.array(var_without),
             np.array(var_with),
+            self._prior_scale(W_form),
         )
 
     @cached_property
