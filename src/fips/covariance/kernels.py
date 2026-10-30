@@ -50,6 +50,24 @@ def _key(coords: pd.DataFrame, name: str) -> np.ndarray:
     return np.asarray(getattr(pd.DatetimeIndex(values), attribute))
 
 
+def _time_kind(values: pd.Series) -> str | None:
+    """Return ``"timedeltas"`` or ``"datetimes"`` for a level that holds times, else None."""
+    if pd.api.types.is_timedelta64_dtype(values):
+        return "timedeltas"
+    if pd.api.types.is_datetime64_any_dtype(values):
+        return "datetimes"
+    return None
+
+
+def _time_error(level: str, kind: str) -> ValueError:
+    """Return the error for a level of times that is not measured alone with a scale that is a time."""
+    return ValueError(
+        f"Level {level!r} holds {kind}: a model measures time along that one "
+        "level, with a scale that is a time (as '30D'), and takes no other "
+        "level or metric with it."
+    )
+
+
 def _ends(values: np.ndarray, rows: np.ndarray | None, cols: np.ndarray | None):
     """Return the two sides of the differences between rows: every two rows (as a column and a row), or the pairs `rows` and `cols` name."""
     if rows is None or cols is None:
@@ -234,6 +252,23 @@ class _Decay(_Kernel):
         """Return whether a correlation of the great-circle distance is positive-definite."""
         return True
 
+    def _numbers(self, coords: pd.DataFrame) -> np.ndarray:
+        """Return the levels of `coords` as float columns, or raise naming a level that holds no numbers."""
+        columns = []
+        for level in self.levels:
+            if (kind := _time_kind(coords[level])) is not None:
+                raise _time_error(level, kind)
+            try:
+                columns.append(coords[level].to_numpy(dtype=float))
+            except (TypeError, ValueError):
+                raise ValueError(
+                    f"Level {level!r} holds {coords[level].dtype} values, which "
+                    f"{type(self).__name__} cannot measure a distance along: "
+                    "a covariance model needs levels of numbers (coordinates) "
+                    "or of times."
+                ) from None
+        return np.column_stack(columns)
+
     def _distance(
         self,
         coords: pd.DataFrame,
@@ -247,28 +282,24 @@ class _Decay(_Kernel):
         vector with the distance from row ``rows[p]`` to row ``cols[p]``.
         """
         if self.metric != "euclidean":
-            lat, lon = (coords[level].to_numpy(dtype=float) for level in self.levels)
+            lat, lon = self._numbers(coords).T
             if rows is None or cols is None:
                 term = _half_angle_term(lat, lon)
             else:
                 term = _half_angle_pairs(lat, lon, rows, cols)
             measure = _great_circle if self.metric == "haversine" else _chord
             return measure(term) / self.scale
-        first = coords[self.levels[0]]
-        lags = pd.api.types.is_timedelta64_dtype(first)
-        if lags or pd.api.types.is_datetime64_any_dtype(first):
-            if len(self.levels) != 1 or not isinstance(self.scale, pd.Timedelta):
-                raise ValueError(
-                    f"Level {self.levels[0]!r} holds "
-                    f"{'timedeltas' if lags else 'datetimes'}: a model measures "
-                    "time along that one level, with a scale that is a time "
-                    "(as '30D')."
-                )
-            if lags:
+        times = {lv: k for lv in self.levels if (k := _time_kind(coords[lv]))}
+        if times:
+            level, kind = next(iter(times.items()))
+            if self.levels != (level,) or not isinstance(self.scale, pd.Timedelta):
+                raise _time_error(level, kind)
+            first = coords[level]
+            if kind == "timedeltas":
                 t = first.to_numpy()
             else:  # an instant is the same instant in any time zone
-                times = pd.DatetimeIndex(first)
-                t = (times.tz_convert(None) if times.tz else times).to_numpy()
+                instants = pd.DatetimeIndex(first)
+                t = (instants.tz_convert(None) if instants.tz else instants).to_numpy()
             a, b = _ends(t, rows, cols)
             return np.abs(a - b) / self.scale.to_timedelta64()
         if isinstance(self.scale, pd.Timedelta):
@@ -276,7 +307,7 @@ class _Decay(_Kernel):
                 f"The scale is a time, but the levels {list(self.levels)} do not "
                 "hold datetimes or timedeltas."
             )
-        x = coords[list(self.levels)].to_numpy(dtype=float)
+        x = self._numbers(coords)
         if x.shape[1] == 1:
             a, b = _ends(x[:, 0], rows, cols)
             distance = np.abs(a - b)
