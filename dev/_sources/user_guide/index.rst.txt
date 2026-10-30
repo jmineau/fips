@@ -431,8 +431,15 @@ for each group how uncertain each aggregate would be without it
 (``std_without``) and is with it (``std_with``), the fraction it takes off on
 top of the other observations (``reduction``), and its share of DOFS. Removing
 a group is a rank update of :math:`\hat{S}`, exact for any model-data
-mismatch, so no problem is solved again. For the total flux of the hourly
-problem above, observed at two sites:
+mismatch, so no problem is solved again. Two columns say what the group is
+worth by itself: ``std_alone`` is how uncertain the aggregate would be with only
+this group's observations, on the prior, and ``reduction_alone`` the fraction
+that takes off the prior (a rank update of :math:`S_0`). The two readings
+differ when groups see the same part of the state: a site that adds little on
+top of the others may have taught a lot had it been the only one. They agree
+only when there is one group. The alone columns use the group's own block of the
+model-data mismatch, so they leave out its correlation with the other groups'
+errors. For the total flux of the hourly problem above, observed at two sites:
 
 .. ipython:: python
 
@@ -443,8 +450,9 @@ problem above, observed at two sites:
 Observations that are not in the problem, a candidate site or platform, are
 their rows of the forward operator and the covariance of their errors (no
 values): :meth:`~fips.Posterior.candidate_worth` adds each group on its own,
-by the same kind of update, and gives the same columns, so a network design
-question ("which candidate site helps the total most") is one call:
+by the same kind of update, and gives the same columns but the two alone ones
+(a candidate is always added on top of the problem's observations), so a network
+design question ("which candidate site helps the total most") is one call:
 
 .. ipython:: python
 
