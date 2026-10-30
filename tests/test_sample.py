@@ -362,8 +362,8 @@ def _info_lines(caplog):
 
 def test_a_semidefinite_block_is_drawn_from_its_eigendecomposition(caplog):
     """A ``Constant()`` block has no Cholesky factor; it is drawn by ``eigh`` with one INFO line, and the draw is constant over the block."""
-    cov = _covariance(_constant_block())
     with caplog.at_level(logging.INFO, logger="fips"):
+        cov = _covariance(_constant_block())  # its root is built here
         draw = cov.sample(rng=0).values
         cov.sample(rng=1)  # the root is kept: nothing more is logged
     assert len(_info_lines(caplog)) == 1
@@ -375,8 +375,9 @@ def test_a_semidefinite_block_is_drawn_from_its_eigendecomposition(caplog):
 def test_a_roundoff_negative_eigenvalue_is_clipped(caplog):
     """An eigenvalue negative by roundoff (-5e-17) is set to zero, with one INFO line."""
     A = np.array([[1.0, 1.0, 0.0], [1.0, 1.0 - 1.1e-16, 0.0], [0.0, 0.0, 2.0]])
-    cov = Covariance(DenseOperator(A), Space({"x": pd.Index(list("abc"), name="i")}))
+    space = Space({"x": pd.Index(list("abc"), name="i")})
     with caplog.at_level(logging.INFO, logger="fips"):
+        cov = Covariance(DenseOperator(A), space)  # its root is built here
         draw = cov.sample(rng=0).values
     assert len(_info_lines(caplog)) == 1
     R = _dense_root(cov.data)
@@ -389,8 +390,8 @@ def test_a_sparse_group_that_is_semidefinite_logs_once(caplog):
     A = _block_diagonal_csr(
         [np.ones((2, 2)), _spd(np.random.default_rng(0), 3), np.ones((3, 3))]
     )
-    cov = _covariance(SparseOperator(A))
     with caplog.at_level(logging.INFO, logger="fips"):
+        cov = _covariance(SparseOperator(A))  # its root is built here
         cov.sample(rng=0)
     assert len(_info_lines(caplog)) == 1
     R = cov.data._root.matrix.toarray()
@@ -400,8 +401,8 @@ def test_a_sparse_group_that_is_semidefinite_logs_once(caplog):
 def test_a_roundoff_negative_variance_is_clipped(caplog):
     """A diagonal entry of -1e-20 beside entries near one is drawn as zero, with one INFO line."""
     space = Space({"x": pd.Index(list("abc"), name="i")})
-    cov = Covariance.diagonal([1.0, -1e-20, 2.0], space)
     with caplog.at_level(logging.INFO, logger="fips"):
+        cov = Covariance.diagonal([1.0, -1e-20, 2.0], space)  # its root is built here
         draw = cov.sample(rng=0).values
     assert draw[1] == 0.0
     assert len(_info_lines(caplog)) == 1
@@ -417,6 +418,11 @@ def test_a_clearly_negative_eigenvalue_raises(form):
         "sparse": SparseOperator(sp.csr_array(dense)),
         "block": BlockDiagonalOperator([DiagonalOperator([1.0]), DenseOperator(dense)]),
     }
-    cov = _covariance(forms[form])
+    # Covariance(...) refuses the dense and sparse forms (and the block holding
+    # one); one fips computes, a sum or difference of covariances, is not checked
+    size = forms[form].shape[0]
+    cov = Covariance._computed(
+        forms[form], Space({"x": pd.Index(range(size), name="i")})
+    )
     with pytest.raises(LinAlgError, match="not positive semi-definite"):
         cov.sample(rng=0)

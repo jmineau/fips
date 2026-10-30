@@ -128,6 +128,23 @@ class TestEachForm:
             assert type(result) is np.ndarray
             np.testing.assert_allclose(result, expected, rtol=RTOL)
 
+    def test_products_with_a_column(self, form):
+        """
+        An ``(n, 1)`` array times the form is ``(n, 1)``.
+
+        SciPy before 1.18 sends a column to ``_matvec``, which must take
+        ``(n,)`` and ``(n, 1)`` alike (#150): called directly here, so every
+        SciPy version tests it.
+        """
+        rng = np.random.default_rng(0)
+        A = square(form, rng)
+        op = make(form, A)
+        column = rng.standard_normal((6, 1))
+        np.testing.assert_allclose(op @ column, A @ column, rtol=RTOL)
+        np.testing.assert_allclose(
+            np.reshape(op._matvec(column), -1), (A @ column).ravel(), rtol=RTOL
+        )
+
     def test_transpose_dense_diagonal_trace(self, form):
         """``.T`` keeps the form; ``dense``, ``diagonal``, ``trace`` and ``np.asarray`` match."""
         rng = np.random.default_rng(1)
