@@ -175,7 +175,9 @@ labels are from their values on some levels:
   scale (``Exponential("time", "30D")``), numeric levels as a straight line,
   or latitude and longitude on the Earth (``metric="haversine"``, the
   great-circle distance in km; ``metric="chordal"``, through the Earth, which a
-  Gaussian or a Matérn needs to stay positive-definite);
+  Gaussian or a Matérn needs to stay positive-definite). The two levels are
+  read by position, not by name, so give latitude first:
+  ``Exponential(["lat", "lon"], 10.0, metric="haversine")``;
 - :class:`~fips.Constant` is 1 everywhere, and :class:`~fips.Independent` the
   identity (1 for a label with itself, 0 otherwise);
 - :class:`~fips.Kronecker` multiplies models on separate levels, kept as its
