@@ -1,0 +1,336 @@
+{
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "id": "cell-00",
+   "metadata": {},
+   "source": "# Which observations constrain a regional total?\n\nAn inversion's answer is often one number: the emissions of a region over a\nyear. This notebook asks how uncertain that number is before and after the\nobservations, what each site contributes to it, and which of a few candidate\nsites would tighten it most. Every number is exact for the linear Gaussian\nproblem and comes from the posterior already solved: nothing is solved again.\n\nThe setup is the one of [the regional flux inversion](flux_regional.ipynb),\nshortened: a year of monthly fluxes on a 10 x 10 grid, daily concentrations\nat three sites, a prior correlated in time and space. The observation error\nis five times larger here (0.01 ppm), so that no single site decides the\nanswer."
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "cell-01",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "import matplotlib.pyplot as plt\n",
+    "import numpy as np\n",
+    "import pandas as pd\n",
+    "import scipy.sparse as sp\n",
+    "\n",
+    "import fips\n",
+    "\n",
+    "rng = np.random.default_rng(42)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "cell-02",
+   "metadata": {},
+   "source": "## The problem\n\n`footprints` builds the forward operator's rows for any sites and days: each\nday a site sees the cells around a point upwind of it, in that day's month.\nThe same function will make the rows of the candidate sites."
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "cell-03",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "lons = np.round(np.arange(-111.975, -111.5, 0.05), 3)\n",
+    "lats = np.round(np.arange(40.525, 41.0, 0.05), 3)\n",
+    "months = pd.date_range(\"2024-01-01\", periods=12, freq=\"MS\")\n",
+    "days = pd.date_range(\"2024-01-01\", \"2024-12-31\", freq=\"D\")\n",
+    "cells = pd.MultiIndex.from_product([months, lats, lons], names=[\"time\", \"lat\", \"lon\"])\n",
+    "prior = fips.Vector.from_series(pd.Series(0.05, index=cells), block=\"flux\")\n",
+    "grid_lat, grid_lon = np.meshgrid(lats, lons, indexing=\"ij\")\n",
+    "\n",
+    "\n",
+    "def footprints(sites, days, rng):\n",
+    "    \"\"\"Return the forward operator of daily concentrations at `sites` (a frame of lon, lat).\"\"\"\n",
+    "    labels = pd.MultiIndex.from_product([sites.index, days], names=[\"site\", \"obs_time\"])\n",
+    "    rows, cols, values = [], [], []\n",
+    "    upwind = rng.normal(0.0, 0.1, (len(labels), 2))\n",
+    "    for i, (site, day) in enumerate(labels):\n",
+    "        x = sites.at[site, \"lon\"] + upwind[i, 0]\n",
+    "        y = sites.at[site, \"lat\"] + upwind[i, 1]\n",
+    "        distance = np.hypot(grid_lon - x, grid_lat - y)\n",
+    "        rows.append(np.full(grid_lat.size, i))\n",
+    "        cols.append((day.month - 1) * grid_lat.size + np.arange(grid_lat.size))\n",
+    "        values.append(np.exp(-0.5 * (distance.ravel() / 0.15) ** 2))\n",
+    "    matrix = sp.csr_array(\n",
+    "        (np.concatenate(values), (np.concatenate(rows), np.concatenate(cols))),\n",
+    "        shape=(len(labels), len(cells)),\n",
+    "    )\n",
+    "    space = fips.Space({\"concentration\": labels})\n",
+    "    return fips.Operator(matrix, space, prior.space)\n",
+    "\n",
+    "\n",
+    "sites = pd.DataFrame(  # the three sites of the regional example, placed by hand\n",
+    "    {\"lon\": [-111.85, -111.7, -111.55], \"lat\": [40.6, 40.85, 40.7]},\n",
+    "    index=pd.Index([\"site_a\", \"site_b\", \"site_c\"], name=\"site\"),\n",
+    ")\n",
+    "forward = footprints(sites, days, rng)\n",
+    "noise = 0.01  # ppm\n",
+    "obs = fips.Vector(\n",
+    "    forward.data @ np.full(len(cells), 0.05)\n",
+    "    + 1.9\n",
+    "    + rng.normal(0.0, noise, forward.shape[0]),\n",
+    "    forward.rows,\n",
+    ")\n",
+    "problem = fips.Problem(\n",
+    "    prior=prior,\n",
+    "    prior_cov=fips.Kronecker(\n",
+    "        fips.Exponential(\"time\", \"60D\"),\n",
+    "        fips.Exponential([\"lat\", \"lon\"], 20.0, metric=\"haversine\"),\n",
+    "    ).with_std(0.25),\n",
+    "    obs=obs,\n",
+    "    obs_cov=fips.Independent().with_std(noise),\n",
+    "    forward=forward,\n",
+    "    offset=1.9,\n",
+    ")\n",
+    "post = fips.solve(problem)\n",
+    "post.summary()[[\"n_state\", \"n_obs\", \"dofs\"]]"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "cell-04",
+   "metadata": {},
+   "source": "## The totals: the region's year, its months, and a seasonal difference\n\nThe region is the eastern half of the grid. `fips.aggregate.sum` builds the\naggregation `W` from the state's own levels: `by` a yearly `pd.Grouper` on the\ntime and a Series that maps the eastern longitudes to `\"east\"`, and\n`dropna=True` leaves out the western cells, which the Series does not map. The\nmonths of the region are the same with a monthly grouping."
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "cell-05",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "east = pd.Series(\n",
+    "    \"east\", index=pd.Index(lons[lons > -111.75], name=\"lon\"), name=\"region\"\n",
+    ")\n",
+    "annual = fips.aggregate.sum(\n",
+    "    prior.space, by=[pd.Grouper(level=\"time\", freq=\"YS\"), east], dropna=True\n",
+    ")\n",
+    "monthly = fips.aggregate.sum(prior.space, by=[\"time\", east], dropna=True)\n",
+    "annual.rows, monthly.rows"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "cell-06",
+   "metadata": {},
+   "source": "A combination of totals is one more row: the summer (June to August) minus the\nwinter (December to February), `C @ monthly`, with `C` the weights of the\nmonths. Its uncertainty uses the covariance between the months, which the\nposterior has; their standard deviations alone could not give it."
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "cell-07",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "month = monthly.rows.select(\"flux\").get_level_values(\"time\").month\n",
+    "weights = np.where(np.isin(month, [6, 7, 8]), 1.0, 0.0) - np.where(\n",
+    "    np.isin(month, [12, 1, 2]), 1.0, 0.0\n",
+    ")\n",
+    "summer_minus_winter = (\n",
+    "    fips.Operator(\n",
+    "        weights[None, :],\n",
+    "        fips.Space({\"seasonal\": pd.Index([\"JJA - DJF\"], name=\"what\")}),\n",
+    "        monthly.rows,\n",
+    "    )\n",
+    "    @ monthly\n",
+    ")\n",
+    "table = pd.concat([post.uncertainty(annual), post.uncertainty(summer_minus_winter)])\n",
+    "table.index = [\"annual total\", \"summer - winter\"]\n",
+    "table.round(3)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "cell-08",
+   "metadata": {},
+   "source": "`post.uncertainty` gives each row's standard deviation before the observations\n(`prior_std`, from `problem.prior_cov.aggregate(W)`) and after\n(`posterior_std`, from `post.cov(W)`), and the fraction the observations take\noff. The months' posterior errors are correlated, which is what the seasonal\ndifference's standard deviation takes into account:"
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "cell-09",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "months_cov = post.cov(monthly).dense()\n",
+    "sd = np.sqrt(np.diag(months_cov))\n",
+    "correlation = months_cov / np.outer(sd, sd)\n",
+    "fig, ax = plt.subplots(figsize=(4.5, 4))\n",
+    "im = ax.imshow(correlation, vmin=-1, vmax=1, cmap=\"RdBu_r\")\n",
+    "ax.set_xlabel(\"month\")\n",
+    "ax.set_ylabel(\"month\")\n",
+    "ax.set_title(\"posterior correlation of the monthly totals\")\n",
+    "fig.colorbar(im, ax=ax);"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "cell-10",
+   "metadata": {},
+   "source": "## What each site contributes\n\n`post.data_worth(by=\"site\", W=annual)` takes each site out in turn (a rank update of\nthe posterior covariance, exact, with no new solve) and gives the total's\nstandard deviation without the site and with it, the fraction the site takes\noff on top of the other two (`reduction`), and the site's share of the\ndegrees of freedom for signal."
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "cell-11",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "by_site = post.data_worth(by=\"site\", W=annual)\n",
+    "by_site.droplevel([\"block\", \"time\", \"region\"]).round(3)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "cell-12",
+   "metadata": {},
+   "source": "The shares of DOFS of the three sites sum to the problem's DOFS:"
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "cell-13",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "by_site.groupby(level=\"site\")[\"dofs\"].first().sum(), post.dofs"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "cell-14",
+   "metadata": {},
+   "source": "Any level of the observations groups them, a time bin too: which months of\nobservations matter most for the annual total?"
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "cell-15",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "by_month = post.data_worth(by=pd.Grouper(level=\"obs_time\", freq=\"MS\"), W=annual)\n",
+    "reduction = by_month[\"reduction\"].droplevel([\"block\", \"time\", \"region\"])\n",
+    "reduction.index = reduction.index.strftime(\"%b\")\n",
+    "ax = reduction.plot.bar(figsize=(7, 3))\n",
+    "ax.set_ylabel(\"reduction of the annual total's std\")\n",
+    "ax.set_xlabel(\"month of observations removed\");"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "cell-16",
+   "metadata": {},
+   "source": "Without one month of observations, the annual total loses most of what the\nobservations gave it: here a day's concentration sees only the fluxes of its\nown month, so that month's fluxes fall back toward the prior, held only by the\nprior's 60-day correlation with the months around it."
+  },
+  {
+   "cell_type": "markdown",
+   "id": "cell-17",
+   "metadata": {},
+   "source": "## Which candidate site would help most\n\nCandidate observations are their rows of the forward operator and the\ncovariance of their errors, no values. Three candidate sites, observed daily\nwith the same error as the others: `post.candidate_worth` adds each on its\nown, by the same kind of update, and gives the same columns. The best\ncandidate for the eastern total need not be one of the eastern sites: the\ntable, not the map, says which."
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "cell-18",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "candidates = pd.DataFrame(\n",
+    "    {\"lon\": [-111.6, -111.9, -111.65], \"lat\": [40.95, 40.95, 40.55]},\n",
+    "    index=pd.Index([\"north_east\", \"north_west\", \"south_east\"], name=\"site\"),\n",
+    ")\n",
+    "H_new = footprints(candidates, days, rng)\n",
+    "worth = post.candidate_worth(\n",
+    "    H_new, fips.Independent().with_std(noise), by=\"site\", W=annual\n",
+    ")\n",
+    "worth.droplevel([\"block\", \"time\", \"region\"]).round(3)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "cell-19",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "fig, ax = plt.subplots(figsize=(5, 4))\n",
+    "ax.scatter(sites[\"lon\"], sites[\"lat\"], color=\"black\", label=\"sites\")\n",
+    "for name, row in candidates.iterrows():\n",
+    "    gain = worth.xs(name, level=\"site\")[\"reduction\"].iloc[0]\n",
+    "    ax.scatter(\n",
+    "        row[\"lon\"], row[\"lat\"], s=2000 * gain + 20, color=\"tab:orange\", alpha=0.7\n",
+    "    )\n",
+    "    ax.annotate(\n",
+    "        f\"{name}\\n{gain:.1%}\", (row[\"lon\"], row[\"lat\"]), ha=\"center\", va=\"bottom\"\n",
+    "    )\n",
+    "ax.axvline(-111.75, color=\"gray\", linestyle=\"--\", label=\"region's west edge\")\n",
+    "ax.set_xlim(lons.min(), lons.max())\n",
+    "ax.set_ylim(lats.min(), lats.max() + 0.08)\n",
+    "ax.set_xlabel(\"lon\")\n",
+    "ax.set_ylabel(\"lat\")\n",
+    "ax.set_title(\"reduction of the annual total's std by each candidate\")\n",
+    "ax.tick_params(axis=\"x\", labelrotation=45)\n",
+    "ax.legend(loc=\"upper left\", bbox_to_anchor=(1.02, 1));"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "cell-20",
+   "metadata": {},
+   "source": "The numbers are exact for this problem: solving it again with a candidate's\nobservations added gives the same standard deviation. Here, the check for one:"
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "cell-21",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "name = \"north_east\"\n",
+    "keep = H_new.rows.select(\"concentration\").get_level_values(\"site\") == name\n",
+    "labels = problem.obs.space.select(\"concentration\").append(\n",
+    "    H_new.rows.select(\"concentration\")[keep]\n",
+    ")\n",
+    "space = fips.Space({\"concentration\": labels})\n",
+    "bigger = fips.Problem(\n",
+    "    prior=prior,\n",
+    "    prior_cov=problem.prior_cov,\n",
+    "    obs=fips.Vector(np.concatenate([obs.values, np.zeros(keep.sum())]), space),\n",
+    "    obs_cov=fips.Independent().with_std(noise),\n",
+    "    forward=fips.Operator(\n",
+    "        sp.vstack([forward.sparse(), H_new.sparse()[keep]]).tocsr(), space, prior.space\n",
+    "    ),\n",
+    "    offset=1.9,\n",
+    ")\n",
+    "again = np.sqrt(fips.solve(bigger).cov(annual).variances.values)\n",
+    "np.c_[worth.xs(name, level=\"site\")[\"std_with\"].to_numpy(), again]"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "cell-22",
+   "metadata": {},
+   "source": "## Notes\n\n- `data_worth` removes a group from the problem as it is, so a site that\n  repeats what another sees shows little worth on its own even if the pair\n  together matters; remove both (a coarser `by`) to see that.\n- `candidate_worth` adds each group to the problem as it is; for a network of\n  several new sites, give them one group label.\n- The candidates' errors are taken to be independent of the problem's\n  observations, and are divided by `gamma` as the problem's are."
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "Python 3",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "name": "python",
+   "pygments_lexer": "ipython3"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 5
+}
