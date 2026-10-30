@@ -8,7 +8,7 @@ else, a :class:`~fips.Vector` gives pandas and xarray objects to plot
 (``post.estimate["flux"].to_series()``, ``.to_xarray()``).
 """
 
-from collections.abc import Sequence
+from collections.abc import Hashable, Sequence
 
 import numpy as np
 import pandas as pd
@@ -31,17 +31,72 @@ def _require_matplotlib():
         ) from exc
 
 
-def _unwrap(x: pd.Series | pd.DataFrame | Vector) -> pd.Series | pd.DataFrame:
+def _as_series(v: Vector) -> pd.Series:
     """
-    Return a ``Vector`` as a Series; anything else as is.
+    Return a ``Vector`` as a Series.
 
     A vector of one block is the Series on the block's own labels, without
     the ``block`` level; one of several blocks keeps it.
     """
-    if not isinstance(x, Vector):
-        return x
-    series = x.to_series()
-    return series.droplevel("block") if len(x.space.names) == 1 else series
+    series = v.to_series()
+    return series.droplevel("block") if len(v.space.names) == 1 else series
+
+
+def _unwrap(x: pd.Series | pd.DataFrame | Vector) -> pd.Series | pd.DataFrame:
+    """Return a ``Vector`` as a Series; anything else as is."""
+    return _as_series(x) if isinstance(x, Vector) else x
+
+
+def _errors_on(
+    err: pd.DataFrame | Operator | pd.Series | Vector | np.ndarray | list,
+    name: Hashable,
+    index: pd.Index,
+    position: int,
+) -> pd.Series | None:
+    """
+    Return the standard deviations ``err`` gives for the series ``name``, on ``index``.
+
+    A Covariance or an Operator gives the square roots of its diagonal, on the
+    labels of its rows. Every error with labels is matched to ``index`` by
+    label, in any order, as the truth is; a plain array or list has none, so it
+    is read by position. A DataFrame gives its column called ``name``, or None
+    if it has none.
+
+    Raises
+    ------
+    ValueError
+        If the error has no value for some label of ``index``, or a plain
+        array or list is not as long as ``index``.
+    """
+    if isinstance(err, (np.ndarray, list, tuple)):
+        values = np.asarray(err, dtype=float)
+        if values.shape != (len(index),):
+            raise ValueError(
+                f"errors[{position}] has {values.size} values for {len(index)} "
+                "points; a plain array or list is read by position."
+            )
+        return pd.Series(values, index=index)
+    if isinstance(err, Covariance):
+        variances = err.variances
+        e = _as_series(Vector(np.sqrt(variances.values), variances.space))
+    elif isinstance(err, Operator):
+        e = _as_series(Vector(np.sqrt(err.data.diagonal()), err.rows))
+    else:
+        given = _unwrap(err)
+        if isinstance(given, pd.DataFrame):
+            if name not in given:
+                return None
+            e = given[name]
+        else:
+            e = given
+
+    e = e.reindex(index)
+    if e.isna().any():
+        raise ValueError(
+            f"errors[{position}] has no value for some labels of the series: "
+            f"{_listed(index[e.isna().to_numpy()])}."
+        )
+    return e
 
 
 def plot_comparison(
@@ -66,10 +121,17 @@ def plot_comparison(
     truth : pd.Series or Vector, optional
         True values to plot as reference, matched to the series by label (in
         any order), as the errors are.
-    errors : Sequence of pd.DataFrame or Covariance or Operator or pd.Series or None, optional
-        Error estimates for each series. Must match length of series.
+    errors : Sequence of pd.DataFrame or Covariance or Operator or pd.Series or Vector or np.ndarray or list or None, optional
+        Error estimates for each series, in the series' order. A Series, a
+        Vector, a DataFrame column or an array is the standard deviations
+        themselves, not the variances: the band is ``y - e`` to ``y + e``.
         If a Covariance or an Operator, its diagonal's square roots (the
-        standard deviations) are used.
+        standard deviations) are used. An error with labels is matched to the
+        series by label (in any order), as `truth` is, so a Series sorted
+        differently from the series, or a Covariance on a reordered space,
+        still gives each point its own error. A plain array or list has no
+        labels: it is read by position, in the series' order. A DataFrame
+        gives its column named like the series.
         Use None for a series with no error: it is plotted without a band or
         error bars.
     kind : {'line', 'bar'}, optional
@@ -85,41 +147,21 @@ def plot_comparison(
     Raises
     ------
     ValueError
-        If `x` is not given for series with a MultiIndex, or `truth` has no
-        value for a label of the series.
+        If `x` is not given for series with a MultiIndex, `truth` or an error
+        has no value for a label of the series, or a plain array or list of
+        errors is not as long as the series.
     """
     plt = _require_matplotlib()
 
     # Unpack data
     df = pd.concat([_unwrap(s) for s in series], axis=1)
 
-    # Extract standard deviations for error bounds: one column per series that has
-    # one, labeled like the series' column in ``df`` (a series without an error is
-    # left out, and so has no column)
-    err_list = []
-    if errors:
-        for i, err in enumerate(errors[: len(series)]):
-            if err is None:
-                continue
-
-            name = df.columns[i]
-
-            if isinstance(err, Covariance):
-                variances = err.variances
-                e = pd.Series(
-                    np.sqrt(variances.values), index=variances.index, name=name
-                )
-            elif isinstance(err, Operator):
-                diagonal = np.sqrt(err.data.diagonal())
-                e = pd.Series(diagonal, index=err.rows.index, name=name)
-            else:
-                e = _unwrap(err)
-                if isinstance(e, pd.Series):
-                    e = e.rename(name)  # a copy: the caller's Series keeps its name
-
-            err_list.append(e)
-
-    err_df = pd.concat(err_list, axis=1) if err_list else None
+    # Standard deviations for the error bounds, each on the series' labels (as the
+    # truth is): ``errors_on[i]`` is None for a series without an error
+    errors_on: list[pd.Series | None] = [None] * len(series)
+    for i, err in enumerate(errors[: len(series)] if errors else []):
+        if err is not None:
+            errors_on[i] = _errors_on(err, df.columns[i], df.index, i)
 
     # Determine X-axis values
     if isinstance(df.index, pd.MultiIndex):
@@ -146,7 +188,7 @@ def plot_comparison(
 
     for i, col in enumerate(df.columns):
         y = df[col]
-        e = err_df[col] if err_df is not None and col in err_df else None
+        e = errors_on[i]
 
         if kind == "line":
             ax.plot(x_vals, y, label=str(col), color=colors[i])

@@ -4,6 +4,9 @@ import numpy as np
 import pandas as pd
 import pytest
 
+from fips.covariance import Covariance
+from fips.operator import Operator
+from fips.space import Space
 from fips.vector import Vector
 from fips.visualization import plot_comparison
 
@@ -270,7 +273,7 @@ class TestPlotComparison:
 
     def test_errors_labeled_data_are_plotted_as_a_series(self):
         """An error Series is not unpacked as ``err.data`` when its index has that label."""
-        a = self._series("a", [1.0, 2.0, 3.0], labels=["u", "v", "w"])
+        a = self._series("a", [1.0, 2.0, 3.0], labels=["data", "b", "c"])
         err = self._series("a", [0.5, 0.25, 0.125], labels=["data", "b", "c"])
 
         _, ax = plot_comparison(a, errors=[err])
@@ -387,3 +390,190 @@ class TestPlotComparison:
         plot_comparison(a, errors=[errors])
 
         assert not hasattr(errors, "name")
+
+
+class TestErrorsAreMatchedByLabel:
+    """The errors of ``plot_comparison`` are read by label, in any order (issue 165)."""
+
+    @pytest.fixture(autouse=True)
+    def _close_figures(self):
+        """Close every figure after a test."""
+        plt = pytest.importorskip("matplotlib.pyplot")
+        yield
+        plt.close("all")
+
+    # labels in an order that is neither sorted nor reversed; std of each label
+    X = [3.0, 1.0, 2.0]
+    STD = {3.0: 1.0, 1.0: 2.0, 2.0: 3.0}
+    Y = {3.0: 10.0, 1.0: 20.0, 2.0: 30.0}
+    C = ["c", "a", "b"]
+    STD_C = {"c": 1.0, "a": 2.0, "b": 3.0}
+
+    @staticmethod
+    def _series(labels, values, name="s"):
+        """A Series of ``values`` on the labels, an index called ``x``."""
+        return pd.Series(values, index=pd.Index(labels, name="x"), name=name)
+
+    @classmethod
+    def _est(cls, labels, by_label):
+        """The estimate: a Series on the labels, in their order."""
+        return cls._series(labels, [by_label[k] for k in labels], name="est")
+
+    @staticmethod
+    def _band(ax):
+        """The (lower, upper) edge of the band at each x of the line, by x."""
+        (band,) = ax.collections
+        v = band.get_paths()[0].vertices
+        return {
+            x: (v[v[:, 0] == x, 1].min(), v[v[:, 0] == x, 1].max())
+            for x in set(v[:, 0])
+        }
+
+    @staticmethod
+    def _bar_lengths(ax):
+        """The length of the whisker on each bar, in the order of the bars."""
+        (whiskers,) = ax.containers[0].lines[2]
+        return [seg[1, 1] - seg[0, 1] for seg in whiskers.get_segments()]
+
+    def _std_in_orders(self, labels, by_label):
+        """The same standard deviations as Series, Vector and DataFrame, in other orders."""
+        for order in (sorted(labels), list(reversed(labels)), list(labels)):
+            series = self._series(order, [by_label[k] for k in order], name="est")
+            yield series
+            yield series.to_frame()
+            yield Vector.from_series(series, block="flux")
+
+    def test_a_series_of_errors_in_another_order_on_a_line(self):
+        """The band of a line plot is each label's own, whatever the errors' order."""
+        est = self._est(self.X, self.Y)
+        for err in self._std_in_orders(self.X, self.STD):
+            _, ax = plot_comparison(est, errors=[err])
+            band = self._band(ax)
+            for x in self.X:
+                assert band[x] == pytest.approx(
+                    (self.Y[x] - self.STD[x], self.Y[x] + self.STD[x])
+                )
+
+    def test_a_series_of_errors_in_another_order_on_bars(self):
+        """The whisker of each bar is its own label's, whatever the errors' order."""
+        y = {"c": 10.0, "a": 20.0, "b": 30.0}
+        est = self._est(self.C, y)
+        for err in self._std_in_orders(self.C, self.STD_C):
+            _, ax = plot_comparison(est, errors=[err])
+            np.testing.assert_allclose(
+                self._bar_lengths(ax), [2 * self.STD_C[k] for k in self.C]
+            )
+
+    def test_the_order_of_the_errors_changes_nothing(self):
+        """Errors in the series' order and in another give the same picture."""
+        est = self._est(self.X, self.Y)
+        std = self._est(self.X, self.STD)
+
+        _, same = plot_comparison(est, errors=[std])
+        _, other = plot_comparison(est, errors=[std.sort_index()])
+
+        assert self._band(other) == self._band(same)
+
+    @pytest.mark.parametrize("form", ["covariance", "operator"])
+    def test_errors_from_a_matrix_on_a_reordered_space(self, form):
+        """A covariance or an operator whose space is in another order is matched by label."""
+        est = Vector.from_series(self._est(self.X, self.Y), block="flux")
+        order = list(reversed(self.X))
+        space = Space({"flux": pd.Index(order, name="x")})
+        variances = np.array([self.STD[k] ** 2 for k in order])
+        cov = Covariance.diagonal(variances, space)
+        err = cov if form == "covariance" else Operator(cov.dense(), space, space)
+
+        _, ax = plot_comparison(est, errors=[err])
+
+        band = self._band(ax)
+        for x in self.X:
+            assert band[x] == pytest.approx(
+                (self.Y[x] - self.STD[x], self.Y[x] + self.STD[x])
+            )
+
+        labels = Vector.from_series(
+            self._est(self.C, {"c": 10.0, "a": 20.0, "b": 30.0}), block="flux"
+        )
+        space = Space({"flux": pd.Index(["b", "c", "a"], name="x")})
+        variances = np.array([self.STD_C[k] ** 2 for k in ["b", "c", "a"]])
+        cov = Covariance.diagonal(variances, space)
+        err = cov if form == "covariance" else Operator(cov.dense(), space, space)
+
+        _, ax = plot_comparison(labels, errors=[err])
+
+        np.testing.assert_allclose(
+            self._bar_lengths(ax), [2 * self.STD_C[k] for k in self.C]
+        )
+
+    def test_errors_of_several_blocks_are_matched_by_label(self):
+        """With a block level too, a covariance on reordered blocks and labels is matched."""
+        x = pd.Index([1.0, 2.0], name="x")
+        est = Vector([10.0, 20.0, 30.0, 40.0], Space({"v": x, "u": x}))  # v1 v2 u1 u2
+        std = {("u", 1.0): 1.0, ("u", 2.0): 2.0, ("v", 1.0): 3.0, ("v", 2.0): 4.0}
+        order = {"u": x[::-1], "v": x}  # u2 u1 v1 v2
+        variances = [std[(b, k)] ** 2 for b, idx in order.items() for k in idx]
+
+        cov = Covariance.diagonal(variances, Space(order))
+        _, ax = plot_comparison(est, x="x", errors=[cov])
+
+        (band,) = ax.collections
+        lower = band.get_paths()[0].vertices[1:5, 1]
+        np.testing.assert_allclose(lower, [10 - 3, 20 - 4, 30 - 1, 40 - 2])
+
+    def test_a_plain_array_or_list_is_read_by_position(self):
+        """An array has no labels: it is the series' order."""
+        est = self._est(self.X, self.Y)
+
+        for err in (np.array([1.0, 2.0, 3.0]), [1.0, 2.0, 3.0], (1.0, 2.0, 3.0)):
+            _, ax = plot_comparison(est, errors=[err])
+            band = self._band(ax)
+            assert band[3.0] == pytest.approx((9.0, 11.0))
+            assert band[1.0] == pytest.approx((18.0, 22.0))
+            assert band[2.0] == pytest.approx((27.0, 33.0))
+
+    def test_a_plain_array_of_the_wrong_length_raises(self):
+        """An array is read by position, so it must be as long as the series."""
+        est = self._est(self.X, self.Y)
+
+        with pytest.raises(ValueError, match=r"errors\[0\] has 2 values for 3 points"):
+            plot_comparison(est, errors=[np.array([1.0, 2.0])])
+
+    @pytest.mark.parametrize("kind", ["line", "bar"])
+    def test_errors_missing_a_label_raise(self, kind):
+        """An error with no value for a label of the series names the label."""
+        est = self._est(self.X, self.Y)
+        std = self._series([1.0, 2.0], [2.0, 3.0])
+
+        with pytest.raises(ValueError, match=r"errors\[0\] has no value .*3\.0"):
+            plot_comparison(est, errors=[std], kind=kind)
+
+    def test_errors_on_other_labels_raise(self):
+        """Errors that share no label with the series raise, rather than get read by position."""
+        est = self._est(self.C, {"c": 10.0, "a": 20.0, "b": 30.0})
+        std = self._series(["u", "v", "w"], [1.0, 2.0, 3.0])
+        space = Space({"flux": pd.Index(["u", "v", "w"], name="x")})
+
+        for err in (std, Covariance.diagonal([1.0, 4.0, 9.0], space)):
+            with pytest.raises(ValueError, match=r"errors\[0\] has no value .*'c'"):
+                plot_comparison(est, errors=[err])
+
+    def test_the_error_of_the_second_series_is_named_by_its_position(self):
+        """The message says which of the errors is wrong."""
+        a = self._est(self.X, self.Y)
+        b = self._est(self.X, self.Y)
+        std = self._series([1.0, 2.0], [2.0, 3.0])
+
+        with pytest.raises(ValueError, match=r"errors\[1\]"):
+            plot_comparison(a, b, errors=[None, std])
+
+    def test_errors_for_labels_the_series_lacks_are_left_out(self):
+        """An error with more labels than the series is cut to the series', as truth is."""
+        est = self._est([2.0, 1.0], {1.0: 20.0, 2.0: 30.0})
+        std = self._est(self.X, self.STD)
+
+        _, ax = plot_comparison(est, errors=[std])
+
+        band = self._band(ax)
+        assert band[1.0] == pytest.approx((18.0, 22.0))
+        assert band[2.0] == pytest.approx((27.0, 33.0))
