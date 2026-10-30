@@ -843,6 +843,288 @@ def test_data_worth_allocates_nothing_n_by_n():
     )
 
 
+# ---------------------------------------------------------------------------
+# Part 3: candidate observations, not in the problem
+# ---------------------------------------------------------------------------
+
+# Four hours at two new sites and at site A, as a block of their own
+CANDIDATES = Space(
+    {
+        "new": pd.MultiIndex.from_product(
+            [["A", "D", "E"], range(10, 14)], names=["site", "hour"]
+        )
+    }
+)
+
+
+def candidates(kind: str, seed: int = 1) -> tuple[Operator, Covariance]:
+    """The candidates' forward operator and error covariance (`dense` correlates the sites)."""
+    rng = np.random.default_rng(seed)
+    m = len(CANDIDATES)
+    H = np.zeros((m, len(STATE)))
+    H[:, : len(FLUX)] = rng.uniform(0.0, 1.0, (m, len(FLUX)))
+    H[:4, len(FLUX)] = 1.0  # site A's bias
+    if kind == "diagonal":
+        R = Covariance(DiagonalOperator(rng.uniform(0.2, 0.6, m)), CANDIDATES)
+    else:
+        R = Covariance(_spd(m, rng) * 0.4, CANDIDATES)
+    return Operator(H, CANDIDATES, STATE), R
+
+
+def with_added(problem: Problem, H_c: Operator, R_c: Covariance, rows) -> Problem:
+    """The problem with the candidates at `rows` added, their errors independent of the others."""
+    observed = problem.obs.space
+    blocks = {name: observed.select(name) for name in observed.names}
+    space = Space({**blocks, "new": H_c.rows.select("new")[rows]})
+    m = len(problem.obs)
+    S_z = np.zeros((len(space), len(space)))
+    S_z[:m, :m] = problem.obs_cov.dense()
+    S_z[m:, m:] = R_c.dense()[np.ix_(rows, rows)]
+    return Problem(
+        prior=problem.prior,
+        prior_cov=problem.prior_cov,
+        obs=Vector(np.concatenate([problem.obs.values, np.zeros(len(rows))]), space),
+        obs_cov=Covariance(0.5 * (S_z + S_z.T), space),
+        forward=Operator(
+            np.vstack([problem.forward.dense(), H_c.dense()[rows]]),
+            space,
+            problem.prior.space,
+        ),
+    )
+
+
+@pytest.mark.usefixtures("analytic_form")
+@pytest.mark.parametrize("analytic_form", ["whitened", "information"], indirect=True)
+@pytest.mark.parametrize("gamma", [1.0, 2.5])
+@pytest.mark.parametrize("errors", ["diagonal", "dense"])
+@pytest.mark.parametrize("mismatch", MISMATCHES)
+@pytest.mark.parametrize("prior", PRIORS)
+def test_adding_candidates_matches_solving_with_them(prior, mismatch, errors, gamma):
+    """std_with of each total is the posterior std of the problem solved again with the group added."""
+    problem = problem_of(prior, mismatch)
+    post = fips.solve(problem, gamma=gamma)
+    H_c, R_c = candidates(errors)
+    W = totals(STATE)
+    Wd = W.dense()
+    table = post.candidate_worth(H_c, R_c, by="site", W=W)
+    assert list(table.columns) == [
+        "n_obs",
+        "dofs",
+        "std_without",
+        "std_with",
+        "reduction",
+    ]
+    assert sorted(table.index.get_level_values("site").unique()) == ["A", "D", "E"]
+    std_without = np.sqrt(np.diag(Wd @ closed_form(problem, gamma) @ Wd.T))
+    sites = CANDIDATES.select("new").get_level_values("site")
+    for site in ["A", "D", "E"]:
+        rows = np.flatnonzero(sites == site)
+        bigger = with_added(problem, H_c, R_c, rows)
+        expected = np.sqrt(np.diag(Wd @ closed_form(bigger, gamma) @ Wd.T))
+        part = table.xs(site, level="site")
+        assert part.index.equals(W.rows.index)
+        np.testing.assert_allclose(part["std_with"], expected, rtol=1e-9)
+        np.testing.assert_allclose(part["std_without"], std_without, rtol=1e-10)
+        np.testing.assert_allclose(
+            part["reduction"], 1 - expected / std_without, rtol=1e-8, atol=1e-12
+        )
+        assert (part["n_obs"] == len(rows)).all()
+        # the candidates' share of DOFS in the problem with them
+        share = self_sensitivity(bigger, gamma)[len(problem.obs) :].sum()
+        np.testing.assert_allclose(part["dofs"], share, rtol=1e-9)
+
+
+@pytest.mark.parametrize("analytic_form", ["whitened", "information"], indirect=True)
+def test_candidates_after_with_gamma_and_as_a_model(analytic_form):
+    """The eigendecomposition's weights, and an error given as a model built on the candidates."""
+    problem = problem_of("kronecker", "dense")
+    post = fips.solve(problem, gamma=0.7).with_gamma(2.0)
+    H_c, _ = candidates("diagonal")
+    W = totals(STATE)
+    # the candidates' columns in another order are matched by label
+    reordered = Space({"bias": BIAS.select("bias"), "flux": FLUX.select("flux")})
+    table = post.candidate_worth(
+        H_c.align(CANDIDATES, reordered),
+        fips.Independent().with_std(0.5),
+        by="site",
+        W=W,
+    )
+    R_c = Covariance.diagonal(0.25, CANDIDATES)
+    rows = np.flatnonzero(CANDIDATES.select("new").get_level_values("site") == "D")
+    Wd = W.dense()
+    expected = np.sqrt(
+        np.diag(Wd @ closed_form(with_added(problem, H_c, R_c, rows), 2.0) @ Wd.T)
+    )
+    np.testing.assert_allclose(
+        table.xs("D", level="site")["std_with"], expected, rtol=1e-9
+    )
+
+
+def test_a_candidate_already_observed_twice_equals_data_worth():
+    """Adding a group that equals one in the problem, to the problem without it, is removing it seen from the other side."""
+    problem = problem_of("dense", "diagonal")
+    rows = _group_rows(problem, "site")["B"]
+    rest = without(problem, rows)
+    labels = problem.obs.index[rows]
+    space = Space.from_index(labels)
+    H_c = Operator(problem.forward.dense()[rows], space, STATE)
+    R_c = Covariance(problem.obs_cov.dense()[np.ix_(rows, rows)], space)
+    W = totals(STATE)
+    added = fips.solve(rest).candidate_worth(H_c, R_c, by="site", W=W)
+    removed = fips.solve(problem).data_worth(by="site", W=W).xs("B", level="site")
+    for column in ["std_without", "std_with", "reduction", "dofs"]:
+        np.testing.assert_allclose(
+            added.xs("B", level="site")[column], removed[column], rtol=1e-9
+        )
+
+
+def _candidates_of(problem: Problem, rows: np.ndarray) -> Operator:
+    """Candidate observations of a problem: one row per entry of `rows` (a ``len(rows) x n`` array)."""
+    space = Space({"new": pd.Index(range(len(rows)), name="candidate")})
+    return Operator(rows, space, problem.prior.space)
+
+
+def test_candidate_worth_of_a_prior_that_is_not_positive_semidefinite_is_nan(caplog):
+    """
+    #148: a total with a negative variance is not reported as known exactly (std 0, reduction 1).
+
+    The standard deviations without and with the group and the reduction are
+    NaN, and each kind of variance is logged once.
+    """
+    problem, W = _indefinite_problem()
+    post = fips.solve(problem)
+    rng = np.random.default_rng(1)
+    forward = _candidates_of(problem, rng.standard_normal((3, len(problem.prior))))
+    with caplog.at_level(logging.WARNING, logger="fips"):
+        table = post.candidate_worth(
+            forward, fips.Independent().with_std(1.0), by=np.array([0, 0, 1]), W=W
+        )
+    assert table[["std_without", "std_with", "reduction"]].isna().all(axis=None)
+    lines = _warnings(caplog)
+    assert len(lines) == 2
+    assert "2 of the 2 variances without the group" in lines[0]
+    assert "2 of the 2 variances with the group" in lines[1]
+
+
+def test_candidate_worth_variance_half_the_roundoff_below_zero_is_zero_and_twice_it_is_nan(
+    caplog,
+):
+    """The boundary is the one of ``uncertainty``: 0 within the roundoff, NaN and a warning beyond."""
+    roundoff = _VARIANCE_RTOL * BOUNDARY_SCALE
+    caplog.set_level(logging.WARNING, logger="fips")
+    groups = np.array([0, 1])
+
+    def table(delta: float) -> pd.DataFrame:
+        problem, total = _boundary_problem(delta)
+        forward = _candidates_of(problem, np.zeros((2, 2)))  # candidates see nothing
+        return fips.solve(problem).candidate_worth(
+            forward, fips.Independent().with_std(1.0), by=groups, W=total
+        )
+
+    within = table(0.5 * roundoff)
+    assert not _warnings(caplog)
+    np.testing.assert_array_equal(within[["std_without", "std_with"]], 0.0)
+    assert within["reduction"].isna().all()
+
+    beyond = table(2.0 * roundoff)
+    assert beyond[["std_without", "std_with", "reduction"]].isna().all(axis=None)
+    lines = _warnings(caplog)
+    assert len(lines) == 2  # without the group, and with it
+    assert all(f"{-2.0 * roundoff:.3g}" in line for line in lines)
+
+
+def test_candidate_worth_of_a_semidefinite_problem_warns_nothing(analytic_form, caplog):
+    """A singular prior gives rows of no spread: standard deviations 0 or finite, never a warning or a NaN."""
+    problem, W = _semidefinite_problem(analytic_form)
+    post = fips.solve(problem)
+    rng = np.random.default_rng(4)
+    forward = _candidates_of(problem, rng.uniform(0.0, 1.0, (3, len(problem.prior))))
+    with caplog.at_level(logging.WARNING, logger="fips"):
+        table = post.candidate_worth(
+            forward, fips.Independent().with_std(0.5), by=np.array([0, 1, 1]), W=W
+        )
+    assert not _warnings(caplog)
+    assert table[["std_without", "std_with"]].notna().all(axis=None)
+
+
+def test_candidate_worth_refuses_what_it_cannot_use():
+    """Arrays, other labels, an error on other labels, and a method whose estimate is not linear."""
+    post = fips.solve(problem_of("diagonal", "diagonal"))
+    H_c, R_c = candidates("diagonal")
+    W = totals(STATE)
+    with pytest.raises(TypeError, match="forward must be an Operator"):
+        post.candidate_worth(H_c.dense(), R_c, by="site", W=W)  # pyrefly: ignore[bad-argument-type]
+    with pytest.raises(ValueError, match="the state"):
+        post.candidate_worth(
+            Operator(H_c.dense()[:, : len(FLUX)], CANDIDATES, FLUX), R_c, by="site", W=W
+        )
+    with pytest.raises(ValueError, match="the candidates"):
+        post.candidate_worth(H_c, Covariance.diagonal(1.0, OBS), by="site", W=W)
+
+    class NotLinear:
+        """A solution whose estimate is not linear in the observations."""
+
+        estimate_is_linear = False
+
+        def __getattr__(self, name):
+            return getattr(post._solution, name)
+
+    other = fips.Posterior(post.problem, NotLinear(), post.options)  # pyrefly: ignore[bad-argument-type]
+    with pytest.raises(TypeError, match="estimate_is_linear"):
+        other.candidate_worth(H_c, R_c, by="site", W=W)
+
+
+def test_candidate_worth_allocates_nothing_n_by_n():
+    """Three candidate sites for a few totals stay far below one ``n x n`` array (n = 2,400)."""
+    rng = np.random.default_rng(0)
+    times = pd.date_range("2024-01-01", periods=48, freq="D")
+    cells = pd.MultiIndex.from_product(
+        [times, np.arange(10) * 0.1, np.arange(5) * 0.1], names=["time", "lat", "lon"]
+    )
+    state = Space({"flux": cells})
+    n, m = len(state), 30
+    observed = Space({"conc": pd.RangeIndex(m, name="obs_id")})
+    problem = Problem(
+        prior=Vector(rng.normal(size=n), state),
+        prior_cov=fips.Kronecker(
+            fips.Exponential("time", "5D"),
+            fips.Exponential(["lat", "lon"], 20.0, metric="haversine"),
+        ).with_std(np.sqrt(0.5)),
+        obs=Vector(rng.normal(size=m), observed),
+        obs_cov=Covariance.diagonal(0.1, observed),
+        forward=Operator(
+            sp.random(m, n, density=0.2, random_state=1, format="csr"),
+            observed,
+            state,
+        ),
+    )
+    new = Space(
+        {
+            "conc": pd.MultiIndex.from_product(
+                [["X", "Y", "Z"], range(10)], names=["site", "hour"]
+            )
+        }
+    )
+    H_c = Operator(
+        sp.random(len(new), n, density=0.2, random_state=2, format="csr"), new, state
+    )
+    total = fips.aggregate.sum(state, by=pd.Grouper(level="time", freq="7D"))
+    n_by_n = n * n * 8
+    post = fips.solve(problem)
+    tracemalloc.start()
+    try:
+        table = post.candidate_worth(
+            H_c, fips.Independent().with_std(0.3), by="site", W=total
+        )
+        _, peak = tracemalloc.get_traced_memory()
+    finally:
+        tracemalloc.stop()
+    assert len(table) == 3 * len(total.rows)
+    assert peak < n_by_n / 2, (
+        f"peak {peak / 1e6:.1f} MB, n x n is {n_by_n / 1e6:.1f} MB"
+    )
+
+
 def _many_groups(kind: str, n_groups: int, per_group: int = 8):
     """A problem with many more observations than state elements (the information form), and its mismatch of one form."""
     rng = np.random.default_rng(0)
