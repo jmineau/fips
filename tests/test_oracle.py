@@ -888,6 +888,9 @@ def _matrix_structure(kind: str, sparse: bool, rng: np.random.Generator):
     co2 = pd.Index([f"a{k}" for k in range(5)], name="obs_id")
     ch4 = pd.Index(["north", "south"], name="site")
 
+    def _values(b):
+        return b.toarray() if sp.issparse(b) else b
+
     def block(rows, cols):
         values = rng.standard_normal((len(rows), len(cols)))
         values[np.abs(values) < 0.7] = 0.0
@@ -909,6 +912,18 @@ def _matrix_structure(kind: str, sparse: bool, rng: np.random.Generator):
             ("bias", "flux"): flux_bias.T,
             ("bias", "bias"): bias_bias + bias_bias.T,
         }
+        # a covariance is positive semidefinite: a diagonal larger than the
+        # absolute sum of each row's other entries (Gershgorin) makes it so
+        full = np.block(
+            [
+                [_values(blocks[(r, c)]) for c in ("flux", "bias")]
+                for r in ("flux", "bias")
+            ]
+        )
+        shift = np.abs(full).sum(axis=1).max()
+        for name, size in (("flux", len(flux)), ("bias", len(bias))):
+            identity = sp.identity(size, format="csr") if sparse else np.eye(size)
+            blocks[(name, name)] = blocks[(name, name)] + shift * identity
         space = Space({"flux": flux, "bias": bias})
         return Covariance.from_blocks(blocks, rows=space, cols=space)
     blocks = {
