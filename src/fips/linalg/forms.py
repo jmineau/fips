@@ -498,8 +498,9 @@ class LinearOperator(_SciPyLinearOperator):
         A matrix ``R`` (``n x r``) with ``R R^T`` equal to this symmetric positive semi-definite form.
 
         A draw from ``N(0, S)`` is ``R w`` for ``w`` standard normal of length
-        ``r``. Built by the first draw and kept (as ``KroneckerOperator._inverses``
-        is), so a loop of draws factors once; ``__getstate__`` leaves it out.
+        ``r``. Built once and kept (as ``KroneckerOperator._inverses`` is), by
+        the first draw or by ``Covariance(...)``, whose positive semidefinite
+        check it is, so a loop of draws factors once; ``__getstate__`` leaves it out.
         """
         return self._make_root()
 
@@ -514,8 +515,8 @@ class LinearOperator(_SciPyLinearOperator):
         if semidefinite:
             logger.info(
                 "The %d x %d covariance has no Cholesky factor (it is only "
-                "positive semi-definite); drawing from its eigendecomposition, "
-                "with the eigenvalues below roundoff set to zero.",
+                "positive semi-definite); a draw from it uses its "
+                "eigendecomposition, with the eigenvalues below roundoff set to zero.",
                 *self.shape,
             )
         return DenseOperator._adopt(R)
@@ -837,9 +838,9 @@ class SparseOperator(LinearOperator):
         if semidefinite:
             logger.info(
                 "The %d x %d sparse covariance has a group of rows with no "
-                "Cholesky factor (it is only positive semi-definite); drawing "
-                "from its eigendecomposition, with the eigenvalues below "
-                "roundoff set to zero.",
+                "Cholesky factor (it is only positive semi-definite); a draw "
+                "from it uses that group's eigendecomposition, with the "
+                "eigenvalues below roundoff set to zero.",
                 n,
                 n,
             )
@@ -950,8 +951,8 @@ class DiagonalOperator(LinearOperator):
         _read_only(self.values)
 
     def _matvec(self, x):
-        """Return ``self @ x`` for a vector."""
-        return self.values * x
+        """Return ``self @ x`` for a vector, given as ``(n,)`` or ``(n, 1)`` (SciPy before 1.18 sends a column here)."""
+        return self.values * np.ravel(x)
 
     def _matmat(self, X):
         """Return ``self @ X``: each row of `X` scaled."""
@@ -1002,7 +1003,7 @@ class DiagonalOperator(LinearOperator):
         if clipped:
             logger.info(
                 "The diagonal covariance has an entry below zero by roundoff; "
-                "drawing it as zero."
+                "a draw gives it zero."
             )
         return DiagonalOperator._adopt(np.sqrt(values))
 

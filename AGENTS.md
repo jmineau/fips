@@ -99,12 +99,18 @@ checks the labels and builds the models; `fips.solve(problem)` returns the
 - **A structure owns its data.** `Vector`, `Operator` and every form copy their
   input and make the copy read-only. A form built from arrays fips just made,
   or from a parent's read-only arrays, uses `_adopt` (no second copy).
-- **A covariance is symmetric.** `Covariance(...)` (so `from_frame` and
-  `from_blocks`) checks a dense or sparse matrix to 1e-10 of its largest
-  entry, without densifying, and `KroneckerOperator` its factors. What fips
-  computes from covariances or models (a sum, a reordering, a block diagonal,
-  `W S W^T`, a posterior) is built with `Covariance._computed`, which skips
-  the check: its roundoff can come near 1e-10.
+- **A covariance is symmetric and positive semidefinite.** `Covariance(...)`
+  (so `from_frame`, `from_blocks` and `Covariance.diagonal`) checks a dense or
+  sparse matrix's symmetry to 1e-10 of its largest entry, without densifying,
+  and `KroneckerOperator` its factors. It then builds `form._root`, which
+  refuses an eigenvalue below zero by more than `n * eps * max|lambda|`, for
+  every fips form, and keeps it for `sample`. What fips computes from
+  covariances or models (a sum, a reordering, a block diagonal, `W S W^T`, a
+  posterior, a model's `build`) is built with `Covariance._computed`, which
+  skips both checks: its roundoff can come near 1e-10, and a model is
+  positive semidefinite by construction. A variance a posterior reports as a
+  standard deviation goes through `posterior._std`: below zero by up to
+  `sqrt(eps)` of `(sum_i |x_i| sigma_i)^2` it is 0, further below it is NaN, logged.
 - **Sparse stays sparse.** A sparse matrix is a SciPy matrix, never a
   pandas-sparse frame (one enters only through `Operator.from_frame`, with a
   fill of 0 or NaN). Products and sums keep the cheapest exact form; a product
@@ -201,6 +207,8 @@ dependency needs a reason, proposed first.
   diagonal, sparse (one factor per connected group), block diagonal and
   Kronecker form (`n x N`, on the whole grid, then its rows) override it so a
   draw never forms `n x n`. A new form with a cheap root overrides `_make_root`.
+  `Covariance(...)` builds the root (its positive semidefinite check), so its
+  INFO line comes when the covariance is built, not at the first draw.
 - **Docs:** an `.. ipython::` block runs only the first line of a multi-line
   statement that is its 10th (or 100th), so split long blocks; napoleon reads a colon in an attribute docstring's first
   line as a type; docstr-coverage counts each `@overload` (give it a one-liner
