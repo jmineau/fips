@@ -189,6 +189,8 @@ def _worth_table(
     var_without: np.ndarray,
     var_with: np.ndarray,
     scale: np.ndarray,
+    prior: np.ndarray | None = None,
+    var_alone: np.ndarray | None = None,
 ) -> pd.DataFrame:
     """
     Return the table of what each group of observations does to each aggregate.
@@ -198,9 +200,11 @@ def _worth_table(
     and with the group (`var_without` and `var_with` are ``groups x
     aggregates``; `scale` is the largest prior variance each aggregate could
     have, :func:`_largest_variance`, which a variance below zero is compared
-    to: :func:`_std`). A group level named like a level of the aggregates
-    (``block``) is called ``obs_<name>``: an index cannot have two levels of
-    one name.
+    to: :func:`_std`). With `var_alone` (``groups x aggregates``: the variance
+    with only the group's observations, on the prior) and `prior` (the prior
+    variance of each aggregate), also ``std_alone`` and ``reduction_alone``. A
+    group level named like a level of the aggregates (``block``) is called
+    ``obs_<name>``: an index cannot have two levels of one name.
     """
     names = [
         f"obs_{name}" if name is not None and name in aggregates.names else name
@@ -217,16 +221,22 @@ def _worth_table(
     std_with = _std(var_with, scale, "variances with the group").ravel()
     with np.errstate(divide="ignore", invalid="ignore"):
         reduction = np.where(std_without > 0, 1.0 - std_with / std_without, np.nan)
-    return pd.DataFrame(
-        {
-            "n_obs": np.repeat([len(rows) for rows in positions], k),
-            "dofs": np.repeat(dofs, k),
-            "std_without": std_without,
-            "std_with": std_with,
-            "reduction": reduction,
-        },
-        index=index,
-    )
+    table = {
+        "n_obs": np.repeat([len(rows) for rows in positions], k),
+        "dofs": np.repeat(dofs, k),
+        "std_without": std_without,
+        "std_with": std_with,
+        "reduction": reduction,
+    }
+    if var_alone is not None and prior is not None:
+        std_alone = _std(var_alone, scale, "variances with the group alone").ravel()
+        prior_std = np.tile(_std(prior, scale, "prior variances"), n_groups)
+        with np.errstate(divide="ignore", invalid="ignore"):
+            table["std_alone"] = std_alone
+            table["reduction_alone"] = np.where(
+                prior_std > 0, 1.0 - std_alone / prior_std, np.nan
+            )
+    return pd.DataFrame(table, index=index)
 
 
 def _stacked(top: LinearOperator, bottom: LinearOperator) -> LinearOperator:
@@ -738,6 +748,25 @@ class Posterior:
         2004); the shares of groups that hold every observation once sum to
         :attr:`dofs`.
 
+        What a group is worth by itself is the other reading: the aggregate's
+        standard deviation with only the group's observations, on the prior,
+        from a rank :math:`m_g` update of :math:`S_0`,
+
+        .. math::
+
+            S_{g} = S_0 - S_0 H_g^T F_g^{-1} H_g S_0, \qquad
+            F_g = H_g S_0 H_g^T + R_{gg} / \gamma,
+
+        with :math:`H_g` the group's rows of :math:`H` and :math:`R_{gg}` its own
+        block of the model-data mismatch. It is not the difference of the other
+        columns: two groups that see the same part of the state each take much
+        off the prior alone and little on top of one another, and the two
+        readings agree only for a single group. Because it uses :math:`R_{gg}`
+        only, it ignores any correlation between the group's errors and the
+        other groups', which ``std_without`` and ``std_with`` keep: a problem
+        whose mismatch correlates sites gives each site, alone, the benefit of
+        independent errors from the rest.
+
         Parameters
         ----------
         by : str, list or pandas.Grouper
@@ -762,11 +791,16 @@ class Posterior:
             (the aggregate's posterior standard deviation without the group),
             ``std_with`` (with it: :meth:`uncertainty`'s ``posterior_std``) and
             ``reduction``, :math:`1 - \sigma_{with} / \sigma_{without}`, the
-            fraction the group takes off on top of the other observations.
+            fraction the group takes off on top of the other observations;
+            ``std_alone`` (the standard deviation with only the group's
+            observations, on the prior) and ``reduction_alone``, :math:`1 -
+            \sigma_{alone} / \sigma_{prior}`, the fraction the group takes off
+            the prior by itself (``prior_std`` in :meth:`uncertainty`).
             A variance below zero by more than roundoff, which only a
             covariance that is not positive semidefinite can give, makes its
             standard deviation and the reduction NaN, with a logged warning
-            (as in :meth:`uncertainty`).
+            (as in :meth:`uncertainty`), and so does one in the alone column or
+            in the prior's.
 
         Raises
         ------
@@ -812,10 +846,21 @@ class Posterior:
         ... )
         >>> post = fips.solve(problem)
         >>> W = fips.Operator(np.eye(1), state, state)
-        >>> post.data_worth(by="site", W=W).droplevel("block").round(3).reset_index()
+        >>> table = post.data_worth(by="site", W=W).droplevel("block").reset_index()
+        >>> table.iloc[:, :7].round(3)
           site cell  n_obs  dofs  std_without  std_with  reduction
         0    A    a      3   0.6        0.707     0.447      0.368
         1    B    a      1   0.2        0.500     0.447      0.106
+
+        Alone on the prior, site A (three observations) leaves the flux at a
+        standard deviation of 0.5 and site B (one) at 0.707, taking 0.5 and
+        0.293 off the prior's 1; on top of the other site, B adds only 0.106 and
+        A 0.368:
+
+        >>> table[["site", "std_alone", "reduction_alone"]].round(3)
+          site  std_alone  reduction_alone
+        0    A      0.500            0.500
+        1    B      0.707            0.293
         """
         precision = self._optional(
             "innovation_precision", "the data worth of groups of observations"
@@ -828,13 +873,26 @@ class Posterior:
         WK = self._solution.gain(W_form)  # k x m
         var_with = self.cov(W).variances.values
         shares = sensitivity()
-        var_without, dofs = [], []
+        # the prior side of the alone column: W S_0 and the group's rows of H
+        prior_cov, H = self._problem.prior_cov.data, self._problem.forward.data
+        R = self._problem.obs_cov.data
+        prior = self._problem.prior_cov.aggregate(W).variances.values
+        WS_0 = W_form @ prior_cov
+        columns = np.arange(len(self._problem.prior))
+        var_without, var_alone, dofs = [], [], []
         for P_gg, rows in zip(precision(positions), positions, strict=True):
             WK_g = WK[:, rows]  # k x m_g
             P_gg = 0.5 * (P_gg + P_gg.T)
             added = np.einsum("ki,ik->k", WK_g, _solve_psd(P_gg, WK_g.T))
             var_without.append(var_with + added)
             dofs.append(float(shares[rows].sum()))
+            # the group alone on the prior: W S_0 H_g^T and H_g S_0 H_g^T + R_gg/gamma
+            H_g = H._select(rows, columns)
+            S_wg = (WS_0 @ H_g._transpose()).dense()  # k x m_g
+            F = ((H_g @ prior_cov) @ H_g._transpose()).dense()
+            F = F + R._select(rows, rows).dense() / self._gamma
+            Y = _solve_psd(0.5 * (F + F.T), S_wg.T)
+            var_alone.append(prior - np.einsum("ki,ik->k", S_wg, Y))
         return _worth_table(
             groups,
             positions,
@@ -843,6 +901,8 @@ class Posterior:
             np.array(var_without),
             np.tile(var_with, (len(positions), 1)),
             self._prior_scale(W_form),
+            prior,
+            np.array(var_alone),
         )
 
     def candidate_worth(
@@ -922,6 +982,12 @@ class Posterior:
         --------
         data_worth : What the groups of observations in the problem add.
         uncertainty : The prior and posterior uncertainty of each aggregate.
+
+        Notes
+        -----
+        A candidate group is always added on top of the problem's observations,
+        so there are no ``std_alone`` and ``reduction_alone`` columns, which
+        :meth:`data_worth` has for the groups in the problem.
 
         Examples
         --------
