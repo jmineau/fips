@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>fips.posterior &#8212; fips 0.2.0b2.dev23+g57012c171 documentation</title>
+    <title>fips.posterior &#8212; fips 0.2.0b2.dev24+gaf426719d documentation</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../_static/documentation_options.js?v=7cca7881"></script>
+    <script src="../../_static/documentation_options.js?v=791eb6a8"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -132,8 +132,8 @@
       
     
     
-    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b2.dev23+g57012c171 documentation - Home"/>
-    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b2.dev23+g57012c171 documentation - Home"/>
+    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b2.dev24+gaf426719d documentation - Home"/>
+    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b2.dev24+gaf426719d documentation - Home"/>
   
   
 </a></div>
@@ -447,15 +447,16 @@
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">scipy.sparse</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">sp</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">numpy.linalg</span><span class="w"> </span><span class="kn">import</span> <span class="n">LinAlgError</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">scipy.linalg</span><span class="w"> </span><span class="kn">import</span> <span class="n">inv</span><span class="p">,</span> <span class="n">solve</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">scipy.special</span><span class="w"> </span><span class="kn">import</span> <span class="n">ndtr</span><span class="p">,</span> <span class="n">ndtri</span>  <span class="c1"># the normal CDF and its inverse</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">fips.covariance</span><span class="w"> </span><span class="kn">import</span> <span class="n">Covariance</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fips.covariance</span><span class="w"> </span><span class="kn">import</span> <span class="n">Covariance</span><span class="p">,</span> <span class="n">CovarianceModel</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">fips.linalg</span><span class="w"> </span><span class="kn">import</span> <span class="n">LinearOperator</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">fips.linalg.forms</span><span class="w"> </span><span class="kn">import</span> <span class="n">_adopt</span><span class="p">,</span> <span class="n">_solve_psd</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">fips.operator</span><span class="w"> </span><span class="kn">import</span> <span class="n">Operator</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">fips.problem</span><span class="w"> </span><span class="kn">import</span> <span class="n">Problem</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fips.problem</span><span class="w"> </span><span class="kn">import</span> <span class="n">Problem</span><span class="p">,</span> <span class="n">_covariance</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">fips.vector</span><span class="w"> </span><span class="kn">import</span> <span class="n">Vector</span>
 
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
@@ -673,6 +674,14 @@
         <span class="p">},</span>
         <span class="n">index</span><span class="o">=</span><span class="n">index</span><span class="p">,</span>
     <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_stacked</span><span class="p">(</span><span class="n">top</span><span class="p">:</span> <span class="n">LinearOperator</span><span class="p">,</span> <span class="n">bottom</span><span class="p">:</span> <span class="n">LinearOperator</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LinearOperator</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Return the rows of `top` above those of `bottom`, sparse if both are."""</span>
+    <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="n">top</span><span class="o">.</span><span class="n">_csr</span><span class="p">(),</span> <span class="n">bottom</span><span class="o">.</span><span class="n">_csr</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">a</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">b</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_adopt</span><span class="p">(</span><span class="n">sp</span><span class="o">.</span><span class="n">vstack</span><span class="p">([</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">],</span> <span class="nb">format</span><span class="o">=</span><span class="s2">"csr"</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">_adopt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">([</span><span class="n">top</span><span class="o">.</span><span class="n">dense</span><span class="p">(),</span> <span class="n">bottom</span><span class="o">.</span><span class="n">dense</span><span class="p">()]))</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_times_pseudo_inverse</span><span class="p">(</span><span class="n">XWt</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">W</span><span class="p">:</span> <span class="n">LinearOperator</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
@@ -1235,6 +1244,7 @@
 <span class="sd">        See Also</span>
 <span class="sd">        --------</span>
 <span class="sd">        uncertainty : The prior and posterior uncertainty of each aggregate.</span>
+<span class="sd">        candidate_worth : What observations not in the problem would add.</span>
 <span class="sd">        dofs : The degrees of freedom for signal, the sum of the shares.</span>
 
 <span class="sd">        References</span>
@@ -1295,6 +1305,169 @@
             <span class="n">W</span><span class="o">.</span><span class="n">rows</span><span class="o">.</span><span class="n">index</span><span class="p">,</span>
             <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">var_without</span><span class="p">),</span>
             <span class="n">np</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">var_with</span><span class="p">,</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">positions</span><span class="p">),</span> <span class="mi">1</span><span class="p">)),</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_prior_scale</span><span class="p">(</span><span class="n">W_form</span><span class="p">),</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Posterior.candidate_worth">
+<a class="viewcode-back" href="../../reference/api/fips.Posterior.candidate_worth.html#fips.Posterior.candidate_worth">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">candidate_worth</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">forward</span><span class="p">:</span> <span class="n">Operator</span><span class="p">,</span>
+        <span class="n">obs_cov</span><span class="p">:</span> <span class="s2">"Covariance | CovarianceModel"</span><span class="p">,</span>
+        <span class="n">by</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+        <span class="n">W</span><span class="p">:</span> <span class="n">Operator</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">        Return what each group of candidate observations, not in the problem, would add to the certainty of each aggregate.</span>
+
+<span class="sd">        Candidate observations are rows of a forward operator that the</span>
+<span class="sd">        problem does not have (a new site, another platform, a season not yet</span>
+<span class="sd">        measured) and the covariance of their errors; their values are not</span>
+<span class="sd">        needed. For each group of candidates, the posterior standard deviation</span>
+<span class="sd">        of each aggregate without the group (this posterior) and with it, from</span>
+<span class="sd">        a rank :math:`m_c` update of :math:`\hat{S}`, without solving again:</span>
+
+<span class="sd">        .. math::</span>
+
+<span class="sd">            \hat{S}_{+c} = \hat{S} - \hat{S} H_c^T F^{-1} H_c \hat{S}, \qquad</span>
+<span class="sd">            F = H_c \hat{S} H_c^T + R_c / \gamma,</span>
+
+<span class="sd">        with :math:`H_c` the group's rows of `forward` and :math:`R_c` its</span>
+<span class="sd">        block of `obs_cov`. The errors of the candidates are taken to be</span>
+<span class="sd">        independent of the problem's observations, and are divided by the</span>
+<span class="sd">        regularization factor :math:`\gamma` as the problem's are, so the</span>
+<span class="sd">        result is the posterior of the problem solved again with the group's</span>
+<span class="sd">        observations added. For :math:`W`, the three blocks</span>
+<span class="sd">        :math:`W \hat{S} W^T`, :math:`W \hat{S} H_c^T` and</span>
+<span class="sd">        :math:`H_c \hat{S} H_c^T` are one :meth:`cov` of :math:`W` and</span>
+<span class="sd">        :math:`H_c` stacked: nothing ``n x n`` is formed. Each group is added</span>
+<span class="sd">        on its own, to the problem as it is.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        forward : Operator</span>
+<span class="sd">            The candidates' forward operator, from the state (its columns, the</span>
+<span class="sd">            state's labels in any order) to the candidate observations (its</span>
+<span class="sd">            rows, labeled as observations are, on the levels `by` groups).</span>
+<span class="sd">        obs_cov : Covariance or CovarianceModel</span>
+<span class="sd">            The covariance of the candidates' errors, on the rows of</span>
+<span class="sd">            `forward`; a model (``fips.Independent().with_std(5.0)``) is built</span>
+<span class="sd">            there. It must be positive-definite.</span>
+<span class="sd">        by : str, list or pandas.Grouper</span>
+<span class="sd">            The levels of the candidates' labels to group by, as</span>
+<span class="sd">            :meth:`data_worth` takes them (``"site"``).</span>
+<span class="sd">        W : Operator</span>
+<span class="sd">            An aggregation, as :meth:`cov` takes it: one row per aggregate.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        pandas.DataFrame</span>
+<span class="sd">            As :meth:`data_worth`: one row per group and aggregate, with</span>
+<span class="sd">            ``n_obs``, ``dofs`` (the group's share of DOFS in the problem with</span>
+<span class="sd">            it added, :math:`m_c - \operatorname{tr}(R_c F^{-1}) / \gamma`),</span>
+<span class="sd">            ``std_without`` (this posterior's), ``std_with`` (with the group</span>
+<span class="sd">            added) and ``reduction``, :math:`1 - \sigma_{with} /</span>
+<span class="sd">            \sigma_{without}`. A variance below zero by more than roundoff,</span>
+<span class="sd">            which only a covariance that is not positive semidefinite can</span>
+<span class="sd">            give, makes its standard deviation and the reduction NaN, with a</span>
+<span class="sd">            logged warning (as in :meth:`uncertainty`).</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        TypeError</span>
+<span class="sd">            If the method's estimate is not linear in the observations (its</span>
+<span class="sd">            solution does not set ``estimate_is_linear``), `forward` or `W`</span>
+<span class="sd">            is not an Operator, or `obs_cov` is not a covariance.</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            If the columns of `forward` or `W` do not have exactly the state's</span>
+<span class="sd">            labels, `obs_cov` is not on the rows of `forward`, or `by` puts</span>
+<span class="sd">            no candidate in a group.</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        --------</span>
+<span class="sd">        data_worth : What the groups of observations in the problem add.</span>
+<span class="sd">        uncertainty : The prior and posterior uncertainty of each aggregate.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        One flux observed four times at site A; would a candidate site B,</span>
+<span class="sd">        three observations with errors of the same size, help more than one</span>
+<span class="sd">        more observation at A?</span>
+
+<span class="sd">        &gt;&gt;&gt; import numpy as np</span>
+<span class="sd">        &gt;&gt;&gt; import pandas as pd</span>
+<span class="sd">        &gt;&gt;&gt; import fips</span>
+<span class="sd">        &gt;&gt;&gt; state = fips.Space({"flux": pd.Index(["a"], name="cell")})</span>
+<span class="sd">        &gt;&gt;&gt; observed = fips.Space(</span>
+<span class="sd">        ...     {</span>
+<span class="sd">        ...         "co2": pd.MultiIndex.from_product(</span>
+<span class="sd">        ...             [["A"], range(4)], names=["site", "hour"]</span>
+<span class="sd">        ...         )</span>
+<span class="sd">        ...     }</span>
+<span class="sd">        ... )</span>
+<span class="sd">        &gt;&gt;&gt; problem = fips.Problem(</span>
+<span class="sd">        ...     prior=fips.Vector(np.zeros(1), state),</span>
+<span class="sd">        ...     prior_cov=fips.Covariance.diagonal(1.0, state),</span>
+<span class="sd">        ...     obs=fips.Vector(np.ones(4), observed),</span>
+<span class="sd">        ...     obs_cov=fips.Covariance.diagonal(1.0, observed),</span>
+<span class="sd">        ...     forward=fips.Operator(np.ones((4, 1)), observed, state),</span>
+<span class="sd">        ... )</span>
+<span class="sd">        &gt;&gt;&gt; post = fips.solve(problem)</span>
+<span class="sd">        &gt;&gt;&gt; candidates = fips.Space(</span>
+<span class="sd">        ...     {</span>
+<span class="sd">        ...         "co2": pd.MultiIndex.from_tuples(</span>
+<span class="sd">        ...             [("A", 4), ("B", 0), ("B", 1), ("B", 2)], names=["site", "hour"]</span>
+<span class="sd">        ...         )</span>
+<span class="sd">        ...     }</span>
+<span class="sd">        ... )</span>
+<span class="sd">        &gt;&gt;&gt; H_new = fips.Operator(np.ones((4, 1)), candidates, state)</span>
+<span class="sd">        &gt;&gt;&gt; W = fips.Operator(np.eye(1), state, state)</span>
+<span class="sd">        &gt;&gt;&gt; table = post.candidate_worth(</span>
+<span class="sd">        ...     H_new, fips.Independent().with_std(1.0), by="site", W=W</span>
+<span class="sd">        ... )</span>
+<span class="sd">        &gt;&gt;&gt; table.droplevel("block").round(3).reset_index()</span>
+<span class="sd">          site cell  n_obs   dofs  std_without  std_with  reduction</span>
+<span class="sd">        0    A    a      1  0.167        0.447     0.408      0.087</span>
+<span class="sd">        1    B    a      3  0.375        0.447     0.354      0.209</span>
+<span class="sd">        """</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_solution</span><span class="p">,</span> <span class="s2">"estimate_is_linear"</span><span class="p">,</span> <span class="kc">False</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                <span class="s2">"The method that solved this problem does not give an estimate "</span>
+                <span class="sa">f</span><span class="s2">"linear in the observations (</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_solution</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2"> does "</span>
+                <span class="s2">"not set estimate_is_linear), so adding observations is not a "</span>
+                <span class="s2">"rank update of its covariance: solve the problem with them."</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">forward</span><span class="p">,</span> <span class="n">Operator</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"forward must be an Operator, got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">forward</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">."</span>
+            <span class="p">)</span>
+        <span class="n">state</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_problem</span><span class="o">.</span><span class="n">prior</span><span class="o">.</span><span class="n">space</span>
+        <span class="n">candidates</span> <span class="o">=</span> <span class="n">forward</span><span class="o">.</span><span class="n">rows</span>
+        <span class="n">H_c</span> <span class="o">=</span> <span class="n">forward</span><span class="o">.</span><span class="n">_on</span><span class="p">(</span><span class="n">candidates</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="s2">"forward"</span><span class="p">,</span> <span class="p">(</span><span class="s2">"the candidates"</span><span class="p">,</span> <span class="s2">"the state"</span><span class="p">))</span>
+        <span class="n">R_c</span> <span class="o">=</span> <span class="n">_covariance</span><span class="p">(</span><span class="n">obs_cov</span><span class="p">,</span> <span class="n">candidates</span><span class="p">,</span> <span class="s2">"obs_cov"</span><span class="p">,</span> <span class="s2">"the candidates"</span><span class="p">)</span><span class="o">.</span><span class="n">data</span>
+        <span class="n">groups</span><span class="p">,</span> <span class="n">positions</span> <span class="o">=</span> <span class="n">_obs_groups</span><span class="p">(</span><span class="n">candidates</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">by</span><span class="p">)</span>
+        <span class="n">W_form</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_aggregation</span><span class="p">(</span><span class="n">W</span><span class="p">)</span>
+        <span class="n">k</span> <span class="o">=</span> <span class="n">W_form</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">columns</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">state</span><span class="p">))</span>
+        <span class="n">var_without</span><span class="p">,</span> <span class="n">var_with</span><span class="p">,</span> <span class="n">dofs</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[],</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">rows</span> <span class="ow">in</span> <span class="n">positions</span><span class="p">:</span>
+            <span class="c1"># W S^ W^T, W S^ H_c^T and H_c S^ H_c^T, from one aggregated covariance</span>
+            <span class="n">S</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_solution</span><span class="o">.</span><span class="n">cov</span><span class="p">(</span><span class="n">_stacked</span><span class="p">(</span><span class="n">W_form</span><span class="p">,</span> <span class="n">H_c</span><span class="o">.</span><span class="n">_select</span><span class="p">(</span><span class="n">rows</span><span class="p">,</span> <span class="n">columns</span><span class="p">)))</span>
+            <span class="n">S_ww</span><span class="p">,</span> <span class="n">S_wc</span><span class="p">,</span> <span class="n">S_cc</span> <span class="o">=</span> <span class="n">S</span><span class="p">[:</span><span class="n">k</span><span class="p">,</span> <span class="p">:</span><span class="n">k</span><span class="p">],</span> <span class="n">S</span><span class="p">[:</span><span class="n">k</span><span class="p">,</span> <span class="n">k</span><span class="p">:],</span> <span class="n">S</span><span class="p">[</span><span class="n">k</span><span class="p">:,</span> <span class="n">k</span><span class="p">:]</span>
+            <span class="n">R_g</span> <span class="o">=</span> <span class="n">R_c</span><span class="o">.</span><span class="n">_select</span><span class="p">(</span><span class="n">rows</span><span class="p">,</span> <span class="n">rows</span><span class="p">)</span><span class="o">.</span><span class="n">dense</span><span class="p">()</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gamma</span>
+            <span class="n">F</span> <span class="o">=</span> <span class="n">S_cc</span> <span class="o">+</span> <span class="n">R_g</span>
+            <span class="n">Y</span> <span class="o">=</span> <span class="n">_solve_psd</span><span class="p">(</span><span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">F</span> <span class="o">+</span> <span class="n">F</span><span class="o">.</span><span class="n">T</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="n">S_wc</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">R_g</span><span class="p">]))</span>
+            <span class="n">var_without</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diagonal</span><span class="p">(</span><span class="n">S_ww</span><span class="p">))</span>
+            <span class="n">var_with</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diagonal</span><span class="p">(</span><span class="n">S_ww</span><span class="p">)</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s2">"ki,ik-&gt;k"</span><span class="p">,</span> <span class="n">S_wc</span><span class="p">,</span> <span class="n">Y</span><span class="p">[:,</span> <span class="p">:</span><span class="n">k</span><span class="p">]))</span>
+            <span class="n">dofs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">rows</span><span class="p">)</span> <span class="o">-</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="n">Y</span><span class="p">[:,</span> <span class="n">k</span><span class="p">:])))</span>
+        <span class="k">return</span> <span class="n">_worth_table</span><span class="p">(</span>
+            <span class="n">groups</span><span class="p">,</span>
+            <span class="n">positions</span><span class="p">,</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">dofs</span><span class="p">),</span>
+            <span class="n">W</span><span class="o">.</span><span class="n">rows</span><span class="o">.</span><span class="n">index</span><span class="p">,</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">var_without</span><span class="p">),</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">var_with</span><span class="p">),</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_prior_scale</span><span class="p">(</span><span class="n">W_form</span><span class="p">),</span>
         <span class="p">)</span></div>
 

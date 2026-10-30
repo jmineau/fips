@@ -37,6 +37,7 @@
    :toctree:
 
    ~Posterior.averaging_kernel
+   ~Posterior.candidate_worth
    ~Posterior.cov
    ~Posterior.data_worth
    ~Posterior.desroziers

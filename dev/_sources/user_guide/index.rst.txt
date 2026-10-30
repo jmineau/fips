@@ -440,6 +440,18 @@ problem above, observed at two sites:
    total = fips.aggregate.sum(hourly.prior.space, by=pd.Series("all", index=hourly.prior.space.select("flux"), name="region"))
    hourly_post.data_worth(by="site", W=total).round(3)
 
+Observations that are not in the problem, a candidate site or platform, are
+their rows of the forward operator and the covariance of their errors (no
+values): :meth:`~fips.Posterior.candidate_worth` adds each group on its own,
+by the same kind of update, and gives the same columns, so a network design
+question ("which candidate site helps the total most") is one call:
+
+.. ipython:: python
+
+   new_sites = fips.Space({"ch4": pd.MultiIndex.from_product([["C", "D"], hours], names=["site", "obs_time"])})
+   H_new = fips.Operator(rng.uniform(0, 0.1, (96, 3)), new_sites, flux.space)
+   hourly_post.candidate_worth(H_new, fips.Independent().with_std(0.05), by="site", W=total).round(3)
+
 **Checking the covariances.** :meth:`~fips.Posterior.desroziers` compares the
 observation error variances the residuals diagnose with those the solve used,
 per observation or averaged over groups; :attr:`~fips.Posterior.reduced_chi2`

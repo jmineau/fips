@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>User Guide &#8212; fips 0.2.0b2.dev23+g57012c171 documentation</title>
+    <title>User Guide &#8212; fips 0.2.0b2.dev24+gaf426719d documentation</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../_static/documentation_options.js?v=7cca7881"></script>
+    <script src="../_static/documentation_options.js?v=791eb6a8"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -137,8 +137,8 @@
       
     
     
-    <img src="../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b2.dev23+g57012c171 documentation - Home"/>
-    <img src="../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b2.dev23+g57012c171 documentation - Home"/>
+    <img src="../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b2.dev24+gaf426719d documentation - Home"/>
+    <img src="../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b2.dev24+gaf426719d documentation - Home"/>
   
   
 </a></div>
@@ -1017,6 +1017,23 @@ problem above, observed at two sites:</p>
 <span class="go">B    flux  all        48  1.340        0.131     0.093      0.287</span>
 </pre></div>
 </div>
+<p>Observations that are not in the problem, a candidate site or platform, are
+their rows of the forward operator and the covariance of their errors (no
+values): <a class="reference internal" href="../reference/api/fips.Posterior.candidate_worth.html#fips.Posterior.candidate_worth" title="fips.Posterior.candidate_worth"><code class="xref py py-meth docutils literal notranslate"><span class="pre">candidate_worth()</span></code></a> adds each group on its own,
+by the same kind of update, and gives the same columns, so a network design
+question (“which candidate site helps the total most”) is one call:</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [62]: </span><span class="n">new_sites</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Space</span><span class="p">({</span><span class="s2">"ch4"</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">MultiIndex</span><span class="o">.</span><span class="n">from_product</span><span class="p">([[</span><span class="s2">"C"</span><span class="p">,</span> <span class="s2">"D"</span><span class="p">],</span> <span class="n">hours</span><span class="p">],</span> <span class="n">names</span><span class="o">=</span><span class="p">[</span><span class="s2">"site"</span><span class="p">,</span> <span class="s2">"obs_time"</span><span class="p">])})</span>
+
+<span class="gp">In [63]: </span><span class="n">H_new</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Operator</span><span class="p">(</span><span class="n">rng</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">,</span> <span class="p">(</span><span class="mi">96</span><span class="p">,</span> <span class="mi">3</span><span class="p">)),</span> <span class="n">new_sites</span><span class="p">,</span> <span class="n">flux</span><span class="o">.</span><span class="n">space</span><span class="p">)</span>
+
+<span class="gp">In [64]: </span><span class="n">hourly_post</span><span class="o">.</span><span class="n">candidate_worth</span><span class="p">(</span><span class="n">H_new</span><span class="p">,</span> <span class="n">fips</span><span class="o">.</span><span class="n">Independent</span><span class="p">()</span><span class="o">.</span><span class="n">with_std</span><span class="p">(</span><span class="mf">0.05</span><span class="p">),</span> <span class="n">by</span><span class="o">=</span><span class="s2">"site"</span><span class="p">,</span> <span class="n">W</span><span class="o">=</span><span class="n">total</span><span class="p">)</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="gh">Out[64]: </span>
+<span class="go">                   n_obs   dofs  std_without  std_with  reduction</span>
+<span class="go">site block region                                                </span>
+<span class="go">C    flux  all        48  0.846        0.093     0.079      0.158</span>
+<span class="go">D    flux  all        48  0.879        0.093     0.077      0.174</span>
+</pre></div>
+</div>
 <p><strong>Checking the covariances.</strong> <a class="reference internal" href="../reference/api/fips.Posterior.desroziers.html#fips.Posterior.desroziers" title="fips.Posterior.desroziers"><code class="xref py py-meth docutils literal notranslate"><span class="pre">desroziers()</span></code></a> compares the
 observation error variances the residuals diagnose with those the solve used,
 per observation or averaged over groups; <a class="reference internal" href="../reference/api/fips.Posterior.reduced_chi2.html#fips.Posterior.reduced_chi2" title="fips.Posterior.reduced_chi2"><code class="xref py py-attr docutils literal notranslate"><span class="pre">reduced_chi2</span></code></a>
@@ -1038,20 +1055,20 @@ inventory, 1.5 times the prior, on the prior’s labels in any order) replaces
 the draw. A trial is the solve on other data, <code class="docutils literal notranslate"><span class="pre">post.with_data(obs)</span></code>, one
 product, so a Monte Carlo is a loop you write. If the inversion is honest, the
 95% interval of each total holds the truth in about 95% of the trials:</p>
-<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [62]: </span><span class="n">rng</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [65]: </span><span class="n">rng</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
 
-<span class="gp">In [63]: </span><span class="n">sd</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">post</span><span class="o">.</span><span class="n">cov</span><span class="p">(</span><span class="n">W</span><span class="p">)</span><span class="o">.</span><span class="n">variances</span><span class="o">.</span><span class="n">values</span><span class="p">)</span>  <span class="c1"># what the posterior claims</span>
+<span class="gp">In [66]: </span><span class="n">sd</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">post</span><span class="o">.</span><span class="n">cov</span><span class="p">(</span><span class="n">W</span><span class="p">)</span><span class="o">.</span><span class="n">variances</span><span class="o">.</span><span class="n">values</span><span class="p">)</span>  <span class="c1"># what the posterior claims</span>
 
-<span class="gp">In [64]: </span><span class="n">inside</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="gp">In [67]: </span><span class="n">inside</span> <span class="o">=</span> <span class="p">[]</span>
 
-<span class="gp">In [65]: </span><span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">500</span><span class="p">):</span>
+<span class="gp">In [68]: </span><span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">500</span><span class="p">):</span>
 <span class="gp">   ....: </span>    <span class="n">truth</span><span class="p">,</span> <span class="n">obs</span> <span class="o">=</span> <span class="n">problem</span><span class="o">.</span><span class="n">simulate</span><span class="p">(</span><span class="n">rng</span><span class="p">)</span>
 <span class="gp">   ....: </span>    <span class="n">estimate</span> <span class="o">=</span> <span class="n">post</span><span class="o">.</span><span class="n">with_data</span><span class="p">(</span><span class="n">obs</span><span class="p">)</span><span class="o">.</span><span class="n">estimate</span>
 <span class="gp">   ....: </span>    <span class="n">inside</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">((</span><span class="n">W</span> <span class="o">@</span> <span class="n">estimate</span><span class="p">)</span><span class="o">.</span><span class="n">values</span> <span class="o">-</span> <span class="p">(</span><span class="n">W</span> <span class="o">@</span> <span class="n">truth</span><span class="p">)</span><span class="o">.</span><span class="n">values</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mf">1.96</span> <span class="o">*</span> <span class="n">sd</span><span class="p">)</span>
 <span class="gp">   ....: </span>
 
-<span class="gp">In [66]: </span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">inside</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
-<span class="gh">Out[66]: </span><span class="go">array([0.97, 0.94, 0.94, 0.96])</span>
+<span class="gp">In [69]: </span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">inside</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="gh">Out[69]: </span><span class="go">array([0.97, 0.94, 0.94, 0.96])</span>
 </pre></div>
 </div>
 <p>The estimate is linear in the observations, so the loop has an exact answer:
@@ -1062,8 +1079,8 @@ from another world on the same labels, and <code class="docutils literal notrans
 <code class="docutils literal notranslate"><span class="pre">simulate</span></code>. A variance below zero by roundoff is a standard deviation of 0;
 one further below zero comes only from a covariance that is not positive
 semidefinite, and is NaN, with a warning:</p>
-<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [67]: </span><span class="n">post</span><span class="o">.</span><span class="n">recovery</span><span class="p">(</span><span class="n">W</span><span class="o">=</span><span class="n">W</span><span class="p">)[[</span><span class="s2">"truth"</span><span class="p">,</span> <span class="s2">"estimate"</span><span class="p">,</span> <span class="s2">"std"</span><span class="p">,</span> <span class="s2">"posterior_std"</span><span class="p">,</span> <span class="s2">"coverage"</span><span class="p">]]</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
-<span class="gh">Out[67]: </span>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [70]: </span><span class="n">post</span><span class="o">.</span><span class="n">recovery</span><span class="p">(</span><span class="n">W</span><span class="o">=</span><span class="n">W</span><span class="p">)[[</span><span class="s2">"truth"</span><span class="p">,</span> <span class="s2">"estimate"</span><span class="p">,</span> <span class="s2">"std"</span><span class="p">,</span> <span class="s2">"posterior_std"</span><span class="p">,</span> <span class="s2">"coverage"</span><span class="p">]]</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="gh">Out[70]: </span>
 <span class="go">                  truth  estimate    std  posterior_std  coverage</span>
 <span class="go">block time                                                       </span>
 <span class="go">flux  2024-01-01    4.0       4.0  0.789          0.789      0.95</span>
@@ -1093,11 +1110,11 @@ extra): several vectors or Series on one axes, with a band of one standard
 deviation from each covariance, and an optional truth. Maps and anything else
 are drawn from <a class="reference internal" href="../reference/api/fips.Vector.to_series.html#fips.Vector.to_series" title="fips.Vector.to_series"><code class="xref py py-meth docutils literal notranslate"><span class="pre">to_series()</span></code></a> and
 <a class="reference internal" href="../reference/api/fips.Vector.to_xarray.html#fips.Vector.to_xarray" title="fips.Vector.to_xarray"><code class="xref py py-meth docutils literal notranslate"><span class="pre">to_xarray()</span></code></a> with pandas, xarray or matplotlib:</p>
-<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [68]: </span><span class="kn">from</span><span class="w"> </span><span class="nn">fips.visualization</span><span class="w"> </span><span class="kn">import</span> <span class="n">plot_comparison</span>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [71]: </span><span class="kn">from</span><span class="w"> </span><span class="nn">fips.visualization</span><span class="w"> </span><span class="kn">import</span> <span class="n">plot_comparison</span>
 
-<span class="gp">In [69]: </span><span class="n">weekly</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">aggregate</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">problem</span><span class="o">.</span><span class="n">prior</span><span class="o">.</span><span class="n">space</span><span class="p">,</span> <span class="n">by</span><span class="o">=</span><span class="s2">"time"</span><span class="p">)</span>
+<span class="gp">In [72]: </span><span class="n">weekly</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">aggregate</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">problem</span><span class="o">.</span><span class="n">prior</span><span class="o">.</span><span class="n">space</span><span class="p">,</span> <span class="n">by</span><span class="o">=</span><span class="s2">"time"</span><span class="p">)</span>
 
-<span class="gp">In [70]: </span><span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plot_comparison</span><span class="p">(</span>
+<span class="gp">In [73]: </span><span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plot_comparison</span><span class="p">(</span>
 <span class="gp">   ....: </span>    <span class="p">(</span><span class="n">weekly</span> <span class="o">@</span> <span class="n">problem</span><span class="o">.</span><span class="n">prior</span><span class="p">)</span><span class="o">.</span><span class="n">to_series</span><span class="p">()</span><span class="o">.</span><span class="n">droplevel</span><span class="p">(</span><span class="s2">"block"</span><span class="p">)</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="s2">"prior"</span><span class="p">),</span>
 <span class="gp">   ....: </span>    <span class="p">(</span><span class="n">weekly</span> <span class="o">@</span> <span class="n">post</span><span class="o">.</span><span class="n">estimate</span><span class="p">)</span><span class="o">.</span><span class="n">to_series</span><span class="p">()</span><span class="o">.</span><span class="n">droplevel</span><span class="p">(</span><span class="s2">"block"</span><span class="p">)</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="s2">"posterior"</span><span class="p">),</span>
 <span class="gp">   ....: </span>    <span class="n">errors</span><span class="o">=</span><span class="p">[</span><span class="n">problem</span><span class="o">.</span><span class="n">prior_cov</span><span class="o">.</span><span class="n">aggregate</span><span class="p">(</span><span class="n">weekly</span><span class="p">),</span> <span class="n">post</span><span class="o">.</span><span class="n">cov</span><span class="p">(</span><span class="n">weekly</span><span class="p">)],</span>
