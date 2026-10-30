@@ -520,7 +520,11 @@ class Posterior:
             One row per aggregate, on the aggregation's rows (or the state's
             labels): ``prior_std``, ``posterior_std`` and ``reduction``,
             :math:`1 - \sigma_{posterior} / \sigma_{prior}` (a fraction; NaN
-            where the prior standard deviation is 0).
+            where the prior standard deviation is 0). A variance below zero by
+            more than roundoff, which only a prior error or model-data
+            mismatch covariance that is not positive semidefinite can give,
+            makes its standard deviation and the reduction NaN, with a
+            logged warning (as in :meth:`recovery`).
 
         Raises
         ------
@@ -583,13 +587,16 @@ class Posterior:
         if W is None:
             prior = self._problem.prior_cov.variances.values
             posterior = self.variances.values
+            scale = _largest_variance(None, self._problem.prior_cov.data)
             index = self._problem.prior.index
         else:
             posterior = self.cov(W).variances.values  # checks W against the state
             prior = self._problem.prior_cov.aggregate(W).variances.values
+            Wt = self._aggregation(W)._transpose().dense()  # n x k
+            scale = _largest_variance(Wt, self._problem.prior_cov.data)
             index = W.rows.index
-        prior_std = np.sqrt(np.maximum(prior, 0.0))  # roundoff can leave -0
-        posterior_std = np.sqrt(np.maximum(posterior, 0.0))
+        prior_std = _std(prior, scale, "prior variances")
+        posterior_std = _std(posterior, scale, "posterior variances")
         with np.errstate(divide="ignore", invalid="ignore"):
             reduction = np.where(prior_std > 0, 1.0 - posterior_std / prior_std, np.nan)
         return pd.DataFrame(
