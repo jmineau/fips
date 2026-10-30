@@ -382,6 +382,26 @@ def test_scale_must_fit_the_level(model, coords, match):
         model.correlation(coords)
 
 
+STRINGS = _coords(cell=["a", "b", "c"], x=[0.0, 1.0, 2.0], lat=[10.0, 11.0, 12.0])
+
+
+@pytest.mark.parametrize(
+    "model",
+    [
+        Exponential("cell", 1.0),
+        Gaussian("cell", 1.0),
+        Matern("cell", 1.0, 1.5),
+        Exponential(["x", "cell"], 1.0),
+        Exponential(["cell", "x"], 1.0, metric="chordal"),
+        Exponential(["lat", "cell"], 1.0, metric="haversine"),
+    ],
+)
+def test_a_string_level_is_named_not_converted(model):
+    """A level of strings has no distance: the error names it and says what a model needs."""
+    with pytest.raises(ValueError, match="Level 'cell' holds .*coordinates.*times"):
+        model.correlation(STRINGS)
+
+
 def test_scale_given_as_text_or_timedelta():
     """``"1D"``, ``pd.Timedelta`` and ``np.timedelta64`` are one scale."""
     a = Exponential("t", "1D")
