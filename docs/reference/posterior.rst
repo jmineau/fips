@@ -8,7 +8,7 @@ Solving and Posterior
 :class:`Posterior`. The problem is the question and holds what needs no solve
 and no :math:`m \times m` matrix (:meth:`Problem.predict`); the posterior is
 the answer and holds what depends on the solve or on the :math:`m \times m`
-matrix it factors (:attr:`Posterior.innovation_cov`). Each method declares its options once (for ``"analytic"``,
+innovation covariance (:attr:`Posterior.innovation_cov`). Each method declares its options once (for ``"analytic"``,
 :class:`~fips.methods.analytic.AnalyticOptions`), and an unknown method or option raises
 with the names it knows. The posterior labels the answer and the method keeps
 its own machinery: the posterior asks what the method kept from the solve (a
