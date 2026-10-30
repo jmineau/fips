@@ -587,6 +587,8 @@ def test_removing_a_group_matches_solving_without_it(prior, mismatch, gamma, rea
         "std_without",
         "std_with",
         "reduction",
+        "std_alone",
+        "reduction_alone",
     ]
     assert list(table.index.names) == ["site", *W.rows.index.names]
     sensitivity = self_sensitivity(problem, gamma)
@@ -648,6 +650,112 @@ def test_the_self_sensitivity_and_dofs_shares(prior, mismatch, gamma, read):
         np.sqrt(np.diag(Wd @ S_rest @ Wd.T)),
         rtol=1e-9,
     )
+
+
+def alone_on_prior(problem: Problem, rows: np.ndarray, gamma: float) -> np.ndarray:
+    """The posterior covariance with only the observations at `rows` on the prior, dense: the group's own block of S_z."""
+    S0 = problem.prior_cov.dense()
+    H = problem.forward.dense()[rows]
+    R = problem.obs_cov.dense()[np.ix_(rows, rows)] / gamma
+    S0Ht = S0 @ H.T
+    return S0 - S0Ht @ np.linalg.inv(H @ S0Ht + R) @ S0Ht.T
+
+
+@pytest.mark.usefixtures("analytic_form")
+@pytest.mark.parametrize("analytic_form", ["whitened", "information"], indirect=True)
+@pytest.mark.parametrize("gamma", [1.0, 2.5])
+@pytest.mark.parametrize("mismatch", MISMATCHES)
+@pytest.mark.parametrize("prior", PRIORS)
+def test_a_group_alone_on_the_prior_matches_the_dense_update(prior, mismatch, gamma):
+    """std_alone of each total is the std of the prior updated with the group's rows only; reduction_alone is against the prior."""
+    problem = problem_of(prior, mismatch)
+    post = fips.solve(problem, gamma=gamma)
+    W = totals(STATE)
+    Wd = W.dense()
+    prior_std = np.sqrt(np.diag(Wd @ problem.prior_cov.dense() @ Wd.T))
+    table = post.data_worth(by="site", W=W)
+    assert list(table.columns)[-2:] == ["std_alone", "reduction_alone"]
+    for site, rows in _group_rows(problem, "site").items():
+        expected = np.sqrt(np.diag(Wd @ alone_on_prior(problem, rows, gamma) @ Wd.T))
+        part = table.xs(site, level="site")
+        np.testing.assert_allclose(part["std_alone"], expected, rtol=1e-9)
+        np.testing.assert_allclose(
+            part["reduction_alone"], 1 - expected / prior_std, rtol=1e-8, atol=1e-12
+        )
+
+
+@pytest.mark.parametrize("analytic_form", ["whitened", "information"], indirect=True)
+@pytest.mark.parametrize("sparse_forward", [False, True])
+def test_alone_on_the_prior_three_groups_of_a_few_dozen_elements(
+    analytic_form, sparse_forward
+):
+    """
+    Three groups, 36 elements, a dense S_0 and a mismatch that correlates the groups, against ``np.linalg.inv``.
+
+    The column uses each group's own block of S_z (it ignores the correlation
+    with the others), while ``std_without`` and ``std_with`` keep it.
+    """
+    rng = np.random.default_rng(11)
+    n, per_group = 36, 5
+    state = Space({"flux": pd.Index(range(n), name="cell")})
+    labels = pd.MultiIndex.from_product(
+        [["A", "B", "C"], range(per_group)], names=["site", "hour"]
+    )
+    observed = Space({"co2": labels})
+    m = len(observed)
+    H = rng.uniform(0.0, 1.0, (m, n)) * (rng.uniform(size=(m, n)) < 0.4)
+    S_0, S_z = _spd(n, rng), _spd(m, rng) * 0.3  # S_z correlates the sites
+    forward = sp.csr_array(H) if sparse_forward else H
+    problem = Problem(
+        prior=Vector(np.zeros(n), state),
+        prior_cov=Covariance(S_0, state),
+        obs=Vector(rng.normal(size=m), observed),
+        obs_cov=Covariance(S_z, observed),
+        forward=Operator(forward, observed, state),
+    )
+    W = np.zeros((4, n))
+    for row, cells in enumerate(np.array_split(np.arange(n), 4)):
+        W[row, cells] = 1.0
+    W[1] += 0.3 * rng.uniform(size=n)  # rows that overlap, so W is not a partition
+    W_op = Operator(W, Space({"agg": pd.Index(range(4), name="region")}), state)
+    table = fips.solve(problem).data_worth(by="site", W=W_op)
+    prior_std = np.sqrt(np.diag(W @ S_0 @ W.T))
+    for g, site in enumerate("ABC"):
+        rows = np.arange(g * per_group, (g + 1) * per_group)
+        H_g, R_g = H[rows], S_z[np.ix_(rows, rows)]
+        S_alone = S_0 - S_0 @ H_g.T @ np.linalg.inv(H_g @ S_0 @ H_g.T + R_g) @ H_g @ S_0
+        expected = np.sqrt(np.diag(W @ S_alone @ W.T))
+        part = table.xs(site, level="site")
+        np.testing.assert_allclose(part["std_alone"], expected, rtol=1e-10)
+        np.testing.assert_allclose(
+            part["reduction_alone"], 1 - expected / prior_std, rtol=1e-9
+        )
+    # the other columns are as before: the correlation with the other groups counts there
+    S_hat = np.linalg.inv(np.linalg.inv(S_0) + H.T @ np.linalg.inv(S_z) @ H)
+    np.testing.assert_allclose(
+        table.xs("A", level="site")["std_with"],
+        np.sqrt(np.diag(W @ S_hat @ W.T)),
+        rtol=1e-8,
+    )
+
+
+@pytest.mark.parametrize("analytic_form", ["whitened", "information"], indirect=True)
+@pytest.mark.parametrize("gamma", [1.0, 2.5])
+def test_one_group_alone_on_the_prior_is_with_the_group(analytic_form, gamma):
+    """With every observation in one group, alone on the prior is the posterior: std_alone is std_with, reduction_alone is reduction."""
+    problem = problem_of("dense", "dense")
+    post = fips.solve(problem, gamma=gamma)
+    table = post.data_worth(by=np.zeros(len(OBS)), W=totals(STATE))
+    np.testing.assert_allclose(table["std_alone"], table["std_with"], rtol=1e-9)
+    np.testing.assert_allclose(table["reduction_alone"], table["reduction"], rtol=1e-8)
+
+
+def test_alone_on_the_prior_is_not_the_other_columns_subtracted():
+    """Two groups that see the same cell: each alone takes more off the prior than it adds on top of the other."""
+    problem = problem_of("dense", "block")
+    post = fips.solve(problem)
+    table = post.data_worth(by="site", W=totals(STATE))
+    assert (table["reduction_alone"] > table["reduction"] + 1e-3).any()
 
 
 @pytest.mark.parametrize("analytic_form", ["whitened", "information"], indirect=True)
@@ -756,9 +864,12 @@ def test_data_worth_of_a_prior_that_is_not_positive_semidefinite_is_nan(caplog):
         table = post.data_worth(by=np.array([0, 0, 0, 1, 1, 1]), W=W)
     assert table[["std_without", "std_with", "reduction"]].isna().all(axis=None)
     lines = _warnings(caplog)
-    assert len(lines) == 2
+    assert len(lines) == 4
     assert "2 of the 2 variances without the group" in lines[0]
     assert "2 of the 2 variances with the group" in lines[1]
+    assert "2 of the 2 variances with the group alone" in lines[2]
+    assert "1 of the 1 prior variances" in lines[3]
+    assert table[["std_alone", "reduction_alone"]].isna().all(axis=None)
 
 
 def test_data_worth_variance_half_the_roundoff_below_zero_is_zero_and_twice_it_is_nan(
@@ -778,9 +889,11 @@ def test_data_worth_variance_half_the_roundoff_below_zero_is_zero_and_twice_it_i
     beyond = fips.solve(problem).data_worth(by=groups, W=total)
     assert beyond[["std_without", "std_with", "reduction"]].isna().all(axis=None)
     lines = _warnings(caplog)
-    assert len(lines) == 2  # without the group, and with it
+    assert len(lines) == 4  # without the group, with it, with it alone, the prior
     assert "2 of the 2 variances without the group" in lines[0]
     assert "2 of the 2 variances with the group" in lines[1]
+    assert "2 of the 2 variances with the group alone" in lines[2]
+    assert "1 of the 1 prior variances" in lines[3]
     assert all(f"{-2.0 * roundoff:.3g}" in line for line in lines)
 
 
