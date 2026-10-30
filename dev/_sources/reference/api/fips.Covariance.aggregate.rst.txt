@@ -1,0 +1,6 @@
+fips.Covariance.aggregate
+=========================
+
+.. currentmodule:: fips
+
+.. automethod:: Covariance.aggregate

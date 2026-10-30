@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>fips.Posterior.with_data &#8212; fips 0.2.0b2.dev21+g310e0e304 documentation</title>
+    <title>fips.Posterior.with_data &#8212; fips 0.2.0b2.dev22+g00e3c8dd8 documentation</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../_static/documentation_options.js?v=5689a713"></script>
+    <script src="../../_static/documentation_options.js?v=08dda611"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -61,7 +61,7 @@
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="fips.Posterior.with_gamma" href="fips.Posterior.with_gamma.html" />
-    <link rel="prev" title="fips.Posterior.summary" href="fips.Posterior.summary.html" />
+    <link rel="prev" title="fips.Posterior.uncertainty" href="fips.Posterior.uncertainty.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
@@ -137,8 +137,8 @@
       
     
     
-    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b2.dev21+g310e0e304 documentation - Home"/>
-    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b2.dev21+g310e0e304 documentation - Home"/>
+    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b2.dev22+g00e3c8dd8 documentation - Home"/>
+    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b2.dev22+g00e3c8dd8 documentation - Home"/>
   
   
 </a></div>
@@ -479,6 +479,7 @@
 <li class="toctree-l2 has-children"><a class="reference internal" href="fips.Covariance.html">fips.Covariance</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l3"><a class="reference internal" href="fips.Covariance.space.html">fips.Covariance.space</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.Covariance.variances.html">fips.Covariance.variances</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fips.Covariance.aggregate.html">fips.Covariance.aggregate</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.Covariance.block_diag.html">fips.Covariance.block_diag</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.Covariance.diagonal.html">fips.Covariance.diagonal</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.Covariance.logdet.html">fips.Covariance.logdet</a></li>
@@ -496,6 +497,7 @@
 <li class="toctree-l2"><a class="reference internal" href="fips.Covariance.logdet.html">fips.Covariance.logdet</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.Covariance.quadratic_form.html">fips.Covariance.quadratic_form</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.Covariance.sqrt.html">fips.Covariance.sqrt</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fips.Covariance.aggregate.html">fips.Covariance.aggregate</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.Covariance.sample.html">fips.Covariance.sample</a></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="fips.Exponential.html">fips.Exponential</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l3"><a class="reference internal" href="fips.Exponential.metric.html">fips.Exponential.metric</a></li>
@@ -618,6 +620,7 @@
 <li class="toctree-l3"><a class="reference internal" href="fips.Posterior.leverage.html">fips.Posterior.leverage</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.Posterior.recovery.html">fips.Posterior.recovery</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.Posterior.summary.html">fips.Posterior.summary</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fips.Posterior.uncertainty.html">fips.Posterior.uncertainty</a></li>
 <li class="toctree-l3 current active"><a aria-current="page" class="current reference internal" href="#">fips.Posterior.with_data</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.Posterior.with_gamma.html">fips.Posterior.with_gamma</a></li>
 </ul>
@@ -628,6 +631,7 @@
 <li class="toctree-l2"><a class="reference internal" href="fips.Posterior.mean.html">fips.Posterior.mean</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.Posterior.variances.html">fips.Posterior.variances</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.Posterior.cov.html">fips.Posterior.cov</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fips.Posterior.uncertainty.html">fips.Posterior.uncertainty</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.Posterior.modeled_obs.html">fips.Posterior.modeled_obs</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.Posterior.innovation_cov.html">fips.Posterior.innovation_cov</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.Posterior.desroziers.html">fips.Posterior.desroziers</a></li>
@@ -865,12 +869,12 @@ any order).</p>
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="fips.Posterior.summary.html"
+       href="fips.Posterior.uncertainty.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">fips.Posterior.summary</p>
+        <p class="prev-next-title">fips.Posterior.uncertainty</p>
       </div>
     </a>
     <a class="right-next"

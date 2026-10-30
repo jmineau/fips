@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>fips.posterior &#8212; fips 0.2.0b2.dev21+g310e0e304 documentation</title>
+    <title>fips.posterior &#8212; fips 0.2.0b2.dev22+g00e3c8dd8 documentation</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../_static/documentation_options.js?v=5689a713"></script>
+    <script src="../../_static/documentation_options.js?v=08dda611"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -132,8 +132,8 @@
       
     
     
-    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b2.dev21+g310e0e304 documentation - Home"/>
-    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b2.dev21+g310e0e304 documentation - Home"/>
+    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b2.dev22+g00e3c8dd8 documentation - Home"/>
+    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b2.dev22+g00e3c8dd8 documentation - Home"/>
   
   
 </a></div>
@@ -950,6 +950,123 @@
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cov</span>
         <span class="n">values</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_solution</span><span class="o">.</span><span class="n">cov</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_aggregation</span><span class="p">(</span><span class="n">W</span><span class="p">))</span>
         <span class="k">return</span> <span class="n">Covariance</span><span class="o">.</span><span class="n">_computed</span><span class="p">(</span><span class="n">_adopt</span><span class="p">(</span><span class="n">values</span><span class="p">),</span> <span class="n">W</span><span class="o">.</span><span class="n">rows</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">"posterior_cov"</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Posterior.uncertainty">
+<a class="viewcode-back" href="../../reference/api/fips.Posterior.uncertainty.html#fips.Posterior.uncertainty">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">uncertainty</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">W</span><span class="p">:</span> <span class="n">Operator</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">        Return the prior and posterior uncertainty of each aggregate, and how much the observations reduce it.</span>
+
+<span class="sd">        The standard deviation of each row of :math:`W x` before the</span>
+<span class="sd">        observations, :math:`\sqrt{\operatorname{diag} W S_0 W^T}`, and after,</span>
+<span class="sd">        :math:`\sqrt{\operatorname{diag} W \hat{S} W^T}`, from</span>
+<span class="sd">        :meth:`Covariance.aggregate &lt;fips.Covariance.aggregate&gt;` and</span>
+<span class="sd">        :meth:`cov`, neither forming an ``n x n`` matrix. A row of `W` can be</span>
+<span class="sd">        any linear combination of the state: a total, a mean, or a combination</span>
+<span class="sd">        of totals such as a trend or the difference of two seasons (``C @ W``,</span>
+<span class="sd">        with ``C`` the weights of the rows of ``W``), whose uncertainty</span>
+<span class="sd">        includes the covariance between the totals.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        W : Operator, optional</span>
+<span class="sd">            An aggregation, as :meth:`cov` takes it: one row per aggregate. By</span>
+<span class="sd">            default, one row per state element.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        pandas.DataFrame</span>
+<span class="sd">            One row per aggregate, on the aggregation's rows (or the state's</span>
+<span class="sd">            labels): ``prior_std``, ``posterior_std`` and ``reduction``,</span>
+<span class="sd">            :math:`1 - \sigma_{posterior} / \sigma_{prior}` (a fraction; NaN</span>
+<span class="sd">            where the prior standard deviation is 0). A variance below zero by</span>
+<span class="sd">            more than roundoff, which only a prior error or model-data</span>
+<span class="sd">            mismatch covariance that is not positive semidefinite can give,</span>
+<span class="sd">            makes its standard deviation and the reduction NaN, with a</span>
+<span class="sd">            logged warning (as in :meth:`recovery`).</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        TypeError</span>
+<span class="sd">            If `W` is not an Operator.</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            If the columns of `W` do not have exactly the state's labels.</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        --------</span>
+<span class="sd">        cov : The posterior covariance, of the state or of aggregates.</span>
+<span class="sd">        fips.Covariance.aggregate : The prior covariance of aggregates, ``problem.prior_cov.aggregate(W)``.</span>
+<span class="sd">        uncertainty_reduction : One number for the whole state.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        Two months of two cells, observed six times; the total of each month,</span>
+<span class="sd">        and the change from the first month to the second:</span>
+
+<span class="sd">        &gt;&gt;&gt; import numpy as np</span>
+<span class="sd">        &gt;&gt;&gt; import pandas as pd</span>
+<span class="sd">        &gt;&gt;&gt; import fips</span>
+<span class="sd">        &gt;&gt;&gt; state = pd.MultiIndex.from_product(</span>
+<span class="sd">        ...     [pd.Index([1, 2], name="month"), pd.Index(["a", "b"], name="cell")]</span>
+<span class="sd">        ... )</span>
+<span class="sd">        &gt;&gt;&gt; prior = fips.Vector.from_series(pd.Series(1.0, index=state), block="flux")</span>
+<span class="sd">        &gt;&gt;&gt; obs = fips.Vector.from_series(</span>
+<span class="sd">        ...     pd.Series(0.0, index=pd.RangeIndex(6, name="obs_id")), block="ch4"</span>
+<span class="sd">        ... )</span>
+<span class="sd">        &gt;&gt;&gt; rng = np.random.default_rng(0)</span>
+<span class="sd">        &gt;&gt;&gt; problem = fips.Problem(</span>
+<span class="sd">        ...     prior=prior,</span>
+<span class="sd">        ...     prior_cov=fips.Independent().with_std(0.5),</span>
+<span class="sd">        ...     obs=obs,</span>
+<span class="sd">        ...     obs_cov=fips.Independent().with_std(1.0),</span>
+<span class="sd">        ...     forward=fips.Operator(</span>
+<span class="sd">        ...         rng.uniform(0.0, 1.0, (6, 4)), obs.space, prior.space</span>
+<span class="sd">        ...     ),</span>
+<span class="sd">        ... )</span>
+<span class="sd">        &gt;&gt;&gt; post = fips.solve(problem)</span>
+<span class="sd">        &gt;&gt;&gt; monthly = fips.aggregate.sum(prior.space, by="month")</span>
+<span class="sd">        &gt;&gt;&gt; post.uncertainty(monthly).droplevel("block").round(3).reset_index()</span>
+<span class="sd">           month  prior_std  posterior_std  reduction</span>
+<span class="sd">        0      1      0.707          0.528      0.253</span>
+<span class="sd">        1      2      0.707          0.586      0.171</span>
+<span class="sd">        &gt;&gt;&gt; change = fips.Operator(</span>
+<span class="sd">        ...     np.array([[-1.0, 1.0]]),</span>
+<span class="sd">        ...     fips.Space({"change": pd.Index(["2 - 1"], name="months")}),</span>
+<span class="sd">        ...     monthly.rows,</span>
+<span class="sd">        ... )</span>
+<span class="sd">        &gt;&gt;&gt; post.uncertainty(change @ monthly).round(3).reset_index()</span>
+<span class="sd">            block months  prior_std  posterior_std  reduction</span>
+<span class="sd">        0  change  2 - 1        1.0          0.921      0.079</span>
+
+<span class="sd">        The change is more uncertain than either month's total: the two</span>
+<span class="sd">        totals' posterior errors are negatively correlated (the observations</span>
+<span class="sd">        see their sum better than how it splits), and the covariance between</span>
+<span class="sd">        the rows enters the change's variance.</span>
+<span class="sd">        """</span>
+        <span class="k">if</span> <span class="n">W</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">prior</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_problem</span><span class="o">.</span><span class="n">prior_cov</span><span class="o">.</span><span class="n">variances</span><span class="o">.</span><span class="n">values</span>
+            <span class="n">posterior</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">variances</span><span class="o">.</span><span class="n">values</span>
+            <span class="n">scale</span> <span class="o">=</span> <span class="n">_largest_variance</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_problem</span><span class="o">.</span><span class="n">prior_cov</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+            <span class="n">index</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_problem</span><span class="o">.</span><span class="n">prior</span><span class="o">.</span><span class="n">index</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">posterior</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cov</span><span class="p">(</span><span class="n">W</span><span class="p">)</span><span class="o">.</span><span class="n">variances</span><span class="o">.</span><span class="n">values</span>  <span class="c1"># checks W against the state</span>
+            <span class="n">prior</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_problem</span><span class="o">.</span><span class="n">prior_cov</span><span class="o">.</span><span class="n">aggregate</span><span class="p">(</span><span class="n">W</span><span class="p">)</span><span class="o">.</span><span class="n">variances</span><span class="o">.</span><span class="n">values</span>
+            <span class="n">Wt</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_aggregation</span><span class="p">(</span><span class="n">W</span><span class="p">)</span><span class="o">.</span><span class="n">_transpose</span><span class="p">()</span><span class="o">.</span><span class="n">dense</span><span class="p">()</span>  <span class="c1"># n x k</span>
+            <span class="n">scale</span> <span class="o">=</span> <span class="n">_largest_variance</span><span class="p">(</span><span class="n">Wt</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_problem</span><span class="o">.</span><span class="n">prior_cov</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+            <span class="n">index</span> <span class="o">=</span> <span class="n">W</span><span class="o">.</span><span class="n">rows</span><span class="o">.</span><span class="n">index</span>
+        <span class="n">prior_std</span> <span class="o">=</span> <span class="n">_std</span><span class="p">(</span><span class="n">prior</span><span class="p">,</span> <span class="n">scale</span><span class="p">,</span> <span class="s2">"prior variances"</span><span class="p">)</span>
+        <span class="n">posterior_std</span> <span class="o">=</span> <span class="n">_std</span><span class="p">(</span><span class="n">posterior</span><span class="p">,</span> <span class="n">scale</span><span class="p">,</span> <span class="s2">"posterior variances"</span><span class="p">)</span>
+        <span class="k">with</span> <span class="n">np</span><span class="o">.</span><span class="n">errstate</span><span class="p">(</span><span class="n">divide</span><span class="o">=</span><span class="s2">"ignore"</span><span class="p">,</span> <span class="n">invalid</span><span class="o">=</span><span class="s2">"ignore"</span><span class="p">):</span>
+            <span class="n">reduction</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">prior_std</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span> <span class="mf">1.0</span> <span class="o">-</span> <span class="n">posterior_std</span> <span class="o">/</span> <span class="n">prior_std</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
+            <span class="p">{</span>
+                <span class="s2">"prior_std"</span><span class="p">:</span> <span class="n">prior_std</span><span class="p">,</span>
+                <span class="s2">"posterior_std"</span><span class="p">:</span> <span class="n">posterior_std</span><span class="p">,</span>
+                <span class="s2">"reduction"</span><span class="p">:</span> <span class="n">reduction</span><span class="p">,</span>
+            <span class="p">},</span>
+            <span class="n">index</span><span class="o">=</span><span class="n">index</span><span class="p">,</span>
+        <span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="Posterior.kalman_gain">

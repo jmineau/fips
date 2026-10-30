@@ -42,6 +42,7 @@
    ~Posterior.leverage
    ~Posterior.recovery
    ~Posterior.summary
+   ~Posterior.uncertainty
    ~Posterior.with_data
    ~Posterior.with_gamma
 

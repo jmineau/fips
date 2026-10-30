@@ -69,6 +69,7 @@ State estimate
    Posterior.mean
    Posterior.variances
    Posterior.cov
+   Posterior.uncertainty
 
 Observation space
 ~~~~~~~~~~~~~~~~~

@@ -25,6 +25,7 @@
 .. autosummary::
    :toctree:
 
+   ~Covariance.aggregate
    ~Covariance.block_diag
    ~Covariance.diagonal
    ~Covariance.logdet

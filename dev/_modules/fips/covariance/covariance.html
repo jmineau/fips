@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>fips.covariance.covariance &#8212; fips 0.2.0b2.dev21+g310e0e304 documentation</title>
+    <title>fips.covariance.covariance &#8212; fips 0.2.0b2.dev22+g00e3c8dd8 documentation</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../../_static/documentation_options.js?v=5689a713"></script>
+    <script src="../../../_static/documentation_options.js?v=08dda611"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -132,8 +132,8 @@
       
     
     
-    <img src="../../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b2.dev21+g310e0e304 documentation - Home"/>
-    <img src="../../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b2.dev21+g310e0e304 documentation - Home"/>
+    <img src="../../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b2.dev22+g00e3c8dd8 documentation - Home"/>
+    <img src="../../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b2.dev22+g00e3c8dd8 documentation - Home"/>
   
   
 </a></div>
@@ -1010,6 +1010,77 @@
 <span class="sd">        sample : A draw, made without forming :math:`L` where a form has a cheaper root.</span>
 <span class="sd">        """</span>
         <span class="k">return</span> <span class="n">Operator</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rows</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rows</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_name</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Covariance.aggregate">
+<a class="viewcode-back" href="../../../reference/api/fips.Covariance.aggregate.html#fips.Covariance.aggregate">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">aggregate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">W</span><span class="p">:</span> <span class="n">Operator</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"Covariance"</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">        Return the covariance of aggregates, :math:`W S W^T`.</span>
+
+<span class="sd">        For :math:`x` with covariance :math:`S`, :math:`W x` has covariance</span>
+<span class="sd">        :math:`W S W^T`: one row and one column per aggregate (a total per</span>
+<span class="sd">        year, the mean over a region, a trend). Its diagonal is the variance</span>
+<span class="sd">        of each aggregate, and its off-diagonal entries are what makes a</span>
+<span class="sd">        combination of aggregates (the difference of two years) more or less</span>
+<span class="sd">        uncertain than its parts. The product is taken in the forms of</span>
+<span class="sd">        :math:`W` and :math:`S` (through the factors of a Kronecker</span>
+<span class="sd">        covariance), so nothing of the covariance's size is formed when</span>
+<span class="sd">        :math:`W` has few rows.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        W : Operator</span>
+<span class="sd">            An aggregation, ``k x n``, such as :func:`fips.aggregate.sum`'s:</span>
+<span class="sd">            its columns the covariance's labels (in any order), its rows the</span>
+<span class="sd">            aggregates.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Covariance</span>
+<span class="sd">            :math:`W S W^T`, on the rows of `W`, with this covariance's name.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        TypeError</span>
+<span class="sd">            If `W` is not an Operator.</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            If the columns of `W` do not have exactly the covariance's labels.</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        --------</span>
+<span class="sd">        fips.Posterior.cov : The posterior covariance of aggregates of the state.</span>
+<span class="sd">        fips.Posterior.uncertainty : The prior and posterior uncertainty of aggregates.</span>
+<span class="sd">        fips.Problem.aggregate : The problem of aggregated observations.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        The total of two cells, each with variance 1, correlated by 0.5:</span>
+
+<span class="sd">        &gt;&gt;&gt; import numpy as np</span>
+<span class="sd">        &gt;&gt;&gt; import pandas as pd</span>
+<span class="sd">        &gt;&gt;&gt; import fips</span>
+<span class="sd">        &gt;&gt;&gt; space = fips.Space({"flux": pd.Index(["a", "b"], name="cell")})</span>
+<span class="sd">        &gt;&gt;&gt; S = fips.Covariance(np.array([[1.0, 0.5], [0.5, 1.0]]), space)</span>
+<span class="sd">        &gt;&gt;&gt; total = fips.Operator(</span>
+<span class="sd">        ...     np.ones((1, 2)),</span>
+<span class="sd">        ...     fips.Space({"total": pd.Index(["all"], name="region")}),</span>
+<span class="sd">        ...     space,</span>
+<span class="sd">        ... )</span>
+<span class="sd">        &gt;&gt;&gt; S.aggregate(total).dense()</span>
+<span class="sd">        array([[3.]])</span>
+<span class="sd">        """</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">W</span><span class="p">,</span> <span class="n">Operator</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"An aggregation is an Operator, not </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">W</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">: build one "</span>
+                <span class="s2">"with fips.aggregate.sum or fips.aggregate.mean."</span>
+            <span class="p">)</span>
+        <span class="n">form</span> <span class="o">=</span> <span class="n">W</span><span class="o">.</span><span class="n">_on</span><span class="p">(</span>
+            <span class="n">W</span><span class="o">.</span><span class="n">rows</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rows</span><span class="p">,</span> <span class="s2">"the aggregation"</span><span class="p">,</span> <span class="p">(</span><span class="s2">"its rows"</span><span class="p">,</span> <span class="s2">"the covariance"</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">Covariance</span><span class="o">.</span><span class="n">_computed</span><span class="p">(</span>
+            <span class="p">(</span><span class="n">form</span> <span class="o">@</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="p">)</span> <span class="o">@</span> <span class="n">form</span><span class="o">.</span><span class="n">_transpose</span><span class="p">(),</span> <span class="n">W</span><span class="o">.</span><span class="n">rows</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_name</span>
+        <span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="Covariance.sample">

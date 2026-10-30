@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>fips.problem &#8212; fips 0.2.0b2.dev21+g310e0e304 documentation</title>
+    <title>fips.problem &#8212; fips 0.2.0b2.dev22+g00e3c8dd8 documentation</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../_static/documentation_options.js?v=5689a713"></script>
+    <script src="../../_static/documentation_options.js?v=08dda611"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -132,8 +132,8 @@
       
     
     
-    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b2.dev21+g310e0e304 documentation - Home"/>
-    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b2.dev21+g310e0e304 documentation - Home"/>
+    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b2.dev22+g00e3c8dd8 documentation - Home"/>
+    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b2.dev22+g00e3c8dd8 documentation - Home"/>
   
   
 </a></div>
@@ -1009,14 +1009,11 @@
         <span class="n">offset</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_offset</span>
         <span class="k">if</span> <span class="n">offset</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">offset</span> <span class="o">=</span> <span class="n">Vector</span><span class="p">(</span><span class="n">form</span> <span class="o">@</span> <span class="n">offset</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="n">rows</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">offset</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
-        <span class="n">obs_cov</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_obs_cov</span>
         <span class="k">return</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)(</span>
             <span class="n">prior</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_prior</span><span class="p">,</span>
             <span class="n">prior_cov</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_prior_cov</span><span class="p">,</span>
             <span class="n">obs</span><span class="o">=</span><span class="n">Vector</span><span class="p">(</span><span class="n">form</span> <span class="o">@</span> <span class="bp">self</span><span class="o">.</span><span class="n">_obs</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="n">rows</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_obs</span><span class="o">.</span><span class="n">name</span><span class="p">),</span>
-            <span class="n">obs_cov</span><span class="o">=</span><span class="n">Covariance</span><span class="o">.</span><span class="n">_computed</span><span class="p">(</span>
-                <span class="p">(</span><span class="n">form</span> <span class="o">@</span> <span class="n">obs_cov</span><span class="o">.</span><span class="n">data</span><span class="p">)</span> <span class="o">@</span> <span class="n">form</span><span class="o">.</span><span class="n">_transpose</span><span class="p">(),</span> <span class="n">rows</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">obs_cov</span><span class="o">.</span><span class="n">name</span>
-            <span class="p">),</span>
+            <span class="n">obs_cov</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_obs_cov</span><span class="o">.</span><span class="n">aggregate</span><span class="p">(</span><span class="n">W</span><span class="p">),</span>
             <span class="n">forward</span><span class="o">=</span><span class="n">Operator</span><span class="p">(</span>
                 <span class="n">form</span> <span class="o">@</span> <span class="bp">self</span><span class="o">.</span><span class="n">_forward</span><span class="o">.</span><span class="n">data</span><span class="p">,</span>
                 <span class="n">rows</span><span class="p">,</span>
