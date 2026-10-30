@@ -38,6 +38,7 @@
 
    ~Posterior.averaging_kernel
    ~Posterior.cov
+   ~Posterior.data_worth
    ~Posterior.desroziers
    ~Posterior.leverage
    ~Posterior.recovery

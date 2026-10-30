@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>fips.Posterior &#8212; fips 0.2.0b2.dev22+g00e3c8dd8 documentation</title>
+    <title>fips.Posterior &#8212; fips 0.2.0b2.dev23+g57012c171 documentation</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../_static/documentation_options.js?v=08dda611"></script>
+    <script src="../../_static/documentation_options.js?v=7cca7881"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -137,8 +137,8 @@
       
     
     
-    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b2.dev22+g00e3c8dd8 documentation - Home"/>
-    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b2.dev22+g00e3c8dd8 documentation - Home"/>
+    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b2.dev23+g57012c171 documentation - Home"/>
+    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b2.dev23+g57012c171 documentation - Home"/>
   
   
 </a></div>
@@ -616,6 +616,7 @@
 <li class="toctree-l3"><a class="reference internal" href="fips.Posterior.variances.html">fips.Posterior.variances</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.Posterior.averaging_kernel.html">fips.Posterior.averaging_kernel</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.Posterior.cov.html">fips.Posterior.cov</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fips.Posterior.data_worth.html">fips.Posterior.data_worth</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.Posterior.desroziers.html">fips.Posterior.desroziers</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.Posterior.leverage.html">fips.Posterior.leverage</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.Posterior.recovery.html">fips.Posterior.recovery</a></li>
@@ -648,6 +649,7 @@
 <li class="toctree-l2"><a class="reference internal" href="fips.Posterior.with_gamma.html">fips.Posterior.with_gamma</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.Posterior.with_data.html">fips.Posterior.with_data</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.Posterior.recovery.html">fips.Posterior.recovery</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fips.Posterior.data_worth.html">fips.Posterior.data_worth</a></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="fips.posterior.Solution.html">fips.posterior.Solution</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l3"><a class="reference internal" href="fips.posterior.Solution.chi2.html">fips.posterior.Solution.chi2</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.posterior.Solution.cov.html">fips.posterior.Solution.cov</a></li>
@@ -946,25 +948,28 @@ arrays (for the analytic method, a factorization:
 <tr class="row-even"><td><p><a class="reference internal" href="fips.Posterior.cov.html#fips.Posterior.cov" title="fips.Posterior.cov"><code class="xref py py-obj docutils literal notranslate"><span class="pre">cov</span></code></a>([W])</p></td>
 <td><p>Return the posterior error covariance, of the state or of aggregates of it.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="fips.Posterior.desroziers.html#fips.Posterior.desroziers" title="fips.Posterior.desroziers"><code class="xref py py-obj docutils literal notranslate"><span class="pre">desroziers</span></code></a>([by])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="fips.Posterior.data_worth.html#fips.Posterior.data_worth" title="fips.Posterior.data_worth"><code class="xref py py-obj docutils literal notranslate"><span class="pre">data_worth</span></code></a>(by, W)</p></td>
+<td><p>Return what each group of observations adds to the certainty of each aggregate, and its share of DOFS.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="fips.Posterior.desroziers.html#fips.Posterior.desroziers" title="fips.Posterior.desroziers"><code class="xref py py-obj docutils literal notranslate"><span class="pre">desroziers</span></code></a>([by])</p></td>
 <td><p>Compare the observation error variances Desroziers et al. (2005) diagnose with those the solve used.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="fips.Posterior.leverage.html#fips.Posterior.leverage" title="fips.Posterior.leverage"><code class="xref py py-obj docutils literal notranslate"><span class="pre">leverage</span></code></a>(x)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="fips.Posterior.leverage.html#fips.Posterior.leverage" title="fips.Posterior.leverage"><code class="xref py py-obj docutils literal notranslate"><span class="pre">leverage</span></code></a>(x)</p></td>
 <td><p>Return the leverage matrix of the state <cite>x</cite>: which observations weigh most on it.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="fips.Posterior.recovery.html#fips.Posterior.recovery" title="fips.Posterior.recovery"><code class="xref py py-obj docutils literal notranslate"><span class="pre">recovery</span></code></a>([world, truth, W, level])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="fips.Posterior.recovery.html#fips.Posterior.recovery" title="fips.Posterior.recovery"><code class="xref py py-obj docutils literal notranslate"><span class="pre">recovery</span></code></a>([world, truth, W, level])</p></td>
 <td><p>Return how well the estimate recovers the truth when the data come from <cite>world</cite>: exactly, without sampling.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="fips.Posterior.summary.html#fips.Posterior.summary" title="fips.Posterior.summary"><code class="xref py py-obj docutils literal notranslate"><span class="pre">summary</span></code></a>()</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="fips.Posterior.summary.html#fips.Posterior.summary" title="fips.Posterior.summary"><code class="xref py py-obj docutils literal notranslate"><span class="pre">summary</span></code></a>()</p></td>
 <td><p>Return the diagnostics of the solve as a table of one row.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="fips.Posterior.uncertainty.html#fips.Posterior.uncertainty" title="fips.Posterior.uncertainty"><code class="xref py py-obj docutils literal notranslate"><span class="pre">uncertainty</span></code></a>([W])</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="fips.Posterior.uncertainty.html#fips.Posterior.uncertainty" title="fips.Posterior.uncertainty"><code class="xref py py-obj docutils literal notranslate"><span class="pre">uncertainty</span></code></a>([W])</p></td>
 <td><p>Return the prior and posterior uncertainty of each aggregate, and how much the observations reduce it.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="fips.Posterior.with_data.html#fips.Posterior.with_data" title="fips.Posterior.with_data"><code class="xref py py-obj docutils literal notranslate"><span class="pre">with_data</span></code></a>(obs)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="fips.Posterior.with_data.html#fips.Posterior.with_data" title="fips.Posterior.with_data"><code class="xref py py-obj docutils literal notranslate"><span class="pre">with_data</span></code></a>(obs)</p></td>
 <td><p>Return the posterior of the same problem with other observations.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="fips.Posterior.with_gamma.html#fips.Posterior.with_gamma" title="fips.Posterior.with_gamma"><code class="xref py py-obj docutils literal notranslate"><span class="pre">with_gamma</span></code></a>(gamma)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="fips.Posterior.with_gamma.html#fips.Posterior.with_gamma" title="fips.Posterior.with_gamma"><code class="xref py py-obj docutils literal notranslate"><span class="pre">with_gamma</span></code></a>(gamma)</p></td>
 <td><p>Return the posterior of the same problem with another regularization factor.</p></td>
 </tr>
 </tbody>

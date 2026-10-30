@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>fips.posterior &#8212; fips 0.2.0b2.dev22+g00e3c8dd8 documentation</title>
+    <title>fips.posterior &#8212; fips 0.2.0b2.dev23+g57012c171 documentation</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../_static/documentation_options.js?v=08dda611"></script>
+    <script src="../../_static/documentation_options.js?v=7cca7881"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -132,8 +132,8 @@
       
     
     
-    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b2.dev22+g00e3c8dd8 documentation - Home"/>
-    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b2.dev22+g00e3c8dd8 documentation - Home"/>
+    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b2.dev23+g57012c171 documentation - Home"/>
+    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b2.dev23+g57012c171 documentation - Home"/>
   
   
 </a></div>
@@ -474,7 +474,7 @@
 <span class="sd">    observations (``problem.obs``). The posterior labels them, and computes</span>
 <span class="sd">    each one once.</span>
 
-<span class="sd">    Two members are optional, and a posterior whose solution lacks one says</span>
+<span class="sd">    Four members are optional, and a posterior whose solution lacks one says</span>
 <span class="sd">    so when it is asked for the feature:</span>
 
 <span class="sd">    - ``with_gamma(gamma) -&gt; Solution``: the solution at another</span>
@@ -482,6 +482,11 @@
 <span class="sd">    - ``with_data(problem) -&gt; Solution``: the solution of `problem`, the same</span>
 <span class="sd">      problem with other values of the observations, without solving again</span>
 <span class="sd">      (:meth:`Posterior.with_data`).</span>
+<span class="sd">    - ``innovation_precision(groups) -&gt; list[np.ndarray]``: for each array of</span>
+<span class="sd">      observation positions :math:`g`, the block :math:`P_{gg}` of</span>
+<span class="sd">      :math:`P = (H S_0 H^T + S_z/\gamma)^{-1}` (``m_g x m_g``), and</span>
+<span class="sd">      ``self_sensitivity() -&gt; np.ndarray``: :math:`\operatorname{diag}(H K)`</span>
+<span class="sd">      (``m``), whose sum is DOFS (:meth:`Posterior.data_worth`).</span>
 
 <span class="sd">    And a solution whose :meth:`estimate` is the posterior mean says so with a</span>
 <span class="sd">    class attribute ``estimate_is_mean = True``; without it, a posterior has</span>
@@ -589,6 +594,85 @@
 <span class="w">        </span><span class="sa">r</span><span class="sd">"""The regularization factor :math:`\gamma`: the solve divided the model-data mismatch by it."""</span>
         <span class="o">...</span></div>
 
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_obs_groups</span><span class="p">(</span><span class="n">index</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">,</span> <span class="n">by</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">,</span> <span class="nb">list</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Return the groups `by` makes of the labels `index`, and the positions of each group's labels.</span>
+
+<span class="sd">    The groups are those of :meth:`pandas.DataFrame.groupby` on the labels'</span>
+<span class="sd">    levels, in its order; a label whose block lacks a level is in no group of</span>
+<span class="sd">    it, and an empty group (a time bin with no label) is left out.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        If no label is in a group.</span>
+<span class="sd">    """</span>
+    <span class="n">grouped</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s2">"position"</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">index</span><span class="p">))},</span> <span class="n">index</span><span class="o">=</span><span class="n">index</span><span class="p">)</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span>
+        <span class="n">by</span>
+    <span class="p">)[</span><span class="s2">"position"</span><span class="p">]</span>
+    <span class="n">names</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">grouped</span><span class="o">.</span><span class="n">size</span><span class="p">()</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">names</span><span class="p">)</span>
+    <span class="n">keys</span><span class="p">,</span> <span class="n">positions</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">part</span> <span class="ow">in</span> <span class="n">grouped</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">part</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">names</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">key</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">key</span> <span class="o">=</span> <span class="n">key</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>  <span class="c1"># a list of one key gives one-element tuples</span>
+            <span class="n">keys</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+            <span class="n">positions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">part</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">())</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">keys</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"`by` puts no observation in a group."</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">names</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">(</span><span class="n">keys</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">names</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="n">positions</span>
+    <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">MultiIndex</span><span class="o">.</span><span class="n">from_tuples</span><span class="p">(</span><span class="n">keys</span><span class="p">,</span> <span class="n">names</span><span class="o">=</span><span class="n">names</span><span class="p">),</span> <span class="n">positions</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_worth_table</span><span class="p">(</span>
+    <span class="n">groups</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">,</span>
+    <span class="n">positions</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">],</span>
+    <span class="n">dofs</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">aggregates</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">,</span>
+    <span class="n">var_without</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">var_with</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">scale</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Return the table of what each group of observations does to each aggregate.</span>
+
+<span class="sd">    One row per group and aggregate (the groups' levels, then the aggregates'):</span>
+<span class="sd">    ``n_obs`` and ``dofs`` of the group, and the std of the aggregate without</span>
+<span class="sd">    and with the group (`var_without` and `var_with` are ``groups x</span>
+<span class="sd">    aggregates``; `scale` is the largest prior variance each aggregate could</span>
+<span class="sd">    have, :func:`_largest_variance`, which a variance below zero is compared</span>
+<span class="sd">    to: :func:`_std`). A group level named like a level of the aggregates</span>
+<span class="sd">    (``block``) is called ``obs_&lt;name&gt;``: an index cannot have two levels of</span>
+<span class="sd">    one name.</span>
+<span class="sd">    """</span>
+    <span class="n">names</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="sa">f</span><span class="s2">"obs_</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">"</span> <span class="k">if</span> <span class="n">name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">aggregates</span><span class="o">.</span><span class="n">names</span> <span class="k">else</span> <span class="n">name</span>
+        <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">groups</span><span class="o">.</span><span class="n">names</span>
+    <span class="p">]</span>
+    <span class="n">n_groups</span><span class="p">,</span> <span class="n">k</span> <span class="o">=</span> <span class="n">var_without</span><span class="o">.</span><span class="n">shape</span>
+    <span class="n">g</span><span class="p">,</span> <span class="n">a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">n_groups</span><span class="p">),</span> <span class="n">k</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">k</span><span class="p">),</span> <span class="n">n_groups</span><span class="p">)</span>
+    <span class="n">index</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">MultiIndex</span><span class="o">.</span><span class="n">from_arrays</span><span class="p">(</span>
+        <span class="p">[</span><span class="n">groups</span><span class="o">.</span><span class="n">get_level_values</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="o">.</span><span class="n">take</span><span class="p">(</span><span class="n">g</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">groups</span><span class="o">.</span><span class="n">nlevels</span><span class="p">)]</span>
+        <span class="o">+</span> <span class="p">[</span><span class="n">aggregates</span><span class="o">.</span><span class="n">get_level_values</span><span class="p">(</span><span class="n">j</span><span class="p">)</span><span class="o">.</span><span class="n">take</span><span class="p">(</span><span class="n">a</span><span class="p">)</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">aggregates</span><span class="o">.</span><span class="n">nlevels</span><span class="p">)],</span>
+        <span class="n">names</span><span class="o">=</span><span class="n">names</span> <span class="o">+</span> <span class="nb">list</span><span class="p">(</span><span class="n">aggregates</span><span class="o">.</span><span class="n">names</span><span class="p">),</span>
+    <span class="p">)</span>
+    <span class="n">std_without</span> <span class="o">=</span> <span class="n">_std</span><span class="p">(</span><span class="n">var_without</span><span class="p">,</span> <span class="n">scale</span><span class="p">,</span> <span class="s2">"variances without the group"</span><span class="p">)</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span>
+    <span class="n">std_with</span> <span class="o">=</span> <span class="n">_std</span><span class="p">(</span><span class="n">var_with</span><span class="p">,</span> <span class="n">scale</span><span class="p">,</span> <span class="s2">"variances with the group"</span><span class="p">)</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span>
+    <span class="k">with</span> <span class="n">np</span><span class="o">.</span><span class="n">errstate</span><span class="p">(</span><span class="n">divide</span><span class="o">=</span><span class="s2">"ignore"</span><span class="p">,</span> <span class="n">invalid</span><span class="o">=</span><span class="s2">"ignore"</span><span class="p">):</span>
+        <span class="n">reduction</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">std_without</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span> <span class="mf">1.0</span> <span class="o">-</span> <span class="n">std_with</span> <span class="o">/</span> <span class="n">std_without</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
+        <span class="p">{</span>
+            <span class="s2">"n_obs"</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">repeat</span><span class="p">([</span><span class="nb">len</span><span class="p">(</span><span class="n">rows</span><span class="p">)</span> <span class="k">for</span> <span class="n">rows</span> <span class="ow">in</span> <span class="n">positions</span><span class="p">],</span> <span class="n">k</span><span class="p">),</span>
+            <span class="s2">"dofs"</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="n">dofs</span><span class="p">,</span> <span class="n">k</span><span class="p">),</span>
+            <span class="s2">"std_without"</span><span class="p">:</span> <span class="n">std_without</span><span class="p">,</span>
+            <span class="s2">"std_with"</span><span class="p">:</span> <span class="n">std_with</span><span class="p">,</span>
+            <span class="s2">"reduction"</span><span class="p">:</span> <span class="n">reduction</span><span class="p">,</span>
+        <span class="p">},</span>
+        <span class="n">index</span><span class="o">=</span><span class="n">index</span><span class="p">,</span>
+    <span class="p">)</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_times_pseudo_inverse</span><span class="p">(</span><span class="n">XWt</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">W</span><span class="p">:</span> <span class="n">LinearOperator</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
@@ -952,6 +1036,16 @@
         <span class="k">return</span> <span class="n">Covariance</span><span class="o">.</span><span class="n">_computed</span><span class="p">(</span><span class="n">_adopt</span><span class="p">(</span><span class="n">values</span><span class="p">),</span> <span class="n">W</span><span class="o">.</span><span class="n">rows</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">"posterior_cov"</span><span class="p">)</span></div>
 
 
+    <span class="k">def</span><span class="w"> </span><span class="nf">_prior_scale</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">W_form</span><span class="p">:</span> <span class="n">LinearOperator</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Return the largest prior variance each aggregate could have, which its roundoff is relative to.</span>
+
+<span class="sd">        :func:`_largest_variance` of the prior error covariance for the rows of</span>
+<span class="sd">        `W_form` (the state's elements for None).</span>
+<span class="sd">        """</span>
+        <span class="n">Wt</span> <span class="o">=</span> <span class="kc">None</span> <span class="k">if</span> <span class="n">W_form</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">W_form</span><span class="o">.</span><span class="n">_transpose</span><span class="p">()</span><span class="o">.</span><span class="n">dense</span><span class="p">()</span>  <span class="c1"># n x k</span>
+        <span class="k">return</span> <span class="n">_largest_variance</span><span class="p">(</span><span class="n">Wt</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_problem</span><span class="o">.</span><span class="n">prior_cov</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+
 <div class="viewcode-block" id="Posterior.uncertainty">
 <a class="viewcode-back" href="../../reference/api/fips.Posterior.uncertainty.html#fips.Posterior.uncertainty">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">uncertainty</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">W</span><span class="p">:</span> <span class="n">Operator</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
@@ -1047,13 +1141,12 @@
         <span class="k">if</span> <span class="n">W</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">prior</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_problem</span><span class="o">.</span><span class="n">prior_cov</span><span class="o">.</span><span class="n">variances</span><span class="o">.</span><span class="n">values</span>
             <span class="n">posterior</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">variances</span><span class="o">.</span><span class="n">values</span>
-            <span class="n">scale</span> <span class="o">=</span> <span class="n">_largest_variance</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_problem</span><span class="o">.</span><span class="n">prior_cov</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+            <span class="n">scale</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_prior_scale</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
             <span class="n">index</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_problem</span><span class="o">.</span><span class="n">prior</span><span class="o">.</span><span class="n">index</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">posterior</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cov</span><span class="p">(</span><span class="n">W</span><span class="p">)</span><span class="o">.</span><span class="n">variances</span><span class="o">.</span><span class="n">values</span>  <span class="c1"># checks W against the state</span>
             <span class="n">prior</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_problem</span><span class="o">.</span><span class="n">prior_cov</span><span class="o">.</span><span class="n">aggregate</span><span class="p">(</span><span class="n">W</span><span class="p">)</span><span class="o">.</span><span class="n">variances</span><span class="o">.</span><span class="n">values</span>
-            <span class="n">Wt</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_aggregation</span><span class="p">(</span><span class="n">W</span><span class="p">)</span><span class="o">.</span><span class="n">_transpose</span><span class="p">()</span><span class="o">.</span><span class="n">dense</span><span class="p">()</span>  <span class="c1"># n x k</span>
-            <span class="n">scale</span> <span class="o">=</span> <span class="n">_largest_variance</span><span class="p">(</span><span class="n">Wt</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_problem</span><span class="o">.</span><span class="n">prior_cov</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+            <span class="n">scale</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_prior_scale</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_aggregation</span><span class="p">(</span><span class="n">W</span><span class="p">))</span>
             <span class="n">index</span> <span class="o">=</span> <span class="n">W</span><span class="o">.</span><span class="n">rows</span><span class="o">.</span><span class="n">index</span>
         <span class="n">prior_std</span> <span class="o">=</span> <span class="n">_std</span><span class="p">(</span><span class="n">prior</span><span class="p">,</span> <span class="n">scale</span><span class="p">,</span> <span class="s2">"prior variances"</span><span class="p">)</span>
         <span class="n">posterior_std</span> <span class="o">=</span> <span class="n">_std</span><span class="p">(</span><span class="n">posterior</span><span class="p">,</span> <span class="n">scale</span><span class="p">,</span> <span class="s2">"posterior variances"</span><span class="p">)</span>
@@ -1066,6 +1159,143 @@
                 <span class="s2">"reduction"</span><span class="p">:</span> <span class="n">reduction</span><span class="p">,</span>
             <span class="p">},</span>
             <span class="n">index</span><span class="o">=</span><span class="n">index</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Posterior.data_worth">
+<a class="viewcode-back" href="../../reference/api/fips.Posterior.data_worth.html#fips.Posterior.data_worth">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">data_worth</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">by</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">W</span><span class="p">:</span> <span class="n">Operator</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">        Return what each group of observations adds to the certainty of each aggregate, and its share of DOFS.</span>
+
+<span class="sd">        For each group (a site, a platform, a month), the posterior standard</span>
+<span class="sd">        deviation of each aggregate without the group's observations and with</span>
+<span class="sd">        them (this posterior), without solving again. Removing the</span>
+<span class="sd">        observations :math:`g` changes the posterior covariance by a rank</span>
+<span class="sd">        :math:`m_g` update,</span>
+
+<span class="sd">        .. math::</span>
+
+<span class="sd">            \hat{S}_{-g} = \hat{S} + K_g P_{gg}^{-1} K_g^T, \qquad</span>
+<span class="sd">            P = (H S_0 H^T + S_z/\gamma)^{-1},</span>
+
+<span class="sd">        with :math:`K_g` the gain's columns for the group and :math:`P_{gg}`</span>
+<span class="sd">        its block of :math:`P` (the block inverse of the innovation</span>
+<span class="sd">        covariance). It is exact whatever the model-data mismatch, also when</span>
+<span class="sd">        it correlates the errors of one group with another's: it is the</span>
+<span class="sd">        posterior of the problem without the group's rows and columns. For</span>
+<span class="sd">        :math:`W`, :math:`W K_g` is a part of :math:`W K` (``k x m``), so</span>
+<span class="sd">        nothing ``n x n`` is formed.</span>
+
+<span class="sd">        A group's share of DOFS is the sum of :math:`(H K)_{ii}` over its</span>
+<span class="sd">        observations (the observation self-sensitivity, Cardinali et al.,</span>
+<span class="sd">        2004); the shares of groups that hold every observation once sum to</span>
+<span class="sd">        :attr:`dofs`.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        by : str, list or pandas.Grouper</span>
+<span class="sd">            The levels of the observations' labels to group by, as</span>
+<span class="sd">            :meth:`desroziers` and :meth:`pandas.DataFrame.groupby` take them:</span>
+<span class="sd">            ``"site"``, ``"block"`` (a platform per block), ``["site",</span>
+<span class="sd">            pd.Grouper(level="obs_time", freq="MS")]``. Observations whose</span>
+<span class="sd">            block lacks a level are in no group of it (they are never</span>
+<span class="sd">            removed).</span>
+<span class="sd">        W : Operator</span>
+<span class="sd">            An aggregation, as :meth:`cov` takes it: one row per aggregate (a</span>
+<span class="sd">            regional annual total, a trend as ``C @ W``). For every state</span>
+<span class="sd">            element, the identity on the state's space.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        pandas.DataFrame</span>
+<span class="sd">            One row per group and aggregate, indexed by the group's levels</span>
+<span class="sd">            and then the aggregation's rows (a group level with the name of</span>
+<span class="sd">            one of those, ``block``, is called ``obs_block``): ``n_obs`` (the</span>
+<span class="sd">            group's observations), ``dofs`` (its share of DOFS), ``std_without``</span>
+<span class="sd">            (the aggregate's posterior standard deviation without the group),</span>
+<span class="sd">            ``std_with`` (with it: :meth:`uncertainty`'s ``posterior_std``) and</span>
+<span class="sd">            ``reduction``, :math:`1 - \sigma_{with} / \sigma_{without}`, the</span>
+<span class="sd">            fraction the group takes off on top of the other observations.</span>
+<span class="sd">            A variance below zero by more than roundoff, which only a</span>
+<span class="sd">            covariance that is not positive semidefinite can give, makes its</span>
+<span class="sd">            standard deviation and the reduction NaN, with a logged warning</span>
+<span class="sd">            (as in :meth:`uncertainty`).</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        TypeError</span>
+<span class="sd">            If `W` is not an Operator, or the method cannot give the blocks of</span>
+<span class="sd">            :math:`P` and the self-sensitivity (its solution lacks</span>
+<span class="sd">            ``innovation_precision`` or ``self_sensitivity``).</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            If the columns of `W` do not have exactly the state's labels, or</span>
+<span class="sd">            `by` puts no observation in a group.</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        --------</span>
+<span class="sd">        uncertainty : The prior and posterior uncertainty of each aggregate.</span>
+<span class="sd">        dofs : The degrees of freedom for signal, the sum of the shares.</span>
+
+<span class="sd">        References</span>
+<span class="sd">        ----------</span>
+<span class="sd">        Cardinali, C., Pezzulli, S., &amp; Andersson, E. (2004). Influence-matrix</span>
+<span class="sd">        diagnostic of a data assimilation system. Q.J.R. Meteorol. Soc.,</span>
+<span class="sd">        130, 2767-2786.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        One flux observed at two sites, three times at A and once at B; the</span>
+<span class="sd">        flux's own row (``W`` the identity):</span>
+
+<span class="sd">        &gt;&gt;&gt; import numpy as np</span>
+<span class="sd">        &gt;&gt;&gt; import pandas as pd</span>
+<span class="sd">        &gt;&gt;&gt; import fips</span>
+<span class="sd">        &gt;&gt;&gt; state = fips.Space({"flux": pd.Index(["a"], name="cell")})</span>
+<span class="sd">        &gt;&gt;&gt; labels = pd.MultiIndex.from_tuples(</span>
+<span class="sd">        ...     [("A", 0), ("A", 1), ("A", 2), ("B", 0)], names=["site", "hour"]</span>
+<span class="sd">        ... )</span>
+<span class="sd">        &gt;&gt;&gt; observed = fips.Space({"co2": labels})</span>
+<span class="sd">        &gt;&gt;&gt; problem = fips.Problem(</span>
+<span class="sd">        ...     prior=fips.Vector(np.zeros(1), state),</span>
+<span class="sd">        ...     prior_cov=fips.Covariance.diagonal(1.0, state),</span>
+<span class="sd">        ...     obs=fips.Vector(np.ones(4), observed),</span>
+<span class="sd">        ...     obs_cov=fips.Covariance.diagonal(1.0, observed),</span>
+<span class="sd">        ...     forward=fips.Operator(np.ones((4, 1)), observed, state),</span>
+<span class="sd">        ... )</span>
+<span class="sd">        &gt;&gt;&gt; post = fips.solve(problem)</span>
+<span class="sd">        &gt;&gt;&gt; W = fips.Operator(np.eye(1), state, state)</span>
+<span class="sd">        &gt;&gt;&gt; post.data_worth(by="site", W=W).droplevel("block").round(3).reset_index()</span>
+<span class="sd">          site cell  n_obs  dofs  std_without  std_with  reduction</span>
+<span class="sd">        0    A    a      3   0.6        0.707     0.447      0.368</span>
+<span class="sd">        1    B    a      1   0.2        0.500     0.447      0.106</span>
+<span class="sd">        """</span>
+        <span class="n">precision</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_optional</span><span class="p">(</span>
+            <span class="s2">"innovation_precision"</span><span class="p">,</span> <span class="s2">"the data worth of groups of observations"</span>
+        <span class="p">)</span>
+        <span class="n">sensitivity</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_optional</span><span class="p">(</span>
+            <span class="s2">"self_sensitivity"</span><span class="p">,</span> <span class="s2">"the data worth of groups of observations"</span>
+        <span class="p">)</span>
+        <span class="n">groups</span><span class="p">,</span> <span class="n">positions</span> <span class="o">=</span> <span class="n">_obs_groups</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_problem</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">by</span><span class="p">)</span>
+        <span class="n">W_form</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_aggregation</span><span class="p">(</span><span class="n">W</span><span class="p">)</span>
+        <span class="n">WK</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_solution</span><span class="o">.</span><span class="n">gain</span><span class="p">(</span><span class="n">W_form</span><span class="p">)</span>  <span class="c1"># k x m</span>
+        <span class="n">var_with</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cov</span><span class="p">(</span><span class="n">W</span><span class="p">)</span><span class="o">.</span><span class="n">variances</span><span class="o">.</span><span class="n">values</span>
+        <span class="n">shares</span> <span class="o">=</span> <span class="n">sensitivity</span><span class="p">()</span>
+        <span class="n">var_without</span><span class="p">,</span> <span class="n">dofs</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">P_gg</span><span class="p">,</span> <span class="n">rows</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">precision</span><span class="p">(</span><span class="n">positions</span><span class="p">),</span> <span class="n">positions</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+            <span class="n">WK_g</span> <span class="o">=</span> <span class="n">WK</span><span class="p">[:,</span> <span class="n">rows</span><span class="p">]</span>  <span class="c1"># k x m_g</span>
+            <span class="n">P_gg</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">P_gg</span> <span class="o">+</span> <span class="n">P_gg</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+            <span class="n">added</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s2">"ki,ik-&gt;k"</span><span class="p">,</span> <span class="n">WK_g</span><span class="p">,</span> <span class="n">_solve_psd</span><span class="p">(</span><span class="n">P_gg</span><span class="p">,</span> <span class="n">WK_g</span><span class="o">.</span><span class="n">T</span><span class="p">))</span>
+            <span class="n">var_without</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">var_with</span> <span class="o">+</span> <span class="n">added</span><span class="p">)</span>
+            <span class="n">dofs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">shares</span><span class="p">[</span><span class="n">rows</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">()))</span>
+        <span class="k">return</span> <span class="n">_worth_table</span><span class="p">(</span>
+            <span class="n">groups</span><span class="p">,</span>
+            <span class="n">positions</span><span class="p">,</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">dofs</span><span class="p">),</span>
+            <span class="n">W</span><span class="o">.</span><span class="n">rows</span><span class="o">.</span><span class="n">index</span><span class="p">,</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">var_without</span><span class="p">),</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">var_with</span><span class="p">,</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">positions</span><span class="p">),</span> <span class="mi">1</span><span class="p">)),</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_prior_scale</span><span class="p">(</span><span class="n">W_form</span><span class="p">),</span>
         <span class="p">)</span></div>
 
 
