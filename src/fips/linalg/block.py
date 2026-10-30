@@ -6,6 +6,8 @@ A covariance whose blocks are independent (a flux block and a bias block, say)
 keeps each block in its own form, so it costs what its blocks do.
 """
 
+from collections.abc import Callable
+
 import numpy as np
 import scipy.sparse as sp
 from scipy.linalg import block_diag
@@ -134,6 +136,20 @@ class BlockDiagonalOperator(LinearOperator):
         for form, rows in self._parts():
             X[rows] = form.solve(B[rows])
         return X
+
+    def _solver(self) -> Callable[[np.ndarray], np.ndarray]:
+        """Return the blocks' substitutions, each factored once (see :meth:`LinearOperator._solver`)."""
+        parts = [(form._solver(), rows) for form, rows in self._parts()]
+
+        def solve(B) -> np.ndarray:
+            """Return ``self^-1 B``, block by block."""
+            B = _as_array(B)
+            X = np.empty(B.shape)
+            for substitute, rows in parts:
+                X[rows] = substitute(B[rows])
+            return X
+
+        return solve
 
     def logdet(self) -> float:
         """Return the sum of the blocks' log-determinants."""

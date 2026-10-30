@@ -31,6 +31,7 @@ when there is not enough memory for ``evd``'s workspace (``_eigh``).
 import dataclasses
 import logging
 import math
+from collections.abc import Sequence
 from dataclasses import dataclass, field
 from typing import ClassVar, Self
 
@@ -387,6 +388,38 @@ class Whitened(_Factors):
         r"""Return :math:`d^T (H Q H^T + S_z/\gamma)^{-1} d = \sum_k w_k e_k^2`."""
         return float(np.sum(self.weights() * self.innovation**2))
 
+    def innovation_precision(self, groups: Sequence[np.ndarray]) -> list[np.ndarray]:
+        r"""
+        Return each group's block of :math:`P = (H Q H^T + S_z/\gamma)^{-1} = B^T \operatorname{diag}(w) B`.
+
+        For a group of observations at positions :math:`g`,
+        :math:`P_{gg} = B_g^T \operatorname{diag}(w) B_g` from the columns
+        :math:`B_g` of the whitener: :math:`O(m\, m_g^2)`.
+        """
+        w = self.weights()[:, None]
+        blocks = []
+        for rows in groups:
+            B_g = self.whitener[:, rows]
+            blocks.append((B_g * w).T @ B_g)
+        return blocks
+
+    def self_sensitivity(self) -> np.ndarray:
+        r"""
+        Return :math:`\operatorname{diag}(H K)`, each observation's share of DOFS.
+
+        :math:`H K = I - (S_z/\gamma) P` and :math:`S_z B^T = L X`, so
+        :math:`(H K)_{ii} = 1 - \sum_k (S_z B^T)_{ik} w_k B_{ki} / \gamma`:
+        :math:`O(m^2)` for a diagonal :math:`S_z`, one product of
+        :math:`S_z` with :math:`B^T` (``m x m``) otherwise.
+        """
+        B, w = self.whitener, self.weights()
+        S_z = self.problem.obs_cov.data
+        if isinstance(S_z, DiagonalOperator):
+            SP = S_z.values * np.einsum("k,ki,ki->i", w, B, B)
+        else:
+            SP = np.einsum("ik,k,ki->i", np.asarray(S_z @ B.T), w, B)
+        return 1.0 - SP / self.gamma
+
     def with_data(self, problem: Problem) -> "Whitened":
         """
         Return the factors of `problem`, this one's with other observation values.
@@ -575,6 +608,59 @@ class Information(_Factors):
         d = _innovation(problem)
         r = d - problem.forward.data @ self._increment()
         return self.gamma * float(d @ problem.obs_cov.data.solve(r))
+
+    def _weighted_obs(self) -> tuple[np.ndarray, np.ndarray]:
+        r"""Return :math:`H G` and :math:`Z = S_z^{-1} H G` (both ``m x n``)."""
+        HG = np.asarray(self.problem.forward.data @ self.G)
+        return HG, np.asarray(self.problem.obs_cov.data.solve(HG))
+
+    def innovation_precision(self, groups: Sequence[np.ndarray]) -> list[np.ndarray]:
+        r"""
+        Return each group's block of :math:`P = (H S_0 H^T + S_z/\gamma)^{-1}`.
+
+        By Woodbury, :math:`P = \gamma S_z^{-1} - \gamma Z \operatorname{diag}(w) Z^T`
+        with :math:`Z = S_z^{-1} H G` (``m x n``, formed once), so
+        :math:`P_{gg} = \gamma \big((S_z^{-1})_{gg} - Z_g \operatorname{diag}(w) Z_g^T\big)`.
+        The block :math:`(S_z^{-1})_{gg}` is read from a diagonal
+        :math:`S_z`, and otherwise from a solve with the group's columns of
+        the identity (``m x m_g``) after one factorization of :math:`S_z`,
+        made for all groups: no inverse of :math:`S_z` is formed.
+        """
+        _, Z = self._weighted_obs()
+        w = self.weights()
+        S_z = self.problem.obs_cov.data
+        if isinstance(S_z, DiagonalOperator):
+            values = S_z.values
+
+            def inverse_block(rows: np.ndarray) -> np.ndarray:
+                """Return the block of the diagonal's inverse."""
+                return np.diag(1.0 / values[rows])
+
+        else:
+            m = S_z.shape[0]
+            solve = S_z._solver()
+
+            def inverse_block(rows: np.ndarray) -> np.ndarray:
+                """Return the block of the inverse, from a solve with the group's columns of the identity."""
+                E = np.zeros((m, len(rows)))
+                E[rows, np.arange(len(rows))] = 1.0
+                return np.asarray(solve(E))[rows]
+
+        blocks = []
+        for rows in groups:
+            Z_g = Z[rows]
+            blocks.append(self.gamma * (inverse_block(rows) - (Z_g * w) @ Z_g.T))
+        return blocks
+
+    def self_sensitivity(self) -> np.ndarray:
+        r"""
+        Return :math:`\operatorname{diag}(H K)`, each observation's share of DOFS.
+
+        :math:`H K = (H G) \operatorname{diag}(w) Z^T`, so
+        :math:`(H K)_{ii} = \sum_k (H G)_{ik} w_k Z_{ik}`: :math:`O(m n)`.
+        """
+        HG, Z = self._weighted_obs()
+        return np.einsum("ik,k,ik->i", HG, self.weights(), Z)
 
     def with_data(self, problem: Problem) -> "Information":
         """

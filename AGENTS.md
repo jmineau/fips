@@ -141,8 +141,9 @@ checks the labels and builds the models; `fips.solve(problem)` returns the
 
 A module `methods/<name>.py` with three things: its options (a frozen dataclass
 with a `gamma` field, values checked in `__post_init__`), its solution (answers
-`posterior.Solution`; `with_gamma`, `with_data`, `estimate_is_mean` and
-`estimate_is_linear` only if it can), and a function `(problem, options) -> Posterior`. Add a line to
+`posterior.Solution`; `with_gamma`, `with_data`, `estimate_is_mean`,
+`estimate_is_linear`, and `innovation_precision` with `self_sensitivity` (for
+`Posterior.data_worth`) only if it can), and a function `(problem, options) -> Posterior`. Add a line to
 `_METHODS` in `methods/__init__.py`; its docstring says how a lognormal or an
 ensemble method fits. `tests/test_oracle.py` runs every method against the
 closed-form posterior and the permutation test.
@@ -245,7 +246,9 @@ dependency needs a reason, proposed first.
   must be positive-definite; it never factors `H S_0 H^T + S_z`. Other
   covariance solves go through `LinearOperator.solve` or `_solve_psd`
   (Cholesky, then `LDL^T` with a warning), never `scipy.linalg.solve` directly;
-  a sparse form solves with SuperLU.
+  a sparse form solves with SuperLU. A form keeps no factorization of its own
+  (Kronecker keeps its factors); a loop of solves with one `S_z` takes
+  `S_z._solver()`, which factors once and returns the substitution.
 - **A constructor refuses a labeled object.** `Operator(op, rows, cols)`,
   `Covariance(cov, space)` and `Vector(v, space)` refuse a pandas object, an
   `Operator` or a `Vector`, whose labels they would ignore: use `from_frame`,
