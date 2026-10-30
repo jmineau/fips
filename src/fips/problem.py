@@ -573,14 +573,11 @@ class Problem:
         offset = self._offset
         if offset is not None:
             offset = Vector(form @ offset.values, rows, name=offset.name)
-        obs_cov = self._obs_cov
         return type(self)(
             prior=self._prior,
             prior_cov=self._prior_cov,
             obs=Vector(form @ self._obs.values, rows, name=self._obs.name),
-            obs_cov=Covariance._computed(
-                (form @ obs_cov.data) @ form._transpose(), rows, name=obs_cov.name
-            ),
+            obs_cov=self._obs_cov.aggregate(W),
             forward=Operator(
                 form @ self._forward.data,
                 rows,

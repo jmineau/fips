@@ -36,7 +36,11 @@ every label of a block a group label on one level:
   maps): sites to networks, cells to regions.
 
 The group labels of every key together label the groups. A label a key cannot
-place (outside every interval, missing from a mapping, mapped to NaN) raises.
+place (outside every interval, missing from a mapping, mapped to NaN) raises,
+unless ``dropna=True`` leaves it out of every group: then a key can pick part
+of a block, such as the cells of one region (a Series that maps only those
+cells) or one year of a longer record (an IntervalIndex of that year), and the
+blocks not named in ``blocks`` are left out too, instead of passed through.
 """
 
 from collections.abc import Hashable, Sequence
@@ -64,9 +68,14 @@ def _level(index: pd.Index, level: Hashable, block: str) -> pd.Index:
     return index.get_level_values(list(index.names).index(level))
 
 
-def _key_labels(index: pd.Index, key: Any, block: str) -> pd.Index:
+def _key_labels(
+    index: pd.Index, key: Any, block: str, dropna: bool = False
+) -> pd.Index:
     """
     Return the group label one key gives each label of a block, as an Index named after its level.
+
+    With `dropna`, a label the key cannot place gets a missing (NaN) group
+    instead of raising.
 
     Raises
     ------
@@ -100,7 +109,7 @@ def _key_labels(index: pd.Index, key: Any, block: str) -> pd.Index:
                 "An IntervalIndex in `by` must be named after the level it bins "
                 '(bins.rename("obs_time")).'
             )
-        return _mapped(index, key, pd.Index(key.left), key.name, block)
+        return _mapped(index, key, pd.Index(key.left), key.name, block, dropna)
     if isinstance(key, pd.Series):
         if key.index.name is None:
             raise ValueError(
@@ -113,7 +122,7 @@ def _key_labels(index: pd.Index, key: Any, block: str) -> pd.Index:
                 "duplicate entries in its index."
             )
         name = key.index.name if key.name is None else key.name
-        return _mapped(index, key.index, pd.Index(key.array), name, block)
+        return _mapped(index, key.index, pd.Index(key.array), name, block, dropna)
     raise TypeError(
         "Each key in `by` is a level name, a pandas Grouper, an IntervalIndex "
         f"or a Series, not {type(key).__name__}."
@@ -121,12 +130,19 @@ def _key_labels(index: pd.Index, key: Any, block: str) -> pd.Index:
 
 
 def _mapped(
-    index: pd.Index, lookup: pd.Index, to: pd.Index, name: Hashable, block: str
+    index: pd.Index,
+    lookup: pd.Index,
+    to: pd.Index,
+    name: Hashable,
+    block: str,
+    dropna: bool = False,
 ) -> pd.Index:
     """
     Return the entry of `to` at the position of each label's value in `lookup`.
 
-    `lookup`'s name is the level read; the result is named `name`.
+    `lookup`'s name is the level read; the result is named `name`. With
+    `dropna`, a value not in `lookup` gets a missing (NaN) group instead of
+    raising, as does one `to` maps to NaN.
 
     Raises
     ------
@@ -146,6 +162,9 @@ def _mapped(
         ):
             values = values.astype(subtype)
     positions = lookup.get_indexer(values)
+    if dropna:
+        groups = to.take(np.maximum(positions, 0))
+        return pd.Index(groups.where(positions >= 0), name=name)
     if (positions < 0).any():
         where = (
             "outside every interval"
@@ -169,10 +188,12 @@ def _mapped(
 
 
 def _groups(
-    blocks: Sequence[tuple[str, pd.Index]], by: Any
+    blocks: Sequence[tuple[str, pd.Index]], by: Any, dropna: bool = False
 ) -> tuple[np.ndarray, pd.Index]:
     """
     Return the group of each label of `blocks` (their labels in order) and the groups, sorted.
+
+    With `dropna`, a label that a key cannot place is in no group: its code is -1.
 
     Raises
     ------
@@ -185,14 +206,17 @@ def _groups(
         raise ValueError("`by` needs at least one key.")
     columns = []
     for key in keys:
-        parts = [_key_labels(index, key, name) for name, index in blocks]
+        parts = [_key_labels(index, key, name, dropna) for name, index in blocks]
         columns.append(parts[0].append(parts[1:]) if len(parts) > 1 else parts[0])
     names = [column.name for column in columns]
     if len(set(names)) < len(names):
         raise ValueError(f"Two keys in `by` label the same level: {names}.")
     labels = columns[0] if len(columns) == 1 else pd.MultiIndex.from_arrays(columns)
-    groups = _sorted(labels.unique())
-    return groups.get_indexer(labels), groups
+    placed = ~np.logical_or.reduce([np.asarray(column.isna()) for column in columns])
+    groups = _sorted(labels[placed].unique())
+    codes = np.full(len(labels), -1, dtype=np.intp)
+    codes[placed] = groups.get_indexer(labels[placed])
+    return codes, groups
 
 
 def _chosen(space: Space, blocks: "str | Sequence[str] | None") -> list[str]:
@@ -211,9 +235,20 @@ def _chosen(space: Space, blocks: "str | Sequence[str] | None") -> list[str]:
 
 
 def _aggregation(
-    space: Space, by: Any, blocks: "str | Sequence[str] | None", average: bool
+    space: Space,
+    by: Any,
+    blocks: "str | Sequence[str] | None",
+    average: bool,
+    dropna: bool,
 ) -> Operator:
-    """Return the sum (or the mean, if `average`) of each group of labels, block by block."""
+    """
+    Return the sum (or the mean, if `average`) of each group of labels, block by block.
+
+    Raises
+    ------
+    ValueError
+        If `dropna` leaves out every label.
+    """
     if not isinstance(space, Space):
         raise TypeError(f"space must be a Space, got {type(space).__name__}.")
     chosen = _chosen(space, blocks)
@@ -223,16 +258,27 @@ def _aggregation(
     for name in space.names:
         index = space.select(name)
         if name in chosen:
-            codes, groups = _groups([(name, index)], by)
-            counts = np.bincount(codes, minlength=len(groups))
-            weight = 1.0 / counts[codes] if average else np.ones(len(codes))
+            codes, groups = _groups([(name, index)], by, dropna)
+        elif dropna:  # left out
+            continue
         else:  # passed through, one row per label
-            codes, groups, weight = np.arange(len(index)), index, np.ones(len(index))
+            codes, groups = np.arange(len(index)), index
+        placed = codes >= 0
+        if not placed.any():  # dropna left out the whole block
+            continue
+        codes = codes[placed]
+        counts = np.bincount(codes, minlength=len(groups))
+        weight = 1.0 / counts[codes] if average else np.ones(len(codes))
         rows.append(start + codes)
-        cols.append(space.slice(name).start + np.arange(len(index)))
+        cols.append(space.slice(name).start + np.flatnonzero(placed))
         weights.append(weight)
         labels[name] = groups
         start += len(groups)
+    if not labels:
+        raise ValueError(
+            "dropna=True left out every label: no key placed a label of the "
+            f"blocks {_listed(chosen)} in a group."
+        )
     matrix = sp.csr_array(
         (np.concatenate(weights), (np.concatenate(rows), np.concatenate(cols))),
         shape=(start, len(space)),
@@ -240,7 +286,12 @@ def _aggregation(
     return Operator(_adopt(matrix), Space(labels), space)
 
 
-def sum(space: Space, by: Any, blocks: "str | Sequence[str] | None" = None) -> Operator:
+def sum(
+    space: Space,
+    by: Any,
+    blocks: "str | Sequence[str] | None" = None,
+    dropna: bool = False,
+) -> Operator:
     """
     Return the operator that sums the labels of `space` by group.
 
@@ -256,7 +307,15 @@ def sum(space: Space, by: Any, blocks: "str | Sequence[str] | None" = None) -> O
         keys read.
     blocks : str or list of str, optional
         The blocks to sum, each on its own; every block by default. A block
-        not named is passed through, one row for each of its labels.
+        not named is passed through, one row for each of its labels (left
+        out with `dropna`).
+    dropna : bool, default False
+        Leave out the labels a key cannot place (outside every interval,
+        missing from a mapping, mapped to NaN) and the blocks not named in
+        `blocks`, instead of raising and passing them through: their
+        columns of :math:`W` are zero. This picks part of the state, such as
+        the cells of one region or the months of one year, as pandas'
+        ``groupby(dropna=True)`` leaves out a missing key.
 
     Returns
     -------
@@ -264,7 +323,8 @@ def sum(space: Space, by: Any, blocks: "str | Sequence[str] | None" = None) -> O
         :math:`W`, sparse, with one row per group (ones where a label is in
         the group) and `space` as its columns. Its rows are a space of the
         same blocks, each labeled by its groups in sorted order on the
-        levels the keys name (a block passed through keeps its labels).
+        levels the keys name (a block passed through keeps its labels; a
+        block `dropna` leaves out entirely is not there).
 
     Raises
     ------
@@ -273,8 +333,9 @@ def sum(space: Space, by: Any, blocks: "str | Sequence[str] | None" = None) -> O
     ValueError
         If `by` is empty, a block summed lacks a level a key reads, a key
         cannot place a label (outside every interval, missing from a
-        mapping or mapped to NaN), two keys label one level, or `blocks`
-        names no block of `space`.
+        mapping or mapped to NaN) without `dropna`, `dropna` leaves out
+        every label, two keys label one level, or `blocks` names no block
+        of `space`.
 
     See Also
     --------
@@ -299,12 +360,29 @@ def sum(space: Space, by: Any, blocks: "str | Sequence[str] | None" = None) -> O
     Space(flux: 2 x ['time'])
     >>> (W @ flux).values
     array([ 3., 12.])
+
+    The total of a region in each month: a Series maps the region's cells,
+    and `dropna` leaves out the others:
+
+    >>> region = pd.Series(
+    ...     "north", index=pd.Index(["a", "b"], name="cell"), name="region"
+    ... )
+    >>> W = fips.aggregate.sum(flux.space, by=["time", region], dropna=True)
+    >>> W.rows.select("flux")
+    MultiIndex([('2020-01-01', 'north'),
+                ('2020-02-01', 'north')],
+               names=['time', 'region'])
+    >>> (W @ flux).values
+    array([1., 7.])
     """
-    return _aggregation(space, by, blocks, average=False)
+    return _aggregation(space, by, blocks, average=False, dropna=dropna)
 
 
 def mean(
-    space: Space, by: Any, blocks: "str | Sequence[str] | None" = None
+    space: Space,
+    by: Any,
+    blocks: "str | Sequence[str] | None" = None,
+    dropna: bool = False,
 ) -> Operator:
     """
     Return the operator that averages the labels of `space` by group.
@@ -317,7 +395,11 @@ def mean(
         The groups, as :func:`sum` takes them.
     blocks : str or list of str, optional
         The blocks to average, each on its own; every block by default. A
-        block not named is passed through, one row for each of its labels.
+        block not named is passed through, one row for each of its labels
+        (left out with `dropna`).
+    dropna : bool, default False
+        Leave out the labels a key cannot place and the blocks not named in
+        `blocks`, as :func:`sum` does; a mean is over the labels kept.
 
     Returns
     -------
@@ -365,7 +447,7 @@ def mean(
     >>> (W @ obs).values
     array([0.5, 2.5, 4.5, 6.5])
     """
-    return _aggregation(space, by, blocks, average=True)
+    return _aggregation(space, by, blocks, average=True, dropna=dropna)
 
 
 def offset_block(

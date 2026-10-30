@@ -45,7 +45,8 @@ src/fips/
   aggregate.py      sum, mean (an aggregation W), offset_block
   visualization.py  plot_comparison, the one plot (the `viz` extra: matplotlib)
   covariance/       Covariance and the models that write one down (public)
-    covariance.py   Covariance: diagonal, block_diag, variances, solve, logdet, sqrt, sample
+    covariance.py   Covariance: diagonal, block_diag, variances, solve, logdet, sqrt, sample,
+                    aggregate (W S W^T)
     models.py       CorrelationModel, Independent, Kronecker, CovarianceModel
                     (`with_std` takes a number, a Vector or a Series, never an array)
     kernels.py      Exponential, Gaussian, Matern, Constant; within= groups

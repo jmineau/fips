@@ -569,6 +569,74 @@ class Covariance(Operator):
         """
         return Operator(self._data.sqrt(), self._rows, self._rows, name=self._name)
 
+    def aggregate(self, W: Operator) -> "Covariance":
+        r"""
+        Return the covariance of aggregates, :math:`W S W^T`.
+
+        For :math:`x` with covariance :math:`S`, :math:`W x` has covariance
+        :math:`W S W^T`: one row and one column per aggregate (a total per
+        year, the mean over a region, a trend). Its diagonal is the variance
+        of each aggregate, and its off-diagonal entries are what makes a
+        combination of aggregates (the difference of two years) more or less
+        uncertain than its parts. The product is taken in the forms of
+        :math:`W` and :math:`S` (through the factors of a Kronecker
+        covariance), so nothing of the covariance's size is formed when
+        :math:`W` has few rows.
+
+        Parameters
+        ----------
+        W : Operator
+            An aggregation, ``k x n``, such as :func:`fips.aggregate.sum`'s:
+            its columns the covariance's labels (in any order), its rows the
+            aggregates.
+
+        Returns
+        -------
+        Covariance
+            :math:`W S W^T`, on the rows of `W`, with this covariance's name.
+
+        Raises
+        ------
+        TypeError
+            If `W` is not an Operator.
+        ValueError
+            If the columns of `W` do not have exactly the covariance's labels.
+
+        See Also
+        --------
+        fips.Posterior.cov : The posterior covariance of aggregates of the state.
+        fips.Posterior.uncertainty : The prior and posterior uncertainty of aggregates.
+        fips.Problem.aggregate : The problem of aggregated observations.
+
+        Examples
+        --------
+        The total of two cells, each with variance 1, correlated by 0.5:
+
+        >>> import numpy as np
+        >>> import pandas as pd
+        >>> import fips
+        >>> space = fips.Space({"flux": pd.Index(["a", "b"], name="cell")})
+        >>> S = fips.Covariance(np.array([[1.0, 0.5], [0.5, 1.0]]), space)
+        >>> total = fips.Operator(
+        ...     np.ones((1, 2)),
+        ...     fips.Space({"total": pd.Index(["all"], name="region")}),
+        ...     space,
+        ... )
+        >>> S.aggregate(total).dense()
+        array([[3.]])
+        """
+        if not isinstance(W, Operator):
+            raise TypeError(
+                f"An aggregation is an Operator, not {type(W).__name__}: build one "
+                "with fips.aggregate.sum or fips.aggregate.mean."
+            )
+        form = W._on(
+            W.rows, self._rows, "the aggregation", ("its rows", "the covariance")
+        )
+        return Covariance._computed(
+            (form @ self._data) @ form._transpose(), W.rows, name=self._name
+        )
+
     def sample(self, rng: int | np.random.Generator | None = None) -> Vector:
         r"""
         Return one draw from :math:`N(0, S)`, a vector on the covariance's space.

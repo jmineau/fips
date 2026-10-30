@@ -88,6 +88,107 @@ def test_labels_outside_every_bin_raise():
 
 
 # ---------------------------------------------------------------------------
+# dropna: part of a block, and the blocks not named, left out
+# ---------------------------------------------------------------------------
+
+_MONTHS = pd.date_range("2020-01-01", periods=24, freq="MS", name="time")
+_CELLS = pd.Index(["a", "b", "c"], name="cell")
+
+
+def _flux_and_bias() -> Space:
+    """Two years of monthly fluxes in three cells, and two site biases."""
+    return Space(
+        {
+            "flux": pd.MultiIndex.from_product([_MONTHS, _CELLS]),
+            "bias": pd.Index(["north", "south"], name="site"),
+        }
+    )
+
+
+def _dense(W: Operator, space: Space) -> np.ndarray:
+    """The matrix of `W`, its columns in the order of `space`."""
+    return W.align(W.rows, space).dense()
+
+
+def test_dropna_leaves_out_cells_a_mapping_lacks():
+    """A region's total: a Series that maps two of three cells; the third cell and the bias get zero columns."""
+    space = _flux_and_bias()
+    region = pd.Series("SLV", index=pd.Index(["a", "b"], name="cell"), name="region")
+    W = fips.aggregate.sum(
+        space,
+        by=[pd.Grouper(level="time", freq="YS"), region],
+        blocks="flux",
+        dropna=True,
+    )
+    assert W.rows.names == ("flux",)
+    assert list(W.rows.select("flux")) == [
+        (pd.Timestamp("2020-01-01"), "SLV"),
+        (pd.Timestamp("2021-01-01"), "SLV"),
+    ]
+    flux = space.select("flux")
+    year = flux.get_level_values("time").year
+    cell = flux.get_level_values("cell")
+    expected = np.zeros((2, len(space)))
+    for row, y in enumerate([2020, 2021]):
+        expected[row, : len(flux)] = (year == y) & cell.isin(["a", "b"])
+    np.testing.assert_array_equal(_dense(W, space), expected)
+
+
+def test_without_dropna_the_same_mapping_raises():
+    """The default still names the labels a mapping lacks, and passes the bias through."""
+    space = _flux_and_bias()
+    region = pd.Series("SLV", index=pd.Index(["a", "b"], name="cell"), name="region")
+    with pytest.raises(ValueError, match="not in the mapping"):
+        fips.aggregate.sum(space, by=region, blocks="flux")
+    W = fips.aggregate.sum(space, by="time", blocks="flux")
+    assert W.rows.names == ("flux", "bias")
+    assert len(W.rows.select("bias")) == 2
+
+
+def test_dropna_keeps_one_year_of_an_interval_index():
+    """An IntervalIndex of one year picks that year; the other months are left out."""
+    space = Space({"flux": pd.MultiIndex.from_product([_MONTHS, _CELLS])})
+    year = pd.IntervalIndex.from_breaks(
+        pd.to_datetime(["2021-01-01", "2022-01-01"]), closed="left", name="time"
+    )
+    W = fips.aggregate.mean(space, by=[year, "cell"], dropna=True)
+    rows = W.rows.select("flux")
+    assert list(rows.get_level_values("cell")) == ["a", "b", "c"]
+    D = _dense(W, space)
+    np.testing.assert_allclose(D.sum(axis=1), 1.0)  # a mean over the 12 kept months
+    kept = space.select("flux").get_level_values("time").year == 2021
+    assert np.all(D[:, ~kept] == 0)
+    np.testing.assert_allclose(D[:, kept][D[:, kept] > 0], 1 / 12)
+
+
+def test_dropna_leaves_out_a_label_mapped_to_nan():
+    """A Series value of NaN is no group with dropna."""
+    space = Space({"flux": _CELLS})
+    groups = pd.Series(["x", np.nan, "x"], index=_CELLS, name="g")
+    with pytest.raises(ValueError, match="missing \\(NaN\\) group"):
+        fips.aggregate.sum(space, by=groups)
+    W = fips.aggregate.sum(space, by=groups, dropna=True)
+    np.testing.assert_array_equal(W.dense(), [[1.0, 0.0, 1.0]])
+
+
+def test_dropna_leaves_out_a_block_with_no_label_placed():
+    """A block whose labels no key places is not in the rows; no label at all raises."""
+    space = Space(
+        {
+            "a": pd.Index(["x", "y"], name="cell"),
+            "b": pd.Index(["z"], name="cell"),
+        }
+    )
+    groups = pd.Series("one", index=pd.Index(["x", "y"], name="cell"), name="g")
+    W = fips.aggregate.sum(space, by=groups, dropna=True)
+    assert W.rows.names == ("a",)
+    np.testing.assert_array_equal(_dense(W, space), [[1.0, 1.0, 0.0]])
+    nothing = pd.Series("one", index=pd.Index(["w"], name="cell"), name="g")
+    with pytest.raises(ValueError, match="left out every label"):
+        fips.aggregate.sum(space, by=nothing, dropna=True)
+
+
+# ---------------------------------------------------------------------------
 # Observations: 4 obs over two days, 2 per day (what ObsAggregator's tests used)
 # ---------------------------------------------------------------------------
 
