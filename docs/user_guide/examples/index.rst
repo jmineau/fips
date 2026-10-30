@@ -12,6 +12,7 @@ code produces.
    gravity_2d
    flux_regional
    synthetic_truth
+   data_worth
 
 :doc:`gravity_2d`
    The density of buried prisms from the gravity measured above them: a small,
@@ -27,3 +28,9 @@ code produces.
    Does the inversion recover a known flux? A world makes the data and the
    inversion solves them: coverage of the monthly totals, a mismatch assumed too
    small or too large, a bias on one site, and a truth of 1.5 times the prior.
+
+:doc:`data_worth`
+   Which observations constrain a regional total? The prior and posterior
+   uncertainty of a region's annual total and of a seasonal difference, what
+   each site and each month of observations contributes, and which candidate
+   site would help most.
