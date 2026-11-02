@@ -69,7 +69,9 @@ def plot_comparison(
     errors : Sequence of pd.DataFrame or Covariance or Operator or pd.Series or None, optional
         Error estimates for each series. Must match length of series.
         If a Covariance or an Operator, its diagonal's square roots (the
-        standard deviations) are used.
+        standard deviations) are used. A Series is taken as the standard
+        deviations themselves, not the variances: the band is ``y - e`` to
+        ``y + e``.
         Use None for a series with no error: it is plotted without a band or
         error bars.
     kind : {'line', 'bar'}, optional
