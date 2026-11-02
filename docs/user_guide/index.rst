@@ -38,6 +38,12 @@ estimate. It comes from a Series (one block) or from several (one per block):
    prior.to_series()
    prior["flux"].to_series()
 
+.. ipython:: python
+   :suppress:
+
+   pd.set_option("display.max_columns", None)  # show every column of a summary() table
+   pd.set_option("display.width", 110)
+
 Together, the blocks are one :class:`pandas.MultiIndex` with the ``block``
 level first (``prior.space.index``). A level that one block has and another
 lacks is missing (NaN) on the other's rows, and :class:`~fips.Space` is the one
