@@ -146,8 +146,10 @@ The posterior also has these statistics:
        :math:`m`, and is near 1 when the covariances are right.
    * - :math:`R^2`, RMSE
      - ``post.r2``, ``post.rmse``
-     - The squared correlation, and the root mean square difference, of the
-       observations and :math:`H \hat{x} + c`.
+     - The squared correlation of the observations less the offset,
+       :math:`z - c`, with :math:`H \hat{x}`, and the root mean square of
+       :math:`z - H \hat{x} - c`. With no offset, or a constant one, the
+       squared correlation is that of :math:`z` and :math:`H \hat{x} + c`.
    * - uncertainty reduction
      - ``post.uncertainty_reduction``
      - :math:`1 - \sqrt{\operatorname{tr}(\hat{S})} / \sqrt{\operatorname{tr}(S_0)}`.
