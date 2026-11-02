@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>User Guide &#8212; fips 0.2.0b2.dev27+g817a94728 documentation</title>
+    <title>User Guide &#8212; fips 0.2.0b2.dev32+g6f3651bd7 documentation</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../_static/documentation_options.js?v=0aea724a"></script>
+    <script src="../_static/documentation_options.js?v=7bb93d87"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -137,8 +137,8 @@
       
     
     
-    <img src="../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b2.dev27+g817a94728 documentation - Home"/>
-    <img src="../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b2.dev27+g817a94728 documentation - Home"/>
+    <img src="../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b2.dev32+g6f3651bd7 documentation - Home"/>
+    <img src="../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b2.dev32+g6f3651bd7 documentation - Home"/>
   
   
 </a></div>
@@ -668,7 +668,9 @@ decay with the distance along their levels: a datetime level with a time
 scale (<code class="docutils literal notranslate"><span class="pre">Exponential(&quot;time&quot;,</span> <span class="pre">&quot;30D&quot;)</span></code>), numeric levels as a straight line,
 or latitude and longitude on the Earth (<code class="docutils literal notranslate"><span class="pre">metric=&quot;haversine&quot;</span></code>, the
 great-circle distance in km; <code class="docutils literal notranslate"><span class="pre">metric=&quot;chordal&quot;</span></code>, through the Earth, which a
-Gaussian or a Matérn needs to stay positive-definite);</p></li>
+Gaussian or a Matérn needs to stay positive-definite). The two levels are
+read by position, not by name, so give latitude first:
+<code class="docutils literal notranslate"><span class="pre">Exponential([&quot;lat&quot;,</span> <span class="pre">&quot;lon&quot;],</span> <span class="pre">10.0,</span> <span class="pre">metric=&quot;haversine&quot;)</span></code>;</p></li>
 <li><p><a class="reference internal" href="../reference/api/fips.Constant.html#fips.Constant" title="fips.Constant"><code class="xref py py-class docutils literal notranslate"><span class="pre">Constant</span></code></a> is 1 everywhere, and <a class="reference internal" href="../reference/api/fips.Independent.html#fips.Independent" title="fips.Independent"><code class="xref py py-class docutils literal notranslate"><span class="pre">Independent</span></code></a> the
 identity (1 for a label with itself, 0 otherwise);</p></li>
 <li><p><a class="reference internal" href="../reference/api/fips.Kronecker.html#fips.Kronecker" title="fips.Kronecker"><code class="xref py py-class docutils literal notranslate"><span class="pre">Kronecker</span></code></a> multiplies models on separate levels, kept as its
@@ -989,12 +991,10 @@ the same labels (a bootstrap, <a class="reference internal" href="#synthetic-dat
 <a class="reference internal" href="../reference/api/fips.Posterior.summary.html#fips.Posterior.summary" title="fips.Posterior.summary"><code class="xref py py-meth docutils literal notranslate"><span class="pre">summary()</span></code></a> stack:</p>
 <div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [58]: </span><span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">post</span><span class="o">.</span><span class="n">with_gamma</span><span class="p">(</span><span class="n">g</span><span class="p">)</span><span class="o">.</span><span class="n">summary</span><span class="p">()</span> <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="p">(</span><span class="mf">0.25</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">4.0</span><span class="p">)],</span> <span class="n">ignore_index</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="gh">Out[58]: </span>
-<span class="go">   gamma  n_state  n_obs  ...        r2      rmse  uncertainty_reduction</span>
-<span class="go">0   0.25       16     15  ...  0.082316  0.888671               0.217130</span>
-<span class="go">1   1.00       16     15  ...  0.522039  0.703456               0.314634</span>
-<span class="go">2   4.00       16     15  ...  0.727697  0.522095               0.446752</span>
-
-<span class="go">[3 rows x 9 columns]</span>
+<span class="go">   gamma  n_state  n_obs      dofs       chi2  reduced_chi2        r2      rmse  uncertainty_reduction</span>
+<span class="go">0   0.25       16     15  2.256343  12.424450      0.828297  0.082316  0.888671               0.217130</span>
+<span class="go">1   1.00       16     15  4.350110  26.420686      1.761379  0.522039  0.703456               0.314634</span>
+<span class="go">2   4.00       16     15  7.290068  58.434926      3.895662  0.727697  0.522095               0.446752</span>
 </pre></div>
 </div>
 <p><strong>What each group of observations adds.</strong> <a class="reference internal" href="../reference/api/fips.Posterior.data_worth.html#fips.Posterior.data_worth" title="fips.Posterior.data_worth"><code class="xref py py-meth docutils literal notranslate"><span class="pre">data_worth()</span></code></a>
@@ -1019,12 +1019,10 @@ errors. For the total flux of the hourly problem above, observed at two sites:</
 
 <span class="gp">In [61]: </span><span class="n">hourly_post</span><span class="o">.</span><span class="n">data_worth</span><span class="p">(</span><span class="n">by</span><span class="o">=</span><span class="s2">"site"</span><span class="p">,</span> <span class="n">W</span><span class="o">=</span><span class="n">total</span><span class="p">)</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
 <span class="gh">Out[61]: </span>
-<span class="go">                   n_obs   dofs  ...  std_alone  reduction_alone</span>
-<span class="go">site block region                ...                            </span>
-<span class="go">A    flux  all        48  1.445  ...      0.131            0.849</span>
-<span class="go">B    flux  all        48  1.340  ...      0.132            0.848</span>
-
-<span class="go">[2 rows x 7 columns]</span>
+<span class="go">                   n_obs   dofs  std_without  std_with  reduction  std_alone  reduction_alone</span>
+<span class="go">site block region                                                                            </span>
+<span class="go">A    flux  all        48  1.445        0.132     0.093      0.292      0.131            0.849</span>
+<span class="go">B    flux  all        48  1.340        0.131     0.093      0.287      0.132            0.848</span>
 </pre></div>
 </div>
 <p>Observations that are not in the problem, a candidate site or platform, are

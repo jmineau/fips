@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>fips.posterior &#8212; fips 0.2.0b2.dev27+g817a94728 documentation</title>
+    <title>fips.posterior &#8212; fips 0.2.0b2.dev32+g6f3651bd7 documentation</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../_static/documentation_options.js?v=0aea724a"></script>
+    <script src="../../_static/documentation_options.js?v=7bb93d87"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -132,8 +132,8 @@
       
     
     
-    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b2.dev27+g817a94728 documentation - Home"/>
-    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b2.dev27+g817a94728 documentation - Home"/>
+    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b2.dev32+g6f3651bd7 documentation - Home"/>
+    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b2.dev32+g6f3651bd7 documentation - Home"/>
   
   
 </a></div>
@@ -1747,12 +1747,13 @@
 <span class="sd">        Return the leverage matrix of the state `x`: which observations weigh most on it.</span>
 
 <span class="sd">        .. math::</span>
-<span class="sd">            L = Hx \left((Hx)^T G^{-1} Hx\right)^{-1} (Hx)^T G^{-1},</span>
-<span class="sd">            \qquad G = H S_0 H^T + S_z / \gamma</span>
+<span class="sd">            L = h \left(h^T G^{-1} h\right)^{-1} h^T G^{-1},</span>
+<span class="sd">            \qquad h = H x + c, \quad G = H S_0 H^T + S_z / \gamma</span>
 
 <span class="sd">        This is the generalized-least-squares hat matrix of the one regressor</span>
-<span class="sd">        :math:`Hx` (which includes the offset :math:`c`): the projection onto</span>
-<span class="sd">        :math:`Hx` in the metric :math:`G^{-1}`. It is idempotent and its</span>
+<span class="sd">        :math:`h`, the observations that `x` models (:meth:`~fips.Problem.predict`,</span>
+<span class="sd">        which includes the offset :math:`c`): the projection onto :math:`h` in</span>
+<span class="sd">        the metric :math:`G^{-1}`. It is idempotent and its</span>
 <span class="sd">        trace is 1, so its diagonal shares one unit of leverage among the</span>
 <span class="sd">        observations; with correlated errors an entry can be negative.</span>
 

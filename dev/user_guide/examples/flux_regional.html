@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>A regional flux inversion &#8212; fips 0.2.0b2.dev27+g817a94728 documentation</title>
+    <title>A regional flux inversion &#8212; fips 0.2.0b2.dev32+g6f3651bd7 documentation</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../_static/documentation_options.js?v=0aea724a"></script>
+    <script src="../../_static/documentation_options.js?v=7bb93d87"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -135,8 +135,8 @@
       
     
     
-    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b2.dev27+g817a94728 documentation - Home"/>
-    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b2.dev27+g817a94728 documentation - Home"/>
+    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b2.dev32+g6f3651bd7 documentation - Home"/>
+    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b2.dev32+g6f3651bd7 documentation - Home"/>
   
   
 </a></div>
@@ -635,7 +635,7 @@ noise.</p>
     <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mf">0.5</span> <span class="o">*</span> <span class="p">((</span><span class="n">grid_lon</span> <span class="o">-</span> <span class="n">x</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="n">grid_lat</span> <span class="o">-</span> <span class="n">y</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span> <span class="o">/</span> <span class="mf">0.1</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
     <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="ow">in</span> <span class="n">hotspots</span>
 <span class="p">)</span>
-<span class="n">season</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">+</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="p">(</span><span class="n">months</span><span class="o">.</span><span class="n">dayofyear</span> <span class="o">-</span> <span class="mi">80</span><span class="p">)</span> <span class="o">/</span> <span class="mf">365.25</span><span class="p">)</span>
+<span class="n">season</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">+</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="p">(</span><span class="n">months</span><span class="o">.</span><span class="n">day_of_year</span> <span class="o">-</span> <span class="mi">80</span><span class="p">)</span> <span class="o">/</span> <span class="mf">365.25</span><span class="p">)</span>
 <span class="n">truth</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Vector</span><span class="p">(</span>
     <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">s</span> <span class="o">*</span> <span class="n">spatial</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">season</span><span class="p">]),</span> <span class="n">prior</span><span class="o">.</span><span class="n">space</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">"truth"</span>
 <span class="p">)</span>
@@ -648,12 +648,6 @@ noise.</p>
     <span class="n">obs_space</span><span class="p">,</span>
     <span class="n">name</span><span class="o">=</span><span class="s2">"observed"</span><span class="p">,</span>
 <span class="p">)</span>
-</pre></div>
-</div>
-</div>
-<div class="cell_output docutils container">
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/tmp/ipykernel_2644/320684116.py:6: Pandas4Warning: DatetimeIndex.dayofyear is deprecated and will be removed in a future version. Use DatetimeIndex.day_of_year instead.
-  season = 1.0 + 0.5 * np.sin(2 * np.pi * (months.dayofyear - 80) / 365.25)
 </pre></div>
 </div>
 </div>
@@ -831,7 +825,9 @@ with a band of one standard deviation each, and the truth.</p>
 <h2>Which months the data constrain<a class="headerlink" href="#which-months-the-data-constrain" title="Link to this heading">#</a></h2>
 <p>The averaging kernel of the totals says how the estimated total of each month
 responds to its true total: near 1 where the observations decide it, near 0
-where it stays at the prior.</p>
+where it stays at the prior. Here every month is decided by the data (each has
+about 90 observations), so the table is the identity matrix; a <code class="docutils literal notranslate"><span class="pre">-0.0</span></code> is a tiny
+negative number, rounded.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">post</span><span class="o">.</span><span class="n">averaging_kernel</span><span class="p">(</span><span class="n">W</span><span class="p">)</span><span class="o">.</span><span class="n">to_frame</span><span class="p">()</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>

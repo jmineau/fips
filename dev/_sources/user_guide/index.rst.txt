@@ -38,6 +38,12 @@ estimate. It comes from a Series (one block) or from several (one per block):
    prior.to_series()
    prior["flux"].to_series()
 
+.. ipython:: python
+   :suppress:
+
+   pd.set_option("display.max_columns", None)  # show every column of a summary() table
+   pd.set_option("display.width", 110)
+
 Together, the blocks are one :class:`pandas.MultiIndex` with the ``block``
 level first (``prior.space.index``). A level that one block has and another
 lacks is missing (NaN) on the other's rows, and :class:`~fips.Space` is the one
@@ -175,7 +181,9 @@ labels are from their values on some levels:
   scale (``Exponential("time", "30D")``), numeric levels as a straight line,
   or latitude and longitude on the Earth (``metric="haversine"``, the
   great-circle distance in km; ``metric="chordal"``, through the Earth, which a
-  Gaussian or a Matérn needs to stay positive-definite);
+  Gaussian or a Matérn needs to stay positive-definite). The two levels are
+  read by position, not by name, so give latitude first:
+  ``Exponential(["lat", "lon"], 10.0, metric="haversine")``;
 - :class:`~fips.Constant` is 1 everywhere, and :class:`~fips.Independent` the
   identity (1 for a label with itself, 0 otherwise);
 - :class:`~fips.Kronecker` multiplies models on separate levels, kept as its

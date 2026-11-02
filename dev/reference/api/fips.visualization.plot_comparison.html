@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>fips.visualization.plot_comparison &#8212; fips 0.2.0b2.dev27+g817a94728 documentation</title>
+    <title>fips.visualization.plot_comparison &#8212; fips 0.2.0b2.dev32+g6f3651bd7 documentation</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../_static/documentation_options.js?v=0aea724a"></script>
+    <script src="../../_static/documentation_options.js?v=7bb93d87"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -135,8 +135,8 @@
       
     
     
-    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b2.dev27+g817a94728 documentation - Home"/>
-    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b2.dev27+g817a94728 documentation - Home"/>
+    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b2.dev32+g6f3651bd7 documentation - Home"/>
+    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b2.dev32+g6f3651bd7 documentation - Home"/>
   
   
 </a></div>
@@ -839,7 +839,9 @@ with optional error bars/bands and truth values for comparison.</p>
 any order), as the errors are.</p></li>
 <li><p><strong>errors</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Sequence" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sequence</span></code></a>[<a class="reference external" href="https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html#pandas.DataFrame" title="(in pandas v3.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></a> | <a class="reference internal" href="fips.Operator.html#fips.Operator" title="fips.operator.Operator"><code class="xref py py-class docutils literal notranslate"><span class="pre">Operator</span></code></a> | <a class="reference external" href="https://pandas.pydata.org/docs/reference/api/pandas.Series.html#pandas.Series" title="(in pandas v3.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Series</span></code></a> | <span class="highlight sphinx_autodoc_typehints-value"><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><code class="xref py py-obj docutils literal notranslate"><span class="kc"><span class="pre">None</span></span></code></a></span>] | <span class="highlight sphinx_autodoc_typehints-value"><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><code class="xref py py-obj docutils literal notranslate"><span class="kc"><span class="pre">None</span></span></code></a></span></span>) – Error estimates for each series. Must match length of series.
 If a Covariance or an Operator, its diagonal’s square roots (the
-standard deviations) are used.
+standard deviations) are used. A Series is taken as the standard
+deviations themselves, not the variances: the band is <code class="docutils literal notranslate"><span class="pre">y</span> <span class="pre">-</span> <span class="pre">e</span></code> to
+<code class="docutils literal notranslate"><span class="pre">y</span> <span class="pre">+</span> <span class="pre">e</span></code>.
 Use None for a series with no error: it is plotted without a band or
 error bars.</p></li>
 <li><p><strong>kind</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a> | <span class="highlight sphinx_autodoc_typehints-value"><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><code class="xref py py-obj docutils literal notranslate"><span class="kc"><span class="pre">None</span></span></code></a></span></span>) – Plot type. If None, auto-detects based on x-axis data type.</p></li>
