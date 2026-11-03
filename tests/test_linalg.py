@@ -1092,7 +1092,7 @@ POSTERIOR_OUTPUTS = [
     "estimate", "mean", "cov", "variances", "modeled_obs",
     "innovation_cov", "kalman_gain", "averaging_kernel", "desroziers", "dofs",
     "dofs_per_element", "information_content", "chi2",
-    "reduced_chi2", "r2", "rmse", "uncertainty_reduction",
+    "reduced_chi2", "chi2_tests", "r2", "rmse", "uncertainty_reduction",
 ]  # fmt: skip
 COMBINATIONS = [
     (h, s0, sz) for h in (False, True) for s0 in (False, True) for sz in (False, True)

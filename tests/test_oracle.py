@@ -23,6 +23,7 @@ import numpy as np
 import pandas as pd
 import pytest
 import scipy.sparse as sp
+from scipy.stats import chi2 as chi2_distribution
 from scipy.stats import norm
 
 import fips
@@ -353,6 +354,101 @@ def check_posterior(
         sc["chi2"] * len(o),
         at("chi2"),
     )
+
+
+def rodgers_test(C: np.ndarray, v: np.ndarray) -> tuple[float, int]:
+    """
+    Return ``v^T C^+ v`` and the rank of ``C``, as pyOptimalEstimation's ``_estimateChi2`` computes them.
+
+    ``C`` is eigendecomposed and ``v`` rotated onto its eigenvectors; an
+    eigenvalue counts above ``1e-9`` of the largest (the test matrices are
+    well conditioned, so a nonzero one is far above it, and a zero one,
+    computed with explicit inverses, far below).
+    """
+    eigenvalues, V = np.linalg.eigh(C)
+    kept = eigenvalues > 1e-9 * np.abs(eigenvalues).max()
+    rotated = V.T @ v
+    return float(np.sum(rotated[kept] ** 2 / eigenvalues[kept])), int(kept.sum())
+
+
+def rodgers_four_tests(z, x_0, H, S_0, S_z, c) -> dict[str, tuple[float, int]]:
+    """The four chi-squared tests of Rodgers (2000, chapter 12), written as pyOptimalEstimation writes them."""
+    inv = np.linalg.inv
+    S_y = H @ S_0 @ H.T + S_z
+    K = S_0 @ H.T @ inv(S_y)
+    x_hat = x_0 + K @ (z - H @ x_0 - c)
+    y_hat, y_0 = H @ x_hat + c, H @ x_0 + c
+    HS_0H = H @ S_0 @ H.T
+    return {
+        "retrieval vs measurement": rodgers_test(S_z @ inv(S_y) @ S_z, y_hat - z),
+        "measurement vs prior": rodgers_test(S_y, z - y_0),
+        "retrieval vs prior, y": rodgers_test(HS_0H @ inv(S_y) @ HS_0H, y_hat - y_0),
+        "retrieval vs prior, x": rodgers_test(
+            S_0 @ H.T @ inv(S_y) @ H @ S_0, x_hat - x_0
+        ),
+    }
+
+
+@pytest.mark.usefixtures("analytic_form")
+@pytest.mark.parametrize("method", METHODS)
+@pytest.mark.parametrize("gamma", [0.3, 1.0, 5.0])
+@pytest.mark.parametrize(
+    "n, m, rank", [(3, 10, 3), (7, 2, 2), (7, 10, 4), (4, 4, 4), (5, 6, 0)]
+)
+def test_chi2_tests_are_rodgers_four(method, gamma, n, m, rank):
+    """
+    Each row of ``chi2_tests`` is one of Rodgers' four tests, with its degrees of freedom.
+
+    ``H`` has rank `rank`: fewer than ``min(m, n)`` in one case and zero (the
+    observations see nothing) in another, and well-conditioned singular
+    values otherwise: the reference's rank, with a tolerance on ``C`` (whose
+    eigenvalues go as the fourth power of the singular values in observation
+    space), would otherwise drop a direction the observations barely see.
+    The degrees of freedom are the reference's ranks, not fips's: ``m`` for
+    the first two and ``rank`` for the increments. The p-values are SciPy's
+    chi-squared survival function at the reference's degrees of freedom.
+    """
+    rows = {
+        "innovation": "measurement vs prior",
+        "residual": "retrieval vs measurement",
+        "modeled_increment": "retrieval vs prior, y",
+        "increment": "retrieval vs prior, x",
+    }
+    for seed in range(5):
+        case = Case.random(seed, n, m)
+        rng = np.random.default_rng(100 + seed)
+        # Singular values between 0.5 and 2, `rank` of them: the reference,
+        # written with explicit inverses, keeps its digits
+        H = np.zeros((m, n))
+        if rank:
+            U = np.linalg.qr(rng.standard_normal((m, rank)))[0]
+            V = np.linalg.qr(rng.standard_normal((n, rank)))[0]
+            H = U @ np.diag(rng.uniform(0.5, 2.0, rank)) @ V.T
+        case.H = H
+        case.z = H @ case.x_0 + rng.standard_normal(m) * 3.0
+        four = rodgers_four_tests(
+            case.z, case.x_0, H, case.S_0, case.S_z / gamma, case.c
+        )
+        table = solve(case.problem(), method, gamma=gamma).chi2_tests()
+        assert list(table.index) == list(rows)
+        assert table.index.name == "test"
+        assert list(table.columns) == ["chi2", "dof", "reduced_chi2", "p_value"]
+        for row, name in rows.items():
+            got = table.loc[row]
+            statistic, dof = four[name]
+            what = f"seed {seed}, {row} = {name}"
+            assert got["dof"] == dof, what
+            np.testing.assert_allclose(
+                got["chi2"], statistic, rtol=1e-8, atol=1e-12, err_msg=what
+            )
+            if dof == 0:
+                assert np.isnan(got["reduced_chi2"]) and np.isnan(got["p_value"])
+                continue
+            np.testing.assert_allclose(
+                got["p_value"], chi2_distribution.sf(got["chi2"], dof), rtol=1e-12
+            )
+            assert got["reduced_chi2"] == got["chi2"] / got["dof"]
+        assert list(table["dof"]) == [m, m, rank, rank]
 
 
 def takes_gamma(method: str) -> bool:

@@ -16,6 +16,8 @@ in (the ``analytic_form`` fixture):
   trial;
 - the Desroziers ratio of each block averages 1 within 4 standard errors of
   its own trials;
+- each chi-squared test averages its degrees of freedom, and its p-value is
+  below 0.05 in 5% of the trials;
 - each element's DOFS is how its estimate follows its truth,
   ``Cov(x_hat, x) S_0^-1``, and ``J_x`` averages DOFS, within 4 standard errors;
 - when the world's noise is four times the assumed one, the chi-squared
@@ -175,6 +177,47 @@ def test_dofs_per_element_is_how_the_estimate_follows_the_truth(analytic_form):
     J_x_error = J_x.std(ddof=1) / np.sqrt(TRIALS)
     assert abs(J_x.mean() - post.dofs) < STANDARD_ERRORS * J_x_error
     assert expected.sum() == pytest.approx(post.dofs, rel=1e-12)
+
+
+def test_each_chi2_test_averages_its_degrees_of_freedom(analytic_form):
+    """
+    In its own world each test's chi-squared averages its degrees of freedom, and its p-value is uniform.
+
+    The innovation and the residual have ``M`` degrees of freedom, the
+    modeled increment and the increment ``N`` (8 < 12 here, so the pairs
+    differ); each mean is within 4 standard errors, ``sqrt(2 dof / TRIALS)``,
+    and the fraction of p-values below 0.05 is 0.05 within `COVERAGE_TOL`. A
+    world with four times the noise fails every test far more often than 5%
+    of the time (in about 78% of the trials for the first pair and 46% for
+    the increments: they see the noise only through the directions the state
+    can follow).
+    """
+    arrays = World()
+    problem = arrays.problem()
+    post = fips.solve(problem).with_gamma(
+        1.0
+    )  # every trial shares its eigendecomposition
+    rng = np.random.default_rng(4)
+    tables = [
+        post.with_data(problem.simulate(rng)[1]).chi2_tests() for _ in range(TRIALS)
+    ]
+    dof = tables[0]["dof"].to_numpy()
+    assert list(dof) == [M, M, N, N]
+    chi2 = np.array([t["chi2"].to_numpy() for t in tables])
+    p_value = np.array([t["p_value"].to_numpy() for t in tables])
+    standard_error = np.sqrt(2.0 * dof / TRIALS)
+    assert np.all(np.abs(chi2.mean(axis=0) - dof) < STANDARD_ERRORS * standard_error)
+    np.testing.assert_allclose((p_value < 0.05).mean(axis=0), 0.05, atol=COVERAGE_TOL)
+    noisy = arrays.problem(noise_factor=4.0)
+    rejected = np.mean(
+        [
+            post.with_data(noisy.simulate(rng)[1]).chi2_tests()["p_value"].to_numpy()
+            < 0.05
+            for _ in range(200)
+        ],
+        axis=0,
+    )
+    assert np.all(rejected[:2] > 0.5) and np.all(rejected[2:] > 0.25)
 
 
 @pytest.mark.parametrize("gamma", [1.0, 4.0])

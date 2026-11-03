@@ -28,7 +28,7 @@ import pandas as pd
 import scipy.sparse as sp
 from numpy.linalg import LinAlgError
 from scipy.linalg import inv, solve
-from scipy.special import ndtr, ndtri  # the normal CDF and its inverse
+from scipy.special import chdtrc, ndtr, ndtri  # chi-squared sf, normal CDF, inverse
 
 from fips.covariance import Covariance, CovarianceModel
 from fips.linalg import LinearOperator
@@ -138,6 +138,20 @@ class Solution(Protocol):
 
     def chi2(self) -> float:
         r"""Return the chi-squared of the solution: the sum of the data and the state misfits."""
+        ...
+
+    def chi2_tests(self) -> dict[str, tuple[float, int]]:
+        r"""
+        Return Rodgers' four chi-squared tests, each its chi-squared and degrees of freedom.
+
+        Keyed ``innovation`` (:math:`z - H x_0 - c`), ``residual``
+        (:math:`z - H \hat{x} - c`), ``modeled_increment`` (:math:`H (\hat{x}
+        - x_0)`) and ``increment`` (:math:`\hat{x} - x_0`): for each,
+        :math:`v^T C^{+} v` and the rank of :math:`C`, its covariance
+        (:meth:`Posterior.chi2_tests`, which adds the p-values). A method
+        whose estimate is linear in the observations gives two pairs of the
+        same numbers.
+        """
         ...
 
 
@@ -1458,18 +1472,178 @@ class Posterior:
         See Also
         --------
         reduced_chi2 : It, divided by the number of observations.
+        chi2_tests : Its degrees of freedom and p-value, and Rodgers' other three tests.
         """
         return self._solution.chi2()
 
     @property
     def reduced_chi2(self) -> float:
-        """
+        r"""
         :attr:`chi2` divided by the number of observations; near 1 when the covariances are right.
 
-        Tarantola (1987), as in Kunik et al. (2019),
+        :attr:`chi2` is :math:`d^T G^{-1} d`, with :math:`d = z - H x_0 - c`
+        the innovation and :math:`G = H S_0 H^T + S_z / \gamma` its
+        covariance (:attr:`innovation_cov`). When the covariances are right,
+        :math:`d \sim N(0, G)`, so :attr:`chi2` follows a chi-squared
+        distribution with :math:`m` degrees of freedom: its mean is :math:`m`
+        and its standard deviation :math:`\sqrt{2m}`, so this is 1 within
+        about :math:`\sqrt{2/m}`. It is the first test of
+        :meth:`chi2_tests`, which gives its p-value (Rodgers, 2000, chapter
+        12). Used, for example, by Kunik et al. (2019),
         https://doi.org/10.1525/elementa.375.
+
+        References
+        ----------
+        Rodgers, C. D. (2000). *Inverse Methods for Atmospheric Sounding:
+        Theory and Practice*. World Scientific.
+
+        See Also
+        --------
+        chi2 : The chi-squared itself.
+        chi2_tests : The test, with its p-value, and Rodgers' other three tests.
         """
         return self.chi2 / len(self._problem.obs)
+
+    def chi2_tests(self) -> pd.DataFrame:
+        r"""
+        Test whether the innovation, the residual and the increment are as large as the covariances say: Rodgers' four chi-squared tests.
+
+        Each test takes a vector that is :math:`N(0, C)` when the prior error
+        and model-data mismatch covariances are right, and its chi-squared
+        :math:`v^T C^{+} v` (:math:`^{+}` the pseudo-inverse), which then
+        follows a chi-squared distribution whose degrees of freedom are the
+        rank of :math:`C`: it averages them. With :math:`G = H S_0 H^T +
+        S_z / \gamma` (:attr:`innovation_cov`) and :math:`r` the rank of
+        :math:`H S_0`, the number of directions of the state the
+        observations constrain at all:
+
+        - ``innovation``: the observations against what the prior models,
+          :math:`d = z - H x_0 - c`, with :math:`C = G`: :math:`m` degrees
+          of freedom. Its chi-squared is :attr:`chi2`: this row is
+          :attr:`chi2` and :attr:`reduced_chi2` with their p-value.
+        - ``residual``: the observations against what the estimate models,
+          :math:`z - H \hat{x} - c`, with :math:`C = (S_z/\gamma) G^{-1}
+          (S_z/\gamma)`: :math:`m` degrees of freedom.
+        - ``modeled_increment``: how far the estimate moves the modeled
+          observations from the prior's, :math:`H (\hat{x} - x_0)`, with
+          :math:`C = H S_0 H^T G^{-1} H S_0 H^T`: :math:`r` degrees of freedom.
+        - ``increment``: the estimate against the prior,
+          :math:`\hat{x} - x_0`, with :math:`C = S_0 - \hat{S} = S_0 H^T
+          G^{-1} H S_0`: :math:`r` degrees of freedom.
+
+        Rodgers (2000, chapter 12) names them the measurement against the
+        prior, the retrieval against the measurement, and the retrieval
+        against the prior in the measurement and in the state space, as
+        pyOptimalEstimation computes them. The first two test both
+        covariances at once; the last two whether the observations move the
+        estimate as far from the prior as the prior error covariance allows.
+
+        **In a linear problem the four are two pairs of the same numbers**,
+        so a table with duplicate rows is expected: the residual is
+        :math:`(S_z/\gamma) G^{-1} d`, so its chi-squared is :math:`d^T G^{-1}
+        d`, the innovation's; and the two increments are the same
+        components of the innovation, scaled, so their chi-squared is one
+        sum (below). When the observations constrain as many directions as
+        there are observations (:math:`r = m`, usual when :math:`n \ge m`),
+        all four are the same number. They differ when the estimate is not
+        linear in the observations (a nonlinear method, whose :math:`H` is
+        the forward model linearized at the estimate): the table has four
+        rows so that every method gives it the same shape.
+
+        The degrees of freedom are the ranks of the four :math:`C`. :math:`G`
+        and :math:`S_z` are positive definite, so the first two have rank
+        :math:`m`. For a positive-definite :math:`G^{-1}`, :math:`B^T G^{-1}
+        B` has the rank of :math:`B`: :math:`B = H S_0 H^T` for the third
+        and :math:`B = H S_0` for the fourth, both of rank :math:`r` (with a
+        positive-definite :math:`S_0`, :math:`r` is the rank of :math:`H`).
+        So :math:`r \le \min(m, n)`: with fewer state elements than
+        observations the increments have at most :math:`n`, and observations
+        that see nothing (:math:`H S_0 = 0`) give them none.
+
+        The analytic method computes the increments from the
+        eigendecomposition of its factors: with :math:`s_k^2` its
+        eigenvalues times :math:`\gamma` and :math:`e'_k` the innovation
+        whitened by :math:`S_z / \gamma` and rotated onto its eigenvectors
+        (variance :math:`1 + s_k^2`), the increment has the components
+        :math:`s_k e'_k / (1 + s_k^2)` in the state whitened by :math:`S_0`
+        and the modeled increment :math:`s_k^2 e'_k / (1 + s_k^2)` in the
+        observations whitened by :math:`S_z / \gamma`; both chi-squared are
+        :math:`\sum_k e_k'^2 / (1 + s_k^2)` over the :math:`r` eigenvalues
+        above zero. After :func:`fips.solve` this eigendecomposes once, as
+        the first :meth:`with_gamma` does, and keeps it; a Monte Carlo over
+        :meth:`with_data` should start from ``post.with_gamma(gamma)``, whose
+        eigendecomposition every trial shares. An eigenvalue counts when it
+        is above roundoff relative to the largest, so the units of the
+        problem do not change the degrees of freedom.
+
+        Returns
+        -------
+        pandas.DataFrame
+            One row per test (``innovation``, ``residual``,
+            ``modeled_increment``, ``increment``), indexed by ``test``:
+            ``chi2``, ``dof`` (the degrees of freedom), ``reduced_chi2``
+            (``chi2 / dof``, near 1 when the covariances are right) and
+            ``p_value``, the probability of a chi-squared at least this large
+            when they are right. A small p-value says the vector is larger
+            than the covariances allow (they are too small); one near 1 that it
+            is smaller (they are too large). With no degrees of freedom (the
+            observations constrain nothing) the last two are NaN.
+
+        References
+        ----------
+        Rodgers, C. D. (2000). *Inverse Methods for Atmospheric Sounding:
+        Theory and Practice*, chapter 12. World Scientific.
+
+        See Also
+        --------
+        chi2 : The chi-squared of the innovation.
+        desroziers : The observation error variances the residuals diagnose.
+
+        Examples
+        --------
+        Three observations of two state elements: the innovation and the
+        residual have three degrees of freedom, the two increments two. The
+        problem is linear, so the rows come in pairs of the same numbers.
+
+        >>> import numpy as np
+        >>> import pandas as pd
+        >>> import fips
+        >>> cells = pd.Index(["a", "b"], name="cell")
+        >>> obs_id = pd.Index(["o1", "o2", "o3"], name="obs_id")
+        >>> prior = fips.Vector.from_series(pd.Series(0.0, index=cells), block="flux")
+        >>> obs = fips.Vector.from_series(
+        ...     pd.Series([1.0, 2.0, 4.0], index=obs_id), block="co2"
+        ... )
+        >>> problem = fips.Problem(
+        ...     prior=prior,
+        ...     prior_cov=fips.Independent().with_std(1.0),
+        ...     obs=obs,
+        ...     obs_cov=fips.Independent().with_std(np.sqrt(0.1)),
+        ...     forward=fips.Operator(
+        ...         np.array([[1.0, 0.0], [0.0, 1.0], [1.0, 1.0]]),
+        ...         obs.space,
+        ...         prior.space,
+        ...     ),
+        ... )
+        >>> fips.solve(problem).chi2_tests().round(3).reset_index()
+                        test    chi2  dof  reduced_chi2  p_value
+        0         innovation  10.293    3         3.431    0.016
+        1           residual  10.293    3         3.431    0.016
+        2  modeled_increment   6.960    2         3.480    0.031
+        3          increment   6.960    2         3.480    0.031
+        """
+        names = ["innovation", "residual", "modeled_increment", "increment"]
+        tests = self._solution.chi2_tests()
+        chi2 = np.array([tests[name][0] for name in names], dtype=float)
+        dof = np.array([tests[name][1] for name in names], dtype=int)
+        has_dof = dof > 0
+        with np.errstate(divide="ignore", invalid="ignore"):
+            reduced = np.where(has_dof, chi2 / dof, np.nan)
+        p_value = np.where(has_dof, chdtrc(np.maximum(dof, 1), chi2), np.nan)
+        return pd.DataFrame(
+            {"chi2": chi2, "dof": dof, "reduced_chi2": reduced, "p_value": p_value},
+            index=pd.Index(names, name="test"),
+        )
 
     @property
     def r2(self) -> float:
@@ -1571,6 +1745,7 @@ class Posterior:
 
         See Also
         --------
+        chi2_tests : The chi-squared tests, with their p-values.
         desroziers : The observation error variances the residuals diagnose.
         with_gamma : The posterior with another regularization factor.
 
