@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Terminology &#8212; fips 0.2.0b2.dev35+g9eb1e573f documentation</title>
+    <title>Terminology &#8212; fips 0.2.0b2.dev36+ga6c70d1c3 documentation</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../_static/documentation_options.js?v=36d2b424"></script>
+    <script src="../_static/documentation_options.js?v=1173149e"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -137,8 +137,8 @@
       
     
     
-    <img src="../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b2.dev35+g9eb1e573f documentation - Home"/>
-    <img src="../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b2.dev35+g9eb1e573f documentation - Home"/>
+    <img src="../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b2.dev36+ga6c70d1c3 documentation - Home"/>
+    <img src="../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b2.dev36+ga6c70d1c3 documentation - Home"/>
   
   
 </a></div>
@@ -547,8 +547,12 @@ Rodgers, <span class="math notranslate nohighlight">\(C_D\)</span> in Tarantola)
 <td><p><code class="docutils literal notranslate"><span class="pre">post.innovation_cov</span></code></p></td>
 <td><p>The observations minus what the prior models,
 <span class="math notranslate nohighlight">\(d = z - H x_0 - c\)</span>. Its covariance,
-<span class="math notranslate nohighlight">\(H S_0 H^T + S_z / \gamma\)</span>, is the <span class="math notranslate nohighlight">\(m \times m\)</span> matrix the
-solve factors.</p></td>
+<span class="math notranslate nohighlight">\(H S_0 H^T + S_z / \gamma\)</span>, is <span class="math notranslate nohighlight">\(m \times m\)</span>. The solve factors
+it, whitened by the model-data mismatch, unless there are fewer state
+elements than observations, the mismatch is dense, diagonal, sparse,
+block diagonal or Kronecker, and the prior error covariance has a
+square root (a positive-definite one does): it then factors an
+<span class="math notranslate nohighlight">\(n \times n\)</span> matrix instead.</p></td>
 </tr>
 <tr class="row-even"><td><p><strong>posterior</strong></p></td>
 <td><p><span class="math notranslate nohighlight">\(\hat{x}\)</span>, <span class="math notranslate nohighlight">\(\hat{S}\)</span></p></td>
