@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>fips.covariance.kernels &#8212; fips 0.2.0b2.dev39+g41a8910cb documentation</title>
+    <title>fips.covariance.kernels &#8212; fips 0.2.0b2.dev40+g53eb97b37 documentation</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../../_static/documentation_options.js?v=827188b5"></script>
+    <script src="../../../_static/documentation_options.js?v=767acf5e"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -132,8 +132,8 @@
       
     
     
-    <img src="../../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b2.dev39+g41a8910cb documentation - Home"/>
-    <img src="../../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b2.dev39+g41a8910cb documentation - Home"/>
+    <img src="../../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b2.dev40+g53eb97b37 documentation - Home"/>
+    <img src="../../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b2.dev40+g53eb97b37 documentation - Home"/>
   
   
 </a></div>
@@ -473,6 +473,24 @@
     <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">DatetimeIndex</span><span class="p">(</span><span class="n">values</span><span class="p">),</span> <span class="n">attribute</span><span class="p">))</span>
 
 
+<span class="k">def</span><span class="w"> </span><span class="nf">_time_kind</span><span class="p">(</span><span class="n">values</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Return ``"timedeltas"`` or ``"datetimes"`` for a level that holds times, else None."""</span>
+    <span class="k">if</span> <span class="n">pd</span><span class="o">.</span><span class="n">api</span><span class="o">.</span><span class="n">types</span><span class="o">.</span><span class="n">is_timedelta64_dtype</span><span class="p">(</span><span class="n">values</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">"timedeltas"</span>
+    <span class="k">if</span> <span class="n">pd</span><span class="o">.</span><span class="n">api</span><span class="o">.</span><span class="n">types</span><span class="o">.</span><span class="n">is_datetime64_any_dtype</span><span class="p">(</span><span class="n">values</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">"datetimes"</span>
+    <span class="k">return</span> <span class="kc">None</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_time_error</span><span class="p">(</span><span class="n">level</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">kind</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="ne">ValueError</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Return the error for a level of times that is not measured alone with a scale that is a time."""</span>
+    <span class="k">return</span> <span class="ne">ValueError</span><span class="p">(</span>
+        <span class="sa">f</span><span class="s2">"Level </span><span class="si">{</span><span class="n">level</span><span class="si">!r}</span><span class="s2"> holds </span><span class="si">{</span><span class="n">kind</span><span class="si">}</span><span class="s2">: a model measures time along that one "</span>
+        <span class="s2">"level, with a scale that is a time (as '30D'), and takes no other "</span>
+        <span class="s2">"level or metric with it."</span>
+    <span class="p">)</span>
+
+
 <span class="k">def</span><span class="w"> </span><span class="nf">_ends</span><span class="p">(</span><span class="n">values</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">rows</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">cols</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">|</span> <span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">"""Return the two sides of the differences between rows: every two rows (as a column and a row), or the pairs `rows` and `cols` name."""</span>
     <span class="k">if</span> <span class="n">rows</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">cols</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -664,6 +682,8 @@
 <span class="w">        </span><span class="sd">"""Return the levels of `coords` as float columns, or raise naming a level that holds no numbers."""</span>
         <span class="n">columns</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">level</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">levels</span><span class="p">:</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">kind</span> <span class="o">:=</span> <span class="n">_time_kind</span><span class="p">(</span><span class="n">coords</span><span class="p">[</span><span class="n">level</span><span class="p">]))</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">_time_error</span><span class="p">(</span><span class="n">level</span><span class="p">,</span> <span class="n">kind</span><span class="p">)</span>
             <span class="k">try</span><span class="p">:</span>
                 <span class="n">columns</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">coords</span><span class="p">[</span><span class="n">level</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">))</span>
             <span class="k">except</span> <span class="p">(</span><span class="ne">TypeError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">):</span>
@@ -695,21 +715,17 @@
                 <span class="n">term</span> <span class="o">=</span> <span class="n">_half_angle_pairs</span><span class="p">(</span><span class="n">lat</span><span class="p">,</span> <span class="n">lon</span><span class="p">,</span> <span class="n">rows</span><span class="p">,</span> <span class="n">cols</span><span class="p">)</span>
             <span class="n">measure</span> <span class="o">=</span> <span class="n">_great_circle</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">metric</span> <span class="o">==</span> <span class="s2">"haversine"</span> <span class="k">else</span> <span class="n">_chord</span>
             <span class="k">return</span> <span class="n">measure</span><span class="p">(</span><span class="n">term</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">scale</span>
-        <span class="n">first</span> <span class="o">=</span> <span class="n">coords</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">levels</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
-        <span class="n">lags</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">api</span><span class="o">.</span><span class="n">types</span><span class="o">.</span><span class="n">is_timedelta64_dtype</span><span class="p">(</span><span class="n">first</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">lags</span> <span class="ow">or</span> <span class="n">pd</span><span class="o">.</span><span class="n">api</span><span class="o">.</span><span class="n">types</span><span class="o">.</span><span class="n">is_datetime64_any_dtype</span><span class="p">(</span><span class="n">first</span><span class="p">):</span>
-            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">levels</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">scale</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">Timedelta</span><span class="p">):</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                    <span class="sa">f</span><span class="s2">"Level </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">levels</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">!r}</span><span class="s2"> holds "</span>
-                    <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="s1">'timedeltas'</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">lags</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="s1">'datetimes'</span><span class="si">}</span><span class="s2">: a model measures "</span>
-                    <span class="s2">"time along that one level, with a scale that is a time "</span>
-                    <span class="s2">"(as '30D')."</span>
-                <span class="p">)</span>
-            <span class="k">if</span> <span class="n">lags</span><span class="p">:</span>
+        <span class="n">times</span> <span class="o">=</span> <span class="p">{</span><span class="n">lv</span><span class="p">:</span> <span class="n">k</span> <span class="k">for</span> <span class="n">lv</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">levels</span> <span class="k">if</span> <span class="p">(</span><span class="n">k</span> <span class="o">:=</span> <span class="n">_time_kind</span><span class="p">(</span><span class="n">coords</span><span class="p">[</span><span class="n">lv</span><span class="p">]))}</span>
+        <span class="k">if</span> <span class="n">times</span><span class="p">:</span>
+            <span class="n">level</span><span class="p">,</span> <span class="n">kind</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="n">times</span><span class="o">.</span><span class="n">items</span><span class="p">()))</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">levels</span> <span class="o">!=</span> <span class="p">(</span><span class="n">level</span><span class="p">,)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">scale</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">Timedelta</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="n">_time_error</span><span class="p">(</span><span class="n">level</span><span class="p">,</span> <span class="n">kind</span><span class="p">)</span>
+            <span class="n">first</span> <span class="o">=</span> <span class="n">coords</span><span class="p">[</span><span class="n">level</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">kind</span> <span class="o">==</span> <span class="s2">"timedeltas"</span><span class="p">:</span>
                 <span class="n">t</span> <span class="o">=</span> <span class="n">first</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
             <span class="k">else</span><span class="p">:</span>  <span class="c1"># an instant is the same instant in any time zone</span>
-                <span class="n">times</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DatetimeIndex</span><span class="p">(</span><span class="n">first</span><span class="p">)</span>
-                <span class="n">t</span> <span class="o">=</span> <span class="p">(</span><span class="n">times</span><span class="o">.</span><span class="n">tz_convert</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span> <span class="k">if</span> <span class="n">times</span><span class="o">.</span><span class="n">tz</span> <span class="k">else</span> <span class="n">times</span><span class="p">)</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
+                <span class="n">instants</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DatetimeIndex</span><span class="p">(</span><span class="n">first</span><span class="p">)</span>
+                <span class="n">t</span> <span class="o">=</span> <span class="p">(</span><span class="n">instants</span><span class="o">.</span><span class="n">tz_convert</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span> <span class="k">if</span> <span class="n">instants</span><span class="o">.</span><span class="n">tz</span> <span class="k">else</span> <span class="n">instants</span><span class="p">)</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
             <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="n">_ends</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">rows</span><span class="p">,</span> <span class="n">cols</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">a</span> <span class="o">-</span> <span class="n">b</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">scale</span><span class="o">.</span><span class="n">to_timedelta64</span><span class="p">()</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">scale</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">Timedelta</span><span class="p">):</span>
