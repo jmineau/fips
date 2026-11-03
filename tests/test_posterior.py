@@ -341,7 +341,7 @@ class TestSummary:
 
 
 class TestChi2Tests:
-    """``chi2_tests()``: two rows, the innovation's and the increment's; the numbers are in ``test_oracle.py``."""
+    """``chi2_tests()``: four rows, Rodgers' tests; the numbers are in ``test_oracle.py``."""
 
     def test_the_innovation_row_is_chi2(self, problem, post):
         table = post.chi2_tests()
@@ -375,10 +375,23 @@ class TestChi2Tests:
             offset=problem.offset,
         )
         table = fips.solve(blind).chi2_tests()
-        row = table.loc["increment"]
-        assert (row["chi2"], row["dof"]) == (0.0, 0)
-        assert np.isnan(row["reduced_chi2"]) and np.isnan(row["p_value"])
-        assert table.loc["innovation", "dof"] == len(problem.obs)
+        for name in ["modeled_increment", "increment"]:
+            row = table.loc[name]
+            assert (row["chi2"], row["dof"]) == (0.0, 0)
+            assert np.isnan(row["reduced_chi2"]) and np.isnan(row["p_value"])
+        assert list(table["dof"].iloc[:2]) == [len(problem.obs)] * 2
+
+    def test_a_linear_problem_gives_two_pairs(self, post):
+        table = post.chi2_tests()
+        assert list(table.index) == [
+            "innovation", "residual", "modeled_increment", "increment"
+        ]  # fmt: skip
+        pd.testing.assert_series_equal(
+            table.loc["innovation"], table.loc["residual"], check_names=False
+        )
+        pd.testing.assert_series_equal(
+            table.loc["modeled_increment"], table.loc["increment"], check_names=False
+        )
 
 
 class TestDesroziers:
@@ -560,7 +573,8 @@ class _DenseSolution:
     def __init__(self, problem: Problem, gamma: float):
         S_0 = problem.prior_cov.dense()
         H = problem.forward.dense()
-        G = H @ S_0 @ H.T + problem.obs_cov.dense() / gamma
+        self.S_z = problem.obs_cov.dense() / gamma
+        G = H @ S_0 @ H.T + self.S_z
         d = problem.obs.values - problem.predict(problem.prior).values
         self.K = S_0 @ H.T @ np.linalg.inv(G)
         self.x = problem.prior.values + self.K @ d
@@ -568,6 +582,7 @@ class _DenseSolution:
         self.H = H
         self.S0 = S_0
         self.x0 = problem.prior.values
+        self.G, self.d = G, d
         self.chi = float(d @ np.linalg.solve(G, d))
 
     def estimate(self):
@@ -594,13 +609,27 @@ class _DenseSolution:
     def information(self):
         return -0.5 * float(np.linalg.slogdet(np.eye(len(self.x)) - self.K @ self.H)[1])
 
-    def increment_chi2(self):
-        dx = self.x - self.x0
-        C = self.S0 - self.S
+    def chi2_tests(self):
+        # Each test as its textbook writes it: v^T C^+ v and the rank of C
+        S_z, dx = self.S_z, self.x - self.x0
+        residual = self.d - self.H @ dx  # z - H x_hat - c
+        C_residual = S_z @ np.linalg.solve(self.G, S_z)
+        C_increment = self.S0 - self.S
         # S_0 - S_hat is exact to about eps of S_0: a direction the observations
-        # barely see (an eigenvalue of 1e-11 of the largest here) still counts
-        rank = np.linalg.matrix_rank(C, rtol=1e-13)
-        return float(dx @ np.linalg.pinv(C, rcond=1e-13) @ dx), int(rank)
+        # barely see (an eigenvalue of 1e-11 of the largest here) still counts.
+        # The modeled increment's covariance has that eigenvalue squared, below
+        # roundoff, so its row is the increment's: the oracle checks that pair
+        increment = (
+            float(dx @ np.linalg.pinv(C_increment, rcond=1e-13) @ dx),
+            int(np.linalg.matrix_rank(C_increment, rtol=1e-13)),
+        )
+        m = len(self.d)
+        return {
+            "innovation": (self.chi, m),
+            "residual": (float(residual @ np.linalg.solve(C_residual, residual)), m),
+            "modeled_increment": increment,
+            "increment": increment,
+        }
 
     def chi2(self):
         return self.chi

@@ -15,7 +15,8 @@ below:
 - its solution, the object it keeps from a solve, which answers the questions
   of :class:`~fips.posterior.Solution` with unlabeled arrays in the order of
   the problem's spaces: ``estimate()``, ``variances()``, ``cov(W)``,
-  ``gain(W)``, ``dofs()`` and ``chi2()``. It may also have
+  ``gain(W)``, ``dofs()``, ``dofs_per_element()``, ``information()``,
+  ``chi2()`` and ``chi2_tests()``. It may also have
   ``with_gamma(gamma)`` and ``with_data(problem)``, which give another
   solution without solving again, ``estimate_is_mean = True`` when its
   estimate is the posterior mean, and ``estimate_is_linear = True`` when its

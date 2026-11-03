@@ -183,13 +183,14 @@ def test_each_chi2_test_averages_its_degrees_of_freedom(analytic_form):
     """
     In its own world each test's chi-squared averages its degrees of freedom, and its p-value is uniform.
 
-    The innovation has ``M`` degrees of freedom and the increment ``N``
-    (8 < 12 here, so the two differ); each mean is within 4 standard
-    errors, ``sqrt(2 dof / TRIALS)``, and the fraction of p-values below 0.05
-    is 0.05 within `COVERAGE_TOL`. A world with four times the noise fails
-    both tests far more often than 5% of the time (in about 78% and 46% of
-    the trials: the increment sees the noise only through the directions the
-    state can follow).
+    The innovation and the residual have ``M`` degrees of freedom, the
+    modeled increment and the increment ``N`` (8 < 12 here, so the pairs
+    differ); each mean is within 4 standard errors, ``sqrt(2 dof / TRIALS)``,
+    and the fraction of p-values below 0.05 is 0.05 within `COVERAGE_TOL`. A
+    world with four times the noise fails every test far more often than 5%
+    of the time (in about 78% of the trials for the first pair and 46% for
+    the increments: they see the noise only through the directions the state
+    can follow).
     """
     arrays = World()
     problem = arrays.problem()
@@ -201,7 +202,7 @@ def test_each_chi2_test_averages_its_degrees_of_freedom(analytic_form):
         post.with_data(problem.simulate(rng)[1]).chi2_tests() for _ in range(TRIALS)
     ]
     dof = tables[0]["dof"].to_numpy()
-    assert list(dof) == [M, N]
+    assert list(dof) == [M, M, N, N]
     chi2 = np.array([t["chi2"].to_numpy() for t in tables])
     p_value = np.array([t["p_value"].to_numpy() for t in tables])
     standard_error = np.sqrt(2.0 * dof / TRIALS)
@@ -216,7 +217,7 @@ def test_each_chi2_test_averages_its_degrees_of_freedom(analytic_form):
         ],
         axis=0,
     )
-    assert rejected[0] > 0.5 and rejected[1] > 0.25
+    assert np.all(rejected[:2] > 0.5) and np.all(rejected[2:] > 0.25)
 
 
 @pytest.mark.parametrize("gamma", [1.0, 4.0])

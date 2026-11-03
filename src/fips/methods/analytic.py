@@ -183,7 +183,32 @@ class _Factors:
             return self.information_at_gamma
         return 0.5 * float(np.sum(np.log1p(self.gamma * self.eigenvalues)))
 
-    def increment_chi2(self) -> tuple[float, int]:
+    def chi2(self) -> float:
+        r"""Return the chi-squared of the innovation, :math:`d^T (H S_0 H^T + S_z/\gamma)^{-1} d` (each form defines it)."""
+        raise NotImplementedError
+
+    def chi2_tests(self) -> dict[str, tuple[float, int]]:
+        r"""
+        Return Rodgers' four chi-squared tests, each its chi-squared and degrees of freedom (:meth:`Posterior.chi2_tests <fips.Posterior.chi2_tests>`).
+
+        The estimate is linear in the observations, so the four are two
+        pairs of the same numbers: ``innovation`` and ``residual`` are
+        :meth:`chi2` with :math:`m` degrees of freedom (the residual is
+        :math:`(S_z/\gamma) G^{-1} d`, so its chi-squared is :math:`d^T
+        G^{-1} d`); ``modeled_increment`` and ``increment`` are one sum over
+        the eigenvalues (``_increment_chi2``), with the rank of :math:`H S_0`,
+        the number of directions the observations constrain, as theirs.
+        """
+        chi2, m = self.chi2(), len(self.problem.obs)
+        increment, rank = self._increment_chi2()
+        return {
+            "innovation": (chi2, m),
+            "residual": (chi2, m),
+            "modeled_increment": (increment, rank),
+            "increment": (increment, rank),
+        }
+
+    def _increment_chi2(self) -> tuple[float, int]:
         r"""
         Return the chi-squared of the increment, :math:`\sum_k e_k'^2 / (1 + s_k^2)` over :math:`s_k^2 > 0`, and the number of those :math:`k`.
 
@@ -202,7 +227,7 @@ class _Factors:
         keeps it.
         """
         if self.eigenvalues is None:
-            return self.with_gamma(self.gamma).increment_chi2()
+            return self.with_gamma(self.gamma)._increment_chi2()
         eigenvalues = self.eigenvalues
         roundoff = len(eigenvalues) * np.finfo(float).eps * eigenvalues.max(initial=0.0)
         kept = eigenvalues > roundoff
@@ -696,7 +721,7 @@ class Information(_Factors):
         they have no eigenvalue above zero, and the sum leaves them out.
         """
         w, b, eigenvalues = self.weights(), self.innovation, self.eigenvalues
-        assert eigenvalues is not None  # increment_chi2 eigendecomposes first
+        assert eigenvalues is not None  # _increment_chi2 eigendecomposes first
         return w[kept] * b[kept] ** 2 / eigenvalues[kept]
 
     def _weighted_obs(self) -> tuple[np.ndarray, np.ndarray]:

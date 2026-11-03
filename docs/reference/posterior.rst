@@ -168,6 +168,6 @@ added is in the docstring of :mod:`fips.methods`.
    Solution.dofs_per_element
    Solution.information
    Solution.chi2
-   Solution.increment_chi2
+   Solution.chi2_tests
    Options
    Options.gamma
