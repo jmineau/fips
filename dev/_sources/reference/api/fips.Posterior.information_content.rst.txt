@@ -1,0 +1,6 @@
+fips.Posterior.information\_content
+===================================
+
+.. currentmodule:: fips
+
+.. autoproperty:: Posterior.information_content

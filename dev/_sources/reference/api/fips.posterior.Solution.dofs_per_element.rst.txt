@@ -1,0 +1,6 @@
+fips.posterior.Solution.dofs\_per\_element
+==========================================
+
+.. currentmodule:: fips.posterior
+
+.. automethod:: Solution.dofs_per_element

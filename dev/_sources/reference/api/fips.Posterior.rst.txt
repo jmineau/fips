@@ -16,7 +16,9 @@
 
    ~Posterior.chi2
    ~Posterior.dofs
+   ~Posterior.dofs_per_element
    ~Posterior.estimate
+   ~Posterior.information_content
    ~Posterior.innovation_cov
    ~Posterior.kalman_gain
    ~Posterior.mean

@@ -20,8 +20,10 @@
    ~Solution.chi2
    ~Solution.cov
    ~Solution.dofs
+   ~Solution.dofs_per_element
    ~Solution.estimate
    ~Solution.gain
+   ~Solution.information
    ~Solution.variances
 
 

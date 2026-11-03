@@ -127,6 +127,15 @@ The words
      - ``post.dofs``
      - Degrees of freedom for signal: the number of independent pieces of
        information the observations give about the state.
+       ``post.dofs_per_element`` is the diagonal of :math:`A`, each state
+       element's share, which sums to DOFS.
+   * - **information content**
+     - :math:`-\tfrac{1}{2} \ln \lvert I - A \rvert`
+     - ``post.information_content``
+     - The Shannon information content, in nats (divide by :math:`\ln 2`
+       for bits): how much the observations shrink the volume of the state's
+       uncertainty, :math:`\tfrac{1}{2} \ln (\lvert S_0 \rvert /
+       \lvert \hat{S} \rvert)`, on a log scale.
    * - **gamma**
      - :math:`\gamma`
      - ``gamma``, ``post.with_gamma(g)``

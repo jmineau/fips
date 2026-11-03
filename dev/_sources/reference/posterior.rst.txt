@@ -97,6 +97,8 @@ Diagnostics
    :toctree: api/
 
    Posterior.dofs
+   Posterior.dofs_per_element
+   Posterior.information_content
    Posterior.chi2
    Posterior.reduced_chi2
    Posterior.r2
@@ -162,6 +164,8 @@ added is in the docstring of :mod:`fips.methods`.
    Solution.cov
    Solution.gain
    Solution.dofs
+   Solution.dofs_per_element
+   Solution.information
    Solution.chi2
    Options
    Options.gamma
