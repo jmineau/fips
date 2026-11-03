@@ -183,6 +183,35 @@ class _Factors:
             return self.information_at_gamma
         return 0.5 * float(np.sum(np.log1p(self.gamma * self.eigenvalues)))
 
+    def increment_chi2(self) -> tuple[float, int]:
+        r"""
+        Return the chi-squared of the increment, :math:`\sum_k e_k'^2 / (1 + s_k^2)` over :math:`s_k^2 > 0`, and the number of those :math:`k`.
+
+        With :math:`s_k^2 = \gamma \lambda_k` and :math:`e'_k` the innovation
+        whitened by :math:`S_z / \gamma` and rotated onto the eigenvectors,
+        :math:`\hat{x} - x_0` has the components :math:`s_k e'_k / (1 +
+        s_k^2)` of variance :math:`s_k^2 / (1 + s_k^2)` in the state whitened
+        by :math:`S_0`, and :math:`H (\hat{x} - x_0)` the components
+        :math:`s_k^2 e'_k / (1 + s_k^2)` of variance :math:`s_k^4 / (1 +
+        s_k^2)` in the observations whitened by :math:`S_z / \gamma`; either
+        way the chi-squared is this sum, and the degrees of freedom the rank.
+        An eigenvalue counts when it is above roundoff, ``k * eps`` times the
+        largest (the tolerance of ``_clip``): relative, so the units of the
+        problem do not change the rank. It needs the eigendecomposition: after
+        a Cholesky, this does it as the first :meth:`with_gamma` does, and
+        keeps it.
+        """
+        if self.eigenvalues is None:
+            return self.with_gamma(self.gamma).increment_chi2()
+        eigenvalues = self.eigenvalues
+        roundoff = len(eigenvalues) * np.finfo(float).eps * eigenvalues.max(initial=0.0)
+        kept = eigenvalues > roundoff
+        return float(np.sum(self._chi2_terms(kept))), int(kept.sum())
+
+    def _chi2_terms(self, kept: np.ndarray) -> np.ndarray:
+        r"""Return :math:`e_k'^2 / (1 + s_k^2)` for the eigenvalues `kept` (each form defines it)."""
+        raise NotImplementedError
+
     def with_gamma(self, gamma: float) -> "Self":
         """Return the same factors, read at `gamma`, from the eigendecomposition (done on the first call after a Cholesky, and kept)."""
         if self.eigenvalues is not None:
@@ -416,6 +445,10 @@ class Whitened(_Factors):
     def chi2(self) -> float:
         r"""Return :math:`d^T (H Q H^T + S_z/\gamma)^{-1} d = \sum_k w_k e_k^2`."""
         return float(np.sum(self.weights() * self.innovation**2))
+
+    def _chi2_terms(self, kept: np.ndarray) -> np.ndarray:
+        r"""Return :math:`w_k e_k^2` for the eigenvalues `kept`: :math:`e'_k = \sqrt{\gamma} e_k`, so :math:`e_k'^2 / (1 + s_k^2) = w_k e_k^2`."""
+        return (self.weights() * self.innovation**2)[kept]
 
     def innovation_precision(self, groups: Sequence[np.ndarray]) -> list[np.ndarray]:
         r"""
@@ -651,6 +684,20 @@ class Information(_Factors):
         d = _innovation(problem)
         r = d - problem.forward.data @ self._increment()
         return self.gamma * float(d @ problem.obs_cov.data.solve(r))
+
+    def _chi2_terms(self, kept: np.ndarray) -> np.ndarray:
+        r"""
+        Return :math:`w_k b_k^2 / \lambda_k` for the eigenvalues `kept`.
+
+        :math:`b_k = \sqrt{\lambda_k} e_k` (both are the innovation carried
+        through the singular vectors of :math:`S_z^{-1/2} H R_0`), so
+        :math:`e_k'^2 / (1 + s_k^2) = w_k e_k^2 = w_k b_k^2 / \lambda_k`. The
+        information form has no component outside the state's directions:
+        they have no eigenvalue above zero, and the sum leaves them out.
+        """
+        w, b, eigenvalues = self.weights(), self.innovation, self.eigenvalues
+        assert eigenvalues is not None  # increment_chi2 eigendecomposes first
+        return w[kept] * b[kept] ** 2 / eigenvalues[kept]
 
     def _weighted_obs(self) -> tuple[np.ndarray, np.ndarray]:
         r"""Return :math:`H G` and :math:`Z = S_z^{-1} H G` (both ``m x n``)."""

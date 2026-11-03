@@ -157,6 +157,8 @@ The posterior also has these statistics:
      - The misfit of the estimate to the observations and to the prior, each
        weighed by its covariance; ``post.reduced_chi2`` divides it by
        :math:`m`, and is near 1 when the covariances are right.
+       ``post.chi2_tests()`` gives its degrees of freedom and p-value, and the
+       same test of the increment :math:`\hat{x} - x_0` (Rodgers' tests).
    * - :math:`R^2`, RMSE
      - ``post.r2``, ``post.rmse``
      - The squared correlation of the observations less the offset,

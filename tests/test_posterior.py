@@ -340,6 +340,47 @@ class TestSummary:
         )
 
 
+class TestChi2Tests:
+    """``chi2_tests()``: two rows, the innovation's and the increment's; the numbers are in ``test_oracle.py``."""
+
+    def test_the_innovation_row_is_chi2(self, problem, post):
+        table = post.chi2_tests()
+        row = table.loc["innovation"]
+        assert row["chi2"] == post.chi2
+        assert row["dof"] == len(problem.obs)
+        assert row["reduced_chi2"] == pytest.approx(post.reduced_chi2, rel=1e-15)
+        assert pd.api.types.is_integer_dtype(table["dof"])
+        assert 0.0 <= row["p_value"] <= 1.0
+
+    def test_it_prints_nothing_and_keeps_the_eigendecomposition(self, post, capsys):
+        assert post._solution.eigenvalues is None  # a Cholesky
+        first = post.chi2_tests()
+        assert capsys.readouterr().out == ""
+        kept = vars(post._solution)["_eigendecomposed"]
+        pd.testing.assert_frame_equal(post.chi2_tests(), first)
+        assert vars(post._solution)["_eigendecomposed"] is kept
+        swept = post.with_gamma(1.0)
+        assert swept._solution.eigenvalues is kept.eigenvalues
+        pd.testing.assert_frame_equal(swept.chi2_tests(), first, rtol=1e-10)
+
+    def test_observations_that_see_nothing_have_no_degrees_of_freedom(self, problem):
+        blind = Problem(
+            prior=problem.prior,
+            prior_cov=problem.prior_cov,
+            obs=problem.obs,
+            obs_cov=problem.obs_cov,
+            forward=Operator(
+                np.zeros(problem.forward.shape), problem.obs.space, problem.prior.space
+            ),
+            offset=problem.offset,
+        )
+        table = fips.solve(blind).chi2_tests()
+        row = table.loc["increment"]
+        assert (row["chi2"], row["dof"]) == (0.0, 0)
+        assert np.isnan(row["reduced_chi2"]) and np.isnan(row["p_value"])
+        assert table.loc["innovation", "dof"] == len(problem.obs)
+
+
 class TestDesroziers:
     def test_per_observation(self, problem, post):
         table = post.desroziers()
@@ -525,6 +566,8 @@ class _DenseSolution:
         self.x = problem.prior.values + self.K @ d
         self.S = S_0 - self.K @ H @ S_0
         self.H = H
+        self.S0 = S_0
+        self.x0 = problem.prior.values
         self.chi = float(d @ np.linalg.solve(G, d))
 
     def estimate(self):
@@ -550,6 +593,14 @@ class _DenseSolution:
 
     def information(self):
         return -0.5 * float(np.linalg.slogdet(np.eye(len(self.x)) - self.K @ self.H)[1])
+
+    def increment_chi2(self):
+        dx = self.x - self.x0
+        C = self.S0 - self.S
+        # S_0 - S_hat is exact to about eps of S_0: a direction the observations
+        # barely see (an eigenvalue of 1e-11 of the largest here) still counts
+        rank = np.linalg.matrix_rank(C, rtol=1e-13)
+        return float(dx @ np.linalg.pinv(C, rcond=1e-13) @ dx), int(rank)
 
     def chi2(self):
         return self.chi
@@ -605,6 +656,7 @@ class TestAnotherMethod:
             other.desroziers(by="site"), post.desroziers(by="site"), rtol=1e-10
         )
         pd.testing.assert_frame_equal(other.summary(), post.summary(), rtol=1e-10)
+        pd.testing.assert_frame_equal(other.chi2_tests(), post.chi2_tests(), rtol=1e-8)
         assert other.options == _Options() and other.problem is problem
 
     def test_analytic_only_members_say_so(self, problem, other):

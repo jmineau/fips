@@ -489,6 +489,26 @@ per observation or averaged over groups; :attr:`~fips.Posterior.reduced_chi2`
 is near 1 when the covariances are right; :meth:`~fips.Posterior.leverage`
 says which observations weigh most on a state.
 
+:meth:`~fips.Posterior.chi2_tests` makes the reduced chi-squared a test
+(Rodgers, 2000, chapter 12): for the innovation :math:`z - H x_0 - c`, whose
+chi-squared is :attr:`~fips.Posterior.chi2` with :math:`m` degrees of freedom,
+and for the increment :math:`\hat{x} - x_0` against its covariance
+:math:`S_0 - \hat{S}`, with as many degrees of freedom as the directions of the
+state the observations constrain. Each row has its p-value: small when the
+vector is larger than the covariances allow, near 1 when it is smaller. Rodgers
+writes four tests; in a linear problem the other two give the same numbers as
+these, so fips reports two. In the weekly problem the state has more elements
+than its 15 observations, which constrain 15 directions of it, so the two rows
+are the same number; in the hourly problem many observations see three state
+elements, and the increment has three degrees of freedom. Both of the hourly
+problem's tests reject its covariances (p-values of 0): its made-up
+observations are much farther from the prior than its covariances allow.
+
+.. ipython:: python
+
+   post.chi2_tests().round(3)
+   hourly_post.chi2_tests().round(3)
+
 
 .. _synthetic-data:
 
