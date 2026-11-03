@@ -75,7 +75,7 @@ class Problem:
     The problem is the question: it holds what needs no solve and no
     ``m x m`` matrix, such as :meth:`predict`, and it makes other questions
     from itself (:meth:`aggregate`, :meth:`restrict`). What depends on the
-    solve, or on the ``m x m`` matrix the solve factors, is on the
+    solve, or on the ``m x m`` innovation covariance, is on the
     :class:`~fips.Posterior`.
 
     Parameters

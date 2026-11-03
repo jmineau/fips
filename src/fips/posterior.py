@@ -335,7 +335,7 @@ class Posterior:
     object), and the posterior covariance is
     :math:`\hat{S} = (H^T S_z^{-1} H + S_0^{-1})^{-1}`, with :math:`S_z`
     divided by the regularization factor :math:`\gamma`. It holds what depends
-    on the solve or on the ``m x m`` matrix the solve factors
+    on the solve or on the ``m x m`` innovation covariance
     (:attr:`innovation_cov`); what needs neither is on the
     :class:`~fips.Problem` (:meth:`~fips.Problem.predict`).
 
