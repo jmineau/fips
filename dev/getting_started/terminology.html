@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Terminology &#8212; fips 0.2.0b2.dev41+gfc693201c documentation</title>
+    <title>Terminology &#8212; fips 0.2.0b2.dev42+gf73af5bb9 documentation</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../_static/documentation_options.js?v=f7fc8618"></script>
+    <script src="../_static/documentation_options.js?v=d87d1a4b"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -137,8 +137,8 @@
       
     
     
-    <img src="../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b2.dev41+gfc693201c documentation - Home"/>
-    <img src="../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b2.dev41+gfc693201c documentation - Home"/>
+    <img src="../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b2.dev42+gf73af5bb9 documentation - Home"/>
+    <img src="../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b2.dev42+gf73af5bb9 documentation - Home"/>
   
   
 </a></div>
@@ -620,7 +620,14 @@ more. 1 by default.</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">post.chi2</span></code></p></td>
 <td><p>The misfit of the estimate to the observations and to the prior, each
 weighed by its covariance; <code class="docutils literal notranslate"><span class="pre">post.reduced_chi2</span></code> divides it by
-<span class="math notranslate nohighlight">\(m\)</span>, and is near 1 when the covariances are right.</p></td>
+<span class="math notranslate nohighlight">\(m\)</span>, and is near 1 when the covariances are right.
+<code class="docutils literal notranslate"><span class="pre">post.chi2_tests()</span></code> gives its degrees of freedom and p-value, and
+the same test of three more vectors (Rodgers’ four tests): the
+residual <span class="math notranslate nohighlight">\(z - H \hat{x} - c\)</span>, the increment
+<span class="math notranslate nohighlight">\(\hat{x} - x_0\)</span>, and the modeled increment
+<span class="math notranslate nohighlight">\(H (\hat{x} - x_0)\)</span>, the increment as the observations see it.
+In a linear problem the residual’s test gives the innovation’s
+numbers and the modeled increment’s the increment’s.</p></td>
 </tr>
 <tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(R^2\)</span>, RMSE</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">post.r2</span></code>, <code class="docutils literal notranslate"><span class="pre">post.rmse</span></code></p></td>

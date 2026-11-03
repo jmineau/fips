@@ -157,6 +157,13 @@ The posterior also has these statistics:
      - The misfit of the estimate to the observations and to the prior, each
        weighed by its covariance; ``post.reduced_chi2`` divides it by
        :math:`m`, and is near 1 when the covariances are right.
+       ``post.chi2_tests()`` gives its degrees of freedom and p-value, and
+       the same test of three more vectors (Rodgers' four tests): the
+       residual :math:`z - H \hat{x} - c`, the increment
+       :math:`\hat{x} - x_0`, and the modeled increment
+       :math:`H (\hat{x} - x_0)`, the increment as the observations see it.
+       In a linear problem the residual's test gives the innovation's
+       numbers and the modeled increment's the increment's.
    * - :math:`R^2`, RMSE
      - ``post.r2``, ``post.rmse``
      - The squared correlation of the observations less the offset,

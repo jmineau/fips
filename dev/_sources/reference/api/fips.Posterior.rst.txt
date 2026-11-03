@@ -40,6 +40,7 @@
 
    ~Posterior.averaging_kernel
    ~Posterior.candidate_worth
+   ~Posterior.chi2_tests
    ~Posterior.cov
    ~Posterior.data_worth
    ~Posterior.desroziers

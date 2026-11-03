@@ -101,6 +101,7 @@ Diagnostics
    Posterior.information_content
    Posterior.chi2
    Posterior.reduced_chi2
+   Posterior.chi2_tests
    Posterior.r2
    Posterior.rmse
    Posterior.uncertainty_reduction
@@ -167,5 +168,6 @@ added is in the docstring of :mod:`fips.methods`.
    Solution.dofs_per_element
    Solution.information
    Solution.chi2
+   Solution.chi2_tests
    Options
    Options.gamma
