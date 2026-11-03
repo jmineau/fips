@@ -7,6 +7,30 @@ file alone: the entries are written at release (`just changelog` drafts them).
 
 ## [Unreleased]
 
+## [0.2.0b2] - 2026-11-03
+
+### Added
+
+- **Aggregates and what the observations are worth.** `Posterior.uncertainty(W)` gives the prior and posterior standard deviation and the reduction (1 − posterior/prior) of each aggregate (a row of `W`, a trend or a season, or each state element) without an n × n matrix. `Covariance.aggregate(W)` gives `W S Wᵀ`. `Posterior.data_worth` says what each group of observations adds to an aggregate and its share of DOFS, and `std_alone` and `reduction_alone` say what the group is worth alone on the prior. `Posterior.candidate_worth` says what candidate observations that are not in the problem would add. `fips.aggregate.sum` and `mean` take `dropna`, which leaves out the labels a key cannot place and the blocks it does not name. (#142, #143, #144, #151)
+- **Information content.** `Posterior.dofs_per_element` is the diagonal of the averaging kernel on the state's labels (it sums to `dofs`), and `Posterior.information_content` is the Shannon information, −½ ln|I − A|, in nats. `summary()` gains an `information_content` column after `dofs`. Neither forms the gain or an n × n kernel. (#27, #169)
+- **Chi-squared tests.** `Posterior.chi2_tests()` returns Rodgers' (2000, chapter 12) four chi-squared tests with their degrees of freedom, reduced chi-squared and p-values, one row each: `innovation` (z − H x₀ − c, the existing `chi2`), `residual` (z − H x̂ − c), `modeled_increment` (H (x̂ − x₀)) and `increment` (x̂ − x₀). In a linear problem they are two equal pairs, and all four are one number when the rank of `H S₀` equals the number of observations; they differ in a nonlinear retrieval. (#27, #170)
+- **Synthetic truth.** `Problem.simulate` draws a truth and its synthetic observations, `Covariance.sample` draws from N(0, S) without forming S where a form has a cheap root, and `Posterior.recovery` gives the exact error of the estimate when the data come from a world (the answer of a Monte Carlo loop over `simulate` and `with_data`, without sampling). (#20)
+- The information form takes a dense or a Kronecker model-data mismatch. (#128, #130)
+
+### Changed
+
+- **Breaking:** `Covariance` refuses a matrix that is not positive semidefinite, with an eigenvalue below zero by more than roundoff. `Posterior.recovery` gives NaN, with a warning, for a variance below zero by more than roundoff. Covariances that models build or fips computes are not checked. (#149)
+- **Breaking:** `Covariance.from_blocks` refuses a block that lacks variances. (#127)
+- **Breaking for a custom method:** the `Solution` protocol gains required members: `dofs_per_element()`, `information()` and `chi2_tests()`, which replaces `increment_chi2()`.
+- `fips.solve` factors the analytic method's matrix by Cholesky at the gamma it was given, where it eigendecomposed it. The first `Posterior.with_gamma` eigendecomposes the same problem and keeps that, so later `with_gamma` calls stay cheap. Results agree to 1e-10 (Desroziers to 1e-9).
+
+### Fixed
+
+- A covariance model on a level of times measures it alone, wherever the level sits among the levels. A level of datetimes that was not first used to be cast to float nanoseconds, so `Exponential(["x", "t"], 1.0)` returned the identity with no error; such calls now raise. (#163, #164)
+- A covariance model on a level of strings names the level and says a model needs numbers (coordinates) or times, where numpy's `could not convert string to float` came out. (#158, #159)
+- `plot_comparison` matches the errors to the series by label. The error band and bars were read by position, so a standard deviation `Series` in another order gave each point another point's uncertainty. A plain array or list is still read by position and must be as long as the series. (#166)
+- The numpy, scipy and xarray floors are raised. (#145, #146)
+
 ## [0.2.0b1] - 2026-10-27
 
 fips 0.2 replaces the pandas-backed structures of 0.1 with labeled linear
