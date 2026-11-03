@@ -383,6 +383,21 @@ and keeps it, so a sweep over ``gamma`` pays for one eigendecomposition.
    post = fips.solve(problem)
    post.variances.to_series().head()
 
+**How much the observations tell.** :attr:`~fips.Posterior.dofs` is the trace
+of the averaging kernel, the number of independent pieces of information the
+observations give about the state; :attr:`~fips.Posterior.dofs_per_element` is
+its diagonal on the state's labels, so the share of a week, a region or a block
+is a sum over its labels. :attr:`~fips.Posterior.information_content` is the
+Shannon information content, :math:`-\tfrac{1}{2} \ln \lvert I - A \rvert` in
+nats: where DOFS counts a constrained direction as at most 1, it keeps growing
+as the observations get more precise. Both are read from the factors, without
+the :math:`n \times n` kernel:
+
+.. ipython:: python
+
+   post.dofs_per_element.to_series().groupby(level="time").sum().round(3)
+   round(post.dofs, 3), round(post.information_content, 3)
+
 **The posterior of aggregates.** An aggregation :math:`W` of the state (one row
 per total or mean) gives the posterior covariance of the aggregates,
 ``post.cov(W)`` (:math:`W \hat{S} W^T`), their prior covariance,

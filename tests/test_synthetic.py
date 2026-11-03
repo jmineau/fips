@@ -16,6 +16,8 @@ in (the ``analytic_form`` fixture):
   trial;
 - the Desroziers ratio of each block averages 1 within 4 standard errors of
   its own trials;
+- each element's DOFS is how its estimate follows its truth,
+  ``Cov(x_hat, x) S_0^-1``, and ``J_x`` averages DOFS, within 4 standard errors;
 - when the world's noise is four times the assumed one, the chi-squared
   averages the closed form tr(G^-1 (H S_0 H^T + S_z,world)), G = H S_0 H^T +
   S_z / gamma, within 4 standard errors of the trials.
@@ -145,6 +147,34 @@ def test_reduced_chi2_and_desroziers_are_one(analytic_form):
     # the ratio's spread is not 2 / m: its own trials give its standard error
     ratio_error = ratios.std(axis=0, ddof=1) / np.sqrt(TRIALS)
     assert np.all(np.abs(ratios.mean(axis=0) - 1.0) < STANDARD_ERRORS * ratio_error)
+
+
+def test_dofs_per_element_is_how_the_estimate_follows_the_truth(analytic_form):
+    """
+    The averaging kernel is the regression of the estimate on the truth: ``A = Cov(x_hat, x) S_0^-1``.
+
+    So the mean over trials of ``(x_hat - x_0)_j (S_0^-1 (x - x_0))_j`` is
+    ``A_jj``, each within 4 standard errors of its trials, and the mean of
+    ``J_x = (x_hat - x_0)^T S_0^-1 (x_hat - x_0)`` is ``tr(A)``, DOFS.
+    """
+    arrays = World()
+    problem = arrays.problem()
+    post = fips.solve(problem)
+    S0_inv = np.linalg.inv(arrays.S0)
+    rng = np.random.default_rng(3)
+    follows, J_x = [], []
+    for _ in range(TRIALS):
+        truth, obs = problem.simulate(rng)
+        increment = post.with_data(obs).estimate.values - arrays.x0
+        follows.append(increment * (S0_inv @ (truth.values - arrays.x0)))
+        J_x.append(increment @ S0_inv @ increment)
+    follows, J_x = np.array(follows), np.array(J_x)
+    expected = post.dofs_per_element.values
+    error = follows.std(axis=0, ddof=1) / np.sqrt(TRIALS)
+    assert np.all(np.abs(follows.mean(axis=0) - expected) < STANDARD_ERRORS * error)
+    J_x_error = J_x.std(ddof=1) / np.sqrt(TRIALS)
+    assert abs(J_x.mean() - post.dofs) < STANDARD_ERRORS * J_x_error
+    assert expected.sum() == pytest.approx(post.dofs, rel=1e-12)
 
 
 @pytest.mark.parametrize("gamma", [1.0, 4.0])

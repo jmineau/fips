@@ -5,8 +5,9 @@ The posterior of a solved inverse problem.
 the method, and what the method kept from its solve (a :class:`Solution`).
 The posterior labels the answer; the method keeps its own machinery. It asks
 the solution for unlabeled arrays (the estimate, the variances, the
-covariance of aggregates, the gain, DOFS, chi-squared), puts the problem's
-labels on them and keeps each one once computed. Everything else it gives is
+covariance of aggregates, the gain, DOFS and its share per state element, the
+information content, chi-squared), puts the problem's labels on them and keeps
+each one once computed. Everything else it gives is
 written from those and the problem, so it holds for every method. The
 analytic method's solution is the factorization of its whitened system, or of
 its information system when that is smaller (:mod:`fips.methods.analytic`).
@@ -125,6 +126,14 @@ class Solution(Protocol):
 
     def dofs(self) -> float:
         r"""Return the degrees of freedom for signal, :math:`\operatorname{tr}(K H)`."""
+        ...
+
+    def dofs_per_element(self) -> np.ndarray:
+        r"""Return the diagonal of the averaging kernel, :math:`\operatorname{diag}(K H)` (``n``), whose sum is :meth:`dofs`."""
+        ...
+
+    def information(self) -> float:
+        r"""Return the Shannon information content, :math:`-\tfrac{1}{2} \ln \lvert I - K H \rvert`, in nats."""
         ...
 
     def chi2(self) -> float:
@@ -1312,6 +1321,127 @@ class Posterior:
         """
         return self._solution.dofs()
 
+    @cached_property
+    def dofs_per_element(self) -> Vector:
+        r"""
+        Each state element's share of :attr:`dofs`: the diagonal of :meth:`averaging_kernel`, on the prior's space.
+
+        :math:`A_{jj}`, how much the estimate of element :math:`j` responds to
+        its own true value: near 1 for an element the observations constrain,
+        near 0 for one left at its prior. The values sum to :attr:`dofs`, so
+        a group's share (a region, a block, a month) is a sum over its
+        labels. The analytic method computes the diagonal from its factors,
+        without forming the gain or the ``n x n`` kernel.
+
+        A diagonal entry is not the information on that element alone: the
+        rest of its row of :math:`A` says how much of the estimate comes
+        from the true values of the other elements.
+
+        See Also
+        --------
+        dofs : Their sum.
+        averaging_kernel : The full kernel :math:`A = K H`.
+        information_content : The information the observations give, in nats.
+
+        Examples
+        --------
+        >>> import numpy as np
+        >>> import pandas as pd
+        >>> import fips
+        >>> cells = pd.Index(["a", "b"], name="cell")
+        >>> obs_id = pd.Index(["o1", "o2", "o3"], name="obs_id")
+        >>> prior = fips.Vector.from_series(pd.Series(0.0, index=cells), block="flux")
+        >>> obs = fips.Vector.from_series(
+        ...     pd.Series([1.0, 2.0, 3.0], index=obs_id), block="co2"
+        ... )
+        >>> problem = fips.Problem(
+        ...     prior=prior,
+        ...     prior_cov=fips.Independent().with_std(1.0),
+        ...     obs=obs,
+        ...     obs_cov=fips.Independent().with_std(np.sqrt(0.1)),
+        ...     forward=fips.Operator(
+        ...         np.array([[1.0, 0.0], [0.0, 1.0], [1.0, 1.0]]),
+        ...         obs.space,
+        ...         prior.space,
+        ...     ),
+        ... )
+        >>> post = fips.solve(problem)
+        >>> post.dofs_per_element.to_series().round(3)
+        block  cell
+        flux   a       0.938
+               b       0.938
+        Name: dofs_per_element, dtype: float64
+        >>> round(post.dofs, 3)
+        1.877
+        """
+        values = self._solution.dofs_per_element()
+        return Vector(values, self._problem.prior.space, name="dofs_per_element")
+
+    @property
+    def information_content(self) -> float:
+        r"""
+        The Shannon information content of the observations about the state, in nats.
+
+        .. math::
+            H = -\tfrac{1}{2} \ln \lvert I - A \rvert
+              = \tfrac{1}{2} \ln \frac{\lvert S_0 \rvert}{\lvert \hat{S} \rvert}
+              = \tfrac{1}{2} \sum_k \ln(1 + s_k^2)
+
+        with :math:`A` the averaging kernel and :math:`s_k^2` the eigenvalues
+        of :math:`\gamma R_0^T H^T S_z^{-1} H R_0` (:math:`S_0 = R_0 R_0^T`),
+        the observations' information on the whitened state;
+        :attr:`dofs` is :math:`\sum_k s_k^2 / (1 + s_k^2)`. It is how much
+        the observations reduce the entropy of the state, from the prior to
+        the posterior: the log of how many times smaller the volume of
+        uncertainty is. Divide by :math:`\ln 2` for bits. A direction the
+        observations constrain counts at most 1 in :attr:`dofs`, but its
+        information keeps growing with the precision of the observations.
+
+        The analytic method reads the log-determinant from the factor it
+        solved with (the Cholesky factor at the gamma of :func:`fips.solve`,
+        or the eigenvalues after :meth:`with_gamma`), so it costs nothing
+        more than the solve.
+
+        References
+        ----------
+        Rodgers, C. D. (2000). *Inverse Methods for Atmospheric Sounding:
+        Theory and Practice*. World Scientific.
+
+        See Also
+        --------
+        dofs : The degrees of freedom for signal.
+        dofs_per_element : DOFS, element by element.
+
+        Examples
+        --------
+        >>> import numpy as np
+        >>> import pandas as pd
+        >>> import fips
+        >>> cells = pd.Index(["a", "b"], name="cell")
+        >>> obs_id = pd.Index(["o1", "o2", "o3"], name="obs_id")
+        >>> prior = fips.Vector.from_series(pd.Series(0.0, index=cells), block="flux")
+        >>> obs = fips.Vector.from_series(
+        ...     pd.Series([1.0, 2.0, 3.0], index=obs_id), block="co2"
+        ... )
+        >>> problem = fips.Problem(
+        ...     prior=prior,
+        ...     prior_cov=fips.Independent().with_std(1.0),
+        ...     obs=obs,
+        ...     obs_cov=fips.Independent().with_std(np.sqrt(0.1)),
+        ...     forward=fips.Operator(
+        ...         np.array([[1.0, 0.0], [0.0, 1.0], [1.0, 1.0]]),
+        ...         obs.space,
+        ...         prior.space,
+        ...     ),
+        ... )
+        >>> post = fips.solve(problem)
+        >>> round(post.information_content, 3)
+        2.916
+        >>> round(float(post.information_content / np.log(2)), 3)  # in bits
+        4.207
+        """
+        return self._solution.information()
+
     @property
     def chi2(self) -> float:
         r"""
@@ -1435,8 +1565,9 @@ class Posterior:
         pandas.DataFrame
             One row: ``gamma`` (the regularization factor), ``n_state`` and
             ``n_obs`` (the sizes of the state and of the observations), then
-            :attr:`dofs`, :attr:`chi2`, :attr:`reduced_chi2`, :attr:`r2`,
-            :attr:`rmse` and :attr:`uncertainty_reduction`.
+            :attr:`dofs`, :attr:`information_content`, :attr:`chi2`,
+            :attr:`reduced_chi2`, :attr:`r2`, :attr:`rmse` and
+            :attr:`uncertainty_reduction`.
 
         See Also
         --------
@@ -1482,6 +1613,7 @@ class Posterior:
             "n_state": len(problem.prior),
             "n_obs": len(problem.obs),
             "dofs": self.dofs,
+            "information_content": self.information_content,
             "chi2": self.chi2,
             "reduced_chi2": self.reduced_chi2,
             "r2": self.r2,

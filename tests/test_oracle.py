@@ -81,6 +81,7 @@ class ClosedForm:
     K: np.ndarray
     A: np.ndarray
     DOFS: float
+    information: float
     y_hat: np.ndarray
     y_0: np.ndarray
     G: np.ndarray
@@ -104,6 +105,15 @@ def closed_form(z, x_0, H, S_0, S_z, c) -> ClosedForm:
     S_hat_cov = S_0 - S_0 @ H.T @ inv(G) @ H @ S_0
     S_hat_info = inv(H.T @ inv(S_z) @ H + inv(S_0))
     A = K @ H
+    # Shannon information content (Rodgers 2000): -1/2 ln|I - A| = 1/2 ln(|S_0| / |S_hat|)
+    sign, logdet_I_A = np.linalg.slogdet(np.eye(len(x_0)) - A)
+    assert sign > 0
+    information = -0.5 * logdet_I_A
+    _, logdet_S_0 = np.linalg.slogdet(S_0)
+    _, logdet_S_hat = np.linalg.slogdet(S_hat_info)
+    np.testing.assert_allclose(
+        information, 0.5 * (logdet_S_0 - logdet_S_hat), rtol=1e-9
+    )
     r = z - H @ x_hat - c
     d = x_hat - x_0
     chi2 = (r @ inv(S_z) @ r + d @ inv(S_0) @ d) / len(z)
@@ -115,6 +125,7 @@ def closed_form(z, x_0, H, S_0, S_z, c) -> ClosedForm:
         "K": (a(S_0 @ H.T) @ a(inv(G))).max(),
         "A": (a(K) @ a(H)).max(),
         "DOFS": np.trace(a(K) @ a(H)),
+        "information": max(abs(information), 1.0),
         "y": (a(H) @ a(x_hat)).max() + a(c).max(),
         "G": (a(H) @ a(S_0) @ a(H.T)).max() + a(S_z).max(),
         "chi2": chi2,
@@ -126,6 +137,7 @@ def closed_form(z, x_0, H, S_0, S_z, c) -> ClosedForm:
         K=K,
         A=A,
         DOFS=float(np.trace(A)),
+        information=float(information),
         y_hat=H @ x_hat + c,
         y_0=H @ x_0 + c,
         G=H @ S_0 @ H.T + S_z,
@@ -302,6 +314,18 @@ def check_posterior(
         at("averaging_kernel"),
     )
     assert_close(post.dofs, expected.DOFS, sc["DOFS"], at("dofs"))
+    assert_close(
+        vector_on(post.dofs_per_element, s, at("dofs_per_element")),
+        np.diag(expected.A),
+        sc["A"],
+        at("dofs_per_element"),
+    )
+    assert_close(
+        post.information_content,
+        expected.information,
+        sc["information"],
+        at("information_content"),
+    )
     assert_close(
         vector_on(post.modeled_obs, o, at("modeled_obs")),
         expected.y_hat,
