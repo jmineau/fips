@@ -234,6 +234,21 @@ class _Decay(_Kernel):
         """Return whether a correlation of the great-circle distance is positive-definite."""
         return True
 
+    def _numbers(self, coords: pd.DataFrame) -> np.ndarray:
+        """Return the levels of `coords` as float columns, or raise naming a level that holds no numbers."""
+        columns = []
+        for level in self.levels:
+            try:
+                columns.append(coords[level].to_numpy(dtype=float))
+            except (TypeError, ValueError):
+                raise ValueError(
+                    f"Level {level!r} holds {coords[level].dtype} values, which "
+                    f"{type(self).__name__} cannot measure a distance along: "
+                    "a covariance model needs levels of numbers (coordinates) "
+                    "or of times."
+                ) from None
+        return np.column_stack(columns)
+
     def _distance(
         self,
         coords: pd.DataFrame,
@@ -247,7 +262,7 @@ class _Decay(_Kernel):
         vector with the distance from row ``rows[p]`` to row ``cols[p]``.
         """
         if self.metric != "euclidean":
-            lat, lon = (coords[level].to_numpy(dtype=float) for level in self.levels)
+            lat, lon = self._numbers(coords).T
             if rows is None or cols is None:
                 term = _half_angle_term(lat, lon)
             else:
@@ -276,7 +291,7 @@ class _Decay(_Kernel):
                 f"The scale is a time, but the levels {list(self.levels)} do not "
                 "hold datetimes or timedeltas."
             )
-        x = coords[list(self.levels)].to_numpy(dtype=float)
+        x = self._numbers(coords)
         if x.shape[1] == 1:
             a, b = _ends(x[:, 0], rows, cols)
             distance = np.abs(a - b)
