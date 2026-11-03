@@ -140,9 +140,9 @@ the estimate, on the prior's labels, and its uncertainty:
 
 Nothing larger than the observations is formed until you ask for it: the
 estimate and the variances come from a factorization of an :math:`m \times m`
-matrix (an :math:`n \times n` one when there are fewer state elements than
-observations and the observation covariance is diagonal, sparse or block
-diagonal; both hold here), and ``post.cov()`` forms the full
+matrix (an :math:`n \times n` one here, with fewer state elements than
+observations, a diagonal observation covariance and a prior error covariance
+that has a square root), and ``post.cov()`` forms the full
 :math:`n \times n` covariance only when it is read. The diagnostics of the solve are attributes, and
 :meth:`~fips.Posterior.summary` gives them as one row:
 
