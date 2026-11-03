@@ -163,7 +163,16 @@ class TestOutputs:
         )
 
     @pytest.mark.parametrize(
-        "attr", ["dofs", "chi2", "reduced_chi2", "r2", "rmse", "uncertainty_reduction"]
+        "attr",
+        [
+            "dofs",
+            "information_content",
+            "chi2",
+            "reduced_chi2",
+            "r2",
+            "rmse",
+            "uncertainty_reduction",
+        ],
     )
     def test_scalars_are_floats(self, post, attr):
         assert isinstance(getattr(post, attr), float)
@@ -295,6 +304,7 @@ class TestSummary:
         "n_state",
         "n_obs",
         "dofs",
+        "information_content",
         "chi2",
         "reduced_chi2",
         "r2",
@@ -535,6 +545,12 @@ class _DenseSolution:
     def dofs(self):
         return float(np.trace(self.K @ self.H))
 
+    def dofs_per_element(self):
+        return np.diag(self.K @ self.H).copy()
+
+    def information(self):
+        return -0.5 * float(np.linalg.slogdet(np.eye(len(self.x)) - self.K @ self.H)[1])
+
     def chi2(self):
         return self.chi
 
@@ -559,6 +575,7 @@ class TestAnotherMethod:
         pairs = {
             "estimate": (other.estimate, post.estimate),
             "variances": (other.variances, post.variances),
+            "dofs_per_element": (other.dofs_per_element, post.dofs_per_element),
             "modeled_obs": (other.modeled_obs, post.modeled_obs),
         }
         for name, (got, want) in pairs.items():

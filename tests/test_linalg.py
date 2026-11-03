@@ -1090,7 +1090,8 @@ def _problem(cov_shape: str, sparse: tuple[bool, bool, bool]) -> Problem:
 
 POSTERIOR_OUTPUTS = [
     "estimate", "mean", "cov", "variances", "modeled_obs",
-    "innovation_cov", "kalman_gain", "averaging_kernel", "desroziers", "dofs", "chi2",
+    "innovation_cov", "kalman_gain", "averaging_kernel", "desroziers", "dofs",
+    "dofs_per_element", "information_content", "chi2",
     "reduced_chi2", "r2", "rmse", "uncertainty_reduction",
 ]  # fmt: skip
 COMBINATIONS = [

@@ -123,12 +123,13 @@ class AnalyticOptions:
 @dataclass(frozen=True, eq=False)
 class _Factors:
     r"""
-    What both forms share: the weights, DOFS, and the eigendecomposition :meth:`with_gamma` needs.
+    What both forms share: the weights, DOFS, the information content, and the eigendecomposition :meth:`with_gamma` needs.
 
     A form factors its matrix :math:`A` (``M`` or ``N``) so that
     :math:`(A + I/\gamma)^{-1} = X \operatorname{diag}(w) X^T` (``_decompose``).
     ``fips.solve`` factors by Cholesky at its gamma: :attr:`eigenvalues` is
-    None, the weights are 1 and DOFS was computed with the factor. The first
+    None, the weights are 1, and DOFS and the information content were
+    computed with the factor. The first
     :meth:`with_gamma` eigendecomposes the same problem, keeps that, and reads
     it at the new gamma: :math:`w_k = \gamma / (\gamma \lambda_k + 1)`.
     """
@@ -146,6 +147,8 @@ class _Factors:
     """The innovation in the form's basis (:math:`e` or :math:`b`)."""
     dofs_at_gamma: float | None = field(default=None, kw_only=True)
     """DOFS at :attr:`gamma`, computed with a Cholesky; None after an eigendecomposition."""
+    information_at_gamma: float | None = field(default=None, kw_only=True)
+    """The information content at :attr:`gamma`, computed with a Cholesky; None after an eigendecomposition."""
 
     @classmethod
     def factor(
@@ -166,6 +169,19 @@ class _Factors:
             assert self.dofs_at_gamma is not None  # set with every Cholesky
             return self.dofs_at_gamma
         return float(np.sum(self.weights() * self.eigenvalues))
+
+    def information(self) -> float:
+        r"""
+        Return the information content, :math:`\tfrac{1}{2} \ln \lvert I + \gamma A \rvert = \tfrac{1}{2} \sum_k \ln(1 + \gamma \lambda_k)`, or after a Cholesky the value computed with it.
+
+        :math:`\lvert I + \gamma M \rvert = \lvert I + \gamma N \rvert`
+        (Sylvester's determinant identity: :math:`M = J J^T` and
+        :math:`N = J^T J` for one :math:`J`), so both forms give the same.
+        """
+        if self.eigenvalues is None:
+            assert self.information_at_gamma is not None  # set with every Cholesky
+            return self.information_at_gamma
+        return 0.5 * float(np.sum(np.log1p(self.gamma * self.eigenvalues)))
 
     def with_gamma(self, gamma: float) -> "Self":
         """Return the same factors, read at `gamma`, from the eigendecomposition (done on the first call after a Cholesky, and kept)."""
@@ -256,7 +272,7 @@ class Whitened(_Factors):
     """The posterior is Gaussian, so its estimate is its mean."""
 
     # And from _Factors: problem, gamma, eigenvalues (of M, m), innovation
-    # (e = B (z - H x_0 - c), m), dofs_at_gamma
+    # (e = B (z - H x_0 - c), m), dofs_at_gamma, information_at_gamma
     whitener: np.ndarray
     """:math:`B = X^T L^{-1}`, which whitens an observation-space vector (``m x m``)."""
     W: np.ndarray
@@ -332,7 +348,7 @@ class Whitened(_Factors):
                 return np.asarray(solve_triangular(L, X, lower=True, trans="T")).T
 
         M = 0.5 * (M + M.T)
-        X, eigenvalues, dofs = _decompose(
+        X, eigenvalues, dofs, information = _decompose(
             M,
             gamma,
             eigendecompose,
@@ -349,6 +365,7 @@ class Whitened(_Factors):
             innovation=_read_only(B @ d),
             prior_variances=_read_only(np.asarray(S_0.diagonal(), dtype=float)),
             dofs_at_gamma=dofs,
+            information_at_gamma=information,
         )
 
     def estimate(self) -> np.ndarray:
@@ -383,6 +400,18 @@ class Whitened(_Factors):
         if W is None:
             return self.W.T @ (self.weights()[:, None] * self.whitener)
         return ((W @ self.W.T) * self.weights()) @ self.whitener
+
+    def dofs_per_element(self) -> np.ndarray:
+        r"""
+        Return the diagonal of the averaging kernel, :math:`\operatorname{diag}(K H)`, without :math:`K` or :math:`A`.
+
+        :math:`K H = W_f^T \operatorname{diag}(w) (B H)`, so
+        :math:`A_{jj} = \sum_k (W_f)_{kj} w_k (B H)_{kj}`: one product of
+        :math:`H` with the whitener (``m x n``, through :math:`H`'s form).
+        """
+        H = self.problem.forward.data
+        BH = np.asarray(H._transpose() @ self.whitener.T).T  # B H, m x n
+        return np.einsum("k,kj,kj->j", self.weights(), self.W, BH)
 
     def chi2(self) -> float:
         r"""Return :math:`d^T (H Q H^T + S_z/\gamma)^{-1} d = \sum_k w_k e_k^2`."""
@@ -492,7 +521,7 @@ class Information(_Factors):
     """The posterior is Gaussian, so its estimate is its mean."""
 
     # And from _Factors: problem, gamma, eigenvalues (of N, n), innovation
-    # (b = G^T H^T S_z^-1 (z - H x_0 - c), n), dofs_at_gamma
+    # (b = G^T H^T S_z^-1 (z - H x_0 - c), n), dofs_at_gamma, information_at_gamma
     G: np.ndarray
     """:math:`G = R_0 X`, the prior's square root in the basis :math:`X` (``n x n``)."""
 
@@ -550,7 +579,7 @@ class Information(_Factors):
         HR = (H @ R_0).dense()
         N = HR.T @ S_z.solve(HR)
         N = 0.5 * (N + N.T)
-        X, eigenvalues, dofs = _decompose(
+        X, eigenvalues, dofs, information = _decompose(
             N,
             gamma,
             eigendecompose,
@@ -565,6 +594,7 @@ class Information(_Factors):
             G=_read_only(G),
             innovation=_read_only(_carried(problem, G)),
             dofs_at_gamma=dofs,
+            information_at_gamma=information,
         )
 
     def _increment(self) -> np.ndarray:
@@ -589,6 +619,19 @@ class Information(_Factors):
         Y = self.G if W is None else np.asarray(W @ self.G)
         Y = Y * np.sqrt(self.weights() / self.gamma)
         return Y @ Y.T
+
+    def dofs_per_element(self) -> np.ndarray:
+        r"""
+        Return the diagonal of the averaging kernel, :math:`\operatorname{diag}(K H)`, without :math:`K` or :math:`A`.
+
+        :math:`K H = G \operatorname{diag}(w) (H^T Z)^T` with
+        :math:`Z = S_z^{-1} H G`, so
+        :math:`A_{ii} = \sum_k G_{ik} w_k (H^T Z)_{ik}`: :math:`H^T Z` is
+        ``n x n``.
+        """
+        _, Z = self._weighted_obs()
+        HtZ = np.asarray(self.problem.forward.data._transpose() @ Z)
+        return np.einsum("ik,k,ik->i", self.G, self.weights(), HtZ)
 
     def gain(self, W: LinearOperator | None = None) -> np.ndarray:
         r"""
@@ -690,9 +733,9 @@ def _carried(problem: Problem, G: np.ndarray) -> np.ndarray:
 
 def _decompose(
     A: np.ndarray, gamma: float, eigendecompose: bool, matrix: str, covariance: str
-) -> tuple[np.ndarray, np.ndarray | None, float | None]:
+) -> tuple[np.ndarray, np.ndarray | None, float | None, float | None]:
     r"""
-    Return :math:`X`, the eigenvalues and DOFS, with :math:`(A + I/\gamma)^{-1} = X \operatorname{diag}(w) X^T`.
+    Return :math:`X`, the eigenvalues, DOFS and the information content, with :math:`(A + I/\gamma)^{-1} = X \operatorname{diag}(w) X^T`.
 
     `A` is a form's symmetric positive semidefinite matrix (``M`` or ``N``,
     ``k x k``), which this may overwrite.
@@ -705,10 +748,15 @@ def _decompose(
     product (:math:`k^3` flops, less than the form spends making `A`). It
     equals :math:`k - \lVert R^{-1} \rVert_F^2 / \gamma`, but that loses
     digits when DOFS is much smaller than `k` (two in paper 1's monthly
-    inversion). The
+    inversion). The information content, :math:`\tfrac{1}{2} \ln \lvert I +
+    \gamma A \rvert = \tfrac{1}{2} \sum_i \ln(\gamma R_{ii}^2)`, is read from
+    the factor's diagonal (that of :math:`R^{-1}` is :math:`1 / R_{ii}`): the
+    log-determinant of the matrix the solve factored, with no second
+    factorization. The
     eigendecomposition :math:`A = V \Lambda V^T` holds at any gamma
-    (:math:`X = V`, :math:`w_k = \gamma / (\gamma \lambda_k + 1)`; DOFS is
-    then read from the eigenvalues, so None here). It is done when
+    (:math:`X = V`, :math:`w_k = \gamma / (\gamma \lambda_k + 1)`; DOFS and
+    the information content are then read from the eigenvalues, so None
+    here). It is done when
     `eigendecompose` (the first ``with_gamma`` asks for it), and when `A` is
     not positive semidefinite to roundoff (``_cholesky_inverse``), so that
     ``_clip`` clips its negative eigenvalues and names `matrix` and
@@ -719,13 +767,15 @@ def _decompose(
         if R_inv is not None:
             (trmm,) = get_blas_funcs(("trmm",), (R_inv,))  # triangular times full
             dofs = float(np.vdot(trmm(1.0, R_inv, A, lower=1), R_inv))
-            return R_inv.T, None, dofs
+            # 1/2 ln|I + gamma A| = 1/2 sum ln(gamma R_ii^2) = -sum ln(R_inv_ii / sqrt(gamma))
+            information = -float(np.log(np.diagonal(R_inv) / math.sqrt(gamma)).sum())
+            return R_inv.T, None, dofs, information
         logger.debug(
             "%s is not positive semidefinite to roundoff: eigendecomposing it.", matrix
         )
     eigenvalues, V = _eigh(A)
     _clip(eigenvalues, matrix, covariance)
-    return V, eigenvalues, None
+    return V, eigenvalues, None, None
 
 
 def _cholesky_inverse(A: np.ndarray, gamma: float) -> np.ndarray | None:

@@ -119,6 +119,8 @@ def _closed_form(z, x_0, H, S_0, S_z, c, gamma):
     S_hat = inv(H.T @ inv(S_z) @ H + inv(S_0))
     r, dx = z - H @ x_hat - c, x_hat - x_0
     chi2 = r @ inv(S_z) @ r + dx @ inv(S_0) @ dx
+    sign, logdet = np.linalg.slogdet(np.eye(len(x_0)) - K @ H)
+    assert sign > 0
     return {
         "estimate": x_hat,
         "cov": S_hat,
@@ -126,6 +128,8 @@ def _closed_form(z, x_0, H, S_0, S_z, c, gamma):
         "kalman_gain": K,
         "averaging_kernel": K @ H,
         "dofs": np.trace(K @ H),
+        "dofs_per_element": np.diag(K @ H),
+        "information_content": -0.5 * logdet,
         "chi2": chi2,
         "reduced_chi2": chi2 / len(z),
         "uncertainty_reduction": 1 - np.sqrt(np.trace(S_hat)) / np.sqrt(np.trace(S_0)),
@@ -199,6 +203,8 @@ def _outputs(post) -> dict:
         "kalman_gain": post.kalman_gain.dense(),
         "averaging_kernel": post.averaging_kernel().dense(),
         "dofs": post.dofs,
+        "dofs_per_element": post.dofs_per_element.values,
+        "information_content": post.information_content,
         "chi2": post.chi2,
         "reduced_chi2": post.reduced_chi2,
         "uncertainty_reduction": post.uncertainty_reduction,
