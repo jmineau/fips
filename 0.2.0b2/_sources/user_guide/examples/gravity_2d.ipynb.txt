@@ -1,0 +1,374 @@
+{
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "id": "cell-00",
+   "metadata": {},
+   "source": [
+    "# Gravity: density below the surface\n",
+    "\n",
+    "Gravity measured along a line at the surface depends on how dense the ground\n",
+    "is below it. This notebook finds the density anomaly of 40 buried prisms (a\n",
+    "10 x 4 grid, 1000 m across and 25 to 250 m deep) from the vertical gravity\n",
+    "measured at 41 points above them.\n",
+    "\n",
+    "In the words of the [terminology](../../getting_started/terminology.rst):\n",
+    "\n",
+    "- the **state** is the density anomaly of each prism (g/cm³);\n",
+    "- the **observations** are the gravity anomalies at the surface (mGal);\n",
+    "- the **forward operator** is Newton's law for a rectangular prism: the\n",
+    "  gravity at each point from a unit density in each prism;\n",
+    "- the **prior** is no anomaly anywhere, with a **prior covariance** that makes\n",
+    "  neighboring prisms alike, and the **observation covariance** says the\n",
+    "  measurements are good to 1% of the largest signal."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "cell-01",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "import matplotlib.pyplot as plt\n",
+    "import numpy as np\n",
+    "import pandas as pd\n",
+    "\n",
+    "import fips\n",
+    "from fips.visualization import plot_comparison"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "cell-02",
+   "metadata": {},
+   "source": [
+    "## The data and the geometry\n",
+    "\n",
+    "The observed gravity anomalies, and where the prisms are."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "cell-03",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "gravity = np.array(\n",
+    "    [\n",
+    "        6.5112333e-03,\n",
+    "        7.1144759e-03,\n",
+    "        7.8050213e-03,\n",
+    "        8.6004187e-03,\n",
+    "        9.5228049e-03,\n",
+    "        1.0600394e-02,\n",
+    "        1.1869543e-02,\n",
+    "        1.3377636e-02,\n",
+    "        1.5187140e-02,\n",
+    "        1.7381291e-02,\n",
+    "        2.0071869e-02,\n",
+    "        2.3409173e-02,\n",
+    "        2.7592423e-02,\n",
+    "        3.2872699e-02,\n",
+    "        3.9524661e-02,\n",
+    "        4.7739666e-02,\n",
+    "        5.7427097e-02,\n",
+    "        6.8126652e-02,\n",
+    "        7.9261565e-02,\n",
+    "        9.0330964e-02,\n",
+    "        1.0070638e-01,\n",
+    "        1.0950167e-01,\n",
+    "        1.1588202e-01,\n",
+    "        1.1936106e-01,\n",
+    "        1.1961197e-01,\n",
+    "        1.1617789e-01,\n",
+    "        1.0868957e-01,\n",
+    "        9.7370419e-02,\n",
+    "        8.3429883e-02,\n",
+    "        6.9002570e-02,\n",
+    "        5.6079733e-02,\n",
+    "        4.5525921e-02,\n",
+    "        3.7267881e-02,\n",
+    "        3.0880404e-02,\n",
+    "        2.5919366e-02,\n",
+    "        2.2024198e-02,\n",
+    "        1.8925481e-02,\n",
+    "        1.6427182e-02,\n",
+    "        1.4387142e-02,\n",
+    "        1.2701558e-02,\n",
+    "        1.1293783e-02,\n",
+    "    ]\n",
+    ")  # mGal\n",
+    "stations = np.linspace(0, 1000, len(gravity))  # where gravity was measured, m\n",
+    "\n",
+    "x_edges = np.linspace(0, 1000, 11)  # the prisms' edges across, m\n",
+    "depth_edges = np.linspace(25, 250, 5)  # and down, m\n",
+    "x_centers = (x_edges[:-1] + x_edges[1:]) / 2\n",
+    "depth_centers = (depth_edges[:-1] + depth_edges[1:]) / 2"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "cell-04",
+   "metadata": {},
+   "source": [
+    "## Labels and vectors\n",
+    "\n",
+    "fips keeps a label beside every number. Each prism is labeled by where it is,\n",
+    "its `x` and its `depth`; each observation by its `x`. A `Vector` is values on\n",
+    "such labels: the prior is no anomaly in any prism, in a block named\n",
+    "`density`, and the observations are a block named `gravity`."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "cell-05",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "prisms = pd.MultiIndex.from_product([x_centers, depth_centers], names=[\"x\", \"depth\"])\n",
+    "prior = fips.Vector.from_series(\n",
+    "    pd.Series(0.0, index=prisms, name=\"prior\"), block=\"density\"\n",
+    ")\n",
+    "\n",
+    "points = pd.Index(stations, name=\"x\")\n",
+    "obs = fips.Vector.from_series(\n",
+    "    pd.Series(gravity, index=points, name=\"observed\"), block=\"gravity\"\n",
+    ")\n",
+    "prior.space"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "cell-06",
+   "metadata": {},
+   "source": [
+    "## The forward operator\n",
+    "\n",
+    "The gravity of a rectangular prism of unit density has a closed form. The\n",
+    "matrix has one row per observation and one column per prism, in the order of\n",
+    "the labels above (`x` outer, `depth` inner), so `fips.Operator` puts the\n",
+    "observations' labels on its rows and the prisms' on its columns."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "cell-07",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "G = 6.67e-4  # the gravitational constant, in units that give mGal\n",
+    "\n",
+    "\n",
+    "def prism_integral(dx, dz):\n",
+    "    \"\"\"Return the indefinite integral of the vertical gravity of a 2D prism.\"\"\"\n",
+    "    return dz * np.arctan(dx / dz) + dx / 2 * np.log(dz**2 + dx**2)\n",
+    "\n",
+    "\n",
+    "def prism_gravity(stations, x_edges, depth_edges):\n",
+    "    \"\"\"Return the gravity at each station of a unit density in each prism (stations x prisms).\"\"\"\n",
+    "    columns = []\n",
+    "    for x1, x2 in zip(x_edges[:-1], x_edges[1:], strict=True):\n",
+    "        for z1, z2 in zip(depth_edges[:-1], depth_edges[1:], strict=True):\n",
+    "            a, b = x1 - stations, x2 - stations\n",
+    "            columns.append(\n",
+    "                2\n",
+    "                * G\n",
+    "                * (\n",
+    "                    prism_integral(b, z2)\n",
+    "                    - prism_integral(b, z1)\n",
+    "                    - prism_integral(a, z2)\n",
+    "                    + prism_integral(a, z1)\n",
+    "                )\n",
+    "            )\n",
+    "    return np.column_stack(columns)\n",
+    "\n",
+    "\n",
+    "forward = fips.Operator(\n",
+    "    prism_gravity(stations, x_edges, depth_edges), obs.space, prior.space\n",
+    ")\n",
+    "forward.shape"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "cell-08",
+   "metadata": {},
+   "source": [
+    "## The covariances\n",
+    "\n",
+    "Neighboring prisms should be alike: the prior covariance correlates two prisms\n",
+    "by their distance across (over 200 m) and in depth (over 100 m), with a\n",
+    "standard deviation of 0.5 g/cm³. It is a `Kronecker` product of two\n",
+    "exponential correlations, kept as its two small factors. The observations'\n",
+    "errors are independent, at 1% of the largest signal."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "cell-09",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "prior_cov = fips.Kronecker(\n",
+    "    fips.Exponential(\"x\", 200.0), fips.Exponential(\"depth\", 100.0)\n",
+    ").with_std(0.5)\n",
+    "obs_cov = fips.Independent().with_std(0.01 * gravity.max())"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "cell-10",
+   "metadata": {},
+   "source": [
+    "## The problem and its solution\n",
+    "\n",
+    "A `Problem` puts the inputs together and checks that every label matches.\n",
+    "`fips.solve` returns the `Posterior`: the estimate, its uncertainty and the\n",
+    "diagnostics of the solve."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "cell-11",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "problem = fips.Problem(\n",
+    "    prior=prior, prior_cov=prior_cov, obs=obs, obs_cov=obs_cov, forward=forward\n",
+    ")\n",
+    "post = fips.solve(problem)\n",
+    "post.summary()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "cell-12",
+   "metadata": {},
+   "source": [
+    "The DOFS say how many independent pieces of information the 41 measurements\n",
+    "give about the 40 prisms. The reduced chi-squared is near 1 when the\n",
+    "covariances fit the data; here it is well below, because these synthetic\n",
+    "observations have no noise at all."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "cell-13",
+   "metadata": {},
+   "source": [
+    "## The fit to the data\n",
+    "\n",
+    "`plot_comparison` draws the observations, what the prior predicts\n",
+    "(`problem.predict`, the forward operator times the prior) and what the\n",
+    "estimate predicts (`post.modeled_obs`) on one axes."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "cell-14",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "def named(vector, name):\n",
+    "    \"\"\"Return a vector of one block as a Series on its own labels, named for the legend.\"\"\"\n",
+    "    return vector.to_series().droplevel(\"block\").rename(name)\n",
+    "\n",
+    "\n",
+    "fig, ax = plot_comparison(\n",
+    "    named(problem.obs, \"observed\"),\n",
+    "    named(problem.predict(problem.prior), \"prior\"),\n",
+    "    named(post.modeled_obs, \"posterior\"),\n",
+    ")\n",
+    "ax.set(xlabel=\"x (m)\", ylabel=\"gravity (mGal)\");"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "cell-15",
+   "metadata": {},
+   "source": [
+    "## The density below\n",
+    "\n",
+    "The estimate and its standard deviation, as maps of the prisms:\n",
+    "`to_xarray()` puts a block on its levels, `x` and `depth`."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "cell-16",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "estimate = post.estimate[\"density\"].to_xarray()\n",
+    "std = np.sqrt(post.variances[\"density\"].to_xarray())\n",
+    "\n",
+    "fig, axes = plt.subplots(2, 1, figsize=(8, 6), sharex=True)\n",
+    "estimate.plot(\n",
+    "    ax=axes[0],\n",
+    "    x=\"x\",\n",
+    "    y=\"depth\",\n",
+    "    yincrease=False,\n",
+    "    cmap=\"Greys\",\n",
+    "    cbar_kwargs={\"label\": \"density (g/cm³)\"},\n",
+    ")\n",
+    "axes[0].set_title(\"Posterior estimate\")\n",
+    "std.plot(\n",
+    "    ax=axes[1],\n",
+    "    x=\"x\",\n",
+    "    y=\"depth\",\n",
+    "    yincrease=False,\n",
+    "    cmap=\"viridis\",\n",
+    "    cbar_kwargs={\"label\": \"std (g/cm³)\"},\n",
+    ")\n",
+    "axes[1].set_title(\"Posterior standard deviation\");"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "cell-17",
+   "metadata": {},
+   "source": [
+    "## How much to trust the data\n",
+    "\n",
+    "The regularization factor `gamma` divides the observation covariance: above\n",
+    "1 the solve trusts the data more, below 1 the prior. The posterior keeps its\n",
+    "factorization, so `with_gamma` gives each gamma's posterior without solving\n",
+    "again, and the rows of `summary()` stack into a table."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "cell-18",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "pd.concat(\n",
+    "    [post.with_gamma(g).summary() for g in (0.1, 0.3, 1.0, 3.0, 10.0)],\n",
+    "    ignore_index=True,\n",
+    ")"
+   ]
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "Python 3",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "name": "python",
+   "pygments_lexer": "ipython3"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 5
+}

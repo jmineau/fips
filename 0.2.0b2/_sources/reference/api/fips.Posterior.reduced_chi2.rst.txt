@@ -1,0 +1,6 @@
+fips.Posterior.reduced\_chi2
+============================
+
+.. currentmodule:: fips
+
+.. autoproperty:: Posterior.reduced_chi2

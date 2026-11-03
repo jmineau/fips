@@ -1,0 +1,6 @@
+fips.Posterior.rmse
+===================
+
+.. currentmodule:: fips
+
+.. autoproperty:: Posterior.rmse

@@ -1,0 +1,6 @@
+fips.Space.names
+================
+
+.. currentmodule:: fips
+
+.. autoproperty:: Space.names

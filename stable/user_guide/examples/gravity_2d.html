@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Gravity: density below the surface &#8212; fips 0.2.0b1 documentation</title>
+    <title>Gravity: density below the surface &#8212; fips 0.2.0b2 documentation</title>
   
   
   
@@ -26,31 +26,32 @@
   </noscript>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="../../_static/styles/theme.css?digest=64cc4de3f052d77215f0" rel="stylesheet" />
-<link href="../../_static/styles/pydata-sphinx-theme.css?digest=64cc4de3f052d77215f0" rel="stylesheet" />
+  <link href="../../_static/styles/theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
 
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../_static/plot_directive.css" />
     <link rel="stylesheet" type="text/css" href="../../_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx_autodoc_typehints.css?v=057ac668" />
     <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../../_static/custom.css?v=4b8357b6" />
   
   <!-- So that users can add custom icons -->
-  <script defer src="../../_static/scripts/fontawesome.js?digest=64cc4de3f052d77215f0"></script>
+  <script defer src="../../_static/scripts/fontawesome.js?digest=18bd87630a240e9c25be"></script>
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0" />
-<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0" />
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../_static/documentation_options.js?v=3804d0ff"></script>
+    <script src="../../_static/documentation_options.js?v=0ffc5a95"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../../_static/copybutton.js?v=f281be69"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'user_guide/examples/gravity_2d';</script>
     <script>
-        DOCUMENTATION_OPTIONS.theme_version = '0.22.0';
+        DOCUMENTATION_OPTIONS.theme_version = '0.23.0';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://jmineau.github.io/fips/switcher.json';
-        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.2.0b1';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.2.0b2';
         DOCUMENTATION_OPTIONS.show_version_warning_banner =
             true;
         </script>
@@ -60,6 +61,7 @@
     <link rel="next" title="A regional flux inversion" href="flux_regional.html" />
     <link rel="prev" title="Examples" href="index.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="0.2" />
   
@@ -133,8 +135,8 @@
       
     
     
-    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b1 documentation - Home"/>
-    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b1 documentation - Home"/>
+    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b2 documentation - Home"/>
+    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b2 documentation - Home"/>
   
   
 </a></div>
@@ -385,6 +387,8 @@
 <li class="toctree-l1 current active has-children"><a class="reference internal" href="index.html">Examples</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
 <li class="toctree-l2 current active"><a aria-current="page" class="current reference internal" href="#">Gravity: density below the surface</a></li>
 <li class="toctree-l2"><a class="reference internal" href="flux_regional.html">A regional flux inversion</a></li>
+<li class="toctree-l2"><a class="reference internal" href="synthetic_truth.html">Does the inversion recover a known flux?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data_worth.html">Which observations constrain a regional total?</a></li>
 </ul>
 </details></li>
 </ul>
@@ -530,7 +534,7 @@ measurements are good to 1% of the largest signal.</p></li>
 <span class="p">)</span>  <span class="c1"># mGal</span>
 <span class="n">stations</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1000</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">gravity</span><span class="p">))</span>  <span class="c1"># where gravity was measured, m</span>
 
-<span class="n">x_edges</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1000</span><span class="p">,</span> <span class="mi">11</span><span class="p">)</span>  <span class="c1"># the prisms&#39; edges across, m</span>
+<span class="n">x_edges</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1000</span><span class="p">,</span> <span class="mi">11</span><span class="p">)</span>  <span class="c1"># the prisms' edges across, m</span>
 <span class="n">depth_edges</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">25</span><span class="p">,</span> <span class="mi">250</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>  <span class="c1"># and down, m</span>
 <span class="n">x_centers</span> <span class="o">=</span> <span class="p">(</span><span class="n">x_edges</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">x_edges</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span> <span class="o">/</span> <span class="mi">2</span>
 <span class="n">depth_centers</span> <span class="o">=</span> <span class="p">(</span><span class="n">depth_edges</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">depth_edges</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span> <span class="o">/</span> <span class="mi">2</span>
@@ -547,21 +551,21 @@ such labels: the prior is no anomaly in any prism, in a block named
 <code class="docutils literal notranslate"><span class="pre">density</span></code>, and the observations are a block named <code class="docutils literal notranslate"><span class="pre">gravity</span></code>.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">prisms</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">MultiIndex</span><span class="o">.</span><span class="n">from_product</span><span class="p">([</span><span class="n">x_centers</span><span class="p">,</span> <span class="n">depth_centers</span><span class="p">],</span> <span class="n">names</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;x&quot;</span><span class="p">,</span> <span class="s2">&quot;depth&quot;</span><span class="p">])</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">prisms</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">MultiIndex</span><span class="o">.</span><span class="n">from_product</span><span class="p">([</span><span class="n">x_centers</span><span class="p">,</span> <span class="n">depth_centers</span><span class="p">],</span> <span class="n">names</span><span class="o">=</span><span class="p">[</span><span class="s2">"x"</span><span class="p">,</span> <span class="s2">"depth"</span><span class="p">])</span>
 <span class="n">prior</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Vector</span><span class="o">.</span><span class="n">from_series</span><span class="p">(</span>
-    <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">prisms</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;prior&quot;</span><span class="p">),</span> <span class="n">block</span><span class="o">=</span><span class="s2">&quot;density&quot;</span>
+    <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">prisms</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">"prior"</span><span class="p">),</span> <span class="n">block</span><span class="o">=</span><span class="s2">"density"</span>
 <span class="p">)</span>
 
-<span class="n">points</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">(</span><span class="n">stations</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;x&quot;</span><span class="p">)</span>
+<span class="n">points</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">(</span><span class="n">stations</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">"x"</span><span class="p">)</span>
 <span class="n">obs</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Vector</span><span class="o">.</span><span class="n">from_series</span><span class="p">(</span>
-    <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">gravity</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">points</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;observed&quot;</span><span class="p">),</span> <span class="n">block</span><span class="o">=</span><span class="s2">&quot;gravity&quot;</span>
+    <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">gravity</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">points</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">"observed"</span><span class="p">),</span> <span class="n">block</span><span class="o">=</span><span class="s2">"gravity"</span>
 <span class="p">)</span>
 <span class="n">prior</span><span class="o">.</span><span class="n">space</span>
 </pre></div>
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Space(density: 40 x [&#39;x&#39;, &#39;depth&#39;])
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Space(density: 40 x ['x', 'depth'])
 </pre></div>
 </div>
 </div>
@@ -579,12 +583,12 @@ observations’ labels on its rows and the prisms’ on its columns.</p>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">prism_integral</span><span class="p">(</span><span class="n">dx</span><span class="p">,</span> <span class="n">dz</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the indefinite integral of the vertical gravity of a 2D prism.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Return the indefinite integral of the vertical gravity of a 2D prism."""</span>
     <span class="k">return</span> <span class="n">dz</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">arctan</span><span class="p">(</span><span class="n">dx</span> <span class="o">/</span> <span class="n">dz</span><span class="p">)</span> <span class="o">+</span> <span class="n">dx</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">dz</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">dx</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">prism_gravity</span><span class="p">(</span><span class="n">stations</span><span class="p">,</span> <span class="n">x_edges</span><span class="p">,</span> <span class="n">depth_edges</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the gravity at each station of a unit density in each prism (stations x prisms).&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Return the gravity at each station of a unit density in each prism (stations x prisms)."""</span>
     <span class="n">columns</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">for</span> <span class="n">x1</span><span class="p">,</span> <span class="n">x2</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">x_edges</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">x_edges</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span> <span class="n">strict</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
         <span class="k">for</span> <span class="n">z1</span><span class="p">,</span> <span class="n">z2</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">depth_edges</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">depth_edges</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span> <span class="n">strict</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
@@ -626,7 +630,7 @@ errors are independent, at 1% of the largest signal.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">prior_cov</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Kronecker</span><span class="p">(</span>
-    <span class="n">fips</span><span class="o">.</span><span class="n">Exponential</span><span class="p">(</span><span class="s2">&quot;x&quot;</span><span class="p">,</span> <span class="mf">200.0</span><span class="p">),</span> <span class="n">fips</span><span class="o">.</span><span class="n">Exponential</span><span class="p">(</span><span class="s2">&quot;depth&quot;</span><span class="p">,</span> <span class="mf">100.0</span><span class="p">)</span>
+    <span class="n">fips</span><span class="o">.</span><span class="n">Exponential</span><span class="p">(</span><span class="s2">"x"</span><span class="p">,</span> <span class="mf">200.0</span><span class="p">),</span> <span class="n">fips</span><span class="o">.</span><span class="n">Exponential</span><span class="p">(</span><span class="s2">"depth"</span><span class="p">,</span> <span class="mf">100.0</span><span class="p">)</span>
 <span class="p">)</span><span class="o">.</span><span class="n">with_std</span><span class="p">(</span><span class="mf">0.5</span><span class="p">)</span>
 <span class="n">obs_cov</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Independent</span><span class="p">()</span><span class="o">.</span><span class="n">with_std</span><span class="p">(</span><span class="mf">0.01</span> <span class="o">*</span> <span class="n">gravity</span><span class="o">.</span><span class="n">max</span><span class="p">())</span>
 </pre></div>
@@ -672,6 +676,7 @@ diagnostics of the solve.</p>
       <th>n_state</th>
       <th>n_obs</th>
       <th>dofs</th>
+      <th>information_content</th>
       <th>chi2</th>
       <th>reduced_chi2</th>
       <th>r2</th>
@@ -686,6 +691,7 @@ diagnostics of the solve.</p>
       <td>40</td>
       <td>41</td>
       <td>16.05898</td>
+      <td>53.145823</td>
       <td>2.723385</td>
       <td>0.066424</td>
       <td>0.999982</td>
@@ -709,16 +715,16 @@ estimate predicts (<code class="docutils literal notranslate"><span class="pre">
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">named</span><span class="p">(</span><span class="n">vector</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return a vector of one block as a Series on its own labels, named for the legend.&quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="n">vector</span><span class="o">.</span><span class="n">to_series</span><span class="p">()</span><span class="o">.</span><span class="n">droplevel</span><span class="p">(</span><span class="s2">&quot;block&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+<span class="w">    </span><span class="sd">"""Return a vector of one block as a Series on its own labels, named for the legend."""</span>
+    <span class="k">return</span> <span class="n">vector</span><span class="o">.</span><span class="n">to_series</span><span class="p">()</span><span class="o">.</span><span class="n">droplevel</span><span class="p">(</span><span class="s2">"block"</span><span class="p">)</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
 
 
 <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plot_comparison</span><span class="p">(</span>
-    <span class="n">named</span><span class="p">(</span><span class="n">problem</span><span class="o">.</span><span class="n">obs</span><span class="p">,</span> <span class="s2">&quot;observed&quot;</span><span class="p">),</span>
-    <span class="n">named</span><span class="p">(</span><span class="n">problem</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">problem</span><span class="o">.</span><span class="n">prior</span><span class="p">),</span> <span class="s2">&quot;prior&quot;</span><span class="p">),</span>
-    <span class="n">named</span><span class="p">(</span><span class="n">post</span><span class="o">.</span><span class="n">modeled_obs</span><span class="p">,</span> <span class="s2">&quot;posterior&quot;</span><span class="p">),</span>
+    <span class="n">named</span><span class="p">(</span><span class="n">problem</span><span class="o">.</span><span class="n">obs</span><span class="p">,</span> <span class="s2">"observed"</span><span class="p">),</span>
+    <span class="n">named</span><span class="p">(</span><span class="n">problem</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">problem</span><span class="o">.</span><span class="n">prior</span><span class="p">),</span> <span class="s2">"prior"</span><span class="p">),</span>
+    <span class="n">named</span><span class="p">(</span><span class="n">post</span><span class="o">.</span><span class="n">modeled_obs</span><span class="p">,</span> <span class="s2">"posterior"</span><span class="p">),</span>
 <span class="p">)</span>
-<span class="n">ax</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">xlabel</span><span class="o">=</span><span class="s2">&quot;x (m)&quot;</span><span class="p">,</span> <span class="n">ylabel</span><span class="o">=</span><span class="s2">&quot;gravity (mGal)&quot;</span><span class="p">);</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="n">xlabel</span><span class="o">=</span><span class="s2">"x (m)"</span><span class="p">,</span> <span class="n">ylabel</span><span class="o">=</span><span class="s2">"gravity (mGal)"</span><span class="p">);</span>
 </pre></div>
 </div>
 </div>
@@ -733,28 +739,28 @@ estimate predicts (<code class="docutils literal notranslate"><span class="pre">
 <code class="docutils literal notranslate"><span class="pre">to_xarray()</span></code> puts a block on its levels, <code class="docutils literal notranslate"><span class="pre">x</span></code> and <code class="docutils literal notranslate"><span class="pre">depth</span></code>.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">estimate</span> <span class="o">=</span> <span class="n">post</span><span class="o">.</span><span class="n">estimate</span><span class="p">[</span><span class="s2">&quot;density&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">to_xarray</span><span class="p">()</span>
-<span class="n">std</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">post</span><span class="o">.</span><span class="n">variances</span><span class="p">[</span><span class="s2">&quot;density&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">to_xarray</span><span class="p">())</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">estimate</span> <span class="o">=</span> <span class="n">post</span><span class="o">.</span><span class="n">estimate</span><span class="p">[</span><span class="s2">"density"</span><span class="p">]</span><span class="o">.</span><span class="n">to_xarray</span><span class="p">()</span>
+<span class="n">std</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">post</span><span class="o">.</span><span class="n">variances</span><span class="p">[</span><span class="s2">"density"</span><span class="p">]</span><span class="o">.</span><span class="n">to_xarray</span><span class="p">())</span>
 
 <span class="n">fig</span><span class="p">,</span> <span class="n">axes</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">6</span><span class="p">),</span> <span class="n">sharex</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="n">estimate</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
     <span class="n">ax</span><span class="o">=</span><span class="n">axes</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
-    <span class="n">x</span><span class="o">=</span><span class="s2">&quot;x&quot;</span><span class="p">,</span>
-    <span class="n">y</span><span class="o">=</span><span class="s2">&quot;depth&quot;</span><span class="p">,</span>
+    <span class="n">x</span><span class="o">=</span><span class="s2">"x"</span><span class="p">,</span>
+    <span class="n">y</span><span class="o">=</span><span class="s2">"depth"</span><span class="p">,</span>
     <span class="n">yincrease</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-    <span class="n">cmap</span><span class="o">=</span><span class="s2">&quot;Greys&quot;</span><span class="p">,</span>
-    <span class="n">cbar_kwargs</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;label&quot;</span><span class="p">:</span> <span class="s2">&quot;density (g/cm³)&quot;</span><span class="p">},</span>
+    <span class="n">cmap</span><span class="o">=</span><span class="s2">"Greys"</span><span class="p">,</span>
+    <span class="n">cbar_kwargs</span><span class="o">=</span><span class="p">{</span><span class="s2">"label"</span><span class="p">:</span> <span class="s2">"density (g/cm³)"</span><span class="p">},</span>
 <span class="p">)</span>
-<span class="n">axes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;Posterior estimate&quot;</span><span class="p">)</span>
+<span class="n">axes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">"Posterior estimate"</span><span class="p">)</span>
 <span class="n">std</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
     <span class="n">ax</span><span class="o">=</span><span class="n">axes</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
-    <span class="n">x</span><span class="o">=</span><span class="s2">&quot;x&quot;</span><span class="p">,</span>
-    <span class="n">y</span><span class="o">=</span><span class="s2">&quot;depth&quot;</span><span class="p">,</span>
+    <span class="n">x</span><span class="o">=</span><span class="s2">"x"</span><span class="p">,</span>
+    <span class="n">y</span><span class="o">=</span><span class="s2">"depth"</span><span class="p">,</span>
     <span class="n">yincrease</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-    <span class="n">cmap</span><span class="o">=</span><span class="s2">&quot;viridis&quot;</span><span class="p">,</span>
-    <span class="n">cbar_kwargs</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;label&quot;</span><span class="p">:</span> <span class="s2">&quot;std (g/cm³)&quot;</span><span class="p">},</span>
+    <span class="n">cmap</span><span class="o">=</span><span class="s2">"viridis"</span><span class="p">,</span>
+    <span class="n">cbar_kwargs</span><span class="o">=</span><span class="p">{</span><span class="s2">"label"</span><span class="p">:</span> <span class="s2">"std (g/cm³)"</span><span class="p">},</span>
 <span class="p">)</span>
-<span class="n">axes</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;Posterior standard deviation&quot;</span><span class="p">);</span>
+<span class="n">axes</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">"Posterior standard deviation"</span><span class="p">);</span>
 </pre></div>
 </div>
 </div>
@@ -801,6 +807,7 @@ again, and the rows of <code class="docutils literal notranslate"><span class="p
       <th>n_state</th>
       <th>n_obs</th>
       <th>dofs</th>
+      <th>information_content</th>
       <th>chi2</th>
       <th>reduced_chi2</th>
       <th>r2</th>
@@ -815,6 +822,7 @@ again, and the rows of <code class="docutils literal notranslate"><span class="p
       <td>40</td>
       <td>41</td>
       <td>12.410882</td>
+      <td>36.968706</td>
       <td>1.221866</td>
       <td>0.029802</td>
       <td>0.999911</td>
@@ -827,6 +835,7 @@ again, and the rows of <code class="docutils literal notranslate"><span class="p
       <td>40</td>
       <td>41</td>
       <td>13.865537</td>
+      <td>44.159710</td>
       <td>1.808107</td>
       <td>0.044100</td>
       <td>0.999946</td>
@@ -839,6 +848,7 @@ again, and the rows of <code class="docutils literal notranslate"><span class="p
       <td>40</td>
       <td>41</td>
       <td>16.058980</td>
+      <td>53.145823</td>
       <td>2.723385</td>
       <td>0.066424</td>
       <td>0.999982</td>
@@ -851,6 +861,7 @@ again, and the rows of <code class="docutils literal notranslate"><span class="p
       <td>40</td>
       <td>41</td>
       <td>18.042533</td>
+      <td>62.528799</td>
       <td>3.426285</td>
       <td>0.083568</td>
       <td>0.999996</td>
@@ -863,6 +874,7 @@ again, and the rows of <code class="docutils literal notranslate"><span class="p
       <td>40</td>
       <td>41</td>
       <td>19.627809</td>
+      <td>73.902069</td>
       <td>3.867133</td>
       <td>0.094320</td>
       <td>0.999999</td>
@@ -956,8 +968,8 @@ again, and the rows of <code class="docutils literal notranslate"><span class="p
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script defer src="../../_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0"></script>
-<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0"></script>
+  <script defer src="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be"></script>
+<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be"></script>
 
   <footer class="bd-footer">
 <div class="bd-footer__inner bd-page-width">
@@ -977,7 +989,7 @@ again, and the rows of <code class="docutils literal notranslate"><span class="p
         <div class="footer-item">
 
   <p class="sphinx-version">
-    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.1.0.
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.2.0.
   </p>
 </div>
       
@@ -990,7 +1002,7 @@ again, and the rows of <code class="docutils literal notranslate"><span class="p
         <div class="footer-item">
 <p class="theme-version">
   <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
-  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.22.0.
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.23.0.
 </p></div>
       
     </div>

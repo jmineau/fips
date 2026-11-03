@@ -1,0 +1,6 @@
+fips.Matern.within
+==================
+
+.. currentmodule:: fips
+
+.. autoattribute:: Matern.within

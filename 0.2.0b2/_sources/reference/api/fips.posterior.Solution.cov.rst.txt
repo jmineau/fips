@@ -1,0 +1,6 @@
+fips.posterior.Solution.cov
+===========================
+
+.. currentmodule:: fips.posterior
+
+.. automethod:: Solution.cov

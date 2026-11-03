@@ -1,0 +1,6 @@
+fips.Exponential.scale
+======================
+
+.. currentmodule:: fips
+
+.. autoattribute:: Exponential.scale

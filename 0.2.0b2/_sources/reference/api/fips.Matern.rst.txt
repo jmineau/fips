@@ -1,0 +1,40 @@
+﻿fips.Matern
+===========
+
+.. currentmodule:: fips
+
+.. autoclass:: Matern
+   :no-members:
+   :show-inheritance:
+
+
+
+
+.. rubric:: Attributes
+
+.. autosummary::
+   :toctree:
+
+   ~Matern.metric
+   ~Matern.nu
+   ~Matern.scale
+   ~Matern.within
+
+
+
+.. rubric:: Methods
+
+.. autosummary::
+   :toctree:
+
+   ~Matern.correlation
+
+
+
+
+.. rubric:: Inherited
+
+
+From :class:`~.CorrelationModel`: :py:obj:`~.CorrelationModel.levels`, :py:obj:`~.CorrelationModel.with_std`
+
+

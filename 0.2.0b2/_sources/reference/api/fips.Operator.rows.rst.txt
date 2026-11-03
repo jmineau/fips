@@ -1,0 +1,6 @@
+fips.Operator.rows
+==================
+
+.. currentmodule:: fips
+
+.. autoproperty:: Operator.rows

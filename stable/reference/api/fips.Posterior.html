@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>fips.Posterior &#8212; fips 0.2.0b1 documentation</title>
+    <title>fips.Posterior &#8212; fips 0.2.0b2 documentation</title>
   
   
   
@@ -26,22 +26,23 @@
   </noscript>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="../../_static/styles/theme.css?digest=64cc4de3f052d77215f0" rel="stylesheet" />
-<link href="../../_static/styles/pydata-sphinx-theme.css?digest=64cc4de3f052d77215f0" rel="stylesheet" />
+  <link href="../../_static/styles/theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
 
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../_static/plot_directive.css" />
     <link rel="stylesheet" type="text/css" href="../../_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx_autodoc_typehints.css?v=057ac668" />
     <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../../_static/custom.css?v=4b8357b6" />
   
   <!-- So that users can add custom icons -->
-  <script defer src="../../_static/scripts/fontawesome.js?digest=64cc4de3f052d77215f0"></script>
+  <script defer src="../../_static/scripts/fontawesome.js?digest=18bd87630a240e9c25be"></script>
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0" />
-<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0" />
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../_static/documentation_options.js?v=3804d0ff"></script>
+    <script src="../../_static/documentation_options.js?v=0ffc5a95"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -50,9 +51,9 @@
     <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'reference/api/fips.Posterior';</script>
     <script>
-        DOCUMENTATION_OPTIONS.theme_version = '0.22.0';
+        DOCUMENTATION_OPTIONS.theme_version = '0.23.0';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://jmineau.github.io/fips/switcher.json';
-        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.2.0b1';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.2.0b2';
         DOCUMENTATION_OPTIONS.show_version_warning_banner =
             true;
         </script>
@@ -62,6 +63,7 @@
     <link rel="next" title="fips.Posterior.chi2" href="fips.Posterior.chi2.html" />
     <link rel="prev" title="fips.methods.analytic.AnalyticOptions.gamma" href="fips.methods.analytic.AnalyticOptions.gamma.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="0.2" />
   
@@ -135,8 +137,8 @@
       
     
     
-    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b1 documentation - Home"/>
-    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b1 documentation - Home"/>
+    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b2 documentation - Home"/>
+    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b2 documentation - Home"/>
   
   
 </a></div>
@@ -477,10 +479,12 @@
 <li class="toctree-l2 has-children"><a class="reference internal" href="fips.Covariance.html">fips.Covariance</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l3"><a class="reference internal" href="fips.Covariance.space.html">fips.Covariance.space</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.Covariance.variances.html">fips.Covariance.variances</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fips.Covariance.aggregate.html">fips.Covariance.aggregate</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.Covariance.block_diag.html">fips.Covariance.block_diag</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.Covariance.diagonal.html">fips.Covariance.diagonal</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.Covariance.logdet.html">fips.Covariance.logdet</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.Covariance.quadratic_form.html">fips.Covariance.quadratic_form</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fips.Covariance.sample.html">fips.Covariance.sample</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.Covariance.solve.html">fips.Covariance.solve</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.Covariance.sqrt.html">fips.Covariance.sqrt</a></li>
 </ul>
@@ -493,6 +497,8 @@
 <li class="toctree-l2"><a class="reference internal" href="fips.Covariance.logdet.html">fips.Covariance.logdet</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.Covariance.quadratic_form.html">fips.Covariance.quadratic_form</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.Covariance.sqrt.html">fips.Covariance.sqrt</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fips.Covariance.aggregate.html">fips.Covariance.aggregate</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fips.Covariance.sample.html">fips.Covariance.sample</a></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="fips.Exponential.html">fips.Exponential</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l3"><a class="reference internal" href="fips.Exponential.metric.html">fips.Exponential.metric</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.Exponential.scale.html">fips.Exponential.scale</a></li>
@@ -571,6 +577,7 @@
 <li class="toctree-l3"><a class="reference internal" href="fips.Problem.aggregate.html">fips.Problem.aggregate</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.Problem.predict.html">fips.Problem.predict</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.Problem.restrict.html">fips.Problem.restrict</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fips.Problem.simulate.html">fips.Problem.simulate</a></li>
 </ul>
 </details></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.Problem.prior.html">fips.Problem.prior</a></li>
@@ -580,6 +587,7 @@
 <li class="toctree-l2"><a class="reference internal" href="fips.Problem.forward.html">fips.Problem.forward</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.Problem.offset.html">fips.Problem.offset</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.Problem.predict.html">fips.Problem.predict</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fips.Problem.simulate.html">fips.Problem.simulate</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.Problem.aggregate.html">fips.Problem.aggregate</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.Problem.restrict.html">fips.Problem.restrict</a></li>
 </ul>
@@ -594,7 +602,9 @@
 <li class="toctree-l2 current active has-children"><a aria-current="page" class="current reference internal" href="#">fips.Posterior</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l3"><a class="reference internal" href="fips.Posterior.chi2.html">fips.Posterior.chi2</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.Posterior.dofs.html">fips.Posterior.dofs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fips.Posterior.dofs_per_element.html">fips.Posterior.dofs_per_element</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.Posterior.estimate.html">fips.Posterior.estimate</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fips.Posterior.information_content.html">fips.Posterior.information_content</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.Posterior.innovation_cov.html">fips.Posterior.innovation_cov</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.Posterior.kalman_gain.html">fips.Posterior.kalman_gain</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.Posterior.mean.html">fips.Posterior.mean</a></li>
@@ -607,10 +617,15 @@
 <li class="toctree-l3"><a class="reference internal" href="fips.Posterior.uncertainty_reduction.html">fips.Posterior.uncertainty_reduction</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.Posterior.variances.html">fips.Posterior.variances</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.Posterior.averaging_kernel.html">fips.Posterior.averaging_kernel</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fips.Posterior.candidate_worth.html">fips.Posterior.candidate_worth</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fips.Posterior.chi2_tests.html">fips.Posterior.chi2_tests</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.Posterior.cov.html">fips.Posterior.cov</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fips.Posterior.data_worth.html">fips.Posterior.data_worth</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.Posterior.desroziers.html">fips.Posterior.desroziers</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.Posterior.leverage.html">fips.Posterior.leverage</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fips.Posterior.recovery.html">fips.Posterior.recovery</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.Posterior.summary.html">fips.Posterior.summary</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fips.Posterior.uncertainty.html">fips.Posterior.uncertainty</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.Posterior.with_data.html">fips.Posterior.with_data</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.Posterior.with_gamma.html">fips.Posterior.with_gamma</a></li>
 </ul>
@@ -621,6 +636,7 @@
 <li class="toctree-l2"><a class="reference internal" href="fips.Posterior.mean.html">fips.Posterior.mean</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.Posterior.variances.html">fips.Posterior.variances</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.Posterior.cov.html">fips.Posterior.cov</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fips.Posterior.uncertainty.html">fips.Posterior.uncertainty</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.Posterior.modeled_obs.html">fips.Posterior.modeled_obs</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.Posterior.innovation_cov.html">fips.Posterior.innovation_cov</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.Posterior.desroziers.html">fips.Posterior.desroziers</a></li>
@@ -628,20 +644,29 @@
 <li class="toctree-l2"><a class="reference internal" href="fips.Posterior.kalman_gain.html">fips.Posterior.kalman_gain</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.Posterior.averaging_kernel.html">fips.Posterior.averaging_kernel</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.Posterior.dofs.html">fips.Posterior.dofs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fips.Posterior.dofs_per_element.html">fips.Posterior.dofs_per_element</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fips.Posterior.information_content.html">fips.Posterior.information_content</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.Posterior.chi2.html">fips.Posterior.chi2</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.Posterior.reduced_chi2.html">fips.Posterior.reduced_chi2</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fips.Posterior.chi2_tests.html">fips.Posterior.chi2_tests</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.Posterior.r2.html">fips.Posterior.r2</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.Posterior.rmse.html">fips.Posterior.rmse</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.Posterior.uncertainty_reduction.html">fips.Posterior.uncertainty_reduction</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.Posterior.summary.html">fips.Posterior.summary</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.Posterior.with_gamma.html">fips.Posterior.with_gamma</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.Posterior.with_data.html">fips.Posterior.with_data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fips.Posterior.recovery.html">fips.Posterior.recovery</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fips.Posterior.data_worth.html">fips.Posterior.data_worth</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fips.Posterior.candidate_worth.html">fips.Posterior.candidate_worth</a></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="fips.posterior.Solution.html">fips.posterior.Solution</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l3"><a class="reference internal" href="fips.posterior.Solution.chi2.html">fips.posterior.Solution.chi2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fips.posterior.Solution.chi2_tests.html">fips.posterior.Solution.chi2_tests</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.posterior.Solution.cov.html">fips.posterior.Solution.cov</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.posterior.Solution.dofs.html">fips.posterior.Solution.dofs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fips.posterior.Solution.dofs_per_element.html">fips.posterior.Solution.dofs_per_element</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.posterior.Solution.estimate.html">fips.posterior.Solution.estimate</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.posterior.Solution.gain.html">fips.posterior.Solution.gain</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fips.posterior.Solution.information.html">fips.posterior.Solution.information</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.posterior.Solution.variances.html">fips.posterior.Solution.variances</a></li>
 </ul>
 </details></li>
@@ -650,7 +675,10 @@
 <li class="toctree-l2"><a class="reference internal" href="fips.posterior.Solution.cov.html">fips.posterior.Solution.cov</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.posterior.Solution.gain.html">fips.posterior.Solution.gain</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.posterior.Solution.dofs.html">fips.posterior.Solution.dofs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fips.posterior.Solution.dofs_per_element.html">fips.posterior.Solution.dofs_per_element</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fips.posterior.Solution.information.html">fips.posterior.Solution.information</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.posterior.Solution.chi2.html">fips.posterior.Solution.chi2</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fips.posterior.Solution.chi2_tests.html">fips.posterior.Solution.chi2_tests</a></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="fips.posterior.Options.html">fips.posterior.Options</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l3"><a class="reference internal" href="fips.posterior.Options.gamma.html">fips.posterior.Options.gamma</a></li>
 </ul>
@@ -822,21 +850,22 @@ is Gaussian: <a class="reference internal" href="fips.Posterior.estimate.html#fi
 object), and the posterior covariance is
 <span class="math notranslate nohighlight">\(\hat{S} = (H^T S_z^{-1} H + S_0^{-1})^{-1}\)</span>, with <span class="math notranslate nohighlight">\(S_z\)</span>
 divided by the regularization factor <span class="math notranslate nohighlight">\(\gamma\)</span>. It holds what depends
-on the solve or on the <code class="docutils literal notranslate"><span class="pre">m</span> <span class="pre">x</span> <span class="pre">m</span></code> matrix the solve factors
+on the solve or on the <code class="docutils literal notranslate"><span class="pre">m</span> <span class="pre">x</span> <span class="pre">m</span></code> innovation covariance
 (<a class="reference internal" href="fips.Posterior.innovation_cov.html#fips.Posterior.innovation_cov" title="fips.Posterior.innovation_cov"><code class="xref py py-attr docutils literal notranslate"><span class="pre">innovation_cov</span></code></a>); what needs neither is on the
 <a class="reference internal" href="fips.Problem.html#fips.Problem" title="fips.Problem"><code class="xref py py-class docutils literal notranslate"><span class="pre">Problem</span></code></a> (<a class="reference internal" href="fips.Problem.predict.html#fips.Problem.predict" title="fips.Problem.predict"><code class="xref py py-meth docutils literal notranslate"><span class="pre">predict()</span></code></a>).</p>
-<p>Every member works for every method, except three that need more of the
+<p>Every member works for every method, except four that need more of the
 method than a <code class="xref py py-class docutils literal notranslate"><span class="pre">Solution</span></code> gives: <a class="reference internal" href="fips.Posterior.mean.html#fips.Posterior.mean" title="fips.Posterior.mean"><code class="xref py py-attr docutils literal notranslate"><span class="pre">mean</span></code></a> (where the estimate is
 the mean), <a class="reference internal" href="fips.Posterior.with_gamma.html#fips.Posterior.with_gamma" title="fips.Posterior.with_gamma"><code class="xref py py-meth docutils literal notranslate"><span class="pre">with_gamma()</span></code></a> and <a class="reference internal" href="fips.Posterior.with_data.html#fips.Posterior.with_data" title="fips.Posterior.with_data"><code class="xref py py-meth docutils literal notranslate"><span class="pre">with_data()</span></code></a> (where the method can
-answer without solving again). The analytic method has all three.</p>
+answer without solving again), and <a class="reference internal" href="fips.Posterior.recovery.html#fips.Posterior.recovery" title="fips.Posterior.recovery"><code class="xref py py-meth docutils literal notranslate"><span class="pre">recovery()</span></code></a> (where the estimate is
+linear in the observations). The analytic method has all four.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>problem</strong> (<a class="reference internal" href="fips.Problem.html#fips.Problem" title="fips.Problem"><em>Problem</em></a>) – The problem that was solved.</p></li>
-<li><p><strong>solution</strong> (<a class="reference internal" href="fips.posterior.Solution.html#fips.posterior.Solution" title="fips.posterior.Solution"><em>Solution</em></a>) – What the method kept from the solve, which gives the unlabeled
+<li><p><strong>problem</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="fips.Problem.html#fips.Problem" title="fips.problem.Problem"><code class="xref py py-class docutils literal notranslate"><span class="pre">Problem</span></code></a></span>) – The problem that was solved.</p></li>
+<li><p><strong>solution</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="fips.posterior.Solution.html#fips.posterior.Solution" title="fips.posterior.Solution"><code class="xref py py-class docutils literal notranslate"><span class="pre">Solution</span></code></a></span>) – What the method kept from the solve, which gives the unlabeled
 arrays (for the analytic method, a factorization:
 <code class="docutils literal notranslate"><span class="pre">fips.methods.analytic.Whitened</span></code> or <code class="docutils literal notranslate"><span class="pre">Information</span></code>).</p></li>
-<li><p><strong>options</strong> (<a class="reference internal" href="fips.posterior.Options.html#fips.posterior.Options" title="fips.posterior.Options"><em>Options</em></a>) – The options of the method, such as
+<li><p><strong>options</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="fips.posterior.Options.html#fips.posterior.Options" title="fips.posterior.Options"><code class="xref py py-class docutils literal notranslate"><span class="pre">Options</span></code></a></span>) – The options of the method, such as
 <a class="reference internal" href="fips.methods.analytic.AnalyticOptions.html#fips.methods.analytic.AnalyticOptions" title="fips.methods.analytic.AnalyticOptions"><code class="xref py py-class docutils literal notranslate"><span class="pre">fips.methods.analytic.AnalyticOptions</span></code></a>.</p></li>
 </ul>
 </dd>
@@ -852,11 +881,11 @@ arrays (for the analytic method, a factorization:
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">fips</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">cells</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">([</span><span class="s2">&quot;a&quot;</span><span class="p">,</span> <span class="s2">&quot;b&quot;</span><span class="p">],</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;cell&quot;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">obs_id</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">([</span><span class="s2">&quot;o1&quot;</span><span class="p">,</span> <span class="s2">&quot;o2&quot;</span><span class="p">,</span> <span class="s2">&quot;o3&quot;</span><span class="p">],</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;obs_id&quot;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">prior</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Vector</span><span class="o">.</span><span class="n">from_series</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">cells</span><span class="p">),</span> <span class="n">block</span><span class="o">=</span><span class="s2">&quot;flux&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cells</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">([</span><span class="s2">"a"</span><span class="p">,</span> <span class="s2">"b"</span><span class="p">],</span> <span class="n">name</span><span class="o">=</span><span class="s2">"cell"</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">obs_id</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">([</span><span class="s2">"o1"</span><span class="p">,</span> <span class="s2">"o2"</span><span class="p">,</span> <span class="s2">"o3"</span><span class="p">],</span> <span class="n">name</span><span class="o">=</span><span class="s2">"obs_id"</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">prior</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Vector</span><span class="o">.</span><span class="n">from_series</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">cells</span><span class="p">),</span> <span class="n">block</span><span class="o">=</span><span class="s2">"flux"</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">obs</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Vector</span><span class="o">.</span><span class="n">from_series</span><span class="p">(</span>
-<span class="gp">... </span>    <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">([</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">,</span> <span class="mf">3.0</span><span class="p">],</span> <span class="n">index</span><span class="o">=</span><span class="n">obs_id</span><span class="p">),</span> <span class="n">block</span><span class="o">=</span><span class="s2">&quot;co2&quot;</span>
+<span class="gp">... </span>    <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">([</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">,</span> <span class="mf">3.0</span><span class="p">],</span> <span class="n">index</span><span class="o">=</span><span class="n">obs_id</span><span class="p">),</span> <span class="n">block</span><span class="o">=</span><span class="s2">"co2"</span>
 <span class="gp">... </span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">problem</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Problem</span><span class="p">(</span>
 <span class="gp">... </span>    <span class="n">prior</span><span class="o">=</span><span class="n">prior</span><span class="p">,</span>
@@ -885,8 +914,14 @@ arrays (for the analytic method, a factorization:
 <tr class="row-even"><td><p><a class="reference internal" href="fips.Posterior.dofs.html#fips.Posterior.dofs" title="fips.Posterior.dofs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">dofs</span></code></a></p></td>
 <td><p>Degrees of freedom for signal, the trace of <code class="xref py py-meth docutils literal notranslate"><span class="pre">averaging_kernel()</span></code>.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="fips.Posterior.estimate.html#fips.Posterior.estimate" title="fips.Posterior.estimate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">estimate</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="fips.Posterior.dofs_per_element.html#fips.Posterior.dofs_per_element" title="fips.Posterior.dofs_per_element"><code class="xref py py-obj docutils literal notranslate"><span class="pre">dofs_per_element</span></code></a></p></td>
+<td><p>the diagonal of <code class="xref py py-meth docutils literal notranslate"><span class="pre">averaging_kernel()</span></code>, on the prior's space.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="fips.Posterior.estimate.html#fips.Posterior.estimate" title="fips.Posterior.estimate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">estimate</span></code></a></p></td>
 <td><p>The posterior state estimate, <span class="math notranslate nohighlight">\(\hat{x}\)</span>, on the prior's space.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="fips.Posterior.information_content.html#fips.Posterior.information_content" title="fips.Posterior.information_content"><code class="xref py py-obj docutils literal notranslate"><span class="pre">information_content</span></code></a></p></td>
+<td><p>The Shannon information content of the observations about the state, in nats.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="fips.Posterior.innovation_cov.html#fips.Posterior.innovation_cov" title="fips.Posterior.innovation_cov"><code class="xref py py-obj docutils literal notranslate"><span class="pre">innovation_cov</span></code></a></p></td>
 <td><p>The covariance of the innovation, <span class="math notranslate nohighlight">\(H S_0 H^T + S_z / \gamma\)</span>, dense.</p></td>
@@ -930,22 +965,37 @@ arrays (for the analytic method, a factorization:
 <tr class="row-odd"><td><p><a class="reference internal" href="fips.Posterior.averaging_kernel.html#fips.Posterior.averaging_kernel" title="fips.Posterior.averaging_kernel"><code class="xref py py-obj docutils literal notranslate"><span class="pre">averaging_kernel</span></code></a>([W])</p></td>
 <td><p>Return the averaging kernel, of the state or of aggregates of it.</p></td>
 </tr>
+<tr class="row-even"><td><p><a class="reference internal" href="fips.Posterior.candidate_worth.html#fips.Posterior.candidate_worth" title="fips.Posterior.candidate_worth"><code class="xref py py-obj docutils literal notranslate"><span class="pre">candidate_worth</span></code></a>(forward, obs_cov, by, W)</p></td>
+<td><p>Return what each group of candidate observations, not in the problem, would add to the certainty of each aggregate.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="fips.Posterior.chi2_tests.html#fips.Posterior.chi2_tests" title="fips.Posterior.chi2_tests"><code class="xref py py-obj docutils literal notranslate"><span class="pre">chi2_tests</span></code></a>()</p></td>
+<td><p>Test whether the innovation, the residual and the increment are as large as the covariances say: Rodgers' four chi-squared tests.</p></td>
+</tr>
 <tr class="row-even"><td><p><a class="reference internal" href="fips.Posterior.cov.html#fips.Posterior.cov" title="fips.Posterior.cov"><code class="xref py py-obj docutils literal notranslate"><span class="pre">cov</span></code></a>([W])</p></td>
 <td><p>Return the posterior error covariance, of the state or of aggregates of it.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="fips.Posterior.desroziers.html#fips.Posterior.desroziers" title="fips.Posterior.desroziers"><code class="xref py py-obj docutils literal notranslate"><span class="pre">desroziers</span></code></a>([by])</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="fips.Posterior.data_worth.html#fips.Posterior.data_worth" title="fips.Posterior.data_worth"><code class="xref py py-obj docutils literal notranslate"><span class="pre">data_worth</span></code></a>(by, W)</p></td>
+<td><p>Return what each group of observations adds to the certainty of each aggregate, and its share of DOFS.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="fips.Posterior.desroziers.html#fips.Posterior.desroziers" title="fips.Posterior.desroziers"><code class="xref py py-obj docutils literal notranslate"><span class="pre">desroziers</span></code></a>([by])</p></td>
 <td><p>Compare the observation error variances Desroziers et al. (2005) diagnose with those the solve used.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="fips.Posterior.leverage.html#fips.Posterior.leverage" title="fips.Posterior.leverage"><code class="xref py py-obj docutils literal notranslate"><span class="pre">leverage</span></code></a>(x)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="fips.Posterior.leverage.html#fips.Posterior.leverage" title="fips.Posterior.leverage"><code class="xref py py-obj docutils literal notranslate"><span class="pre">leverage</span></code></a>(x)</p></td>
 <td><p>Return the leverage matrix of the state <cite>x</cite>: which observations weigh most on it.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="fips.Posterior.recovery.html#fips.Posterior.recovery" title="fips.Posterior.recovery"><code class="xref py py-obj docutils literal notranslate"><span class="pre">recovery</span></code></a>([world, truth, W, level])</p></td>
+<td><p>Return how well the estimate recovers the truth when the data come from <cite>world</cite>: exactly, without sampling.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="fips.Posterior.summary.html#fips.Posterior.summary" title="fips.Posterior.summary"><code class="xref py py-obj docutils literal notranslate"><span class="pre">summary</span></code></a>()</p></td>
 <td><p>Return the diagnostics of the solve as a table of one row.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="fips.Posterior.with_data.html#fips.Posterior.with_data" title="fips.Posterior.with_data"><code class="xref py py-obj docutils literal notranslate"><span class="pre">with_data</span></code></a>(obs)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="fips.Posterior.uncertainty.html#fips.Posterior.uncertainty" title="fips.Posterior.uncertainty"><code class="xref py py-obj docutils literal notranslate"><span class="pre">uncertainty</span></code></a>([W])</p></td>
+<td><p>Return the prior and posterior uncertainty of each aggregate, and how much the observations reduce it.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="fips.Posterior.with_data.html#fips.Posterior.with_data" title="fips.Posterior.with_data"><code class="xref py py-obj docutils literal notranslate"><span class="pre">with_data</span></code></a>(obs)</p></td>
 <td><p>Return the posterior of the same problem with other observations.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="fips.Posterior.with_gamma.html#fips.Posterior.with_gamma" title="fips.Posterior.with_gamma"><code class="xref py py-obj docutils literal notranslate"><span class="pre">with_gamma</span></code></a>(gamma)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="fips.Posterior.with_gamma.html#fips.Posterior.with_gamma" title="fips.Posterior.with_gamma"><code class="xref py py-obj docutils literal notranslate"><span class="pre">with_gamma</span></code></a>(gamma)</p></td>
 <td><p>Return the posterior of the same problem with another regularization factor.</p></td>
 </tr>
 </tbody>
@@ -1026,8 +1076,8 @@ arrays (for the analytic method, a factorization:
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script defer src="../../_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0"></script>
-<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0"></script>
+  <script defer src="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be"></script>
+<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be"></script>
 
   <footer class="bd-footer">
 <div class="bd-footer__inner bd-page-width">
@@ -1047,7 +1097,7 @@ arrays (for the analytic method, a factorization:
         <div class="footer-item">
 
   <p class="sphinx-version">
-    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.1.0.
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.2.0.
   </p>
 </div>
       
@@ -1060,7 +1110,7 @@ arrays (for the analytic method, a factorization:
         <div class="footer-item">
 <p class="theme-version">
   <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
-  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.22.0.
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.23.0.
 </p></div>
       
     </div>

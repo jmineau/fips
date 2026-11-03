@@ -1,0 +1,40 @@
+﻿fips.Operator
+=============
+
+.. currentmodule:: fips
+
+.. autoclass:: Operator
+   :no-members:
+
+
+
+
+.. rubric:: Attributes
+
+.. autosummary::
+   :toctree:
+
+   ~Operator.cols
+   ~Operator.data
+   ~Operator.name
+   ~Operator.rows
+   ~Operator.shape
+   ~Operator.T
+
+
+
+.. rubric:: Methods
+
+.. autosummary::
+   :toctree:
+
+   ~Operator.align
+   ~Operator.dense
+   ~Operator.from_blocks
+   ~Operator.from_frame
+   ~Operator.round_labels
+   ~Operator.sparse
+   ~Operator.to_frame
+
+
+

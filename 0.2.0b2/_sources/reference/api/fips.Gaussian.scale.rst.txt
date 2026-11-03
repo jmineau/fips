@@ -1,0 +1,6 @@
+fips.Gaussian.scale
+===================
+
+.. currentmodule:: fips
+
+.. autoattribute:: Gaussian.scale

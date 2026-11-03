@@ -1,0 +1,6 @@
+fips.Posterior.candidate\_worth
+===============================
+
+.. currentmodule:: fips
+
+.. automethod:: Posterior.candidate_worth

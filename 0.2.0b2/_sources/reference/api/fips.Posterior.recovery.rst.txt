@@ -1,0 +1,6 @@
+fips.Posterior.recovery
+=======================
+
+.. currentmodule:: fips
+
+.. automethod:: Posterior.recovery

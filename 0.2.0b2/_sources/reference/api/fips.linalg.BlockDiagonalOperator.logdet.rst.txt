@@ -1,0 +1,6 @@
+fips.linalg.BlockDiagonalOperator.logdet
+========================================
+
+.. currentmodule:: fips.linalg
+
+.. automethod:: BlockDiagonalOperator.logdet

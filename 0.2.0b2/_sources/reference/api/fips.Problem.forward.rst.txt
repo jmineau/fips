@@ -1,0 +1,6 @@
+fips.Problem.forward
+====================
+
+.. currentmodule:: fips
+
+.. autoproperty:: Problem.forward

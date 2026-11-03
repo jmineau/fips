@@ -1,0 +1,6 @@
+fips.Posterior.with\_gamma
+==========================
+
+.. currentmodule:: fips
+
+.. automethod:: Posterior.with_gamma

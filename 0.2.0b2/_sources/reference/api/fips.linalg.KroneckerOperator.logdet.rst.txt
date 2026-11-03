@@ -1,0 +1,6 @@
+fips.linalg.KroneckerOperator.logdet
+====================================
+
+.. currentmodule:: fips.linalg
+
+.. automethod:: KroneckerOperator.logdet

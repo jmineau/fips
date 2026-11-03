@@ -1,0 +1,6 @@
+fips.Matern.metric
+==================
+
+.. currentmodule:: fips
+
+.. autoattribute:: Matern.metric

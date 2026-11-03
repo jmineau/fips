@@ -1,0 +1,6 @@
+fips.Space.slice
+================
+
+.. currentmodule:: fips
+
+.. automethod:: Space.slice

@@ -1,0 +1,6 @@
+fips.Posterior.summary
+======================
+
+.. currentmodule:: fips
+
+.. automethod:: Posterior.summary

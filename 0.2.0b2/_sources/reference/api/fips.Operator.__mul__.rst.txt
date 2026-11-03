@@ -1,0 +1,6 @@
+﻿fips.Operator.\_\_mul\_\_
+=========================
+
+.. currentmodule:: fips
+
+.. automethod:: Operator.__mul__

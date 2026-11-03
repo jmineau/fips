@@ -1,0 +1,6 @@
+fips.linalg.KroneckerOperator.sqrt
+==================================
+
+.. currentmodule:: fips.linalg
+
+.. automethod:: KroneckerOperator.sqrt

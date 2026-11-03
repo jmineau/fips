@@ -1,0 +1,6 @@
+fips.Covariance.quadratic\_form
+===============================
+
+.. currentmodule:: fips
+
+.. automethod:: Covariance.quadratic_form

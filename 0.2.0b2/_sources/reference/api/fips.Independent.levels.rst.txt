@@ -1,0 +1,6 @@
+fips.Independent.levels
+=======================
+
+.. currentmodule:: fips
+
+.. autoattribute:: Independent.levels

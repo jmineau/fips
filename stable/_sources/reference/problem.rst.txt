@@ -63,14 +63,16 @@ Inputs
 Without a solve
 ~~~~~~~~~~~~~~~
 What needs no solve and no :math:`m \times m` matrix is on the problem: what
-the problem predicts, and the problems made from it (the observations
-aggregated, part of the state held at its prior). What depends on the solve
-is on the :class:`Posterior`.
+the problem predicts, a truth and its synthetic observations
+(:ref:`how to use them <synthetic-data>`), and the problems made from it (the
+observations aggregated, part of the state held at its prior). What depends on
+the solve is on the :class:`Posterior`.
 
 .. autosummary::
    :toctree: api/
 
    Problem.predict
+   Problem.simulate
    Problem.aggregate
    Problem.restrict
 

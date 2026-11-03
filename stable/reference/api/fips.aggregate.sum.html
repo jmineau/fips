@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>fips.aggregate.sum &#8212; fips 0.2.0b1 documentation</title>
+    <title>fips.aggregate.sum &#8212; fips 0.2.0b2 documentation</title>
   
   
   
@@ -26,22 +26,23 @@
   </noscript>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="../../_static/styles/theme.css?digest=64cc4de3f052d77215f0" rel="stylesheet" />
-<link href="../../_static/styles/pydata-sphinx-theme.css?digest=64cc4de3f052d77215f0" rel="stylesheet" />
+  <link href="../../_static/styles/theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
 
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../_static/plot_directive.css" />
     <link rel="stylesheet" type="text/css" href="../../_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx_autodoc_typehints.css?v=057ac668" />
     <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../../_static/custom.css?v=4b8357b6" />
   
   <!-- So that users can add custom icons -->
-  <script defer src="../../_static/scripts/fontawesome.js?digest=64cc4de3f052d77215f0"></script>
+  <script defer src="../../_static/scripts/fontawesome.js?digest=18bd87630a240e9c25be"></script>
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0" />
-<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0" />
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../_static/documentation_options.js?v=3804d0ff"></script>
+    <script src="../../_static/documentation_options.js?v=0ffc5a95"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -50,9 +51,9 @@
     <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'reference/api/fips.aggregate.sum';</script>
     <script>
-        DOCUMENTATION_OPTIONS.theme_version = '0.22.0';
+        DOCUMENTATION_OPTIONS.theme_version = '0.23.0';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://jmineau.github.io/fips/switcher.json';
-        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.2.0b1';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = '0.2.0b2';
         DOCUMENTATION_OPTIONS.show_version_warning_banner =
             true;
         </script>
@@ -62,6 +63,7 @@
     <link rel="next" title="fips.aggregate.mean" href="fips.aggregate.mean.html" />
     <link rel="prev" title="Aggregation and Offsets" href="../aggregate.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="0.2" />
   
@@ -135,8 +137,8 @@
       
     
     
-    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b1 documentation - Home"/>
-    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b1 documentation - Home"/>
+    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b2 documentation - Home"/>
+    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b2 documentation - Home"/>
   
   
 </a></div>
@@ -477,10 +479,12 @@
 <li class="toctree-l2 has-children"><a class="reference internal" href="fips.Covariance.html">fips.Covariance</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l3"><a class="reference internal" href="fips.Covariance.space.html">fips.Covariance.space</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.Covariance.variances.html">fips.Covariance.variances</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fips.Covariance.aggregate.html">fips.Covariance.aggregate</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.Covariance.block_diag.html">fips.Covariance.block_diag</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.Covariance.diagonal.html">fips.Covariance.diagonal</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.Covariance.logdet.html">fips.Covariance.logdet</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.Covariance.quadratic_form.html">fips.Covariance.quadratic_form</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fips.Covariance.sample.html">fips.Covariance.sample</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.Covariance.solve.html">fips.Covariance.solve</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.Covariance.sqrt.html">fips.Covariance.sqrt</a></li>
 </ul>
@@ -493,6 +497,8 @@
 <li class="toctree-l2"><a class="reference internal" href="fips.Covariance.logdet.html">fips.Covariance.logdet</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.Covariance.quadratic_form.html">fips.Covariance.quadratic_form</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.Covariance.sqrt.html">fips.Covariance.sqrt</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fips.Covariance.aggregate.html">fips.Covariance.aggregate</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fips.Covariance.sample.html">fips.Covariance.sample</a></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="fips.Exponential.html">fips.Exponential</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l3"><a class="reference internal" href="fips.Exponential.metric.html">fips.Exponential.metric</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.Exponential.scale.html">fips.Exponential.scale</a></li>
@@ -571,6 +577,7 @@
 <li class="toctree-l3"><a class="reference internal" href="fips.Problem.aggregate.html">fips.Problem.aggregate</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.Problem.predict.html">fips.Problem.predict</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.Problem.restrict.html">fips.Problem.restrict</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fips.Problem.simulate.html">fips.Problem.simulate</a></li>
 </ul>
 </details></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.Problem.prior.html">fips.Problem.prior</a></li>
@@ -580,6 +587,7 @@
 <li class="toctree-l2"><a class="reference internal" href="fips.Problem.forward.html">fips.Problem.forward</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.Problem.offset.html">fips.Problem.offset</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.Problem.predict.html">fips.Problem.predict</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fips.Problem.simulate.html">fips.Problem.simulate</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.Problem.aggregate.html">fips.Problem.aggregate</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.Problem.restrict.html">fips.Problem.restrict</a></li>
 </ul>
@@ -594,7 +602,9 @@
 <li class="toctree-l2 has-children"><a class="reference internal" href="fips.Posterior.html">fips.Posterior</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l3"><a class="reference internal" href="fips.Posterior.chi2.html">fips.Posterior.chi2</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.Posterior.dofs.html">fips.Posterior.dofs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fips.Posterior.dofs_per_element.html">fips.Posterior.dofs_per_element</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.Posterior.estimate.html">fips.Posterior.estimate</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fips.Posterior.information_content.html">fips.Posterior.information_content</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.Posterior.innovation_cov.html">fips.Posterior.innovation_cov</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.Posterior.kalman_gain.html">fips.Posterior.kalman_gain</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.Posterior.mean.html">fips.Posterior.mean</a></li>
@@ -607,10 +617,15 @@
 <li class="toctree-l3"><a class="reference internal" href="fips.Posterior.uncertainty_reduction.html">fips.Posterior.uncertainty_reduction</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.Posterior.variances.html">fips.Posterior.variances</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.Posterior.averaging_kernel.html">fips.Posterior.averaging_kernel</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fips.Posterior.candidate_worth.html">fips.Posterior.candidate_worth</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fips.Posterior.chi2_tests.html">fips.Posterior.chi2_tests</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.Posterior.cov.html">fips.Posterior.cov</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fips.Posterior.data_worth.html">fips.Posterior.data_worth</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.Posterior.desroziers.html">fips.Posterior.desroziers</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.Posterior.leverage.html">fips.Posterior.leverage</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fips.Posterior.recovery.html">fips.Posterior.recovery</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.Posterior.summary.html">fips.Posterior.summary</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fips.Posterior.uncertainty.html">fips.Posterior.uncertainty</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.Posterior.with_data.html">fips.Posterior.with_data</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.Posterior.with_gamma.html">fips.Posterior.with_gamma</a></li>
 </ul>
@@ -621,6 +636,7 @@
 <li class="toctree-l2"><a class="reference internal" href="fips.Posterior.mean.html">fips.Posterior.mean</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.Posterior.variances.html">fips.Posterior.variances</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.Posterior.cov.html">fips.Posterior.cov</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fips.Posterior.uncertainty.html">fips.Posterior.uncertainty</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.Posterior.modeled_obs.html">fips.Posterior.modeled_obs</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.Posterior.innovation_cov.html">fips.Posterior.innovation_cov</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.Posterior.desroziers.html">fips.Posterior.desroziers</a></li>
@@ -628,20 +644,29 @@
 <li class="toctree-l2"><a class="reference internal" href="fips.Posterior.kalman_gain.html">fips.Posterior.kalman_gain</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.Posterior.averaging_kernel.html">fips.Posterior.averaging_kernel</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.Posterior.dofs.html">fips.Posterior.dofs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fips.Posterior.dofs_per_element.html">fips.Posterior.dofs_per_element</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fips.Posterior.information_content.html">fips.Posterior.information_content</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.Posterior.chi2.html">fips.Posterior.chi2</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.Posterior.reduced_chi2.html">fips.Posterior.reduced_chi2</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fips.Posterior.chi2_tests.html">fips.Posterior.chi2_tests</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.Posterior.r2.html">fips.Posterior.r2</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.Posterior.rmse.html">fips.Posterior.rmse</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.Posterior.uncertainty_reduction.html">fips.Posterior.uncertainty_reduction</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.Posterior.summary.html">fips.Posterior.summary</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.Posterior.with_gamma.html">fips.Posterior.with_gamma</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.Posterior.with_data.html">fips.Posterior.with_data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fips.Posterior.recovery.html">fips.Posterior.recovery</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fips.Posterior.data_worth.html">fips.Posterior.data_worth</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fips.Posterior.candidate_worth.html">fips.Posterior.candidate_worth</a></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="fips.posterior.Solution.html">fips.posterior.Solution</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l3"><a class="reference internal" href="fips.posterior.Solution.chi2.html">fips.posterior.Solution.chi2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fips.posterior.Solution.chi2_tests.html">fips.posterior.Solution.chi2_tests</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.posterior.Solution.cov.html">fips.posterior.Solution.cov</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.posterior.Solution.dofs.html">fips.posterior.Solution.dofs</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fips.posterior.Solution.dofs_per_element.html">fips.posterior.Solution.dofs_per_element</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.posterior.Solution.estimate.html">fips.posterior.Solution.estimate</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.posterior.Solution.gain.html">fips.posterior.Solution.gain</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fips.posterior.Solution.information.html">fips.posterior.Solution.information</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.posterior.Solution.variances.html">fips.posterior.Solution.variances</a></li>
 </ul>
 </details></li>
@@ -650,7 +675,10 @@
 <li class="toctree-l2"><a class="reference internal" href="fips.posterior.Solution.cov.html">fips.posterior.Solution.cov</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.posterior.Solution.gain.html">fips.posterior.Solution.gain</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.posterior.Solution.dofs.html">fips.posterior.Solution.dofs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fips.posterior.Solution.dofs_per_element.html">fips.posterior.Solution.dofs_per_element</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fips.posterior.Solution.information.html">fips.posterior.Solution.information</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.posterior.Solution.chi2.html">fips.posterior.Solution.chi2</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fips.posterior.Solution.chi2_tests.html">fips.posterior.Solution.chi2_tests</a></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="fips.posterior.Options.html">fips.posterior.Options</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l3"><a class="reference internal" href="fips.posterior.Options.gamma.html">fips.posterior.Options.gamma</a></li>
 </ul>
@@ -812,37 +840,46 @@
 <h1>fips.aggregate.sum<a class="headerlink" href="#fips-aggregate-sum" title="Link to this heading">#</a></h1>
 <dl class="py function">
 <dt class="sig sig-object py" id="fips.aggregate.sum">
-<span class="sig-prename descclassname"><span class="pre">fips.aggregate.</span></span><span class="sig-name descname"><span class="pre">sum</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">space</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">by</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">blocks</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/fips/aggregate.html#sum"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fips.aggregate.sum" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">fips.aggregate.</span></span><span class="sig-name descname"><span class="pre">sum</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">space</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">by</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">blocks</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dropna</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/fips/aggregate.html#sum"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fips.aggregate.sum" title="Link to this definition">#</a></dt>
 <dd><p>Return the operator that sums the labels of <cite>space</cite> by group.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>space</strong> (<a class="reference internal" href="fips.Space.html#fips.Space" title="fips.Space"><em>Space</em></a>) – The labels to sum: the state’s or the observations’.</p></li>
-<li><p><strong>by</strong> (<em>key</em><em> or </em><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.15)"><em>list</em></a><em> of </em><em>keys</em>) – The groups: level names, a <a class="reference external" href="https://pandas.pydata.org/docs/reference/api/pandas.Grouper.html#pandas.Grouper" title="(in pandas v3.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">pandas.Grouper</span></code></a> with a <code class="docutils literal notranslate"><span class="pre">level</span></code> and
+<li><p><strong>space</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="fips.Space.html#fips.Space" title="fips.space.Space"><code class="xref py py-class docutils literal notranslate"><span class="pre">Space</span></code></a></span>) – The labels to sum: the state’s or the observations’.</p></li>
+<li><p><strong>by</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.15)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code></a></span>) – The groups: level names, a <a class="reference external" href="https://pandas.pydata.org/docs/reference/api/pandas.Grouper.html#pandas.Grouper" title="(in pandas v3.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">pandas.Grouper</span></code></a> with a <code class="docutils literal notranslate"><span class="pre">level</span></code> and
 a <code class="docutils literal notranslate"><span class="pre">freq</span></code>, an <a class="reference external" href="https://pandas.pydata.org/docs/reference/api/pandas.IntervalIndex.html#pandas.IntervalIndex" title="(in pandas v3.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">pandas.IntervalIndex</span></code></a> named after a level, or a
 <a class="reference external" href="https://pandas.pydata.org/docs/reference/api/pandas.Series.html#pandas.Series" title="(in pandas v3.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">pandas.Series</span></code></a> that maps a level’s values to groups (see
 <code class="xref py py-mod docutils literal notranslate"><span class="pre">fips.aggregate</span></code>). Every block summed must have the levels the
 keys read.</p></li>
-<li><p><strong>blocks</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.15)"><em>list</em></a><em> of </em><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a><em>, </em><em>optional</em>) – The blocks to sum, each on its own; every block by default. A block
-not named is passed through, one row for each of its labels.</p></li>
+<li><p><strong>blocks</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a> | <a class="reference external" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Sequence" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sequence</span></code></a>[<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>] | <span class="highlight sphinx_autodoc_typehints-value"><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><code class="xref py py-obj docutils literal notranslate"><span class="kc"><span class="pre">None</span></span></code></a></span></span>) – The blocks to sum, each on its own; every block by default. A block
+not named is passed through, one row for each of its labels (left
+out with <cite>dropna</cite>).</p></li>
+<li><p><strong>dropna</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></span>) – Leave out the labels a key cannot place (outside every interval,
+missing from a mapping, mapped to NaN) and the blocks not named in
+<cite>blocks</cite>, instead of raising and passing them through: their
+columns of <span class="math notranslate nohighlight">\(W\)</span> are zero. This picks part of the state, such as
+the cells of one region or the months of one year, as pandas’
+<code class="docutils literal notranslate"><span class="pre">groupby(dropna=True)</span></code> leaves out a missing key.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><span class="math notranslate nohighlight">\(W\)</span>, sparse, with one row per group (ones where a label is in
 the group) and <cite>space</cite> as its columns. Its rows are a space of the
 same blocks, each labeled by its groups in sorted order on the
-levels the keys name (a block passed through keeps its labels).</p>
+levels the keys name (a block passed through keeps its labels; a
+block <cite>dropna</cite> leaves out entirely is not there).</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference internal" href="fips.Operator.html#fips.Operator" title="fips.Operator">Operator</a></p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="fips.Operator.html#fips.Operator" title="fips.operator.Operator"><code class="xref py py-class docutils literal notranslate"><span class="pre">Operator</span></code></a></span></p>
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
 <dd class="field-even"><ul class="simple">
 <li><p><a class="reference external" href="https://docs.python.org/3/builtins/exceptions.html#TypeError" title="(in Python v3.15)"><strong>TypeError</strong></a> – If <cite>space</cite> is not a Space, or a key is of another kind.</p></li>
 <li><p><a class="reference external" href="https://docs.python.org/3/builtins/exceptions.html#ValueError" title="(in Python v3.15)"><strong>ValueError</strong></a> – If <cite>by</cite> is empty, a block summed lacks a level a key reads, a key
     cannot place a label (outside every interval, missing from a
-    mapping or mapped to NaN), two keys label one level, or <cite>blocks</cite>
-    names no block of <cite>space</cite>.</p></li>
+    mapping or mapped to NaN) without <cite>dropna</cite>, <cite>dropna</cite> leaves out
+    every label, two keys label one level, or <cite>blocks</cite> names no block
+    of <cite>space</cite>.</p></li>
 </ul>
 </dd>
 </dl>
@@ -862,17 +899,31 @@ levels the keys name (a block passed through keeps its labels).</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">fips</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">cells</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">MultiIndex</span><span class="o">.</span><span class="n">from_product</span><span class="p">(</span>
-<span class="gp">... </span>    <span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">date_range</span><span class="p">(</span><span class="s2">&quot;2020-01-01&quot;</span><span class="p">,</span> <span class="n">periods</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">freq</span><span class="o">=</span><span class="s2">&quot;MS&quot;</span><span class="p">),</span> <span class="p">[</span><span class="s2">&quot;a&quot;</span><span class="p">,</span> <span class="s2">&quot;b&quot;</span><span class="p">,</span> <span class="s2">&quot;c&quot;</span><span class="p">]],</span>
-<span class="gp">... </span>    <span class="n">names</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;time&quot;</span><span class="p">,</span> <span class="s2">&quot;cell&quot;</span><span class="p">],</span>
+<span class="gp">... </span>    <span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">date_range</span><span class="p">(</span><span class="s2">"2020-01-01"</span><span class="p">,</span> <span class="n">periods</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">freq</span><span class="o">=</span><span class="s2">"MS"</span><span class="p">),</span> <span class="p">[</span><span class="s2">"a"</span><span class="p">,</span> <span class="s2">"b"</span><span class="p">,</span> <span class="s2">"c"</span><span class="p">]],</span>
+<span class="gp">... </span>    <span class="n">names</span><span class="o">=</span><span class="p">[</span><span class="s2">"time"</span><span class="p">,</span> <span class="s2">"cell"</span><span class="p">],</span>
 <span class="gp">... </span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">flux</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Vector</span><span class="o">.</span><span class="n">from_series</span><span class="p">(</span>
-<span class="gp">... </span>    <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mf">6.0</span><span class="p">),</span> <span class="n">index</span><span class="o">=</span><span class="n">cells</span><span class="p">),</span> <span class="n">block</span><span class="o">=</span><span class="s2">&quot;flux&quot;</span>
+<span class="gp">... </span>    <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mf">6.0</span><span class="p">),</span> <span class="n">index</span><span class="o">=</span><span class="n">cells</span><span class="p">),</span> <span class="n">block</span><span class="o">=</span><span class="s2">"flux"</span>
 <span class="gp">... </span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">W</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">aggregate</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">flux</span><span class="o">.</span><span class="n">space</span><span class="p">,</span> <span class="n">by</span><span class="o">=</span><span class="s2">&quot;time&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">W</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">aggregate</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">flux</span><span class="o">.</span><span class="n">space</span><span class="p">,</span> <span class="n">by</span><span class="o">=</span><span class="s2">"time"</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">W</span><span class="o">.</span><span class="n">rows</span>
-<span class="go">Space(flux: 2 x [&#39;time&#39;])</span>
+<span class="go">Space(flux: 2 x ['time'])</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="p">(</span><span class="n">W</span> <span class="o">@</span> <span class="n">flux</span><span class="p">)</span><span class="o">.</span><span class="n">values</span>
 <span class="go">array([ 3., 12.])</span>
+</pre></div>
+</div>
+<p>The total of a region in each month: a Series maps the region’s cells,
+and <cite>dropna</cite> leaves out the others:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">region</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="s2">"north"</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">([</span><span class="s2">"a"</span><span class="p">,</span> <span class="s2">"b"</span><span class="p">],</span> <span class="n">name</span><span class="o">=</span><span class="s2">"cell"</span><span class="p">),</span> <span class="n">name</span><span class="o">=</span><span class="s2">"region"</span>
+<span class="gp">... </span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">W</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">aggregate</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">flux</span><span class="o">.</span><span class="n">space</span><span class="p">,</span> <span class="n">by</span><span class="o">=</span><span class="p">[</span><span class="s2">"time"</span><span class="p">,</span> <span class="n">region</span><span class="p">],</span> <span class="n">dropna</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">W</span><span class="o">.</span><span class="n">rows</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">"flux"</span><span class="p">)</span>
+<span class="go">MultiIndex([('2020-01-01', 'north'),</span>
+<span class="go">            ('2020-02-01', 'north')],</span>
+<span class="go">           names=['time', 'region'])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">(</span><span class="n">W</span> <span class="o">@</span> <span class="n">flux</span><span class="p">)</span><span class="o">.</span><span class="n">values</span>
+<span class="go">array([1., 7.])</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -952,8 +1003,8 @@ levels the keys name (a block passed through keeps its labels).</p>
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script defer src="../../_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0"></script>
-<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0"></script>
+  <script defer src="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be"></script>
+<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be"></script>
 
   <footer class="bd-footer">
 <div class="bd-footer__inner bd-page-width">
@@ -973,7 +1024,7 @@ levels the keys name (a block passed through keeps its labels).</p>
         <div class="footer-item">
 
   <p class="sphinx-version">
-    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.1.0.
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.2.0.
   </p>
 </div>
       
@@ -986,7 +1037,7 @@ levels the keys name (a block passed through keeps its labels).</p>
         <div class="footer-item">
 <p class="theme-version">
   <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
-  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.22.0.
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.23.0.
 </p></div>
       
     </div>

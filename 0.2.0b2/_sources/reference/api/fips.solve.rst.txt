@@ -1,0 +1,6 @@
+﻿fips.solve
+==========
+
+.. currentmodule:: fips
+
+.. autofunction:: solve

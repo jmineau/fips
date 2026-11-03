@@ -1,0 +1,6 @@
+fips.linalg.SparseOperator.solve
+================================
+
+.. currentmodule:: fips.linalg
+
+.. automethod:: SparseOperator.solve

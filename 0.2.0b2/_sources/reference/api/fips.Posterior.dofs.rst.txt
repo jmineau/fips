@@ -1,0 +1,6 @@
+fips.Posterior.dofs
+===================
+
+.. currentmodule:: fips
+
+.. autoproperty:: Posterior.dofs

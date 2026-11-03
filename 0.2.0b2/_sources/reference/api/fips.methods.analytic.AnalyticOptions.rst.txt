@@ -1,0 +1,22 @@
+﻿fips.methods.analytic.AnalyticOptions
+=====================================
+
+.. currentmodule:: fips.methods.analytic
+
+.. autoclass:: AnalyticOptions
+   :no-members:
+
+
+
+
+.. rubric:: Attributes
+
+.. autosummary::
+   :toctree:
+
+   ~AnalyticOptions.gamma
+
+
+
+
+

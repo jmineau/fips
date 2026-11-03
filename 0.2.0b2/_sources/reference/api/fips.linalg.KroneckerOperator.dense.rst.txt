@@ -1,0 +1,6 @@
+fips.linalg.KroneckerOperator.dense
+===================================
+
+.. currentmodule:: fips.linalg
+
+.. automethod:: KroneckerOperator.dense

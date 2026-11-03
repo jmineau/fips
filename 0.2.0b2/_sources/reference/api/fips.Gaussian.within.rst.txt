@@ -1,0 +1,6 @@
+fips.Gaussian.within
+====================
+
+.. currentmodule:: fips
+
+.. autoattribute:: Gaussian.within

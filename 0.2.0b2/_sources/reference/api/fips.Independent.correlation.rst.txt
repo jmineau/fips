@@ -1,0 +1,6 @@
+fips.Independent.correlation
+============================
+
+.. currentmodule:: fips
+
+.. automethod:: Independent.correlation

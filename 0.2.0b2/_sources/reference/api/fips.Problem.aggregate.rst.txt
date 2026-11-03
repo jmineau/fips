@@ -1,0 +1,6 @@
+fips.Problem.aggregate
+======================
+
+.. currentmodule:: fips
+
+.. automethod:: Problem.aggregate

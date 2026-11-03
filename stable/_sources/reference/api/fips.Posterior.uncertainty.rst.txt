@@ -1,0 +1,6 @@
+fips.Posterior.uncertainty
+==========================
+
+.. currentmodule:: fips
+
+.. automethod:: Posterior.uncertainty

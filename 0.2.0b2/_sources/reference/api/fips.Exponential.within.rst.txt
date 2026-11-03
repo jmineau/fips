@@ -1,0 +1,6 @@
+fips.Exponential.within
+=======================
+
+.. currentmodule:: fips
+
+.. autoattribute:: Exponential.within

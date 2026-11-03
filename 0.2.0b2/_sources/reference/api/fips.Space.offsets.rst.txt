@@ -1,0 +1,6 @@
+fips.Space.offsets
+==================
+
+.. currentmodule:: fips
+
+.. autoproperty:: Space.offsets

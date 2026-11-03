@@ -1,0 +1,36 @@
+﻿fips.Space
+==========
+
+.. currentmodule:: fips
+
+.. autoclass:: Space
+   :no-members:
+
+
+
+
+.. rubric:: Attributes
+
+.. autosummary::
+   :toctree:
+
+   ~Space.index
+   ~Space.levels
+   ~Space.names
+   ~Space.offsets
+
+
+
+.. rubric:: Methods
+
+.. autosummary::
+   :toctree:
+
+   ~Space.align
+   ~Space.from_index
+   ~Space.round_labels
+   ~Space.select
+   ~Space.slice
+
+
+

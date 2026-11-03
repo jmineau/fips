@@ -1,0 +1,6 @@
+﻿fips.Vector.\_\_getitem\_\_
+===========================
+
+.. currentmodule:: fips
+
+.. automethod:: Vector.__getitem__

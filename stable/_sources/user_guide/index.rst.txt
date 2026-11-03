@@ -38,6 +38,12 @@ estimate. It comes from a Series (one block) or from several (one per block):
    prior.to_series()
    prior["flux"].to_series()
 
+.. ipython:: python
+   :suppress:
+
+   pd.set_option("display.max_columns", None)  # show every column of a summary() table
+   pd.set_option("display.width", 110)
+
 Together, the blocks are one :class:`pandas.MultiIndex` with the ``block``
 level first (``prior.space.index``). A level that one block has and another
 lacks is missing (NaN) on the other's rows, and :class:`~fips.Space` is the one
@@ -134,6 +140,21 @@ adds what a covariance needs: its :attr:`~fips.Covariance.variances`,
 :meth:`~fips.Covariance.quadratic_form` (of its inverse) and
 :meth:`~fips.Covariance.sqrt`, each done the way its form makes cheap.
 
+A matrix you give (``fips.Covariance(array, space)``,
+:meth:`~fips.Operator.from_frame`, :meth:`~fips.Operator.from_blocks`, or the
+variances of :meth:`Covariance.diagonal <fips.Covariance.diagonal>`) is checked
+once, when the covariance is built: it must be symmetric, to 1e-10 of its
+largest entry, and positive semidefinite, with no eigenvalue below zero by
+more than roundoff (``n * eps`` times the largest). One that is not, a
+covariance estimated or tapered by hand, say, raises, naming its smallest
+eigenvalue. The check is the square root a draw is made with
+(:meth:`~fips.Covariance.sample`), built and kept: for a dense matrix, one
+Cholesky factorization and an ``n x n`` factor held beside it; for a sparse
+one, a factor for each group of correlated rows; for a singular matrix (zero
+variances, a :class:`~fips.Constant` block), which has no Cholesky factor, an
+eigendecomposition. A covariance a model builds is positive semidefinite by
+construction and is not checked.
+
 Independent errors are a diagonal, kept as its variances, one number per
 element: :meth:`Covariance.diagonal <fips.Covariance.diagonal>` takes a scalar
 (one variance for every element), an array (one each) or a vector. Independent
@@ -160,7 +181,9 @@ labels are from their values on some levels:
   scale (``Exponential("time", "30D")``), numeric levels as a straight line,
   or latitude and longitude on the Earth (``metric="haversine"``, the
   great-circle distance in km; ``metric="chordal"``, through the Earth, which a
-  Gaussian or a Matérn needs to stay positive-definite);
+  Gaussian or a Matérn needs to stay positive-definite). The two levels are
+  read by position, not by name, so give latitude first:
+  ``Exponential(["lat", "lon"], 10.0, metric="haversine")``;
 - :class:`~fips.Constant` is 1 everywhere, and :class:`~fips.Independent` the
   identity (1 for a label with itself, 0 otherwise);
 - :class:`~fips.Kronecker` multiplies models on separate levels, kept as its
@@ -324,18 +347,23 @@ names it knows.
 The analytic method factors the problem once, in one of two forms that give
 the same posterior. The whitened form works in the observations' size: it
 whitens with the Cholesky factor of :math:`S_z` (or the square root of its
-diagonal), so :math:`S_z` must be positive-definite, and eigendecomposes the
+diagonal), so :math:`S_z` must be positive-definite, and factors the
 :math:`m \times m` matrix :math:`H S_0 H^T` in that metric. It computes
 :math:`H S_0` in the forms of :math:`H` and :math:`S_0` (through the factors of
 a Kronecker covariance), and the estimate, the variances, the DOFS and the
 chi-squared from the factors, without forming anything :math:`n \times n`. The
-information form works in the state's size: it eigendecomposes an
+information form works in the state's size: it factors an
 :math:`n \times n` matrix built from :math:`H`, a square root of :math:`S_0` and
-:math:`S_z^{-1}`, and forms nothing :math:`m \times m`. It is used when there
-are fewer state elements than observations and :math:`S_z` is diagonal, sparse
-or block diagonal, so that its inverse is cheap to apply; otherwise the
-whitened form. In both, the full posterior covariance (``post.cov()``), the
-gain and the averaging kernel are formed only when they are read, once each.
+:math:`S_z^{-1}`, and forms no :math:`m \times m` matrix of its own (a dense
+:math:`S_z` is applied through its Cholesky factor, a Kronecker one through
+its factors). It is used when there are fewer state elements than
+observations and :math:`S_z` is dense, diagonal, sparse, block diagonal or
+Kronecker; otherwise the whitened form. In both, the full posterior
+covariance (``post.cov()``), the gain and the averaging kernel are formed
+only when they are read, once each. :func:`fips.solve` factors that matrix
+by Cholesky at its ``gamma``, the cheapest way to solve at one ``gamma``; the
+first ``post.with_gamma`` eigendecomposes it, which holds at any ``gamma``,
+and keeps it, so a sweep over ``gamma`` pays for one eigendecomposition.
 
 .. ipython:: python
 
@@ -355,35 +383,193 @@ gain and the averaging kernel are formed only when they are read, once each.
    post = fips.solve(problem)
    post.variances.to_series().head()
 
+**How much the observations tell.** :attr:`~fips.Posterior.dofs` is the trace
+of the averaging kernel, the number of independent pieces of information the
+observations give about the state; :attr:`~fips.Posterior.dofs_per_element` is
+its diagonal on the state's labels, so the share of a week, a region or a block
+is a sum over its labels. :attr:`~fips.Posterior.information_content` is the
+Shannon information content, :math:`-\tfrac{1}{2} \ln \lvert I - A \rvert` in
+nats: where DOFS counts a constrained direction as at most 1, it keeps growing
+as the observations get more precise. Both are read from the factors, without
+the :math:`n \times n` kernel:
+
+.. ipython:: python
+
+   post.dofs_per_element.to_series().groupby(level="time").sum().round(3)
+   round(post.dofs, 3), round(post.information_content, 3)
+
 **The posterior of aggregates.** An aggregation :math:`W` of the state (one row
 per total or mean) gives the posterior covariance of the aggregates,
-``post.cov(W)`` (:math:`W \hat{S} W^T`), and their averaging kernel,
-``post.averaging_kernel(W)`` (:math:`W A W^*`, with :math:`W^*` the
-pseudo-inverse of :math:`W`), neither forming the :math:`n \times n`
-matrices. Here, the total flux of each week:
+``post.cov(W)`` (:math:`W \hat{S} W^T`), their prior covariance,
+``problem.prior_cov.aggregate(W)`` (:math:`W S_0 W^T`), and their averaging
+kernel, ``post.averaging_kernel(W)`` (:math:`W A W^*`, with :math:`W^*` the
+pseudo-inverse of :math:`W`), none forming the :math:`n \times n` matrices.
+:meth:`~fips.Posterior.uncertainty` puts the two standard deviations of each
+aggregate side by side, with the fraction the observations take off. Here, the
+total flux of each week:
 
 .. ipython:: python
 
    W = fips.aggregate.sum(problem.prior.space, by="time")
    post.cov(W).to_frame().round(4)
+   post.uncertainty(W).round(3)
    post.averaging_kernel(W).dense().diagonal().round(3)
+
+A row of :math:`W` is any linear combination of the state, so a combination of
+totals is a row too: ``C @ W``, with ``C`` the weights of the rows of ``W``. Its
+uncertainty includes the covariance between the totals: the change from one
+week to the next is not the root of the two weeks' variances summed:
+
+.. ipython:: python
+
+   change = fips.Operator(
+       np.array([[-1.0, 1.0, 0.0, 0.0]]),
+       fips.Space({"change": pd.Index(["week 2 - week 1"], name="what")}),
+       W.rows,
+   )
+   post.uncertainty(change @ W).round(3)
+
+``dropna=True`` on :func:`fips.aggregate.sum` and :func:`~fips.aggregate.mean`
+picks part of the state: labels a key cannot place are left out instead of
+raising (a Series that maps only a region's cells gives the region's total, an
+interval of one year that year's), and so are the blocks not named in
+``blocks`` (a bias block next to the fluxes).
 
 **Another gamma or other observations, without a new solve.** The factors
 depend neither on gamma nor on the values of the observations, so
 ``post.with_gamma(g)`` is ``fips.solve(problem, gamma=g)`` at the cost of a few
 products, and ``post.with_data(obs)`` the posterior of other observations at
-the same labels (a bootstrap, synthetic observations of a known truth). A sweep
-over gamma factors once, and the rows of :meth:`~fips.Posterior.summary` stack:
+the same labels (a bootstrap, :ref:`synthetic observations of a known truth
+<synthetic-data>`). A sweep over gamma factors once, and the rows of
+:meth:`~fips.Posterior.summary` stack:
 
 .. ipython:: python
 
    pd.concat([post.with_gamma(g).summary() for g in (0.25, 1.0, 4.0)], ignore_index=True)
+
+**What each group of observations adds.** :meth:`~fips.Posterior.data_worth`
+groups the observations by any of their levels (a site, a platform's block, a
+month by ``pd.Grouper``), as :meth:`~fips.Posterior.desroziers` does, and says
+for each group how uncertain each aggregate would be without it
+(``std_without``) and is with it (``std_with``), the fraction it takes off on
+top of the other observations (``reduction``), and its share of DOFS. Removing
+a group is a rank update of :math:`\hat{S}`, exact for any model-data
+mismatch, so no problem is solved again. Two columns say what the group is
+worth by itself: ``std_alone`` is how uncertain the aggregate would be with only
+this group's observations, on the prior, and ``reduction_alone`` the fraction
+that takes off the prior (a rank update of :math:`S_0`). The two readings
+differ when groups see the same part of the state: a site that adds little on
+top of the others may have taught a lot had it been the only one. They agree
+only when there is one group. The alone columns use the group's own block of the
+model-data mismatch, so they leave out its correlation with the other groups'
+errors. For the total flux of the hourly problem above, observed at two sites:
+
+.. ipython:: python
+
+   hourly_post = fips.solve(hourly)
+   total = fips.aggregate.sum(hourly.prior.space, by=pd.Series("all", index=hourly.prior.space.select("flux"), name="region"))
+   hourly_post.data_worth(by="site", W=total).round(3)
+
+Observations that are not in the problem, a candidate site or platform, are
+their rows of the forward operator and the covariance of their errors (no
+values): :meth:`~fips.Posterior.candidate_worth` adds each group on its own,
+by the same kind of update, and gives the same columns but the two alone ones
+(a candidate is always added on top of the problem's observations), so a network
+design question ("which candidate site helps the total most") is one call:
+
+.. ipython:: python
+
+   new_sites = fips.Space({"ch4": pd.MultiIndex.from_product([["C", "D"], hours], names=["site", "obs_time"])})
+   H_new = fips.Operator(rng.uniform(0, 0.1, (96, 3)), new_sites, flux.space)
+   hourly_post.candidate_worth(H_new, fips.Independent().with_std(0.05), by="site", W=total).round(3)
 
 **Checking the covariances.** :meth:`~fips.Posterior.desroziers` compares the
 observation error variances the residuals diagnose with those the solve used,
 per observation or averaged over groups; :attr:`~fips.Posterior.reduced_chi2`
 is near 1 when the covariances are right; :meth:`~fips.Posterior.leverage`
 says which observations weigh most on a state.
+
+:meth:`~fips.Posterior.chi2_tests` makes the reduced chi-squared a test
+(Rodgers, 2000, chapter 12), and adds the same test of three more vectors:
+each is compared with its own covariance, and has its degrees of freedom and
+p-value, small when the vector is larger than the covariances allow and near 1
+when it is smaller. The four rows are the innovation :math:`z - H x_0 - c`
+(the row of :attr:`~fips.Posterior.chi2`, with :math:`m` degrees of freedom),
+the residual :math:`z - H \hat{x} - c` (also :math:`m`), the modeled increment
+:math:`H (\hat{x} - x_0)` and the increment :math:`\hat{x} - x_0` (each with
+as many degrees of freedom as the directions of the state the observations
+constrain). In a linear problem, the only kind fips solves, the rows come in
+two pairs of the same numbers: the residual's test gives the innovation's, the
+modeled increment's the increment's. They differ only when the estimate is not
+linear in the observations; the table has four rows so that it keeps its shape
+when such a method comes. In the weekly problem the state has more elements
+than its 15 observations, which constrain 15 directions of it, so all four rows
+are the same number; in the hourly problem many observations see three state
+elements, and the two increments have three degrees of freedom. Every test of
+the hourly problem rejects its covariances (p-values of 0): its made-up
+observations are much farther from the prior than its covariances allow.
+
+.. ipython:: python
+
+   post.chi2_tests().round(3)
+   hourly_post.chi2_tests().round(3)
+
+
+.. _synthetic-data:
+
+Synthetic truth and observations
+--------------------------------
+
+To test an inversion on data whose answer you know, make the data from the
+problem. :meth:`Problem.simulate <fips.Problem.simulate>` returns ``(truth,
+obs)``, two vectors: a truth drawn from the prior, :math:`x \sim N(x_0, S_0)`,
+and the observations it would give, :math:`z = H x + c + e` with :math:`e \sim
+N(0, S_z)`; :meth:`~fips.Problem.predict` is the same without the error. Its
+draws are :meth:`Covariance.sample <fips.Covariance.sample>`, which draws from
+:math:`N(0, S)` without forming :math:`S` where its form has a cheaper root.
+``rng`` is a seed or a :class:`numpy.random.Generator` (one generator passed to
+every call gives independent trials), and a ``truth=`` of your own (another
+inventory, 1.5 times the prior, on the prior's labels in any order) replaces
+the draw. A trial is the solve on other data, ``post.with_data(obs)``, one
+product, so a Monte Carlo is a loop you write. If the inversion is honest, the
+95% interval of each total holds the truth in about 95% of the trials:
+
+.. ipython:: python
+
+   rng = np.random.default_rng(0)
+   sd = np.sqrt(post.cov(W).variances.values)  # what the posterior claims
+   inside = []
+   for _ in range(500):
+       truth, obs = problem.simulate(rng)
+       estimate = post.with_data(obs).estimate
+       inside.append(np.abs((W @ estimate).values - (W @ truth).values) <= 1.96 * sd)
+   np.mean(inside, axis=0).round(2)
+
+The estimate is linear in the observations, so the loop has an exact answer:
+:meth:`post.recovery <fips.Posterior.recovery>` gives, for each total, the
+mean and spread of the error and the probability that the interval holds the
+truth, without sampling. ``post.recovery(world, W=W)`` does the same for data
+from another world on the same labels, and ``truth=`` fixes the truth, as in
+``simulate``. A variance below zero by roundoff is a standard deviation of 0;
+one further below zero comes only from a covariance that is not positive
+semidefinite, and is NaN, with a warning:
+
+.. ipython:: python
+
+   post.recovery(W=W)[["truth", "estimate", "std", "posterior_std", "coverage"]].round(3)
+
+The data come from a world, and the inversion you run on them has its own
+assumptions. There are four kinds of world:
+
+- **The problem itself**: ``problem.simulate(rng)``, as above, tests that the
+  inversion is honest.
+- **A chosen truth**: ``problem.simulate(rng, truth=inventory)`` tests how much
+  of another inventory the inversion recovers.
+- **Another observing system**: a separate :class:`~fips.Problem` with other
+  observations and its own solve, compared on the uncertainty of the totals.
+- **One input wrong**: the :class:`~fips.Problem` your own code builds with one
+  input changed (a background, the mismatch), then ``world.simulate(rng)`` and
+  ``post.with_data(obs)``, which solves its data with your assumptions.
 
 
 Plotting
@@ -405,7 +591,7 @@ are drawn from :meth:`~fips.Vector.to_series` and
    fig, ax = plot_comparison(
        (weekly @ problem.prior).to_series().droplevel("block").rename("prior"),
        (weekly @ post.estimate).to_series().droplevel("block").rename("posterior"),
-       errors=[weekly @ problem.prior_cov @ weekly.T, post.cov(weekly)],
+       errors=[problem.prior_cov.aggregate(weekly), post.cov(weekly)],
    )
 
 

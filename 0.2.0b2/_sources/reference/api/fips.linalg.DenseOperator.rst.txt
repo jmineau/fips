@@ -1,0 +1,39 @@
+﻿fips.linalg.DenseOperator
+=========================
+
+.. currentmodule:: fips.linalg
+
+.. autoclass:: DenseOperator
+   :no-members:
+   :show-inheritance:
+
+
+
+
+.. rubric:: Attributes
+
+.. autosummary::
+   :toctree:
+
+   ~DenseOperator.array
+
+
+
+.. rubric:: Methods
+
+.. autosummary::
+   :toctree:
+
+   ~DenseOperator.dense
+   ~DenseOperator.solve
+   ~DenseOperator.trace
+
+
+
+
+.. rubric:: Inherited
+
+
+From :class:`~.LinearOperator`: :py:obj:`~.LinearOperator.diagonal`, :py:obj:`~.LinearOperator.dot`, :py:obj:`~.LinearOperator.logdet`, :py:obj:`~.LinearOperator.sqrt`
+
+

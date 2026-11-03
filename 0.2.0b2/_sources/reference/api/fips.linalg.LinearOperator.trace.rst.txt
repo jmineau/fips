@@ -1,0 +1,6 @@
+fips.linalg.LinearOperator.trace
+================================
+
+.. currentmodule:: fips.linalg
+
+.. automethod:: LinearOperator.trace

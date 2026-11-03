@@ -16,7 +16,9 @@
 
    ~Posterior.chi2
    ~Posterior.dofs
+   ~Posterior.dofs_per_element
    ~Posterior.estimate
+   ~Posterior.information_content
    ~Posterior.innovation_cov
    ~Posterior.kalman_gain
    ~Posterior.mean
@@ -37,10 +39,15 @@
    :toctree:
 
    ~Posterior.averaging_kernel
+   ~Posterior.candidate_worth
+   ~Posterior.chi2_tests
    ~Posterior.cov
+   ~Posterior.data_worth
    ~Posterior.desroziers
    ~Posterior.leverage
+   ~Posterior.recovery
    ~Posterior.summary
+   ~Posterior.uncertainty
    ~Posterior.with_data
    ~Posterior.with_gamma
 

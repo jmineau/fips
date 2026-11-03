@@ -25,10 +25,12 @@
 .. autosummary::
    :toctree:
 
+   ~Covariance.aggregate
    ~Covariance.block_diag
    ~Covariance.diagonal
    ~Covariance.logdet
    ~Covariance.quadratic_form
+   ~Covariance.sample
    ~Covariance.solve
    ~Covariance.sqrt
 

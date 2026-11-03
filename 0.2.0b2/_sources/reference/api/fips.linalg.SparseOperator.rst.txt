@@ -1,0 +1,40 @@
+﻿fips.linalg.SparseOperator
+==========================
+
+.. currentmodule:: fips.linalg
+
+.. autoclass:: SparseOperator
+   :no-members:
+   :show-inheritance:
+
+
+
+
+.. rubric:: Attributes
+
+.. autosummary::
+   :toctree:
+
+   ~SparseOperator.matrix
+
+
+
+.. rubric:: Methods
+
+.. autosummary::
+   :toctree:
+
+   ~SparseOperator.dense
+   ~SparseOperator.diagonal
+   ~SparseOperator.logdet
+   ~SparseOperator.solve
+
+
+
+
+.. rubric:: Inherited
+
+
+From :class:`~.LinearOperator`: :py:obj:`~.LinearOperator.dot`, :py:obj:`~.LinearOperator.sqrt`, :py:obj:`~.LinearOperator.trace`
+
+

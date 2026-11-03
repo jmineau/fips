@@ -1,0 +1,526 @@
+{
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "id": "cell-00",
+   "metadata": {},
+   "source": [
+    "# Does the inversion recover a known flux?\n",
+    "\n",
+    "An inversion returns an estimate and a claim about how uncertain it is. To\n",
+    "check both, give it data whose answer you know. Every such test has the same\n",
+    "shape: a **world** makes the data, and the inversion you run on them has its\n",
+    "own assumptions. When the world is the problem itself, the test asks whether\n",
+    "the inversion is honest; when one input of the world differs from what the\n",
+    "inversion assumes, it asks how much that input matters.\n",
+    "\n",
+    "{ref}`Synthetic truth and observations <synthetic-data>` in the user guide explains\n",
+    "`Problem.simulate`, `post.with_data`, the coverage loop and `post.recovery`.\n",
+    "This notebook runs four experiments on the problem of the\n",
+    "[regional flux inversion](flux_regional.ipynb) (monthly fluxes on a grid from\n",
+    "daily concentrations at three sites), each on a different world:\n",
+    "\n",
+    "1. the problem itself: is the inversion honest?\n",
+    "2. the problem with a mismatch that is larger or smaller than the inversion assumes;\n",
+    "3. the problem with a bias on the observations of one site;\n",
+    "4. a chosen truth, 1.5 times the prior, with no noise: how much of it is recovered?\n",
+    "\n",
+    "Each is answered exactly, with no sampling, by `post.recovery(world)`. The first\n",
+    "also runs the Monte Carlo loop, to show that the two agree and what the loop is\n",
+    "still for."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "cell-01",
+   "metadata": {},
+   "source": [
+    "## The problem, and a function that builds it\n",
+    "\n",
+    "The grid, the sites and the forward operator are those of the\n",
+    "[regional flux inversion](flux_regional.ipynb), built the same way. This time\n",
+    "there is no truth or observations to make by hand: the world makes them."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "cell-02",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "import matplotlib.pyplot as plt\n",
+    "import numpy as np\n",
+    "import pandas as pd\n",
+    "import scipy.sparse as sp\n",
+    "\n",
+    "import fips\n",
+    "from fips.visualization import plot_comparison\n",
+    "\n",
+    "rng = np.random.default_rng(42)  # the sites and the winds, as in flux_regional\n",
+    "\n",
+    "lons = np.round(np.arange(-111.975, -111.5, 0.05), 3)\n",
+    "lats = np.round(np.arange(40.525, 41.0, 0.05), 3)\n",
+    "months = pd.date_range(\"2024-01-01\", periods=12, freq=\"MS\")\n",
+    "days = pd.date_range(\"2024-01-01\", \"2024-12-31\", freq=\"D\")\n",
+    "\n",
+    "sites = pd.DataFrame(\n",
+    "    {\"lon\": rng.uniform(-112.0, -111.5, 3), \"lat\": rng.uniform(40.5, 41.0, 3)},\n",
+    "    index=pd.Index([\"site_a\", \"site_b\", \"site_c\"], name=\"site\"),\n",
+    ")\n",
+    "cells = pd.MultiIndex.from_product([months, lats, lons], names=[\"time\", \"lat\", \"lon\"])\n",
+    "prior = fips.Vector.from_series(\n",
+    "    pd.Series(0.05, index=cells, name=\"prior\"), block=\"flux\"\n",
+    ")\n",
+    "obs_labels = pd.MultiIndex.from_product([sites.index, days], names=[\"site\", \"obs_time\"])\n",
+    "obs_space = fips.Space({\"concentration\": obs_labels})\n",
+    "\n",
+    "# Each day a site sees the cells around a point upwind of it, within its month.\n",
+    "grid_lat, grid_lon = np.meshgrid(lats, lons, indexing=\"ij\")\n",
+    "rows, cols, values = [], [], []\n",
+    "upwind = rng.normal(0.0, 0.1, (len(obs_labels), 2))\n",
+    "for i, (site, day) in enumerate(obs_labels):\n",
+    "    x, y = sites.at[site, \"lon\"] + upwind[i, 0], sites.at[site, \"lat\"] + upwind[i, 1]\n",
+    "    distance = np.hypot(grid_lon - x, grid_lat - y)\n",
+    "    rows.append(np.full(distance.size, i))\n",
+    "    cols.append((day.month - 1) * distance.size + np.arange(distance.size))\n",
+    "    values.append(np.exp(-0.5 * (distance.ravel() / 0.15) ** 2))\n",
+    "jacobian = sp.csr_array(\n",
+    "    (np.concatenate(values), (np.concatenate(rows), np.concatenate(cols))),\n",
+    "    shape=(len(obs_labels), len(cells)),\n",
+    ")\n",
+    "forward = fips.Operator(jacobian, obs_space, prior.space)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "cell-03",
+   "metadata": {},
+   "source": [
+    "`build_problem` is the builder: the function that makes a `fips.Problem` from\n",
+    "its inputs. A world with one input changed is the same call with one argument\n",
+    "changed: the standard deviation of the mismatch, the background (the offset),\n",
+    "or the standard deviation of the prior. The observations are zeros, because\n",
+    "`simulate` takes only their labels; the world makes the real ones."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "cell-04",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "noise = 0.002  # ppm, the mismatch the inversion assumes\n",
+    "background = 1.9  # ppm\n",
+    "\n",
+    "\n",
+    "def build_problem(obs_std=noise, offset=background, prior_std=0.25):\n",
+    "    \"\"\"Return the regional problem, with the given mismatch, background and prior.\"\"\"\n",
+    "    prior_cov = fips.Kronecker(\n",
+    "        fips.Exponential(\"time\", \"60D\"),\n",
+    "        fips.Exponential([\"lat\", \"lon\"], 20.0, metric=\"haversine\"),\n",
+    "    ).with_std(prior_std)\n",
+    "    return fips.Problem(\n",
+    "        prior=prior,\n",
+    "        prior_cov=prior_cov,\n",
+    "        obs=fips.Vector(np.zeros(len(obs_labels)), obs_space, name=\"concentration\"),\n",
+    "        obs_cov=fips.Independent().with_std(obs_std),\n",
+    "        forward=forward,\n",
+    "        offset=offset,\n",
+    "    )\n",
+    "\n",
+    "\n",
+    "problem = build_problem()\n",
+    "post = fips.solve(problem)\n",
+    "W = fips.aggregate.sum(prior.space, by=\"time\")  # the monthly totals"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "cell-05",
+   "metadata": {},
+   "source": [
+    "## 1. The honest world\n",
+    "\n",
+    "**If the inversion's assumptions are true, the 95% interval of each monthly\n",
+    "total holds the truth in about 95% of the trials, and the reduced chi-squared\n",
+    "averages 1.**\n",
+    "\n",
+    "The world is `problem`. The estimate is linear in the observations, so what\n",
+    "the inversion does on data from a world has an exact answer, without drawing\n",
+    "any: `post.recovery(world, W=W)` gives, for each monthly total, the bias of the\n",
+    "estimate, its real spread (`std`), the spread the posterior claims\n",
+    "(`posterior_std`), and the probability that the posterior's 95% interval holds\n",
+    "the truth (`coverage`). `recover` is that call with the months named."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "cell-06",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "def recover(post, world=None, truth=None):\n",
+    "    \"\"\"Return `post.recovery` of the monthly totals, indexed by month.\"\"\"\n",
+    "    table = post.recovery(world, truth=truth, W=W).droplevel(\"block\")\n",
+    "    table.index = pd.Index(months.strftime(\"%b\"), name=\"month\")\n",
+    "    return table\n",
+    "\n",
+    "\n",
+    "exact = recover(post, problem)\n",
+    "exact[[\"bias\", \"std\", \"posterior_std\", \"coverage\"]].round(3)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "cell-07",
+   "metadata": {},
+   "source": [
+    "In its own world the bias is zero, the real spread is the one the posterior\n",
+    "claims, and the coverage is 0.95 in every month. That is the Monte Carlo\n",
+    "result, with no sampling noise.\n",
+    "\n",
+    "To check that the loop gives the same, `monte_carlo` is the loop of the user\n",
+    "guide in a function. It makes the data in `world` with `world.simulate(rng)`,\n",
+    "solves them at the cost of a product with `post.with_data(obs)`, and counts how\n",
+    "often the truth falls inside the posterior's interval. It takes the world and\n",
+    "the inversion as arguments, so the next sections can change one or the other,\n",
+    "and one seed makes the truths and the noise the same draws every time."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "cell-07b",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "def monte_carlo(world, post, trials=500, seed=0):\n",
+    "    \"\"\"\n",
+    "    Make data in `world` and solve them with `post`'s assumptions, `trials` times.\n",
+    "\n",
+    "    Return how often the 95% interval of each monthly total holds the truth and\n",
+    "    the mean reduced chi-squared.\n",
+    "    \"\"\"\n",
+    "    rng = np.random.default_rng(seed)\n",
+    "    sd = np.sqrt(post.cov(W).variances.values)  # what the posterior claims\n",
+    "    inside, chi2 = [], []\n",
+    "    for _ in range(trials):\n",
+    "        truth, obs = world.simulate(rng)\n",
+    "        trial = post.with_data(obs)\n",
+    "        miss = (W @ trial.estimate).values - (W @ truth).values\n",
+    "        inside.append(np.abs(miss) <= 1.96 * sd)\n",
+    "        chi2.append(trial.reduced_chi2)\n",
+    "    return {\n",
+    "        \"coverage\": pd.Series(np.mean(inside, axis=0), index=months.strftime(\"%b\")),\n",
+    "        \"reduced_chi2\": np.mean(chi2),\n",
+    "    }\n",
+    "\n",
+    "\n",
+    "honest = monte_carlo(problem, post)\n",
+    "print(f\"mean reduced chi-squared: {honest['reduced_chi2']:.3f}\")\n",
+    "print(\n",
+    "    f\"coverage, mean {honest['coverage'].mean():.3f} (exact: {exact['coverage'].mean():.3f})\"\n",
+    ")\n",
+    "pd.DataFrame({\"exact\": exact[\"coverage\"], \"500 trials\": honest[\"coverage\"]}).round(2).T"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "cell-07c",
+   "metadata": {},
+   "source": [
+    "With 500 trials a coverage is known to about 0.01, so each month agrees with\n",
+    "the exact 0.95. The loop is the way for anything `recovery` does not cover: a\n",
+    "method whose estimate is not linear in the data, a world on other labels (the\n",
+    "whole state where the solve was restricted), or a statistic it does not give,\n",
+    "such as the reduced chi-squared, which the loop averages to 1 here. One trial\n",
+    "looks like this: the error of each monthly total (the estimate minus the truth\n",
+    "the world drew) against the 95% interval the posterior claims. The truth is at\n",
+    "zero, and the interval should hold it in about 19 of 20 months."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "cell-08",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "truth, obs = problem.simulate(np.random.default_rng(1))\n",
+    "miss = (W @ post.with_data(obs).estimate).values - (W @ truth).values\n",
+    "half_width = 1.96 * np.sqrt(post.cov(W).variances.values)\n",
+    "\n",
+    "fig, ax = plt.subplots(figsize=(7, 3))\n",
+    "ax.errorbar(months.strftime(\"%b\"), miss, yerr=half_width, fmt=\"o\", capsize=3)\n",
+    "ax.axhline(0, color=\"black\", linewidth=1)\n",
+    "ax.set_ylabel(\"estimate - truth\\n(total flux, µmol/m²/s)\")\n",
+    "print(f\"{(np.abs(miss) <= half_width).sum()} of 12 intervals hold the truth\")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "cell-09",
+   "metadata": {},
+   "source": [
+    "## 2. The mismatch assumed too small, then too large\n",
+    "\n",
+    "**An inversion that assumes a mismatch smaller than the real one is overconfident\n",
+    "(its reduced chi-squared is above 1 and its intervals miss the truth too often);\n",
+    "one that assumes a larger mismatch is underconfident (below 1, intervals that\n",
+    "hold the truth too often).**\n",
+    "\n",
+    "The world's mismatch is scaled and the inversion's is not: `post` still assumes\n",
+    "a standard deviation of 0.002 ppm (2 ppb). Everything else is the world of\n",
+    "section 1. The coverage is exact, from `recovery`; the reduced chi-squared is\n",
+    "the one number that needs the loop, so the table runs `monte_carlo` for it."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "cell-10",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "scales = {\n",
+    "    \"assumed 4 times too small\": 4.0,\n",
+    "    \"honest\": 1.0,\n",
+    "    \"assumed 4 times too large\": 0.25,\n",
+    "}\n",
+    "worlds = {\n",
+    "    label: build_problem(obs_std=scale * noise) for label, scale in scales.items()\n",
+    "}\n",
+    "tables = {label: recover(post, world) for label, world in worlds.items()}\n",
+    "pd.DataFrame(\n",
+    "    {\n",
+    "        label: {\n",
+    "            \"world's mismatch sd (ppb)\": 1000 * scale * noise,\n",
+    "            \"mean reduced chi-squared\": monte_carlo(worlds[label], post)[\n",
+    "                \"reduced_chi2\"\n",
+    "            ],\n",
+    "            \"mean coverage\": tables[label][\"coverage\"].mean(),\n",
+    "            \"worst month\": tables[label][\"coverage\"].min(),\n",
+    "        }\n",
+    "        for label, scale in scales.items()\n",
+    "    }\n",
+    ").T.round(3)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "cell-11",
+   "metadata": {},
+   "source": [
+    "The reduced chi-squared gives the direction: above 1 when the data scatter\n",
+    "more than the inversion assumed, below 1 when they scatter less. The coverage\n",
+    "says what it costs. The 95% interval of an overconfident inversion holds the truth\n",
+    "about half the time; an underconfident one is safe but wider than it needs to be."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "cell-12",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "fig, ax = plt.subplots(figsize=(7, 3))\n",
+    "for label, table in tables.items():\n",
+    "    ax.plot(table.index, table[\"coverage\"].values, marker=\"o\", label=label)\n",
+    "ax.axhline(0.95, color=\"black\", linestyle=\"--\", linewidth=1)\n",
+    "ax.set_ylim(0, 1.02)\n",
+    "ax.set_ylabel(\"coverage of the 95% interval\")\n",
+    "ax.legend(loc=\"lower left\");"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "cell-13",
+   "metadata": {},
+   "source": [
+    "## 3. A bias on one site's observations\n",
+    "\n",
+    "**An inversion cannot tell a bias in the observations from a flux, so a bias on\n",
+    "one site's block lands in the estimated fluxes, and the intervals around the\n",
+    "totals no longer hold the truth.**\n",
+    "\n",
+    "The world's offset is changed on that block only: site A reads 0.01 ppm\n",
+    "(10 ppb) too high, five times the noise, all year. The inversion still assumes\n",
+    "the background of 1.9 ppm everywhere. `recovery` gives the bias of each total\n",
+    "and the coverage of its interval; the chi-squared again comes from the loop."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "cell-14",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "from_site_a = obs_labels.get_level_values(\"site\") == \"site_a\"\n",
+    "biased_offset = fips.Vector(background + 0.01 * from_site_a, obs_space)\n",
+    "biased_world = build_problem(offset=biased_offset)\n",
+    "biased = recover(post, biased_world)\n",
+    "\n",
+    "print(\n",
+    "    f\"mean reduced chi-squared: {monte_carlo(biased_world, post)['reduced_chi2']:.3f} \"\n",
+    "    f\"(honest: {honest['reduced_chi2']:.3f})\"\n",
+    ")\n",
+    "pd.DataFrame({\"honest\": exact[\"coverage\"], \"biased\": biased[\"coverage\"]}).round(2).T"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "cell-15",
+   "metadata": {},
+   "source": [
+    "The chi-squared rises, but it does not say which site is wrong. The map says\n",
+    "where the bias went: the bias of the estimate in each cell (the expected\n",
+    "estimate minus the truth, exact, from `recovery` without `W`), in the month\n",
+    "whose total it moves the most, with the sites marked. The honest world has none."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "cell-16",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "cell_bias = {\n",
+    "    \"honest\": post.recovery(problem)[\"bias\"].droplevel(\"block\"),\n",
+    "    \"site A biased\": post.recovery(biased_world)[\"bias\"].droplevel(\"block\"),\n",
+    "}\n",
+    "month_bias = cell_bias[\"site A biased\"].groupby(\"time\").sum()  # the bias of each total\n",
+    "worst = month_bias.abs().idxmax()\n",
+    "limit = cell_bias[\"site A biased\"].xs(worst, level=\"time\").abs().max()\n",
+    "\n",
+    "fig, axes = plt.subplots(ncols=2, figsize=(9, 3.4), sharey=True)\n",
+    "for ax, (title, bias) in zip(axes, cell_bias.items(), strict=True):\n",
+    "    grid = bias.xs(worst, level=\"time\").unstack(\"lon\")\n",
+    "    image = ax.pcolormesh(\n",
+    "        grid.columns, grid.index, grid.values, cmap=\"RdBu_r\", vmin=-limit, vmax=limit\n",
+    "    )\n",
+    "    ax.scatter(sites[\"lon\"], sites[\"lat\"], color=\"black\", zorder=5)\n",
+    "    for site, row in sites.iterrows():\n",
+    "        ax.annotate(\n",
+    "            site[-1].upper(),\n",
+    "            (row[\"lon\"], row[\"lat\"]),\n",
+    "            xytext=(4, 4),\n",
+    "            textcoords=\"offset points\",\n",
+    "        )\n",
+    "    ax.set_title(title)\n",
+    "fig.colorbar(image, ax=axes, label=f\"bias, {worst:%b} (µmol/m²/s)\");"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "cell-17",
+   "metadata": {},
+   "source": [
+    "The error is not under site A. In this month it is a pattern of both signs over\n",
+    "the whole domain, the largest at the western edge, far from every site. The\n",
+    "inversion does not remove a bias: it moves it into the fluxes."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "cell-18",
+   "metadata": {},
+   "source": [
+    "## 4. Testing a prior: a truth of 1.5 times the prior\n",
+    "\n",
+    "**With no noise, the share of a true departure from the prior that the\n",
+    "inversion recovers is set by how much the inversion trusts its data against its\n",
+    "prior.**\n",
+    "\n",
+    "Give the world a chosen truth instead of a draw: 1.5 times the prior,\n",
+    "`post.recovery(truth=truth, W=W)`. The expected estimate is the one the\n",
+    "noise-free observations give, since the noise has mean zero; `std` is the\n",
+    "spread the noise adds. The recovered fraction of each total is\n",
+    "`(estimate - prior) / (truth - prior)`: 1 if the inversion finds the whole 50%,\n",
+    "0 if it stays at the prior. This is the design of an observing system\n",
+    "simulation experiment (OSSE) with a known truth."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "cell-19",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "truth = fips.Vector(prior.values * 1.5, prior.space, name=\"truth\")\n",
+    "\n",
+    "\n",
+    "def recovered(post):\n",
+    "    \"\"\"Return the share of the true departure from the prior that each total recovers.\"\"\"\n",
+    "    table = recover(post, truth=truth)\n",
+    "    return (table[\"estimate\"] - table[\"prior\"]) / (table[\"truth\"] - table[\"prior\"])\n",
+    "\n",
+    "\n",
+    "recovered(post).round(3).rename(\"as built\").to_frame().T"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "cell-20",
+   "metadata": {},
+   "source": [
+    "The data of this problem are precise (0.002 ppm against a signal of a few ppm),\n",
+    "so they decide, and the whole 50% comes back. The fraction falls as the\n",
+    "inversion trusts its data less. The same noise-free observations, solved with\n",
+    "a mismatch standard deviation assumed larger, in ppm:"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "cell-21",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "weaker = {\n",
+    "    f\"{std} ppm\": recovered(fips.solve(build_problem(obs_std=std)))\n",
+    "    for std in (1, 10, 30, 100)\n",
+    "}\n",
+    "pd.DataFrame(weaker).round(2).T"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "cell-22",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "own = recover(post, truth=truth)\n",
+    "weak = recover(fips.solve(build_problem(obs_std=30)), truth=truth)\n",
+    "fig, ax = plot_comparison(\n",
+    "    own[\"prior\"].rename(\"prior\"),\n",
+    "    own[\"estimate\"].rename(\"mismatch 0.002 ppm\"),\n",
+    "    weak[\"estimate\"].rename(\"mismatch 30 ppm\"),\n",
+    "    truth=own[\"truth\"].rename(\"truth\"),\n",
+    ")\n",
+    "ax.legend(loc=\"center left\", bbox_to_anchor=(1, 0.5))\n",
+    "ax.set_ylabel(\"domain total flux (µmol/m²/s, summed over cells)\");"
+   ]
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "Python 3",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "name": "python",
+   "pygments_lexer": "ipython3"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 5
+}

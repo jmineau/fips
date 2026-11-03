@@ -1,0 +1,6 @@
+fips.Problem.simulate
+=====================
+
+.. currentmodule:: fips
+
+.. automethod:: Problem.simulate

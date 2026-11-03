@@ -1,0 +1,6 @@
+fips.Space.align
+================
+
+.. currentmodule:: fips
+
+.. automethod:: Space.align

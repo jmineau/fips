@@ -1,0 +1,6 @@
+fips.Posterior.data\_worth
+==========================
+
+.. currentmodule:: fips
+
+.. automethod:: Posterior.data_worth

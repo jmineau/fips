@@ -1,0 +1,6 @@
+fips.Vector.from\_blocks
+========================
+
+.. currentmodule:: fips
+
+.. automethod:: Vector.from_blocks

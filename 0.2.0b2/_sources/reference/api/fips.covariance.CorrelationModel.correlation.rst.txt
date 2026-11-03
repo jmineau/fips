@@ -1,0 +1,6 @@
+fips.covariance.CorrelationModel.correlation
+============================================
+
+.. currentmodule:: fips.covariance
+
+.. automethod:: CorrelationModel.correlation

@@ -1,0 +1,6 @@
+﻿fips.visualization.plot\_comparison
+===================================
+
+.. currentmodule:: fips.visualization
+
+.. autofunction:: plot_comparison

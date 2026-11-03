@@ -1,0 +1,6 @@
+fips.Posterior.dofs\_per\_element
+=================================
+
+.. currentmodule:: fips
+
+.. autoproperty:: Posterior.dofs_per_element

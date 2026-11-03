@@ -1,0 +1,6 @@
+fips.Problem.offset
+===================
+
+.. currentmodule:: fips
+
+.. autoproperty:: Problem.offset

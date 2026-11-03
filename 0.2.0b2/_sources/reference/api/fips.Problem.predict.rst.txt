@@ -1,0 +1,6 @@
+fips.Problem.predict
+====================
+
+.. currentmodule:: fips
+
+.. automethod:: Problem.predict

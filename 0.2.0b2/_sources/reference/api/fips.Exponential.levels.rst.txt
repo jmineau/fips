@@ -1,0 +1,6 @@
+﻿fips.Exponential.levels
+=======================
+
+.. currentmodule:: fips
+
+.. autoattribute:: Exponential.levels

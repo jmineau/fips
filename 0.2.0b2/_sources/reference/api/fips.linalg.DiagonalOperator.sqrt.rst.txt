@@ -1,0 +1,6 @@
+fips.linalg.DiagonalOperator.sqrt
+=================================
+
+.. currentmodule:: fips.linalg
+
+.. automethod:: DiagonalOperator.sqrt

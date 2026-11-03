@@ -1,0 +1,6 @@
+fips.Exponential.correlation
+============================
+
+.. currentmodule:: fips
+
+.. automethod:: Exponential.correlation

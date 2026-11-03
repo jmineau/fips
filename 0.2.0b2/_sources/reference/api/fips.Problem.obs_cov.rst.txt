@@ -1,0 +1,6 @@
+fips.Problem.obs\_cov
+=====================
+
+.. currentmodule:: fips
+
+.. autoproperty:: Problem.obs_cov

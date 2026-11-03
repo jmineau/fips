@@ -18,10 +18,13 @@
    :toctree:
 
    ~Solution.chi2
+   ~Solution.chi2_tests
    ~Solution.cov
    ~Solution.dofs
+   ~Solution.dofs_per_element
    ~Solution.estimate
    ~Solution.gain
+   ~Solution.information
    ~Solution.variances
 
 

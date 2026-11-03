@@ -1,0 +1,6 @@
+fips.linalg.LinearOperator.solve
+================================
+
+.. currentmodule:: fips.linalg
+
+.. automethod:: LinearOperator.solve

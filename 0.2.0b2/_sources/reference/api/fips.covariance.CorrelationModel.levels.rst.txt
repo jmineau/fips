@@ -1,0 +1,6 @@
+fips.covariance.CorrelationModel.levels
+=======================================
+
+.. currentmodule:: fips.covariance
+
+.. autoattribute:: CorrelationModel.levels

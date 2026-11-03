@@ -1,0 +1,6 @@
+fips.Exponential.metric
+=======================
+
+.. currentmodule:: fips
+
+.. autoattribute:: Exponential.metric

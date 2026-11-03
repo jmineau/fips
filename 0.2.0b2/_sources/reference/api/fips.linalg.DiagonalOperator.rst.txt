@@ -1,0 +1,41 @@
+﻿fips.linalg.DiagonalOperator
+============================
+
+.. currentmodule:: fips.linalg
+
+.. autoclass:: DiagonalOperator
+   :no-members:
+   :show-inheritance:
+
+
+
+
+.. rubric:: Attributes
+
+.. autosummary::
+   :toctree:
+
+   ~DiagonalOperator.values
+
+
+
+.. rubric:: Methods
+
+.. autosummary::
+   :toctree:
+
+   ~DiagonalOperator.dense
+   ~DiagonalOperator.diagonal
+   ~DiagonalOperator.logdet
+   ~DiagonalOperator.solve
+   ~DiagonalOperator.sqrt
+
+
+
+
+.. rubric:: Inherited
+
+
+From :class:`~.LinearOperator`: :py:obj:`~.LinearOperator.dot`, :py:obj:`~.LinearOperator.trace`
+
+

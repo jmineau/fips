@@ -1,0 +1,6 @@
+﻿fips.available\_methods
+=======================
+
+.. currentmodule:: fips
+
+.. autofunction:: available_methods

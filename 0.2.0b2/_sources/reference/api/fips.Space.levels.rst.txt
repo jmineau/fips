@@ -1,0 +1,6 @@
+fips.Space.levels
+=================
+
+.. currentmodule:: fips
+
+.. autoproperty:: Space.levels

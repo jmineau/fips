@@ -1,0 +1,6 @@
+fips.Operator.shape
+===================
+
+.. currentmodule:: fips
+
+.. autoproperty:: Operator.shape
