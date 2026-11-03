@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Which observations constrain a regional total? &#8212; fips 0.2.0b2.dev36+ga6c70d1c3 documentation</title>
+    <title>Which observations constrain a regional total? &#8212; fips 0.2.0b2.dev38+geb1e07302 documentation</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../_static/documentation_options.js?v=1173149e"></script>
+    <script src="../../_static/documentation_options.js?v=771f14d1"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -135,8 +135,8 @@
       
     
     
-    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b2.dev36+ga6c70d1c3 documentation - Home"/>
-    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b2.dev36+ga6c70d1c3 documentation - Home"/>
+    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b2.dev38+geb1e07302 documentation - Home"/>
+    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b2.dev38+geb1e07302 documentation - Home"/>
   
   
 </a></div>
@@ -701,7 +701,9 @@ difference’s standard deviation takes into account:</p>
 the posterior covariance, exact, with no new solve) and gives the total’s
 standard deviation without the site and with it, the fraction the site takes
 off on top of the other two (<code class="docutils literal notranslate"><span class="pre">reduction</span></code>), and the site’s share of the
-degrees of freedom for signal.</p>
+degrees of freedom for signal. <code class="docutils literal notranslate"><span class="pre">std_alone</span></code> and <code class="docutils literal notranslate"><span class="pre">reduction_alone</span></code> are the
+standard deviation and the fraction with only this site’s observations added
+to the prior, where <code class="docutils literal notranslate"><span class="pre">reduction</span></code> is on top of all the other sites.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">by_site</span> <span class="o">=</span> <span class="n">post</span><span class="o">.</span><span class="n">data_worth</span><span class="p">(</span><span class="n">by</span><span class="o">=</span><span class="s2">"site"</span><span class="p">,</span> <span class="n">W</span><span class="o">=</span><span class="n">annual</span><span class="p">)</span>
@@ -790,7 +792,7 @@ degrees of freedom for signal.</p>
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>(np.float64(225.47057550772604), 225.47057550748872)
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>(np.float64(225.4705755130525), 225.4705755071374)
 </pre></div>
 </div>
 </div>
@@ -964,9 +966,12 @@ observations added gives the same standard deviation. Here, the check for one:</
 <section id="notes">
 <h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">#</a></h2>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">data_worth</span></code> removes a group from the problem as it is, so a site that
-repeats what another sees shows little worth on its own even if the pair
-together matters; remove both (a coarser <code class="docutils literal notranslate"><span class="pre">by</span></code>) to see that.</p></li>
+<li><p>A site that repeats what another sees shows little on top of it (<code class="docutils literal notranslate"><span class="pre">reduction</span></code>)
+but a lot alone (<code class="docutils literal notranslate"><span class="pre">reduction_alone</span></code>): <code class="docutils literal notranslate"><span class="pre">site_b</span></code> adds 7 % to the other two, yet
+by itself takes 97 % off the prior’s std. The two answer different questions:
+what is lost if the site is dropped, and what the site is worth by itself.
+To see what two sites that repeat each other give together, remove both (a
+coarser <code class="docutils literal notranslate"><span class="pre">by</span></code>).</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">candidate_worth</span></code> adds each group to the problem as it is; for a network of
 several new sites, give them one group label.</p></li>
 <li><p>The candidates’ errors are taken to be independent of the problem’s
