@@ -130,6 +130,15 @@ checks the labels and builds the models; `fips.solve(problem)` returns the
 - **Covariance models** are frozen dataclasses checked in `__init__`. The 0.1
   builders' covariances are pinned bit for bit in `tests/test_covariance.py`:
   keep the order of the products (`(std_i * C_ij) * std_j`).
+- **`rtol=` conditions each matrix a kernel builds** (`_Kernel._conditioned`:
+  the whole correlation, each `within=` group, a Kronecker factor on its own
+  coordinates): eigenvalues below `rtol * max` are raised to that floor and
+  the matrix is rescaled to a unit diagonal, with a WARNING if that shrinks
+  correlations past 1%. Without `rtol` no value changes. **Only a solve warns
+  of a nearly singular matrix**, on the final mismatch (`_warn_if_ill_conditioned`,
+  above condition number `1e10`, of the correlation: standard deviations cost
+  no digits), since a kernel cannot tell a prior from a mismatch or see a sum.
+  `_solve_psd`'s `LDL^T` stays the last fallback.
 - An aggregation has one row per group that holds a label; `Problem` and
   `Posterior` pickle with plain `pickle` (a posterior never stores an output).
 - **Logging, not printing.** A module that logs uses

@@ -26,6 +26,10 @@ of the observations, so the posterior of other observations
 (``post.with_data``) shares the factors instead of solving again. The
 eigendecomposition uses LAPACK's ``evd`` driver, and redoes it with ``evr``
 when there is not enough memory for ``evd``'s workspace (``_eigh``).
+
+A solve logs a warning when the correlation of the model-data mismatch is
+nearly singular (``_warn_if_ill_conditioned``). Only the mismatch is checked,
+as the solve sees it, sums included: a prior error covariance may be singular.
 """
 
 import dataclasses
@@ -49,11 +53,28 @@ from fips.linalg import (
     LinearOperator,
     SparseOperator,
 )
-from fips.linalg.forms import _read_only
+from fips.linalg.forms import _dense_correlation_condition, _read_only
 from fips.posterior import Posterior
 from fips.problem import Problem
 
 logger = logging.getLogger(__name__)
+
+_ILL_CONDITIONED = 1e10
+"""The condition number of the mismatch's correlation above which a solve warns: it keeps about six of sixteen digits."""
+
+
+def _warn_if_ill_conditioned(condition: float) -> None:
+    """Log a warning if the correlation of the model-data mismatch has a `condition` number above ``_ILL_CONDITIONED``."""
+    if condition > _ILL_CONDITIONED:
+        logger.warning(
+            "The correlation of the model-data mismatch has a condition number "
+            "of about %.1e: a solve with it loses about as many digits as the "
+            "condition number has, of sixteen. Pass rtol= to its kernel "
+            "(rtol=1e-8 keeps the condition number near 1e8), or add independent "
+            "errors (+ Independent().with_std(...)).",
+            condition,
+        )
+
 
 _LARGE_M = 5000
 """
@@ -386,13 +407,17 @@ class Whitened(_Factors):
                 return X.T / s[None, :]
 
         else:
+            S_z_dense = S_z.dense()
             try:
-                L = cholesky(S_z.dense(), lower=True)
+                # np.asarray: SciPy is not annotated, and gives no array type
+                L = np.asarray(cholesky(S_z_dense, lower=True))
             except LinAlgError as err:
                 raise LinAlgError(
                     "The model-data mismatch is not positive-definite, so it "
                     "cannot whiten the observations."
                 ) from err
+            if not eigendecompose:  # with_gamma factors the same mismatch again
+                _warn_if_ill_conditioned(_dense_correlation_condition(S_z_dense, L))
             # np.asarray: SciPy is not annotated, and gives no array type
             X = np.asarray(solve_triangular(L, HQH, lower=True))
             M = np.asarray(solve_triangular(L, X.T, lower=True))
@@ -634,6 +659,8 @@ class Information(_Factors):
                 "The prior error covariance has no square root: it is not "
                 "positive-definite to working precision."
             ) from err
+        if not eigendecompose:  # with_gamma factors the same mismatch again
+            _warn_if_ill_conditioned(S_z._correlation_condition())
         HR = (H @ R_0).dense()
         N = HR.T @ S_z.solve(HR)
         N = 0.5 * (N + N.T)

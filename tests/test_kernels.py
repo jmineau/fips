@@ -4,16 +4,20 @@ Tests for the correlation models (``fips.covariance.models`` and ``fips.covarian
 Each kernel against its formula written out, on numeric, datetime and
 geographic levels; ``within`` groups (the date cut at midnight, the
 hour-of-day mask); the parameters each model refuses; ``Independent`` and
-``Kronecker``; and the extension point, a model subclass.
+``Kronecker``; the extension point, a model subclass; and conditioning
+(``rtol=``).
 """
 
+import logging
 import pickle
 from dataclasses import dataclass
 
 import numpy as np
 import pandas as pd
 import pytest
+from numpy.linalg import LinAlgError
 
+import fips
 from fips import (
     Constant,
     Exponential,
@@ -21,7 +25,10 @@ from fips import (
     Independent,
     Kronecker,
     Matern,
+    Operator,
+    Problem,
     Space,
+    Vector,
 )
 from fips.covariance import CorrelationModel
 from fips.covariance.distances import chordal_matrix, haversine_matrix
@@ -329,6 +336,10 @@ class TestWithinBlocks:
         (lambda: Exponential("t", "1D", within="t.normalize"), "dotted name"),
         (lambda: Exponential("t", "1D", within="t.nope"), "dotted name"),
         (lambda: Constant(within=["site", "site"]), "twice"),
+        (lambda: Exponential("x", 1.0, rtol=0.0), "rtol must be in"),
+        (lambda: Gaussian("x", 1.0, rtol=1.0), "rtol must be in"),
+        (lambda: Matern("x", 1.0, rtol=np.nan), "rtol must be in"),
+        (lambda: Constant(rtol=-1e-8), "rtol must be in"),
     ],
     ids=[
         "zero scale",
@@ -349,6 +360,10 @@ class TestWithinBlocks:
         "method attribute",
         "unknown attribute",
         "within twice",
+        "rtol zero",
+        "rtol one",
+        "rtol nan",
+        "rtol negative",
     ],
 )
 def test_bad_parameters_raise(make, match):
@@ -586,3 +601,173 @@ def test_a_new_model_is_a_subclass():
     time = np.array([[1.0, np.exp(-1.0)], [np.exp(-1.0), 1.0]])
     steps = _Steps().correlation(pd.DataFrame({"x": [0, 1, 2]}))
     np.testing.assert_allclose(S.dense(), 4.0 * np.kron(time, steps), rtol=1e-15)
+
+
+# ---------------------------------------------------------------------------
+# Conditioning: rtol=
+# ---------------------------------------------------------------------------
+
+CLOSE = pd.DataFrame({"x": np.arange(120.0)})
+"""Points close together for a smooth kernel of scale 10: numerically singular."""
+
+
+def _kernel_warnings(caplog) -> list[str]:
+    """The WARNING lines the kernels logged."""
+    return [
+        r.getMessage()
+        for r in caplog.records
+        if r.name == "fips.covariance.kernels" and r.levelno == logging.WARNING
+    ]
+
+
+class TestConditioning:
+    """``rtol`` raises the smallest eigenvalues; without it, the kernel gives its formula and says nothing."""
+
+    @pytest.mark.parametrize("rtol", [1e-4, 1e-8, 1e-12])
+    @pytest.mark.parametrize(
+        "make",
+        [
+            lambda rtol: Gaussian("x", 10.0, rtol=rtol),
+            lambda rtol: Matern("x", 10.0, nu=10.0, rtol=rtol),
+            lambda rtol: Constant(rtol=rtol),
+        ],
+        ids=["gaussian", "matern", "constant"],
+    )
+    def test_the_floor_bounds_the_condition_number(self, make, rtol):
+        """A correlation still (ones on the diagonal, symmetric), positive-definite, of condition number about 1 / rtol."""
+        kernel = make(rtol)
+        C = kernel.correlation(CLOSE)
+        assert (np.diag(C) == 1.0).all()
+        assert (C == C.T).all()
+        np.linalg.cholesky(C)  # positive-definite
+        w = np.linalg.eigvalsh(C)
+        # the floor, rtol * max(w), is known to the roundoff of rebuilding the
+        # matrix and of eigvalsh, about n * eps * max(w): a few percent at 1e-12
+        slack = 1e-3 + len(C) * np.finfo(float).eps / rtol
+        assert w[-1] / w[0] <= (1 + slack) / rtol
+        assert w[-1] / w[0] >= (1 - slack) / rtol  # it was above, so it is at the floor
+
+    def test_the_resolved_eigenvalues_are_kept(self):
+        """The eigenvalues above the floor move only by the rescaling, a factor of at most 1 + rtol * max."""
+        rtol = 1e-8
+        w0 = np.linalg.eigvalsh(Gaussian("x", 10.0).correlation(CLOSE))
+        w = np.linalg.eigvalsh(Gaussian("x", 10.0, rtol=rtol).correlation(CLOSE))
+        kept = w0 > 2 * rtol * w0[-1]
+        factor = w0[kept] / w[kept]
+        slack = 1e-6  # the roundoff of the smallest kept eigenvalues
+        assert (factor <= (1 + rtol * w0[-1]) * (1 + slack)).all()
+        assert (factor >= 1 - slack).all()
+
+    def test_a_large_rtol_warns(self, caplog):
+        """A floor large enough to shrink the correlations past 1% says so, with the percentage."""
+        with caplog.at_level(logging.WARNING, logger="fips"):
+            C = Gaussian("x", 10.0, rtol=1e-2).correlation(CLOSE)
+        (message,) = _kernel_warnings(caplog)
+        assert "rtol=0.01 is large" in message
+        assert "%" in message
+        assert C[0, 1] < Gaussian("x", 10.0).correlation(CLOSE)[0, 1] * 0.9
+
+    def test_a_correlation_above_the_floor_is_unchanged(self):
+        """Exponential on spread points has no eigenvalue below the floor: bit for bit the formula."""
+        C = Exponential("x", 2.0, rtol=1e-8).correlation(X)
+        assert np.array_equal(C, Exponential("x", 2.0).correlation(X))
+
+    def test_each_group_is_floored_alone(self):
+        """With ``within``, each group's block is conditioned on its own, and the form stays sparse."""
+        x = np.tile(np.arange(40.0), 8)
+        coords = pd.DataFrame({"x": x, "site": np.repeat(np.arange(8), 40)})
+        coords = coords.sample(frac=1.0, random_state=0).reset_index(drop=True)
+        form = Gaussian("x", 5.0, within="site", rtol=1e-8)._form(coords)
+        assert isinstance(form, SparseOperator)
+        C = form.dense()
+        alone = Gaussian("x", 5.0, rtol=1e-8)
+        for site in range(8):
+            rows = np.flatnonzero(coords["site"].to_numpy() == site)
+            np.testing.assert_allclose(
+                C[np.ix_(rows, rows)],
+                alone.correlation(coords.iloc[rows].reset_index(drop=True)),
+                rtol=0,
+                atol=1e-14,
+            )
+        assert np.linalg.cond(C) <= 1.001e8
+
+    def test_a_kronecker_factor_is_floored_on_its_coordinates(self):
+        """In a Kronecker model the factor's own matrix is conditioned; the other factor and the form are kept."""
+        index = pd.MultiIndex.from_product(
+            [np.arange(60.0), np.arange(4.0)], names=["t", "y"]
+        )
+        model = Kronecker(Gaussian("t", 8.0, rtol=1e-8), Exponential("y", 1.0))
+        S = model.with_std(2.0).build(Space({"flux": index}))
+        assert isinstance(S.data, KroneckerOperator)
+        time, place = S.data.factors
+        t = pd.DataFrame({"t": np.arange(60.0)})
+        np.testing.assert_array_equal(
+            time, Gaussian("t", 8.0, rtol=1e-8).correlation(t)
+        )
+        np.testing.assert_array_equal(
+            place,
+            Exponential("y", 1.0).correlation(pd.DataFrame({"y": np.arange(4.0)})),
+        )
+        assert np.linalg.cond(time) <= 1.001e8
+
+    @pytest.mark.parametrize(
+        "model",
+        [
+            Exponential("x", 2.0),
+            Gaussian("x", 10.0),
+            Gaussian("x", 10.0, within="site"),
+            Gaussian("x", 10.0, rtol=1e-8),
+            Constant(),
+            Constant(within="site"),
+        ],
+        ids=[
+            "well conditioned",
+            "numerically singular",
+            "singular groups",
+            "small rtol",
+            "constant",
+            "constant within",
+        ],
+    )
+    def test_no_warning(self, model, caplog):
+        """A kernel does not know what it is for, so it warns of no singular matrix: a solve does."""
+        coords = CLOSE.assign(site=np.arange(120) // 30)
+        with caplog.at_level(logging.WARNING, logger="fips"):
+            model.correlation(coords)
+        assert not _kernel_warnings(caplog)
+
+    def test_rtol_is_logged(self, caplog):
+        """With rtol, one INFO line says how many eigenvalues were raised."""
+        with caplog.at_level(logging.INFO, logger="fips.covariance.kernels"):
+            Gaussian("x", 10.0, rtol=1e-8).correlation(CLOSE)
+        (record,) = caplog.records
+        assert record.levelno == logging.INFO
+        assert "of the 120 eigenvalues" in record.getMessage()
+
+    def test_rtol_is_a_parameter(self):
+        """The rtol is a field: kept by a pickle, and two kernels that differ in it differ."""
+        model = Matern("x", 1.0, nu=2.5, within="site", rtol=1e-6)
+        assert pickle.loads(pickle.dumps(model)) == model
+        assert model.rtol == 1e-6
+        assert Gaussian("x", 1.0) != Gaussian("x", 1.0, rtol=1e-6)
+        assert Gaussian("x", 1.0).rtol is None
+
+    def test_a_smooth_mismatch_solves_with_rtol(self):
+        """A Gaussian mismatch has no Cholesky factor, so the solve refuses it; with rtol it solves."""
+        rng = np.random.default_rng(0)
+        obs = Space({"co2": pd.Index(np.arange(80.0), name="x")})
+        state = Space({"flux": pd.Index(["a", "b", "c"], name="cell")})
+
+        def problem(rtol):
+            """The problem with a Gaussian mismatch of this rtol."""
+            return Problem(
+                prior=Vector(np.zeros(3), state),
+                prior_cov=Independent().with_std(1.0),
+                obs=Vector(rng.standard_normal(80), obs),
+                obs_cov=Gaussian("x", 10.0, rtol=rtol).with_std(0.5),
+                forward=Operator(rng.uniform(size=(80, 3)), obs, state),
+            )
+
+        with pytest.raises(LinAlgError, match="not positive-definite"):
+            fips.solve(problem(None))
+        assert np.isfinite(fips.solve(problem(1e-8)).estimate.values).all()

@@ -155,6 +155,10 @@ class BlockDiagonalOperator(LinearOperator):
         """Return the sum of the blocks' log-determinants."""
         return float(sum(form.logdet() for form in self.blocks))
 
+    def _correlation_condition(self) -> float:
+        """Return the largest condition number of its blocks (see :meth:`LinearOperator._correlation_condition`)."""
+        return max(block._correlation_condition() for block in self.blocks)
+
     def sqrt(self) -> "BlockDiagonalOperator":
         """Return the square root of each block."""
         return BlockDiagonalOperator([form.sqrt() for form in self.blocks])

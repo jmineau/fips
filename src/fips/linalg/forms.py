@@ -89,6 +89,30 @@ def _as_array(B) -> np.ndarray:
     return np.asarray(B, dtype=float)
 
 
+def _dense_correlation_condition(
+    A: np.ndarray, factor: np.ndarray | None = None
+) -> float:
+    """
+    Return LAPACK's estimate of the condition number of the positive-definite `A` scaled to ones on its diagonal, or inf if that has no Cholesky factor.
+
+    Scaling leaves out what standard deviations of different sizes add, which
+    costs a solve no digits. The estimate is of the 1-norm condition number,
+    which for a correlation is close to the ratio of the largest eigenvalue to
+    the smallest. `factor`, the lower Cholesky factor of `A`, saves factoring.
+    """
+    s = np.sqrt(np.diag(A))
+    C = A / s[:, None] / s[None, :]
+    potrf, pocon = get_lapack_funcs(("potrf", "pocon"), (C,))
+    if factor is None:
+        factor, info = potrf(C, lower=True)
+        if info != 0:
+            return np.inf
+    else:
+        factor = factor / s[:, None]
+    rcond, _ = pocon(factor, np.abs(C).sum(axis=0).max(), uplo="L")
+    return 1.0 / rcond if rcond > 0 else np.inf
+
+
 def _cholesky(A: np.ndarray) -> np.ndarray:
     """Return the lower Cholesky factor of `A`, raising LinAlgError naming why if it is not positive-definite."""
     try:
@@ -486,6 +510,10 @@ class LinearOperator(_SciPyLinearOperator):
         L = _cholesky(self.dense())
         return float(2.0 * np.log(np.diagonal(L)).sum())
 
+    def _correlation_condition(self) -> float:
+        """Return the condition number of this positive-definite form scaled to ones on its diagonal (see :func:`_dense_correlation_condition`), each form as cheaply as it can."""
+        return _dense_correlation_condition(self.dense())
+
     def sqrt(self) -> "LinearOperator":
         r"""
         Return a square root :math:`L` with :math:`L L^T` equal to this symmetric positive-definite form.
@@ -836,6 +864,29 @@ class SparseOperator(LinearOperator):
                 f"The sparse matrix is singular: its LU factorization failed ({err})."
             ) from err
 
+    def _row_groups(self) -> tuple[np.ndarray, np.ndarray, np.ndarray, sp.csr_array]:
+        """Return the connected components of the sparsity pattern: the order that puts each group's rows together, each group's start and end in it, and the matrix in that order."""
+        A = sp.csr_array(self.matrix)
+        graph = A.astype(bool)
+        graph.eliminate_zeros()  # a stored zero is not a correlation
+        count, label = connected_components(graph, directed=False)
+        order = np.argsort(label, kind="stable")  # each group's rows together
+        ends = np.cumsum(np.bincount(label, minlength=count))
+        starts = ends - np.bincount(label, minlength=count)
+        # SciPy is not annotated, so pyrefly finds no __getitem__ on a sparse array
+        return order, starts, ends, sp.csr_array(A[order][:, order])  # pyrefly: ignore[bad-index]
+
+    def _correlation_condition(self) -> float:
+        """Return the largest condition number of its independent groups of rows (see :meth:`LinearOperator._correlation_condition`)."""
+        _, starts, ends, ordered = self._row_groups()
+        largest = 1.0
+        for a, b in zip(starts, ends, strict=True):
+            if b - a > 1:
+                # pyrefly reads a slice of the array as the bare `sparray` (no toarray)
+                block = ordered[a:b, a:b].toarray()  # pyrefly: ignore[missing-attribute]
+                largest = max(largest, _dense_correlation_condition(block))
+        return largest
+
     def _make_root(self) -> "SparseOperator":
         """
         Return the root of each independent group of rows, as one sparse matrix.
@@ -847,17 +898,9 @@ class SparseOperator(LinearOperator):
         (:func:`_dense_root`), put back at the rows' own places. A matrix whose
         rows are all connected has one group, its dense matrix.
         """
-        A = sp.csr_array(self.matrix)
         n = self.shape[0]
-        graph = A.astype(bool)
-        graph.eliminate_zeros()  # a stored zero is not a correlation
-        count, label = connected_components(graph, directed=False)
-        order = np.argsort(label, kind="stable")  # each group's rows together
-        sizes = np.bincount(label, minlength=count)
-        ends = np.cumsum(sizes)
-        starts = ends - sizes
-        # SciPy is not annotated, so pyrefly finds no __getitem__ on a sparse array
-        ordered = sp.csr_array(A[order][:, order])  # pyrefly: ignore[bad-index]
+        order, starts, ends, ordered = self._row_groups()
+        sizes = ends - starts
 
         # the groups of one row, all at once: the root is the square root of the entry
         alone = starts[sizes == 1]
@@ -1039,6 +1082,10 @@ class DiagonalOperator(LinearOperator):
         if (self.values <= 0).any():
             raise LinAlgError("The diagonal has an entry that is not positive.")
         return float(np.log(self.values).sum())
+
+    def _correlation_condition(self) -> float:
+        """Return 1: a diagonal scaled to ones on its diagonal is the identity."""
+        return 1.0
 
     def _make_root(self) -> "DiagonalOperator":
         """Return the diagonal of square roots; an entry negative by roundoff is zero (a draw from it is 0)."""

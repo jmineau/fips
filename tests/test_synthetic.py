@@ -542,7 +542,7 @@ def test_roundoff_is_what_a_solve_keeps_not_one_sum():
 
 
 def test_an_ill_conditioned_problem_warns_nothing(caplog):
-    """A Gaussian prior (rank deficient to roundoff) and a mismatch of condition number 1e12: digits lost, no warning."""
+    """A Gaussian prior (rank deficient to roundoff) and a mismatch of condition number 1e12: digits lost, and only that is warned of."""
     rng = np.random.default_rng(1)
     n, m = 150, 100
     state = Space({"flux": pd.Index(np.arange(n, dtype=float), name="x")})
@@ -567,7 +567,10 @@ def test_an_ill_conditioned_problem_warns_nothing(caplog):
             post = fips.solve(problem, gamma=gamma)
             for table in (post.recovery(), post.recovery(W=totals)):
                 assert table[["std", "posterior_std"]].notna().all(axis=None)
-    assert not _warnings(caplog)
+    # the mismatch's condition number is the one thing to warn of, once per solve
+    warned = _warnings(caplog)
+    assert len(warned) == 2
+    assert all("condition number" in message for message in warned)
 
 
 def test_the_scale_bounds_every_covariance_with_those_variances():
