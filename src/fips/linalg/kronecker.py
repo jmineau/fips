@@ -26,6 +26,7 @@ from fips.linalg.forms import (
     _as_array,
     _asymmetry,
     _cholesky,
+    _dense_correlation_condition,
     _dense_root,
     _read_only,
     _solve_psd,
@@ -392,6 +393,10 @@ class KroneckerOperator(LinearOperator):
                 "A standard deviation is zero, so the operator is singular."
             )
         return _KroneckerRoot(self, tuple(_cholesky(C) for C in self.factors))
+
+    def _correlation_condition(self) -> float:
+        """Return the product of its factors' condition numbers, which bounds that of any rows of the product (see :meth:`LinearOperator._correlation_condition`)."""
+        return float(np.prod([_dense_correlation_condition(C) for C in self.factors]))
 
     def _make_root(self) -> "_KroneckerDraw":
         r"""

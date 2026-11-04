@@ -95,6 +95,26 @@ and :meth:`Covariance.block_diag` takes them by block name.
    ).with_std(0.02)
    mdm
 
+A smooth kernel on points close together for its scale is nearly singular:
+its smallest eigenvalues are roundoff. A prior error covariance may be
+singular, but a model-data mismatch must be positive-definite, and a solve with
+one loses about as many digits as the condition number of its correlation has:
+:func:`fips.solve` logs a warning when that is above ``1e10``. ``rtol=`` on the
+kernel raises the eigenvalues below ``rtol`` times the largest to that value
+and scales the matrix back to ones on the diagonal, so the condition number
+stays near ``1 / rtol``. It acts on each matrix the kernel builds: the whole
+correlation, each group's with ``within=``, and the factor's own in a
+:class:`Kronecker` model. Keep ``rtol`` small: a large one shrinks the
+correlations too, and a warning says so past 1%. Adding an independent error
+(``+ Independent().with_std(...)``) is the other remedy.
+
+.. ipython:: python
+
+   import numpy as np
+
+   times = pd.DataFrame({"time": np.arange(100.0)})
+   np.linalg.cond(fips.Gaussian("time", 10.0, rtol=1e-8).correlation(times))
+
 Kernels
 ~~~~~~~
 .. autosummary::
@@ -122,8 +142,10 @@ Parameters
    Exponential.scale
    Exponential.metric
    Exponential.within
+   Exponential.rtol
    Matern.nu
    Constant.within
+   Constant.rtol
    Kronecker.factors
    Kronecker.levels
 

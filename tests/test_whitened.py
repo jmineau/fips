@@ -30,7 +30,10 @@ import fips
 from fips import (
     Covariance,
     Exponential,
+    Gaussian,
+    Independent,
     Kronecker,
+    Matern,
     Operator,
     Problem,
     Space,
@@ -43,6 +46,7 @@ from fips.linalg import (
     SparseOperator,
     as_linear_operator,
 )
+from fips.linalg.forms import _dense_correlation_condition
 from fips.methods.analytic import AnalyticOptions, Information, Whitened
 from fips.posterior import Posterior
 
@@ -1224,3 +1228,128 @@ def test_the_information_form_allocates_nothing_m_by_m(mismatch):
         if solution.eigenvalues is not None:
             shapes["eigenvalues"] = (n,)
         assert {k: v.shape for k, v in held.items()} == shapes
+
+
+# ---------------------------------------------------------------------------
+# A solve warns of a nearly singular model-data mismatch
+# ---------------------------------------------------------------------------
+
+
+def _solve_warnings(caplog) -> list[str]:
+    """The lines about a nearly singular mismatch that a solve logged."""
+    return [
+        r.getMessage()
+        for r in caplog.records
+        if r.levelno == logging.WARNING and "condition number" in r.getMessage()
+    ]
+
+
+def _with_mismatch(obs_cov, labels: pd.Index, prior_cov=None) -> Problem:
+    """A problem of five state elements with this mismatch on these labels."""
+    rng = np.random.default_rng(0)
+    state = Space({"flux": pd.Index(np.arange(5.0), name="cell")})
+    obs = Space({"co2": labels})
+    return Problem(
+        prior=Vector(np.zeros(5), state),
+        prior_cov=Independent().with_std(1.0) if prior_cov is None else prior_cov,
+        obs=Vector(rng.standard_normal(len(labels)), obs),
+        obs_cov=obs_cov,
+        forward=Operator(rng.uniform(size=(len(labels), 5)), obs, state),
+    )
+
+
+NEAR = pd.Index(np.arange(120.0), name="x")
+"""Observations close together for :data:`NEARLY_SINGULAR`."""
+NEARLY_SINGULAR = Matern("x", 30.0, nu=3.5)
+"""A correlation with a Cholesky factor and a condition number between 1e10 and 1e14 on :data:`NEAR`."""
+
+
+@pytest.mark.usefixtures("analytic_form")
+@pytest.mark.parametrize("analytic_form", ["whitened", "information"], indirect=True)
+class TestNearlySingularMismatch:
+    """Each form warns of what the mismatch is as the solve sees it, and of nothing else."""
+
+    def test_it_warns_once_with_the_number(self, caplog):
+        """One warning, saying the condition number and the remedies; another gamma says nothing again."""
+        problem = _with_mismatch(NEARLY_SINGULAR.with_std(0.5), NEAR)
+        with caplog.at_level(logging.WARNING, logger="fips"):
+            post = fips.solve(problem)
+            post.with_gamma(2.0)
+        (message,) = _solve_warnings(caplog)
+        assert "condition number of about" in message
+        assert "rtol=" in message
+        assert "Independent()" in message
+
+    @pytest.mark.parametrize("form", ["sparse", "kronecker", "block diagonal"])
+    def test_every_form_of_mismatch_is_checked(self, form, caplog):
+        """Groups, factors and blocks are each read in their own form."""
+        x = np.arange(120.0)
+        if form == "sparse":
+            labels = pd.MultiIndex.from_product([range(5), x], names=["site", "x"])
+            model = Matern("x", 30.0, nu=3.5, within="site").with_std(0.5)
+        elif form == "kronecker":
+            labels = pd.MultiIndex.from_product([x, [0.0, 9.0]], names=["x", "y"])
+            model = Kronecker(NEARLY_SINGULAR, Exponential("y", 1.0)).with_std(0.5)
+        else:
+            labels = NEAR
+            model = Covariance.block_diag(co2=NEARLY_SINGULAR.with_std(0.5))
+        problem = _with_mismatch(model, labels)
+        with caplog.at_level(logging.WARNING, logger="fips"):
+            fips.solve(problem)
+        assert len(_solve_warnings(caplog)) == 1
+
+    @pytest.mark.parametrize(
+        "model",
+        [
+            Matern("x", 30.0, nu=3.5, rtol=1e-8).with_std(0.5),
+            NEARLY_SINGULAR.with_std(0.5) + Independent().with_std(0.1),
+            Independent().with_std(0.5),
+            Independent().with_std(pd.Series(np.logspace(-3, 3, 120), index=NEAR)),
+            Exponential("x", 2.0).with_std(
+                pd.Series(np.logspace(-3, 3, 120), index=NEAR)
+            ),
+        ],
+        ids=[
+            "with rtol",
+            "independent errors added",
+            "independent",
+            "independent with standard deviations far apart",
+            "correlated with standard deviations far apart",
+        ],
+    )
+    def test_a_healthy_mismatch_says_nothing(self, model, caplog):
+        """The remedies work, and standard deviations of different sizes cost no digits."""
+        problem = _with_mismatch(model, NEAR)
+        with caplog.at_level(logging.WARNING, logger="fips"):
+            fips.solve(problem)
+        assert not _solve_warnings(caplog)
+
+
+def test_a_singular_prior_says_nothing(caplog):
+    """A prior error covariance may be singular (it has no square root, so the whitened form solves it)."""
+    rng = np.random.default_rng(1)
+    state = Space({"flux": pd.Index(np.arange(40.0), name="x")})
+    obs = Space({"co2": pd.Index(np.arange(60), name="k")})
+    problem = Problem(
+        prior=Vector(np.zeros(40), state),
+        prior_cov=Gaussian("x", 10.0).with_std(1.0),
+        obs=Vector(rng.standard_normal(60), obs),
+        obs_cov=Independent().with_std(0.5),
+        forward=Operator(rng.uniform(size=(60, 40)), obs, state),
+    )
+    with caplog.at_level(logging.WARNING, logger="fips"):
+        assert np.isfinite(fips.solve(problem).estimate.values).all()
+    assert not _solve_warnings(caplog)
+
+
+def test_the_estimate_matches_the_one_from_a_factor():
+    """The condition number from a factor it already has is the one it would compute."""
+    C = NEARLY_SINGULAR.correlation(pd.DataFrame({"x": NEAR}))
+    std = np.logspace(-3, 3, 120)
+    A = std[:, None] * C * std[None, :]
+    L = np.linalg.cholesky(A)
+    assert _dense_correlation_condition(A, L) == pytest.approx(
+        _dense_correlation_condition(A), rel=1e-3
+    )
+    assert 1e10 < _dense_correlation_condition(C) < 1e15
+    assert 0.1 < _dense_correlation_condition(C) / np.linalg.cond(C, 1) < 10
