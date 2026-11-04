@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Gravity: density below the surface &#8212; fips 0.2.0b3.dev2+g4841e17c9 documentation</title>
+    <title>Gravity: density below the surface &#8212; fips 0.2.0b3.dev3+g2fa8ec89a documentation</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../_static/documentation_options.js?v=93a3f2cd"></script>
+    <script src="../../_static/documentation_options.js?v=7a81d17d"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -135,8 +135,8 @@
       
     
     
-    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev2+g4841e17c9 documentation - Home"/>
-    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev2+g4841e17c9 documentation - Home"/>
+    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev3+g2fa8ec89a documentation - Home"/>
+    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev3+g2fa8ec89a documentation - Home"/>
   
   
 </a></div>
@@ -458,11 +458,12 @@
 <h1>Gravity: density below the surface<a class="headerlink" href="#gravity-density-below-the-surface" title="Link to this heading">#</a></h1>
 <p>Gravity measured along a line at the surface depends on how dense the ground
 is below it. This notebook finds the density anomaly of 40 buried prisms (a
-10 x 4 grid, 1000 m across and 25 to 250 m deep) from the vertical gravity
+10 x 4 grid, 1000 m across and 25 to 225 m deep) from the vertical gravity
 measured at 41 points above them.</p>
 <p>In the words of the <a class="reference internal" href="../../getting_started/terminology.html"><span class="std std-doc">terminology</span></a>:</p>
 <ul class="simple">
-<li><p>the <strong>state</strong> is the density anomaly of each prism (g/cm³);</p></li>
+<li><p>the <strong>state</strong> is the density anomaly of each prism, in units of 0.1 g/cm³
+(100 kg/m³);</p></li>
 <li><p>the <strong>observations</strong> are the gravity anomalies at the surface (mGal);</p></li>
 <li><p>the <strong>forward operator</strong> is Newton’s law for a rectangular prism: the
 gravity at each point from a unit density in each prism;</p></li>
@@ -535,7 +536,7 @@ measurements are good to 1% of the largest signal.</p></li>
 <span class="n">stations</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1000</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">gravity</span><span class="p">))</span>  <span class="c1"># where gravity was measured, m</span>
 
 <span class="n">x_edges</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1000</span><span class="p">,</span> <span class="mi">11</span><span class="p">)</span>  <span class="c1"># the prisms' edges across, m</span>
-<span class="n">depth_edges</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">25</span><span class="p">,</span> <span class="mi">250</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>  <span class="c1"># and down, m</span>
+<span class="n">depth_edges</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">25</span><span class="p">,</span> <span class="mi">225</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>  <span class="c1"># and down, m</span>
 <span class="n">x_centers</span> <span class="o">=</span> <span class="p">(</span><span class="n">x_edges</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">x_edges</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span> <span class="o">/</span> <span class="mi">2</span>
 <span class="n">depth_centers</span> <span class="o">=</span> <span class="p">(</span><span class="n">depth_edges</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">depth_edges</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span> <span class="o">/</span> <span class="mi">2</span>
 </pre></div>
@@ -576,10 +577,12 @@ such labels: the prior is no anomaly in any prism, in a block named
 <p>The gravity of a rectangular prism of unit density has a closed form. The
 matrix has one row per observation and one column per prism, in the order of
 the labels above (<code class="docutils literal notranslate"><span class="pre">x</span></code> outer, <code class="docutils literal notranslate"><span class="pre">depth</span></code> inner), so <code class="docutils literal notranslate"><span class="pre">fips.Operator</span></code> puts the
-observations’ labels on its rows and the prisms’ on its columns.</p>
+observations’ labels on its rows and the prisms’ on its columns. Lengths are
+in meters; with the constant below, a density of 1 is 0.1 g/cm³ (100 kg/m³)
+and the gravity comes out in mGal.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">G</span> <span class="o">=</span> <span class="mf">6.67e-4</span>  <span class="c1"># the gravitational constant, in units that give mGal</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">G</span> <span class="o">=</span> <span class="mf">6.67e-4</span>  <span class="c1"># 6.67e-11 m³/(kg s²), scaled to give mGal from densities in 0.1 g/cm³ (100 kg/m³)</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">prism_integral</span><span class="p">(</span><span class="n">dx</span><span class="p">,</span> <span class="n">dz</span><span class="p">):</span>
@@ -624,7 +627,7 @@ observations’ labels on its rows and the prisms’ on its columns.</p>
 <h2>The covariances<a class="headerlink" href="#the-covariances" title="Link to this heading">#</a></h2>
 <p>Neighboring prisms should be alike: the prior covariance correlates two prisms
 by their distance across (over 200 m) and in depth (over 100 m), with a
-standard deviation of 0.5 g/cm³. It is a <code class="docutils literal notranslate"><span class="pre">Kronecker</span></code> product of two
+standard deviation of 0.5 (0.05 g/cm³). It is a <code class="docutils literal notranslate"><span class="pre">Kronecker</span></code> product of two
 exponential correlations, kept as its two small factors. The observations’
 errors are independent, at 1% of the largest signal.</p>
 <div class="cell docutils container">
@@ -690,13 +693,13 @@ diagnostics of the solve.</p>
       <td>1.0</td>
       <td>40</td>
       <td>41</td>
-      <td>16.05898</td>
-      <td>53.145823</td>
-      <td>2.723385</td>
-      <td>0.066424</td>
+      <td>16.098998</td>
+      <td>52.690122</td>
+      <td>2.788621</td>
+      <td>0.068015</td>
       <td>0.999982</td>
       <td>0.000162</td>
-      <td>0.456763</td>
+      <td>0.478697</td>
     </tr>
   </tbody>
 </table>
@@ -729,7 +732,7 @@ estimate predicts (<code class="docutils literal notranslate"><span class="pre">
 </div>
 </div>
 <div class="cell_output docutils container">
-<img alt="../../_images/78899f35263c86731615f9453251592381cc2ed6cd46a9c7fec8a2bb54047c41.png" src="../../_images/78899f35263c86731615f9453251592381cc2ed6cd46a9c7fec8a2bb54047c41.png" />
+<img alt="../../_images/034eec869d656215954fb6dc88e3822265d66c6482430e502c757dcf7559e926.png" src="../../_images/034eec869d656215954fb6dc88e3822265d66c6482430e502c757dcf7559e926.png" />
 </div>
 </div>
 </section>
@@ -749,7 +752,7 @@ estimate predicts (<code class="docutils literal notranslate"><span class="pre">
     <span class="n">y</span><span class="o">=</span><span class="s2">"depth"</span><span class="p">,</span>
     <span class="n">yincrease</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
     <span class="n">cmap</span><span class="o">=</span><span class="s2">"Greys"</span><span class="p">,</span>
-    <span class="n">cbar_kwargs</span><span class="o">=</span><span class="p">{</span><span class="s2">"label"</span><span class="p">:</span> <span class="s2">"density (g/cm³)"</span><span class="p">},</span>
+    <span class="n">cbar_kwargs</span><span class="o">=</span><span class="p">{</span><span class="s2">"label"</span><span class="p">:</span> <span class="s2">"density (0.1 g/cm³)"</span><span class="p">},</span>
 <span class="p">)</span>
 <span class="n">axes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">"Posterior estimate"</span><span class="p">)</span>
 <span class="n">std</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
@@ -758,14 +761,14 @@ estimate predicts (<code class="docutils literal notranslate"><span class="pre">
     <span class="n">y</span><span class="o">=</span><span class="s2">"depth"</span><span class="p">,</span>
     <span class="n">yincrease</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
     <span class="n">cmap</span><span class="o">=</span><span class="s2">"viridis"</span><span class="p">,</span>
-    <span class="n">cbar_kwargs</span><span class="o">=</span><span class="p">{</span><span class="s2">"label"</span><span class="p">:</span> <span class="s2">"std (g/cm³)"</span><span class="p">},</span>
+    <span class="n">cbar_kwargs</span><span class="o">=</span><span class="p">{</span><span class="s2">"label"</span><span class="p">:</span> <span class="s2">"std (0.1 g/cm³)"</span><span class="p">},</span>
 <span class="p">)</span>
 <span class="n">axes</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">"Posterior standard deviation"</span><span class="p">);</span>
 </pre></div>
 </div>
 </div>
 <div class="cell_output docutils container">
-<img alt="../../_images/8049ee54896fd4198cce70f61206054a4940bc9069f3b7569a29b70bd4c8bfc2.png" src="../../_images/8049ee54896fd4198cce70f61206054a4940bc9069f3b7569a29b70bd4c8bfc2.png" />
+<img alt="../../_images/d0629d3948b324b85bffb91824a92d64a93a2f70c1aeff094a0f738723c27fe4.png" src="../../_images/d0629d3948b324b85bffb91824a92d64a93a2f70c1aeff094a0f738723c27fe4.png" />
 </div>
 </div>
 </section>
@@ -821,65 +824,65 @@ again, and the rows of <code class="docutils literal notranslate"><span class="p
       <td>0.1</td>
       <td>40</td>
       <td>41</td>
-      <td>12.410882</td>
-      <td>36.968706</td>
-      <td>1.221866</td>
-      <td>0.029802</td>
-      <td>0.999911</td>
-      <td>0.000363</td>
-      <td>0.391886</td>
+      <td>12.346173</td>
+      <td>36.513886</td>
+      <td>1.276713</td>
+      <td>0.031139</td>
+      <td>0.999909</td>
+      <td>0.000366</td>
+      <td>0.411227</td>
     </tr>
     <tr>
       <th>1</th>
       <td>0.3</td>
       <td>40</td>
       <td>41</td>
-      <td>13.865537</td>
-      <td>44.159710</td>
-      <td>1.808107</td>
-      <td>0.044100</td>
-      <td>0.999946</td>
-      <td>0.000282</td>
-      <td>0.419185</td>
+      <td>13.868205</td>
+      <td>43.688626</td>
+      <td>1.871269</td>
+      <td>0.045641</td>
+      <td>0.999945</td>
+      <td>0.000284</td>
+      <td>0.440071</td>
     </tr>
     <tr>
       <th>2</th>
       <td>1.0</td>
       <td>40</td>
       <td>41</td>
-      <td>16.058980</td>
-      <td>53.145823</td>
-      <td>2.723385</td>
-      <td>0.066424</td>
+      <td>16.098998</td>
+      <td>52.690122</td>
+      <td>2.788621</td>
+      <td>0.068015</td>
       <td>0.999982</td>
       <td>0.000162</td>
-      <td>0.456763</td>
+      <td>0.478697</td>
     </tr>
     <tr>
       <th>3</th>
       <td>3.0</td>
       <td>40</td>
       <td>41</td>
-      <td>18.042533</td>
-      <td>62.528799</td>
-      <td>3.426285</td>
-      <td>0.083568</td>
+      <td>18.075671</td>
+      <td>62.094576</td>
+      <td>3.484654</td>
+      <td>0.084992</td>
       <td>0.999996</td>
       <td>0.000076</td>
-      <td>0.491897</td>
+      <td>0.514173</td>
     </tr>
     <tr>
       <th>4</th>
       <td>10.0</td>
       <td>40</td>
       <td>41</td>
-      <td>19.627809</td>
-      <td>73.902069</td>
-      <td>3.867133</td>
-      <td>0.094320</td>
+      <td>19.642477</td>
+      <td>73.481477</td>
+      <td>3.915245</td>
+      <td>0.095494</td>
       <td>0.999999</td>
-      <td>0.000030</td>
-      <td>0.522448</td>
+      <td>0.000029</td>
+      <td>0.544561</td>
     </tr>
   </tbody>
 </table>
