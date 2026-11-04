@@ -114,6 +114,73 @@ class TestConstruction:
         assert not hasattr(Problem(**_inputs()), "solve")
 
 
+class TestZeroPriorVariances:
+    """Some prior variances may be zero; all of them may not."""
+
+    STATE = Space({"flux": pd.Index(list("abc"), name="cell")})
+    OBS = Space({"co2": pd.Index(range(4), name="k")})
+
+    def _problem(self, prior_cov) -> Problem:
+        """A problem with this prior error covariance."""
+        rng = np.random.default_rng(0)
+        return Problem(
+            prior=Vector(np.ones(3), self.STATE),
+            prior_cov=prior_cov,
+            obs=Vector(rng.standard_normal(4), self.OBS),
+            obs_cov=Independent().with_std(0.5),
+            forward=Operator(rng.uniform(size=(4, 3)), self.OBS, self.STATE),
+        )
+
+    @pytest.mark.parametrize(
+        "prior_cov",
+        [
+            Independent().with_std(0.0),
+            Exponential("cell_number", 1.0).with_std(0.0),
+        ],
+        ids=["independent", "correlated"],
+    )
+    def test_all_zero_raises(self, prior_cov):
+        """A prior no observation could change is refused where it is given."""
+        state = Space(
+            {
+                "flux": pd.MultiIndex.from_arrays(
+                    [list("abc"), [0.0, 1.0, 2.0]], names=["cell", "cell_number"]
+                )
+            }
+        )
+        rng = np.random.default_rng(0)
+        with pytest.raises(ValueError, match="Every variance of prior_cov is zero"):
+            Problem(
+                prior=Vector(np.ones(3), state),
+                prior_cov=prior_cov,
+                obs=Vector(rng.standard_normal(4), self.OBS),
+                obs_cov=Independent().with_std(0.5),
+                forward=Operator(rng.uniform(size=(4, 3)), self.OBS, state),
+            )
+
+    def test_all_zero_covariance_raises(self):
+        """A covariance given as numbers is refused the same way."""
+        with pytest.raises(ValueError, match="Every variance of prior_cov is zero"):
+            self._problem(Covariance.diagonal(np.zeros(3), self.STATE))
+
+    def test_some_zero_solves(self):
+        """An element known exactly stays at its prior; the others move."""
+        std = pd.Series([1.0, 0.0, 1.0], index=pd.Index(list("abc"), name="cell"))
+        estimate = fips.solve(
+            self._problem(Independent().with_std(std))
+        ).estimate.values
+        assert estimate[1] == 1.0
+        assert estimate[0] != 1.0
+
+    def test_restricting_to_the_zero_elements_raises(self):
+        """A restriction goes through the same check."""
+        std = pd.Series([1.0, 0.0, 1.0], index=pd.Index(list("abc"), name="cell"))
+        problem = self._problem(Independent().with_std(std))
+        keep = Space({"flux": pd.Index(["b"], name="cell")})
+        with pytest.raises(ValueError, match="Every variance of prior_cov is zero"):
+            problem.restrict(keep)
+
+
 class TestExactJoin:
     """Every input is put on the prior's or the observations' space by its labels."""
 

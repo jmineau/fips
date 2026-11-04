@@ -106,7 +106,9 @@ class Problem:
     ValueError
         If the forward operator, a covariance or the offset does not have
         exactly the labels of the space it is put on: a block or a label on
-        one side and not the other. The message names them.
+        one side and not the other. The message names them. Also if every
+        variance of the prior error covariance is zero (some may be: an
+        element known exactly, a bias block given as 0).
 
     See Also
     --------
@@ -178,6 +180,13 @@ class Problem:
             name=forward.name,
         )
         self._prior_cov = _covariance(prior_cov, state, "prior_cov", "the prior")
+        if len(state) and not self._prior_cov.data.diagonal().any():
+            raise ValueError(
+                "Every variance of prior_cov is zero, which says every state "
+                "element is known exactly: no observation could change the prior. "
+                "Check its standard deviations and their units. Some zero "
+                "variances are fine; to fix the whole state, use Problem.predict."
+            )
         self._obs_cov = _covariance(obs_cov, observed, "obs_cov", "the observations")
 
         if offset is None:
