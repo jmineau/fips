@@ -87,7 +87,8 @@ checks the labels and builds the models; `fips.solve(problem)` returns the
   offset must have exactly the labels of the observations or the prior, in any
   order, or it raises naming the labels on one side only (`Space._align`).
   Nothing is zero-filled, converted to numbers or rounded unless the caller
-  asks (`round_labels`). Duplicate, missing and unnamed labels raise.
+  asks (`round_labels`). Duplicate, missing and unnamed labels raise. A prior
+  error covariance that is zero everywhere raises; some zero variances do not.
 - **`block` is the first level, and `Space` owns the padding.** A level one
   block lacks is NaN on its rows; `Space.index` pads (keeping each level's
   dtype) and `Space.from_index`/`select` strip, so `v[block]` and `op[r, c]`
