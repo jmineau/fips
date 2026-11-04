@@ -1,0 +1,6 @@
+fips.Exponential.rtol
+=====================
+
+.. currentmodule:: fips
+
+.. autoattribute:: Exponential.rtol

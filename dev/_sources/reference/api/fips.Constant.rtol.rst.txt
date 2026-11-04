@@ -1,0 +1,6 @@
+fips.Constant.rtol
+==================
+
+.. currentmodule:: fips
+
+.. autoattribute:: Constant.rtol

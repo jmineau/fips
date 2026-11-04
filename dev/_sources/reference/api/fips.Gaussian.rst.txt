@@ -16,6 +16,7 @@
    :toctree:
 
    ~Gaussian.metric
+   ~Gaussian.rtol
    ~Gaussian.scale
    ~Gaussian.within
 

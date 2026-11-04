@@ -17,6 +17,7 @@
 
    ~Matern.metric
    ~Matern.nu
+   ~Matern.rtol
    ~Matern.scale
    ~Matern.within
 

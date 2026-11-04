@@ -16,6 +16,7 @@
    :toctree:
 
    ~Exponential.metric
+   ~Exponential.rtol
    ~Exponential.scale
    ~Exponential.within
 

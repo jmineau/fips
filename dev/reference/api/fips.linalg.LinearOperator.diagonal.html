@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>fips.linalg.LinearOperator.diagonal &#8212; fips 0.2.0b2.dev43+gb5d8744fd documentation</title>
+    <title>fips.linalg.LinearOperator.diagonal &#8212; fips 0.2.0b3.dev1+g691e78f7b documentation</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../_static/documentation_options.js?v=ee43392c"></script>
+    <script src="../../_static/documentation_options.js?v=df28eab2"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -135,8 +135,8 @@
       
     
     
-    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b2.dev43+gb5d8744fd documentation - Home"/>
-    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b2.dev43+gb5d8744fd documentation - Home"/>
+    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev1+g691e78f7b documentation - Home"/>
+    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev1+g691e78f7b documentation - Home"/>
   
   
 </a></div>
@@ -499,6 +499,7 @@
 <li class="toctree-l2"><a class="reference internal" href="fips.Covariance.sample.html">fips.Covariance.sample</a></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="fips.Exponential.html">fips.Exponential</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l3"><a class="reference internal" href="fips.Exponential.metric.html">fips.Exponential.metric</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fips.Exponential.rtol.html">fips.Exponential.rtol</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.Exponential.scale.html">fips.Exponential.scale</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.Exponential.within.html">fips.Exponential.within</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.Exponential.correlation.html">fips.Exponential.correlation</a></li>
@@ -506,6 +507,7 @@
 </details></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="fips.Gaussian.html">fips.Gaussian</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l3"><a class="reference internal" href="fips.Gaussian.metric.html">fips.Gaussian.metric</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fips.Gaussian.rtol.html">fips.Gaussian.rtol</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.Gaussian.scale.html">fips.Gaussian.scale</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.Gaussian.within.html">fips.Gaussian.within</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.Gaussian.correlation.html">fips.Gaussian.correlation</a></li>
@@ -514,6 +516,7 @@
 <li class="toctree-l2 has-children"><a class="reference internal" href="fips.Matern.html">fips.Matern</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l3"><a class="reference internal" href="fips.Matern.metric.html">fips.Matern.metric</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.Matern.nu.html">fips.Matern.nu</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fips.Matern.rtol.html">fips.Matern.rtol</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.Matern.scale.html">fips.Matern.scale</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.Matern.within.html">fips.Matern.within</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.Matern.correlation.html">fips.Matern.correlation</a></li>
@@ -521,6 +524,7 @@
 </details></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="fips.Constant.html">fips.Constant</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l3"><a class="reference internal" href="fips.Constant.levels.html">fips.Constant.levels</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fips.Constant.rtol.html">fips.Constant.rtol</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.Constant.within.html">fips.Constant.within</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.Constant.correlation.html">fips.Constant.correlation</a></li>
 </ul>
@@ -540,8 +544,10 @@
 <li class="toctree-l2"><a class="reference internal" href="fips.Exponential.scale.html">fips.Exponential.scale</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.Exponential.metric.html">fips.Exponential.metric</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.Exponential.within.html">fips.Exponential.within</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fips.Exponential.rtol.html">fips.Exponential.rtol</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.Matern.nu.html">fips.Matern.nu</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.Constant.within.html">fips.Constant.within</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fips.Constant.rtol.html">fips.Constant.rtol</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.Kronecker.factors.html">fips.Kronecker.factors</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.Kronecker.levels.html">fips.Kronecker.levels</a></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="fips.covariance.CorrelationModel.html">fips.covariance.CorrelationModel</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>

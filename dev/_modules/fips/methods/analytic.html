@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>fips.methods.analytic &#8212; fips 0.2.0b2.dev43+gb5d8744fd documentation</title>
+    <title>fips.methods.analytic &#8212; fips 0.2.0b3.dev1+g691e78f7b documentation</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../../_static/documentation_options.js?v=ee43392c"></script>
+    <script src="../../../_static/documentation_options.js?v=df28eab2"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -132,8 +132,8 @@
       
     
     
-    <img src="../../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b2.dev43+gb5d8744fd documentation - Home"/>
-    <img src="../../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b2.dev43+gb5d8744fd documentation - Home"/>
+    <img src="../../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev1+g691e78f7b documentation - Home"/>
+    <img src="../../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev1+g691e78f7b documentation - Home"/>
   
   
 </a></div>
@@ -452,6 +452,10 @@
 <span class="sd">(``post.with_data``) shares the factors instead of solving again. The</span>
 <span class="sd">eigendecomposition uses LAPACK's ``evd`` driver, and redoes it with ``evr``</span>
 <span class="sd">when there is not enough memory for ``evd``'s workspace (``_eigh``).</span>
+
+<span class="sd">A solve logs a warning when the correlation of the model-data mismatch is</span>
+<span class="sd">nearly singular (``_warn_if_ill_conditioned``). Only the mismatch is checked,</span>
+<span class="sd">as the solve sees it, sums included: a prior error covariance may be singular.</span>
 <span class="sd">"""</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">dataclasses</span>
@@ -475,11 +479,28 @@
     <span class="n">LinearOperator</span><span class="p">,</span>
     <span class="n">SparseOperator</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">fips.linalg.forms</span><span class="w"> </span><span class="kn">import</span> <span class="n">_read_only</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fips.linalg.forms</span><span class="w"> </span><span class="kn">import</span> <span class="n">_dense_correlation_condition</span><span class="p">,</span> <span class="n">_read_only</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">fips.posterior</span><span class="w"> </span><span class="kn">import</span> <span class="n">Posterior</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">fips.problem</span><span class="w"> </span><span class="kn">import</span> <span class="n">Problem</span>
 
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+<span class="n">_ILL_CONDITIONED</span> <span class="o">=</span> <span class="mf">1e10</span>
+<span class="sd">"""The condition number of the mismatch's correlation above which a solve warns: it keeps about six of sixteen digits."""</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_warn_if_ill_conditioned</span><span class="p">(</span><span class="n">condition</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Log a warning if the correlation of the model-data mismatch has a `condition` number above ``_ILL_CONDITIONED``."""</span>
+    <span class="k">if</span> <span class="n">condition</span> <span class="o">&gt;</span> <span class="n">_ILL_CONDITIONED</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+            <span class="s2">"The correlation of the model-data mismatch has a condition number "</span>
+            <span class="s2">"of about </span><span class="si">%.1e</span><span class="s2">: a solve with it loses about as many digits as the "</span>
+            <span class="s2">"condition number has, of sixteen. Pass rtol= to its kernel "</span>
+            <span class="s2">"(rtol=1e-8 keeps the condition number near 1e8), or add independent "</span>
+            <span class="s2">"errors (+ Independent().with_std(...))."</span><span class="p">,</span>
+            <span class="n">condition</span><span class="p">,</span>
+        <span class="p">)</span>
+
 
 <span class="n">_LARGE_M</span> <span class="o">=</span> <span class="mi">5000</span>
 <span class="sd">"""</span>
@@ -815,13 +836,17 @@
                 <span class="k">return</span> <span class="n">X</span><span class="o">.</span><span class="n">T</span> <span class="o">/</span> <span class="n">s</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="p">:]</span>
 
         <span class="k">else</span><span class="p">:</span>
+            <span class="n">S_z_dense</span> <span class="o">=</span> <span class="n">S_z</span><span class="o">.</span><span class="n">dense</span><span class="p">()</span>
             <span class="k">try</span><span class="p">:</span>
-                <span class="n">L</span> <span class="o">=</span> <span class="n">cholesky</span><span class="p">(</span><span class="n">S_z</span><span class="o">.</span><span class="n">dense</span><span class="p">(),</span> <span class="n">lower</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="c1"># np.asarray: SciPy is not annotated, and gives no array type</span>
+                <span class="n">L</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">cholesky</span><span class="p">(</span><span class="n">S_z_dense</span><span class="p">,</span> <span class="n">lower</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
             <span class="k">except</span> <span class="n">LinAlgError</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="n">LinAlgError</span><span class="p">(</span>
                     <span class="s2">"The model-data mismatch is not positive-definite, so it "</span>
                     <span class="s2">"cannot whiten the observations."</span>
                 <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">err</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">eigendecompose</span><span class="p">:</span>  <span class="c1"># with_gamma factors the same mismatch again</span>
+                <span class="n">_warn_if_ill_conditioned</span><span class="p">(</span><span class="n">_dense_correlation_condition</span><span class="p">(</span><span class="n">S_z_dense</span><span class="p">,</span> <span class="n">L</span><span class="p">))</span>
             <span class="c1"># np.asarray: SciPy is not annotated, and gives no array type</span>
             <span class="n">X</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">solve_triangular</span><span class="p">(</span><span class="n">L</span><span class="p">,</span> <span class="n">HQH</span><span class="p">,</span> <span class="n">lower</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
             <span class="n">M</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">solve_triangular</span><span class="p">(</span><span class="n">L</span><span class="p">,</span> <span class="n">X</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">lower</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
@@ -1063,6 +1088,8 @@
                 <span class="s2">"The prior error covariance has no square root: it is not "</span>
                 <span class="s2">"positive-definite to working precision."</span>
             <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">err</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">eigendecompose</span><span class="p">:</span>  <span class="c1"># with_gamma factors the same mismatch again</span>
+            <span class="n">_warn_if_ill_conditioned</span><span class="p">(</span><span class="n">S_z</span><span class="o">.</span><span class="n">_correlation_condition</span><span class="p">())</span>
         <span class="n">HR</span> <span class="o">=</span> <span class="p">(</span><span class="n">H</span> <span class="o">@</span> <span class="n">R_0</span><span class="p">)</span><span class="o">.</span><span class="n">dense</span><span class="p">()</span>
         <span class="n">N</span> <span class="o">=</span> <span class="n">HR</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">S_z</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">HR</span><span class="p">)</span>
         <span class="n">N</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">N</span> <span class="o">+</span> <span class="n">N</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>

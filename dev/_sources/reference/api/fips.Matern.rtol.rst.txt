@@ -1,0 +1,6 @@
+fips.Matern.rtol
+================
+
+.. currentmodule:: fips
+
+.. autoattribute:: Matern.rtol

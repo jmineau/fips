@@ -1,0 +1,6 @@
+fips.Gaussian.rtol
+==================
+
+.. currentmodule:: fips
+
+.. autoattribute:: Gaussian.rtol
