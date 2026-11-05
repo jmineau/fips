@@ -208,6 +208,29 @@ class _Factors:
         r"""Return the chi-squared of the innovation, :math:`d^T (H S_0 H^T + S_z/\gamma)^{-1} d` (each form defines it)."""
         raise NotImplementedError
 
+    def _innovation_precision_times(self) -> np.ndarray:
+        r"""Return :math:`u = (H S_0 H^T + S_z/\gamma)^{-1} d` (``m``; each form defines it)."""
+        raise NotImplementedError
+
+    def misfits(self) -> tuple[float, float]:
+        r"""
+        Return the data misfit :math:`r^T S_z^{-1} r` and the state misfit :math:`(\hat{x} - x_0)^T S_0^{-1} (\hat{x} - x_0)`.
+
+        Both come from :math:`u = (H S_0 H^T + S_z/\gamma)^{-1} d`: the
+        residual is :math:`r = d - H (\hat{x} - x_0) = (S_z/\gamma) u` and
+        the increment :math:`\hat{x} - x_0 = S_0 H^T u`, so the data misfit
+        is :math:`u^T S_z u / \gamma^2` and the state misfit :math:`(H^T u)^T
+        S_0 (H^T u)`: products with the covariances' forms, and no inverse
+        (a semi-definite :math:`S_0` needs none). :meth:`chi2` is
+        :math:`\gamma` times the first plus the second.
+        """
+        problem = self.problem
+        u = self._innovation_precision_times()
+        data = float(u @ np.asarray(problem.obs_cov.data @ u)) / self.gamma**2
+        Htu = np.asarray(problem.forward.data._transpose() @ u)
+        state = float(Htu @ np.asarray(problem.prior_cov.data @ Htu))
+        return data, state
+
     def chi2_tests(self) -> dict[str, tuple[float, int]]:
         r"""
         Return Rodgers' four chi-squared tests, each its chi-squared and degrees of freedom (:meth:`Posterior.chi2_tests <fips.Posterior.chi2_tests>`).
@@ -334,8 +357,8 @@ class Whitened(_Factors):
         K = W^T \operatorname{diag}(w) B, \qquad
         d^T (H Q H^T + S_z/\gamma)^{-1} d = \textstyle\sum_k w_k e_k^2.
 
-    The last is the minimum of the cost, the sum of the data and model misfits of
-    the reduced chi-squared. DOFS, :math:`\operatorname{tr}(K H) =
+    The last is the minimum of the cost, the data misfit times :math:`\gamma`
+    plus the state misfit (``misfits``). DOFS, :math:`\operatorname{tr}(K H) =
     \operatorname{tr}(M (M + I/\gamma)^{-1})`, is :math:`\sum_k \gamma\lambda_k /
     (\gamma\lambda_k + 1)` from the eigenvalues, and :math:`\operatorname{tr}(R^{-1}
     M R^{-T})` from the Cholesky factor. Once the eigendecomposition
@@ -495,6 +518,10 @@ class Whitened(_Factors):
     def chi2(self) -> float:
         r"""Return :math:`d^T (H Q H^T + S_z/\gamma)^{-1} d = \sum_k w_k e_k^2`."""
         return float(np.sum(self.weights() * self.innovation**2))
+
+    def _innovation_precision_times(self) -> np.ndarray:
+        r"""Return :math:`u = B^T (w \circ e)`: :math:`(H Q H^T + S_z/\gamma)^{-1} = B^T \operatorname{diag}(w) B` and :math:`e = B d`."""
+        return self.whitener.T @ (self.weights() * self.innovation)
 
     def _chi2_terms(self, kept: np.ndarray) -> np.ndarray:
         r"""Return :math:`w_k e_k^2` for the eigenvalues `kept`: :math:`e'_k = \sqrt{\gamma} e_k`, so :math:`e_k'^2 / (1 + s_k^2) = w_k e_k^2`."""
@@ -731,11 +758,19 @@ class Information(_Factors):
         return (WG * self.weights()) @ Z.T
 
     def chi2(self) -> float:
-        r"""Return the minimum of the cost, :math:`\gamma d^T S_z^{-1} r` with :math:`r = d - H (\hat{x} - x_0)`."""
+        r"""Return the minimum of the cost, :math:`d^T u = \gamma d^T S_z^{-1} r` with :math:`r = d - H (\hat{x} - x_0)`."""
+        return float(_innovation(self.problem) @ self._innovation_precision_times())
+
+    def _innovation_precision_times(self) -> np.ndarray:
+        r"""
+        Return :math:`u = (H S_0 H^T + S_z/\gamma)^{-1} d = \gamma S_z^{-1} r`, one solve with :math:`S_z`.
+
+        :math:`d = H (\hat{x} - x_0) + r` and :math:`\hat{x} - x_0 = S_0
+        H^T u`, so :math:`(H S_0 H^T + S_z/\gamma) \gamma S_z^{-1} r = d`.
+        """
         problem = self.problem
-        d = _innovation(problem)
-        r = d - problem.forward.data @ self._increment()
-        return self.gamma * float(d @ problem.obs_cov.data.solve(r))
+        r = _innovation(problem) - problem.forward.data @ self._increment()
+        return self.gamma * np.asarray(problem.obs_cov.data.solve(r))
 
     def _chi2_terms(self, kept: np.ndarray) -> np.ndarray:
         r"""

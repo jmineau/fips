@@ -136,6 +136,9 @@ def _closed_form(z, x_0, H, S_0, S_z, c, gamma):
         "information_content": -0.5 * logdet,
         "chi2": chi2,
         "reduced_chi2": chi2 / len(z),
+        # S_z here is already divided by gamma; the data misfit is on S_z as given
+        "data_misfit": r @ inv(S_z) @ r / gamma,
+        "state_misfit": dx @ inv(S_0) @ dx,
         "uncertainty_reduction": 1 - np.sqrt(np.trace(S_hat)) / np.sqrt(np.trace(S_0)),
     }
 
@@ -157,7 +160,8 @@ def _direct(z, x_0, H, S_0, S_z, c, gamma):
     S_hat = S_0.dense() - K @ HS_0
     y_hat, y_0 = H @ x_hat + c, H @ x_0 + c
     r, dx = z - y_hat, x_hat - x_0
-    chi2 = float(r @ S_z.solve(r) + dx @ S_0.solve(dx))
+    data_misfit, state_misfit = float(r @ S_z.solve(r)), float(dx @ S_0.solve(dx))
+    chi2 = data_misfit + state_misfit
     return {
         "estimate": x_hat,
         "cov": S_hat,
@@ -167,6 +171,8 @@ def _direct(z, x_0, H, S_0, S_z, c, gamma):
         "dofs": np.trace(K @ H),
         "chi2": chi2,
         "reduced_chi2": chi2 / len(z),
+        "data_misfit": data_misfit / gamma,  # on S_z as given, not S_z / gamma
+        "state_misfit": state_misfit,
         "uncertainty_reduction": 1 - np.sqrt(np.trace(S_hat)) / np.sqrt(S_0.trace()),
         "modeled_obs": y_hat,
         "predict(prior)": y_0,
@@ -211,6 +217,8 @@ def _outputs(post) -> dict:
         "information_content": post.information_content,
         "chi2": post.chi2,
         "reduced_chi2": post.reduced_chi2,
+        "data_misfit": post.data_misfit,
+        "state_misfit": post.state_misfit,
         "uncertainty_reduction": post.uncertainty_reduction,
         "modeled_obs": post.modeled_obs.values,
         "predict(prior)": post.problem.predict(post.problem.prior).values,
@@ -1135,6 +1143,29 @@ def test_a_prior_without_a_square_root_takes_the_whitened_form(caplog):
     K = S_0 @ H.T @ np.linalg.inv(H @ S_0 @ H.T + S_z.toarray())
     _close(post.estimate.values, x_0 + K @ (z - H @ x_0 - c), "estimate")
     assert post.estimate.values[2] == x_0[2]
+
+
+@pytest.mark.parametrize("gamma", [0.5, 1.0, 3.0])
+def test_the_misfits_of_a_semidefinite_prior(gamma, analytic_form):
+    """
+    With an element known exactly, the state misfit is the increment on the pseudo-inverse of ``S_0``.
+
+    The misfits need no inverse of ``S_0`` (the increment is ``S_0 H^T u``), so
+    a prior error with a zero variance gives them; ``chi2`` is gamma times the
+    data misfit plus the state misfit, after a solve and after ``with_gamma``.
+    """
+    z, x_0, H, _, _, c = _arrays("dense", 0, n_time=1, n_cell=3, m=8)
+    S_0 = DiagonalOperator(np.array([1.0, 2.0, 0.0]))  # a square root: either form
+    S_z = sp.diags(np.linspace(0.5, 1.5, 8)).tocsr()
+    post = fips.solve(_problem(z, x_0, H, S_0, S_z, c), gamma=gamma)
+    S_0, S_z = np.diag([1.0, 2.0, 0.0]), S_z.toarray()
+    K = S_0 @ H.T @ np.linalg.inv(H @ S_0 @ H.T + S_z / gamma)
+    dx = K @ (z - H @ x_0 - c)
+    r = z - H @ (x_0 + dx) - c
+    for got in (post, post.with_gamma(1.0).with_gamma(gamma)):
+        _close(got.data_misfit, r @ np.linalg.solve(S_z, r), "data_misfit")
+        _close(got.state_misfit, dx @ np.linalg.pinv(S_0) @ dx, "state_misfit")
+        _close(got.chi2, gamma * got.data_misfit + got.state_misfit, "chi2")
 
 
 def test_a_large_whitened_solve_warns(caplog, monkeypatch):

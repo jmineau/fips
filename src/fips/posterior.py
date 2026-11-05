@@ -6,7 +6,7 @@ the method, and what the method kept from its solve (a :class:`Solution`).
 The posterior labels the answer; the method keeps its own machinery. It asks
 the solution for unlabeled arrays (the estimate, the variances, the
 covariance of aggregates, the gain, DOFS and its share per state element, the
-information content, chi-squared), puts the problem's labels on them and keeps
+information content, chi-squared and its two misfits), puts the problem's labels on them and keeps
 each one once computed. Everything else it gives is
 written from those and the problem, so it holds for every method. The
 analytic method's solution is the factorization of its whitened system, or of
@@ -137,7 +137,11 @@ class Solution(Protocol):
         ...
 
     def chi2(self) -> float:
-        r"""Return the chi-squared of the solution: the sum of the data and the state misfits."""
+        r"""Return the chi-squared of the solution, :math:`d^T (H S_0 H^T + S_z/\gamma)^{-1} d`: gamma times the data misfit plus the state misfit."""
+        ...
+
+    def misfits(self) -> tuple[float, float]:
+        r"""Return the data misfit :math:`r^T S_z^{-1} r` and the state misfit :math:`(\hat{x} - x_0)^T S_0^{-1} (\hat{x} - x_0)`, with :math:`r = z - H \hat{x} - c`."""
         ...
 
     def chi2_tests(self) -> dict[str, tuple[float, int]]:
@@ -1459,11 +1463,12 @@ class Posterior:
     @property
     def chi2(self) -> float:
         r"""
-        The chi-squared of the solution: the sum of the data and the state misfits.
+        The chi-squared of the solution: the minimum of the cost, the data misfit times gamma plus the state misfit.
 
         .. math::
             \chi^2 = (z - H\hat{x} - c)^T (S_z/\gamma)^{-1} (z - H\hat{x} - c)
                 + (\hat{x} - x_0)^T S_0^{-1} (\hat{x} - x_0)
+            = \gamma \, \mathrm{data\_misfit} + \mathrm{state\_misfit}
 
         which equals :math:`d^T (H S_0 H^T + S_z/\gamma)^{-1} d` with
         :math:`d = z - H x_0 - c`; the analytic method reads it from its
@@ -1473,8 +1478,123 @@ class Posterior:
         --------
         reduced_chi2 : It, divided by the number of observations.
         chi2_tests : Its degrees of freedom and p-value, and Rodgers' other three tests.
+        data_misfit : Its first term, without gamma.
+        state_misfit : Its second term.
         """
         return self._solution.chi2()
+
+    @cached_property
+    def _misfits(self) -> tuple[float, float]:
+        """The data and the state misfits, computed together once."""
+        return self._solution.misfits()
+
+    @property
+    def data_misfit(self) -> float:
+        r"""
+        How far the modeled observations are from the observations, weighed by the model-data mismatch: :math:`r^T S_z^{-1} r`.
+
+        :math:`r = z - H \hat{x} - c` is the residual and :math:`S_z` the
+        model-data mismatch as the problem gives it, not divided by
+        :math:`\gamma`, so that it can be compared across a sweep over
+        gamma: with :attr:`state_misfit` it is the L-curve (Hansen, 1992), a
+        point per gamma, whose corner is where fitting the observations more
+        closely starts to cost much more departure from the prior.
+        :attr:`chi2` is :math:`\gamma` times this plus :attr:`state_misfit`.
+
+        References
+        ----------
+        Hansen, P. C. (1992). Analysis of discrete ill-posed problems by means
+        of the L-curve. *SIAM Review*, 34(4), 561-580.
+        https://doi.org/10.1137/1034115
+
+        See Also
+        --------
+        state_misfit : The other term, the departure from the prior.
+        chi2 : The two together, at the solve's gamma.
+        with_gamma : The posterior at another gamma, for a sweep.
+
+        Examples
+        --------
+        >>> import numpy as np
+        >>> import pandas as pd
+        >>> import fips
+        >>> cells = pd.Index(["a", "b"], name="cell")
+        >>> obs_id = pd.Index(["o1", "o2", "o3"], name="obs_id")
+        >>> prior = fips.Vector.from_series(pd.Series(0.0, index=cells), block="flux")
+        >>> obs = fips.Vector.from_series(
+        ...     pd.Series([1.0, 2.0, 3.0], index=obs_id), block="co2"
+        ... )
+        >>> problem = fips.Problem(
+        ...     prior=prior,
+        ...     prior_cov=fips.Independent().with_std(1.0),
+        ...     obs=obs,
+        ...     obs_cov=fips.Independent().with_std(np.sqrt(0.1)),
+        ...     forward=fips.Operator(
+        ...         np.array([[1.0, 0.0], [0.0, 1.0], [1.0, 1.0]]),
+        ...         obs.space,
+        ...         prior.space,
+        ...     ),
+        ... )
+        >>> post = fips.solve(problem)
+        >>> round(post.data_misfit, 3)
+        0.182
+        >>> sweep = [post.with_gamma(g) for g in (0.1, 1.0, 10.0)]
+        >>> [
+        ...     round(p.data_misfit, 3) for p in sweep
+        ... ]  # closer to the data as gamma grows
+        [9.688, 0.182, 0.002]
+        """
+        return self._misfits[0]
+
+    @property
+    def state_misfit(self) -> float:
+        r"""
+        How far the estimate is from the prior, weighed by the prior error covariance: :math:`(\hat{x} - x_0)^T S_0^{-1} (\hat{x} - x_0)`.
+
+        The analytic method computes it without inverting :math:`S_0`, so it
+        holds for a semi-definite prior error covariance too (the increment
+        lies in its range). With :attr:`data_misfit` it is the L-curve: plot
+        one against the other over a sweep of gamma. :attr:`chi2` is
+        :math:`\gamma` times :attr:`data_misfit` plus this.
+
+        See Also
+        --------
+        data_misfit : The other term, the misfit to the observations.
+        chi2 : The two together, at the solve's gamma.
+        with_gamma : The posterior at another gamma, for a sweep.
+
+        Examples
+        --------
+        >>> import numpy as np
+        >>> import pandas as pd
+        >>> import fips
+        >>> cells = pd.Index(["a", "b"], name="cell")
+        >>> obs_id = pd.Index(["o1", "o2", "o3"], name="obs_id")
+        >>> prior = fips.Vector.from_series(pd.Series(0.0, index=cells), block="flux")
+        >>> obs = fips.Vector.from_series(
+        ...     pd.Series([1.0, 2.0, 3.0], index=obs_id), block="co2"
+        ... )
+        >>> problem = fips.Problem(
+        ...     prior=prior,
+        ...     prior_cov=fips.Independent().with_std(1.0),
+        ...     obs=obs,
+        ...     obs_cov=fips.Independent().with_std(np.sqrt(0.1)),
+        ...     forward=fips.Operator(
+        ...         np.array([[1.0, 0.0], [0.0, 1.0], [1.0, 1.0]]),
+        ...         obs.space,
+        ...         prior.space,
+        ...     ),
+        ... )
+        >>> post = fips.solve(problem)
+        >>> round(post.state_misfit, 3)
+        4.628
+        >>> sweep = [post.with_gamma(g) for g in (0.1, 1.0, 10.0)]
+        >>> [
+        ...     round(p.state_misfit, 3) for p in sweep
+        ... ]  # farther from the prior as gamma grows
+        [2.656, 4.628, 4.96]
+        """
+        return self._misfits[1]
 
     @property
     def reduced_chi2(self) -> float:

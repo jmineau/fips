@@ -87,6 +87,7 @@ class ClosedForm:
     y_0: np.ndarray
     G: np.ndarray
     reduced_chi2: float
+    misfits: tuple[float, float]
     scale: dict[str, float]
 
 
@@ -117,7 +118,8 @@ def closed_form(z, x_0, H, S_0, S_z, c) -> ClosedForm:
     )
     r = z - H @ x_hat - c
     d = x_hat - x_0
-    chi2 = (r @ inv(S_z) @ r + d @ inv(S_0) @ d) / len(z)
+    misfits = (float(r @ inv(S_z) @ r), float(d @ inv(S_0) @ d))
+    chi2 = sum(misfits) / len(z)
 
     a = np.abs
     scale = {
@@ -143,6 +145,7 @@ def closed_form(z, x_0, H, S_0, S_z, c) -> ClosedForm:
         y_0=H @ x_0 + c,
         G=H @ S_0 @ H.T + S_z,
         reduced_chi2=float(chi2),
+        misfits=misfits,
         scale=scale,
     )
 
@@ -354,6 +357,13 @@ def check_posterior(
         sc["chi2"] * len(o),
         at("chi2"),
     )
+    # The closed form is given S_z / gamma; data_misfit is on S_z as the problem gives it
+    data, state = expected.misfits
+    gamma = post.options.gamma
+    assert_close(
+        post.data_misfit, data / gamma, sc["chi2"] * len(o) / gamma, at("data_misfit")
+    )
+    assert_close(post.state_misfit, state, sc["chi2"] * len(o), at("state_misfit"))
 
 
 def rodgers_test(C: np.ndarray, v: np.ndarray) -> tuple[float, int]:

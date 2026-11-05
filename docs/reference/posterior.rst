@@ -100,6 +100,8 @@ Diagnostics
    Posterior.dofs_per_element
    Posterior.information_content
    Posterior.chi2
+   Posterior.data_misfit
+   Posterior.state_misfit
    Posterior.reduced_chi2
    Posterior.chi2_tests
    Posterior.r2
@@ -168,6 +170,7 @@ added is in the docstring of :mod:`fips.methods`.
    Solution.dofs_per_element
    Solution.information
    Solution.chi2
+   Solution.misfits
    Solution.chi2_tests
    Options
    Options.gamma
