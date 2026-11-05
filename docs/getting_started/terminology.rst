@@ -157,6 +157,9 @@ The posterior also has these statistics:
      - The misfit of the estimate to the observations and to the prior, each
        weighed by its covariance; ``post.reduced_chi2`` divides it by
        :math:`m`, and is near 1 when the covariances are right.
+       ``post.data_misfit`` and ``post.state_misfit`` are its two terms (the
+       first on :math:`S_z` as given, without :math:`\gamma`), the two axes
+       of an L-curve.
        ``post.chi2_tests()`` gives its degrees of freedom and p-value, and
        the same test of three more vectors (Rodgers' four tests): the
        residual :math:`z - H \hat{x} - c`, the increment
