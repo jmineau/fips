@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Solving and Posterior &#8212; fips 0.2.0b3.dev3+g2fa8ec89a documentation</title>
+    <title>Solving and Posterior &#8212; fips 0.2.0b3.dev4+gd92276da3 documentation</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../_static/documentation_options.js?v=7a81d17d"></script>
+    <script src="../_static/documentation_options.js?v=328475d5"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -137,8 +137,8 @@
       
     
     
-    <img src="../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev3+g2fa8ec89a documentation - Home"/>
-    <img src="../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev3+g2fa8ec89a documentation - Home"/>
+    <img src="../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev4+gd92276da3 documentation - Home"/>
+    <img src="../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev4+gd92276da3 documentation - Home"/>
   
   
 </a></div>
@@ -607,6 +607,7 @@
 </details></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="api/fips.Posterior.html">fips.Posterior</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l3"><a class="reference internal" href="api/fips.Posterior.chi2.html">fips.Posterior.chi2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/fips.Posterior.data_misfit.html">fips.Posterior.data_misfit</a></li>
 <li class="toctree-l3"><a class="reference internal" href="api/fips.Posterior.dofs.html">fips.Posterior.dofs</a></li>
 <li class="toctree-l3"><a class="reference internal" href="api/fips.Posterior.dofs_per_element.html">fips.Posterior.dofs_per_element</a></li>
 <li class="toctree-l3"><a class="reference internal" href="api/fips.Posterior.estimate.html">fips.Posterior.estimate</a></li>
@@ -620,6 +621,7 @@
 <li class="toctree-l3"><a class="reference internal" href="api/fips.Posterior.r2.html">fips.Posterior.r2</a></li>
 <li class="toctree-l3"><a class="reference internal" href="api/fips.Posterior.reduced_chi2.html">fips.Posterior.reduced_chi2</a></li>
 <li class="toctree-l3"><a class="reference internal" href="api/fips.Posterior.rmse.html">fips.Posterior.rmse</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/fips.Posterior.state_misfit.html">fips.Posterior.state_misfit</a></li>
 <li class="toctree-l3"><a class="reference internal" href="api/fips.Posterior.uncertainty_reduction.html">fips.Posterior.uncertainty_reduction</a></li>
 <li class="toctree-l3"><a class="reference internal" href="api/fips.Posterior.variances.html">fips.Posterior.variances</a></li>
 <li class="toctree-l3"><a class="reference internal" href="api/fips.Posterior.averaging_kernel.html">fips.Posterior.averaging_kernel</a></li>
@@ -653,6 +655,8 @@
 <li class="toctree-l2"><a class="reference internal" href="api/fips.Posterior.dofs_per_element.html">fips.Posterior.dofs_per_element</a></li>
 <li class="toctree-l2"><a class="reference internal" href="api/fips.Posterior.information_content.html">fips.Posterior.information_content</a></li>
 <li class="toctree-l2"><a class="reference internal" href="api/fips.Posterior.chi2.html">fips.Posterior.chi2</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/fips.Posterior.data_misfit.html">fips.Posterior.data_misfit</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/fips.Posterior.state_misfit.html">fips.Posterior.state_misfit</a></li>
 <li class="toctree-l2"><a class="reference internal" href="api/fips.Posterior.reduced_chi2.html">fips.Posterior.reduced_chi2</a></li>
 <li class="toctree-l2"><a class="reference internal" href="api/fips.Posterior.chi2_tests.html">fips.Posterior.chi2_tests</a></li>
 <li class="toctree-l2"><a class="reference internal" href="api/fips.Posterior.r2.html">fips.Posterior.r2</a></li>
@@ -673,6 +677,7 @@
 <li class="toctree-l3"><a class="reference internal" href="api/fips.posterior.Solution.estimate.html">fips.posterior.Solution.estimate</a></li>
 <li class="toctree-l3"><a class="reference internal" href="api/fips.posterior.Solution.gain.html">fips.posterior.Solution.gain</a></li>
 <li class="toctree-l3"><a class="reference internal" href="api/fips.posterior.Solution.information.html">fips.posterior.Solution.information</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/fips.posterior.Solution.misfits.html">fips.posterior.Solution.misfits</a></li>
 <li class="toctree-l3"><a class="reference internal" href="api/fips.posterior.Solution.variances.html">fips.posterior.Solution.variances</a></li>
 </ul>
 </details></li>
@@ -684,6 +689,7 @@
 <li class="toctree-l2"><a class="reference internal" href="api/fips.posterior.Solution.dofs_per_element.html">fips.posterior.Solution.dofs_per_element</a></li>
 <li class="toctree-l2"><a class="reference internal" href="api/fips.posterior.Solution.information.html">fips.posterior.Solution.information</a></li>
 <li class="toctree-l2"><a class="reference internal" href="api/fips.posterior.Solution.chi2.html">fips.posterior.Solution.chi2</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/fips.posterior.Solution.misfits.html">fips.posterior.Solution.misfits</a></li>
 <li class="toctree-l2"><a class="reference internal" href="api/fips.posterior.Solution.chi2_tests.html">fips.posterior.Solution.chi2_tests</a></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="api/fips.posterior.Options.html">fips.posterior.Options</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l3"><a class="reference internal" href="api/fips.posterior.Options.gamma.html">fips.posterior.Options.gamma</a></li>
@@ -984,7 +990,13 @@ factorization in either form.</p>
 <td><p>The Shannon information content of the observations about the state, in nats.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="api/fips.Posterior.chi2.html#fips.Posterior.chi2" title="fips.Posterior.chi2"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Posterior.chi2</span></code></a></p></td>
-<td><p>the sum of the data and the state misfits.</p></td>
+<td><p>the minimum of the cost, the data misfit times gamma plus the state misfit.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="api/fips.Posterior.data_misfit.html#fips.Posterior.data_misfit" title="fips.Posterior.data_misfit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Posterior.data_misfit</span></code></a></p></td>
+<td><p><span class="math notranslate nohighlight">\(r^T S_z^{-1} r\)</span>.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="api/fips.Posterior.state_misfit.html#fips.Posterior.state_misfit" title="fips.Posterior.state_misfit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Posterior.state_misfit</span></code></a></p></td>
+<td><p><span class="math notranslate nohighlight">\((\hat{x} - x_0)^T S_0^{-1} (\hat{x} - x_0)\)</span>.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="api/fips.Posterior.reduced_chi2.html#fips.Posterior.reduced_chi2" title="fips.Posterior.reduced_chi2"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Posterior.reduced_chi2</span></code></a></p></td>
 <td><p><code class="xref py py-attr docutils literal notranslate"><span class="pre">chi2</span></code> divided by the number of observations; near 1 when the covariances are right.</p></td>
@@ -1095,15 +1107,18 @@ added is in the docstring of <code class="xref py py-mod docutils literal notran
 <td><p>Return the Shannon information content, <span class="math notranslate nohighlight">\(-\tfrac{1}{2} \ln \lvert I - K H \rvert\)</span>, in nats.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="api/fips.posterior.Solution.chi2.html#fips.posterior.Solution.chi2" title="fips.posterior.Solution.chi2"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Solution.chi2</span></code></a>()</p></td>
-<td><p>Return the chi-squared of the solution: the sum of the data and the state misfits.</p></td>
+<td><p>Return the chi-squared of the solution, <span class="math notranslate nohighlight">\(d^T (H S_0 H^T + S_z/\gamma)^{-1} d\)</span>: gamma times the data misfit plus the state misfit.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="api/fips.posterior.Solution.chi2_tests.html#fips.posterior.Solution.chi2_tests" title="fips.posterior.Solution.chi2_tests"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Solution.chi2_tests</span></code></a>()</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="api/fips.posterior.Solution.misfits.html#fips.posterior.Solution.misfits" title="fips.posterior.Solution.misfits"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Solution.misfits</span></code></a>()</p></td>
+<td><p>Return the data misfit <span class="math notranslate nohighlight">\(r^T S_z^{-1} r\)</span> and the state misfit <span class="math notranslate nohighlight">\((\hat{x} - x_0)^T S_0^{-1} (\hat{x} - x_0)\)</span>, with <span class="math notranslate nohighlight">\(r = z - H \hat{x} - c\)</span>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="api/fips.posterior.Solution.chi2_tests.html#fips.posterior.Solution.chi2_tests" title="fips.posterior.Solution.chi2_tests"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Solution.chi2_tests</span></code></a>()</p></td>
 <td><p>Return Rodgers' four chi-squared tests, each its chi-squared and degrees of freedom.</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="api/fips.posterior.Options.html#fips.posterior.Options" title="fips.posterior.Options"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Options</span></code></a>(*args, **kwargs)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="api/fips.posterior.Options.html#fips.posterior.Options" title="fips.posterior.Options"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Options</span></code></a>(*args, **kwargs)</p></td>
 <td><p>What a <a class="reference internal" href="api/fips.Posterior.html#fips.Posterior" title="fips.posterior.Posterior"><code class="xref py py-class docutils literal notranslate"><span class="pre">Posterior</span></code></a> reads from the options of a method.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="api/fips.posterior.Options.gamma.html#fips.posterior.Options.gamma" title="fips.posterior.Options.gamma"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Options.gamma</span></code></a></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="api/fips.posterior.Options.gamma.html#fips.posterior.Options.gamma" title="fips.posterior.Options.gamma"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Options.gamma</span></code></a></p></td>
 <td><p>the solve divided the model-data mismatch by it.</p></td>
 </tr>
 </tbody>

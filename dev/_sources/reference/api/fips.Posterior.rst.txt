@@ -15,6 +15,7 @@
    :toctree:
 
    ~Posterior.chi2
+   ~Posterior.data_misfit
    ~Posterior.dofs
    ~Posterior.dofs_per_element
    ~Posterior.estimate
@@ -28,6 +29,7 @@
    ~Posterior.r2
    ~Posterior.reduced_chi2
    ~Posterior.rmse
+   ~Posterior.state_misfit
    ~Posterior.uncertainty_reduction
    ~Posterior.variances
 

@@ -25,6 +25,7 @@
    ~Solution.estimate
    ~Solution.gain
    ~Solution.information
+   ~Solution.misfits
    ~Solution.variances
 
 

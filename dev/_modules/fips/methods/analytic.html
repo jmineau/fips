@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>fips.methods.analytic &#8212; fips 0.2.0b3.dev3+g2fa8ec89a documentation</title>
+    <title>fips.methods.analytic &#8212; fips 0.2.0b3.dev4+gd92276da3 documentation</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../../_static/documentation_options.js?v=7a81d17d"></script>
+    <script src="../../../_static/documentation_options.js?v=328475d5"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -132,8 +132,8 @@
       
     
     
-    <img src="../../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev3+g2fa8ec89a documentation - Home"/>
-    <img src="../../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev3+g2fa8ec89a documentation - Home"/>
+    <img src="../../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev4+gd92276da3 documentation - Home"/>
+    <img src="../../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev4+gd92276da3 documentation - Home"/>
   
   
 </a></div>
@@ -637,6 +637,29 @@
 <span class="w">        </span><span class="sa">r</span><span class="sd">"""Return the chi-squared of the innovation, :math:`d^T (H S_0 H^T + S_z/\gamma)^{-1} d` (each form defines it)."""</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span>
 
+    <span class="k">def</span><span class="w"> </span><span class="nf">_innovation_precision_times</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""Return :math:`u = (H S_0 H^T + S_z/\gamma)^{-1} d` (``m``; each form defines it)."""</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">misfits</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">        Return the data misfit :math:`r^T S_z^{-1} r` and the state misfit :math:`(\hat{x} - x_0)^T S_0^{-1} (\hat{x} - x_0)`.</span>
+
+<span class="sd">        Both come from :math:`u = (H S_0 H^T + S_z/\gamma)^{-1} d`: the</span>
+<span class="sd">        residual is :math:`r = d - H (\hat{x} - x_0) = (S_z/\gamma) u` and</span>
+<span class="sd">        the increment :math:`\hat{x} - x_0 = S_0 H^T u`, so the data misfit</span>
+<span class="sd">        is :math:`u^T S_z u / \gamma^2` and the state misfit :math:`(H^T u)^T</span>
+<span class="sd">        S_0 (H^T u)`: products with the covariances' forms, and no inverse</span>
+<span class="sd">        (a semi-definite :math:`S_0` needs none). :meth:`chi2` is</span>
+<span class="sd">        :math:`\gamma` times the first plus the second.</span>
+<span class="sd">        """</span>
+        <span class="n">problem</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">problem</span>
+        <span class="n">u</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_innovation_precision_times</span><span class="p">()</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">u</span> <span class="o">@</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">problem</span><span class="o">.</span><span class="n">obs_cov</span><span class="o">.</span><span class="n">data</span> <span class="o">@</span> <span class="n">u</span><span class="p">))</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">gamma</span><span class="o">**</span><span class="mi">2</span>
+        <span class="n">Htu</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">problem</span><span class="o">.</span><span class="n">forward</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">_transpose</span><span class="p">()</span> <span class="o">@</span> <span class="n">u</span><span class="p">)</span>
+        <span class="n">state</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">Htu</span> <span class="o">@</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">problem</span><span class="o">.</span><span class="n">prior_cov</span><span class="o">.</span><span class="n">data</span> <span class="o">@</span> <span class="n">Htu</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">data</span><span class="p">,</span> <span class="n">state</span>
+
     <span class="k">def</span><span class="w"> </span><span class="nf">chi2_tests</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]:</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Return Rodgers' four chi-squared tests, each its chi-squared and degrees of freedom (:meth:`Posterior.chi2_tests &lt;fips.Posterior.chi2_tests&gt;`).</span>
@@ -763,8 +786,8 @@
 <span class="sd">        K = W^T \operatorname{diag}(w) B, \qquad</span>
 <span class="sd">        d^T (H Q H^T + S_z/\gamma)^{-1} d = \textstyle\sum_k w_k e_k^2.</span>
 
-<span class="sd">    The last is the minimum of the cost, the sum of the data and model misfits of</span>
-<span class="sd">    the reduced chi-squared. DOFS, :math:`\operatorname{tr}(K H) =</span>
+<span class="sd">    The last is the minimum of the cost, the data misfit times :math:`\gamma`</span>
+<span class="sd">    plus the state misfit (``misfits``). DOFS, :math:`\operatorname{tr}(K H) =</span>
 <span class="sd">    \operatorname{tr}(M (M + I/\gamma)^{-1})`, is :math:`\sum_k \gamma\lambda_k /</span>
 <span class="sd">    (\gamma\lambda_k + 1)` from the eigenvalues, and :math:`\operatorname{tr}(R^{-1}</span>
 <span class="sd">    M R^{-T})` from the Cholesky factor. Once the eigendecomposition</span>
@@ -924,6 +947,10 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">chi2</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">"""Return :math:`d^T (H Q H^T + S_z/\gamma)^{-1} d = \sum_k w_k e_k^2`."""</span>
         <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">weights</span><span class="p">()</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">innovation</span><span class="o">**</span><span class="mi">2</span><span class="p">))</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_innovation_precision_times</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""Return :math:`u = B^T (w \circ e)`: :math:`(H Q H^T + S_z/\gamma)^{-1} = B^T \operatorname{diag}(w) B` and :math:`e = B d`."""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">whitener</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">weights</span><span class="p">()</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">innovation</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_chi2_terms</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">kept</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">"""Return :math:`w_k e_k^2` for the eigenvalues `kept`: :math:`e'_k = \sqrt{\gamma} e_k`, so :math:`e_k'^2 / (1 + s_k^2) = w_k e_k^2`."""</span>
@@ -1160,11 +1187,19 @@
         <span class="k">return</span> <span class="p">(</span><span class="n">WG</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">weights</span><span class="p">())</span> <span class="o">@</span> <span class="n">Z</span><span class="o">.</span><span class="n">T</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">chi2</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-<span class="w">        </span><span class="sa">r</span><span class="sd">"""Return the minimum of the cost, :math:`\gamma d^T S_z^{-1} r` with :math:`r = d - H (\hat{x} - x_0)`."""</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""Return the minimum of the cost, :math:`d^T u = \gamma d^T S_z^{-1} r` with :math:`r = d - H (\hat{x} - x_0)`."""</span>
+        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">_innovation</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">problem</span><span class="p">)</span> <span class="o">@</span> <span class="bp">self</span><span class="o">.</span><span class="n">_innovation_precision_times</span><span class="p">())</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_innovation_precision_times</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">        Return :math:`u = (H S_0 H^T + S_z/\gamma)^{-1} d = \gamma S_z^{-1} r`, one solve with :math:`S_z`.</span>
+
+<span class="sd">        :math:`d = H (\hat{x} - x_0) + r` and :math:`\hat{x} - x_0 = S_0</span>
+<span class="sd">        H^T u`, so :math:`(H S_0 H^T + S_z/\gamma) \gamma S_z^{-1} r = d`.</span>
+<span class="sd">        """</span>
         <span class="n">problem</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">problem</span>
-        <span class="n">d</span> <span class="o">=</span> <span class="n">_innovation</span><span class="p">(</span><span class="n">problem</span><span class="p">)</span>
-        <span class="n">r</span> <span class="o">=</span> <span class="n">d</span> <span class="o">-</span> <span class="n">problem</span><span class="o">.</span><span class="n">forward</span><span class="o">.</span><span class="n">data</span> <span class="o">@</span> <span class="bp">self</span><span class="o">.</span><span class="n">_increment</span><span class="p">()</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">gamma</span> <span class="o">*</span> <span class="nb">float</span><span class="p">(</span><span class="n">d</span> <span class="o">@</span> <span class="n">problem</span><span class="o">.</span><span class="n">obs_cov</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">r</span><span class="p">))</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="n">_innovation</span><span class="p">(</span><span class="n">problem</span><span class="p">)</span> <span class="o">-</span> <span class="n">problem</span><span class="o">.</span><span class="n">forward</span><span class="o">.</span><span class="n">data</span> <span class="o">@</span> <span class="bp">self</span><span class="o">.</span><span class="n">_increment</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">gamma</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">problem</span><span class="o">.</span><span class="n">obs_cov</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">r</span><span class="p">))</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_chi2_terms</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">kept</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>

@@ -1,0 +1,6 @@
+fips.Posterior.data\_misfit
+===========================
+
+.. currentmodule:: fips
+
+.. autoproperty:: Posterior.data_misfit

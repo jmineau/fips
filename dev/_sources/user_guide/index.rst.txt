@@ -447,6 +447,24 @@ the same labels (a bootstrap, :ref:`synthetic observations of a known truth
 
    pd.concat([post.with_gamma(g).summary() for g in (0.25, 1.0, 4.0)], ignore_index=True)
 
+**An L-curve.** :attr:`~fips.Posterior.chi2` is the sum of two misfits:
+:attr:`~fips.Posterior.data_misfit`, how far the modeled observations are from
+the observations (:math:`r^T S_z^{-1} r`, on :math:`S_z` as given, so that it
+compares across gammas), times gamma, and
+:attr:`~fips.Posterior.state_misfit`, how far the estimate is from the prior
+(:math:`(\hat{x} - x_0)^T S_0^{-1} (\hat{x} - x_0)`). Over a sweep of gamma
+the first falls and the second rises; plotted one against the other they
+trace the L-curve (Hansen, 1992), whose corner is a gamma past which fitting
+the observations more closely costs much more departure from the prior:
+
+.. ipython:: python
+
+   sweep = [post.with_gamma(g) for g in np.logspace(-2, 2, 9)]
+   pd.DataFrame(
+       [(p.options.gamma, p.data_misfit, p.state_misfit) for p in sweep],
+       columns=["gamma", "data_misfit", "state_misfit"],
+   ).round(3)
+
 **What each group of observations adds.** :meth:`~fips.Posterior.data_worth`
 groups the observations by any of their levels (a site, a platform's block, a
 month by ``pd.Grouper``), as :meth:`~fips.Posterior.desroziers` does, and says

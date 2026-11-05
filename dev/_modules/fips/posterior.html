@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>fips.posterior &#8212; fips 0.2.0b3.dev3+g2fa8ec89a documentation</title>
+    <title>fips.posterior &#8212; fips 0.2.0b3.dev4+gd92276da3 documentation</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../_static/documentation_options.js?v=7a81d17d"></script>
+    <script src="../../_static/documentation_options.js?v=328475d5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -132,8 +132,8 @@
       
     
     
-    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev3+g2fa8ec89a documentation - Home"/>
-    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev3+g2fa8ec89a documentation - Home"/>
+    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev4+gd92276da3 documentation - Home"/>
+    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev4+gd92276da3 documentation - Home"/>
   
   
 </a></div>
@@ -429,7 +429,7 @@
 <span class="sd">The posterior labels the answer; the method keeps its own machinery. It asks</span>
 <span class="sd">the solution for unlabeled arrays (the estimate, the variances, the</span>
 <span class="sd">covariance of aggregates, the gain, DOFS and its share per state element, the</span>
-<span class="sd">information content, chi-squared), puts the problem's labels on them and keeps</span>
+<span class="sd">information content, chi-squared and its two misfits), puts the problem's labels on them and keeps</span>
 <span class="sd">each one once computed. Everything else it gives is</span>
 <span class="sd">written from those and the problem, so it holds for every method. The</span>
 <span class="sd">analytic method's solution is the factorization of its whitened system, or of</span>
@@ -585,7 +585,14 @@
 <div class="viewcode-block" id="Solution.chi2">
 <a class="viewcode-back" href="../../reference/api/fips.posterior.Solution.chi2.html#fips.Solution.chi2">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">chi2</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-<span class="w">        </span><span class="sa">r</span><span class="sd">"""Return the chi-squared of the solution: the sum of the data and the state misfits."""</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""Return the chi-squared of the solution, :math:`d^T (H S_0 H^T + S_z/\gamma)^{-1} d`: gamma times the data misfit plus the state misfit."""</span>
+        <span class="o">...</span></div>
+
+
+<div class="viewcode-block" id="Solution.misfits">
+<a class="viewcode-back" href="../../reference/api/fips.posterior.Solution.misfits.html#fips.Solution.misfits">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">misfits</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""Return the data misfit :math:`r^T S_z^{-1} r` and the state misfit :math:`(\hat{x} - x_0)^T S_0^{-1} (\hat{x} - x_0)`, with :math:`r = z - H \hat{x} - c`."""</span>
         <span class="o">...</span></div>
 
 
@@ -1956,11 +1963,12 @@
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">chi2</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
-<span class="sd">        The chi-squared of the solution: the sum of the data and the state misfits.</span>
+<span class="sd">        The chi-squared of the solution: the minimum of the cost, the data misfit times gamma plus the state misfit.</span>
 
 <span class="sd">        .. math::</span>
 <span class="sd">            \chi^2 = (z - H\hat{x} - c)^T (S_z/\gamma)^{-1} (z - H\hat{x} - c)</span>
 <span class="sd">                + (\hat{x} - x_0)^T S_0^{-1} (\hat{x} - x_0)</span>
+<span class="sd">            = \gamma \, \mathrm{data\_misfit} + \mathrm{state\_misfit}</span>
 
 <span class="sd">        which equals :math:`d^T (H S_0 H^T + S_z/\gamma)^{-1} d` with</span>
 <span class="sd">        :math:`d = z - H x_0 - c`; the analytic method reads it from its</span>
@@ -1970,8 +1978,123 @@
 <span class="sd">        --------</span>
 <span class="sd">        reduced_chi2 : It, divided by the number of observations.</span>
 <span class="sd">        chi2_tests : Its degrees of freedom and p-value, and Rodgers' other three tests.</span>
+<span class="sd">        data_misfit : Its first term, without gamma.</span>
+<span class="sd">        state_misfit : Its second term.</span>
 <span class="sd">        """</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_solution</span><span class="o">.</span><span class="n">chi2</span><span class="p">()</span>
+
+    <span class="nd">@cached_property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_misfits</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""The data and the state misfits, computed together once."""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_solution</span><span class="o">.</span><span class="n">misfits</span><span class="p">()</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">data_misfit</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">        How far the modeled observations are from the observations, weighed by the model-data mismatch: :math:`r^T S_z^{-1} r`.</span>
+
+<span class="sd">        :math:`r = z - H \hat{x} - c` is the residual and :math:`S_z` the</span>
+<span class="sd">        model-data mismatch as the problem gives it, not divided by</span>
+<span class="sd">        :math:`\gamma`, so that it can be compared across a sweep over</span>
+<span class="sd">        gamma: with :attr:`state_misfit` it is the L-curve (Hansen, 1992), a</span>
+<span class="sd">        point per gamma, whose corner is where fitting the observations more</span>
+<span class="sd">        closely starts to cost much more departure from the prior.</span>
+<span class="sd">        :attr:`chi2` is :math:`\gamma` times this plus :attr:`state_misfit`.</span>
+
+<span class="sd">        References</span>
+<span class="sd">        ----------</span>
+<span class="sd">        Hansen, P. C. (1992). Analysis of discrete ill-posed problems by means</span>
+<span class="sd">        of the L-curve. *SIAM Review*, 34(4), 561-580.</span>
+<span class="sd">        https://doi.org/10.1137/1034115</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        --------</span>
+<span class="sd">        state_misfit : The other term, the departure from the prior.</span>
+<span class="sd">        chi2 : The two together, at the solve's gamma.</span>
+<span class="sd">        with_gamma : The posterior at another gamma, for a sweep.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; import numpy as np</span>
+<span class="sd">        &gt;&gt;&gt; import pandas as pd</span>
+<span class="sd">        &gt;&gt;&gt; import fips</span>
+<span class="sd">        &gt;&gt;&gt; cells = pd.Index(["a", "b"], name="cell")</span>
+<span class="sd">        &gt;&gt;&gt; obs_id = pd.Index(["o1", "o2", "o3"], name="obs_id")</span>
+<span class="sd">        &gt;&gt;&gt; prior = fips.Vector.from_series(pd.Series(0.0, index=cells), block="flux")</span>
+<span class="sd">        &gt;&gt;&gt; obs = fips.Vector.from_series(</span>
+<span class="sd">        ...     pd.Series([1.0, 2.0, 3.0], index=obs_id), block="co2"</span>
+<span class="sd">        ... )</span>
+<span class="sd">        &gt;&gt;&gt; problem = fips.Problem(</span>
+<span class="sd">        ...     prior=prior,</span>
+<span class="sd">        ...     prior_cov=fips.Independent().with_std(1.0),</span>
+<span class="sd">        ...     obs=obs,</span>
+<span class="sd">        ...     obs_cov=fips.Independent().with_std(np.sqrt(0.1)),</span>
+<span class="sd">        ...     forward=fips.Operator(</span>
+<span class="sd">        ...         np.array([[1.0, 0.0], [0.0, 1.0], [1.0, 1.0]]),</span>
+<span class="sd">        ...         obs.space,</span>
+<span class="sd">        ...         prior.space,</span>
+<span class="sd">        ...     ),</span>
+<span class="sd">        ... )</span>
+<span class="sd">        &gt;&gt;&gt; post = fips.solve(problem)</span>
+<span class="sd">        &gt;&gt;&gt; round(post.data_misfit, 3)</span>
+<span class="sd">        0.182</span>
+<span class="sd">        &gt;&gt;&gt; sweep = [post.with_gamma(g) for g in (0.1, 1.0, 10.0)]</span>
+<span class="sd">        &gt;&gt;&gt; [</span>
+<span class="sd">        ...     round(p.data_misfit, 3) for p in sweep</span>
+<span class="sd">        ... ]  # closer to the data as gamma grows</span>
+<span class="sd">        [9.688, 0.182, 0.002]</span>
+<span class="sd">        """</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_misfits</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">state_misfit</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">        How far the estimate is from the prior, weighed by the prior error covariance: :math:`(\hat{x} - x_0)^T S_0^{-1} (\hat{x} - x_0)`.</span>
+
+<span class="sd">        The analytic method computes it without inverting :math:`S_0`, so it</span>
+<span class="sd">        holds for a semi-definite prior error covariance too (the increment</span>
+<span class="sd">        lies in its range). With :attr:`data_misfit` it is the L-curve: plot</span>
+<span class="sd">        one against the other over a sweep of gamma. :attr:`chi2` is</span>
+<span class="sd">        :math:`\gamma` times :attr:`data_misfit` plus this.</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        --------</span>
+<span class="sd">        data_misfit : The other term, the misfit to the observations.</span>
+<span class="sd">        chi2 : The two together, at the solve's gamma.</span>
+<span class="sd">        with_gamma : The posterior at another gamma, for a sweep.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; import numpy as np</span>
+<span class="sd">        &gt;&gt;&gt; import pandas as pd</span>
+<span class="sd">        &gt;&gt;&gt; import fips</span>
+<span class="sd">        &gt;&gt;&gt; cells = pd.Index(["a", "b"], name="cell")</span>
+<span class="sd">        &gt;&gt;&gt; obs_id = pd.Index(["o1", "o2", "o3"], name="obs_id")</span>
+<span class="sd">        &gt;&gt;&gt; prior = fips.Vector.from_series(pd.Series(0.0, index=cells), block="flux")</span>
+<span class="sd">        &gt;&gt;&gt; obs = fips.Vector.from_series(</span>
+<span class="sd">        ...     pd.Series([1.0, 2.0, 3.0], index=obs_id), block="co2"</span>
+<span class="sd">        ... )</span>
+<span class="sd">        &gt;&gt;&gt; problem = fips.Problem(</span>
+<span class="sd">        ...     prior=prior,</span>
+<span class="sd">        ...     prior_cov=fips.Independent().with_std(1.0),</span>
+<span class="sd">        ...     obs=obs,</span>
+<span class="sd">        ...     obs_cov=fips.Independent().with_std(np.sqrt(0.1)),</span>
+<span class="sd">        ...     forward=fips.Operator(</span>
+<span class="sd">        ...         np.array([[1.0, 0.0], [0.0, 1.0], [1.0, 1.0]]),</span>
+<span class="sd">        ...         obs.space,</span>
+<span class="sd">        ...         prior.space,</span>
+<span class="sd">        ...     ),</span>
+<span class="sd">        ... )</span>
+<span class="sd">        &gt;&gt;&gt; post = fips.solve(problem)</span>
+<span class="sd">        &gt;&gt;&gt; round(post.state_misfit, 3)</span>
+<span class="sd">        4.628</span>
+<span class="sd">        &gt;&gt;&gt; sweep = [post.with_gamma(g) for g in (0.1, 1.0, 10.0)]</span>
+<span class="sd">        &gt;&gt;&gt; [</span>
+<span class="sd">        ...     round(p.state_misfit, 3) for p in sweep</span>
+<span class="sd">        ... ]  # farther from the prior as gamma grows</span>
+<span class="sd">        [2.656, 4.628, 4.96]</span>
+<span class="sd">        """</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_misfits</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">reduced_chi2</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
