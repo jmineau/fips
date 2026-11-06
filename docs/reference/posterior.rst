@@ -9,7 +9,8 @@ Solving and Posterior
 and no :math:`m \times m` matrix (:meth:`Problem.predict`); the posterior is
 the answer and holds what depends on the solve or on the :math:`m \times m`
 innovation covariance (:attr:`Posterior.innovation_cov`). Each method declares its options once (for ``"analytic"``,
-:class:`~fips.methods.analytic.AnalyticOptions`), and an unknown method or option raises
+:class:`~fips.methods.analytic.AnalyticOptions`; for ``"bounded"``, the
+posterior with bounds on the state, :class:`~fips.methods.bounded.BoundedOptions`), and an unknown method or option raises
 with the names it knows. The posterior labels the answer and the method keeps
 its own machinery: the posterior asks what the method kept from the solve (a
 :class:`~fips.posterior.Solution`) for unlabeled arrays and labels them with
@@ -45,6 +46,13 @@ Solving
 
    AnalyticOptions
 
+.. currentmodule:: fips.methods.bounded
+
+.. autosummary::
+   :toctree: api/
+
+   BoundedOptions
+
 .. currentmodule:: fips
 
 Constructor
@@ -73,6 +81,7 @@ State estimate
    Posterior.cov
    Posterior.uncertainty
    Posterior.sample
+   Posterior.at_bound
 
 Observation space
 ~~~~~~~~~~~~~~~~~
