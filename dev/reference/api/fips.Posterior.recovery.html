@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>fips.Posterior.recovery &#8212; fips 0.2.0b3.dev6+ge358c2796 documentation</title>
+    <title>fips.Posterior.recovery &#8212; fips 0.2.0b3.dev7+g480372630 documentation</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../_static/documentation_options.js?v=4da59963"></script>
+    <script src="../../_static/documentation_options.js?v=b420fb47"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -137,8 +137,8 @@
       
     
     
-    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev6+ge358c2796 documentation - Home"/>
-    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev6+ge358c2796 documentation - Home"/>
+    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev7+g480372630 documentation - Home"/>
+    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev7+g480372630 documentation - Home"/>
   
   
 </a></div>
@@ -855,7 +855,7 @@
 <h1>fips.Posterior.recovery<a class="headerlink" href="#fips-posterior-recovery" title="Link to this heading">#</a></h1>
 <dl class="py method">
 <dt class="sig sig-object py" id="fips.Posterior.recovery">
-<span class="sig-prename descclassname"><span class="pre">Posterior.</span></span><span class="sig-name descname"><span class="pre">recovery</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">world</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">truth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">W</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">level</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.95</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/fips/posterior.html#Posterior.recovery"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fips.Posterior.recovery" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">Posterior.</span></span><span class="sig-name descname"><span class="pre">recovery</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">world</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">truth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">W</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">W_world</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">level</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.95</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/fips/posterior.html#Posterior.recovery"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fips.Posterior.recovery" title="Link to this definition">#</a></dt>
 <dd><p>Return how well the estimate recovers the truth when the data come from <cite>world</cite>: exactly, without sampling.</p>
 <p>The exact answer of the Monte Carlo loop over <code class="docutils literal notranslate"><span class="pre">world.simulate(rng)</span></code>
 and <a class="reference internal" href="fips.Posterior.with_data.html#fips.Posterior.with_data" title="fips.Posterior.with_data"><code class="xref py py-meth docutils literal notranslate"><span class="pre">with_data()</span></code></a>. The estimate is linear in the observations,
@@ -878,20 +878,32 @@ V = (K H_w - I) P (K H_w - I)^T + K R_w K^T.\]</div>
 holds. With the world the problem itself and <span class="math notranslate nohighlight">\(\gamma = 1\)</span>, the
 bias is zero and <span class="math notranslate nohighlight">\(V\)</span> is <span class="math notranslate nohighlight">\(\hat{S}\)</span> (in Joseph form), so
 <code class="docutils literal notranslate"><span class="pre">std</span></code> equals <code class="docutils literal notranslate"><span class="pre">posterior_std</span></code>.</p>
+<p>The world’s state may have other labels than the posterior’s (a
+monthly truth recovered by an annual inversion, the whole state where
+the solve was restricted, a gridded truth and a basin inversion) when
+both are added up to the same totals: <cite>W</cite> on the posterior’s state and
+<cite>W_world</cite> on the world’s, with the same rows. The error of a total is
+then <span class="math notranslate nohighlight">\(W \hat{x} - W_w x\)</span>, with mean <span class="math notranslate nohighlight">\(W x_0 + W K (H_w \mu
++ c_w - H x_0 - c) - W_w \mu\)</span> and covariance <span class="math notranslate nohighlight">\(G P G^T + W K R_w
+K^T W^T\)</span>, <span class="math notranslate nohighlight">\(G = W K H_w - W_w\)</span> (<code class="docutils literal notranslate"><span class="pre">k</span> <span class="pre">x</span> <span class="pre">n_w</span></code>): the same formula,
+with <span class="math notranslate nohighlight">\(W\)</span> on each side its own.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>world</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="fips.Problem.html#fips.Problem" title="fips.problem.Problem"><code class="xref py py-class docutils literal notranslate"><span class="pre">Problem</span></code></a> | <span class="highlight sphinx_autodoc_typehints-value"><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><code class="xref py py-obj docutils literal notranslate"><span class="kc"><span class="pre">None</span></span></code></a></span></span>) – The problem that makes the data, with exactly this posterior’s
-state and observation labels (in any order); its own observations
-are not used. By default the posterior’s problem. A world on
-other state labels (the whole state where the solve was
-restricted) is not taken: use <code class="docutils literal notranslate"><span class="pre">world.simulate</span></code> and
-<a class="reference internal" href="fips.Posterior.with_data.html#fips.Posterior.with_data" title="fips.Posterior.with_data"><code class="xref py py-meth docutils literal notranslate"><span class="pre">with_data()</span></code></a> in a loop.</p></li>
-<li><p><strong>truth</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="fips.Vector.html#fips.Vector" title="fips.vector.Vector"><code class="xref py py-class docutils literal notranslate"><span class="pre">Vector</span></code></a> | <span class="highlight sphinx_autodoc_typehints-value"><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><code class="xref py py-obj docutils literal notranslate"><span class="kc"><span class="pre">None</span></span></code></a></span></span>) – A fixed truth, on the state’s labels in any order, instead of the
-world’s prior (another inventory, 1.5 times the prior). Only the
-observation error is then random.</p></li>
+observation labels (in any order) and, unless <cite>W_world</cite> is given,
+its state labels; its own observations are not used. By default
+the posterior’s problem.</p></li>
+<li><p><strong>truth</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="fips.Vector.html#fips.Vector" title="fips.vector.Vector"><code class="xref py py-class docutils literal notranslate"><span class="pre">Vector</span></code></a> | <span class="highlight sphinx_autodoc_typehints-value"><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><code class="xref py py-obj docutils literal notranslate"><span class="kc"><span class="pre">None</span></span></code></a></span></span>) – A fixed truth, on the world’s state labels in any order, instead
+of the world’s prior (another inventory, 1.5 times the prior).
+Only the observation error is then random.</p></li>
 <li><p><strong>W</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="fips.Operator.html#fips.Operator" title="fips.operator.Operator"><code class="xref py py-class docutils literal notranslate"><span class="pre">Operator</span></code></a> | <span class="highlight sphinx_autodoc_typehints-value"><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><code class="xref py py-obj docutils literal notranslate"><span class="kc"><span class="pre">None</span></span></code></a></span></span>) – An aggregation, as <a class="reference internal" href="fips.Posterior.cov.html#fips.Posterior.cov" title="fips.Posterior.cov"><code class="xref py py-meth docutils literal notranslate"><span class="pre">cov()</span></code></a> takes it: one row per total. By
-default, one row per state element.</p></li>
+default, one row per state element. Required with <cite>W_world</cite>.</p></li>
+<li><p><strong>W_world</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="fips.Operator.html#fips.Operator" title="fips.operator.Operator"><code class="xref py py-class docutils literal notranslate"><span class="pre">Operator</span></code></a> | <span class="highlight sphinx_autodoc_typehints-value"><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><code class="xref py py-obj docutils literal notranslate"><span class="kc"><span class="pre">None</span></span></code></a></span></span>) – The aggregation of the world’s state to the same totals, for a
+world whose state has other labels than the posterior’s: its
+columns the world’s state labels, its rows exactly the rows of
+<cite>W</cite> (in any order). By default <cite>W</cite>, so the world must then have
+the posterior’s state labels.</p></li>
 <li><p><strong>level</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a></span>) – The probability of the posterior’s interval that <code class="docutils literal notranslate"><span class="pre">coverage</span></code>
 is computed for, <span class="math notranslate nohighlight">\(\hat{x} \pm z_{level} \hat{\sigma}\)</span>.</p></li>
 </ul>
@@ -921,9 +933,11 @@ the same variances, <span class="math notranslate nohighlight">\((\sum_i |x_i| \
 <li><p><a class="reference external" href="https://docs.python.org/3/builtins/exceptions.html#TypeError" title="(in Python v3.15)"><strong>TypeError</strong></a> – If the method’s estimate is not linear in the observations (its
     solution does not set <code class="docutils literal notranslate"><span class="pre">estimate_is_linear</span></code>), or <cite>world</cite> is not
     a Problem, or <cite>truth</cite> not a Vector.</p></li>
-<li><p><a class="reference external" href="https://docs.python.org/3/builtins/exceptions.html#ValueError" title="(in Python v3.15)"><strong>ValueError</strong></a> – If the world’s state or observations, the truth or the columns of
-    <cite>W</cite> do not have exactly this posterior’s labels (the message names
-    those on one side only), or <cite>level</cite> is not between 0 and 1.</p></li>
+<li><p><a class="reference external" href="https://docs.python.org/3/builtins/exceptions.html#ValueError" title="(in Python v3.15)"><strong>ValueError</strong></a> – If the world’s observations or, without <cite>W_world</cite>, its state, the
+    truth or the columns of <cite>W</cite> do not have exactly this posterior’s
+    labels (the message names those on one side only); if <cite>W_world</cite>
+    is given without <cite>W</cite>, its columns are not the world’s state or
+    its rows are not <cite>W</cite>’s; or <cite>level</cite> is not between 0 and 1.</p></li>
 </ul>
 </dd>
 </dl>

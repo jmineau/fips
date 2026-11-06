@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>fips.posterior &#8212; fips 0.2.0b3.dev6+ge358c2796 documentation</title>
+    <title>fips.posterior &#8212; fips 0.2.0b3.dev7+g480372630 documentation</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../_static/documentation_options.js?v=4da59963"></script>
+    <script src="../../_static/documentation_options.js?v=b420fb47"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -132,8 +132,8 @@
       
     
     
-    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev6+ge358c2796 documentation - Home"/>
-    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev6+ge358c2796 documentation - Home"/>
+    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev7+g480372630 documentation - Home"/>
+    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev7+g480372630 documentation - Home"/>
   
   
 </a></div>
@@ -2542,28 +2542,42 @@
 
     <span class="c1"># -- the error of the estimate in a world ----------------------------------</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">_on_labels</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">world</span><span class="p">:</span> <span class="n">Problem</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Problem</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_on_labels</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">world</span><span class="p">:</span> <span class="n">Problem</span><span class="p">,</span> <span class="n">own_state</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Problem</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">"""</span>
 <span class="sd">        Return `world` with its inputs in the order of this posterior's labels.</span>
+
+<span class="sd">        With `own_state`, the world keeps its state (on any labels) and only</span>
+<span class="sd">        its observations are put in the posterior's order.</span>
 
 <span class="sd">        Raises</span>
 <span class="sd">        ------</span>
 <span class="sd">        TypeError</span>
 <span class="sd">            If `world` is not a Problem.</span>
 <span class="sd">        ValueError</span>
-<span class="sd">            If its state or observations do not have exactly the labels of</span>
-<span class="sd">            this posterior's; the message names those on one side only.</span>
+<span class="sd">            If its observations, or its state unless `own_state`, do not have</span>
+<span class="sd">            exactly the labels of this posterior's; the message names those</span>
+<span class="sd">            on one side only.</span>
 <span class="sd">        """</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">world</span><span class="p">,</span> <span class="n">Problem</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"world must be a Problem, got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">world</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">."</span><span class="p">)</span>
         <span class="n">state</span><span class="p">,</span> <span class="n">observed</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_problem</span><span class="o">.</span><span class="n">prior</span><span class="o">.</span><span class="n">space</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_problem</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">space</span>
-        <span class="k">if</span> <span class="n">world</span><span class="o">.</span><span class="n">prior</span><span class="o">.</span><span class="n">space</span> <span class="o">==</span> <span class="n">state</span> <span class="ow">and</span> <span class="n">world</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">space</span> <span class="o">==</span> <span class="n">observed</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">world</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">space</span> <span class="o">==</span> <span class="n">observed</span> <span class="ow">and</span> <span class="p">(</span><span class="n">own_state</span> <span class="ow">or</span> <span class="n">world</span><span class="o">.</span><span class="n">prior</span><span class="o">.</span><span class="n">space</span> <span class="o">==</span> <span class="n">state</span><span class="p">):</span>
             <span class="k">return</span> <span class="n">world</span>
-        <span class="n">s</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">_align</span><span class="p">(</span>
-            <span class="n">world</span><span class="o">.</span><span class="n">prior</span><span class="o">.</span><span class="n">space</span><span class="p">,</span>
-            <span class="s2">"the world's state"</span><span class="p">,</span>
-            <span class="s2">"The world's state and the posterior's"</span><span class="p">,</span>
-        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">own_state</span><span class="p">:</span>
+            <span class="n">prior</span> <span class="o">=</span> <span class="n">world</span><span class="o">.</span><span class="n">prior</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">s</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">_align</span><span class="p">(</span>
+                    <span class="n">world</span><span class="o">.</span><span class="n">prior</span><span class="o">.</span><span class="n">space</span><span class="p">,</span>
+                    <span class="s2">"the world's state"</span><span class="p">,</span>
+                    <span class="s2">"The world's state and the posterior's"</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">error</span><span class="si">}</span><span class="s2"> A world on other state labels is compared on totals: "</span>
+                    <span class="s2">"give W on the posterior's state and W_world on the world's."</span>
+                <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="kc">None</span>
+            <span class="n">prior</span> <span class="o">=</span> <span class="n">Vector</span><span class="p">(</span><span class="n">world</span><span class="o">.</span><span class="n">prior</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="n">s</span><span class="p">],</span> <span class="n">state</span><span class="p">)</span>
         <span class="n">o</span> <span class="o">=</span> <span class="n">observed</span><span class="o">.</span><span class="n">_align</span><span class="p">(</span>
             <span class="n">world</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">space</span><span class="p">,</span>
             <span class="s2">"the world's observations"</span><span class="p">,</span>
@@ -2571,7 +2585,7 @@
         <span class="p">)</span>
         <span class="c1"># Problem puts the operators, covariances and offset on these spaces</span>
         <span class="k">return</span> <span class="n">Problem</span><span class="p">(</span>
-            <span class="n">prior</span><span class="o">=</span><span class="n">Vector</span><span class="p">(</span><span class="n">world</span><span class="o">.</span><span class="n">prior</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="n">s</span><span class="p">],</span> <span class="n">state</span><span class="p">),</span>
+            <span class="n">prior</span><span class="o">=</span><span class="n">prior</span><span class="p">,</span>
             <span class="n">prior_cov</span><span class="o">=</span><span class="n">world</span><span class="o">.</span><span class="n">prior_cov</span><span class="p">,</span>
             <span class="n">obs</span><span class="o">=</span><span class="n">Vector</span><span class="p">(</span><span class="n">world</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="n">o</span><span class="p">],</span> <span class="n">observed</span><span class="p">),</span>
             <span class="n">obs_cov</span><span class="o">=</span><span class="n">world</span><span class="o">.</span><span class="n">obs_cov</span><span class="p">,</span>
@@ -2587,6 +2601,7 @@
         <span class="o">*</span><span class="p">,</span>
         <span class="n">truth</span><span class="p">:</span> <span class="n">Vector</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">W</span><span class="p">:</span> <span class="n">Operator</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">W_world</span><span class="p">:</span> <span class="n">Operator</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">level</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.95</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
@@ -2617,22 +2632,36 @@
 <span class="sd">        bias is zero and :math:`V` is :math:`\hat{S}` (in Joseph form), so</span>
 <span class="sd">        ``std`` equals ``posterior_std``.</span>
 
+<span class="sd">        The world's state may have other labels than the posterior's (a</span>
+<span class="sd">        monthly truth recovered by an annual inversion, the whole state where</span>
+<span class="sd">        the solve was restricted, a gridded truth and a basin inversion) when</span>
+<span class="sd">        both are added up to the same totals: `W` on the posterior's state and</span>
+<span class="sd">        `W_world` on the world's, with the same rows. The error of a total is</span>
+<span class="sd">        then :math:`W \hat{x} - W_w x`, with mean :math:`W x_0 + W K (H_w \mu</span>
+<span class="sd">        + c_w - H x_0 - c) - W_w \mu` and covariance :math:`G P G^T + W K R_w</span>
+<span class="sd">        K^T W^T`, :math:`G = W K H_w - W_w` (``k x n_w``): the same formula,</span>
+<span class="sd">        with :math:`W` on each side its own.</span>
+
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        world : Problem, optional</span>
 <span class="sd">            The problem that makes the data, with exactly this posterior's</span>
-<span class="sd">            state and observation labels (in any order); its own observations</span>
-<span class="sd">            are not used. By default the posterior's problem. A world on</span>
-<span class="sd">            other state labels (the whole state where the solve was</span>
-<span class="sd">            restricted) is not taken: use ``world.simulate`` and</span>
-<span class="sd">            :meth:`with_data` in a loop.</span>
+<span class="sd">            observation labels (in any order) and, unless `W_world` is given,</span>
+<span class="sd">            its state labels; its own observations are not used. By default</span>
+<span class="sd">            the posterior's problem.</span>
 <span class="sd">        truth : Vector, optional</span>
-<span class="sd">            A fixed truth, on the state's labels in any order, instead of the</span>
-<span class="sd">            world's prior (another inventory, 1.5 times the prior). Only the</span>
-<span class="sd">            observation error is then random.</span>
+<span class="sd">            A fixed truth, on the world's state labels in any order, instead</span>
+<span class="sd">            of the world's prior (another inventory, 1.5 times the prior).</span>
+<span class="sd">            Only the observation error is then random.</span>
 <span class="sd">        W : Operator, optional</span>
 <span class="sd">            An aggregation, as :meth:`cov` takes it: one row per total. By</span>
-<span class="sd">            default, one row per state element.</span>
+<span class="sd">            default, one row per state element. Required with `W_world`.</span>
+<span class="sd">        W_world : Operator, optional</span>
+<span class="sd">            The aggregation of the world's state to the same totals, for a</span>
+<span class="sd">            world whose state has other labels than the posterior's: its</span>
+<span class="sd">            columns the world's state labels, its rows exactly the rows of</span>
+<span class="sd">            `W` (in any order). By default `W`, so the world must then have</span>
+<span class="sd">            the posterior's state labels.</span>
 <span class="sd">        level : float, default 0.95</span>
 <span class="sd">            The probability of the posterior's interval that ``coverage``</span>
 <span class="sd">            is computed for, :math:`\hat{x} \pm z_{level} \hat{\sigma}`.</span>
@@ -2663,9 +2692,11 @@
 <span class="sd">            solution does not set ``estimate_is_linear``), or `world` is not</span>
 <span class="sd">            a Problem, or `truth` not a Vector.</span>
 <span class="sd">        ValueError</span>
-<span class="sd">            If the world's state or observations, the truth or the columns of</span>
-<span class="sd">            `W` do not have exactly this posterior's labels (the message names</span>
-<span class="sd">            those on one side only), or `level` is not between 0 and 1.</span>
+<span class="sd">            If the world's observations or, without `W_world`, its state, the</span>
+<span class="sd">            truth or the columns of `W` do not have exactly this posterior's</span>
+<span class="sd">            labels (the message names those on one side only); if `W_world`</span>
+<span class="sd">            is given without `W`, its columns are not the world's state or</span>
+<span class="sd">            its rows are not `W`'s; or `level` is not between 0 and 1.</span>
 
 <span class="sd">        See Also</span>
 <span class="sd">        --------</span>
@@ -2734,20 +2765,31 @@
         <span class="k">if</span> <span class="ow">not</span> <span class="mf">0.0</span> <span class="o">&lt;</span> <span class="n">level</span> <span class="o">&lt;</span> <span class="mf">1.0</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"level must be between 0 and 1, got </span><span class="si">{</span><span class="n">level</span><span class="si">}</span><span class="s2">."</span><span class="p">)</span>
         <span class="n">problem</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_problem</span>
-        <span class="n">world</span> <span class="o">=</span> <span class="n">problem</span> <span class="k">if</span> <span class="n">world</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">_on_labels</span><span class="p">(</span><span class="n">world</span><span class="p">)</span>
-        <span class="n">state</span> <span class="o">=</span> <span class="n">problem</span><span class="o">.</span><span class="n">prior</span><span class="o">.</span><span class="n">space</span>
+        <span class="k">if</span> <span class="n">W_world</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">W</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">"W_world needs W: a world on other state labels is compared on "</span>
+                <span class="s2">"totals, W on the posterior's state and W_world on the world's."</span>
+            <span class="p">)</span>
+        <span class="n">world</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">problem</span>
+            <span class="k">if</span> <span class="n">world</span> <span class="ow">is</span> <span class="kc">None</span>
+            <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">_on_labels</span><span class="p">(</span><span class="n">world</span><span class="p">,</span> <span class="n">own_state</span><span class="o">=</span><span class="n">W_world</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">state</span><span class="p">,</span> <span class="n">world_state</span> <span class="o">=</span> <span class="n">problem</span><span class="o">.</span><span class="n">prior</span><span class="o">.</span><span class="n">space</span><span class="p">,</span> <span class="n">world</span><span class="o">.</span><span class="n">prior</span><span class="o">.</span><span class="n">space</span>
         <span class="k">if</span> <span class="n">truth</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">mu</span><span class="p">,</span> <span class="n">P</span> <span class="o">=</span> <span class="n">world</span><span class="o">.</span><span class="n">prior</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="n">world</span><span class="o">.</span><span class="n">prior_cov</span><span class="o">.</span><span class="n">data</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">truth</span><span class="p">,</span> <span class="n">Vector</span><span class="p">):</span>
                 <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"truth must be a Vector, got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">truth</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">."</span><span class="p">)</span>
             <span class="n">mu</span> <span class="o">=</span> <span class="n">truth</span><span class="o">.</span><span class="n">values</span>
-            <span class="k">if</span> <span class="n">truth</span><span class="o">.</span><span class="n">space</span> <span class="o">!=</span> <span class="n">state</span><span class="p">:</span>
-                <span class="n">mu</span> <span class="o">=</span> <span class="n">mu</span><span class="p">[</span><span class="n">state</span><span class="o">.</span><span class="n">_align</span><span class="p">(</span><span class="n">truth</span><span class="o">.</span><span class="n">space</span><span class="p">,</span> <span class="s2">"truth"</span><span class="p">,</span> <span class="s2">"The truth and the prior"</span><span class="p">)]</span>
+            <span class="k">if</span> <span class="n">truth</span><span class="o">.</span><span class="n">space</span> <span class="o">!=</span> <span class="n">world_state</span><span class="p">:</span>
+                <span class="n">mu</span> <span class="o">=</span> <span class="n">mu</span><span class="p">[</span>
+                    <span class="n">world_state</span><span class="o">.</span><span class="n">_align</span><span class="p">(</span><span class="n">truth</span><span class="o">.</span><span class="n">space</span><span class="p">,</span> <span class="s2">"truth"</span><span class="p">,</span> <span class="s2">"The truth and the prior"</span><span class="p">)</span>
+                <span class="p">]</span>
             <span class="n">P</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># a fixed truth has no spread</span>
         <span class="c1"># The world's mean data minus what the problem's prior predicts</span>
         <span class="n">d</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="n">world</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">Vector</span><span class="p">(</span><span class="n">mu</span><span class="p">,</span> <span class="n">state</span><span class="p">))</span><span class="o">.</span><span class="n">values</span>
+            <span class="n">world</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">Vector</span><span class="p">(</span><span class="n">mu</span><span class="p">,</span> <span class="n">world_state</span><span class="p">))</span><span class="o">.</span><span class="n">values</span>
             <span class="o">-</span> <span class="n">problem</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">problem</span><span class="o">.</span><span class="n">prior</span><span class="p">)</span><span class="o">.</span><span class="n">values</span>
         <span class="p">)</span>
 
@@ -2755,16 +2797,30 @@
             <span class="n">WK</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_solution</span><span class="o">.</span><span class="n">gain</span><span class="p">()</span>  <span class="c1"># n x m</span>
             <span class="n">Wx0</span><span class="p">,</span> <span class="n">Wmu</span> <span class="o">=</span> <span class="n">problem</span><span class="o">.</span><span class="n">prior</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="n">mu</span>
             <span class="n">posterior_var</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">variances</span><span class="o">.</span><span class="n">values</span>
-            <span class="n">Wt</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">state</span><span class="p">))</span>  <span class="c1"># n x n: the per-element case</span>
+            <span class="n">Wt_post</span> <span class="o">=</span> <span class="n">Wt</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">state</span><span class="p">))</span>  <span class="c1"># n x n: the per-element case</span>
             <span class="n">index</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">index</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">W_form</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_aggregation</span><span class="p">(</span><span class="n">W</span><span class="p">)</span>
             <span class="n">WK</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_solution</span><span class="o">.</span><span class="n">gain</span><span class="p">(</span><span class="n">W_form</span><span class="p">)</span>  <span class="c1"># k x m</span>
             <span class="n">Wx0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">W_form</span> <span class="o">@</span> <span class="n">problem</span><span class="o">.</span><span class="n">prior</span><span class="o">.</span><span class="n">values</span><span class="p">)</span>
-            <span class="n">Wmu</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">W_form</span> <span class="o">@</span> <span class="n">mu</span><span class="p">)</span>
             <span class="n">posterior_var</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cov</span><span class="p">(</span><span class="n">W</span><span class="p">)</span><span class="o">.</span><span class="n">variances</span><span class="o">.</span><span class="n">values</span>
-            <span class="n">Wt</span> <span class="o">=</span> <span class="n">W_form</span><span class="o">.</span><span class="n">_transpose</span><span class="p">()</span><span class="o">.</span><span class="n">dense</span><span class="p">()</span>  <span class="c1"># n x k</span>
+            <span class="n">Wt_post</span> <span class="o">=</span> <span class="n">W_form</span><span class="o">.</span><span class="n">_transpose</span><span class="p">()</span><span class="o">.</span><span class="n">dense</span><span class="p">()</span>  <span class="c1"># n x k</span>
             <span class="n">index</span> <span class="o">=</span> <span class="n">W</span><span class="o">.</span><span class="n">rows</span><span class="o">.</span><span class="n">index</span>
+            <span class="k">if</span> <span class="n">W_world</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">Ww_form</span> <span class="o">=</span> <span class="n">W_form</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">W_world</span><span class="p">,</span> <span class="n">Operator</span><span class="p">):</span>
+                    <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">"W_world is an Operator, not </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">W_world</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">."</span>
+                    <span class="p">)</span>
+                <span class="n">Ww_form</span> <span class="o">=</span> <span class="n">W_world</span><span class="o">.</span><span class="n">_on</span><span class="p">(</span>
+                    <span class="n">W</span><span class="o">.</span><span class="n">rows</span><span class="p">,</span>
+                    <span class="n">world_state</span><span class="p">,</span>
+                    <span class="s2">"W_world"</span><span class="p">,</span>
+                    <span class="p">(</span><span class="s2">"the rows of W"</span><span class="p">,</span> <span class="s2">"the world's state"</span><span class="p">),</span>
+                <span class="p">)</span>
+            <span class="n">Wmu</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">Ww_form</span> <span class="o">@</span> <span class="n">mu</span><span class="p">)</span>
+            <span class="n">Wt</span> <span class="o">=</span> <span class="n">Ww_form</span><span class="o">.</span><span class="n">_transpose</span><span class="p">()</span><span class="o">.</span><span class="n">dense</span><span class="p">()</span>  <span class="c1"># n_w x k</span>
 
         <span class="n">estimate</span> <span class="o">=</span> <span class="n">Wx0</span> <span class="o">+</span> <span class="n">WK</span> <span class="o">@</span> <span class="n">d</span>
         <span class="n">bias</span> <span class="o">=</span> <span class="n">estimate</span> <span class="o">-</span> <span class="n">Wmu</span>
@@ -2779,7 +2835,7 @@
             <span class="n">scale</span> <span class="o">+=</span> <span class="n">_largest_variance</span><span class="p">(</span><span class="n">Gt</span><span class="p">,</span> <span class="n">P</span><span class="p">)</span>
         <span class="n">std</span> <span class="o">=</span> <span class="n">_std</span><span class="p">(</span><span class="n">variance</span><span class="p">,</span> <span class="n">scale</span><span class="p">,</span> <span class="s2">"error variances"</span><span class="p">)</span>
         <span class="n">prior_scale</span> <span class="o">=</span> <span class="n">_largest_variance</span><span class="p">(</span>
-            <span class="kc">None</span> <span class="k">if</span> <span class="n">W</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">Wt</span><span class="p">,</span> <span class="n">problem</span><span class="o">.</span><span class="n">prior_cov</span><span class="o">.</span><span class="n">data</span>
+            <span class="kc">None</span> <span class="k">if</span> <span class="n">W</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">Wt_post</span><span class="p">,</span> <span class="n">problem</span><span class="o">.</span><span class="n">prior_cov</span><span class="o">.</span><span class="n">data</span>
         <span class="p">)</span>
         <span class="n">posterior_std</span> <span class="o">=</span> <span class="n">_std</span><span class="p">(</span><span class="n">posterior_var</span><span class="p">,</span> <span class="n">prior_scale</span><span class="p">,</span> <span class="s2">"posterior variances"</span><span class="p">)</span>
 
