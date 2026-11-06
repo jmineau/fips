@@ -17,14 +17,16 @@ operator, prior covariance, ...) are defined in `docs/terminology.rst`.
 
 ## What fips is
 
-The **Flexible Inverse Problem Solver**: the exact Gaussian posterior of a
-*linear* inverse problem, `z = H x + c + e`, whose state and observations are
-labeled by pandas indexes in named blocks. Labels are matched, never positions;
-each matrix is kept in its cheapest form (dense, sparse, diagonal, Kronecker
-factors). Beta: the API may change between releases. PyPI and import name `fips`.
+The **Flexible Inverse Problem Solver**: the posterior of a linear inverse
+problem, `z = H x + c + e`, with a Gaussian prior and Gaussian errors, whose
+state and observations are labeled by pandas indexes in named blocks: exact
+without bounds; with bounds on the state, its mode and draws of the Gaussian
+truncated to the bounds. fips samples the posteriors it cannot give in closed
+form. Labels are matched, never positions; each matrix is kept in its cheapest
+form (dense, sparse, diagonal, Kronecker factors). Beta: the API may change
+between releases. PyPI and import name `fips`.
 
-It is not an MCMC sampler (a draw from a Gaussian covariance, `Covariance.sample`, is
-all it samples), not a nonlinear solver (the caller linearizes), not a file
+It is not a nonlinear solver (the caller linearizes), not a file
 format, and not tied to a science domain: a flux inversion is a `Problem` whose
 blocks are named `flux` and `concentration`, and its workflow, maps and STILT
 code live in its user's package (no domain subpackages, no lat/lon defaults, no
@@ -54,6 +56,8 @@ src/fips/
   methods/          solve, the method table (_METHODS), one module per method
     analytic.py     AnalyticOptions; its two Solutions, Whitened (m x m) and
                     Information (n x n); `_choose` picks the form by size
+    bounded.py      BoundedOptions; Bounded: the mode by an active set on the
+                    analytic posterior, draws by exact HMC (_Sampler)
   linalg/           the unlabeled forms (public as fips.linalg)
     forms.py        LinearOperator and the Dense-, Sparse- and DiagonalOperator it builds
     block.py        BlockDiagonalOperator
@@ -151,12 +155,19 @@ checks the labels and builds the models; `fips.solve(problem)` returns the
 
 A module `methods/<name>.py` with three things: its options (a frozen dataclass
 with a `gamma` field, values checked in `__post_init__`), its solution (answers
-`posterior.Solution`; `with_gamma`, `with_data`, `sample`, `estimate_is_mean`,
+`posterior.Solution`; `with_gamma`, `with_data`, `sample`, `at_bound`, `estimate_is_mean`,
 `estimate_is_linear`, and `innovation_precision` with `self_sensitivity` (for
 `Posterior.data_worth`) only if it can), and a function `(problem, options) -> Posterior`. Add a line to
 `_METHODS` in `methods/__init__.py`; its docstring says how a lognormal or an
-ensemble method fits. `tests/test_oracle.py` runs every method against the
-closed-form posterior and the permutation test.
+ensemble method fits. **A method's default options on a linear, unbounded
+problem give the analytic posterior** (`"bounded"` with no finite bound returns
+the analytic solution itself): `tests/test_oracle.py` runs every registered
+method, with its defaults, against the closed-form posterior and the
+permutation test. A method that samples is held to exact answers in small
+cases (`scipy.stats.truncnorm`, numerical integration) within Monte Carlo
+errors that count its draws' autocorrelation, to the rank of the truth among
+its draws in its own world (`tests/test_bounded.py`), and to a wrong variant
+that those tests must fail.
 
 ## Dev commands
 
@@ -204,8 +215,8 @@ fips owns the core solve (the labeled layer around a few `scipy.linalg` calls;
 an outside solver loses the labels) and delegates factorizations and storage to
 SciPy (`scipy.linalg`, `scipy.sparse`, `LinearOperator`, `eigsh`).
 pylops is read, not installed or copied (LGPL). GSTools only in an extra,
-if `covariance/kernels.py` outgrows its kernels. Never write a sampler: PyMC or CUQIpy and ArviZ if
-MCMC comes. The other inverse-problem libraries (pyOE, hippylib, pyemu, the
+if `covariance/kernels.py` outgrows its kernels. fips writes the samplers its
+methods need (exact HMC for the bounded posterior) on NumPy and SciPy. The other inverse-problem libraries (pyOE, hippylib, pyemu, the
 Yadav and Michalak code) are test oracles, not dependencies. A new runtime
 dependency needs a reason, proposed first.
 
@@ -264,3 +275,11 @@ dependency needs a reason, proposed first.
   `Operator` or a `Vector`, whose labels they would ignore: use `from_frame`,
   `align`, or `.data` / `.values`.
 - Check an optional pandas index with `is None`: its truth value raises.
+- **The bounded method needs `S_hat` only at some columns** (`_Columns`, from
+  `analytic._cov_times`, kept; one cache for every `with_data`): the active set's
+  and those the sampler's paths reach. They are computed in fixed blocks of 64
+  neighbors, since a product's last bits depend on its shape: a chain is then
+  the same after a pickle. The draws are made at the first `variances`/`cov`
+  and kept outside the frozen fields (not pickled). A draw costs one `O(n)`
+  reflection per bound its path reaches, about as many as there are elements
+  near a bound, so `trials` of a bounded posterior runs a sampler per trial.
