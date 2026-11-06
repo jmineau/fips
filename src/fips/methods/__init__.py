@@ -4,8 +4,10 @@ Solving an inverse problem: :func:`solve` and the methods it can use.
 Each method is registered under a name with the dataclass of its options,
 declared once: :func:`solve` checks the options a caller passes against it
 before anything is computed, and an unknown method or option raises with the
-names it knows. The one method is ``"analytic"`` (:mod:`fips.methods.analytic`),
-the closed-form Gaussian posterior.
+names it knows. The methods are ``"analytic"`` (:mod:`fips.methods.analytic`),
+the closed-form Gaussian posterior, and ``"bounded"``
+(:mod:`fips.methods.bounded`), that posterior with bounds on the state: its
+mode, and draws of the Gaussian truncated to the bounds.
 
 A method is a module here with three things, and a line in ``_METHODS``
 below:
@@ -19,7 +21,8 @@ below:
   ``chi2()``, ``misfits()`` and ``chi2_tests()``. It may also have
   ``with_gamma(gamma)`` and ``with_data(problem)``, which give another
   solution without solving again, ``sample(N, rng)``, which draws from the
-  posterior (``Posterior.sample``), ``estimate_is_mean = True`` when its
+  posterior (``Posterior.sample``), ``at_bound()``, which says which state
+  elements sit on a bound (``Posterior.at_bound``), ``estimate_is_mean = True`` when its
   estimate is the posterior mean, and ``estimate_is_linear = True`` when its
   estimate is :math:`x_0 + K (z - H x_0 - c)` with the gain of ``gain()``
   (what ``Posterior.recovery`` needs); a posterior whose solution lacks one
@@ -27,19 +30,27 @@ below:
 - a function from a :class:`~fips.Problem` and the options to
   ``Posterior(problem, solution, options)``.
 
+A method's default options on a linear problem with no bounds give the
+analytic posterior: ``tests/test_oracle.py`` runs every registered method,
+with its default options, against the closed form.
+
 The :class:`~fips.Posterior` puts the labels on, keeps each output, and
 writes everything else (the averaging kernel, the innovation covariance,
 Desroziers, leverage, the scalars, the summary) from those answers and the
 problem, so a new method gets them all. The analytic method's solution is
 ``Whitened`` or ``Information``, the factorization of its whitened
 (``m x m``) or information (``n x n``) system, whichever its size calls for.
-A method whose posterior is not Gaussian in closed form (a bounded or an iterated one) would keep
-its estimate (the mode) and the Gaussian of the problem linearized there, with any cells on a bound
-held at it, and answer from those (no ``estimate_is_mean``, and no ``estimate_is_linear``, since the
-mode is not linear in the data); an ensemble method would keep its posterior ensemble and answer
-from the sample mean and covariance (``estimate_is_mean = True``). Neither an iterated nor an
-ensemble method can change gamma without solving again, so neither has ``with_gamma``. A method imports
-:mod:`fips.posterior`; :mod:`fips.posterior` never imports a method.
+The bounded method's solution (``fips.methods.bounded.Bounded``) holds the
+analytic one and the mode, and answers the variances from draws of its
+truncated posterior and the gain from the Gaussian at the mode; it has no
+``estimate_is_mean`` and no ``estimate_is_linear`` (the mode is not linear in
+the data), and its ``with_gamma`` and ``with_data`` find the mode again on the
+analytic factors. An iterated method (a lognormal flux) would keep its mode
+and the Gaussian of the problem linearized there; an ensemble method would keep
+its posterior ensemble and answer from the sample mean and covariance
+(``estimate_is_mean = True``). Neither an iterated nor an ensemble method can
+change gamma without solving again, so neither has ``with_gamma``. A method
+imports :mod:`fips.posterior`; :mod:`fips.posterior` never imports a method.
 """
 
 import logging
@@ -48,6 +59,7 @@ from dataclasses import dataclass, fields
 from typing import Any
 
 from fips.methods.analytic import AnalyticOptions, _analytic
+from fips.methods.bounded import BoundedOptions, _bounded
 from fips.posterior import Posterior
 from fips.problem import Problem
 
@@ -62,7 +74,10 @@ class _Method:
     solve: Callable[[Problem, Any], Posterior]
 
 
-_METHODS: dict[str, _Method] = {"analytic": _Method(AnalyticOptions, _analytic)}
+_METHODS: dict[str, _Method] = {
+    "analytic": _Method(AnalyticOptions, _analytic),
+    "bounded": _Method(BoundedOptions, _bounded),
+}
 """The methods by name."""
 
 
@@ -90,10 +105,13 @@ def solve(problem: Problem, method: str = "analytic", **options: Any) -> Posteri
         The problem to solve.
     method : str, default "analytic"
         The name of a method (see :func:`available_methods`). ``"analytic"``
-        is the closed-form Gaussian posterior.
+        is the closed-form Gaussian posterior; ``"bounded"`` the posterior
+        with bounds on the state.
     **options
         The method's options, by name: for ``"analytic"``, ``gamma`` (see
-        :class:`~fips.methods.analytic.AnalyticOptions`).
+        :class:`~fips.methods.analytic.AnalyticOptions`); for ``"bounded"``,
+        ``gamma``, ``lower``, ``upper``, ``draws``, ``burn_in`` and ``seed``
+        (see :class:`~fips.methods.bounded.BoundedOptions`).
 
     Returns
     -------

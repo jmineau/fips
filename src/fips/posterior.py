@@ -53,7 +53,7 @@ class Solution(Protocol):
     observations (``problem.obs``). The posterior labels them, and computes
     each one once.
 
-    Five members are optional, and a posterior whose solution lacks one says
+    Six members are optional, and a posterior whose solution lacks one says
     so when it is asked for the feature:
 
     - ``with_gamma(gamma) -> Solution``: the solution at another
@@ -69,6 +69,8 @@ class Solution(Protocol):
     - ``sample(N, rng) -> np.ndarray``: ``N`` draws from the posterior, one per
       column (``n x N``), made with the :class:`numpy.random.Generator`
       `rng` (:meth:`Posterior.sample`).
+    - ``at_bound() -> np.ndarray``: which state elements sit on a bound at the
+      estimate, booleans (``n``; :attr:`Posterior.at_bound`).
 
     And a solution whose :meth:`estimate` is the posterior mean says so with a
     class attribute ``estimate_is_mean = True``; without it, a posterior has
@@ -78,11 +80,15 @@ class Solution(Protocol):
     ``estimate_is_linear = True``; without it, a posterior has no
     :meth:`~Posterior.recovery`.
 
-    A method whose posterior is not Gaussian in closed form (a bounded or an
-    iterated one) answers these questions at its estimate: from the Gaussian
-    of the problem linearized there, with any cells on a bound held at it. Its
-    answers are then approximations, and :meth:`Posterior.trials` measures
-    how good they are.
+    A method whose posterior is not Gaussian in closed form answers each
+    question as its docstring says. The bounded method's estimate is the mode;
+    its variances and covariances are those of draws of its posterior (a
+    Gaussian truncated to the bounds); its gain, DOFS and information content
+    are those of the Gaussian at the mode, with the elements on a bound held
+    there; and its chi-squared terms are those of the mode. An iterated method
+    would answer from the Gaussian of the problem linearized at its estimate.
+    Such answers are estimates or approximations, and
+    :meth:`Posterior.trials` measures how good they are.
 
     See Also
     --------
@@ -377,11 +383,18 @@ class Posterior:
     (:attr:`innovation_cov`); what needs neither is on the
     :class:`~fips.Problem` (:meth:`~fips.Problem.predict`).
 
-    Every member works for every method, except four that need more of the
+    Every member works for every method, except those that need more of the
     method than a :class:`Solution` gives: :attr:`mean` (where the estimate is
     the mean), :meth:`with_gamma` and :meth:`with_data` (where the method can
-    answer without solving again), and :meth:`recovery` (where the estimate is
-    linear in the observations). The analytic method has all four.
+    answer without solving again), :meth:`recovery` and
+    :meth:`candidate_worth` (where the estimate is linear in the
+    observations), :meth:`data_worth`, :meth:`sample` (where the method can
+    draw from its posterior) and :attr:`at_bound` (where it has bounds). The
+    analytic method has all but :attr:`at_bound`. The ``"bounded"`` method
+    (:class:`~fips.methods.bounded.BoundedOptions`) has :meth:`with_gamma`,
+    :meth:`with_data`, :meth:`sample` and :attr:`at_bound`; its estimate is
+    the mode of the posterior with bounds on the state, and its variances are
+    those of draws of that posterior.
 
     Parameters
     ----------
@@ -530,7 +543,11 @@ class Posterior:
         The posterior error variances, the diagonal of :math:`\hat{S}`.
 
         The analytic method computes them from its factors in
-        :math:`O(m n)`, without the :math:`n \times n` covariance.
+        :math:`O(m n)`, without the :math:`n \times n` covariance. The
+        ``"bounded"`` method gives the variances of its kept draws of the
+        truncated posterior (``draws`` of them: a Monte Carlo estimate, a
+        standard deviation good to about 2% at the default 2000), about
+        their mean, not about the mode.
 
         See Also
         --------
@@ -538,6 +555,78 @@ class Posterior:
         """
         values = self._solution.variances()
         return Vector(values, self._problem.prior.space, name="variance")
+
+    @cached_property
+    def at_bound(self) -> pd.Series:
+        r"""
+        Which state elements sit on a bound at the estimate: True where one does.
+
+        A method with bounds on the state (``"bounded"``) moves an element that
+        the analytic estimate puts outside its bounds onto the bound, and may
+        hold others there that the move would push out. These are the elements
+        the bounds decide; the observations decide the others. Its estimate is
+        the mode, so an element on a bound still has posterior spread
+        (:attr:`variances`, from draws of the truncated posterior), on one side
+        of the bound.
+
+        Returns
+        -------
+        pandas.Series
+            Booleans on the state's labels, named ``at_bound``; its sum is the
+            number of elements on a bound.
+
+        Raises
+        ------
+        TypeError
+            If the method has no bounds (its solution has no ``at_bound``),
+            as for the analytic method, and for ``"bounded"`` when no finite
+            bound is given (its posterior is then the analytic one).
+
+        See Also
+        --------
+        estimate : The estimate, the mode for a bounded method.
+        fips.methods.bounded.BoundedOptions : The bounds.
+
+        Examples
+        --------
+        Three cells seen through two sums, :math:`a + b = -0.4` and :math:`b
+        + c = 1.2`. Without a bound, ``a`` goes below zero. Held at or above
+        zero, ``a`` goes to its bound and ``b``, which the first sum ties to
+        it, is held there too; ``c`` moves up by what the second sum says
+        ``b`` gave:
+
+        >>> import numpy as np
+        >>> import pandas as pd
+        >>> import fips
+        >>> cells = pd.Index(["a", "b", "c"], name="cell")
+        >>> prior = fips.Vector.from_series(pd.Series(0.5, index=cells), block="flux")
+        >>> obs = fips.Vector(
+        ...     np.array([-0.4, 1.2]),
+        ...     fips.Space({"co2": pd.Index(["o1", "o2"], name="obs_id")}),
+        ... )
+        >>> problem = fips.Problem(
+        ...     prior=prior,
+        ...     prior_cov=fips.Independent().with_std(0.5),
+        ...     obs=obs,
+        ...     obs_cov=fips.Independent().with_std(0.1),
+        ...     forward=fips.Operator(
+        ...         np.array([[1.0, 1.0, 0.0], [0.0, 1.0, 1.0]]), obs.space, prior.space
+        ...     ),
+        ... )
+        >>> fips.solve(problem).estimate.values.round(3)
+        array([-0.467,  0.105,  1.072])
+        >>> post = fips.solve(problem, "bounded", lower=0.0)
+        >>> post.estimate.values.round(3)
+        array([0.   , 0.   , 1.173])
+        >>> post.at_bound.tolist()
+        [True, True, False]
+        """
+        at = self._optional("at_bound", "which state elements sit on a bound")
+        return pd.Series(
+            np.asarray(at(), dtype=bool),
+            index=self._problem.prior.index,
+            name="at_bound",
+        )
 
     def _aggregation(self, W: Operator) -> LinearOperator:
         """
@@ -589,7 +678,9 @@ class Posterior:
             Without `W`, :math:`\hat{S}`, dense, ``n x n`` (formed once, the
             same object each time). With `W`, :math:`W \hat{S} W^T` on the
             aggregation's rows, ``k x k``, computed without the ``n x n``
-            covariance.
+            covariance. For the ``"bounded"`` method, the covariance of its
+            kept draws of the truncated posterior (or of the draws
+            aggregated, :math:`W x`): a Monte Carlo estimate.
 
         Raises
         ------
@@ -789,6 +880,16 @@ class Posterior:
         held as a ``state x n`` array: for many draws of a large state, ask
         for them in blocks (each call with its own generator, or the same one
         passed along).
+
+        The ``"bounded"`` method draws its posterior, the Gaussian truncated
+        to the bounds, by exact Hamiltonian Monte Carlo (Pakman and Paninski,
+        2014): each call runs a chain from the mode, leaves out its first
+        ``burn_in`` draws, and returns the next `n`. Each draw starts from the
+        last, so the draws are correlated (in the tests, about one effective
+        draw per draw for most elements, one per four or five for an element
+        whose analytic estimate is far outside its bound). A call costs a
+        reflection off a bound, an ``O(n)`` step, for each bound a path
+        reaches: about as many per draw as there are elements near a bound.
 
         Parameters
         ----------
