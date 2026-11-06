@@ -180,6 +180,14 @@ The posterior also has these statistics:
      - ``post.desroziers(by=...)``
      - The observation error variances the residuals :math:`z - H \hat{x} - c`
        and the innovation diagnose, beside those the solve used.
+   * - synthetic experiment (OSSE)
+     - ``problem.simulate``, ``post.with_data``, ``post.recovery``
+     - A test on data whose answer is known: a *world* makes a truth and its
+       observations, the inversion solves them with its own assumptions, and
+       the error of each total is read as its bias, spread and coverage.
+       Called an observing system simulation experiment (OSSE) in atmospheric
+       science, a twin experiment in oceanography and a simulation study in
+       statistics; :doc:`/user_guide/synthetic` is the guide.
 
 .. _fips-words:
 
