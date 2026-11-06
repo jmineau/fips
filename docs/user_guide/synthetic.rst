@@ -297,7 +297,7 @@ and the loop above takes either. Two worlds a real experiment needs and a
 ``Problem`` cannot describe: a truth that is lognormal about the prior (so it
 stays positive and its spread scales with the prior), and an error the
 inversion cannot see, such as a transport error that scales every observation
-of a trial by one factor. Each is a few lines:
+of a trial by one factor. Each is a few lines, since vectors do arithmetic by label:
 
 .. ipython:: python
 
