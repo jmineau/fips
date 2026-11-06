@@ -480,6 +480,18 @@ class Posterior:
         self._options = state["options"]
         self._solution = state["solution"]
 
+    @cached_property
+    def _linear(self) -> Problem:
+        """
+        The linear problem the gain, the averaging kernel and the innovation covariance are of.
+
+        The posterior's own problem, or, for a method that solves a problem
+        with a forward model, the problem linearized where its last solve was
+        made (the solution's ``linearized``).
+        """
+        linearized = getattr(self._solution, "linearized", None)
+        return self._problem if linearized is None else linearized()
+
     def _optional(self, name: str, feature: str) -> Any:
         """
         Return the solution's optional member `name`.
@@ -1140,7 +1152,7 @@ class Posterior:
         var_with = self.cov(W).variances.values
         shares = sensitivity()
         # the prior side of the alone column: W S_0 and the group's rows of H
-        prior_cov, H = self._problem.prior_cov.data, self._problem.forward.data
+        prior_cov, H = self._problem.prior_cov.data, self._linear._operator.data
         R = self._problem.obs_cov.data
         prior = self._problem.prior_cov.aggregate(W).variances.values
         WS_0 = W_form @ prior_cov
@@ -1354,7 +1366,7 @@ class Posterior:
     @cached_property
     def _averaging_kernel(self) -> Operator:
         """The full averaging kernel, formed once."""
-        A = self.kalman_gain.dense() @ self._problem.forward.data
+        A = self.kalman_gain.dense() @ self._linear._operator.data
         space = self._problem.prior.space
         return Operator(_adopt(A), space, space, name="averaging_kernel")
 
@@ -1398,7 +1410,7 @@ class Posterior:
             return self._averaging_kernel
         W_form = self._aggregation(W)
         WK = self._solution.gain(W_form)  # k x m
-        HWt = np.asarray(self._problem.forward.data @ W_form.T)  # m x k
+        HWt = np.asarray(self._linear._operator.data @ W_form.T)  # m x k
         values = _times_pseudo_inverse(WK @ HWt, W_form)
         return Operator(_adopt(values), W.rows, W.rows, name="averaging_kernel")
 
@@ -1423,7 +1435,7 @@ class Posterior:
     @cached_property
     def _HS_0H(self) -> LinearOperator:
         r""":math:`H S_0 H^T`, in the cheapest form of its factors."""
-        H = self._problem.forward.data
+        H = self._linear._operator.data
         return (H @ self._problem.prior_cov.data) @ H._transpose()
 
     @cached_property
@@ -2501,6 +2513,13 @@ class Posterior:
             if world is None
             else self._on_labels(world, own_state=W_world is not None)
         )
+        if not isinstance(world.forward, Operator):
+            raise TypeError(
+                "recovery's exact answer needs a world whose forward is a linear "
+                f"operator, and this world's is a model, {type(world.forward).__name__}: "
+                "a model's data are not Gaussian. Measure the error by sampling, "
+                "with Posterior.trials(world)."
+            )
         state, world_state = problem.prior.space, world.prior.space
         if truth is None:
             mu, P = world.prior.values, world.prior_cov.data
@@ -2556,7 +2575,7 @@ class Posterior:
         scale = _largest_variance(KT, world.obs_cov.data)
         if P is not None:
             # G^T = (W K H_w - W)^T = H_w^T (W K)^T - W^T, n x k
-            Gt = np.asarray(world.forward.data._transpose() @ KT) - Wt
+            Gt = np.asarray(world._operator.data._transpose() @ KT) - Wt
             variance += np.einsum("ik,ik->k", Gt, np.asarray(P @ Gt))
             scale += _largest_variance(Gt, P)
         std = _std(variance, scale, "error variances")

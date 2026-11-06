@@ -555,3 +555,163 @@ class TestOperatorsAreNotCopiedAgain:
         before = fips.solve(problem).estimate.values
         H.fill(-1.0)
         np.testing.assert_array_equal(fips.solve(problem).estimate.values, before)
+
+
+class Quadratic(fips.ForwardModel):
+    """``F(x) = H x + (H x)^2 / 2``, the Jacobian ``diag(1 + H x) H``; at the top level, so it pickles."""
+
+    def __init__(self, H: Operator, rows: Space | None = None):
+        super().__init__(H.rows if rows is None else rows, H.cols)
+        self.H = H
+
+    def __call__(self, x):
+        Hx = self.H @ x
+        return (Hx + Hx * Hx / 2.0).align(self.rows)
+
+    def jacobian(self, x):
+        Hx = self.H @ x
+        scale = Operator(DiagonalOperator(1.0 + Hx.values), self.H.rows, self.H.rows)
+        return scale @ self.H
+
+
+class TestForwardModel:
+    """A problem whose forward is a model: its labels are checked, and predict, simulate, linearized and aggregate run it."""
+
+    X = Vector([1.0, -1.0, 2.0, 0.5, 0.2], STATE)
+
+    def problem(self, **changes) -> Problem:
+        H = Operator(H_VALUES, OBS, STATE, name="H")
+        return Problem(**_inputs(forward=Quadratic(H), offset=0.5, **changes))
+
+    @staticmethod
+    def F(x: np.ndarray) -> np.ndarray:
+        Hx = H_VALUES @ x
+        return Hx + Hx**2 / 2.0
+
+    def test_predict_and_simulate_run_the_model(self):
+        problem = self.problem()
+        np.testing.assert_allclose(
+            problem.predict(self.X).values, self.F(self.X.values) + 0.5
+        )
+        truth, obs = problem.simulate(rng=3, truth=self.X)
+        noise = problem.obs_cov.sample(np.random.default_rng(3)).values
+        np.testing.assert_allclose(obs.values, self.F(self.X.values) + 0.5 + noise)
+        assert problem.forward.__class__ is Quadratic
+
+    def test_a_model_on_labels_in_another_order_is_called_in_its_own(self):
+        H = Operator(H_VALUES, OBS, STATE).align(_reversed(OBS), _reversed(STATE))
+        problem = Problem(**_inputs(forward=Quadratic(H), offset=0.5))
+        np.testing.assert_allclose(
+            problem.predict(self.X).values, self.F(self.X.values) + 0.5
+        )
+        linear = problem.linearized(self.X)
+        assert linear.forward.rows is OBS and linear.forward.cols is STATE
+
+    def test_linearized_is_the_tangent_problem(self):
+        problem = self.problem()
+        linear = problem.linearized(self.X)
+        J = (1.0 + H_VALUES @ self.X.values)[:, None] * H_VALUES
+        assert type(linear) is Problem and isinstance(linear.forward, Operator)
+        np.testing.assert_allclose(linear.forward.dense(), J)
+        np.testing.assert_allclose(
+            linear.offset.values, 0.5 + self.F(self.X.values) - J @ self.X.values
+        )
+        # at x itself it predicts what the model does
+        np.testing.assert_allclose(
+            linear.predict(self.X).values, problem.predict(self.X).values
+        )
+        assert linear.prior is problem.prior and linear.obs is problem.obs
+        reordered = self.X.align(_reversed(STATE))
+        np.testing.assert_array_equal(
+            problem.linearized(reordered).offset.values, linear.offset.values
+        )
+
+    def test_a_linear_problem_is_its_own_linearization(self):
+        problem = Problem(**_inputs())
+        assert problem.linearized(self.X) is problem
+
+    def test_aggregate_follows_the_model_with_the_aggregation(self):
+        problem = self.problem()
+        W = Operator(
+            np.array([[0.5, 0.5, 0.0], [0.0, 0.0, 1.0]]),
+            Space({"daily": pd.Index(["d1", "d2"], name="day")}),
+            OBS,
+        )
+        daily = problem.aggregate(W)
+        assert isinstance(daily.forward, fips.ForwardModel)
+        np.testing.assert_allclose(
+            daily.predict(self.X).values,
+            W.dense() @ (self.F(self.X.values) + 0.5),
+        )
+        J = (1.0 + H_VALUES @ self.X.values)[:, None] * H_VALUES
+        np.testing.assert_allclose(
+            daily.linearized(self.X).forward.dense(), W.dense() @ J
+        )
+        assert fips.taylortest(daily.forward, self.X)
+        loaded = pickle.loads(pickle.dumps(daily))
+        np.testing.assert_array_equal(
+            loaded.predict(self.X).values, daily.predict(self.X).values
+        )
+
+    def test_restrict_refuses_a_model(self):
+        with pytest.raises(TypeError, match=r"restrict needs a linear.*linearized"):
+            self.problem().restrict(Space({"flux": CELLS}))
+
+    def test_what_needs_an_operator_refuses_a_model(self):
+        with pytest.raises(TypeError, match=r"gauss_newton.*linearized"):
+            _ = self.problem()._operator
+
+    def test_a_model_on_other_labels_raises(self):
+        H = Operator(H_VALUES[:2], Space({"a": OBS_A}), STATE)
+        with pytest.raises(
+            ValueError,
+            match=r"The rows of forward and the observations do not have the same "
+            r"labels: blocks missing from the rows of forward: 'b'",
+        ):
+            Problem(**_inputs(forward=Quadratic(H)))
+        other_state = Space({"flux": CELLS, "bias": pd.Index(["A", "C"], name="site")})
+        H = Operator(H_VALUES, OBS, other_state)
+        with pytest.raises(ValueError, match=r"The columns of forward and the prior"):
+            Problem(**_inputs(forward=Quadratic(H)))
+
+    def test_a_model_that_returns_other_labels_raises(self):
+        H = Operator(H_VALUES, OBS, STATE)
+        other = Space({"a": OBS_A, "b": pd.Index(["o9"], name="obs_id")})
+
+        class Wrong(Quadratic):
+            def __call__(self, x):
+                return Vector(super().__call__(x).values, other)
+
+        problem = Problem(**_inputs(forward=Wrong(H)))
+        with pytest.raises(
+            ValueError, match=r"What Wrong.__call__ returns and its rows do not"
+        ):
+            problem.predict(self.X)
+
+    def test_a_model_that_returns_other_types_raises(self):
+        H = Operator(H_VALUES, OBS, STATE)
+
+        class Array(Quadratic):
+            def __call__(self, x):
+                return super().__call__(x).values
+
+        class Matrix(Quadratic):
+            def jacobian(self, x):
+                return super().jacobian(x).dense()
+
+        with pytest.raises(TypeError, match=r"Array.__call__ must return a Vector"):
+            Problem(**_inputs(forward=Array(H))).predict(self.X)
+        with pytest.raises(TypeError, match=r"Matrix.jacobian must return an Operator"):
+            Problem(**_inputs(forward=Matrix(H))).linearized(self.X)
+
+    def test_a_model_without_its_spaces_or_a_wrong_forward_raises(self):
+        class NoInit(Quadratic):
+            def __init__(self, H):
+                self.H = H
+
+        with pytest.raises(TypeError, match=r"super\(\).__init__\(rows, cols\)"):
+            Problem(**_inputs(forward=NoInit(Operator(H_VALUES, OBS, STATE))))
+        with pytest.raises(TypeError, match="an Operator or a ForwardModel"):
+            Problem(**_inputs(forward=H_VALUES))
+        with pytest.raises(TypeError, match="rows must be a Space"):
+            Quadratic(Operator(H_VALUES, OBS, STATE), rows=OBS_A)

@@ -54,6 +54,7 @@ from fips.linalg import (
     SparseOperator,
 )
 from fips.linalg.forms import _dense_correlation_condition, _read_only
+from fips.operator import Operator
 from fips.posterior import Posterior
 from fips.problem import Problem
 
@@ -285,7 +286,7 @@ class _Factors:
         error = np.asarray(
             obs_root @ rng.standard_normal((obs_root.shape[1], N)), dtype=float
         ) / math.sqrt(self.gamma)
-        innovations = np.asarray(problem.forward.data @ delta) + error  # m x N
+        innovations = np.asarray(problem._operator.data @ delta) + error  # m x N
         return self.estimate()[:, None] + delta - self._gain_times(innovations)
 
     def misfits(self) -> tuple[float, float]:
@@ -303,7 +304,7 @@ class _Factors:
         problem = self.problem
         u = self._innovation_precision_times()
         data = float(u @ np.asarray(problem.obs_cov.data @ u)) / self.gamma**2
-        Htu = np.asarray(problem.forward.data._transpose() @ u)
+        Htu = np.asarray(problem._operator.data._transpose() @ u)
         state = float(Htu @ np.asarray(problem.prior_cov.data @ Htu))
         return data, state
 
@@ -484,7 +485,7 @@ class Whitened(_Factors):
         numpy.linalg.LinAlgError
             If the model-data mismatch is not positive-definite.
         """
-        H = problem.forward.data
+        H = problem._operator.data
         S_0 = problem.prior_cov.data
         HS_0 = H @ S_0
         HS_0H = HS_0 @ H._transpose()
@@ -587,7 +588,7 @@ class Whitened(_Factors):
         :math:`A_{jj} = \sum_k (W_f)_{kj} w_k (B H)_{kj}`: one product of
         :math:`H` with the whitener (``m x n``, through :math:`H`'s form).
         """
-        H = self.problem.forward.data
+        H = self.problem._operator.data
         BH = np.asarray(H._transpose() @ self.whitener.T).T  # B H, m x n
         return np.einsum("k,kj,kj->j", self.weights(), self.W, BH)
 
@@ -661,7 +662,7 @@ class Whitened(_Factors):
         """
         assert self.eigenvalues is not None  # _increment_chi2_at eigendecomposes first
         HQy = np.asarray(
-            self.problem.forward.data @ (self.problem.prior_cov.data @ y), dtype=float
+            self.problem._operator.data @ (self.problem.prior_cov.data @ y), dtype=float
         )
         with np.errstate(divide="ignore", invalid="ignore"):
             return (self.whitener @ HQy) / np.sqrt(self.eigenvalues)
@@ -777,7 +778,7 @@ class Information(_Factors):
             If the prior error covariance has no square root (it is not
             positive-definite to working precision).
         """
-        H = problem.forward.data
+        H = problem._operator.data
         S_z = problem.obs_cov.data
         try:
             S_z.logdet()  # raises unless positive-definite
@@ -849,7 +850,7 @@ class Information(_Factors):
         ``n x n``.
         """
         _, Z = self._weighted_obs()
-        HtZ = np.asarray(self.problem.forward.data._transpose() @ Z)
+        HtZ = np.asarray(self.problem._operator.data._transpose() @ Z)
         return np.einsum("ik,k,ik->i", self.G, self.weights(), HtZ)
 
     def gain(self, W: LinearOperator | None = None) -> np.ndarray:
@@ -859,7 +860,7 @@ class Information(_Factors):
         :math:`S_z^{-1} H G` (``m x n``) is formed for each call.
         """
         problem = self.problem
-        HG = np.asarray(problem.forward.data @ self.G)
+        HG = np.asarray(problem._operator.data @ self.G)
         Z = problem.obs_cov.data.solve(HG)
         WG = self.G if W is None else np.asarray(W @ self.G)
         return (WG * self.weights()) @ Z.T
@@ -876,7 +877,7 @@ class Information(_Factors):
         H^T u`, so :math:`(H S_0 H^T + S_z/\gamma) \gamma S_z^{-1} r = d`.
         """
         problem = self.problem
-        r = _innovation(problem) - problem.forward.data @ self._increment()
+        r = _innovation(problem) - problem._operator.data @ self._increment()
         return self.gamma * np.asarray(problem.obs_cov.data.solve(r))
 
     def _chi2_terms(self, kept: np.ndarray) -> np.ndarray:
@@ -895,7 +896,7 @@ class Information(_Factors):
 
     def _weighted_obs(self) -> tuple[np.ndarray, np.ndarray]:
         r"""Return :math:`H G` and :math:`Z = S_z^{-1} H G` (both ``m x n``)."""
-        HG = np.asarray(self.problem.forward.data @ self.G)
+        HG = np.asarray(self.problem._operator.data @ self.G)
         return HG, np.asarray(self.problem.obs_cov.data.solve(HG))
 
     def innovation_precision(self, groups: Sequence[np.ndarray]) -> list[np.ndarray]:
@@ -950,7 +951,7 @@ class Information(_Factors):
         r"""Return :math:`K D = G (w \circ (G^T H^T S_z^{-1} D))`: ``with_data``'s product (``_carried``) for a block of innovations."""
         problem = self.problem
         Y = np.asarray(problem.obs_cov.data.solve(D))
-        HtY = np.asarray(problem.forward.data._transpose() @ Y)
+        HtY = np.asarray(problem._operator.data._transpose() @ Y)
         return self.G @ (self.weights()[:, None] * (self.G.T @ HtY))
 
     def _cov_times(self, V: np.ndarray) -> np.ndarray:
@@ -965,7 +966,7 @@ class Information(_Factors):
         S_0 H^T P V` with :math:`P` the inverse, so :math:`V - H K V = (S_z /
         \gamma) P V`.
         """
-        HKV = np.asarray(self.problem.forward.data @ self._gain_times(V), dtype=float)
+        HKV = np.asarray(self.problem._operator.data @ self._gain_times(V), dtype=float)
         return self.gamma * np.asarray(self.problem.obs_cov.data.solve(V - HKV))
 
     def _whitened_increment(self, y: np.ndarray) -> np.ndarray:
@@ -1001,7 +1002,7 @@ def _innovation(problem: Problem) -> np.ndarray:
 def _carried(problem: Problem, G: np.ndarray) -> np.ndarray:
     r"""Return :math:`b = G^T H^T S_z^{-1} d`, the innovation carried into the information form's eigenvectors."""
     y = problem.obs_cov.data.solve(_innovation(problem))
-    return G.T @ (problem.forward.data._transpose() @ y)
+    return G.T @ (problem._operator.data._transpose() @ y)
 
 
 def _decompose(
@@ -1144,7 +1145,7 @@ def _choose(problem: Problem) -> tuple[type, str]:
     diagonal or Kronecker; otherwise the whitened form. The tests replace this
     function to hold both forms to the same outputs.
     """
-    m, n = problem.forward.data.shape
+    m, n = problem._operator.data.shape
     S_z = problem.obs_cov.data
     if n >= m:
         return (
@@ -1188,7 +1189,7 @@ def _factor(problem: Problem, gamma: float) -> "Whitened | Information":
             logger.debug("The analytic method uses the information form: %s.", why)
             return solution
     logger.debug("The analytic method uses the whitened form: %s.", why)
-    m, n = problem.forward.data.shape
+    m, n = problem._operator.data.shape
     if m > _LARGE_M and m > 2 * n:
         logger.warning(
             "The whitened form factors an m x m matrix, with m = %d "
@@ -1204,4 +1205,12 @@ def _factor(problem: Problem, gamma: float) -> "Whitened | Information":
 
 def _analytic(problem: Problem, options: AnalyticOptions) -> Posterior:
     """Factor the problem once, in the form its size calls for; the posterior asks the factors for everything."""
+    if not isinstance(problem.forward, Operator):
+        raise TypeError(
+            "The analytic method solves a linear problem, and this problem's "
+            f"forward is a model, {type(problem.forward).__name__}. Find the "
+            'posterior mode with fips.solve(problem, "gauss_newton"), which '
+            "solves the problem linearized at each estimate in turn, or solve the "
+            "linearization at one state x yourself, fips.solve(problem.linearized(x))."
+        )
     return Posterior(problem, _factor(problem, options.gamma), options)
