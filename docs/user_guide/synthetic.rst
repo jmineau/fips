@@ -358,7 +358,7 @@ the estimate and another ``W`` on the truth; ``recovery`` takes the second as
 ``W_world``, and the error of each total, :math:`W \hat{x} - W_w x`, keeps its
 closed form.
 
-The question paper 1 asked this way: does an annual inversion, fed a year of
+The question a year of data raises: does an annual inversion, fed the
 observations of a seasonal flux, recover the mean flux, or does it alias the
 season through a footprint that is stronger in some months? The annual
 inversion has one flux per cell, and its forward operator is the monthly one
@@ -381,8 +381,8 @@ identity on the annual state, the mean over the months on the monthly one.
    W_monthly = fips.aggregate.mean(prior.space, by="x")  # the mean over the months
 
 A truth of 1.5 times the prior with a season (one month at 1.3 times its mean,
-the other two at 0.85) and no noise, as paper 1 did it, against the same truth
-recovered by the monthly inversion and averaged over the months:
+the other two at 0.85) and no noise, against the same truth recovered by the
+monthly inversion and averaged over the months:
 
 .. ipython:: python
 
