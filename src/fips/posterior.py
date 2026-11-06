@@ -20,6 +20,8 @@ is on the problem.
 
 import dataclasses
 import logging
+import numbers
+from collections.abc import Callable
 from functools import cached_property
 from typing import Any, ClassVar, Protocol
 
@@ -2186,6 +2188,7 @@ class Posterior:
 
         See Also
         --------
+        trials : The same question answered by sampling, for any world.
         fips.Problem.simulate : One draw of a truth and its observations.
         with_data : The posterior of one draw's observations.
         cov : The posterior covariance, of the state or of aggregates.
@@ -2342,4 +2345,221 @@ class Posterior:
                 "coverage": coverage,
             },
             index=index,
+        )
+
+    def trials(
+        self,
+        world: "Problem | Callable[[np.random.Generator], tuple[Vector, Vector]] | None" = None,
+        n: int = 400,
+        rng: "int | np.random.Generator | None" = None,
+        *,
+        W: Operator | None = None,
+        W_world: Operator | None = None,
+    ) -> pd.DataFrame:
+        r"""
+        Return the truth and the estimate of each total in `n` trials of data made by `world`: the sampled :meth:`recovery`.
+
+        Each trial, the world makes a truth and its observations, this
+        posterior solves the observations with its own assumptions
+        (:meth:`with_data`, one product), and the totals of the two go into
+        one row per total. The table is the loop :meth:`recovery` answers
+        exactly, kept trial by trial, for what the exact answer cannot take: a
+        world whose truth is not Gaussian or whose error is not additive, a
+        statistic of each trial (its reduced chi-squared), or a method whose
+        estimate is not linear in the observations. Where both apply, the
+        table's bias, spread and coverage agree with ``recovery`` within their
+        Monte Carlo standard errors.
+
+        Parameters
+        ----------
+        world : Problem or callable, optional
+            What makes the data. A :class:`~fips.Problem` makes them with
+            :meth:`~fips.Problem.simulate` (a truth drawn from its prior, the
+            observations with its error); its observations must have this
+            posterior's labels, in any order, and its state this posterior's
+            unless `W_world` is given. Or a function of a
+            :class:`numpy.random.Generator` that returns ``(truth, obs)``, two
+            :class:`~fips.Vector`: a lognormal truth, an error the inversion
+            cannot see. By default the posterior's own problem.
+        n : int, default 400
+            The number of trials. With 400, a bias is known to a twentieth of
+            the spread and a coverage near 0.95 to about 0.01.
+        rng : int, numpy.random.Generator or None, default None
+            A seed, or the generator to draw from, as
+            :meth:`~fips.Problem.simulate` takes it. The same seed gives two
+            posteriors the same data, trial for trial, so their tables pair.
+        W : Operator, optional
+            An aggregation, as :meth:`recovery` takes it: one row per total.
+            By default, one row per state element.
+        W_world : Operator, optional
+            The aggregation of the world's state to the same totals, as
+            :meth:`recovery` takes it, for a world whose state has other
+            labels than the posterior's.
+
+        Returns
+        -------
+        pandas.DataFrame
+            One row per trial and total, indexed by ``trial`` (0 to ``n - 1``)
+            and then the rows of `W` (or the state's labels): ``truth``
+            (:math:`W_w x`), ``estimate`` (:math:`W \hat{x}`),
+            ``posterior_std`` (the spread the posterior claims,
+            :math:`\sqrt{\operatorname{diag} W \hat{S} W^T}`, the same in
+            every trial of a linear method) and ``reduced_chi2`` (the trial's
+            :attr:`reduced_chi2`, the same on every row of a trial). Its
+            ``groupby`` over the totals (with ``dropna=False``: a state of
+            several blocks is NaN on the levels a block lacks) gives the
+            performance measures: the mean of ``estimate - truth`` is the
+            bias, its standard deviation the spread, and the fraction of
+            trials with ``|estimate - truth| <= z * posterior_std`` the
+            coverage.
+
+        Raises
+        ------
+        TypeError
+            If `world` is neither a Problem nor callable, or returns something
+            other than two Vectors; or the method cannot take new
+            observations (its solution has no ``with_data``).
+        ValueError
+            If `n` is not a positive integer; if the world's observations do
+            not have exactly this posterior's labels, or its truth not the
+            state's (without `W_world`); if `W_world` is given without `W`,
+            or its columns are not the truth's labels or its rows not `W`'s.
+
+        See Also
+        --------
+        recovery : The exact bias, spread and coverage, without sampling.
+        fips.Problem.simulate : One draw of a truth and its observations.
+        with_data : The posterior of one draw's observations.
+
+        Examples
+        --------
+        The honest world of a small problem, sampled, beside the exact answer:
+
+        >>> import numpy as np
+        >>> import pandas as pd
+        >>> import fips
+        >>> cells = pd.Index(["a", "b"], name="cell")
+        >>> prior = fips.Vector.from_series(pd.Series(1.0, index=cells), block="flux")
+        >>> obs = fips.Vector(
+        ...     np.zeros(3), fips.Space({"co2": pd.RangeIndex(3, name="obs_id")})
+        ... )
+        >>> problem = fips.Problem(
+        ...     prior=prior,
+        ...     prior_cov=fips.Independent().with_std(0.5),
+        ...     obs=obs,
+        ...     obs_cov=fips.Independent().with_std(0.2),
+        ...     forward=fips.Operator(
+        ...         np.array([[1.0, 0.0], [0.0, 1.0], [1.0, 1.0]]),
+        ...         obs.space,
+        ...         prior.space,
+        ...     ),
+        ... )
+        >>> post = fips.solve(problem)
+        >>> table = post.trials(n=2000, rng=0)
+        >>> table.index.names
+        FrozenList(['trial', 'block', 'cell'])
+        >>> error = table["estimate"] - table["truth"]
+        >>> error.groupby(level="cell").std().round(
+        ...     2
+        ... ).tolist()  # the spread over trials
+        [0.16, 0.15]
+        >>> post.recovery()["std"].round(2).tolist()  # the exact spread
+        [0.15, 0.15]
+        """
+        resolve = self._optional("with_data", "the posterior of other observations")
+        if not isinstance(n, numbers.Integral) or isinstance(n, bool) or n < 1:
+            raise ValueError(
+                f"n is the number of trials, a positive integer, got {n!r}."
+            )
+        if W_world is not None and W is None:
+            raise ValueError(
+                "W_world needs W: a world on other state labels is compared on "
+                "totals, W on the posterior's state and W_world on the world's."
+            )
+        problem = self._problem
+        if world is None:
+            make = problem.simulate
+        elif isinstance(world, Problem):
+            make = world.simulate
+        elif callable(world):
+            make = world
+        else:
+            raise TypeError(
+                "world is a Problem (its simulate makes the data) or a function of "
+                f"a numpy Generator returning (truth, obs), not {type(world).__name__}."
+            )
+        if W_world is not None and not isinstance(W_world, Operator):
+            raise TypeError(f"W_world is an Operator, not {type(W_world).__name__}.")
+        generator = np.random.default_rng(rng)
+        state = problem.prior.space
+        if W is None:
+            W_form, rows_of_W, index = None, state, state.index
+            claimed = np.sqrt(np.maximum(self.variances.values, 0.0))
+        else:
+            W_form, rows_of_W, index = self._aggregation(W), W.rows, W.rows.index
+            claimed = np.sqrt(np.maximum(self.cov(W).variances.values, 0.0))
+        del resolve  # with_data checks the observations' labels each trial
+
+        truths, estimates, chi2 = [], [], []
+        for _ in range(n):
+            drawn = make(generator)
+            if (
+                not isinstance(drawn, tuple)
+                or len(drawn) != 2
+                or not all(isinstance(v, Vector) for v in drawn)
+            ):
+                raise TypeError(
+                    "The world must return (truth, obs), two Vectors, as "
+                    "Problem.simulate does."
+                )
+            truth, obs = drawn
+            trial = self.with_data(obs)
+            estimate = trial.estimate.values
+            if W_world is not None:
+                Ww_form = W_world._on(
+                    rows_of_W,
+                    truth.space,
+                    "W_world",
+                    ("the rows of W", "the world's truth"),
+                )
+                x = np.asarray(Ww_form @ truth.values)
+            else:
+                x = truth.values
+                if truth.space != state:
+                    try:
+                        x = x[
+                            state._align(
+                                truth.space, "the truth", "The truth and the state"
+                            )
+                        ]
+                    except ValueError as error:
+                        raise ValueError(
+                            f"{error} A world on other state labels is compared on "
+                            "totals: give W on the posterior's state and W_world on "
+                            "the world's."
+                        ) from None
+                if W_form is not None:
+                    x = np.asarray(W_form @ x)
+            truths.append(x)
+            estimates.append(
+                estimate if W_form is None else np.asarray(W_form @ estimate)
+            )
+            chi2.append(trial.reduced_chi2)
+        k = len(index)
+        rows = pd.MultiIndex.from_arrays(
+            [np.repeat(np.arange(n), k)]
+            + [
+                index.get_level_values(i).take(np.tile(np.arange(k), n))
+                for i in range(index.nlevels)
+            ],
+            names=["trial", *index.names],
+        )
+        return pd.DataFrame(
+            {
+                "truth": np.concatenate(truths),
+                "estimate": np.concatenate(estimates),
+                "posterior_std": np.tile(claimed, n),
+                "reduced_chi2": np.repeat(np.asarray(chi2, dtype=float), k),
+            },
+            index=rows,
         )

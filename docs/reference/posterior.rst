@@ -122,12 +122,14 @@ Recovering a known truth
 The exact mean and spread of the estimate's error when the data come from a
 world (the problem itself, a fixed truth, or another :class:`Problem` on the
 same labels): the answer of a Monte Carlo loop over :meth:`Problem.simulate`
-and :meth:`Posterior.with_data`, without sampling.
+and :meth:`Posterior.with_data`, without sampling. :meth:`Posterior.trials` is that loop kept trial by
+trial, for any world (a :class:`Problem` or a function) and any statistic.
 
 .. autosummary::
    :toctree: api/
 
    Posterior.recovery
+   Posterior.trials
 
 What groups of observations add
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
