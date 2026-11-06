@@ -3,7 +3,8 @@ User Guide
 
 This guide takes fips's objects one at a time, in the order a problem uses
 them, and says what each is for before how to call it. :doc:`/getting_started/first_problem`
-solves one problem from start to finish; :doc:`/getting_started/terminology` defines the words.
+solves one problem from start to finish; :doc:`/getting_started/terminology` defines the words;
+:doc:`synthetic` tests an inversion on data whose answer is known.
 
 .. contents:: On this page
    :local:
@@ -533,61 +534,19 @@ observations are much farther from the prior than its covariances allow.
    hourly_post.chi2_tests().round(3)
 
 
-.. _synthetic-data:
-
 Synthetic truth and observations
 --------------------------------
 
 To test an inversion on data whose answer you know, make the data from the
-problem. :meth:`Problem.simulate <fips.Problem.simulate>` returns ``(truth,
-obs)``, two vectors: a truth drawn from the prior, :math:`x \sim N(x_0, S_0)`,
-and the observations it would give, :math:`z = H x + c + e` with :math:`e \sim
-N(0, S_z)`; :meth:`~fips.Problem.predict` is the same without the error. Its
-draws are :meth:`Covariance.sample <fips.Covariance.sample>`, which draws from
-:math:`N(0, S)` without forming :math:`S` where its form has a cheaper root.
-``rng`` is a seed or a :class:`numpy.random.Generator` (one generator passed to
-every call gives independent trials), and a ``truth=`` of your own (another
-inventory, 1.5 times the prior, on the prior's labels in any order) replaces
-the draw. A trial is the solve on other data, ``post.with_data(obs)``, one
-product, so a Monte Carlo is a loop you write. If the inversion is honest, the
-95% interval of each total holds the truth in about 95% of the trials:
-
-.. ipython:: python
-
-   rng = np.random.default_rng(0)
-   sd = np.sqrt(post.cov(W).variances.values)  # what the posterior claims
-   inside = []
-   for _ in range(500):
-       truth, obs = problem.simulate(rng)
-       estimate = post.with_data(obs).estimate
-       inside.append(np.abs((W @ estimate).values - (W @ truth).values) <= 1.96 * sd)
-   np.mean(inside, axis=0).round(2)
-
-The estimate is linear in the observations, so the loop has an exact answer:
-:meth:`post.recovery <fips.Posterior.recovery>` gives, for each total, the
-mean and spread of the error and the probability that the interval holds the
-truth, without sampling. ``post.recovery(world, W=W)`` does the same for data
-from another world on the same labels, and ``truth=`` fixes the truth, as in
-``simulate``. A variance below zero by roundoff is a standard deviation of 0;
-one further below zero comes only from a covariance that is not positive
-semidefinite, and is NaN, with a warning:
-
-.. ipython:: python
-
-   post.recovery(W=W)[["truth", "estimate", "std", "posterior_std", "coverage"]].round(3)
-
-The data come from a world, and the inversion you run on them has its own
-assumptions. There are four kinds of world:
-
-- **The problem itself**: ``problem.simulate(rng)``, as above, tests that the
-  inversion is honest.
-- **A chosen truth**: ``problem.simulate(rng, truth=inventory)`` tests how much
-  of another inventory the inversion recovers.
-- **Another observing system**: a separate :class:`~fips.Problem` with other
-  observations and its own solve, compared on the uncertainty of the totals.
-- **One input wrong**: the :class:`~fips.Problem` your own code builds with one
-  input changed (a background, the mismatch), then ``world.simulate(rng)`` and
-  ``post.with_data(obs)``, which solves its data with your assumptions.
+problem: :meth:`Problem.simulate <fips.Problem.simulate>` returns a truth drawn
+from the prior and the observations it would give, ``post.with_data(obs)``
+solves them at the cost of a product, and :meth:`post.recovery
+<fips.Posterior.recovery>` gives the exact bias, spread and coverage of each
+total when the data come from a world, without sampling. The page
+:doc:`synthetic` is the guide to these experiments: the four kinds of world,
+when the answer is exact and when it needs trials, the loop and its summary,
+worlds no problem can describe, two inversions on the same data, and what to
+read off the table.
 
 
 Plotting
@@ -666,6 +625,8 @@ Label the observations and the prior to match the Jacobian's rows (receptor
 ids) and columns (``(time, lon, lat)``).
 
 
+.. _repeated-inversions:
+
 Repeated inversions, logging and saving
 ---------------------------------------
 
@@ -704,4 +665,5 @@ when it is read.
 .. toctree::
    :hidden:
 
+   synthetic
    examples/index
