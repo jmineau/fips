@@ -220,6 +220,46 @@ class _Factors:
         r"""Return :math:`K D` for a block of ``N`` innovations `D` (``m x N``), as ``n x N`` (each form defines it)."""
         raise NotImplementedError
 
+    def _cov_times(self, V: np.ndarray) -> np.ndarray:
+        r"""Return :math:`\hat{S} V` for a block `V` (``n x k``), as ``n x k``, through the factors (each form defines it)."""
+        raise NotImplementedError
+
+    def _precision_times(self, V: np.ndarray) -> np.ndarray:
+        r"""Return :math:`(H S_0 H^T + S_z/\gamma)^{-1} V` for a block `V` (``m x k``), as ``m x k`` (each form defines it)."""
+        raise NotImplementedError
+
+    def _increment_chi2_at(self, y: np.ndarray) -> tuple[float, int]:
+        r"""
+        Return the chi-squared of the increment :math:`S_0 y` in the directions the observations constrain, and their number.
+
+        The increment of the estimate, :math:`\hat{x} - x_0`, lies in the
+        directions of the state the observations constrain, and
+        :meth:`_increment_chi2` sums its components there. Another increment
+        :math:`S_0 y` (a bounded estimate's, whose bounds also move it in
+        directions the observations do not see) is measured the same way: its
+        components :math:`\xi_k` on the eigenvectors in the state whitened by
+        :math:`S_0`, over the eigenvalues :math:`s_k^2 = \gamma \lambda_k`
+        above roundoff, give :math:`\sum_k \xi_k^2 (1 + s_k^2) / s_k^2`. The
+        part in the other directions, which the covariance of the increment
+        does not span, is left out. For the estimate's own increment this is
+        :meth:`_increment_chi2`. Its modeled increment, :math:`H S_0 y`, has
+        the same chi-squared, since the modeled increment is the same
+        components seen through the observations. It needs the
+        eigendecomposition, done and kept as :meth:`_increment_chi2` does.
+        """
+        if self.eigenvalues is None:
+            return self.with_gamma(self.gamma)._increment_chi2_at(y)
+        eigenvalues = self.eigenvalues
+        roundoff = len(eigenvalues) * np.finfo(float).eps * eigenvalues.max(initial=0.0)
+        kept = eigenvalues > roundoff
+        s2 = self.gamma * eigenvalues[kept]
+        xi = self._whitened_increment(y)[kept]
+        return float(np.sum(xi**2 * (1.0 + s2) / s2)), int(kept.sum())
+
+    def _whitened_increment(self, y: np.ndarray) -> np.ndarray:
+        r"""Return the components :math:`\xi_k` of the increment :math:`S_0 y` on the eigenvectors, the state whitened by :math:`S_0` (each form defines it)."""
+        raise NotImplementedError
+
     def sample(self, N: int, rng: np.random.Generator) -> np.ndarray:
         r"""
         Return `N` exact draws from the posterior, ``n x N``, by perturbing the prior and the data and solving.
@@ -599,6 +639,33 @@ class Whitened(_Factors):
         r"""Return :math:`K D = W^T (w \circ (B D))`: ``with_data``'s product for a block of innovations."""
         return self.W.T @ (self.weights()[:, None] * (self.whitener @ D))
 
+    def _cov_times(self, V: np.ndarray) -> np.ndarray:
+        r"""Return :math:`\hat{S} V = Q V - W^T (w \circ (W V))`: ``O(m n k)``, and a product of :math:`Q` in its own form."""
+        prior = np.asarray(self.problem.prior_cov.data @ V, dtype=float)
+        return prior - self.W.T @ (self.weights()[:, None] * (self.W @ V))
+
+    def _precision_times(self, V: np.ndarray) -> np.ndarray:
+        r"""Return :math:`(H Q H^T + S_z/\gamma)^{-1} V = B^T (w \circ (B V))`."""
+        return self.whitener.T @ (self.weights()[:, None] * (self.whitener @ V))
+
+    def _whitened_increment(self, y: np.ndarray) -> np.ndarray:
+        r"""
+        Return :math:`\xi_k = (B H Q y)_k / \sqrt{\lambda_k}`.
+
+        With :math:`S_0 = R_0 R_0^T` and :math:`J = L^{-1} H R_0`, the
+        eigenvectors of :math:`M = J J^T` are :math:`v_k` and those of
+        :math:`J^T J` (the state whitened by :math:`S_0`) are :math:`J^T v_k /
+        \sqrt{\lambda_k}`, so :math:`\xi_k = v_k^T L^{-1} H S_0 y /
+        \sqrt{\lambda_k}`: no root of :math:`S_0` is needed. Only the
+        components with :math:`\lambda_k > 0` are used.
+        """
+        assert self.eigenvalues is not None  # _increment_chi2_at eigendecomposes first
+        HQy = np.asarray(
+            self.problem.forward.data @ (self.problem.prior_cov.data @ y), dtype=float
+        )
+        with np.errstate(divide="ignore", invalid="ignore"):
+            return (self.whitener @ HQy) / np.sqrt(self.eigenvalues)
+
     def with_data(self, problem: Problem) -> "Whitened":
         """
         Return the factors of `problem`, this one's with other observation values.
@@ -885,6 +952,31 @@ class Information(_Factors):
         Y = np.asarray(problem.obs_cov.data.solve(D))
         HtY = np.asarray(problem.forward.data._transpose() @ Y)
         return self.G @ (self.weights()[:, None] * (self.G.T @ HtY))
+
+    def _cov_times(self, V: np.ndarray) -> np.ndarray:
+        r"""Return :math:`\hat{S} V = G (w / \gamma \circ (G^T V))`: ``O(n^2 k)``."""
+        return self.G @ ((self.weights() / self.gamma)[:, None] * (self.G.T @ V))
+
+    def _precision_times(self, V: np.ndarray) -> np.ndarray:
+        r"""
+        Return :math:`(H S_0 H^T + S_z/\gamma)^{-1} V = \gamma S_z^{-1} (V - H K V)`: one solve with :math:`S_z`.
+
+        As for the innovation (``_innovation_precision_times``): :math:`K V =
+        S_0 H^T P V` with :math:`P` the inverse, so :math:`V - H K V = (S_z /
+        \gamma) P V`.
+        """
+        HKV = np.asarray(self.problem.forward.data @ self._gain_times(V), dtype=float)
+        return self.gamma * np.asarray(self.problem.obs_cov.data.solve(V - HKV))
+
+    def _whitened_increment(self, y: np.ndarray) -> np.ndarray:
+        r"""
+        Return :math:`\xi = G^T y = X^T R_0^T y`.
+
+        :math:`S_0 y = R_0 (R_0^T y)`, so in the state whitened by
+        :math:`S_0` the increment is :math:`R_0^T y`, and on the eigenvectors
+        :math:`X` its components are :math:`X^T R_0^T y = G^T y`.
+        """
+        return self.G.T @ y
 
     def with_data(self, problem: Problem) -> "Information":
         """
