@@ -17,21 +17,22 @@ operator, prior covariance, ...) are defined in `docs/terminology.rst`.
 
 ## What fips is
 
-The **Flexible Inverse Problem Solver**: the posterior of a linear inverse
-problem, `z = H x + c + e`, with a Gaussian prior and Gaussian errors, whose
-state and observations are labeled by pandas indexes in named blocks: exact
-without bounds; with bounds on the state, its mode and draws of the Gaussian
-truncated to the bounds. fips samples the posteriors it cannot give in closed
-form. Labels are matched, never positions; each matrix is kept in its cheapest
-form (dense, sparse, diagonal, Kronecker factors). Beta: the API may change
-between releases. PyPI and import name `fips`.
+The **Flexible Inverse Problem Solver**: the posterior of an inverse problem
+with a Gaussian prior and Gaussian errors, `z = H x + c + e` (or `F(x)`, a
+`ForwardModel` the caller writes with its Jacobian), whose state and
+observations are labeled by pandas indexes in named blocks: exact for a linear
+problem; with bounds on the state, its mode and draws of the Gaussian truncated
+to the bounds; with a forward model, its mode by Gauss-Newton and the Gaussian
+at the mode. fips samples the posteriors it cannot give in closed form. Labels
+are matched, never positions; each matrix is kept in its cheapest form (dense,
+sparse, diagonal, Kronecker factors). Beta: the API may change between
+releases. PyPI and import name `fips`.
 
-It is not a nonlinear solver (the caller linearizes), not a file
-format, and not tied to a science domain: a flux inversion is a `Problem` whose
-blocks are named `flux` and `concentration`, and its workflow, maps and STILT
-code live in its user's package (no domain subpackages, no lat/lon defaults, no
-cartopy). fips does not build transport Jacobians; the caller places one with
-`Operator.from_blocks`.
+It is not a general optimizer, not a file format, and not tied to a science
+domain: a flux inversion is a `Problem` whose blocks are named `flux` and
+`concentration`, and its workflow, maps and STILT code live in its user's
+package (no domain subpackages, no lat/lon defaults, no cartopy). fips builds
+no Jacobian: the caller places one with `Operator.from_blocks`, or writes it.
 
 ## Layout
 
@@ -42,7 +43,8 @@ src/fips/
   space.py          Space: ordered named blocks, the padded MultiIndex, select, align
   vector.py         Vector: values on a Space (read-only), from_series/from_blocks
   operator.py       Operator: a fips.linalg form with a Space on each axis
-  problem.py        Problem: the inputs, checked once; predict, aggregate, restrict
+  forward.py        ForwardModel (F and its Jacobian, written by the caller), taylortest
+  problem.py        Problem: the inputs, checked once; predict, linearized, aggregate, restrict
   posterior.py      Posterior (labels a method's answer); the Solution and Options protocols
   aggregate.py      sum, mean (an aggregation W), offset_block
   visualization.py  plot_comparison, the one plot (the `viz` extra: matplotlib)
@@ -58,6 +60,7 @@ src/fips/
                     Information (n x n); `_choose` picks the form by size
     bounded.py      BoundedOptions; Bounded: the mode by an active set on the
                     analytic posterior, draws by exact HMC (_Sampler)
+    gauss_newton.py GaussNewtonOptions; GaussNewton: the mode by solving linearizations
   linalg/           the unlabeled forms (public as fips.linalg)
     forms.py        LinearOperator and the Dense-, Sparse- and DiagonalOperator it builds
     block.py        BlockDiagonalOperator
@@ -66,9 +69,9 @@ tests/              pytest; test_oracle.py holds every method to the closed form
 docs/               Sphinx: guides, reference/ (by topic), examples/ (notebooks)
 ```
 
-Imports run one way: `space` < `vector`, `linalg` < `operator` < `covariance` <
-`problem` < `posterior` < `methods`, with `aggregate` and `visualization` on
-top. No import inside a function to dodge a cycle, none under `TYPE_CHECKING`.
+Imports run one way: `space` < `vector`, `linalg` < `operator` < `forward`,
+`covariance` < `problem` < `posterior` < `methods`, with `aggregate` and
+`visualization` on top. No import inside a function to dodge a cycle, none under `TYPE_CHECKING`.
 `Covariance` does not import the models: `models.py` sets
 `Covariance._block_diag_models`, so `Covariance.block_diag` takes model parts.
 `posterior.py` imports no method: a method imports `posterior` and returns
@@ -82,14 +85,16 @@ which places labeled blocks by label); write each covariance as a correlation
 model times standard deviations (`Kronecker(...).with_std(std)`, sums,
 `Covariance.block_diag(flux=..., bias=...)`); hand them to `Problem`, which
 checks the labels and builds the models; `fips.solve(problem)` returns the
-`Posterior`. A repeated inversion is a function that builds the `Problem`.
+`Posterior` (`"gauss_newton"` for a `ForwardModel` in place of `H`). A repeated
+inversion is a function that builds the `Problem`.
 
 ## Invariants
 
 - **Labels are matched exactly, and kept as given.** `Problem.__init__` is the
-  one place a solve's inputs are checked: `forward`, each covariance and the
-  offset must have exactly the labels of the observations or the prior, in any
-  order, or it raises naming the labels on one side only (`Space._align`).
+  one place a solve's inputs are checked: `forward` (or a model's `rows` and
+  `cols`), each covariance and the offset must have exactly the labels of the
+  observations or the prior, in any order, or it raises naming the labels on
+  one side only (`Space._align`).
   Nothing is zero-filled, converted to numbers or rounded unless the caller
   asks (`round_labels`). Duplicate, missing and unnamed labels raise. A prior
   error covariance that is zero everywhere raises; some zero variances do not.
@@ -101,7 +106,8 @@ checks the labels and builds the models; `fips.solve(problem)` returns the
   `fips.linalg` form in the order of `rows` and `cols`; every product, sum and
   placement aligns the other side first, and a result is built with `_like`
   (which keeps a `Covariance` a `Covariance`). Reorder with `form._select`,
-  which keeps a Kronecker or block-diagonal form.
+  which keeps a Kronecker or block-diagonal form. A `ForwardModel` forward is
+  kept as given; code that needs `H` reads `problem._operator` (refuses it).
 - **A structure owns its data.** `Vector`, `Operator` and every form copy their
   input and make the copy read-only. A form built from arrays fips just made,
   or from a parent's read-only arrays, uses `_adopt` (no second copy).
@@ -123,11 +129,12 @@ checks the labels and builds the models; `fips.solve(problem)` returns the
   past a quarter full is dense (the rule is in `linalg/__init__.py`). Compute
   with `.data`, not `dense()` or `to_frame()`, except where a dense matrix is
   the point: the analytic method densifies `H S_0` (`m x n`), `H S_0 H^T` and a
-  non-diagonal `S_z` (`m x m`), and `post.cov()` forms `n x n` only when read.
+  non-diagonal `S_z` (`m x m`; Gauss-Newton, each step's `J S_0`, `J S_0 J^T`),
+  and `post.cov()` forms `n x n` only when read.
 - **The problem is the question, the posterior the answer.** `Problem` holds
-  what needs no solve and no `m x m` matrix (`predict`, `aggregate`,
-  `restrict`, each returning a new problem through `__init__`); `Posterior`
-  holds everything that depends on the solve, built once and kept.
+  what needs no solve and no `m x m` matrix (`predict`; `linearized`,
+  `aggregate`, `restrict` make a new problem through `__init__`; `restrict`
+  refuses a model); `Posterior` what depends on the solve, built once, kept.
 - **The posterior labels; the method computes.** A method's solution answers
   `posterior.Solution` with unlabeled arrays in the problem's order;
   `Posterior` labels them and writes the rest (averaging kernel, innovation
@@ -160,9 +167,9 @@ with a `gamma` field, values checked in `__post_init__`), its solution (answers
 `Posterior.data_worth`) only if it can), and a function `(problem, options) -> Posterior`. Add a line to
 `_METHODS` in `methods/__init__.py`; its docstring says how a lognormal or an
 ensemble method fits. **A method's default options on a linear, unbounded
-problem give the analytic posterior** (`"bounded"` with no finite bound returns
-the analytic solution itself): `tests/test_oracle.py` runs every registered
-method, with its defaults, against the closed-form posterior and the
+problem give the analytic posterior** (`"bounded"` with no finite bound and
+`"gauss_newton"` with an operator return the analytic solution itself):
+`tests/test_oracle.py` runs every registered method, with its defaults, against the closed-form posterior and the
 permutation test. A method that samples is held to exact answers in small
 cases (`scipy.stats.truncnorm`, numerical integration) within Monte Carlo
 errors that count its draws' autocorrelation, to the rank of the truth among
@@ -283,3 +290,10 @@ dependency needs a reason, proposed first.
   and kept outside the frozen fields (not pickled). A draw costs one `O(n)`
   reflection per bound its path reaches, about as many as there are elements
   near a bound, so `trials` of a bounded posterior runs a sampler per trial.
+- **A Gauss-Newton posterior holds the user's problem, with the model**
+  (`modeled_obs`, `chi2`, the misfits are the model's at the mode; `with_data`
+  solves again from the last linearization, reusing its factors), and the
+  analytic solution linearized at the last iterate (gain, `cov`, DOFS, and the
+  `H` of the averaging kernel and `innovation_cov`: `Posterior._linear`). Every
+  iterate is `x_0 + S_0 y`, so `d2` needs no `S_0^-1`. A step that raises the
+  cost is halved; only a whole step stops.
