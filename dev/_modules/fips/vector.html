@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>fips.vector &#8212; fips 0.2.0b3.dev5+geb154d94c documentation</title>
+    <title>fips.vector &#8212; fips 0.2.0b3.dev6+ge358c2796 documentation</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../_static/documentation_options.js?v=864a0190"></script>
+    <script src="../../_static/documentation_options.js?v=4da59963"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -132,8 +132,8 @@
       
     
     
-    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev5+geb154d94c documentation - Home"/>
-    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev5+geb154d94c documentation - Home"/>
+    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev6+ge358c2796 documentation - Home"/>
+    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev6+ge358c2796 documentation - Home"/>
   
   
 </a></div>
@@ -430,6 +430,7 @@
 <span class="sd">:class:`pandas.Series` is what :meth:`Vector.to_series` gives.</span>
 <span class="sd">"""</span>
 
+<span class="kn">import</span><span class="w"> </span><span class="nn">numbers</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Mapping</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
@@ -452,6 +453,17 @@
 <span class="sd">    called. A vector of one block is what a single state or observation</span>
 <span class="sd">    component is (``Vector.from_series(series, block="flux")``); several</span>
 <span class="sd">    blocks are put together with :meth:`from_blocks`.</span>
+
+<span class="sd">    Vectors do arithmetic by label: ``+``, ``-``, ``*``, ``/`` and NumPy's</span>
+<span class="sd">    element-wise functions (``np.exp``, ``np.log``, ``np.maximum``, ...) take a</span>
+<span class="sd">    vector, a number or a 1D array. The right-hand vector is put in the order</span>
+<span class="sd">    of the left's space by its labels, so the order does not matter, but its</span>
+<span class="sd">    labels must be exactly the left's (a missing or extra one raises). A</span>
+<span class="sd">    number or array is combined by position, as the constructor takes one. The</span>
+<span class="sd">    result is a new vector on the left's space, named as its operands if they</span>
+<span class="sd">    agree. A pandas object is refused (its labels would be ignored): use</span>
+<span class="sd">    :meth:`from_series`. A reduction such as ``np.sum(v)`` is not defined; use</span>
+<span class="sd">    :attr:`values`.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -496,6 +508,17 @@
 <span class="sd">    array([1., 2.])</span>
 <span class="sd">    &gt;&gt;&gt; prior["flux"].space.select("flux")</span>
 <span class="sd">    Index([1, 2], dtype='int64', name='cell')</span>
+
+<span class="sd">    Arithmetic matches labels, whatever their order:</span>
+
+<span class="sd">    &gt;&gt;&gt; import numpy as np</span>
+<span class="sd">    &gt;&gt;&gt; other = Vector.from_series(</span>
+<span class="sd">    ...     pd.Series([20.0, 10.0], index=pd.Index([2, 1], name="cell")), block="flux"</span>
+<span class="sd">    ... )</span>
+<span class="sd">    &gt;&gt;&gt; (prior["flux"] + other).values</span>
+<span class="sd">    array([11., 22.])</span>
+<span class="sd">    &gt;&gt;&gt; np.exp(prior["flux"] - prior["flux"]).values</span>
+<span class="sd">    array([1., 1.])</span>
 <span class="sd">    """</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">values</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">ArrayLike</span><span class="p">,</span> <span class="n">space</span><span class="p">:</span> <span class="n">Space</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
@@ -520,6 +543,19 @@
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
                 <span class="sa">f</span><span class="s2">"Got </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">array</span><span class="p">)</span><span class="si">}</span><span class="s2"> values for a space of </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">space</span><span class="p">)</span><span class="si">}</span><span class="s2"> labels."</span>
             <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_hold</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">space</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_adopt</span><span class="p">(</span>
+        <span class="bp">cls</span><span class="p">,</span> <span class="n">values</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">space</span><span class="p">:</span> <span class="n">Space</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"Vector"</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return the vector that holds `values` itself, which fips just made, without copying it."""</span>
+        <span class="n">vector</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="fm">__new__</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span>
+        <span class="n">vector</span><span class="o">.</span><span class="n">_hold</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">space</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">vector</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_hold</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">space</span><span class="p">:</span> <span class="n">Space</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Hold `array`, one float for each label of `space`, read-only; refuse NaN."""</span>
         <span class="n">nan</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">array</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">nan</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
@@ -895,6 +931,99 @@
 <span class="sd">        """</span>
         <span class="k">return</span> <span class="n">Vector</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_values</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_space</span><span class="o">.</span><span class="n">round_labels</span><span class="p">(</span><span class="n">decimals</span><span class="p">),</span> <span class="n">name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_name</span><span class="p">)</span></div>
 
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_operand</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="nb">object</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">|</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return `other`'s values in this vector's order: aligned by label for a vector, by position otherwise."""</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">Vector</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">other</span><span class="o">.</span><span class="n">_space</span> <span class="ow">is</span> <span class="bp">self</span><span class="o">.</span><span class="n">_space</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">other</span><span class="o">.</span><span class="n">_values</span>
+            <span class="n">positions</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_space</span><span class="o">.</span><span class="n">_align</span><span class="p">(</span>
+                <span class="n">other</span><span class="o">.</span><span class="n">_space</span><span class="p">,</span> <span class="s2">"the other vector"</span><span class="p">,</span> <span class="s2">"The two vectors"</span>
+            <span class="p">)</span>
+            <span class="k">return</span> <span class="n">other</span><span class="o">.</span><span class="n">_values</span><span class="p">[</span><span class="n">positions</span><span class="p">]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="p">(</span><span class="n">numbers</span><span class="o">.</span><span class="n">Real</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">bool_</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                <span class="s2">"A vector is combined with a vector, a number or a 1D array, "</span>
+                <span class="sa">f</span><span class="s2">"not </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">other</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">, whose labels would be ignored. "</span>
+                <span class="s2">"Build a vector from a Series with Vector.from_series, or "</span>
+                <span class="s2">"use .values for the values by position (an Operator is "</span>
+                <span class="s2">"applied with @)."</span>
+            <span class="p">)</span>
+        <span class="n">array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">array</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">array</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">array</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"A vector's values are 1D, got shape </span><span class="si">{</span><span class="n">array</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">."</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">array</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"Got </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">array</span><span class="p">)</span><span class="si">}</span><span class="s2"> values for a space of </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="si">}</span><span class="s2"> labels."</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="n">array</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_apply</span><span class="p">(</span><span class="n">ufunc</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ufunc</span><span class="p">,</span> <span class="o">*</span><span class="n">inputs</span><span class="p">:</span> <span class="nb">object</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"Vector"</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return ``ufunc(*inputs)`` as a vector on the space of the first vector among `inputs`."""</span>
+        <span class="n">vectors</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">inputs</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">Vector</span><span class="p">)]</span>
+        <span class="n">first</span> <span class="o">=</span> <span class="n">vectors</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">names</span> <span class="o">=</span> <span class="p">{</span><span class="n">v</span><span class="o">.</span><span class="n">_name</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">vectors</span><span class="p">}</span>
+        <span class="n">values</span> <span class="o">=</span> <span class="n">ufunc</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="n">first</span><span class="o">.</span><span class="n">_operand</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">inputs</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">Vector</span><span class="o">.</span><span class="n">_adopt</span><span class="p">(</span>
+            <span class="n">values</span><span class="p">,</span> <span class="n">first</span><span class="o">.</span><span class="n">_space</span><span class="p">,</span> <span class="n">names</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">names</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">__array_ufunc__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ufunc</span><span class="p">,</span> <span class="n">method</span><span class="p">,</span> <span class="o">*</span><span class="n">inputs</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Apply an element-wise NumPy function to vectors, numbers and arrays.</span>
+
+<span class="sd">        ``np.exp(v)`` and ``np.maximum(v, w)`` return a vector on the space of</span>
+<span class="sd">        the first vector given (the others are aligned to it by label, as in</span>
+<span class="sd">        ``v + w``). Anything else, such as a reduction (``np.sum(v)``), a</span>
+<span class="sd">        function with a keyword argument (``out=``), one with several</span>
+<span class="sd">        outputs or one whose result is not a float (a comparison), is not</span>
+<span class="sd">        defined for a vector: use :attr:`values`.</span>
+<span class="sd">        """</span>
+        <span class="k">if</span> <span class="n">method</span> <span class="o">!=</span> <span class="s2">"__call__"</span> <span class="ow">or</span> <span class="n">kwargs</span> <span class="ow">or</span> <span class="n">ufunc</span><span class="o">.</span><span class="n">nout</span> <span class="o">!=</span> <span class="mi">1</span> <span class="ow">or</span> <span class="n">ufunc</span><span class="o">.</span><span class="n">signature</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">NotImplemented</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_apply</span><span class="p">(</span><span class="n">ufunc</span><span class="p">,</span> <span class="o">*</span><span class="n">inputs</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">kind</span> <span class="o">!=</span> <span class="s2">"f"</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">NotImplemented</span>
+        <span class="k">return</span> <span class="n">result</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__neg__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"Vector"</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return the vector with every value negated."""</span>
+        <span class="k">return</span> <span class="n">Vector</span><span class="o">.</span><span class="n">_adopt</span><span class="p">(</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">_values</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_space</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_name</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__add__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s2">"Vector | npt.ArrayLike"</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"Vector"</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return ``self + other``, the labels of a vector matched (see the class)."""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_apply</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">add</span><span class="p">,</span> <span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__radd__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s2">"npt.ArrayLike"</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"Vector"</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return ``other + self`` for a number or an array."""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_apply</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">add</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__sub__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s2">"Vector | npt.ArrayLike"</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"Vector"</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return ``self - other``, the labels of a vector matched (see the class)."""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_apply</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">subtract</span><span class="p">,</span> <span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__rsub__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s2">"npt.ArrayLike"</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"Vector"</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return ``other - self`` for a number or an array."""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_apply</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">subtract</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__mul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s2">"Vector | npt.ArrayLike"</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"Vector"</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return ``self * other``, the labels of a vector matched (see the class)."""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_apply</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">multiply</span><span class="p">,</span> <span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__rmul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s2">"npt.ArrayLike"</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"Vector"</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return ``other * self`` for a number or an array."""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_apply</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">multiply</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__truediv__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s2">"Vector | npt.ArrayLike"</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"Vector"</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return ``self / other``, the labels of a vector matched (see the class)."""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_apply</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">true_divide</span><span class="p">,</span> <span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__rtruediv__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s2">"npt.ArrayLike"</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"Vector"</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return ``other / self`` for a number or an array."""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_apply</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">true_divide</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">"""Return the name and space, then the values as a Series."""</span>

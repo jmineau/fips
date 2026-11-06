@@ -123,7 +123,7 @@ observations are and how uncertain they are, not on their values:
 
    truth, obs = problem.simulate(rng)
    trial = post.with_data(obs)
-   miss = (W @ trial.estimate).values - (W @ truth).values
+   miss = (W @ trial.estimate - W @ truth).values
    claimed = np.sqrt(post.cov(W).variances.values)
    pd.DataFrame({"miss": miss, "claimed_std": claimed}, index=months).round(3)
 
@@ -196,7 +196,7 @@ where the first recovers nearly all of it:
 
 .. ipython:: python
 
-   bigger = fips.Vector(1.5 * prior.values, prior.space)
+   bigger = 1.5 * prior
    post_tight = fips.solve(build_problem(prior_std=0.1))
 
    def recovered(post):
@@ -297,19 +297,19 @@ and the loop above takes either. Two worlds a real experiment needs and a
 ``Problem`` cannot describe: a truth that is lognormal about the prior (so it
 stays positive and its spread scales with the prior), and an error the
 inversion cannot see, such as a transport error that scales every observation
-of a trial by one factor. Each is a few lines:
+of a trial by one factor. Each is a few lines, since vectors do arithmetic by label:
 
 .. ipython:: python
 
    field = fips.Kronecker(fips.Exponential("month", "45D"), fips.Exponential("x", 1.0)).with_std(0.4)
    field_cov = field.build(prior.space)
-   half_var = 0.5 * field_cov.variances.values  # so the truth's mean is the prior
+   half_var = 0.5 * field_cov.variances  # so the truth's mean is the prior
 
    def lognormal_world(rng):
        """A lognormal truth about the prior, and a transport error of 10% the inversion cannot see."""
-       truth = fips.Vector(prior.values * np.exp(field_cov.sample(rng).values - half_var), prior.space)
+       truth = prior * np.exp(field_cov.sample(rng) - half_var)
        scale = np.exp(rng.normal(0.0, 0.10))
-       obs = fips.Vector(problem.predict(truth).values * scale + problem.obs_cov.sample(rng).values, obs_space)
+       obs = problem.predict(truth) * scale + problem.obs_cov.sample(rng)
        return truth, obs
 
    performance(trials(lognormal_world, post, 400, 0, W)).droplevel("block")[["bias", "std", "posterior_std", "coverage"]].round(3)
