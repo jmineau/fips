@@ -1829,7 +1829,7 @@ class Posterior:
         offset = self._problem.offset
         if offset is not None:
             z = z - offset.values
-        fit = self._problem.forward.data @ self.estimate.values
+        fit = self._problem._apply(self.estimate.values)
         return float(np.corrcoef(z, fit)[0, 1] ** 2)
 
     @property
