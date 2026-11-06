@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>fips.posterior.Solution &#8212; fips 0.2.0b3.dev9+g49b1393a8 documentation</title>
+    <title>fips.posterior.Solution &#8212; fips 0.2.0b3.dev11+gec8b34d0d documentation</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../_static/documentation_options.js?v=55ae725c"></script>
+    <script src="../../_static/documentation_options.js?v=aff245a5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -137,8 +137,8 @@
       
     
     
-    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev9+g49b1393a8 documentation - Home"/>
-    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev9+g49b1393a8 documentation - Home"/>
+    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev11+gec8b34d0d documentation - Home"/>
+    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev11+gec8b34d0d documentation - Home"/>
   
   
 </a></div>
@@ -884,6 +884,11 @@ observations, <span class="math notranslate nohighlight">\(\hat{x} = x_0 + K (z 
 <span class="math notranslate nohighlight">\(K\)</span> of <a class="reference internal" href="fips.posterior.Solution.gain.html#fips.posterior.Solution.gain" title="fips.posterior.Solution.gain"><code class="xref py py-meth docutils literal notranslate"><span class="pre">gain()</span></code></a> whatever the values of <span class="math notranslate nohighlight">\(z\)</span>, says so with
 <code class="docutils literal notranslate"><span class="pre">estimate_is_linear</span> <span class="pre">=</span> <span class="pre">True</span></code>; without it, a posterior has no
 <code class="xref py py-meth docutils literal notranslate"><span class="pre">recovery()</span></code>.</p>
+<p>A method whose posterior is not Gaussian in closed form (a bounded or an
+iterated one) answers these questions at its estimate: from the Gaussian
+of the problem linearized there, with any cells on a bound held at it. Its
+answers are then approximations, and <code class="xref py py-meth docutils literal notranslate"><span class="pre">Posterior.trials()</span></code> measures
+how good they are.</p>
 <div class="admonition seealso">
 <p class="admonition-title">See also</p>
 <dl class="simple">

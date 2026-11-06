@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>fips.Posterior.trials &#8212; fips 0.2.0b3.dev9+g49b1393a8 documentation</title>
+    <title>fips.Posterior.trials &#8212; fips 0.2.0b3.dev11+gec8b34d0d documentation</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../_static/documentation_options.js?v=55ae725c"></script>
+    <script src="../../_static/documentation_options.js?v=aff245a5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -137,8 +137,8 @@
       
     
     
-    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev9+g49b1393a8 documentation - Home"/>
-    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev9+g49b1393a8 documentation - Home"/>
+    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev11+gec8b34d0d documentation - Home"/>
+    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev11+gec8b34d0d documentation - Home"/>
   
   
 </a></div>
@@ -866,7 +866,8 @@ one row per total. The table is the loop <a class="reference internal" href="fip
 exactly, kept trial by trial, for what the exact answer cannot take: a
 world whose truth is not Gaussian or whose error is not additive, a
 statistic of each trial (its reduced chi-squared), or a method whose
-estimate is not linear in the observations. Where both apply, the
+estimate is not linear in the observations (the spread it claims is
+then each trial’s own). Where both apply, the
 table’s bias, spread and coverage agree with <code class="docutils literal notranslate"><span class="pre">recovery</span></code> within their
 Monte Carlo standard errors.</p>
 <dl class="field-list simple">
@@ -897,8 +898,10 @@ labels than the posterior’s.</p></li>
 and then the rows of <cite>W</cite> (or the state’s labels): <code class="docutils literal notranslate"><span class="pre">truth</span></code>
 (<span class="math notranslate nohighlight">\(W_w x\)</span>), <code class="docutils literal notranslate"><span class="pre">estimate</span></code> (<span class="math notranslate nohighlight">\(W \hat{x}\)</span>),
 <code class="docutils literal notranslate"><span class="pre">posterior_std</span></code> (the spread the posterior claims,
-<span class="math notranslate nohighlight">\(\sqrt{\operatorname{diag} W \hat{S} W^T}\)</span>, the same in
-every trial of a linear method) and <code class="docutils literal notranslate"><span class="pre">reduced_chi2</span></code> (the trial’s
+<span class="math notranslate nohighlight">\(\sqrt{\operatorname{diag} W \hat{S} W^T}\)</span>: the same in
+every trial of a method whose estimate is linear in the
+observations, and for any other that of the trial’s own
+posterior) and <code class="docutils literal notranslate"><span class="pre">reduced_chi2</span></code> (the trial’s
 <a class="reference internal" href="fips.Posterior.reduced_chi2.html#fips.Posterior.reduced_chi2" title="fips.Posterior.reduced_chi2"><code class="xref py py-attr docutils literal notranslate"><span class="pre">reduced_chi2</span></code></a>, the same on every row of a trial). Its
 <code class="docutils literal notranslate"><span class="pre">groupby</span></code> over the totals (with <code class="docutils literal notranslate"><span class="pre">dropna=False</span></code>: a state of
 several blocks is NaN on the levels a block lacks) gives the

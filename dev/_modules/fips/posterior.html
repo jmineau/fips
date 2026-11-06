@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>fips.posterior &#8212; fips 0.2.0b3.dev9+g49b1393a8 documentation</title>
+    <title>fips.posterior &#8212; fips 0.2.0b3.dev11+gec8b34d0d documentation</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../_static/documentation_options.js?v=55ae725c"></script>
+    <script src="../../_static/documentation_options.js?v=aff245a5"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -132,8 +132,8 @@
       
     
     
-    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev9+g49b1393a8 documentation - Home"/>
-    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev9+g49b1393a8 documentation - Home"/>
+    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev11+gec8b34d0d documentation - Home"/>
+    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev11+gec8b34d0d documentation - Home"/>
   
   
 </a></div>
@@ -499,6 +499,12 @@
 <span class="sd">    :math:`K` of :meth:`gain` whatever the values of :math:`z`, says so with</span>
 <span class="sd">    ``estimate_is_linear = True``; without it, a posterior has no</span>
 <span class="sd">    :meth:`~Posterior.recovery`.</span>
+
+<span class="sd">    A method whose posterior is not Gaussian in closed form (a bounded or an</span>
+<span class="sd">    iterated one) answers these questions at its estimate: from the Gaussian</span>
+<span class="sd">    of the problem linearized there, with any cells on a bound held at it. Its</span>
+<span class="sd">    answers are then approximations, and :meth:`Posterior.trials` measures</span>
+<span class="sd">    how good they are.</span>
 
 <span class="sd">    See Also</span>
 <span class="sd">    --------</span>
@@ -2332,7 +2338,7 @@
         <span class="n">offset</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_problem</span><span class="o">.</span><span class="n">offset</span>
         <span class="k">if</span> <span class="n">offset</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">z</span> <span class="o">=</span> <span class="n">z</span> <span class="o">-</span> <span class="n">offset</span><span class="o">.</span><span class="n">values</span>
-        <span class="n">fit</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_problem</span><span class="o">.</span><span class="n">forward</span><span class="o">.</span><span class="n">data</span> <span class="o">@</span> <span class="bp">self</span><span class="o">.</span><span class="n">estimate</span><span class="o">.</span><span class="n">values</span>
+        <span class="n">fit</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_problem</span><span class="o">.</span><span class="n">_apply</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">estimate</span><span class="o">.</span><span class="n">values</span><span class="p">)</span>
         <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">corrcoef</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="n">fit</span><span class="p">)[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
 
     <span class="nd">@property</span>
@@ -2883,7 +2889,8 @@
 <span class="sd">        exactly, kept trial by trial, for what the exact answer cannot take: a</span>
 <span class="sd">        world whose truth is not Gaussian or whose error is not additive, a</span>
 <span class="sd">        statistic of each trial (its reduced chi-squared), or a method whose</span>
-<span class="sd">        estimate is not linear in the observations. Where both apply, the</span>
+<span class="sd">        estimate is not linear in the observations (the spread it claims is</span>
+<span class="sd">        then each trial's own). Where both apply, the</span>
 <span class="sd">        table's bias, spread and coverage agree with ``recovery`` within their</span>
 <span class="sd">        Monte Carlo standard errors.</span>
 
@@ -2920,8 +2927,10 @@
 <span class="sd">            and then the rows of `W` (or the state's labels): ``truth``</span>
 <span class="sd">            (:math:`W_w x`), ``estimate`` (:math:`W \hat{x}`),</span>
 <span class="sd">            ``posterior_std`` (the spread the posterior claims,</span>
-<span class="sd">            :math:`\sqrt{\operatorname{diag} W \hat{S} W^T}`, the same in</span>
-<span class="sd">            every trial of a linear method) and ``reduced_chi2`` (the trial's</span>
+<span class="sd">            :math:`\sqrt{\operatorname{diag} W \hat{S} W^T}`: the same in</span>
+<span class="sd">            every trial of a method whose estimate is linear in the</span>
+<span class="sd">            observations, and for any other that of the trial's own</span>
+<span class="sd">            posterior) and ``reduced_chi2`` (the trial's</span>
 <span class="sd">            :attr:`reduced_chi2`, the same on every row of a trial). Its</span>
 <span class="sd">            ``groupby`` over the totals (with ``dropna=False``: a state of</span>
 <span class="sd">            several blocks is NaN on the levels a block lacks) gives the</span>
@@ -3011,13 +3020,21 @@
         <span class="n">state</span> <span class="o">=</span> <span class="n">problem</span><span class="o">.</span><span class="n">prior</span><span class="o">.</span><span class="n">space</span>
         <span class="k">if</span> <span class="n">W</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">W_form</span><span class="p">,</span> <span class="n">rows_of_W</span><span class="p">,</span> <span class="n">index</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="n">state</span><span class="o">.</span><span class="n">index</span>
-            <span class="n">claimed</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">variances</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">))</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">W_form</span><span class="p">,</span> <span class="n">rows_of_W</span><span class="p">,</span> <span class="n">index</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_aggregation</span><span class="p">(</span><span class="n">W</span><span class="p">),</span> <span class="n">W</span><span class="o">.</span><span class="n">rows</span><span class="p">,</span> <span class="n">W</span><span class="o">.</span><span class="n">rows</span><span class="o">.</span><span class="n">index</span>
-            <span class="n">claimed</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cov</span><span class="p">(</span><span class="n">W</span><span class="p">)</span><span class="o">.</span><span class="n">variances</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">))</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">claims</span><span class="p">(</span><span class="n">post</span><span class="p">:</span> <span class="s2">"Posterior"</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">            </span><span class="sd">"""Return the spread `post` claims for each row: the root of its variances."""</span>
+            <span class="n">variances</span> <span class="o">=</span> <span class="n">post</span><span class="o">.</span><span class="n">variances</span> <span class="k">if</span> <span class="n">W</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">post</span><span class="o">.</span><span class="n">cov</span><span class="p">(</span><span class="n">W</span><span class="p">)</span><span class="o">.</span><span class="n">variances</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="n">variances</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">))</span>
+
+        <span class="c1"># a linear method claims the same in every trial (its posterior does not</span>
+        <span class="c1"># depend on the data); any other is asked of each trial's own posterior</span>
+        <span class="n">linear</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_solution</span><span class="p">,</span> <span class="s2">"estimate_is_linear"</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+        <span class="n">claimed</span> <span class="o">=</span> <span class="n">claims</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="k">if</span> <span class="n">linear</span> <span class="k">else</span> <span class="kc">None</span>
         <span class="k">del</span> <span class="n">resolve</span>  <span class="c1"># with_data checks the observations' labels each trial</span>
 
-        <span class="n">truths</span><span class="p">,</span> <span class="n">estimates</span><span class="p">,</span> <span class="n">chi2</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[],</span> <span class="p">[]</span>
+        <span class="n">truths</span><span class="p">,</span> <span class="n">estimates</span><span class="p">,</span> <span class="n">chi2</span><span class="p">,</span> <span class="n">stds</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[],</span> <span class="p">[],</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
             <span class="n">drawn</span> <span class="o">=</span> <span class="n">make</span><span class="p">(</span><span class="n">generator</span><span class="p">)</span>
             <span class="k">if</span> <span class="p">(</span>
@@ -3062,6 +3079,8 @@
                 <span class="n">estimate</span> <span class="k">if</span> <span class="n">W_form</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">W_form</span> <span class="o">@</span> <span class="n">estimate</span><span class="p">)</span>
             <span class="p">)</span>
             <span class="n">chi2</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">trial</span><span class="o">.</span><span class="n">reduced_chi2</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">claimed</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">stds</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">claims</span><span class="p">(</span><span class="n">trial</span><span class="p">))</span>
         <span class="n">k</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">index</span><span class="p">)</span>
         <span class="n">rows</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">MultiIndex</span><span class="o">.</span><span class="n">from_arrays</span><span class="p">(</span>
             <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">n</span><span class="p">),</span> <span class="n">k</span><span class="p">)]</span>
@@ -3075,7 +3094,9 @@
             <span class="p">{</span>
                 <span class="s2">"truth"</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">truths</span><span class="p">),</span>
                 <span class="s2">"estimate"</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">estimates</span><span class="p">),</span>
-                <span class="s2">"posterior_std"</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">claimed</span><span class="p">,</span> <span class="n">n</span><span class="p">),</span>
+                <span class="s2">"posterior_std"</span><span class="p">:</span> <span class="p">(</span>
+                    <span class="n">np</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">claimed</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span> <span class="k">if</span> <span class="n">claimed</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">stds</span><span class="p">)</span>
+                <span class="p">),</span>
                 <span class="s2">"reduced_chi2"</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">chi2</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">),</span> <span class="n">k</span><span class="p">),</span>
             <span class="p">},</span>
             <span class="n">index</span><span class="o">=</span><span class="n">rows</span><span class="p">,</span>
