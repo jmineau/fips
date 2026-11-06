@@ -75,6 +75,12 @@ class Solution(Protocol):
     ``estimate_is_linear = True``; without it, a posterior has no
     :meth:`~Posterior.recovery`.
 
+    A method whose posterior is not Gaussian in closed form (a bounded or an
+    iterated one) answers these questions at its estimate: from the Gaussian
+    of the problem linearized there, with any cells on a bound held at it. Its
+    answers are then approximations, and :meth:`Posterior.trials` measures
+    how good they are.
+
     See Also
     --------
     Posterior : The labeled answer built on it.
@@ -2366,7 +2372,8 @@ class Posterior:
         exactly, kept trial by trial, for what the exact answer cannot take: a
         world whose truth is not Gaussian or whose error is not additive, a
         statistic of each trial (its reduced chi-squared), or a method whose
-        estimate is not linear in the observations. Where both apply, the
+        estimate is not linear in the observations (the spread it claims is
+        then each trial's own). Where both apply, the
         table's bias, spread and coverage agree with ``recovery`` within their
         Monte Carlo standard errors.
 
@@ -2403,8 +2410,10 @@ class Posterior:
             and then the rows of `W` (or the state's labels): ``truth``
             (:math:`W_w x`), ``estimate`` (:math:`W \hat{x}`),
             ``posterior_std`` (the spread the posterior claims,
-            :math:`\sqrt{\operatorname{diag} W \hat{S} W^T}`, the same in
-            every trial of a linear method) and ``reduced_chi2`` (the trial's
+            :math:`\sqrt{\operatorname{diag} W \hat{S} W^T}`: the same in
+            every trial of a method whose estimate is linear in the
+            observations, and for any other that of the trial's own
+            posterior) and ``reduced_chi2`` (the trial's
             :attr:`reduced_chi2`, the same on every row of a trial). Its
             ``groupby`` over the totals (with ``dropna=False``: a state of
             several blocks is NaN on the levels a block lacks) gives the
@@ -2494,13 +2503,21 @@ class Posterior:
         state = problem.prior.space
         if W is None:
             W_form, rows_of_W, index = None, state, state.index
-            claimed = np.sqrt(np.maximum(self.variances.values, 0.0))
         else:
             W_form, rows_of_W, index = self._aggregation(W), W.rows, W.rows.index
-            claimed = np.sqrt(np.maximum(self.cov(W).variances.values, 0.0))
+
+        def claims(post: "Posterior") -> np.ndarray:
+            """Return the spread `post` claims for each row: the root of its variances."""
+            variances = post.variances if W is None else post.cov(W).variances
+            return np.sqrt(np.maximum(variances.values, 0.0))
+
+        # a linear method claims the same in every trial (its posterior does not
+        # depend on the data); any other is asked of each trial's own posterior
+        linear = getattr(self._solution, "estimate_is_linear", False)
+        claimed = claims(self) if linear else None
         del resolve  # with_data checks the observations' labels each trial
 
-        truths, estimates, chi2 = [], [], []
+        truths, estimates, chi2, stds = [], [], [], []
         for _ in range(n):
             drawn = make(generator)
             if (
@@ -2545,6 +2562,8 @@ class Posterior:
                 estimate if W_form is None else np.asarray(W_form @ estimate)
             )
             chi2.append(trial.reduced_chi2)
+            if claimed is None:
+                stds.append(claims(trial))
         k = len(index)
         rows = pd.MultiIndex.from_arrays(
             [np.repeat(np.arange(n), k)]
@@ -2558,7 +2577,9 @@ class Posterior:
             {
                 "truth": np.concatenate(truths),
                 "estimate": np.concatenate(estimates),
-                "posterior_std": np.tile(claimed, n),
+                "posterior_std": (
+                    np.tile(claimed, n) if claimed is not None else np.concatenate(stds)
+                ),
                 "reduced_chi2": np.repeat(np.asarray(chi2, dtype=float), k),
             },
             index=rows,

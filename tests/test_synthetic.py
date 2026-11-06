@@ -966,3 +966,62 @@ def test_trials_refuses_what_it_cannot_run():
         post_annual.trials(problem, 1)
     with pytest.raises(ValueError, match="columns of W_world"):
         post_annual.trials(problem, 1, W=W_annual, W_world=W_annual)
+
+
+class _DataScaled:
+    """
+    A solution like the analytic one, whose posterior depends on the data.
+
+    It claims no ``estimate_is_linear``, and scales the analytic variances by
+    ``1 + mean|z|`` of the problem's observations: what a bounded method's
+    posterior does when more cells reach a bound for some data than for
+    others. ``with_data`` gives another such solution, scaled by its own data.
+    """
+
+    def __init__(self, inner, problem):
+        self._inner = inner
+        self._scale = 1.0 + float(np.abs(problem.obs.values).mean())
+
+    def __getattr__(self, name):
+        if name == "estimate_is_linear":
+            raise AttributeError(name)
+        return getattr(self._inner, name)
+
+    def variances(self):
+        return self._scale * self._inner.variances()
+
+    def cov(self, W=None):
+        return self._scale * self._inner.cov(W)
+
+    def with_data(self, problem):
+        return _DataScaled(self._inner.with_data(problem), problem)
+
+
+def test_trials_reports_each_trials_own_posterior_std_unless_the_method_is_linear():
+    """A method not linear in the data claims its spread trial by trial; a linear one claims one for all."""
+    arrays = World()
+    problem = arrays.problem()
+    linear = fips.solve(problem)
+    post = Posterior(problem, _DataScaled(linear._solution, problem), linear.options)
+    assert not getattr(post._solution, "estimate_is_linear", False)
+    world = _misspecified_world(arrays)
+    W = _flux_totals()
+    for aggregation in (None, W):
+        table = post.trials(world, 5, rng=3, W=aggregation)
+        std = table["posterior_std"]
+        by = [name for name in table.index.names if name != "trial"]
+        assert (std.groupby(level=by, dropna=False).nunique() == 5).all()
+        rng = np.random.default_rng(3)
+        for i in range(5):
+            trial = post.with_data(world.simulate(rng)[1])
+            variances = (
+                trial.variances
+                if aggregation is None
+                else trial.cov(aggregation).variances
+            )
+            np.testing.assert_allclose(
+                std.xs(i, level="trial"), np.sqrt(variances.values), rtol=1e-12
+            )
+        # the analytic method, linear in the data, claims the one spread in every trial
+        constant = linear.trials(world, 5, rng=3, W=aggregation)["posterior_std"]
+        assert (constant.groupby(level=by, dropna=False).nunique() == 1).all()
