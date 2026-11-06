@@ -35,7 +35,7 @@ the statistician's parts, because every such experiment has the same four:
        spread the inversion claims, and how often the claimed interval holds
        the truth.
      - The columns of :meth:`~fips.Posterior.recovery`, exactly; or the same
-       columns summarized from a table of trials.
+       columns summarized from the table of :meth:`~fips.Posterior.trials`.
 
 The inversion's assumptions and the world's may agree or differ, and that is
 the whole design space. When the world is the problem itself, the experiment
@@ -217,31 +217,23 @@ When you need trials
 Three things have no closed form: a statistic ``recovery`` does not give (the
 reduced chi-squared of each trial), a world whose truth is not Gaussian or
 whose error is not additive, and a method whose estimate is not linear in the
-observations. For those, write the loop. It is short, and it is yours: the world makes the data, the inversion
-solves them, and each trial adds its rows to a table.
+observations. For those, sample: :meth:`post.trials <fips.Posterior.trials>`
+is the loop ``recovery`` answers exactly, kept trial by trial. It takes the
+same arguments (the world, ``W`` and ``W_world``), plus the number of trials
+and a seed. Each trial the world makes the data, the inversion solves them
+with ``with_data``, and the totals of the two go into one row per total:
 
 .. ipython:: python
 
-   def trials(world, post, n, rng, W):
-       """Return one row per trial and total: the truth, the estimate, the claimed std, chi2."""
-       rng = np.random.default_rng(rng)
-       make = world.simulate if isinstance(world, fips.Problem) else world
-       claimed = np.sqrt(post.cov(W).variances.values)
-       rows = []
-       for i in range(n):
-           truth, obs = make(rng)
-           trial = post.with_data(obs)
-           rows.append(pd.DataFrame({"trial": i, "truth": (W @ truth).values,
-                                     "estimate": (W @ trial.estimate).values,
-                                     "posterior_std": claimed, "chi2": trial.reduced_chi2},
-                                    index=W.rows.index))
-       return pd.concat(rows).set_index("trial", append=True)
+   table = post.trials(problem, 400, rng=0, W=W)
+   table.head(6)
 
-The table is long: one row per trial and total, so pandas does the rest. The
-same performance measures come from a ``groupby`` over the totals, with the
-Monte Carlo standard error of each (Morris, White and Crowther, 2019): with
-``n`` trials a bias is known to ``std / sqrt(n)`` and a coverage near 0.95 to
-about ``0.22 / sqrt(n)``.
+The table is long: one row per trial and total, with the spread the posterior
+claims and the trial's reduced chi-squared, so pandas does the rest. The
+performance measures come from a ``groupby`` over the totals, with the Monte
+Carlo standard error of each (Morris, White and Crowther, 2019): with ``n``
+trials a bias is known to ``std / sqrt(n)`` and a coverage near 0.95 to about
+``0.22 / sqrt(n)``.
 
 .. ipython:: python
 
@@ -250,14 +242,15 @@ about ``0.22 / sqrt(n)``.
        z = norm.ppf(1 - (1 - level) / 2)
        error = table["estimate"] - table["truth"]
        inside = error.abs() <= z * table["posterior_std"]
-       by = table.index.names[:-1]
-       n = error.groupby(level=by).size()
+       by = [name for name in table.index.names if name != "trial"]  # the totals
+       # dropna=False: a state of several blocks has NaN on the levels a block lacks
+       n = error.groupby(level=by, dropna=False).size()
        out = pd.DataFrame({
-           "bias": error.groupby(level=by).mean(),
-           "std": error.groupby(level=by).std(),
-           "posterior_std": table["posterior_std"].groupby(level=by).first(),
-           "coverage": inside.groupby(level=by).mean(),
-           "chi2": table["chi2"].groupby(level=by).mean(),
+           "bias": error.groupby(level=by, dropna=False).mean(),
+           "std": error.groupby(level=by, dropna=False).std(),
+           "posterior_std": table["posterior_std"].groupby(level=by, dropna=False).first(),
+           "coverage": inside.groupby(level=by, dropna=False).mean(),
+           "reduced_chi2": table["reduced_chi2"].groupby(level=by, dropna=False).mean(),
        })
        out["bias_se"] = out["std"] / np.sqrt(n)
        out["coverage_se"] = np.sqrt(out["coverage"] * (1 - out["coverage"]) / n)
@@ -269,21 +262,21 @@ one number the exact table does not have:
 
 .. ipython:: python
 
-   sampled = performance(trials(problem, post, 400, 0, W)).droplevel("block")
+   sampled = performance(table).droplevel("block")
    pd.DataFrame({"sampled": sampled["coverage"], "exact": honest["coverage"],
                  "se": sampled["coverage_se"]}).round(3)
-   sampled["chi2"].round(3)
+   sampled["reduced_chi2"].round(3)
 
-The noisy world, in the loop, gives the chi-squared that says in which
-direction the mismatch is wrong, beside the coverage that says what it costs:
+The noisy world, sampled, gives the chi-squared that says in which direction
+the mismatch is wrong, beside the coverage that says what it costs:
 
 .. ipython:: python
 
-   performance(trials(noisy, post, 400, 0, W)).droplevel("block")[["coverage", "chi2"]].round(3)
+   performance(post.trials(noisy, 400, rng=0, W=W)).droplevel("block")[["coverage", "reduced_chi2"]].round(3)
 
-Use the exact table where it applies and the loop for what it lacks; where
-both apply, the loop should agree with the table within its standard errors,
-which is also the check that your loop is right.
+Use the exact table where it applies and ``trials`` for what it lacks. Where
+both apply they agree within the standard errors, which is also how ``trials``
+is tested.
 
 .. _function-worlds:
 
@@ -292,7 +285,7 @@ Worlds no Problem can describe
 
 A world is anything that takes a generator and returns a truth and
 observations. ``Problem.simulate`` is one; a function of your own is another,
-and the loop above takes either. Two worlds a real experiment needs and a
+and ``trials`` takes either. Two worlds a real experiment needs and a
 ``Problem`` cannot describe: a truth that is lognormal about the prior (so it
 stays positive and its spread scales with the prior), and an error the
 inversion cannot see, such as a transport error that scales every observation
@@ -311,7 +304,7 @@ of a trial by one factor. Each is a few lines, since vectors do arithmetic by la
        obs = problem.predict(truth) * scale + problem.obs_cov.sample(rng)
        return truth, obs
 
-   performance(trials(lognormal_world, post, 400, 0, W)).droplevel("block")[["bias", "std", "posterior_std", "coverage"]].round(3)
+   performance(post.trials(lognormal_world, 400, rng=0, W=W)).droplevel("block")[["bias", "std", "posterior_std", "coverage"]].round(3)
 
 The error the inversion cannot see lands in the totals: the real spread is
 twice the claimed one, and the 95% interval holds the truth two times in three.
@@ -336,8 +329,8 @@ honest world of the first:
 
 .. ipython:: python
 
-   both = pd.concat({"loose": trials(problem, post, 400, 0, W),
-                     "tight": trials(problem, post_tight, 400, 0, W)}, names=["inversion"])
+   both = pd.concat({"loose": post.trials(problem, 400, rng=0, W=W),
+                     "tight": post_tight.trials(problem, 400, rng=0, W=W)}, names=["inversion"])
    performance(both).droplevel("block")[["bias", "std", "posterior_std", "coverage"]].round(3)
 
 In a world drawn from the loose prior, the tight inversion has no bias on
@@ -353,10 +346,9 @@ A world on other state labels
 The two inversions above share a state. Two that do not (a gridded and a
 basin inversion, a monthly and an annual one, the whole state and the part
 the solve was restricted to) are compared on totals that both add up to: each
-state has its own aggregation to the same rows. In the loop that is ``W`` on
-the estimate and another ``W`` on the truth; ``recovery`` takes the second as
-``W_world``, and the error of each total, :math:`W \hat{x} - W_w x`, keeps its
-closed form.
+state has its own aggregation to the same rows. ``recovery`` and ``trials``
+take the world's as ``W_world``, and the error of each total,
+:math:`W \hat{x} - W_w x`, keeps its closed form.
 
 The question a year of data raises: does an annual inversion, fed the
 observations of a seasonal flux, recover the mean flux, or does it alias the
@@ -407,9 +399,12 @@ annual inversion's claimed spread:
    post_annual.recovery(problem, W=W_annual, W_world=W_monthly).droplevel("block")[["std", "posterior_std", "coverage"]].round(3)
 
 The annual inversion's prior has no room for the month-to-month variation the
-world draws, so its intervals are too narrow. The loop takes a world on other
-labels the same way: the truth through ``W_world`` and the estimate through
-``W``, and it is the check that ``recovery`` is right here too.
+world draws, so its intervals are too narrow. ``trials`` takes the same
+``W_world``, and agrees:
+
+.. ipython:: python
+
+   performance(post_annual.trials(problem, 400, rng=0, W=W_annual, W_world=W_monthly)).droplevel("block")[["std", "posterior_std", "coverage"]].round(3)
 
 Reading the table
 -----------------

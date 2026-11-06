@@ -840,3 +840,129 @@ def test_recovery_allocates_nothing_n_by_n_or_m_by_m(form):
     assert peak < too_big / 2, (
         f"peak {peak / 1e6:.1f} MB; one {max(n, m)} x {max(n, m)} is {too_big / 1e6:.1f} MB"
     )
+
+
+# ---------------------------------------------------------------------------
+# Posterior.trials: the loop as a method
+# ---------------------------------------------------------------------------
+
+
+def _assert_summary_matches(table: pd.DataFrame, exact: pd.DataFrame) -> None:
+    """Hold the trial table's bias, spread and coverage to the exact table within STANDARD_ERRORS."""
+    by = [name for name in table.index.names if name != "trial"]
+    error = table["estimate"] - table["truth"]
+    mean = error.groupby(level=by, sort=False, dropna=False).mean().to_numpy()
+    spread = error.groupby(level=by, sort=False, dropna=False).std().to_numpy()
+    n = table.index.get_level_values("trial").nunique()
+    bias, std = exact["bias"].to_numpy(), exact["std"].to_numpy()
+    np.testing.assert_array_less(
+        np.abs(mean - bias), STANDARD_ERRORS * spread / np.sqrt(n)
+    )
+    np.testing.assert_array_less(
+        np.abs(spread - std), STANDARD_ERRORS * std / np.sqrt(2 * (n - 1))
+    )
+    inside = error.abs() <= norm.ppf(0.975) * table["posterior_std"]
+    frequency = inside.groupby(level=by, sort=False, dropna=False).mean().to_numpy()
+    p = exact["coverage"].to_numpy()
+    np.testing.assert_array_less(
+        np.abs(frequency - p), STANDARD_ERRORS * np.sqrt(p * (1 - p) / n) + 1e-12
+    )
+
+
+def test_trials_is_the_loop_draw_for_draw(analytic_form):
+    """``post.trials`` gives what the loop of ``simulate`` and ``with_data`` gives on the same seed, row for row."""
+    arrays = World()
+    post = fips.solve(arrays.problem())
+    world = _misspecified_world(arrays)
+    W = _flux_totals()
+    table = post.trials(world, 5, rng=3, W=W)
+    assert table.index.names == ["trial", *W.rows.index.names]
+    assert list(table.columns) == ["truth", "estimate", "posterior_std", "reduced_chi2"]
+    rng = np.random.default_rng(3)
+    for i in range(5):
+        x, z = world.simulate(rng)
+        trial = post.with_data(z)
+        row = table.xs(i, level="trial")
+        assert row.index.equals(W.rows.index)
+        np.testing.assert_allclose(row["truth"], (W @ x).values, rtol=1e-12)
+        np.testing.assert_allclose(
+            row["estimate"], (W @ trial.estimate).values, rtol=1e-12
+        )
+        np.testing.assert_allclose(row["reduced_chi2"], trial.reduced_chi2, rtol=1e-12)
+    np.testing.assert_allclose(
+        table.xs(0, level="trial")["posterior_std"],
+        np.sqrt(post.cov(W).variances.values),
+        rtol=1e-12,
+    )
+    each = post.trials(world, 2, rng=3)  # one row per state element
+    assert each.index.names == ["trial", *STATE.index.names]
+    assert len(each) == 2 * N
+    assert each.xs(0, level="trial").index.equals(STATE.index)
+    pd.testing.assert_frame_equal(
+        post.trials(world, 5, rng=3, W=W), table
+    )  # a seed repeats
+
+
+def test_trials_summarizes_to_recovery(analytic_form):
+    """The trials' bias, spread and coverage are ``recovery``'s within their standard errors, with and without W."""
+    arrays = World()
+    post = fips.solve(arrays.problem(), gamma=2.0)
+    W = _flux_totals()
+    for world in (None, _misspecified_world(arrays)):
+        for aggregation in (None, W):
+            table = post.trials(world, TRIALS, rng=4, W=aggregation)
+            _assert_summary_matches(table, post.recovery(world, W=aggregation))
+    at_one = fips.solve(arrays.problem()).trials(None, TRIALS, rng=4)  # gamma 1
+    assert np.isclose(
+        at_one["reduced_chi2"].groupby(level="trial").first().mean(),
+        1.0,
+        atol=STANDARD_ERRORS * np.sqrt(2.0 / M) / np.sqrt(TRIALS),
+    )
+
+
+def test_trials_takes_a_function_world_and_other_labels(analytic_form):
+    """A function world and ``W_world``: the table summarizes to ``recovery`` across labels, and a seed pairs two posteriors."""
+    arrays = World()
+    world = arrays.problem()
+    annual, W, W_world = _annual_inversion_of(world)
+    post = fips.solve(annual)
+
+    def make(rng):
+        return world.simulate(rng)
+
+    table = post.trials(make, TRIALS, rng=6, W=W, W_world=W_world)
+    _assert_summary_matches(table, post.recovery(world, W=W, W_world=W_world))
+    other = post.with_gamma(0.5).trials(make, 5, rng=6, W=W, W_world=W_world)
+    first = table[table.index.get_level_values("trial") < 5]
+    pd.testing.assert_series_equal(other["truth"], first["truth"])  # the same worlds
+    assert not np.allclose(
+        other["estimate"], first["estimate"]
+    )  # another inversion of them
+
+
+def test_trials_refuses_what_it_cannot_run():
+    """A bad count, a world that is neither, a world that returns arrays, and labels that do not add up raise."""
+    arrays = World()
+    problem = arrays.problem()
+    post = fips.solve(problem)
+    W = _flux_totals()
+    for n in (0, -1, 2.5, True):
+        with pytest.raises(ValueError, match="positive integer"):
+            post.trials(n=n)  # type: ignore[arg-type]
+    with pytest.raises(TypeError, match="world is a Problem"):
+        post.trials(3, 1)  # type: ignore[arg-type]
+    with pytest.raises(TypeError, match="two Vectors"):
+        post.trials(lambda rng: (arrays.x0, arrays.z), 1)  # type: ignore[arg-type,return-value]
+    with pytest.raises(ValueError, match="W_world needs W"):
+        post.trials(problem, 1, W_world=W)
+    with pytest.raises(TypeError, match="W_world is an Operator"):
+        post.trials(problem, 1, W=W, W_world=3)  # type: ignore[arg-type]
+    daily = problem.aggregate(fips.aggregate.mean(OBS, by="site", blocks="co2"))
+    with pytest.raises(ValueError, match="new observations"):
+        post.trials(daily, 1)
+    annual, W_annual, W_world = _annual_inversion_of(problem)
+    post_annual = fips.solve(annual)
+    with pytest.raises(ValueError, match="give W on the posterior's state and W_world"):
+        post_annual.trials(problem, 1)
+    with pytest.raises(ValueError, match="columns of W_world"):
+        post_annual.trials(problem, 1, W=W_annual, W_world=W_annual)
