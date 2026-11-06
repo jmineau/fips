@@ -59,6 +59,12 @@ round floats. Duplicate, missing (NaN) and unnamed labels raise a
 rounding are rounded on purpose, with :meth:`~fips.Vector.round_labels` (also
 on a :class:`~fips.Space` and an :class:`~fips.Operator`).
 
+Vectors do arithmetic by label. ``v + w``, ``v - w``, ``v * w`` and ``v / w``
+put ``w`` in the order of ``v``'s labels first (a missing or extra label
+raises, naming it), and a number or a 1D array combines by position;
+``np.exp(v)`` and ``np.maximum(v, w)`` return vectors too. A reduction such as
+``np.sum(v)`` is not defined: use ``v.values``.
+
 A vector is read-only: a new value is a new vector. :meth:`~fips.Vector.align`
 puts a vector in the order of a space with the same labels, and
 :meth:`~fips.Vector.combine_first` fills the labels one vector lacks from

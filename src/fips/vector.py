@@ -7,6 +7,7 @@ variances. The values are a NumPy array and the labels are the space's; a
 :class:`pandas.Series` is what :meth:`Vector.to_series` gives.
 """
 
+import numbers
 from collections.abc import Mapping
 
 import numpy as np
@@ -27,6 +28,17 @@ class Vector:
     called. A vector of one block is what a single state or observation
     component is (``Vector.from_series(series, block="flux")``); several
     blocks are put together with :meth:`from_blocks`.
+
+    Vectors do arithmetic by label: ``+``, ``-``, ``*``, ``/`` and NumPy's
+    element-wise functions (``np.exp``, ``np.log``, ``np.maximum``, ...) take a
+    vector, a number or a 1D array. The right-hand vector is put in the order
+    of the left's space by its labels, so the order does not matter, but its
+    labels must be exactly the left's (a missing or extra one raises). A
+    number or array is combined by position, as the constructor takes one. The
+    result is a new vector on the left's space, named as its operands if they
+    agree. A pandas object is refused (its labels would be ignored): use
+    :meth:`from_series`. A reduction such as ``np.sum(v)`` is not defined; use
+    :attr:`values`.
 
     Parameters
     ----------
@@ -71,6 +83,17 @@ class Vector:
     array([1., 2.])
     >>> prior["flux"].space.select("flux")
     Index([1, 2], dtype='int64', name='cell')
+
+    Arithmetic matches labels, whatever their order:
+
+    >>> import numpy as np
+    >>> other = Vector.from_series(
+    ...     pd.Series([20.0, 10.0], index=pd.Index([2, 1], name="cell")), block="flux"
+    ... )
+    >>> (prior["flux"] + other).values
+    array([11., 22.])
+    >>> np.exp(prior["flux"] - prior["flux"]).values
+    array([1., 1.])
     """
 
     def __init__(self, values: npt.ArrayLike, space: Space, name: str | None = None):
@@ -95,6 +118,19 @@ class Vector:
             raise ValueError(
                 f"Got {len(array)} values for a space of {len(space)} labels."
             )
+        self._hold(array, space, name)
+
+    @classmethod
+    def _adopt(
+        cls, values: np.ndarray, space: Space, name: str | None = None
+    ) -> "Vector":
+        """Return the vector that holds `values` itself, which fips just made, without copying it."""
+        vector = cls.__new__(cls)
+        vector._hold(values, space, name)
+        return vector
+
+    def _hold(self, array: np.ndarray, space: Space, name: str | None) -> None:
+        """Hold `array`, one float for each label of `space`, read-only; refuse NaN."""
         nan = np.isnan(array)
         if nan.any():
             raise ValueError(
@@ -446,6 +482,99 @@ class Vector:
             If rounding makes two labels of a block equal.
         """
         return Vector(self._values, self._space.round_labels(decimals), name=self._name)
+
+    def _operand(self, other: object) -> np.ndarray | float:
+        """Return `other`'s values in this vector's order: aligned by label for a vector, by position otherwise."""
+        if isinstance(other, Vector):
+            if other._space is self._space:
+                return other._values
+            positions = self._space._align(
+                other._space, "the other vector", "The two vectors"
+            )
+            return other._values[positions]
+        if not isinstance(other, (numbers.Real, np.bool_, np.ndarray, list, tuple)):
+            raise TypeError(
+                "A vector is combined with a vector, a number or a 1D array, "
+                f"not {type(other).__name__}, whose labels would be ignored. "
+                "Build a vector from a Series with Vector.from_series, or "
+                "use .values for the values by position (an Operator is "
+                "applied with @)."
+            )
+        array = np.asarray(other, dtype=float)
+        if array.ndim == 0:
+            return float(array)
+        if array.ndim != 1:
+            raise ValueError(f"A vector's values are 1D, got shape {array.shape}.")
+        if len(array) != len(self):
+            raise ValueError(
+                f"Got {len(array)} values for a space of {len(self)} labels."
+            )
+        return array
+
+    @staticmethod
+    def _apply(ufunc: np.ufunc, *inputs: object) -> "Vector":
+        """Return ``ufunc(*inputs)`` as a vector on the space of the first vector among `inputs`."""
+        vectors = [x for x in inputs if isinstance(x, Vector)]
+        first = vectors[0]
+        names = {v._name for v in vectors}
+        values = ufunc(*(first._operand(x) for x in inputs))
+        return Vector._adopt(
+            values, first._space, names.pop() if len(names) == 1 else None
+        )
+
+    def __array_ufunc__(self, ufunc, method, *inputs, **kwargs):
+        """
+        Apply an element-wise NumPy function to vectors, numbers and arrays.
+
+        ``np.exp(v)`` and ``np.maximum(v, w)`` return a vector on the space of
+        the first vector given (the others are aligned to it by label, as in
+        ``v + w``). Anything else, such as a reduction (``np.sum(v)``), a
+        function with a keyword argument (``out=``), one with several
+        outputs or one whose result is not a float (a comparison), is not
+        defined for a vector: use :attr:`values`.
+        """
+        if method != "__call__" or kwargs or ufunc.nout != 1 or ufunc.signature:
+            return NotImplemented
+        result = self._apply(ufunc, *inputs)
+        if result.values.dtype.kind != "f":
+            return NotImplemented
+        return result
+
+    def __neg__(self) -> "Vector":
+        """Return the vector with every value negated."""
+        return Vector._adopt(-self._values, self._space, self._name)
+
+    def __add__(self, other: "Vector | npt.ArrayLike") -> "Vector":
+        """Return ``self + other``, the labels of a vector matched (see the class)."""
+        return self._apply(np.add, self, other)
+
+    def __radd__(self, other: "npt.ArrayLike") -> "Vector":
+        """Return ``other + self`` for a number or an array."""
+        return self._apply(np.add, other, self)
+
+    def __sub__(self, other: "Vector | npt.ArrayLike") -> "Vector":
+        """Return ``self - other``, the labels of a vector matched (see the class)."""
+        return self._apply(np.subtract, self, other)
+
+    def __rsub__(self, other: "npt.ArrayLike") -> "Vector":
+        """Return ``other - self`` for a number or an array."""
+        return self._apply(np.subtract, other, self)
+
+    def __mul__(self, other: "Vector | npt.ArrayLike") -> "Vector":
+        """Return ``self * other``, the labels of a vector matched (see the class)."""
+        return self._apply(np.multiply, self, other)
+
+    def __rmul__(self, other: "npt.ArrayLike") -> "Vector":
+        """Return ``other * self`` for a number or an array."""
+        return self._apply(np.multiply, other, self)
+
+    def __truediv__(self, other: "Vector | npt.ArrayLike") -> "Vector":
+        """Return ``self / other``, the labels of a vector matched (see the class)."""
+        return self._apply(np.true_divide, self, other)
+
+    def __rtruediv__(self, other: "npt.ArrayLike") -> "Vector":
+        """Return ``other / self`` for a number or an array."""
+        return self._apply(np.true_divide, other, self)
 
     def __repr__(self) -> str:
         """Return the name and space, then the values as a Series."""
