@@ -444,6 +444,109 @@ def test_recovery_is_the_mean_of_the_loop(analytic_form, kind, gamma):
     assert far
 
 
+def _annual_inversion_of(world: Problem) -> tuple[Problem, Operator, Operator]:
+    """
+    Return the annual inversion of the monthly `world`'s observations, and the aggregations to compare on.
+
+    The annual state has one flux per cell (the month level summed out) and
+    the same bias block; its forward operator is the world's with the columns
+    of each cell added over the months. ``W`` is the identity on that state
+    and ``W_world`` the mean over the months of the world's, so both give one
+    row per cell and one per site.
+    """
+    annual_state = Space({"flux": CELLS, "bias": SITES})
+    R = np.zeros((N, len(annual_state)))  # annual element -> its monthly elements
+    for j, (_, cell) in enumerate(FLUX):
+        R[j, CELLS.get_loc(cell)] = 1.0
+    for j in range(len(SITES)):
+        R[len(FLUX) + j, len(CELLS) + j] = 1.0
+    months = R.sum(axis=0)
+    H_annual = np.asarray(world.forward.data @ R)
+    annual = Problem(
+        prior=Vector(np.asarray(world.prior.values @ R) / months, annual_state),
+        prior_cov=Covariance(
+            R.T @ world.prior_cov.data.dense() @ R / np.outer(months, months),
+            annual_state,
+        ),
+        obs=Vector(np.zeros(M), OBS),
+        obs_cov=world.obs_cov,
+        forward=Operator(H_annual, OBS, annual_state),
+        offset=world.offset,
+    )
+    W = fips.aggregate.sum(annual_state, by="cell", blocks="flux")
+    W_world = fips.aggregate.mean(STATE, by="cell", blocks="flux")
+    return annual, W, W_world
+
+
+@pytest.mark.parametrize("kind", ["drawn", "seasonal truth"])
+def test_recovery_across_state_labels_is_the_mean_of_the_loop(analytic_form, kind):
+    """
+    A monthly world recovered by an annual inversion: ``recovery`` with ``W_world`` is what the trials show.
+
+    The error of each cell's annual flux (and of each bias) against the mean
+    over the months of the monthly truth, within `STANDARD_ERRORS` of the
+    trials as :func:`test_recovery_is_the_mean_of_the_loop` holds it. The
+    truth is drawn from the monthly prior, or fixed with a seasonal cycle
+    that the annual state cannot hold.
+    """
+    arrays = World()
+    world = arrays.problem()
+    annual, W, W_world = _annual_inversion_of(world)
+    post = fips.solve(annual)
+    truth = None
+    if kind == "seasonal truth":
+        season = np.array([1.3, 0.85, 0.85])  # the mean over the months is 1
+        values = arrays.x0.copy()
+        values[STATE.slice("flux")] *= np.repeat(season, len(CELLS))
+        truth = Vector(values, STATE)
+    table = post.recovery(world, truth=truth, W=W, W_world=W_world)
+    errors = []
+    rng = np.random.default_rng(10)
+    for _ in range(TRIALS):
+        x, z = world.simulate(rng, truth=truth)
+        errors.append((W @ post.with_data(z).estimate).values - (W_world @ x).values)
+    error = np.array(errors)
+    mean, spread = error.mean(axis=0), error.std(axis=0, ddof=1)
+    bias, std = table["bias"].to_numpy(), table["std"].to_numpy()
+    np.testing.assert_array_less(
+        np.abs(mean - bias), STANDARD_ERRORS * spread / np.sqrt(TRIALS)
+    )
+    np.testing.assert_array_less(
+        np.abs(spread - std), STANDARD_ERRORS * std / np.sqrt(2 * (TRIALS - 1))
+    )
+    inside = np.abs(error) <= norm.ppf(0.975) * table["posterior_std"].to_numpy()
+    p = table["coverage"].to_numpy()
+    np.testing.assert_array_less(
+        np.abs(inside.mean(axis=0) - p), STANDARD_ERRORS * np.sqrt(p * (1 - p) / TRIALS)
+    )
+    assert table.index.equals(W.rows.index)
+    np.testing.assert_allclose(
+        table["truth"], (W_world @ (world.prior if truth is None else truth)).values
+    )
+
+
+def test_recovery_across_state_labels_refuses_what_does_not_add_up():
+    """A world on other labels needs W and W_world, whose rows are W's and whose columns are the world's state."""
+    arrays = World()
+    world = arrays.problem()
+    annual, W, W_world = _annual_inversion_of(world)
+    post = fips.solve(annual)
+    with pytest.raises(ValueError, match="give W on the posterior's state and W_world"):
+        post.recovery(world)
+    with pytest.raises(ValueError, match="W_world needs W"):
+        post.recovery(world, W_world=W_world)
+    with pytest.raises(TypeError, match="W_world is an Operator, not int"):
+        post.recovery(world, W=W, W_world=3)  # type: ignore[arg-type]
+    with pytest.raises(ValueError, match="columns of W_world and the world's state"):
+        post.recovery(world, W=W, W_world=W)
+    with pytest.raises(ValueError, match="rows of W_world and the rows of W"):
+        post.recovery(
+            world, W=W, W_world=fips.aggregate.mean(STATE, by="time", blocks="flux")
+        )
+    with pytest.raises(ValueError, match="truth and the prior"):
+        post.recovery(world, truth=annual.prior, W=W, W_world=W_world)
+
+
 def test_recovery_refuses_what_it_cannot_answer():
     """A method not linear in the data, other labels, and bad arguments raise, naming the problem."""
     arrays = World()

@@ -206,19 +206,18 @@ where the first recovers nearly all of it:
 
    pd.DataFrame({"loose prior": recovered(post), "tight prior": recovered(post_tight)}).round(3)
 
-``recovery`` takes a world with exactly the posterior's state and observation
-labels, a method whose estimate is linear in the observations, and a Gaussian
-or fixed truth. Everything else is a loop.
+``recovery`` takes a world with the posterior's observation labels, a method
+whose estimate is linear in the observations, and a Gaussian or fixed truth. A
+world whose state has other labels is compared on totals that both add up to
+(:ref:`other-state-labels`). Everything else is a loop.
 
 When you need trials
 --------------------
 
-Four things have no closed form: a statistic ``recovery`` does not give (the
+Three things have no closed form: a statistic ``recovery`` does not give (the
 reduced chi-squared of each trial), a world whose truth is not Gaussian or
-whose error is not additive, a world on other state labels (the whole state
-where the solve was restricted, a monthly truth for an annual inversion), and a
-method whose estimate is not linear in the observations. For those, write the
-loop. It is short, and it is yours: the world makes the data, the inversion
+whose error is not additive, and a method whose estimate is not linear in the
+observations. For those, write the loop. It is short, and it is yours: the world makes the data, the inversion
 solves them, and each trial adds its rows to a table.
 
 .. ipython:: python
@@ -344,10 +343,73 @@ honest world of the first:
 In a world drawn from the loose prior, the tight inversion has no bias on
 average but claims a third of the spread it has, so its 95% interval holds the
 truth less than half the time: the prior it trusts is not the one the world
-drew from. When the two inversions have different states (a gridded and a basin
-inversion, a monthly and an annual one), each takes its own ``W`` to the same
-totals, with the same row labels, and the loop compares them as above;
-``recovery`` needs the world on the posterior's own labels.
+drew from.
+
+.. _other-state-labels:
+
+A world on other state labels
+-----------------------------
+
+The two inversions above share a state. Two that do not (a gridded and a
+basin inversion, a monthly and an annual one, the whole state and the part
+the solve was restricted to) are compared on totals that both add up to: each
+state has its own aggregation to the same rows. In the loop that is ``W`` on
+the estimate and another ``W`` on the truth; ``recovery`` takes the second as
+``W_world``, and the error of each total, :math:`W \hat{x} - W_w x`, keeps its
+closed form.
+
+The question paper 1 asked this way: does an annual inversion, fed a year of
+observations of a seasonal flux, recover the mean flux, or does it alias the
+season through a footprint that is stronger in some months? The annual
+inversion has one flux per cell, and its forward operator is the monthly one
+with each cell's three columns added. The totals are each cell's flux: the
+identity on the annual state, the mean over the months on the monthly one.
+
+.. ipython:: python
+
+   annual_space = fips.Space({"flux": cells})
+   per_cell = np.kron(np.ones((3, 1)), np.eye(4))  # a monthly element -> its annual cell
+   annual = fips.Problem(
+       prior=fips.Vector(np.ones(4), annual_space, name="prior"),
+       prior_cov=fips.Exponential("x", 1.0).with_std(0.5),
+       obs=fips.Vector(np.zeros(24), obs_space, name="conc"),
+       obs_cov=fips.Independent().with_std(0.3),
+       forward=fips.Operator((weights * sees_month) @ per_cell, obs_space, annual_space),
+   )
+   post_annual = fips.solve(annual)
+   W_annual = fips.aggregate.sum(annual_space, by="x")  # each cell's annual flux
+   W_monthly = fips.aggregate.mean(prior.space, by="x")  # the mean over the months
+
+A truth of 1.5 times the prior with a season (one month at 1.3 times its mean,
+the other two at 0.85) and no noise, as paper 1 did it, against the same truth
+recovered by the monthly inversion and averaged over the months:
+
+.. ipython:: python
+
+   def aliasing(season):
+       """Return the bias of each cell's flux from the annual and the monthly inversion."""
+       truth = fips.Vector(1.5 * prior.values * np.repeat(season, 4), prior.space)
+       annual_bias = post_annual.recovery(problem, truth=truth, W=W_annual, W_world=W_monthly)["bias"]
+       monthly_bias = post.recovery(truth=truth, W=W_monthly)["bias"]
+       return pd.DataFrame({"annual": annual_bias, "monthly, averaged": monthly_bias}).droplevel("block")
+
+   pd.concat({"flat": aliasing([1.0, 1.0, 1.0]), "first month high": aliasing([1.3, 0.85, 0.85])}, axis=1).round(3)
+
+With a flat truth both inversions are nearly unbiased. With a season, the
+annual inversion's biases are several times its spread while the monthly
+inversion's stay small: the season is aliased, because the footprint weights
+differ between the months and the annual state cannot tell a strong month from
+a strong cell. The honest world of the monthly problem says the same about the
+annual inversion's claimed spread:
+
+.. ipython:: python
+
+   post_annual.recovery(problem, W=W_annual, W_world=W_monthly).droplevel("block")[["std", "posterior_std", "coverage"]].round(3)
+
+The annual inversion's prior has no room for the month-to-month variation the
+world draws, so its intervals are too narrow. The loop takes a world on other
+labels the same way: the truth through ``W_world`` and the estimate through
+``W``, and it is the check that ``recovery`` is right here too.
 
 Reading the table
 -----------------

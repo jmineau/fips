@@ -2030,28 +2030,42 @@ class Posterior:
 
     # -- the error of the estimate in a world ----------------------------------
 
-    def _on_labels(self, world: Problem) -> Problem:
+    def _on_labels(self, world: Problem, own_state: bool = False) -> Problem:
         """
         Return `world` with its inputs in the order of this posterior's labels.
+
+        With `own_state`, the world keeps its state (on any labels) and only
+        its observations are put in the posterior's order.
 
         Raises
         ------
         TypeError
             If `world` is not a Problem.
         ValueError
-            If its state or observations do not have exactly the labels of
-            this posterior's; the message names those on one side only.
+            If its observations, or its state unless `own_state`, do not have
+            exactly the labels of this posterior's; the message names those
+            on one side only.
         """
         if not isinstance(world, Problem):
             raise TypeError(f"world must be a Problem, got {type(world).__name__}.")
         state, observed = self._problem.prior.space, self._problem.obs.space
-        if world.prior.space == state and world.obs.space == observed:
+        if world.obs.space == observed and (own_state or world.prior.space == state):
             return world
-        s = state._align(
-            world.prior.space,
-            "the world's state",
-            "The world's state and the posterior's",
-        )
+        if own_state:
+            prior = world.prior
+        else:
+            try:
+                s = state._align(
+                    world.prior.space,
+                    "the world's state",
+                    "The world's state and the posterior's",
+                )
+            except ValueError as error:
+                raise ValueError(
+                    f"{error} A world on other state labels is compared on totals: "
+                    "give W on the posterior's state and W_world on the world's."
+                ) from None
+            prior = Vector(world.prior.values[s], state)
         o = observed._align(
             world.obs.space,
             "the world's observations",
@@ -2059,7 +2073,7 @@ class Posterior:
         )
         # Problem puts the operators, covariances and offset on these spaces
         return Problem(
-            prior=Vector(world.prior.values[s], state),
+            prior=prior,
             prior_cov=world.prior_cov,
             obs=Vector(world.obs.values[o], observed),
             obs_cov=world.obs_cov,
@@ -2073,6 +2087,7 @@ class Posterior:
         *,
         truth: Vector | None = None,
         W: Operator | None = None,
+        W_world: Operator | None = None,
         level: float = 0.95,
     ) -> pd.DataFrame:
         r"""
@@ -2103,22 +2118,36 @@ class Posterior:
         bias is zero and :math:`V` is :math:`\hat{S}` (in Joseph form), so
         ``std`` equals ``posterior_std``.
 
+        The world's state may have other labels than the posterior's (a
+        monthly truth recovered by an annual inversion, the whole state where
+        the solve was restricted, a gridded truth and a basin inversion) when
+        both are added up to the same totals: `W` on the posterior's state and
+        `W_world` on the world's, with the same rows. The error of a total is
+        then :math:`W \hat{x} - W_w x`, with mean :math:`W x_0 + W K (H_w \mu
+        + c_w - H x_0 - c) - W_w \mu` and covariance :math:`G P G^T + W K R_w
+        K^T W^T`, :math:`G = W K H_w - W_w` (``k x n_w``): the same formula,
+        with :math:`W` on each side its own.
+
         Parameters
         ----------
         world : Problem, optional
             The problem that makes the data, with exactly this posterior's
-            state and observation labels (in any order); its own observations
-            are not used. By default the posterior's problem. A world on
-            other state labels (the whole state where the solve was
-            restricted) is not taken: use ``world.simulate`` and
-            :meth:`with_data` in a loop.
+            observation labels (in any order) and, unless `W_world` is given,
+            its state labels; its own observations are not used. By default
+            the posterior's problem.
         truth : Vector, optional
-            A fixed truth, on the state's labels in any order, instead of the
-            world's prior (another inventory, 1.5 times the prior). Only the
-            observation error is then random.
+            A fixed truth, on the world's state labels in any order, instead
+            of the world's prior (another inventory, 1.5 times the prior).
+            Only the observation error is then random.
         W : Operator, optional
             An aggregation, as :meth:`cov` takes it: one row per total. By
-            default, one row per state element.
+            default, one row per state element. Required with `W_world`.
+        W_world : Operator, optional
+            The aggregation of the world's state to the same totals, for a
+            world whose state has other labels than the posterior's: its
+            columns the world's state labels, its rows exactly the rows of
+            `W` (in any order). By default `W`, so the world must then have
+            the posterior's state labels.
         level : float, default 0.95
             The probability of the posterior's interval that ``coverage``
             is computed for, :math:`\hat{x} \pm z_{level} \hat{\sigma}`.
@@ -2149,9 +2178,11 @@ class Posterior:
             solution does not set ``estimate_is_linear``), or `world` is not
             a Problem, or `truth` not a Vector.
         ValueError
-            If the world's state or observations, the truth or the columns of
-            `W` do not have exactly this posterior's labels (the message names
-            those on one side only), or `level` is not between 0 and 1.
+            If the world's observations or, without `W_world`, its state, the
+            truth or the columns of `W` do not have exactly this posterior's
+            labels (the message names those on one side only); if `W_world`
+            is given without `W`, its columns are not the world's state or
+            its rows are not `W`'s; or `level` is not between 0 and 1.
 
         See Also
         --------
@@ -2220,20 +2251,31 @@ class Posterior:
         if not 0.0 < level < 1.0:
             raise ValueError(f"level must be between 0 and 1, got {level}.")
         problem = self._problem
-        world = problem if world is None else self._on_labels(world)
-        state = problem.prior.space
+        if W_world is not None and W is None:
+            raise ValueError(
+                "W_world needs W: a world on other state labels is compared on "
+                "totals, W on the posterior's state and W_world on the world's."
+            )
+        world = (
+            problem
+            if world is None
+            else self._on_labels(world, own_state=W_world is not None)
+        )
+        state, world_state = problem.prior.space, world.prior.space
         if truth is None:
             mu, P = world.prior.values, world.prior_cov.data
         else:
             if not isinstance(truth, Vector):
                 raise TypeError(f"truth must be a Vector, got {type(truth).__name__}.")
             mu = truth.values
-            if truth.space != state:
-                mu = mu[state._align(truth.space, "truth", "The truth and the prior")]
+            if truth.space != world_state:
+                mu = mu[
+                    world_state._align(truth.space, "truth", "The truth and the prior")
+                ]
             P = None  # a fixed truth has no spread
         # The world's mean data minus what the problem's prior predicts
         d = (
-            world.predict(Vector(mu, state)).values
+            world.predict(Vector(mu, world_state)).values
             - problem.predict(problem.prior).values
         )
 
@@ -2241,16 +2283,30 @@ class Posterior:
             WK = self._solution.gain()  # n x m
             Wx0, Wmu = problem.prior.values, mu
             posterior_var = self.variances.values
-            Wt = np.eye(len(state))  # n x n: the per-element case
+            Wt_post = Wt = np.eye(len(state))  # n x n: the per-element case
             index = state.index
         else:
             W_form = self._aggregation(W)
             WK = self._solution.gain(W_form)  # k x m
             Wx0 = np.asarray(W_form @ problem.prior.values)
-            Wmu = np.asarray(W_form @ mu)
             posterior_var = self.cov(W).variances.values
-            Wt = W_form._transpose().dense()  # n x k
+            Wt_post = W_form._transpose().dense()  # n x k
             index = W.rows.index
+            if W_world is None:
+                Ww_form = W_form
+            else:
+                if not isinstance(W_world, Operator):
+                    raise TypeError(
+                        f"W_world is an Operator, not {type(W_world).__name__}."
+                    )
+                Ww_form = W_world._on(
+                    W.rows,
+                    world_state,
+                    "W_world",
+                    ("the rows of W", "the world's state"),
+                )
+            Wmu = np.asarray(Ww_form @ mu)
+            Wt = Ww_form._transpose().dense()  # n_w x k
 
         estimate = Wx0 + WK @ d
         bias = estimate - Wmu
@@ -2265,7 +2321,7 @@ class Posterior:
             scale += _largest_variance(Gt, P)
         std = _std(variance, scale, "error variances")
         prior_scale = _largest_variance(
-            None if W is None else Wt, problem.prior_cov.data
+            None if W is None else Wt_post, problem.prior_cov.data
         )
         posterior_std = _std(posterior_var, prior_scale, "posterior variances")
 

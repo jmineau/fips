@@ -1506,6 +1506,138 @@ def test_recovery_closed_form(gamma, aggregated, world_kind, truth_kind, n, m):
         _check_recovery(table, expected, index, f"seed {seed}")
 
 
+def _other_state_world(
+    case: Case, seed: int, n_w: int
+) -> tuple[pd.MultiIndex, dict, np.ndarray]:
+    """
+    Return a world whose state has `n_w` labels of its own, and an aggregation of it to two totals.
+
+    The world's prior mean and covariance, forward operator (``m x n_w``),
+    offset and mismatch are all its own; ``W_world`` (``2 x n_w``) adds its
+    state up to the same two totals as ``_two_regions`` adds the case's.
+    """
+    rng = np.random.default_rng(700 + seed)
+    m = len(case.c)
+    index = pd.MultiIndex.from_arrays(
+        [["flux"] * n_w, [f"w{k}" for k in rng.permutation(n_w)]],
+        names=["block", "cell"],
+    )
+    world = {
+        "mu": rng.normal(5.0, 2.0, n_w),
+        "P": random_spd(rng, n_w),
+        "H": rng.standard_normal((m, n_w)),
+        "c": case.c + rng.normal(0.0, 0.5, m),
+        "R": 4.0 * case.S_z,
+    }
+    return index, world, rng.uniform(0.0, 1.0, (2, n_w))
+
+
+def recovery_across_closed_form(
+    case: Case,
+    gamma: float,
+    world: dict,
+    W: np.ndarray,
+    W_world: np.ndarray,
+    level: float,
+) -> RecoveryForm:
+    """
+    Return the mean and spread of ``W x_hat - W_world x`` for a world on other state labels.
+
+    The formula of :func:`recovery_closed_form` with ``W`` on the posterior's
+    state and ``W_world`` on the world's: ``G = W K H_w - W_world``.
+    """
+    inv = np.linalg.inv
+    x_0, H, S_0, c = case.x_0, case.H, case.S_0, case.c
+    mu, P, H_w, c_w, R_w = (world[k] for k in ("mu", "P", "H", "c", "R"))
+    K = S_0 @ H.T @ inv(H @ S_0 @ H.T + case.S_z / gamma)
+    d = H_w @ mu + c_w - H @ x_0 - c
+    estimate = W @ x_0 + W @ K @ d
+    bias = estimate - W_world @ mu
+    G = W @ K @ H_w - W_world
+    V = G @ P @ G.T + W @ K @ R_w @ K.T @ W.T
+    S_hat = inv(H.T @ inv(case.S_z / gamma) @ H + inv(S_0))
+    std = np.sqrt(np.diag(V))
+    posterior_std = np.sqrt(np.diag(W @ S_hat @ W.T))
+    half = norm.ppf(0.5 + level / 2) * posterior_std
+    coverage = norm.cdf((half - bias) / std) - norm.cdf((-half - bias) / std)
+    a = np.abs
+    a_W = max(a(W).sum(axis=1).max(), a(W_world).sum(axis=1).max())
+    return RecoveryForm(
+        prior=W @ x_0,
+        truth=W_world @ mu,
+        estimate=estimate,
+        bias=bias,
+        std=std,
+        posterior_std=posterior_std,
+        coverage=coverage,
+        scale_x=a_W * max(a(x_0).max(), a(mu).max(), (a(K) @ a(d)).max()),
+        scale_std=a_W
+        * np.sqrt(
+            (a(G) @ a(P) @ a(G.T)).max() + (a(W @ K) @ a(R_w) @ a((W @ K).T)).max()
+        ),
+    )
+
+
+@pytest.mark.usefixtures("analytic_form")
+@pytest.mark.parametrize("gamma", [1.0, 4.0])
+@pytest.mark.parametrize("truth_kind", ["drawn", "fixed"])
+@pytest.mark.parametrize("n, m, n_w", [(3, 10, 5), (7, 4, 4)])
+def test_recovery_across_state_labels(gamma, truth_kind, n, m, n_w):
+    """
+    ``post.recovery(world, W=W, W_world=W_world)`` for a world on other state labels equals the closed form.
+
+    The world's state has ``n_w`` labels of its own, with every input its own;
+    ``W`` adds the posterior's state and ``W_world`` the world's up to the same
+    two totals. The odd seeds give the world, the truth and the rows of
+    ``W_world`` in their own orders.
+    """
+    for seed in range(4):
+        case = Case.random(seed, n, m)
+        post = solve(case.problem(), gamma=gamma)
+        w_index, world, Ww = _other_state_world(case, seed, n_w)
+        shuffle = np.random.default_rng(seed) if seed % 2 else None
+        world_case = Case(
+            case.z,
+            world["mu"],
+            world["H"],
+            world["P"],
+            world["R"],
+            world["c"],
+            None,
+            w_index,
+            case.obs_index,
+        )
+        world_problem = _world_problem(world_case, world, shuffle)
+        W, W_pos, index = _two_regions(case)
+        frame = pd.DataFrame(Ww, index=W.rows.index, columns=w_index)
+        W_world = Operator.from_frame(
+            frame if shuffle is None else _shuffled(frame, shuffle)
+        )
+        truth = None
+        if truth_kind == "fixed":
+            rng = np.random.default_rng(900 + seed)
+            fixed = world["mu"] * rng.uniform(0.5, 1.5, n_w)
+            truth = Vector.from_series(_shuffled(pd.Series(fixed, index=w_index), rng))
+            world = {**world, "mu": fixed, "P": np.zeros((n_w, n_w))}
+        expected = recovery_across_closed_form(case, gamma, world, W_pos, Ww, 0.9)
+        table = post.recovery(
+            world_problem, truth=truth, W=W, W_world=W_world, level=0.9
+        )
+        _check_recovery(table, expected, index, f"seed {seed}")
+
+
+@pytest.mark.usefixtures("analytic_form")
+def test_recovery_with_w_world_on_the_same_labels_is_recovery_with_w():
+    """``W_world`` equal to ``W`` on a world with the posterior's labels changes nothing."""
+    case = Case.random(3, 5, 8)
+    post = solve(case.problem())
+    world_problem = _world_problem(case, _world_arrays(case, 3, "other"), None)
+    W, _, _ = _two_regions(case)
+    pd.testing.assert_frame_equal(
+        post.recovery(world_problem, W=W, W_world=W), post.recovery(world_problem, W=W)
+    )
+
+
 @pytest.mark.usefixtures("analytic_form")
 @pytest.mark.parametrize("aggregated", [False, True], ids=["state", "W"])
 @pytest.mark.parametrize("n, m", [(3, 10), (7, 4)])
