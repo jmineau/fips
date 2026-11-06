@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>fips.posterior &#8212; fips 0.2.0b3.dev7+g480372630 documentation</title>
+    <title>fips.posterior &#8212; fips 0.2.0b3.dev8+g20ffe5c06 documentation</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../_static/documentation_options.js?v=b420fb47"></script>
+    <script src="../../_static/documentation_options.js?v=2cf1cef4"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -132,8 +132,8 @@
       
     
     
-    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev7+g480372630 documentation - Home"/>
-    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev7+g480372630 documentation - Home"/>
+    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev8+g20ffe5c06 documentation - Home"/>
+    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev8+g20ffe5c06 documentation - Home"/>
   
   
 </a></div>
@@ -443,6 +443,8 @@
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">dataclasses</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numbers</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">functools</span><span class="w"> </span><span class="kn">import</span> <span class="n">cached_property</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">ClassVar</span><span class="p">,</span> <span class="n">Protocol</span>
 
@@ -2700,6 +2702,7 @@
 
 <span class="sd">        See Also</span>
 <span class="sd">        --------</span>
+<span class="sd">        trials : The same question answered by sampling, for any world.</span>
 <span class="sd">        fips.Problem.simulate : One draw of a truth and its observations.</span>
 <span class="sd">        with_data : The posterior of one draw's observations.</span>
 <span class="sd">        cov : The posterior covariance, of the state or of aggregates.</span>
@@ -2856,6 +2859,226 @@
                 <span class="s2">"coverage"</span><span class="p">:</span> <span class="n">coverage</span><span class="p">,</span>
             <span class="p">},</span>
             <span class="n">index</span><span class="o">=</span><span class="n">index</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Posterior.trials">
+<a class="viewcode-back" href="../../reference/api/fips.Posterior.trials.html#fips.Posterior.trials">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">trials</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">world</span><span class="p">:</span> <span class="s2">"Problem | Callable[[np.random.Generator], tuple[Vector, Vector]] | None"</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">n</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">400</span><span class="p">,</span>
+        <span class="n">rng</span><span class="p">:</span> <span class="s2">"int | np.random.Generator | None"</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">W</span><span class="p">:</span> <span class="n">Operator</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">W_world</span><span class="p">:</span> <span class="n">Operator</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">        Return the truth and the estimate of each total in `n` trials of data made by `world`: the sampled :meth:`recovery`.</span>
+
+<span class="sd">        Each trial, the world makes a truth and its observations, this</span>
+<span class="sd">        posterior solves the observations with its own assumptions</span>
+<span class="sd">        (:meth:`with_data`, one product), and the totals of the two go into</span>
+<span class="sd">        one row per total. The table is the loop :meth:`recovery` answers</span>
+<span class="sd">        exactly, kept trial by trial, for what the exact answer cannot take: a</span>
+<span class="sd">        world whose truth is not Gaussian or whose error is not additive, a</span>
+<span class="sd">        statistic of each trial (its reduced chi-squared), or a method whose</span>
+<span class="sd">        estimate is not linear in the observations. Where both apply, the</span>
+<span class="sd">        table's bias, spread and coverage agree with ``recovery`` within their</span>
+<span class="sd">        Monte Carlo standard errors.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        world : Problem or callable, optional</span>
+<span class="sd">            What makes the data. A :class:`~fips.Problem` makes them with</span>
+<span class="sd">            :meth:`~fips.Problem.simulate` (a truth drawn from its prior, the</span>
+<span class="sd">            observations with its error); its observations must have this</span>
+<span class="sd">            posterior's labels, in any order, and its state this posterior's</span>
+<span class="sd">            unless `W_world` is given. Or a function of a</span>
+<span class="sd">            :class:`numpy.random.Generator` that returns ``(truth, obs)``, two</span>
+<span class="sd">            :class:`~fips.Vector`: a lognormal truth, an error the inversion</span>
+<span class="sd">            cannot see. By default the posterior's own problem.</span>
+<span class="sd">        n : int, default 400</span>
+<span class="sd">            The number of trials. With 400, a bias is known to a twentieth of</span>
+<span class="sd">            the spread and a coverage near 0.95 to about 0.01.</span>
+<span class="sd">        rng : int, numpy.random.Generator or None, default None</span>
+<span class="sd">            A seed, or the generator to draw from, as</span>
+<span class="sd">            :meth:`~fips.Problem.simulate` takes it. The same seed gives two</span>
+<span class="sd">            posteriors the same data, trial for trial, so their tables pair.</span>
+<span class="sd">        W : Operator, optional</span>
+<span class="sd">            An aggregation, as :meth:`recovery` takes it: one row per total.</span>
+<span class="sd">            By default, one row per state element.</span>
+<span class="sd">        W_world : Operator, optional</span>
+<span class="sd">            The aggregation of the world's state to the same totals, as</span>
+<span class="sd">            :meth:`recovery` takes it, for a world whose state has other</span>
+<span class="sd">            labels than the posterior's.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        pandas.DataFrame</span>
+<span class="sd">            One row per trial and total, indexed by ``trial`` (0 to ``n - 1``)</span>
+<span class="sd">            and then the rows of `W` (or the state's labels): ``truth``</span>
+<span class="sd">            (:math:`W_w x`), ``estimate`` (:math:`W \hat{x}`),</span>
+<span class="sd">            ``posterior_std`` (the spread the posterior claims,</span>
+<span class="sd">            :math:`\sqrt{\operatorname{diag} W \hat{S} W^T}`, the same in</span>
+<span class="sd">            every trial of a linear method) and ``reduced_chi2`` (the trial's</span>
+<span class="sd">            :attr:`reduced_chi2`, the same on every row of a trial). Its</span>
+<span class="sd">            ``groupby`` over the totals (with ``dropna=False``: a state of</span>
+<span class="sd">            several blocks is NaN on the levels a block lacks) gives the</span>
+<span class="sd">            performance measures: the mean of ``estimate - truth`` is the</span>
+<span class="sd">            bias, its standard deviation the spread, and the fraction of</span>
+<span class="sd">            trials with ``|estimate - truth| &lt;= z * posterior_std`` the</span>
+<span class="sd">            coverage.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        TypeError</span>
+<span class="sd">            If `world` is neither a Problem nor callable, or returns something</span>
+<span class="sd">            other than two Vectors; or the method cannot take new</span>
+<span class="sd">            observations (its solution has no ``with_data``).</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            If `n` is not a positive integer; if the world's observations do</span>
+<span class="sd">            not have exactly this posterior's labels, or its truth not the</span>
+<span class="sd">            state's (without `W_world`); if `W_world` is given without `W`,</span>
+<span class="sd">            or its columns are not the truth's labels or its rows not `W`'s.</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        --------</span>
+<span class="sd">        recovery : The exact bias, spread and coverage, without sampling.</span>
+<span class="sd">        fips.Problem.simulate : One draw of a truth and its observations.</span>
+<span class="sd">        with_data : The posterior of one draw's observations.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        The honest world of a small problem, sampled, beside the exact answer:</span>
+
+<span class="sd">        &gt;&gt;&gt; import numpy as np</span>
+<span class="sd">        &gt;&gt;&gt; import pandas as pd</span>
+<span class="sd">        &gt;&gt;&gt; import fips</span>
+<span class="sd">        &gt;&gt;&gt; cells = pd.Index(["a", "b"], name="cell")</span>
+<span class="sd">        &gt;&gt;&gt; prior = fips.Vector.from_series(pd.Series(1.0, index=cells), block="flux")</span>
+<span class="sd">        &gt;&gt;&gt; obs = fips.Vector(</span>
+<span class="sd">        ...     np.zeros(3), fips.Space({"co2": pd.RangeIndex(3, name="obs_id")})</span>
+<span class="sd">        ... )</span>
+<span class="sd">        &gt;&gt;&gt; problem = fips.Problem(</span>
+<span class="sd">        ...     prior=prior,</span>
+<span class="sd">        ...     prior_cov=fips.Independent().with_std(0.5),</span>
+<span class="sd">        ...     obs=obs,</span>
+<span class="sd">        ...     obs_cov=fips.Independent().with_std(0.2),</span>
+<span class="sd">        ...     forward=fips.Operator(</span>
+<span class="sd">        ...         np.array([[1.0, 0.0], [0.0, 1.0], [1.0, 1.0]]),</span>
+<span class="sd">        ...         obs.space,</span>
+<span class="sd">        ...         prior.space,</span>
+<span class="sd">        ...     ),</span>
+<span class="sd">        ... )</span>
+<span class="sd">        &gt;&gt;&gt; post = fips.solve(problem)</span>
+<span class="sd">        &gt;&gt;&gt; table = post.trials(n=2000, rng=0)</span>
+<span class="sd">        &gt;&gt;&gt; table.index.names</span>
+<span class="sd">        FrozenList(['trial', 'block', 'cell'])</span>
+<span class="sd">        &gt;&gt;&gt; error = table["estimate"] - table["truth"]</span>
+<span class="sd">        &gt;&gt;&gt; error.groupby(level="cell").std().round(</span>
+<span class="sd">        ...     2</span>
+<span class="sd">        ... ).tolist()  # the spread over trials</span>
+<span class="sd">        [0.16, 0.15]</span>
+<span class="sd">        &gt;&gt;&gt; post.recovery()["std"].round(2).tolist()  # the exact spread</span>
+<span class="sd">        [0.15, 0.15]</span>
+<span class="sd">        """</span>
+        <span class="n">resolve</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_optional</span><span class="p">(</span><span class="s2">"with_data"</span><span class="p">,</span> <span class="s2">"the posterior of other observations"</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">numbers</span><span class="o">.</span><span class="n">Integral</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="nb">bool</span><span class="p">)</span> <span class="ow">or</span> <span class="n">n</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"n is the number of trials, a positive integer, got </span><span class="si">{</span><span class="n">n</span><span class="si">!r}</span><span class="s2">."</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="n">W_world</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">W</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">"W_world needs W: a world on other state labels is compared on "</span>
+                <span class="s2">"totals, W on the posterior's state and W_world on the world's."</span>
+            <span class="p">)</span>
+        <span class="n">problem</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_problem</span>
+        <span class="k">if</span> <span class="n">world</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">make</span> <span class="o">=</span> <span class="n">problem</span><span class="o">.</span><span class="n">simulate</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">world</span><span class="p">,</span> <span class="n">Problem</span><span class="p">):</span>
+            <span class="n">make</span> <span class="o">=</span> <span class="n">world</span><span class="o">.</span><span class="n">simulate</span>
+        <span class="k">elif</span> <span class="nb">callable</span><span class="p">(</span><span class="n">world</span><span class="p">):</span>
+            <span class="n">make</span> <span class="o">=</span> <span class="n">world</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                <span class="s2">"world is a Problem (its simulate makes the data) or a function of "</span>
+                <span class="sa">f</span><span class="s2">"a numpy Generator returning (truth, obs), not </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">world</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">."</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="n">W_world</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">W_world</span><span class="p">,</span> <span class="n">Operator</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"W_world is an Operator, not </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">W_world</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">."</span><span class="p">)</span>
+        <span class="n">generator</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="n">rng</span><span class="p">)</span>
+        <span class="n">state</span> <span class="o">=</span> <span class="n">problem</span><span class="o">.</span><span class="n">prior</span><span class="o">.</span><span class="n">space</span>
+        <span class="k">if</span> <span class="n">W</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">W_form</span><span class="p">,</span> <span class="n">rows_of_W</span><span class="p">,</span> <span class="n">index</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="n">state</span><span class="o">.</span><span class="n">index</span>
+            <span class="n">claimed</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">variances</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">W_form</span><span class="p">,</span> <span class="n">rows_of_W</span><span class="p">,</span> <span class="n">index</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_aggregation</span><span class="p">(</span><span class="n">W</span><span class="p">),</span> <span class="n">W</span><span class="o">.</span><span class="n">rows</span><span class="p">,</span> <span class="n">W</span><span class="o">.</span><span class="n">rows</span><span class="o">.</span><span class="n">index</span>
+            <span class="n">claimed</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cov</span><span class="p">(</span><span class="n">W</span><span class="p">)</span><span class="o">.</span><span class="n">variances</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">))</span>
+        <span class="k">del</span> <span class="n">resolve</span>  <span class="c1"># with_data checks the observations' labels each trial</span>
+
+        <span class="n">truths</span><span class="p">,</span> <span class="n">estimates</span><span class="p">,</span> <span class="n">chi2</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[],</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+            <span class="n">drawn</span> <span class="o">=</span> <span class="n">make</span><span class="p">(</span><span class="n">generator</span><span class="p">)</span>
+            <span class="k">if</span> <span class="p">(</span>
+                <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">drawn</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)</span>
+                <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">drawn</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">2</span>
+                <span class="ow">or</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">Vector</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">drawn</span><span class="p">)</span>
+            <span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                    <span class="s2">"The world must return (truth, obs), two Vectors, as "</span>
+                    <span class="s2">"Problem.simulate does."</span>
+                <span class="p">)</span>
+            <span class="n">truth</span><span class="p">,</span> <span class="n">obs</span> <span class="o">=</span> <span class="n">drawn</span>
+            <span class="n">trial</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">with_data</span><span class="p">(</span><span class="n">obs</span><span class="p">)</span>
+            <span class="n">estimate</span> <span class="o">=</span> <span class="n">trial</span><span class="o">.</span><span class="n">estimate</span><span class="o">.</span><span class="n">values</span>
+            <span class="k">if</span> <span class="n">W_world</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">Ww_form</span> <span class="o">=</span> <span class="n">W_world</span><span class="o">.</span><span class="n">_on</span><span class="p">(</span>
+                    <span class="n">rows_of_W</span><span class="p">,</span>
+                    <span class="n">truth</span><span class="o">.</span><span class="n">space</span><span class="p">,</span>
+                    <span class="s2">"W_world"</span><span class="p">,</span>
+                    <span class="p">(</span><span class="s2">"the rows of W"</span><span class="p">,</span> <span class="s2">"the world's truth"</span><span class="p">),</span>
+                <span class="p">)</span>
+                <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">Ww_form</span> <span class="o">@</span> <span class="n">truth</span><span class="o">.</span><span class="n">values</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">x</span> <span class="o">=</span> <span class="n">truth</span><span class="o">.</span><span class="n">values</span>
+                <span class="k">if</span> <span class="n">truth</span><span class="o">.</span><span class="n">space</span> <span class="o">!=</span> <span class="n">state</span><span class="p">:</span>
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="n">x</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span>
+                            <span class="n">state</span><span class="o">.</span><span class="n">_align</span><span class="p">(</span>
+                                <span class="n">truth</span><span class="o">.</span><span class="n">space</span><span class="p">,</span> <span class="s2">"the truth"</span><span class="p">,</span> <span class="s2">"The truth and the state"</span>
+                            <span class="p">)</span>
+                        <span class="p">]</span>
+                    <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
+                        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">error</span><span class="si">}</span><span class="s2"> A world on other state labels is compared on "</span>
+                            <span class="s2">"totals: give W on the posterior's state and W_world on "</span>
+                            <span class="s2">"the world's."</span>
+                        <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="kc">None</span>
+                <span class="k">if</span> <span class="n">W_form</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">W_form</span> <span class="o">@</span> <span class="n">x</span><span class="p">)</span>
+            <span class="n">truths</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+            <span class="n">estimates</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="n">estimate</span> <span class="k">if</span> <span class="n">W_form</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">W_form</span> <span class="o">@</span> <span class="n">estimate</span><span class="p">)</span>
+            <span class="p">)</span>
+            <span class="n">chi2</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">trial</span><span class="o">.</span><span class="n">reduced_chi2</span><span class="p">)</span>
+        <span class="n">k</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">index</span><span class="p">)</span>
+        <span class="n">rows</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">MultiIndex</span><span class="o">.</span><span class="n">from_arrays</span><span class="p">(</span>
+            <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">n</span><span class="p">),</span> <span class="n">k</span><span class="p">)]</span>
+            <span class="o">+</span> <span class="p">[</span>
+                <span class="n">index</span><span class="o">.</span><span class="n">get_level_values</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="o">.</span><span class="n">take</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">k</span><span class="p">),</span> <span class="n">n</span><span class="p">))</span>
+                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">index</span><span class="o">.</span><span class="n">nlevels</span><span class="p">)</span>
+            <span class="p">],</span>
+            <span class="n">names</span><span class="o">=</span><span class="p">[</span><span class="s2">"trial"</span><span class="p">,</span> <span class="o">*</span><span class="n">index</span><span class="o">.</span><span class="n">names</span><span class="p">],</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
+            <span class="p">{</span>
+                <span class="s2">"truth"</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">truths</span><span class="p">),</span>
+                <span class="s2">"estimate"</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">estimates</span><span class="p">),</span>
+                <span class="s2">"posterior_std"</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">claimed</span><span class="p">,</span> <span class="n">n</span><span class="p">),</span>
+                <span class="s2">"reduced_chi2"</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">chi2</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">),</span> <span class="n">k</span><span class="p">),</span>
+            <span class="p">},</span>
+            <span class="n">index</span><span class="o">=</span><span class="n">rows</span><span class="p">,</span>
         <span class="p">)</span></div>
 </div>
 

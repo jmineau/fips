@@ -1,0 +1,6 @@
+fips.Posterior.trials
+=====================
+
+.. currentmodule:: fips
+
+.. automethod:: Posterior.trials
