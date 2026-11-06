@@ -26,8 +26,11 @@ code produces.
 
 :doc:`synthetic_truth`
    Does the inversion recover a known flux? A world makes the data and the
-   inversion solves them: coverage of the monthly totals, a mismatch assumed too
-   small or too large, a bias on one site, and a truth of 1.5 times the prior.
+   inversion solves them, exactly with ``recovery`` and sampled with ``trials``:
+   coverage of the monthly totals, a mismatch assumed too small or too large, a
+   bias on one site, a truth of 1.5 times the prior, a seasonal truth aliased by
+   an annual inversion, and a lognormal world with a transport error the
+   inversion cannot see.
 
 :doc:`data_worth`
    Which observations constrain a regional total? The prior and posterior

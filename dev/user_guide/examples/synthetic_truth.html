@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Does the inversion recover a known flux? &#8212; fips 0.2.0b3.dev8+g20ffe5c06 documentation</title>
+    <title>Does the inversion recover a known flux? &#8212; fips 0.2.0b3.dev9+g49b1393a8 documentation</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../_static/documentation_options.js?v=2cf1cef4"></script>
+    <script src="../../_static/documentation_options.js?v=55ae725c"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -135,8 +135,8 @@
       
     
     
-    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev8+g20ffe5c06 documentation - Home"/>
-    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev8+g20ffe5c06 documentation - Home"/>
+    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev9+g49b1393a8 documentation - Home"/>
+    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev9+g49b1393a8 documentation - Home"/>
   
   
 </a></div>
@@ -465,7 +465,7 @@ the inversion is honest; when one input of the world differs from what the
 inversion assumes, it asks how much that input matters.</p>
 <p><a class="reference internal" href="../synthetic.html#synthetic-data"><span class="std std-ref">Synthetic truth and observations</span></a> in the user guide explains
 <code class="docutils literal notranslate"><span class="pre">Problem.simulate</span></code>, <code class="docutils literal notranslate"><span class="pre">post.with_data</span></code>, the coverage loop and <code class="docutils literal notranslate"><span class="pre">post.recovery</span></code>.
-This notebook runs four experiments on the problem of the
+This notebook runs six experiments on the problem of the
 <a class="reference internal" href="flux_regional.html"><span class="std std-doc">regional flux inversion</span></a> (monthly fluxes on a grid from
 daily concentrations at three sites), each on a different world:</p>
 <ol class="arabic simple">
@@ -473,10 +473,14 @@ daily concentrations at three sites), each on a different world:</p>
 <li><p>the problem with a mismatch that is larger or smaller than the inversion assumes;</p></li>
 <li><p>the problem with a bias on the observations of one site;</p></li>
 <li><p>a chosen truth, 1.5 times the prior, with no noise: how much of it is recovered?</p></li>
+<li><p>a monthly truth with a season, recovered by an annual inversion: is the season aliased?</p></li>
+<li><p>a lognormal truth and a transport error the inversion cannot see: what error bar does
+the inversion earn, and what truth is consistent with a retrieved number?</p></li>
 </ol>
-<p>Each is answered exactly, with no sampling, by <code class="docutils literal notranslate"><span class="pre">post.recovery(world)</span></code>. The first
-also runs the Monte Carlo loop, to show that the two agree and what the loop is
-still for.</p>
+<p>Where the world is Gaussian and the method linear, <code class="docutils literal notranslate"><span class="pre">post.recovery(world)</span></code>
+answers exactly, with no sampling; <code class="docutils literal notranslate"><span class="pre">post.trials(world)</span></code> samples the same
+question for what the exact answer does not cover, and the two are compared
+where both apply.</p>
 <section id="the-problem-and-a-function-that-builds-it">
 <h2>The problem, and a function that builds it<a class="headerlink" href="#the-problem-and-a-function-that-builds-it" title="Link to this heading">#</a></h2>
 <p>The grid, the sites and the forward operator are those of the
@@ -713,37 +717,33 @@ the truth (<code class="docutils literal notranslate"><span class="pre">coverage
 <p>In its own world the bias is zero, the real spread is the one the posterior
 claims, and the coverage is 0.95 in every month. That is the Monte Carlo
 result, with no sampling noise.</p>
-<p>To check that the loop gives the same, <code class="docutils literal notranslate"><span class="pre">monte_carlo</span></code> is the loop of the user
-guide in a function. It makes the data in <code class="docutils literal notranslate"><span class="pre">world</span></code> with <code class="docutils literal notranslate"><span class="pre">world.simulate(rng)</span></code>,
-solves them at the cost of a product with <code class="docutils literal notranslate"><span class="pre">post.with_data(obs)</span></code>, and counts how
-often the truth falls inside the posterior’s interval. It takes the world and
-the inversion as arguments, so the next sections can change one or the other,
-and one seed makes the truths and the noise the same draws every time.</p>
+<p><code class="docutils literal notranslate"><span class="pre">post.trials(world,</span> <span class="pre">n,</span> <span class="pre">rng,</span> <span class="pre">W=W)</span></code> is the sampled version of the same question:
+each trial the world makes the data with <code class="docutils literal notranslate"><span class="pre">world.simulate(rng)</span></code>, the inversion
+solves them at the cost of a product with <code class="docutils literal notranslate"><span class="pre">post.with_data(obs)</span></code>, and the truth
+and the estimate of each total go into one row. <code class="docutils literal notranslate"><span class="pre">performance</span></code> reads the table:
+how often the truth falls inside the posterior’s 95% interval, and the mean
+reduced chi-squared of a trial, the statistic the exact table does not have.
+One seed makes the truths and the noise the same draws every time, so two
+inversions given the same seed see the same worlds.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">monte_carlo</span><span class="p">(</span><span class="n">world</span><span class="p">,</span> <span class="n">post</span><span class="p">,</span> <span class="n">trials</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">performance</span><span class="p">(</span><span class="n">table</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">"""</span>
-<span class="sd">    Make data in `world` and solve them with `post`'s assumptions, `trials` times.</span>
+<span class="sd">    Return the coverage of each monthly total and the mean reduced chi-squared of a trial table.</span>
 
-<span class="sd">    Return how often the 95% interval of each monthly total holds the truth and</span>
-<span class="sd">    the mean reduced chi-squared.</span>
+<span class="sd">    The table is one row per trial and total; the groupby keeps NaN levels</span>
+<span class="sd">    (``dropna=False``) because a state of several blocks has them.</span>
 <span class="sd">    """</span>
-    <span class="n">rng</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span>
-    <span class="n">sd</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">post</span><span class="o">.</span><span class="n">cov</span><span class="p">(</span><span class="n">W</span><span class="p">)</span><span class="o">.</span><span class="n">variances</span><span class="o">.</span><span class="n">values</span><span class="p">)</span>  <span class="c1"># what the posterior claims</span>
-    <span class="n">inside</span><span class="p">,</span> <span class="n">chi2</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[]</span>
-    <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">trials</span><span class="p">):</span>
-        <span class="n">truth</span><span class="p">,</span> <span class="n">obs</span> <span class="o">=</span> <span class="n">world</span><span class="o">.</span><span class="n">simulate</span><span class="p">(</span><span class="n">rng</span><span class="p">)</span>
-        <span class="n">trial</span> <span class="o">=</span> <span class="n">post</span><span class="o">.</span><span class="n">with_data</span><span class="p">(</span><span class="n">obs</span><span class="p">)</span>
-        <span class="n">miss</span> <span class="o">=</span> <span class="p">(</span><span class="n">W</span> <span class="o">@</span> <span class="n">trial</span><span class="o">.</span><span class="n">estimate</span><span class="p">)</span><span class="o">.</span><span class="n">values</span> <span class="o">-</span> <span class="p">(</span><span class="n">W</span> <span class="o">@</span> <span class="n">truth</span><span class="p">)</span><span class="o">.</span><span class="n">values</span>
-        <span class="n">inside</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">miss</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mf">1.96</span> <span class="o">*</span> <span class="n">sd</span><span class="p">)</span>
-        <span class="n">chi2</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">trial</span><span class="o">.</span><span class="n">reduced_chi2</span><span class="p">)</span>
-    <span class="k">return</span> <span class="p">{</span>
-        <span class="s2">"coverage"</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">inside</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span> <span class="n">index</span><span class="o">=</span><span class="n">months</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">"%b"</span><span class="p">)),</span>
-        <span class="s2">"reduced_chi2"</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">chi2</span><span class="p">),</span>
-    <span class="p">}</span>
+    <span class="n">by</span> <span class="o">=</span> <span class="p">[</span><span class="n">name</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">table</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">names</span> <span class="k">if</span> <span class="n">name</span> <span class="o">!=</span> <span class="s2">"trial"</span><span class="p">]</span>
+    <span class="n">error</span> <span class="o">=</span> <span class="n">table</span><span class="p">[</span><span class="s2">"estimate"</span><span class="p">]</span> <span class="o">-</span> <span class="n">table</span><span class="p">[</span><span class="s2">"truth"</span><span class="p">]</span>
+    <span class="n">inside</span> <span class="o">=</span> <span class="n">error</span><span class="o">.</span><span class="n">abs</span><span class="p">()</span> <span class="o">&lt;=</span> <span class="mf">1.96</span> <span class="o">*</span> <span class="n">table</span><span class="p">[</span><span class="s2">"posterior_std"</span><span class="p">]</span>
+    <span class="n">coverage</span> <span class="o">=</span> <span class="n">inside</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="n">by</span><span class="p">,</span> <span class="n">dropna</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span><span class="o">.</span><span class="n">droplevel</span><span class="p">(</span><span class="s2">"block"</span><span class="p">)</span>
+    <span class="n">coverage</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">(</span><span class="n">months</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">"%b"</span><span class="p">),</span> <span class="n">name</span><span class="o">=</span><span class="s2">"month"</span><span class="p">)</span>
+    <span class="n">chi2</span> <span class="o">=</span> <span class="n">table</span><span class="p">[</span><span class="s2">"reduced_chi2"</span><span class="p">]</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="s2">"trial"</span><span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+    <span class="k">return</span> <span class="p">{</span><span class="s2">"coverage"</span><span class="p">:</span> <span class="n">coverage</span><span class="p">,</span> <span class="s2">"reduced_chi2"</span><span class="p">:</span> <span class="n">chi2</span><span class="p">}</span>
 
 
-<span class="n">honest</span> <span class="o">=</span> <span class="n">monte_carlo</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="n">post</span><span class="p">)</span>
+<span class="n">honest</span> <span class="o">=</span> <span class="n">performance</span><span class="p">(</span><span class="n">post</span><span class="o">.</span><span class="n">trials</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="mi">500</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">W</span><span class="o">=</span><span class="n">W</span><span class="p">))</span>
 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"mean reduced chi-squared: </span><span class="si">{</span><span class="n">honest</span><span class="p">[</span><span class="s1">'reduced_chi2'</span><span class="p">]</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span>
     <span class="sa">f</span><span class="s2">"coverage, mean </span><span class="si">{</span><span class="n">honest</span><span class="p">[</span><span class="s1">'coverage'</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2"> (exact: </span><span class="si">{</span><span class="n">exact</span><span class="p">[</span><span class="s1">'coverage'</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">)"</span>
@@ -774,7 +774,7 @@ coverage, mean 0.948 (exact: 0.950)
 <table border="1" class="dataframe">
   <thead>
     <tr style="text-align: right;">
-      <th></th>
+      <th>month</th>
       <th>Jan</th>
       <th>Feb</th>
       <th>Mar</th>
@@ -825,13 +825,13 @@ coverage, mean 0.948 (exact: 0.950)
 </div></div></div>
 </div>
 <p>With 500 trials a coverage is known to about 0.01, so each month agrees with
-the exact 0.95. The loop is the way for anything <code class="docutils literal notranslate"><span class="pre">recovery</span></code> does not cover: a
-method whose estimate is not linear in the data, a world on other labels (the
-whole state where the solve was restricted), or a statistic it does not give,
-such as the reduced chi-squared, which the loop averages to 1 here. One trial
-looks like this: the error of each monthly total (the estimate minus the truth
-the world drew) against the 95% interval the posterior claims. The truth is at
-zero, and the interval should hold it in about 19 of 20 months.</p>
+the exact 0.95. <code class="docutils literal notranslate"><span class="pre">trials</span></code> is the way for anything <code class="docutils literal notranslate"><span class="pre">recovery</span></code> does not cover: a
+statistic it does not give, such as the reduced chi-squared, which averages 1
+here; a world no <code class="docutils literal notranslate"><span class="pre">Problem</span></code> can describe (section 6); or a method whose estimate
+is not linear in the data. One trial looks like this: the error of each
+monthly total (the estimate minus the truth the world drew) against the 95%
+interval the posterior claims. The truth is at zero, and the interval should
+hold it in about 19 of 20 months.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">truth</span><span class="p">,</span> <span class="n">obs</span> <span class="o">=</span> <span class="n">problem</span><span class="o">.</span><span class="n">simulate</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
@@ -863,7 +863,7 @@ hold the truth too often).</strong></p>
 <p>The world’s mismatch is scaled and the inversion’s is not: <code class="docutils literal notranslate"><span class="pre">post</span></code> still assumes
 a standard deviation of 0.002 ppm (2 ppb). Everything else is the world of
 section 1. The coverage is exact, from <code class="docutils literal notranslate"><span class="pre">recovery</span></code>; the reduced chi-squared is
-the one number that needs the loop, so the table runs <code class="docutils literal notranslate"><span class="pre">monte_carlo</span></code> for it.</p>
+the one number that needs trials, so the table runs <code class="docutils literal notranslate"><span class="pre">performance</span></code> on them.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">scales</span> <span class="o">=</span> <span class="p">{</span>
@@ -879,9 +879,9 @@ the one number that needs the loop, so the table runs <code class="docutils lite
     <span class="p">{</span>
         <span class="n">label</span><span class="p">:</span> <span class="p">{</span>
             <span class="s2">"world's mismatch sd (ppb)"</span><span class="p">:</span> <span class="mi">1000</span> <span class="o">*</span> <span class="n">scale</span> <span class="o">*</span> <span class="n">noise</span><span class="p">,</span>
-            <span class="s2">"mean reduced chi-squared"</span><span class="p">:</span> <span class="n">monte_carlo</span><span class="p">(</span><span class="n">worlds</span><span class="p">[</span><span class="n">label</span><span class="p">],</span> <span class="n">post</span><span class="p">)[</span>
-                <span class="s2">"reduced_chi2"</span>
-            <span class="p">],</span>
+            <span class="s2">"mean reduced chi-squared"</span><span class="p">:</span> <span class="n">performance</span><span class="p">(</span>
+                <span class="n">post</span><span class="o">.</span><span class="n">trials</span><span class="p">(</span><span class="n">worlds</span><span class="p">[</span><span class="n">label</span><span class="p">],</span> <span class="mi">500</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">W</span><span class="o">=</span><span class="n">W</span><span class="p">)</span>
+            <span class="p">)[</span><span class="s2">"reduced_chi2"</span><span class="p">],</span>
             <span class="s2">"mean coverage"</span><span class="p">:</span> <span class="n">tables</span><span class="p">[</span><span class="n">label</span><span class="p">][</span><span class="s2">"coverage"</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">(),</span>
             <span class="s2">"worst month"</span><span class="p">:</span> <span class="n">tables</span><span class="p">[</span><span class="n">label</span><span class="p">][</span><span class="s2">"coverage"</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">(),</span>
         <span class="p">}</span>
@@ -971,7 +971,7 @@ totals no longer hold the truth.</strong></p>
 <p>The world’s offset is changed on that block only: site A reads 0.01 ppm
 (10 ppb) too high, five times the noise, all year. The inversion still assumes
 the background of 1.9 ppm everywhere. <code class="docutils literal notranslate"><span class="pre">recovery</span></code> gives the bias of each total
-and the coverage of its interval; the chi-squared again comes from the loop.</p>
+and the coverage of its interval; the chi-squared again comes from the trials.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">from_site_a</span> <span class="o">=</span> <span class="n">obs_labels</span><span class="o">.</span><span class="n">get_level_values</span><span class="p">(</span><span class="s2">"site"</span><span class="p">)</span> <span class="o">==</span> <span class="s2">"site_a"</span>
@@ -980,7 +980,7 @@ and the coverage of its interval; the chi-squared again comes from the loop.</p>
 <span class="n">biased</span> <span class="o">=</span> <span class="n">recover</span><span class="p">(</span><span class="n">post</span><span class="p">,</span> <span class="n">biased_world</span><span class="p">)</span>
 
 <span class="nb">print</span><span class="p">(</span>
-    <span class="sa">f</span><span class="s2">"mean reduced chi-squared: </span><span class="si">{</span><span class="n">monte_carlo</span><span class="p">(</span><span class="n">biased_world</span><span class="p">,</span><span class="w"> </span><span class="n">post</span><span class="p">)[</span><span class="s1">'reduced_chi2'</span><span class="p">]</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2"> "</span>
+    <span class="sa">f</span><span class="s2">"mean reduced chi-squared: </span><span class="si">{</span><span class="n">performance</span><span class="p">(</span><span class="n">post</span><span class="o">.</span><span class="n">trials</span><span class="p">(</span><span class="n">biased_world</span><span class="p">,</span><span class="w"> </span><span class="mi">500</span><span class="p">,</span><span class="w"> </span><span class="n">rng</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">W</span><span class="o">=</span><span class="n">W</span><span class="p">))[</span><span class="s1">'reduced_chi2'</span><span class="p">]</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2"> "</span>
     <span class="sa">f</span><span class="s2">"(honest: </span><span class="si">{</span><span class="n">honest</span><span class="p">[</span><span class="s1">'reduced_chi2'</span><span class="p">]</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">)"</span>
 <span class="p">)</span>
 <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s2">"honest"</span><span class="p">:</span> <span class="n">exact</span><span class="p">[</span><span class="s2">"coverage"</span><span class="p">],</span> <span class="s2">"biased"</span><span class="p">:</span> <span class="n">biased</span><span class="p">[</span><span class="s2">"coverage"</span><span class="p">]})</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
@@ -1311,6 +1311,262 @@ a mismatch standard deviation assumed larger, in ppm:</p>
 </div>
 </div>
 </section>
+<section id="a-monthly-truth-an-annual-inversion-is-the-season-aliased">
+<h2>5. A monthly truth, an annual inversion: is the season aliased?<a class="headerlink" href="#a-monthly-truth-an-annual-inversion-is-the-season-aliased" title="Link to this heading">#</a></h2>
+<p><strong>An inversion whose state has no season cannot tell a strong month from a
+strong cell. Fed a year of observations of a seasonal flux, it recovers the
+annual mean with a bias that depends on when the flux peaks; the monthly
+inversion, averaged over its months, does not.</strong></p>
+<p>The annual inversion has one flux per cell. Its forward operator is the monthly
+one with each cell’s twelve columns added, and its prior the monthly prior
+averaged, both through aggregations of the state (<code class="docutils literal notranslate"><span class="pre">fips.aggregate</span></code>), so no
+array is built by hand. The world is the monthly problem. Its state has other
+labels than the annual inversion’s, so the two are compared on a total that
+both add up to, through an aggregation on each side: <code class="docutils literal notranslate"><span class="pre">W</span></code> on the annual state
+and <code class="docutils literal notranslate"><span class="pre">W_world</span></code> on the monthly one. Here it is one number, the annual-mean
+domain total: the sum over the cells of the annual state, and the mean over
+the months of the monthly totals (<code class="docutils literal notranslate"><span class="pre">W</span></code> of section 1).</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">to_cells</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">aggregate</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span>
+    <span class="n">prior</span><span class="o">.</span><span class="n">space</span><span class="p">,</span> <span class="n">by</span><span class="o">=</span><span class="p">[</span><span class="s2">"lat"</span><span class="p">,</span> <span class="s2">"lon"</span><span class="p">]</span>
+<span class="p">)</span>  <span class="c1"># a monthly element -&gt; its cell</span>
+<span class="n">over_months</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">aggregate</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">prior</span><span class="o">.</span><span class="n">space</span><span class="p">,</span> <span class="n">by</span><span class="o">=</span><span class="p">[</span><span class="s2">"lat"</span><span class="p">,</span> <span class="s2">"lon"</span><span class="p">])</span>
+<span class="n">annual_space</span> <span class="o">=</span> <span class="n">to_cells</span><span class="o">.</span><span class="n">rows</span>
+<span class="n">annual</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Problem</span><span class="p">(</span>
+    <span class="n">prior</span><span class="o">=</span><span class="n">over_months</span> <span class="o">@</span> <span class="n">prior</span><span class="p">,</span>
+    <span class="n">prior_cov</span><span class="o">=</span><span class="n">fips</span><span class="o">.</span><span class="n">Exponential</span><span class="p">([</span><span class="s2">"lat"</span><span class="p">,</span> <span class="s2">"lon"</span><span class="p">],</span> <span class="mf">20.0</span><span class="p">,</span> <span class="n">metric</span><span class="o">=</span><span class="s2">"haversine"</span><span class="p">)</span><span class="o">.</span><span class="n">with_std</span><span class="p">(</span><span class="mf">0.25</span><span class="p">),</span>
+    <span class="n">obs</span><span class="o">=</span><span class="n">fips</span><span class="o">.</span><span class="n">Vector</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">obs_labels</span><span class="p">)),</span> <span class="n">obs_space</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">"concentration"</span><span class="p">),</span>
+    <span class="n">obs_cov</span><span class="o">=</span><span class="n">fips</span><span class="o">.</span><span class="n">Independent</span><span class="p">()</span><span class="o">.</span><span class="n">with_std</span><span class="p">(</span><span class="n">noise</span><span class="p">),</span>
+    <span class="n">forward</span><span class="o">=</span><span class="n">forward</span> <span class="o">@</span> <span class="n">to_cells</span><span class="o">.</span><span class="n">T</span><span class="p">,</span>  <span class="c1"># each cell's twelve columns added</span>
+    <span class="n">offset</span><span class="o">=</span><span class="n">background</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">post_annual</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">annual</span><span class="p">)</span>
+
+<span class="n">every_lat</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="s2">"domain"</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">(</span><span class="n">lats</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">"lat"</span><span class="p">),</span> <span class="n">name</span><span class="o">=</span><span class="s2">"region"</span><span class="p">)</span>
+<span class="n">W_annual</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">aggregate</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span>
+    <span class="n">annual_space</span><span class="p">,</span> <span class="n">by</span><span class="o">=</span><span class="n">every_lat</span>
+<span class="p">)</span>  <span class="c1"># the annual state's domain total</span>
+<span class="n">every_month</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="s2">"domain"</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">W</span><span class="o">.</span><span class="n">rows</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">"flux"</span><span class="p">),</span> <span class="n">name</span><span class="o">=</span><span class="s2">"region"</span><span class="p">)</span>
+<span class="n">W_mean</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">fips</span><span class="o">.</span><span class="n">aggregate</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">W</span><span class="o">.</span><span class="n">rows</span><span class="p">,</span> <span class="n">by</span><span class="o">=</span><span class="n">every_month</span><span class="p">)</span> <span class="o">@</span> <span class="n">W</span>
+<span class="p">)</span>  <span class="c1"># the mean of the monthly totals</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>The truth is 1.5 times the prior with a season: a cosine over the year, 30%
+above the mean at its peak and 30% below half a year later, so every seasonal
+truth has the same annual mean as the flat one. The observations are
+noise-free, which isolates the aliasing: <code class="docutils literal notranslate"><span class="pre">recovery</span></code> with the truth fixed gives
+the estimate the annual inversion reaches, and the monthly inversion’s
+estimate averaged over the months beside it.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">aliasing</span><span class="p">(</span><span class="n">peak</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return the annual-mean domain total each inversion recovers from a truth peaking in month `peak`."""</span>
+    <span class="n">season</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="mi">12</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">peak</span> <span class="ow">is</span> <span class="kc">None</span>
+        <span class="k">else</span> <span class="mf">1.0</span> <span class="o">+</span> <span class="mf">0.3</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="p">(</span><span class="n">months</span><span class="o">.</span><span class="n">month</span> <span class="o">-</span> <span class="n">peak</span><span class="p">)</span> <span class="o">/</span> <span class="mf">12.0</span><span class="p">)</span>
+    <span class="p">)</span>
+    <span class="n">truth</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="mf">1.5</span> <span class="o">*</span> <span class="n">prior</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">season</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">lats</span><span class="p">)</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">lons</span><span class="p">))</span>
+    <span class="p">)</span>  <span class="c1"># a Vector times an array</span>
+    <span class="n">yearly</span> <span class="o">=</span> <span class="n">post_annual</span><span class="o">.</span><span class="n">recovery</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="n">truth</span><span class="o">=</span><span class="n">truth</span><span class="p">,</span> <span class="n">W</span><span class="o">=</span><span class="n">W_annual</span><span class="p">,</span> <span class="n">W_world</span><span class="o">=</span><span class="n">W_mean</span><span class="p">)</span>
+    <span class="n">monthly</span> <span class="o">=</span> <span class="n">post</span><span class="o">.</span><span class="n">recovery</span><span class="p">(</span><span class="n">truth</span><span class="o">=</span><span class="n">truth</span><span class="p">,</span> <span class="n">W</span><span class="o">=</span><span class="n">W_mean</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span>
+        <span class="p">{</span>
+            <span class="s2">"truth"</span><span class="p">:</span> <span class="n">yearly</span><span class="p">[</span><span class="s2">"truth"</span><span class="p">]</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+            <span class="s2">"annual inversion"</span><span class="p">:</span> <span class="n">yearly</span><span class="p">[</span><span class="s2">"estimate"</span><span class="p">]</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+            <span class="s2">"monthly inversion, averaged"</span><span class="p">:</span> <span class="n">monthly</span><span class="p">[</span><span class="s2">"estimate"</span><span class="p">]</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+        <span class="p">}</span>
+    <span class="p">)</span>
+
+
+<span class="n">peaks</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">"flat"</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="s2">"peak in January"</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="s2">"peak in April"</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span>
+    <span class="s2">"peak in July"</span><span class="p">:</span> <span class="mi">7</span><span class="p">,</span>
+    <span class="s2">"peak in October"</span><span class="p">:</span> <span class="mi">10</span><span class="p">,</span>
+<span class="p">}</span>
+<span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="n">name</span><span class="p">:</span> <span class="n">aliasing</span><span class="p">(</span><span class="n">peak</span><span class="p">)</span> <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">peak</span> <span class="ow">in</span> <span class="n">peaks</span><span class="o">.</span><span class="n">items</span><span class="p">()})</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_html"><div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>truth</th>
+      <th>annual inversion</th>
+      <th>monthly inversion, averaged</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>flat</th>
+      <td>7.5</td>
+      <td>7.50</td>
+      <td>7.5</td>
+    </tr>
+    <tr>
+      <th>peak in January</th>
+      <td>7.5</td>
+      <td>4.99</td>
+      <td>7.5</td>
+    </tr>
+    <tr>
+      <th>peak in April</th>
+      <td>7.5</td>
+      <td>11.13</td>
+      <td>7.5</td>
+    </tr>
+    <tr>
+      <th>peak in July</th>
+      <td>7.5</td>
+      <td>10.01</td>
+      <td>7.5</td>
+    </tr>
+    <tr>
+      <th>peak in October</th>
+      <td>7.5</td>
+      <td>3.87</td>
+      <td>7.5</td>
+    </tr>
+  </tbody>
+</table>
+</div></div></div>
+</div>
+<p>The flat truth comes back exactly from both. Every seasonal truth has the
+same annual mean, and the monthly inversion averaged finds it every time; the
+annual inversion’s answer swings with the peak, far above the truth for a
+spring or summer peak and far below for a winter or autumn one. The footprints
+differ from month to month, so the annual state can only explain a seasonal
+signal by moving flux between cells, and the annual-mean total goes with it.
+That is aliasing, and this is the experiment that shows it: a fixed truth the
+inversion’s state cannot hold, no noise, and the exact answer read off
+<code class="docutils literal notranslate"><span class="pre">recovery</span></code>. The annual inversion’s chi-squared in such a world is enormous,
+which is how a real inversion would notice.</p>
+</section>
+<section id="a-lognormal-truth-and-a-transport-error-the-inversion-cannot-see">
+<h2>6. A lognormal truth and a transport error the inversion cannot see<a class="headerlink" href="#a-lognormal-truth-and-a-transport-error-the-inversion-cannot-see" title="Link to this heading">#</a></h2>
+<p><strong>The error bar an inversion earns is the spread of its error over the worlds
+it might be in. When those worlds hold an error the inversion’s covariances do
+not describe, the earned error bar is wider than the claimed one, and a table
+of trials is the way to measure it and to read a retrieved number back to a
+truth.</strong></p>
+<p>No <code class="docutils literal notranslate"><span class="pre">Problem</span></code> describes this world: the truth is the prior times a lognormal
+field (so it stays positive and its spread scales with the prior) times an
+amplitude drawn between 0.75 and 1.5, and every observation of a trial is
+scaled by one transport factor, 2% in the log, that the inversion’s mismatch
+knows nothing about. A world is any function of a generator that returns a
+truth and observations, and <code class="docutils literal notranslate"><span class="pre">trials</span></code> takes it as it takes a <code class="docutils literal notranslate"><span class="pre">Problem</span></code>. Vectors
+do arithmetic by label, so the world is three lines: a draw from a covariance
+model (<code class="docutils literal notranslate"><span class="pre">Covariance.sample</span></code>), the noise-free observations of any truth
+(<code class="docutils literal notranslate"><span class="pre">Problem.predict</span></code>) and a draw of the mismatch. The total is the annual-mean
+domain total of section 5, <code class="docutils literal notranslate"><span class="pre">W_mean</span></code>.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">field</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Kronecker</span><span class="p">(</span>
+    <span class="n">fips</span><span class="o">.</span><span class="n">Exponential</span><span class="p">(</span><span class="s2">"time"</span><span class="p">,</span> <span class="s2">"60D"</span><span class="p">),</span>
+    <span class="n">fips</span><span class="o">.</span><span class="n">Exponential</span><span class="p">([</span><span class="s2">"lat"</span><span class="p">,</span> <span class="s2">"lon"</span><span class="p">],</span> <span class="mf">10.0</span><span class="p">,</span> <span class="n">metric</span><span class="o">=</span><span class="s2">"haversine"</span><span class="p">),</span>
+<span class="p">)</span><span class="o">.</span><span class="n">with_std</span><span class="p">(</span><span class="mf">0.4</span><span class="p">)</span>
+<span class="n">field_cov</span> <span class="o">=</span> <span class="n">field</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">prior</span><span class="o">.</span><span class="n">space</span><span class="p">)</span>
+<span class="n">half_var</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">field_cov</span><span class="o">.</span><span class="n">variances</span>  <span class="c1"># so the field's mean is 1</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">lognormal_world</span><span class="p">(</span><span class="n">rng</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Return a lognormal truth about the prior and its observations, scaled by an unseen transport factor."""</span>
+    <span class="n">amplitude</span> <span class="o">=</span> <span class="n">rng</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mf">0.75</span><span class="p">,</span> <span class="mf">1.5</span><span class="p">)</span>
+    <span class="n">truth</span> <span class="o">=</span> <span class="n">amplitude</span> <span class="o">*</span> <span class="n">prior</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">field_cov</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">rng</span><span class="p">)</span> <span class="o">-</span> <span class="n">half_var</span><span class="p">)</span>
+    <span class="n">transport</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">rng</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.02</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">truth</span><span class="p">,</span> <span class="n">problem</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">truth</span><span class="p">)</span> <span class="o">*</span> <span class="n">transport</span> <span class="o">+</span> <span class="n">problem</span><span class="o">.</span><span class="n">obs_cov</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">rng</span><span class="p">)</span>
+
+
+<span class="n">table</span> <span class="o">=</span> <span class="n">post</span><span class="o">.</span><span class="n">trials</span><span class="p">(</span><span class="n">lognormal_world</span><span class="p">,</span> <span class="mi">400</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">W</span><span class="o">=</span><span class="n">W_mean</span><span class="p">)</span>
+<span class="n">error</span> <span class="o">=</span> <span class="n">table</span><span class="p">[</span><span class="s2">"estimate"</span><span class="p">]</span> <span class="o">-</span> <span class="n">table</span><span class="p">[</span><span class="s2">"truth"</span><span class="p">]</span>
+<span class="n">claimed</span> <span class="o">=</span> <span class="n">table</span><span class="p">[</span><span class="s2">"posterior_std"</span><span class="p">]</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="nb">print</span><span class="p">(</span>
+    <span class="sa">f</span><span class="s2">"bias </span><span class="si">{</span><span class="n">error</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">, spread </span><span class="si">{</span><span class="n">error</span><span class="o">.</span><span class="n">std</span><span class="p">()</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">, claimed </span><span class="si">{</span><span class="n">claimed</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2"> (µmol/m²/s)"</span>
+<span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"coverage of the 95% interval: </span><span class="si">{</span><span class="p">(</span><span class="n">error</span><span class="o">.</span><span class="n">abs</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="mf">1.96</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">claimed</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>bias 0.025, spread 0.326, claimed 0.017 (µmol/m²/s)
+coverage of the 95% interval: 0.09
+</pre></div>
+</div>
+</div>
+</div>
+<p>The inversion earns an error bar twenty times the one it claims, and its
+95% interval almost never holds the truth. The lognormal pattern is not what
+does it: without the transport factor the same world gives a spread below the
+claimed one, because the data are precise. A 2% error on every observation of
+a day’s worth of signal is far larger than the 0.002 ppm noise the inversion
+assumes, and it cannot tell that error from flux.</p>
+<p>The table also answers the question an experiment like this is run for: what
+truth is consistent with the number the inversion retrieved? Each dot is one
+world with a known answer; a regression of the truth on the estimate over the
+trials reads a retrieved total back to a truth, and the quantiles of its
+residuals are the interval that goes with it.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">X</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">column_stack</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">table</span><span class="p">)),</span> <span class="n">table</span><span class="p">[</span><span class="s2">"estimate"</span><span class="p">]])</span>
+<span class="n">beta</span><span class="p">,</span> <span class="o">*</span><span class="n">_</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">lstsq</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">table</span><span class="p">[</span><span class="s2">"truth"</span><span class="p">],</span> <span class="n">rcond</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+<span class="n">residual</span> <span class="o">=</span> <span class="n">table</span><span class="p">[</span><span class="s2">"truth"</span><span class="p">]</span> <span class="o">-</span> <span class="n">X</span> <span class="o">@</span> <span class="n">beta</span>
+<span class="n">low</span><span class="p">,</span> <span class="n">high</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">percentile</span><span class="p">(</span><span class="n">residual</span><span class="p">,</span> <span class="p">[</span><span class="mi">16</span><span class="p">,</span> <span class="mi">84</span><span class="p">])</span>
+<span class="n">retrieved</span> <span class="o">=</span> <span class="mf">6.0</span>  <span class="c1"># a number an inversion of real data might give, µmol/m²/s</span>
+<span class="n">calibrated</span> <span class="o">=</span> <span class="n">beta</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">beta</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">retrieved</span>
+<span class="nb">print</span><span class="p">(</span>
+    <span class="sa">f</span><span class="s2">"truth = </span><span class="si">{</span><span class="n">beta</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2"> + </span><span class="si">{</span><span class="n">beta</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2"> x estimate; residual 68% interval [</span><span class="si">{</span><span class="n">low</span><span class="si">:</span><span class="s2">+.2f</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">high</span><span class="si">:</span><span class="s2">+.2f</span><span class="si">}</span><span class="s2">]"</span>
+<span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span>
+    <span class="sa">f</span><span class="s2">"a retrieved total of </span><span class="si">{</span><span class="n">retrieved</span><span class="si">}</span><span class="s2"> means a truth of </span><span class="si">{</span><span class="n">calibrated</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2"> [</span><span class="si">{</span><span class="n">calibrated</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">low</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">calibrated</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">high</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">]"</span>
+<span class="p">)</span>
+
+<span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mf">4.5</span><span class="p">))</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">table</span><span class="p">[</span><span class="s2">"truth"</span><span class="p">],</span> <span class="n">table</span><span class="p">[</span><span class="s2">"estimate"</span><span class="p">],</span> <span class="s2">"o"</span><span class="p">,</span> <span class="n">ms</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">"one trial"</span><span class="p">)</span>
+<span class="n">line</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">table</span><span class="p">[</span><span class="s2">"truth"</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">(),</span> <span class="n">table</span><span class="p">[</span><span class="s2">"truth"</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">()])</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="n">line</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">"black"</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">"1:1"</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">axhline</span><span class="p">(</span><span class="n">retrieved</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">"C3"</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s2">"--"</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="sa">f</span><span class="s2">"retrieved </span><span class="si">{</span><span class="n">retrieved</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">"true annual-mean total (µmol/m²/s)"</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">"retrieved annual-mean total"</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="s2">"upper left"</span><span class="p">);</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>truth = 0.33 + 0.938 x estimate; residual 68% interval [-0.31, +0.31]
+a retrieved total of 6.0 means a truth of 5.96 [5.65, 6.27]
+</pre></div>
+</div>
+<img alt="../../_images/e82298eb0531b0b9cd49d80c1dfb7534bdbb9dc4ce357ce214b20801b1f400d2.png" src="../../_images/e82298eb0531b0b9cd49d80c1dfb7534bdbb9dc4ce357ce214b20801b1f400d2.png" />
+</div>
+</div>
+<p>Read along the dashed line: the truths of the worlds that retrieve the same
+number as the real data did. That spread is the error bar earned in a world
+with an unseen transport error, and it is what the inversion’s own covariances
+cannot give.</p>
+</section>
 </section>
 
 
@@ -1365,6 +1621,8 @@ a mismatch standard deviation assumed larger, in ppm:</p>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-mismatch-assumed-too-small-then-too-large">2. The mismatch assumed too small, then too large</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#a-bias-on-one-site-s-observations">3. A bias on one site’s observations</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#testing-a-prior-a-truth-of-1-5-times-the-prior">4. Testing a prior: a truth of 1.5 times the prior</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#a-monthly-truth-an-annual-inversion-is-the-season-aliased">5. A monthly truth, an annual inversion: is the season aliased?</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#a-lognormal-truth-and-a-transport-error-the-inversion-cannot-see">6. A lognormal truth and a transport error the inversion cannot see</a></li>
 </ul>
   </nav></div>
 
