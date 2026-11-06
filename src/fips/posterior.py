@@ -53,7 +53,7 @@ class Solution(Protocol):
     observations (``problem.obs``). The posterior labels them, and computes
     each one once.
 
-    Four members are optional, and a posterior whose solution lacks one says
+    Five members are optional, and a posterior whose solution lacks one says
     so when it is asked for the feature:
 
     - ``with_gamma(gamma) -> Solution``: the solution at another
@@ -66,6 +66,9 @@ class Solution(Protocol):
       :math:`P = (H S_0 H^T + S_z/\gamma)^{-1}` (``m_g x m_g``), and
       ``self_sensitivity() -> np.ndarray``: :math:`\operatorname{diag}(H K)`
       (``m``), whose sum is DOFS (:meth:`Posterior.data_worth`).
+    - ``sample(N, rng) -> np.ndarray``: ``N`` draws from the posterior, one per
+      column (``n x N``), made with the :class:`numpy.random.Generator`
+      `rng` (:meth:`Posterior.sample`).
 
     And a solution whose :meth:`estimate` is the posterior mean says so with a
     class attribute ``estimate_is_mean = True``; without it, a posterior has
@@ -753,6 +756,133 @@ class Posterior:
                 "reduction": reduction,
             },
             index=index,
+        )
+
+    def sample(
+        self,
+        n: int,
+        rng: "int | np.random.Generator | None" = None,
+        *,
+        W: Operator | None = None,
+    ) -> pd.DataFrame:
+        r"""
+        Return `n` draws from the posterior, one column each.
+
+        The distribution of any function of the state, which :meth:`cov` and
+        :meth:`uncertainty` give only for a linear one and only as a spread:
+        the probability that a total is above a value or below zero, a
+        quantile of a ratio of two totals, the share of cells below zero. Take
+        the function of each draw, and read the answer off the draws.
+
+        The analytic method draws exactly, by perturbing the prior and the
+        data and solving. With :math:`x_p \sim N(x_0, S_0)` and :math:`e \sim
+        N(0, S_z/\gamma)`, the solution of the perturbed problem is
+
+        .. math::
+
+            x_s = x_p + K (z - c - e - H x_p) = \hat{x} + (x_p - x_0) - K \big(H (x_p - x_0) + e\big),
+
+        and :math:`x_s \sim N(\hat{x}, \hat{S})` exactly: the posterior, for
+        any :math:`\gamma`. The cost is one product with each covariance's
+        root and one with the factors for all `n` draws at once (the gain
+        :math:`K` is never formed, and nothing ``n x n``), and the draws are
+        held as a ``state x n`` array: for many draws of a large state, ask
+        for them in blocks (each call with its own generator, or the same one
+        passed along).
+
+        Parameters
+        ----------
+        n : int
+            The number of draws, a positive integer.
+        rng : int, numpy.random.Generator or None, default None
+            A seed, or the generator to draw from, as :meth:`trials` takes it
+            (used as given, so one generator passed to every call gives
+            independent draws; None draws from fresh entropy). The prior's
+            standard normals are drawn first, as a ``columns x n`` array, then
+            the model-data mismatch's, so a seed gives the same draws for the
+            same problem and gamma (to roundoff, whichever form the method factored in).
+        W : Operator, optional
+            An aggregation, as :meth:`cov` takes it: one row per total, one
+            column per state element. The draws are then those of
+            :math:`W x`: the same state draws, aggregated, so ``sample(n,
+            rng=0, W=W)`` is ``W @ sample(n, rng=0)``.
+
+        Returns
+        -------
+        pandas.DataFrame
+            One row per state element, labeled as the :attr:`estimate` is (or
+            one per row of `W`), and one column per draw, a ``RangeIndex``
+            named ``draw`` from 0 to ``n - 1``. Its ``groupby`` over the rows
+            totals the draws with pandas
+            (``draws.groupby(level="time").sum()``).
+
+        Raises
+        ------
+        TypeError
+            If `W` is not an Operator; or the method cannot draw from its
+            posterior (its solution has no ``sample``).
+        ValueError
+            If `n` is not a positive integer, or the columns of `W` do not
+            have exactly the state's labels.
+
+        See Also
+        --------
+        cov : The posterior covariance, of the state or of aggregates.
+        uncertainty : The standard deviation of aggregates, before and after.
+        trials : The estimate's error over many sets of data.
+        fips.Covariance.sample : One draw from a covariance, as the prior and the mismatch are drawn here.
+
+        Examples
+        --------
+        The total of three cells, and how likely it is to be below 3 (its
+        estimate is 2.35, its posterior standard deviation 0.65):
+
+        >>> import numpy as np
+        >>> import pandas as pd
+        >>> import fips
+        >>> cells = pd.Index(["a", "b", "c"], name="cell")
+        >>> prior = fips.Vector.from_series(pd.Series(1.0, index=cells), block="flux")
+        >>> obs = fips.Vector.from_series(
+        ...     pd.Series([1.0, 2.0], index=pd.Index(["o1", "o2"], name="obs_id")),
+        ...     block="co2",
+        ... )
+        >>> problem = fips.Problem(
+        ...     prior=prior,
+        ...     prior_cov=fips.Independent().with_std(1.0),
+        ...     obs=obs,
+        ...     obs_cov=fips.Independent().with_std(np.sqrt(0.1)),
+        ...     forward=fips.Operator(
+        ...         np.array([[1.0, 1.0, 0.0], [0.0, 1.0, 1.0]]), obs.space, prior.space
+        ...     ),
+        ... )
+        >>> post = fips.solve(problem)
+        >>> total = fips.Operator(
+        ...     np.ones((1, 3)),
+        ...     fips.Space({"total": pd.Index(["all"], name="region")}),
+        ...     prior.space,
+        ... )
+        >>> draws = post.sample(5000, rng=0, W=total)
+        >>> draws.shape
+        (1, 5000)
+        >>> draws.mean(axis=1).round().tolist()  # near the estimate's total, 2.35
+        [2.0]
+        >>> round(float((draws.iloc[0] < 3.0).mean()), 1)  # exactly 0.84 for a Gaussian
+        0.8
+        """
+        sample = self._optional("sample", "draws from the posterior")
+        if not isinstance(n, numbers.Integral) or isinstance(n, bool) or n < 1:
+            raise ValueError(
+                f"n is the number of draws, a positive integer, got {n!r}."
+            )
+        form = None if W is None else self._aggregation(W)
+        draws = sample(int(n), np.random.default_rng(rng))
+        if form is None:
+            values, index = draws, self._problem.prior.index
+        else:
+            assert W is not None  # form is None exactly when W is
+            values, index = np.asarray(form @ draws), W.rows.index
+        return pd.DataFrame(
+            values, index=index, columns=pd.RangeIndex(int(n), name="draw")
         )
 
     def data_worth(self, by: Any, W: Operator) -> pd.DataFrame:

@@ -18,7 +18,8 @@ below:
   ``gain(W)``, ``dofs()``, ``dofs_per_element()``, ``information()``,
   ``chi2()``, ``misfits()`` and ``chi2_tests()``. It may also have
   ``with_gamma(gamma)`` and ``with_data(problem)``, which give another
-  solution without solving again, ``estimate_is_mean = True`` when its
+  solution without solving again, ``sample(N, rng)``, which draws from the
+  posterior (``Posterior.sample``), ``estimate_is_mean = True`` when its
   estimate is the posterior mean, and ``estimate_is_linear = True`` when its
   estimate is :math:`x_0 + K (z - H x_0 - c)` with the gain of ``gain()``
   (what ``Posterior.recovery`` needs); a posterior whose solution lacks one

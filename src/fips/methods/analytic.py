@@ -212,6 +212,42 @@ class _Factors:
         r"""Return :math:`u = (H S_0 H^T + S_z/\gamma)^{-1} d` (``m``; each form defines it)."""
         raise NotImplementedError
 
+    def estimate(self) -> np.ndarray:
+        r"""Return the estimate :math:`\hat{x} = x_0 + K d` (each form defines it)."""
+        raise NotImplementedError
+
+    def _gain_times(self, D: np.ndarray) -> np.ndarray:
+        r"""Return :math:`K D` for a block of ``N`` innovations `D` (``m x N``), as ``n x N`` (each form defines it)."""
+        raise NotImplementedError
+
+    def sample(self, N: int, rng: np.random.Generator) -> np.ndarray:
+        r"""
+        Return `N` exact draws from the posterior, ``n x N``, by perturbing the prior and the data and solving.
+
+        Draw :math:`x_p \sim N(x_0, S_0)` and :math:`e \sim N(0, S_z/\gamma)`
+        and solve with the perturbed prior and observations,
+        :math:`x_s = x_p + K (z - c - e - H x_p)`; since :math:`z - c - H x_0 =
+        d`, that is :math:`x_s = \hat{x} + \delta - K (H \delta + e)` with
+        :math:`\delta = x_p - x_0`, and its covariance is :math:`(I - K H) S_0
+        (I - K H)^T + K (S_z/\gamma) K^T = \hat{S}`. The two errors are
+        :math:`R w` with :math:`R R^T` the covariance and :math:`w` standard
+        normal: the roots of the forms (``form._root``), applied to all `N`
+        columns of normals in one product, the prior's normals drawn from
+        `rng` first. The gain is applied to the whole block by
+        :meth:`_gain_times`, and never formed.
+        """
+        problem = self.problem
+        prior_root = problem.prior_cov.data._root
+        obs_root = problem.obs_cov.data._root
+        delta = np.asarray(
+            prior_root @ rng.standard_normal((prior_root.shape[1], N)), dtype=float
+        )
+        error = np.asarray(
+            obs_root @ rng.standard_normal((obs_root.shape[1], N)), dtype=float
+        ) / math.sqrt(self.gamma)
+        innovations = np.asarray(problem.forward.data @ delta) + error  # m x N
+        return self.estimate()[:, None] + delta - self._gain_times(innovations)
+
     def misfits(self) -> tuple[float, float]:
         r"""
         Return the data misfit :math:`r^T S_z^{-1} r` and the state misfit :math:`(\hat{x} - x_0)^T S_0^{-1} (\hat{x} - x_0)`.
@@ -559,6 +595,10 @@ class Whitened(_Factors):
             SP = np.einsum("ik,k,ki->i", np.asarray(S_z @ B.T), w, B)
         return 1.0 - SP / self.gamma
 
+    def _gain_times(self, D: np.ndarray) -> np.ndarray:
+        r"""Return :math:`K D = W^T (w \circ (B D))`: ``with_data``'s product for a block of innovations."""
+        return self.W.T @ (self.weights()[:, None] * (self.whitener @ D))
+
     def with_data(self, problem: Problem) -> "Whitened":
         """
         Return the factors of `problem`, this one's with other observation values.
@@ -838,6 +878,13 @@ class Information(_Factors):
         """
         HG, Z = self._weighted_obs()
         return np.einsum("ik,k,ik->i", HG, self.weights(), Z)
+
+    def _gain_times(self, D: np.ndarray) -> np.ndarray:
+        r"""Return :math:`K D = G (w \circ (G^T H^T S_z^{-1} D))`: ``with_data``'s product (``_carried``) for a block of innovations."""
+        problem = self.problem
+        Y = np.asarray(problem.obs_cov.data.solve(D))
+        HtY = np.asarray(problem.forward.data._transpose() @ Y)
+        return self.G @ (self.weights()[:, None] * (self.G.T @ HtY))
 
     def with_data(self, problem: Problem) -> "Information":
         """
