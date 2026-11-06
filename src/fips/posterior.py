@@ -53,8 +53,9 @@ class Solution(Protocol):
     observations (``problem.obs``). The posterior labels them, and computes
     each one once.
 
-    Six members are optional, and a posterior whose solution lacks one says
-    so when it is asked for the feature:
+    Eight members are optional, and a posterior whose solution lacks one says
+    so when it is asked for the feature (or, for ``linearized``, uses its own
+    problem):
 
     - ``with_gamma(gamma) -> Solution``: the solution at another
       regularization factor, without solving again (:meth:`Posterior.with_gamma`).
@@ -71,6 +72,14 @@ class Solution(Protocol):
       `rng` (:meth:`Posterior.sample`).
     - ``at_bound() -> np.ndarray``: which state elements sit on a bound at the
       estimate, booleans (``n``; :attr:`Posterior.at_bound`).
+    - ``iterations() -> tuple[np.ndarray, np.ndarray]``: for each iteration of
+      an iterated method, the size of its step and the cost after it
+      (:attr:`Posterior.iterations`).
+    - ``linearized() -> Problem``: for a method that solves a problem with a
+      forward model, the linear problem its gain is of (the problem
+      linearized where its last solve was made). The averaging kernel and
+      the innovation covariance read their forward operator from it; without
+      it, from the posterior's problem.
 
     And a solution whose :meth:`estimate` is the posterior mean says so with a
     class attribute ``estimate_is_mean = True``; without it, a posterior has
@@ -85,8 +94,10 @@ class Solution(Protocol):
     its variances and covariances are those of draws of its posterior (a
     Gaussian truncated to the bounds); its gain, DOFS and information content
     are those of the Gaussian at the mode, with the elements on a bound held
-    there; and its chi-squared terms are those of the mode. An iterated method
-    would answer from the Gaussian of the problem linearized at its estimate.
+    there; and its chi-squared terms are those of the mode. The
+    ``"gauss_newton"`` method answers from the Gaussian of the problem
+    linearized where its last step was made, and its chi-squared terms from
+    the model at its estimate.
     Such answers are estimates or approximations, and
     :meth:`Posterior.trials` measures how good they are.
 
@@ -389,12 +400,20 @@ class Posterior:
     answer without solving again), :meth:`recovery` and
     :meth:`candidate_worth` (where the estimate is linear in the
     observations), :meth:`data_worth`, :meth:`sample` (where the method can
-    draw from its posterior) and :attr:`at_bound` (where it has bounds). The
-    analytic method has all but :attr:`at_bound`. The ``"bounded"`` method
+    draw from its posterior), :attr:`at_bound` (where it has bounds) and
+    :attr:`iterations` (where it iterates). The analytic method has all but
+    :attr:`at_bound` and :attr:`iterations`. The ``"bounded"`` method
     (:class:`~fips.methods.bounded.BoundedOptions`) has :meth:`with_gamma`,
     :meth:`with_data`, :meth:`sample` and :attr:`at_bound`; its estimate is
     the mode of the posterior with bounds on the state, and its variances are
-    those of draws of that posterior.
+    those of draws of that posterior. The ``"gauss_newton"`` method
+    (:class:`~fips.methods.gauss_newton.GaussNewtonOptions`), for a problem
+    with a forward model, has :meth:`with_data`, :meth:`sample` and
+    :attr:`iterations`; its estimate is the mode, and its covariance, gain
+    and averaging kernel are those of the Gaussian at the mode. Its
+    :attr:`problem` is the problem with the model, as solved; what needs a
+    linear forward operator (the averaging kernel, :attr:`innovation_cov`)
+    reads the Jacobian of the last step.
 
     Parameters
     ----------
@@ -479,6 +498,18 @@ class Posterior:
         self._problem = state["problem"]
         self._options = state["options"]
         self._solution = state["solution"]
+
+    @cached_property
+    def _linear(self) -> Problem:
+        """
+        The linear problem the gain, the averaging kernel and the innovation covariance are of.
+
+        The posterior's own problem, or, for a method that solves a problem
+        with a forward model, the problem linearized where its last solve was
+        made (the solution's ``linearized``).
+        """
+        linearized = getattr(self._solution, "linearized", None)
+        return self._problem if linearized is None else linearized()
 
     def _optional(self, name: str, feature: str) -> Any:
         """
@@ -626,6 +657,82 @@ class Posterior:
             np.asarray(at(), dtype=bool),
             index=self._problem.prior.index,
             name="at_bound",
+        )
+
+    @cached_property
+    def iterations(self) -> pd.DataFrame:
+        r"""
+        The steps of an iterated method: how far each moved the estimate, and the cost after it.
+
+        ``"gauss_newton"`` solves the problem linearized at its last estimate,
+        from the prior, until a step is small (Rodgers' rule): ``d2`` is the
+        step :math:`\delta = x_{i+1} - x_i` measured in the posterior
+        covariance of the solve that made it, :math:`\delta^T \hat{S}_i^{-1}
+        \delta`, and the iterations stop when it is below ``tol`` times the
+        number of state elements. ``cost`` is the cost at the step's estimate,
+        :math:`\gamma` times the data misfit plus the state misfit; the last is
+        :attr:`chi2`. Near the mode, Gauss-Newton's ``d2`` falls by orders of
+        magnitude a step, and the cost settles.
+
+        Returns
+        -------
+        pandas.DataFrame
+            One row per step, indexed by ``iteration`` (from 1), with the
+            columns ``d2`` and ``cost``; its length is the number of steps.
+
+        Raises
+        ------
+        TypeError
+            If the method does not iterate (its solution has no
+            ``iterations``), as for the analytic method, and for
+            ``"gauss_newton"`` on a problem whose forward is an operator (its
+            posterior is the analytic one).
+
+        See Also
+        --------
+        fips.methods.gauss_newton.GaussNewtonOptions : ``max_iterations`` and ``tol``.
+
+        Examples
+        --------
+        Two observations of the squares of two state elements:
+
+        >>> import numpy as np
+        >>> import pandas as pd
+        >>> import fips
+        >>> from fips.linalg import DiagonalOperator
+        >>> class Square(fips.ForwardModel):
+        ...     def __call__(self, x):
+        ...         return fips.Vector(x.values**2, self.rows)
+        ...
+        ...     def jacobian(self, x):
+        ...         form = DiagonalOperator(2 * x.values)
+        ...         return fips.Operator(form, self.rows, x.space)
+        >>> state = fips.Space({"flux": pd.Index(["a", "b"], name="cell")})
+        >>> observed = fips.Space({"co2": pd.Index(["o1", "o2"], name="obs_id")})
+        >>> problem = fips.Problem(
+        ...     prior=fips.Vector([1.0, 2.0], state),
+        ...     prior_cov=fips.Independent().with_std(0.5),
+        ...     obs=fips.Vector([1.5, 3.0], observed),
+        ...     obs_cov=fips.Independent().with_std(0.1),
+        ...     forward=Square(observed, state),
+        ... )
+        >>> post = fips.solve(problem, "gauss_newton")
+        >>> post.iterations.round(4).reset_index()
+           iteration        d2    cost
+        0          1  124.5031  1.2294
+        1          2    0.7422  0.4870
+        2          3    0.0000  0.4869
+        3          4    0.0000  0.4869
+        >>> post.estimate.values.round(3)
+        array([1.223, 1.733])
+        >>> post.modeled_obs.values.round(3)  # F(x) at the mode, near the data
+        array([1.496, 3.003])
+        """
+        history = self._optional("iterations", "the steps of an iterated solve")
+        d2, cost = history()
+        return pd.DataFrame(
+            {"d2": np.asarray(d2, dtype=float), "cost": np.asarray(cost, dtype=float)},
+            index=pd.RangeIndex(1, len(d2) + 1, name="iteration"),
         )
 
     def _aggregation(self, W: Operator) -> LinearOperator:
@@ -891,6 +998,12 @@ class Posterior:
         reflection off a bound, an ``O(n)`` step, for each bound a path
         reaches: about as many per draw as there are elements near a bound.
 
+        The ``"gauss_newton"`` method draws the Gaussian at the mode, exactly
+        as the analytic method draws the posterior of the problem linearized
+        at its last step: a draw of the state of a nonlinear model's problem
+        (log scale factors), carried through the model or its transform, is a
+        draw of what that Gaussian says of the result.
+
         Parameters
         ----------
         n : int
@@ -1140,7 +1253,7 @@ class Posterior:
         var_with = self.cov(W).variances.values
         shares = sensitivity()
         # the prior side of the alone column: W S_0 and the group's rows of H
-        prior_cov, H = self._problem.prior_cov.data, self._problem.forward.data
+        prior_cov, H = self._problem.prior_cov.data, self._linear._operator.data
         R = self._problem.obs_cov.data
         prior = self._problem.prior_cov.aggregate(W).variances.values
         WS_0 = W_form @ prior_cov
@@ -1354,7 +1467,7 @@ class Posterior:
     @cached_property
     def _averaging_kernel(self) -> Operator:
         """The full averaging kernel, formed once."""
-        A = self.kalman_gain.dense() @ self._problem.forward.data
+        A = self.kalman_gain.dense() @ self._linear._operator.data
         space = self._problem.prior.space
         return Operator(_adopt(A), space, space, name="averaging_kernel")
 
@@ -1398,7 +1511,7 @@ class Posterior:
             return self._averaging_kernel
         W_form = self._aggregation(W)
         WK = self._solution.gain(W_form)  # k x m
-        HWt = np.asarray(self._problem.forward.data @ W_form.T)  # m x k
+        HWt = np.asarray(self._linear._operator.data @ W_form.T)  # m x k
         values = _times_pseudo_inverse(WK @ HWt, W_form)
         return Operator(_adopt(values), W.rows, W.rows, name="averaging_kernel")
 
@@ -1423,7 +1536,7 @@ class Posterior:
     @cached_property
     def _HS_0H(self) -> LinearOperator:
         r""":math:`H S_0 H^T`, in the cheapest form of its factors."""
-        H = self._problem.forward.data
+        H = self._linear._operator.data
         return (H @ self._problem.prior_cov.data) @ H._transpose()
 
     @cached_property
@@ -2501,6 +2614,13 @@ class Posterior:
             if world is None
             else self._on_labels(world, own_state=W_world is not None)
         )
+        if not isinstance(world.forward, Operator):
+            raise TypeError(
+                "recovery's exact answer needs a world whose forward is a linear "
+                f"operator, and this world's is a model, {type(world.forward).__name__}: "
+                "a model's data are not Gaussian. Measure the error by sampling, "
+                "with Posterior.trials(world)."
+            )
         state, world_state = problem.prior.space, world.prior.space
         if truth is None:
             mu, P = world.prior.values, world.prior_cov.data
@@ -2556,7 +2676,7 @@ class Posterior:
         scale = _largest_variance(KT, world.obs_cov.data)
         if P is not None:
             # G^T = (W K H_w - W)^T = H_w^T (W K)^T - W^T, n x k
-            Gt = np.asarray(world.forward.data._transpose() @ KT) - Wt
+            Gt = np.asarray(world._operator.data._transpose() @ KT) - Wt
             variance += np.einsum("ik,ik->k", Gt, np.asarray(P @ Gt))
             scale += _largest_variance(Gt, P)
         std = _std(variance, scale, "error variances")

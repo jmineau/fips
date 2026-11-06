@@ -54,12 +54,12 @@ class TestSolve:
         np.testing.assert_array_equal(problem.obs.values, before[1])
 
     def test_available_methods(self):
-        assert fips.available_methods() == ["analytic", "bounded"]
+        assert fips.available_methods() == ["analytic", "bounded", "gauss_newton"]
 
     def test_unknown_method_lists_the_methods(self):
         with pytest.raises(
             ValueError,
-            match=r"Unknown method 'analytc'; the methods are: analytic, bounded\.",
+            match=r"Unknown method 'analytc'; the methods are: analytic, bounded, gauss_newton\.",
         ):
             fips.solve(_problem(), "analytc")
 

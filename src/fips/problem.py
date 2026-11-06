@@ -1,11 +1,13 @@
 """
 Inverse problems: the inputs of a solve, on their labels.
 
-A :class:`Problem` holds the prior, the observations, the forward operator,
-the two covariances and an optional offset of a linear inverse problem,
-``obs = forward @ state + offset + error``. It checks their labels once,
-when it is built, and puts every input on the prior's and the observations'
-spaces: :func:`fips.solve` then computes by position.
+A :class:`Problem` holds the prior, the observations, the forward map, the
+two covariances and an optional offset of an inverse problem,
+``obs = forward(state) + offset + error``. The forward map is an
+:class:`~fips.Operator` (a linear problem, ``forward @ state``) or a
+:class:`~fips.ForwardModel` the caller writes, with its Jacobian. It checks
+their labels once, when it is built, and puts every input on the prior's and
+the observations' spaces: :func:`fips.solve` then computes by position.
 
 The problem is the question, and the :class:`~fips.Posterior` that
 :func:`fips.solve` returns is the answer. The problem holds what needs no
@@ -22,6 +24,7 @@ from typing import Any
 import numpy as np
 
 from fips.covariance import Covariance, CovarianceModel
+from fips.forward import ForwardModel, _Aggregated, _differentiated, _evaluated
 from fips.operator import Operator
 from fips.space import Space
 from fips.vector import Vector
@@ -62,15 +65,20 @@ def _covariance(value: Any, space: Space, what: str, of: str) -> Covariance:
 
 class Problem:
     r"""
-    A linear inverse problem: what is known before the observations, and the observations.
+    An inverse problem: what is known before the observations, and the observations.
 
     The state is :math:`x \sim N(x_0, S_0)` (the prior), and the observations
-    are :math:`z = H x + c + e` with :math:`e \sim N(0, S_z)`. Every input is
-    labeled, and the labels are checked once, here, by an exact join: the
-    forward operator, the covariances and the offset must have exactly the
-    labels of the prior or of the observations, in any order. Each is then put
-    in the order of the prior's and the observations' spaces. A problem is not
-    changed after it is built; :func:`fips.solve` solves it.
+    are :math:`z = H x + c + e` with :math:`e \sim N(0, S_z)`: a linear
+    problem, whose forward operator :math:`H` is an
+    :class:`~fips.Operator`. With a forward model, a
+    :class:`~fips.ForwardModel` :math:`F` the caller writes with its Jacobian,
+    they are :math:`z = F(x) + c + e`. Every input is labeled, and the labels
+    are checked once, here, by an exact join: the forward operator or the
+    model, the covariances and the offset must have exactly the labels of the
+    prior or of the observations, in any order. Each is then put in the order
+    of the prior's and the observations' spaces (a model is kept as it is,
+    and its inputs and outputs are put in its order when it is called). A
+    problem is not changed after it is built; :func:`fips.solve` solves it.
 
     The problem is the question: it holds what needs no solve and no
     ``m x m`` matrix, such as :meth:`predict`, and it makes other questions
@@ -91,9 +99,12 @@ class Problem:
         The model-data mismatch :math:`S_z`, the covariance of the
         observation error; a model is built on the observations' space. It
         must be positive-definite.
-    forward : Operator
+    forward : Operator or ForwardModel
         The forward operator :math:`H`, from the state (its columns) to the
-        observations (its rows).
+        observations (its rows); or a forward model :math:`F` with its
+        Jacobian (:class:`~fips.ForwardModel`), whose rows have the
+        observations' labels and whose columns the prior's. A problem with a
+        model is solved by ``fips.solve(problem, "gauss_newton")``.
     offset : Vector or float, optional
         The part of the observations the state does not explain, :math:`c`
         (a background): a vector on the observations' labels, or one value
@@ -104,15 +115,16 @@ class Problem:
     TypeError
         If an input is not of a type named above.
     ValueError
-        If the forward operator, a covariance or the offset does not have
-        exactly the labels of the space it is put on: a block or a label on
-        one side and not the other. The message names them. Also if every
+        If the forward operator or model, a covariance or the offset does not
+        have exactly the labels of the space it is put on: a block or a label
+        on one side and not the other. The message names them. Also if every
         variance of the prior error covariance is zero (some may be: an
         element known exactly, a bias block given as 0).
 
     See Also
     --------
     fips.solve : Solve a problem; it returns a :class:`~fips.Posterior`.
+    fips.ForwardModel : A forward map that is not linear, with its Jacobian.
 
     Notes
     -----
@@ -160,25 +172,45 @@ class Problem:
         prior_cov: "Covariance | CovarianceModel",
         obs: Vector,
         obs_cov: "Covariance | CovarianceModel",
-        forward: Operator,
+        forward: "Operator | ForwardModel",
         offset: "Vector | float | None" = None,
     ):
         self._prior = _vector(prior, "prior")
         self._obs = _vector(obs, "obs")
         state, observed = self._prior.space, self._obs.space
 
-        if not isinstance(forward, Operator):
-            raise TypeError(
-                f"forward must be an Operator, got {type(forward).__name__}. Build "
-                "one with Operator(matrix, rows, cols), Operator.from_blocks or "
-                "Operator.from_frame."
+        self._forward: Operator | ForwardModel
+        if isinstance(forward, Operator):
+            self._forward = Operator(
+                forward._on(
+                    observed, state, "forward", ("the observations", "the prior")
+                ),
+                observed,
+                state,
+                name=forward.name,
             )
-        self._forward = Operator(
-            forward._on(observed, state, "forward", ("the observations", "the prior")),
-            observed,
-            state,
-            name=forward.name,
-        )
+        elif isinstance(forward, ForwardModel):
+            try:
+                rows, cols = forward.rows, forward.cols
+            except AttributeError:
+                raise TypeError(
+                    f"The forward model {type(forward).__name__} has no rows or "
+                    "cols: its __init__ must call super().__init__(rows, cols)."
+                ) from None
+            observed._align(
+                rows, "the rows of forward", "The rows of forward and the observations"
+            )
+            state._align(
+                cols, "the columns of forward", "The columns of forward and the prior"
+            )
+            self._forward = forward
+        else:
+            raise TypeError(
+                f"forward must be an Operator or a ForwardModel, got "
+                f"{type(forward).__name__}. Build an operator with Operator(matrix, "
+                "rows, cols), Operator.from_blocks or Operator.from_frame; a map "
+                "that is not linear is a subclass of fips.ForwardModel."
+            )
         self._prior_cov = _covariance(prior_cov, state, "prior_cov", "the prior")
         if len(state) and not self._prior_cov.data.diagonal().any():
             raise ValueError(
@@ -224,9 +256,29 @@ class Problem:
         return self._obs_cov
 
     @property
-    def forward(self) -> Operator:
-        """The forward operator, :math:`H`: rows on the observations, columns on the prior."""
+    def forward(self) -> "Operator | ForwardModel":
+        """The forward operator, :math:`H` (rows on the observations, columns on the prior), or the forward model, :math:`F`, as given."""
         return self._forward
+
+    @property
+    def _operator(self) -> Operator:
+        """
+        The forward operator, for what needs a linear forward.
+
+        Raises
+        ------
+        TypeError
+            If the forward is a model.
+        """
+        forward = self._forward
+        if isinstance(forward, Operator):
+            return forward
+        raise TypeError(
+            "This needs a linear forward operator, and the problem's forward is a "
+            f"model, {type(forward).__name__}. Solve the problem with "
+            'fips.solve(problem, "gauss_newton"), or linearize it at a state x '
+            "with problem.linearized(x)."
+        )
 
     @property
     def offset(self) -> Vector | None:
@@ -235,7 +287,7 @@ class Problem:
 
     def predict(self, x: Vector) -> Vector:
         r"""
-        Return the observations the state `x` models, :math:`H x + c`.
+        Return the observations the state `x` models, :math:`H x + c` (:math:`F(x) + c` with a forward model).
 
         Parameters
         ----------
@@ -246,8 +298,8 @@ class Problem:
         Returns
         -------
         Vector
-            :math:`H x + c` (with the offset :math:`c`, if any) on the
-            observations' space.
+            :math:`H x + c` (with the offset :math:`c`, if any), or
+            :math:`F(x) + c` with a forward model, on the observations' space.
 
         Raises
         ------
@@ -283,12 +335,116 @@ class Problem:
         >>> problem.predict(problem.prior).values
         array([1.5, 1.5, 2.5])
         """
-        state = self._prior.space
-        values = _vector(x, "x").values
-        if x.space is not state:
-            values = values[state._align(x.space, "x", "x and the prior")]
-        predicted = self._apply(values) + self._offset_values()
+        predicted = self._apply(self._state_values(x, "x")) + self._offset_values()
         return Vector(predicted, self._obs.space)
+
+    def linearized(self, x: Vector) -> "Problem":
+        r"""
+        Return the linear problem at the state `x`: the forward model replaced by its tangent there.
+
+        With a forward model :math:`F` and its Jacobian :math:`J = J(x)`,
+        :math:`F(x') \approx F(x) + J (x' - x)`, so the problem linearized at
+        `x` has the forward operator :math:`J` and the offset :math:`c + F(x)
+        - J x`. It predicts what the model does at `x` itself, and near `x` to
+        first order. Its analytic solve, ``fips.solve(problem.linearized(x))``,
+        is one step of Gauss-Newton from `x`; ``fips.solve(problem,
+        "gauss_newton")`` repeats the step from the prior until the estimate
+        stops moving.
+
+        Parameters
+        ----------
+        x : Vector
+            The state to linearize at, on the prior's labels (in any order).
+
+        Returns
+        -------
+        Problem
+            The linear problem (of the same class), with the same prior,
+            observations and covariances. A problem whose forward is an
+            operator is linear already, and is returned itself.
+
+        Raises
+        ------
+        TypeError
+            If `x` is not a Vector, or the model's Jacobian is not an
+            Operator.
+        ValueError
+            If `x` does not have exactly the prior's labels, or what the model
+            returns does not have exactly its labels.
+
+        See Also
+        --------
+        fips.ForwardModel : The model and its Jacobian.
+        fips.taylortest : Check the Jacobian against the model.
+
+        Examples
+        --------
+        >>> import numpy as np
+        >>> import pandas as pd
+        >>> import fips
+        >>> from fips.linalg import DiagonalOperator
+        >>> class Square(fips.ForwardModel):
+        ...     def __call__(self, x):
+        ...         return fips.Vector(x.values**2, self.rows)
+        ...
+        ...     def jacobian(self, x):
+        ...         form = DiagonalOperator(2 * x.values)
+        ...         return fips.Operator(form, self.rows, x.space)
+        >>> state = fips.Space({"flux": pd.Index(["a", "b"], name="cell")})
+        >>> observed = fips.Space({"co2": pd.Index(["o1", "o2"], name="obs_id")})
+        >>> problem = fips.Problem(
+        ...     prior=fips.Vector([1.0, 2.0], state),
+        ...     prior_cov=fips.Independent().with_std(1.0),
+        ...     obs=fips.Vector([1.5, 3.0], observed),
+        ...     obs_cov=fips.Independent().with_std(0.1),
+        ...     forward=Square(observed, state),
+        ...     offset=10.0,
+        ... )
+        >>> linear = problem.linearized(problem.prior)
+        >>> linear.forward.dense()
+        array([[2., 0.],
+               [0., 4.]])
+        >>> linear.offset.values  # c + F(x) - J x
+        array([9., 6.])
+        >>> linear.predict(problem.prior).values  # F(x) + c at x itself
+        array([11., 14.])
+        """
+        if isinstance(self._forward, Operator):
+            return self
+        return self._linearized(self._state_values(x, "x"))
+
+    def _linearized(
+        self, values: np.ndarray, modeled: np.ndarray | None = None
+    ) -> "Problem":
+        r"""
+        Return the problem linearized at the state `values` (in the prior's order); `modeled` is :math:`F(x)` when it is known.
+
+        Raises
+        ------
+        TypeError
+            If the forward is an operator.
+        """
+        model = self._forward
+        if not isinstance(model, ForwardModel):
+            raise TypeError("Only a problem with a forward model is linearized.")
+        state, observed = self._prior.space, self._obs.space
+        if modeled is None:
+            modeled = self._apply(values)
+        J = _differentiated(model, self._to_model(values))
+        form = J._on(observed, state)
+        offset = self._offset_values() + modeled - np.asarray(form @ values)
+        return type(self)(
+            prior=self._prior,
+            prior_cov=self._prior_cov,
+            obs=self._obs,
+            obs_cov=self._obs_cov,
+            forward=Operator(form, observed, state, name=J.name),
+            offset=Vector(
+                offset,
+                observed,
+                name=None if self._offset is None else self._offset.name,
+            ),
+        )
 
     def simulate(
         self,
@@ -391,11 +547,7 @@ class Problem:
             draw = self._prior_cov.sample(rng)
             truth = Vector(self._prior.values + draw.values, state)
         else:
-            values = _vector(truth, "truth").values
-            if truth.space is not state:
-                values = values[
-                    state._align(truth.space, "truth", "The truth and the prior")
-                ]
+            values = self._state_values(truth, "truth", "The truth and the prior")
             truth = Vector(values, state, name=truth.name)
         noise = self._obs_cov.sample(rng)
         obs = Vector(
@@ -446,6 +598,10 @@ class Problem:
 
         Raises
         ------
+        TypeError
+            If the forward is a model: holding elements at their prior puts
+            what they add to the observations into the offset, which is a
+            constant only when the forward is linear.
         ValueError
             If `keep` has a block or a label that the prior lacks.
 
@@ -483,6 +639,16 @@ class Problem:
         """
         if not isinstance(keep, Space):
             raise TypeError(f"keep must be a Space, got {type(keep).__name__}.")
+        if not isinstance(self._forward, Operator):
+            raise TypeError(
+                "restrict needs a linear forward operator, and this problem's "
+                f"forward is a model, {type(self._forward).__name__}: holding "
+                "elements at their prior puts what they add to the observations "
+                "into the offset, which is a constant only when the forward is "
+                "linear. Restrict the problem linearized at a state, "
+                "problem.linearized(x).restrict(keep), or write the model on the "
+                "elements to keep."
+            )
         state = self._prior.space
         kept = state._subset(keep, "The space to keep")
         left_out = np.ones(len(state), dtype=bool)
@@ -520,7 +686,9 @@ class Problem:
         :math:`W`: the observations :math:`W z`, the forward operator
         :math:`W H`, the model-data mismatch :math:`W S_z W^T` and the offset
         :math:`W c`. Each keeps the cheapest form (a sparse :math:`W` and a
-        diagonal :math:`S_z` give a sparse mismatch).
+        diagonal :math:`S_z` give a sparse mismatch). A forward model
+        :math:`F` is followed by the aggregation: the new problem's model is
+        :math:`W F(x)`, with the Jacobian :math:`W J(x)`.
 
         Parameters
         ----------
@@ -582,23 +750,62 @@ class Problem:
         offset = self._offset
         if offset is not None:
             offset = Vector(form @ offset.values, rows, name=offset.name)
+        forward = self._forward
+        if isinstance(forward, Operator):
+            forward = Operator(
+                form @ forward.data, rows, self._prior.space, name=forward.name
+            )
+        else:
+            forward = _Aggregated(forward, Operator(form, rows, observed, name=W.name))
         return type(self)(
             prior=self._prior,
             prior_cov=self._prior_cov,
             obs=Vector(form @ self._obs.values, rows, name=self._obs.name),
             obs_cov=self._obs_cov.aggregate(W),
-            forward=Operator(
-                form @ self._forward.data,
-                rows,
-                self._prior.space,
-                name=self._forward.name,
-            ),
+            forward=forward,
             offset=offset,
         )
 
+    def _state_values(
+        self, x: Vector, what: str, pair: str | None = None
+    ) -> np.ndarray:
+        """Return the values of the state `x` in the prior's order; `what` names it in the errors."""
+        state = self._prior.space
+        values = _vector(x, what).values
+        if x.space is not state:
+            values = values[
+                state._align(x.space, what, pair or f"{what} and the prior")
+            ]
+        return values
+
+    def _to_model(self, values: np.ndarray) -> np.ndarray:
+        """Return the state `values` (in the prior's order) in the order of the forward model's columns."""
+        model = self._forward
+        assert isinstance(model, ForwardModel)  # called for a model only
+        state = self._prior.space
+        if model.cols is state:
+            return values
+        return values[model.cols._align(state, "the prior", "The model's columns")]
+
     def _apply(self, values: np.ndarray) -> np.ndarray:
-        """Return :math:`H x` for the state values `x`, without the offset; a later forward model replaces it."""
-        return self._forward.data @ values
+        """
+        Return :math:`H x`, or :math:`F(x)` with a forward model, for the state values `x` (in the prior's order), without the offset.
+
+        Raises
+        ------
+        TypeError, ValueError
+            If the model does not return a Vector with exactly its rows' labels.
+        """
+        forward = self._forward
+        if isinstance(forward, Operator):
+            return forward.data @ values
+        modeled = _evaluated(forward, self._to_model(values))
+        observed = self._obs.space
+        if forward.rows is observed:
+            return modeled
+        return modeled[
+            observed._align(forward.rows, "the model's rows", "The model's rows")
+        ]
 
     def _offset_values(self) -> np.ndarray:
         """Return the offset's values, zeros where there is none."""

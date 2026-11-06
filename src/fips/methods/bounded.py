@@ -54,6 +54,7 @@ from scipy.linalg import cho_factor, cho_solve
 from fips.linalg import DenseOperator, LinearOperator
 from fips.linalg.forms import _read_only
 from fips.methods.analytic import AnalyticOptions, Information, Whitened, _factor
+from fips.operator import Operator
 from fips.posterior import Posterior
 from fips.problem import Problem
 from fips.space import Space, _listed
@@ -907,7 +908,7 @@ class Bounded:
 
     def _kernel_rows(self, active: np.ndarray) -> np.ndarray:
         r"""Return the rows of the analytic averaging kernel at `active`, :math:`A_{a:} = K_{a:} H` (``|a| x n``)."""
-        H = self.analytic.problem.forward.data
+        H = self.analytic.problem._operator.data
         return np.asarray(H._transpose() @ self._gain_rows(active).T, dtype=float).T
 
     def dofs(self) -> float:
@@ -957,7 +958,7 @@ class Bounded:
         u = self.analytic._innovation_precision_times()
         problem = self.analytic.problem
         HS_0l = np.asarray(
-            problem.forward.data @ (problem.prior_cov.data @ self.multipliers),
+            problem._operator.data @ (problem.prior_cov.data @ self.multipliers),
             dtype=float,
         )
         return u - self.analytic._precision_times(HS_0l[:, None])[:, 0]
@@ -975,7 +976,7 @@ class Bounded:
         u = self._residual_weights()
         gamma = self.analytic.gamma
         data = float(u @ np.asarray(problem.obs_cov.data @ u)) / gamma**2
-        y = np.asarray(problem.forward.data._transpose() @ u) + self.multipliers
+        y = np.asarray(problem._operator.data._transpose() @ u) + self.multipliers
         state = float(y @ np.asarray(problem.prior_cov.data @ y))
         return data, state
 
@@ -1003,7 +1004,7 @@ class Bounded:
         gamma = self.analytic.gamma
         m = len(problem.obs)
         u = self._residual_weights()
-        Htu = np.asarray(problem.forward.data._transpose() @ u)
+        Htu = np.asarray(problem._operator.data._transpose() @ u)
         residual = (
             float(Htu @ np.asarray(problem.prior_cov.data @ Htu))
             + float(u @ np.asarray(problem.obs_cov.data @ u)) / gamma
@@ -1048,6 +1049,14 @@ def _logdet(S: np.ndarray) -> float:
 
 def _bounded(problem: Problem, options: BoundedOptions) -> Posterior:
     """Factor the problem as the analytic method does, then hold the estimate to the bounds; with no finite bound, the analytic posterior."""
+    if not isinstance(problem.forward, Operator):
+        raise TypeError(
+            "The bounded method solves a linear problem, and this problem's "
+            f"forward is a model, {type(problem.forward).__name__}: bounds with a "
+            'forward model are not available. Solve it with "gauss_newton", '
+            "without bounds, or write the model on a state that cannot leave "
+            "the bounds (the logarithm of a positive flux)."
+        )
     state = problem.prior.space
     lower = _resolve(options.lower, state, "lower")
     upper = _resolve(options.upper, state, "upper")

@@ -10,7 +10,9 @@ and no :math:`m \times m` matrix (:meth:`Problem.predict`); the posterior is
 the answer and holds what depends on the solve or on the :math:`m \times m`
 innovation covariance (:attr:`Posterior.innovation_cov`). Each method declares its options once (for ``"analytic"``,
 :class:`~fips.methods.analytic.AnalyticOptions`; for ``"bounded"``, the
-posterior with bounds on the state, :class:`~fips.methods.bounded.BoundedOptions`), and an unknown method or option raises
+posterior with bounds on the state, :class:`~fips.methods.bounded.BoundedOptions`;
+for ``"gauss_newton"``, the mode of a problem with a forward model,
+:class:`~fips.methods.gauss_newton.GaussNewtonOptions`), and an unknown method or option raises
 with the names it knows. The posterior labels the answer and the method keeps
 its own machinery: the posterior asks what the method kept from the solve (a
 :class:`~fips.posterior.Solution`) for unlabeled arrays and labels them with
@@ -52,6 +54,13 @@ Solving
    :toctree: api/
 
    BoundedOptions
+
+.. currentmodule:: fips.methods.gauss_newton
+
+.. autosummary::
+   :toctree: api/
+
+   GaussNewtonOptions
 
 .. currentmodule:: fips
 
@@ -118,6 +127,7 @@ Diagnostics
    Posterior.rmse
    Posterior.uncertainty_reduction
    Posterior.summary
+   Posterior.iterations
 
 Reusing the factorization
 ~~~~~~~~~~~~~~~~~~~~~~~~~

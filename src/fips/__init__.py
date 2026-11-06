@@ -1,13 +1,14 @@
 """
 Flexible Inverse Problem Solver (FIPS).
 
-A Pythonic framework for solving linear inverse problems using Bayesian estimation.
+A Pythonic framework for solving inverse problems using Bayesian estimation.
 Labels live in a :class:`Space`; values on one are a :class:`Vector`; a matrix
 between two is an :class:`Operator` (a :class:`Covariance` from one to
 itself), kept in its cheapest form. A covariance is written as a correlation
 model with standard deviations: ``Exponential("time", "30D").with_std(std)``.
-A :class:`Problem` puts the prior, the observations, the forward operator and
-the covariances together, and :func:`solve` returns its :class:`Posterior`.
+A :class:`Problem` puts the prior, the observations, the forward operator (or
+a :class:`ForwardModel` that is not linear, with its Jacobian) and the
+covariances together, and :func:`solve` returns its :class:`Posterior`.
 :mod:`fips.aggregate` sums or averages a space by group (the observations to
 daily means, the state to monthly totals), and :func:`offset_block` adds a
 block of offsets to the state.
@@ -28,6 +29,7 @@ from .covariance import (
     Kronecker,
     Matern,
 )
+from .forward import ForwardModel, taylortest
 from .methods import available_methods, solve
 from .operator import Operator
 from .posterior import Posterior
@@ -47,6 +49,8 @@ __all__ = [
     "Space",
     "Vector",
     "Operator",
+    "ForwardModel",
+    "taylortest",
     "Covariance",
     "Exponential",
     "Gaussian",
