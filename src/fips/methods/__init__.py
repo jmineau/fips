@@ -5,9 +5,11 @@ Each method is registered under a name with the dataclass of its options,
 declared once: :func:`solve` checks the options a caller passes against it
 before anything is computed, and an unknown method or option raises with the
 names it knows. The methods are ``"analytic"`` (:mod:`fips.methods.analytic`),
-the closed-form Gaussian posterior, and ``"bounded"``
+the closed-form Gaussian posterior; ``"bounded"``
 (:mod:`fips.methods.bounded`), that posterior with bounds on the state: its
-mode, and draws of the Gaussian truncated to the bounds.
+mode, and draws of the Gaussian truncated to the bounds; and
+``"gauss_newton"`` (:mod:`fips.methods.gauss_newton`), the mode of the
+posterior of a problem with a forward model, and the Gaussian at the mode.
 
 A method is a module here with three things, and a line in ``_METHODS``
 below:
@@ -22,7 +24,9 @@ below:
   ``with_gamma(gamma)`` and ``with_data(problem)``, which give another
   solution without solving again, ``sample(N, rng)``, which draws from the
   posterior (``Posterior.sample``), ``at_bound()``, which says which state
-  elements sit on a bound (``Posterior.at_bound``), ``estimate_is_mean = True`` when its
+  elements sit on a bound (``Posterior.at_bound``), ``iterations()`` and
+  ``linearized()`` for an iterated method (``Posterior.iterations``, and the
+  linear problem its gain is of), ``estimate_is_mean = True`` when its
   estimate is the posterior mean, and ``estimate_is_linear = True`` when its
   estimate is :math:`x_0 + K (z - H x_0 - c)` with the gain of ``gain()``
   (what ``Posterior.recovery`` needs); a posterior whose solution lacks one
@@ -45,12 +49,14 @@ analytic one and the mode, and answers the variances from draws of its
 truncated posterior and the gain from the Gaussian at the mode; it has no
 ``estimate_is_mean`` and no ``estimate_is_linear`` (the mode is not linear in
 the data), and its ``with_gamma`` and ``with_data`` find the mode again on the
-analytic factors. An iterated method (a lognormal flux) would keep its mode
-and the Gaussian of the problem linearized there; an ensemble method would keep
-its posterior ensemble and answer from the sample mean and covariance
-(``estimate_is_mean = True``). Neither an iterated nor an ensemble method can
-change gamma without solving again, so neither has ``with_gamma``. A method
-imports :mod:`fips.posterior`; :mod:`fips.posterior` never imports a method.
+analytic factors. The Gauss-Newton method's solution
+(``fips.methods.gauss_newton.GaussNewton``) keeps its mode and the analytic
+solution of the problem linearized at its last iterate (a lognormal flux is
+such a forward model); it has no ``with_gamma``, since its linearization
+depends on gamma. An ensemble method would keep its posterior ensemble and
+answer from the sample mean and covariance (``estimate_is_mean = True``), and
+could not change gamma without solving again either. A method imports
+:mod:`fips.posterior`; :mod:`fips.posterior` never imports a method.
 """
 
 import logging
@@ -60,6 +66,7 @@ from typing import Any
 
 from fips.methods.analytic import AnalyticOptions, _analytic
 from fips.methods.bounded import BoundedOptions, _bounded
+from fips.methods.gauss_newton import GaussNewtonOptions, _gauss_newton
 from fips.posterior import Posterior
 from fips.problem import Problem
 
@@ -77,6 +84,7 @@ class _Method:
 _METHODS: dict[str, _Method] = {
     "analytic": _Method(AnalyticOptions, _analytic),
     "bounded": _Method(BoundedOptions, _bounded),
+    "gauss_newton": _Method(GaussNewtonOptions, _gauss_newton),
 }
 """The methods by name."""
 
@@ -106,12 +114,15 @@ def solve(problem: Problem, method: str = "analytic", **options: Any) -> Posteri
     method : str, default "analytic"
         The name of a method (see :func:`available_methods`). ``"analytic"``
         is the closed-form Gaussian posterior; ``"bounded"`` the posterior
-        with bounds on the state.
+        with bounds on the state; ``"gauss_newton"`` the mode of the
+        posterior of a problem with a forward model.
     **options
         The method's options, by name: for ``"analytic"``, ``gamma`` (see
         :class:`~fips.methods.analytic.AnalyticOptions`); for ``"bounded"``,
         ``gamma``, ``lower``, ``upper``, ``draws``, ``burn_in`` and ``seed``
-        (see :class:`~fips.methods.bounded.BoundedOptions`).
+        (see :class:`~fips.methods.bounded.BoundedOptions`); for
+        ``"gauss_newton"``, ``gamma``, ``max_iterations`` and ``tol`` (see
+        :class:`~fips.methods.gauss_newton.GaussNewtonOptions`).
 
     Returns
     -------
