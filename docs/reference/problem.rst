@@ -4,9 +4,9 @@ Problem
 
 .. currentmodule:: fips
 
-A :class:`Problem` holds the inputs of a linear inverse problem: the prior and
-its covariance, the observations and theirs, the forward operator and an
-optional offset. It checks their labels once, when it is built, by an exact
+A :class:`Problem` holds the inputs of an inverse problem: the prior and its
+covariance, the observations and theirs, the forward operator (or a
+:class:`ForwardModel`, see :doc:`forward`) and an optional offset. It checks their labels once, when it is built, by an exact
 join: the forward operator, a covariance or the offset must have exactly the
 labels of the prior or of the observations, in any order, or it raises
 naming the blocks and labels on one side only. A covariance model is built on
@@ -73,6 +73,7 @@ the solve is on the :class:`Posterior`.
 
    Problem.predict
    Problem.simulate
+   Problem.linearized
    Problem.aggregate
    Problem.restrict
 
