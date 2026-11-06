@@ -287,7 +287,7 @@ class Problem:
         values = _vector(x, "x").values
         if x.space is not state:
             values = values[state._align(x.space, "x", "x and the prior")]
-        predicted = self._forward.data @ values + self._offset_values()
+        predicted = self._apply(values) + self._offset_values()
         return Vector(predicted, self._obs.space)
 
     def simulate(
@@ -399,7 +399,7 @@ class Problem:
             truth = Vector(values, state, name=truth.name)
         noise = self._obs_cov.sample(rng)
         obs = Vector(
-            self._forward.data @ truth.values + self._offset_values() + noise.values,
+            self._apply(truth.values) + self._offset_values() + noise.values,
             self._obs.space,
             name=self._obs.name,
         )
@@ -595,6 +595,10 @@ class Problem:
             ),
             offset=offset,
         )
+
+    def _apply(self, values: np.ndarray) -> np.ndarray:
+        """Return :math:`H x` for the state values `x`, without the offset; a later forward model replaces it."""
+        return self._forward.data @ values
 
     def _offset_values(self) -> np.ndarray:
         """Return the offset's values, zeros where there is none."""
