@@ -2486,7 +2486,7 @@ class Posterior:
                 "The method that solved this problem does not give an estimate "
                 f"linear in the observations ({type(self._solution).__name__} does "
                 "not set estimate_is_linear), so its error has no closed form: "
-                "use Problem.simulate and with_data in a loop."
+                "measure it by sampling, with Posterior.trials."
             )
         if not 0.0 < level < 1.0:
             raise ValueError(f"level must be between 0 and 1, got {level}.")
