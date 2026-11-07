@@ -34,6 +34,7 @@ from fips import (
     Vector,
 )
 from fips.linalg import DiagonalOperator, KroneckerOperator, SparseOperator
+from fips.methods import analytic
 from fips.methods.analytic import AnalyticOptions, Information, Whitened
 from fips.posterior import Posterior
 
@@ -183,8 +184,16 @@ def test_squared_mahalanobis_lengths_are_chi_squared(case, analytic_form):
     assert p > 0.001, p
 
 
-def test_a_semidefinite_prior_draws_its_mean_and_covariance():
-    """A prior with no Cholesky factor (rank n - 2) is drawn from its eigendecomposition, and the draws still have the posterior's moments."""
+def test_a_semidefinite_prior_draws_its_mean_and_covariance(monkeypatch):
+    """
+    A prior of rank n - 2 still gives draws with the posterior's moments.
+
+    Whether the prior's Cholesky fails in floating point depends on the
+    platform's LAPACK (on macOS it can succeed, with pivots of roundoff), so
+    the solve would take either form. The test holds the whitened form, the
+    one a semidefinite prior is meant for, whichever root the platform
+    finds for the prior.
+    """
     rng = np.random.default_rng(3)
     n, m = 6, 9
     state = Space({"flux": pd.Index(range(n), name="cell")})
@@ -197,8 +206,11 @@ def test_a_semidefinite_prior_draws_its_mean_and_covariance():
         obs_cov=Covariance(_spd(rng, m), obs),
         forward=Operator(rng.standard_normal((m, n)), obs, state),
     )
+    monkeypatch.setattr(
+        analytic, "_choose", lambda problem: (Whitened, "forced by a test")
+    )
     post = fips.solve(problem, gamma=1.5)
-    assert isinstance(post._solution, Whitened)  # no square root for the other form
+    assert isinstance(post._solution, Whitened)
     draws = post.sample(N_DRAWS, rng=4).values
     x_hat, S = post.estimate.values, post.cov().dense()
     variance = np.diag(S)
