@@ -95,9 +95,11 @@ class Solution(Protocol):
     Gaussian truncated to the bounds); its gain, DOFS and information content
     are those of the Gaussian at the mode, with the elements on a bound held
     there; and its chi-squared terms are those of the mode. The
-    ``"gauss_newton"`` method answers from the Gaussian of the problem
-    linearized where its last step was made, and its chi-squared terms from
-    the model at its estimate.
+    ``"gauss_newton"`` method's estimate is the mode; its variances and
+    covariances are those of draws of its posterior; its gain, DOFS and
+    information content those of the Gaussian of the problem linearized where
+    its last step was made; and its chi-squared terms those of the model at
+    its estimate.
     Such answers are estimates or approximations, and
     :meth:`Posterior.trials` measures how good they are.
 
@@ -409,8 +411,9 @@ class Posterior:
     those of draws of that posterior. The ``"gauss_newton"`` method
     (:class:`~fips.methods.gauss_newton.GaussNewtonOptions`), for a problem
     with a forward model, has :meth:`with_data`, :meth:`sample` and
-    :attr:`iterations`; its estimate is the mode, and its covariance, gain
-    and averaging kernel are those of the Gaussian at the mode. Its
+    :attr:`iterations`; its estimate is the mode, its variances are those of
+    draws of its posterior, and its gain and averaging kernel are those of
+    the Gaussian at the mode. Its
     :attr:`problem` is the problem with the model, as solved; what needs a
     linear forward operator (the averaging kernel, :attr:`innovation_cov`)
     reads the Jacobian of the last step.
@@ -578,7 +581,9 @@ class Posterior:
         ``"bounded"`` method gives the variances of its kept draws of the
         truncated posterior (``draws`` of them: a Monte Carlo estimate, a
         standard deviation good to about 2% at the default 2000), about
-        their mean, not about the mode.
+        their mean, not about the mode; the ``"gauss_newton"`` method those
+        of its kept draws of the posterior of its forward model, the same
+        way.
 
         See Also
         --------
@@ -785,9 +790,9 @@ class Posterior:
             Without `W`, :math:`\hat{S}`, dense, ``n x n`` (formed once, the
             same object each time). With `W`, :math:`W \hat{S} W^T` on the
             aggregation's rows, ``k x k``, computed without the ``n x n``
-            covariance. For the ``"bounded"`` method, the covariance of its
-            kept draws of the truncated posterior (or of the draws
-            aggregated, :math:`W x`): a Monte Carlo estimate.
+            covariance. For the ``"bounded"`` and ``"gauss_newton"``
+            methods, the covariance of their kept draws of the posterior (or
+            of the draws aggregated, :math:`W x`): a Monte Carlo estimate.
 
         Raises
         ------
@@ -998,11 +1003,20 @@ class Posterior:
         reflection off a bound, an ``O(n)`` step, for each bound a path
         reaches: about as many per draw as there are elements near a bound.
 
-        The ``"gauss_newton"`` method draws the Gaussian at the mode, exactly
-        as the analytic method draws the posterior of the problem linearized
-        at its last step: a draw of the state of a nonlinear model's problem
-        (log scale factors), carried through the model or its transform, is a
-        draw of what that Gaussian says of the result.
+        The ``"gauss_newton"`` method draws the posterior of its forward
+        model, :math:`p(x \mid z) \propto e^{-\chi^2(x)/2}`, by Hamiltonian
+        Monte Carlo with the Gaussian at the mode as its mass and the exactly
+        solved part of its paths, and a Metropolis test: each call continues
+        the chain from where the solve's burn-in ended, at its tuned step
+        (``GaussNewtonOptions``), and returns the next `n` draws. A draw of
+        the state (log scale factors), carried through the model or its
+        transform, is a draw of the result: a total of fluxes, its interval.
+        The draws are correlated (an autocorrelation time of 1 to 3 draws for
+        most elements in a Salt Lake Valley-shaped test; hundreds along a
+        curve the data pin, which the totals they constrain do not share). A
+        draw costs a few evaluations of the model and of the product of its
+        Jacobian's transpose (one for a linear model), each with a product of
+        the Gaussian at the mode's covariance.
 
         Parameters
         ----------

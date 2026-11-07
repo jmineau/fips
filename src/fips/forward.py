@@ -156,6 +156,16 @@ class ForwardModel(ABC):
             those of :attr:`cols` (in any order).
         """
 
+    def _gradient(self, x: np.ndarray, v: np.ndarray) -> np.ndarray:
+        r"""
+        Return :math:`J(x)^T v`, for the state values `x` in the order of :attr:`cols` and `v` in the order of :attr:`rows`, in the order of :attr:`cols`.
+
+        A product with the transpose of the Jacobian, for a sampler's
+        gradient. This one forms the Jacobian; a model with a cheaper product
+        overrides it.
+        """
+        return np.asarray(_differentiated(self, x).data._transpose() @ v, dtype=float)
+
     def __repr__(self) -> str:
         """Return the class and the two spaces."""
         return f"{type(self).__name__}(rows: {self._rows!r}, cols: {self._cols!r})"
