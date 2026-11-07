@@ -166,6 +166,17 @@ class ForwardModel(ABC):
         """
         return np.asarray(_differentiated(self, x).data._transpose() @ v, dtype=float)
 
+    def _curvature(self, x: np.ndarray, v: np.ndarray) -> np.ndarray | None:
+        r"""
+        Return the diagonal of :math:`\sum_k v_k \nabla^2 F_k(x)` when that matrix is diagonal, else None; `x` and the result in the order of :attr:`cols`, `v` in that of :attr:`rows`.
+
+        The second-order term of the cost's Hessian, which Gauss-Newton leaves
+        out: with it, ``"gauss_newton"`` takes Newton steps. A model whose
+        second derivatives are not diagonal (any model fips did not write)
+        returns None, and its steps are Gauss-Newton's.
+        """
+        return None
+
     def __repr__(self) -> str:
         """Return the class and the two spaces."""
         return f"{type(self).__name__}(rows: {self._rows!r}, cols: {self._cols!r})"
@@ -199,6 +210,12 @@ class _Aggregated(ForwardModel):
         W = self.aggregation
         form = W._on(W.rows, J.rows, "the aggregation")
         return Operator(form @ J.data, W.rows, J.cols, name=J.name)
+
+    def _curvature(self, x: np.ndarray, v: np.ndarray) -> np.ndarray | None:
+        r"""Return the model's curvature with the weights :math:`W^T v`: :math:`\sum_k v_k \nabla^2 (W F)_k = \sum_j (W^T v)_j \nabla^2 F_j`."""
+        W = self.aggregation
+        form = W._on(W.rows, self.model.rows, "the aggregation")
+        return self.model._curvature(x, np.asarray(form._transpose() @ v, dtype=float))
 
     def __repr__(self) -> str:
         """Return the model and the aggregation's rows."""
