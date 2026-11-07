@@ -844,13 +844,33 @@ class Problem:
         """
         model = self._forward
         assert isinstance(model, ForwardModel)  # called for a model only
-        _, rows, to_state = self._model_order
-        if rows is not None:
-            on_rows = np.empty(len(v))
-            on_rows[rows] = v
-            v = on_rows
-        gradient = model._gradient(self._to_model(values), v)
+        gradient = model._gradient(self._to_model(values), self._to_model_rows(v))
+        to_state = self._model_order[2]
         return gradient if to_state is None else gradient[to_state]
+
+    def _curvature(self, values: np.ndarray, v: np.ndarray) -> np.ndarray | None:
+        r"""
+        Return the diagonal of :math:`\sum_k v_k \nabla^2 F_k(x)` for the state values `x` (in the prior's order) and `v` on the observations, in the prior's order; None if the model has no diagonal one.
+
+        Through the model's ``_curvature`` (a transform's; None for any other
+        model, whose steps are then Gauss-Newton's).
+        """
+        model = self._forward
+        assert isinstance(model, ForwardModel)  # called for a model only
+        curvature = model._curvature(self._to_model(values), self._to_model_rows(v))
+        to_state = self._model_order[2]
+        if curvature is None or to_state is None:
+            return curvature
+        return curvature[to_state]
+
+    def _to_model_rows(self, v: np.ndarray) -> np.ndarray:
+        """Return `v`, on the observations, in the order of the forward model's rows."""
+        rows = self._model_order[1]
+        if rows is None:
+            return v
+        on_rows = np.empty(len(v))
+        on_rows[rows] = v
+        return on_rows
 
     def _jacobian(self, values: np.ndarray) -> tuple[LinearOperator, str | None]:
         """
