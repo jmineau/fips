@@ -336,7 +336,7 @@ honest world of the first:
 In a world drawn from the loose prior, the tight inversion has no bias on
 average but claims a third of the spread it has, so its 95% interval holds the
 truth less than half the time: the prior it trusts is not the one the world
-drew from.
+drew from. :doc:`comparison` pairs four methods this way.
 
 .. _other-state-labels:
 
