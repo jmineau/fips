@@ -22,7 +22,8 @@ total, while moving along the correlations can lower it as well.
 What the bounded posterior is
 -----------------------------
 
-The prior with the bounds is the Gaussian prior set to zero outside them, so
+The prior with the bounds is the Gaussian prior set to zero outside them
+(whose mean is above the Gaussian's: :doc:`comparison` shows how far), so
 the posterior with the bounds is the analytic posterior :math:`N(\hat{x},
 \hat{S})` truncated to the box :math:`l \le x \le u`. It is not Gaussian, and
 its mean is not its mode:
@@ -260,9 +261,11 @@ two coverages are within their Monte Carlo error of each other). That is the
 pattern to expect: **bounds mostly improve maps and can move totals**, and since the
 estimate is the mode of a skewed posterior, a total read from it is not the
 posterior's mean total (above, the draws'). Which matters depends on the
-question; a basin total is better served by the analytic posterior, or by the
-draws, than by the mode's total. The world here is a toy: the trials of an
-inversion's own problem, at its own size, say what its bounds do.
+question. For a basin total, read the analytic posterior: the draws' total is
+that of the truncated prior wherever the data see little, above an inventory
+that is the mean, and :doc:`comparison` measures it far above in a Salt Lake
+Valley-shaped problem. The world here is a toy: the trials of an inversion's
+own problem, at its own size, say what its bounds do.
 
 References
 ~~~~~~~~~~
