@@ -9,7 +9,7 @@ the closed-form Gaussian posterior; ``"bounded"``
 (:mod:`fips.methods.bounded`), that posterior with bounds on the state: its
 mode, and draws of the Gaussian truncated to the bounds; and
 ``"gauss_newton"`` (:mod:`fips.methods.gauss_newton`), the mode of the
-posterior of a problem with a forward model, and the Gaussian at the mode.
+posterior of a problem with a forward model, and draws of that posterior.
 
 A method is a module here with three things, and a line in ``_METHODS``
 below:
@@ -52,8 +52,9 @@ the data), and its ``with_gamma`` and ``with_data`` find the mode again on the
 analytic factors. The Gauss-Newton method's solution
 (``fips.methods.gauss_newton.GaussNewton``) keeps its mode and the analytic
 solution of the problem linearized at its last iterate (a lognormal flux is
-such a forward model); it has no ``with_gamma``, since its linearization
-depends on gamma. An ensemble method would keep its posterior ensemble and
+such a forward model), answers the gain from it and the variances from draws
+of the posterior, which it preconditions; it has no ``with_gamma``, since its
+linearization depends on gamma. An ensemble method would keep its posterior ensemble and
 answer from the sample mean and covariance (``estimate_is_mean = True``), and
 could not change gamma without solving again either. A method imports
 :mod:`fips.posterior`; :mod:`fips.posterior` never imports a method.
@@ -115,13 +116,14 @@ def solve(problem: Problem, method: str = "analytic", **options: Any) -> Posteri
         The name of a method (see :func:`available_methods`). ``"analytic"``
         is the closed-form Gaussian posterior; ``"bounded"`` the posterior
         with bounds on the state; ``"gauss_newton"`` the mode of the
-        posterior of a problem with a forward model.
+        posterior of a problem with a forward model, and draws of it.
     **options
         The method's options, by name: for ``"analytic"``, ``gamma`` (see
         :class:`~fips.methods.analytic.AnalyticOptions`); for ``"bounded"``,
         ``gamma``, ``lower``, ``upper``, ``draws``, ``burn_in`` and ``seed``
         (see :class:`~fips.methods.bounded.BoundedOptions`); for
-        ``"gauss_newton"``, ``gamma``, ``max_iterations`` and ``tol`` (see
+        ``"gauss_newton"``, ``gamma``, ``max_iterations``, ``tol``, ``draws``,
+        ``burn_in`` and ``seed`` (see
         :class:`~fips.methods.gauss_newton.GaussNewtonOptions`).
 
     Returns

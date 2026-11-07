@@ -23,6 +23,7 @@ posterior (:meth:`Posterior.sample <fips.Posterior.sample>`), to the flux.
 import math
 import numbers
 from abc import abstractmethod
+from functools import cached_property
 from typing import overload
 
 import numpy as np
@@ -31,7 +32,7 @@ from numpy.polynomial.legendre import leggauss
 from scipy.special import expit
 
 from fips.forward import ForwardModel
-from fips.linalg import DiagonalOperator
+from fips.linalg import DiagonalOperator, LinearOperator
 from fips.operator import Operator
 from fips.space import Space, _listed
 from fips.vector import Vector
@@ -215,6 +216,18 @@ class _Transformed(ForwardModel):
         slopes[self._slice] = self._finite(u, self._slopes(u))
         form = self._H.data @ DiagonalOperator._adopt(slopes)
         return Operator(form, self.rows, self.cols, name=self._H.name)
+
+    @cached_property
+    def _H_T(self) -> LinearOperator:
+        """The transpose of :math:`H`'s form, made once."""
+        return self._H.data._transpose()
+
+    def _gradient(self, x: np.ndarray, v: np.ndarray) -> np.ndarray:
+        r"""Return :math:`J(x)^T v = T'(u) \circ (H^T v)` on the block (:math:`H^T v` off it), without forming the Jacobian."""
+        gradient = np.asarray(self._H_T @ v, dtype=float)
+        u = x[self._slice]
+        gradient[self._slice] *= self._finite(u, self._slopes(u))
+        return gradient
 
     def _transform(self, x: "Vector | pd.DataFrame") -> "Vector | pd.DataFrame":
         """Return `x` (a state, or draws of it, one column each) with the block transformed, on its own labels."""

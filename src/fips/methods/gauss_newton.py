@@ -44,26 +44,43 @@ which may be singular) and its data term :math:`\gamma (J_i \delta)^T
 S_z^{-1} (J_i \delta)`, a solve with the mismatch factored once.
 
 The solution (:class:`GaussNewton`) keeps the analytic solution of the last
-linearized problem. Its estimate is the mode, and its covariance, gain, DOFS
-and draws are those of the Gaussian at the mode: the analytic posterior of
-the problem linearized at the last iterate, one step of :math:`d^2 <
-\mathrm{tol} \cdot n` from the mode. The misfits and the chi-squared are the
-cost's terms at the mode, from the model itself. With a forward operator
-(a linear problem) ``_gauss_newton`` returns the analytic solution itself.
+linearized problem, the Gaussian at the mode: the analytic posterior of the
+problem linearized at the last iterate, one step of :math:`d^2 <
+\mathrm{tol} \cdot n` from the mode. Its estimate is the mode, and its gain,
+DOFS and information content are those of the Gaussian at the mode. Its
+variances, the covariance of aggregates and its draws are those of the
+posterior itself, :math:`p(x \mid z) \propto e^{-\chi^2(x)/2}`, drawn by
+Hamiltonian Monte Carlo (``_Sampler``): the Gaussian at the mode is its mass
+and its exactly solved part, the rest of the cost its kicks, and a Metropolis
+test keeps the chain exact. Where the model bends over the posterior's
+spread, the Gaussian at the mode is not the posterior (a total of lognormal
+fluxes from its draws runs high and covers the truth too rarely); the draws
+are. The misfits and the chi-squared are the cost's terms at the mode, from
+the model itself. With a forward operator (a linear problem)
+``_gauss_newton`` returns the analytic solution itself.
 
 References
 ----------
 Rodgers, C. D. (2000). *Inverse Methods for Atmospheric Sounding: Theory and
 Practice*, chapter 5. World Scientific. https://doi.org/10.1142/3171
+
+Shahbaba, B., Lan, S., Johnson, W. O., and Neal, R. M. (2014). Split
+Hamiltonian Monte Carlo. *Statistics and Computing*, 24(3), 339-349.
+https://doi.org/10.1007/s11222-012-9373-1
+
+Hoffman, M. D., and Gelman, A. (2014). The No-U-Turn sampler: adaptively
+setting path lengths in Hamiltonian Monte Carlo. *Journal of Machine Learning
+Research*, 15, 1593-1623.
 """
 
 import logging
 import math
 import numbers
-from collections.abc import Callable
+from collections.abc import Callable, Iterator
 from dataclasses import dataclass
 
 import numpy as np
+from numpy.linalg import LinAlgError
 
 from fips.linalg import LinearOperator
 from fips.linalg.forms import _read_only
@@ -100,12 +117,31 @@ class GaussNewtonOptions:
         within about that of the mode: far inside its uncertainty, for an
         iteration or two more than a looser rule. Each step costs a factoring
         of the problem linearized at the last estimate.
+    draws : int, default 2000
+        The number of draws of the posterior kept for its variances and the
+        covariance of aggregates (Monte Carlo estimates: the relative error of
+        a standard deviation is about :math:`\sqrt{\tau / (2\,
+        \text{draws}})`, with :math:`\tau` the draws' autocorrelation time,
+        about 1 to 3 for most elements, 2% to 3% at 2000). They are made at
+        the first use of the variances or covariances, and each trial of
+        :meth:`Posterior.trials <fips.Posterior.trials>` makes its own, so
+        fewer make trials quicker. There is no setting without draws: the
+        Gaussian at the mode, which is not the posterior where the model
+        bends, is ``fips.solve(problem.linearized(post.estimate))``.
+    burn_in : int, default 200
+        The draws made and left out before those kept, from the mode, while
+        the sampler tunes its step to an acceptance rate of 0.9.
+    seed : int, default 0
+        The seed of the tuning and the kept draws, so that a solve is
+        reproducible.
 
     Raises
     ------
     ValueError
         If `gamma` is not a positive, finite number, `max_iterations` is not a
-        positive integer, or `tol` is not a positive, finite number.
+        positive integer, `tol` is not a positive, finite number, `draws` is
+        not a positive integer, or `burn_in` or `seed` is not a nonnegative
+        one.
     """
 
     gamma: float = 1.0
@@ -114,6 +150,12 @@ class GaussNewtonOptions:
     """The most steps to take."""
     tol: float = 1e-6
     r"""The iterations stop when :math:`d^2 <` ``tol`` :math:`\cdot\, n`."""
+    draws: int = 2000
+    """The number of draws of the posterior kept for its variances and covariances."""
+    burn_in: int = 200
+    """The draws left out before those kept, while the sampler tunes its step."""
+    seed: int = 0
+    """The seed of the tuning and of the kept draws."""
 
     def __post_init__(self):
         object.__setattr__(self, "gamma", AnalyticOptions(self.gamma).gamma)
@@ -134,34 +176,51 @@ class GaussNewtonOptions:
         if not (math.isfinite(tol) and tol > 0):
             raise ValueError(f"tol must be positive and finite, got {tol}.")
         object.__setattr__(self, "tol", tol)
+        for name, least in (("draws", 1), ("burn_in", 0), ("seed", 0)):
+            value = getattr(self, name)
+            if (
+                not isinstance(value, numbers.Integral)
+                or isinstance(value, bool)
+                or value < least
+            ):
+                kind = "a positive" if least else "a nonnegative"
+                raise ValueError(f"{name} must be {kind} integer, got {value!r}.")
+            object.__setattr__(self, name, int(value))
 
 
 @dataclass(frozen=True, eq=False)
 class GaussNewton:
     r"""
-    The Gauss-Newton method's solution: the mode, and the Gaussian of the problem linearized at the last iterate.
+    The Gauss-Newton method's solution: the mode, the Gaussian of the problem linearized at the last iterate, and draws of the posterior.
 
     It keeps the problem with the forward model (``problem``), the analytic
     solution of the last linearized problem (``analytic``, whose estimate is
     the mode), the state that problem was linearized at, and each step's
     :math:`d^2` and the cost after it. The :class:`~fips.Posterior` asks it
     for every array it reports: it is the method's
-    :class:`~fips.posterior.Solution`. Its answers, by what each needs:
+    :class:`~fips.posterior.Solution`. The draws of the posterior are made at
+    their first use and kept (not pickled: a posterior read back draws them
+    again, the same, from the seed). Its answers, by what each needs:
 
     - the estimate is the mode, not the mean, and is not linear in the
       observations (no ``estimate_is_mean``, no ``estimate_is_linear``);
-    - the variances, the covariance of aggregates, the gain, DOFS, the
-      information content and the draws are those of the Gaussian at the
-      mode (``analytic``'s); the posterior reads the averaging kernel and the
-      innovation covariance from the linearized problem (``linearized``);
+    - the variances and the covariance of aggregates are those of the kept
+      draws of the posterior (``draws`` of them, after a ``burn_in`` that
+      tunes the sampler, from ``seed``), about their mean, and
+      :meth:`sample` draws more;
+    - the gain, DOFS and the information content are those of the Gaussian
+      at the mode (``analytic``'s); the posterior reads the averaging kernel
+      and the innovation covariance from the linearized problem
+      (``linearized``);
     - the misfits and the chi-squared are the terms of the cost at the mode,
       with the residual :math:`z - F(\hat{x}) - c` of the model itself;
-    - :meth:`with_data` solves again, starting from the last linearization;
-      there is no ``with_gamma``: the linearization depends on gamma.
+    - :meth:`with_data` solves again, starting from the last linearization,
+      and its draws are its own; there is no ``with_gamma``: the
+      linearization depends on gamma.
 
     Every estimate is :math:`x_0 + S_0 y`, and the solution keeps the
     :math:`y` of the mode and of the last linearization point, so the state
-    misfit and :math:`d^2` need no inverse of :math:`S_0`.
+    misfit, :math:`d^2` and the sampler need no inverse of :math:`S_0`.
     """
 
     problem: Problem
@@ -187,9 +246,61 @@ class GaussNewton:
     options: GaussNewtonOptions
     """The options it solved with (and :meth:`with_data` solves with)."""
 
+    # -- the draws, kept outside the frozen fields -------------------------------
+
+    def _sampler(self) -> "_Sampler":
+        """Return the sampler of this solution's posterior, made once."""
+        sampler = self.__dict__.get("_sampler_")
+        if sampler is None:
+            sampler = self.__dict__["_sampler_"] = _Sampler(self)
+        return sampler
+
+    def _tuning(self) -> "_Tuning":
+        """Return the sampler's step, tuned over the burn-in from the mode at the first call (its generator a child of the seed's, apart from the kept draws')."""
+        tuning = self.__dict__.get("_tuning_")
+        if tuning is None:
+            (child,) = np.random.SeedSequence(self.options.seed).spawn(1)
+            tuning = self._sampler().tune(
+                self.options.burn_in, np.random.default_rng(child)
+            )
+            self.__dict__["_tuning_"] = tuning
+            steps = _steps(tuning.step)
+            logger.info(
+                "The posterior sampler's step is %.3g, %d steps a draw, after a "
+                "burn-in of %d draws accepted at %.2f.",
+                tuning.step,
+                steps,
+                self.options.burn_in,
+                tuning.acceptance,
+            )
+            if steps >= _MANY_STEPS:
+                logger.warning(
+                    "The posterior sampler takes %d steps a draw: the posterior "
+                    "bends very much over its spread, or the Jacobian is not the "
+                    "derivative of the model (a wrong one leaves the draws exact "
+                    "but makes each cost hundreds of steps; check it with "
+                    "fips.taylortest(problem.forward, post.estimate)).",
+                    steps,
+                )
+        return tuning
+
+    def _kept(self) -> np.ndarray:
+        """Return the kept draws (``n x draws``), drawn from the seed at the first call, with a warning if they mix too slowly for their variances."""
+        kept = self.__dict__.get("_draws")
+        if kept is None:
+            draws = self.options.draws
+            kept = self.sample(draws, np.random.default_rng(self.options.seed))
+            kept = self.__dict__["_draws"] = _read_only(kept)
+            _warn_if_imprecise(_autocorrelation_times(kept), draws)
+        return kept
+
     def __getstate__(self) -> dict:
-        """Return the fields for a pickle or a copy."""
-        return dict(self.__dict__)
+        """Return the fields for a pickle or a copy, without the caches (the draws are made again, the same, from the seed)."""
+        return {
+            name: value
+            for name, value in self.__dict__.items()
+            if name not in ("_sampler_", "_tuning_", "_draws")
+        }
 
     def __setstate__(self, state: dict) -> None:
         """Restore from a pickle or a copy, the arrays read-only again."""
@@ -198,17 +309,32 @@ class GaussNewton:
             if isinstance(value, np.ndarray):
                 _read_only(value)
 
+    # -- the Solution ------------------------------------------------------------
+
     def estimate(self) -> np.ndarray:
         """Return the mode."""
         return self.mode
 
+    def sample(self, N: int, rng: np.random.Generator) -> np.ndarray:
+        """Return `N` new draws of the posterior (``n x N``): the chain from where the burn-in ended, at its tuned step."""
+        tuning = self._tuning()
+        draws, _, acceptance = self._sampler().run(tuning.point, N, rng, tuning.step)
+        logger.debug("%d draws of the posterior, accepted at %.2f.", N, acceptance)
+        return draws
+
     def variances(self) -> np.ndarray:
-        """Return the variances of the Gaussian at the mode."""
-        return self.analytic.variances()
+        """Return the variances of the kept draws."""
+        kept = self._kept()
+        centered = kept - kept.mean(axis=1, keepdims=True)
+        return np.einsum("ij,ij->i", centered, centered) / (kept.shape[1] - 1)
 
     def cov(self, W: LinearOperator | None = None) -> np.ndarray:
-        """Return the covariance of the Gaussian at the mode, or of aggregates of it."""
-        return self.analytic.cov(W)
+        """Return the covariance of the kept draws, ``n x n``, or of their aggregates ``W x``, ``k x k``."""
+        kept = self._kept()
+        Y = kept if W is None else np.asarray(W @ kept, dtype=float)
+        centered = Y - Y.mean(axis=1, keepdims=True)
+        S = centered @ centered.T / (Y.shape[1] - 1)
+        return 0.5 * (S + S.T)
 
     def gain(self, W: LinearOperator | None = None) -> np.ndarray:
         """Return the gain of the problem linearized at the last iterate, or :math:`W` times it."""
@@ -225,10 +351,6 @@ class GaussNewton:
     def information(self) -> float:
         """Return the information content of the Gaussian at the mode."""
         return self.analytic.information()
-
-    def sample(self, N: int, rng: np.random.Generator) -> np.ndarray:
-        """Return `N` draws of the Gaussian at the mode (``n x N``)."""
-        return self.analytic.sample(N, rng)
 
     def misfits(self) -> tuple[float, float]:
         """Return the data and the state misfits at the mode."""
@@ -290,6 +412,307 @@ class GaussNewton:
         do not depend on the observations' values), so it costs a product.
         """
         return _iterate(problem, self.options, start=self)
+
+
+_QUARTER = 0.5 * math.pi
+"""The time each draw travels: a quarter period of the Gaussian at the mode, after which a draw of that Gaussian would be independent of its start."""
+
+_TARGET = 0.9
+"""The acceptance rate the step is tuned to during the burn-in."""
+
+_JITTER = 0.2
+"""Each draw's step is the tuned one times a uniform number within this fraction of 1, so that no path is periodic."""
+
+_MOST_STEPS = 1000
+"""The most steps a draw takes: the step is never tuned below a quarter period over this."""
+
+_MANY_STEPS = 200
+"""The steps a draw takes at which a solve warns that the posterior bends very much or the Jacobian is wrong."""
+
+_BLOCK = 512
+"""The number of velocities the sampler draws in one block."""
+
+_FAILED = (ValueError, FloatingPointError, OverflowError, LinAlgError)
+"""What a model (or a transform) raises at a state it cannot model: a path that reaches one is rejected."""
+
+
+@dataclass(frozen=True)
+class _Point:
+    r"""A state of the chain with what the next path needs there: the remainder :math:`R(x)`, its gradient :math:`\rho(x)` and :math:`\hat{S} \rho(x)`."""
+
+    x: np.ndarray
+    R: float
+    rho: np.ndarray
+    S_rho: np.ndarray
+
+
+@dataclass(frozen=True)
+class _Tuning:
+    """What the burn-in leaves: the tuned step, the state it ended at, and its acceptance rate."""
+
+    step: float
+    point: _Point
+    acceptance: float
+
+
+class _Sampler:
+    r"""
+    Hamiltonian Monte Carlo for the posterior of a problem with a forward model, split at the Gaussian at the mode.
+
+    The posterior is :math:`p(x \mid z) \propto e^{-U(x)}`, :math:`U` half
+    the cost. Write it as the Gaussian at the mode times the rest,
+    :math:`U = U_G + R`, with :math:`U_G(x) = \tfrac{1}{2} (x - \hat{x})^T
+    \hat{S}^{-1} (x - \hat{x})` (:math:`\hat{S}` the covariance of the
+    problem linearized at the last iterate, ``analytic``). The momentum's
+    mass is :math:`\hat{S}^{-1}`, so a velocity is a draw of :math:`N(0,
+    \hat{S})`: the analytic method's exact draws less their mean
+    (``analytic.sample``). The dynamics of :math:`U_G` with that mass are a
+    rotation, solved exactly, as for the bounded method's sampler:
+
+    .. math::
+
+        x(t) = \hat{x} + (x - \hat{x}) \cos t + v \sin t, \qquad
+        v(t) = v \cos t - (x - \hat{x}) \sin t,
+
+    and :math:`R` acts as kicks, :math:`v \leftarrow v - h \hat{S} \nabla R`,
+    half a step before and after each rotation by :math:`h` (Strang
+    splitting: Shahbaba et al., 2014). The path is symplectic and reversible,
+    so a Metropolis test on the change of :math:`H = U + \tfrac{1}{2} v^T
+    \hat{S}^{-1} v` makes the chain exact whatever :math:`\hat{S}` and
+    :math:`h` are; they set only how fast it mixes. Where the posterior is
+    the Gaussian at the mode (a linear model), :math:`\nabla R = 0`, every
+    path is accepted, and one step of a quarter period is an exact,
+    independent draw.
+
+    :math:`S_0^{-1}` is never needed. With :math:`\hat{x} = x_0 + S_0
+    \hat{y}` (``mode_y``) and every state in :math:`x_0` plus the range of
+    :math:`S_0` (the velocities and kicks are), in the state whitened by
+    :math:`S_0` the remainder is
+
+    .. math::
+
+        R(x) = \hat{y}^T (x - \hat{x}) + \tfrac{\gamma}{2} \big(r^T S_z^{-1} r
+            - d^T S_z^{-1} d\big), \qquad r = z - F(x) - c, \quad
+            d = J_* (x - \hat{x}),
+
+    up to a constant, with :math:`J_*` the Jacobian of the last
+    linearization; its gradient is :math:`\rho = \hat{y} - \gamma J(x)^T
+    S_z^{-1} r - \gamma J_*^T S_z^{-1} d`, so a kick is :math:`\hat{S} \rho`
+    (``_cov_times``). The kinetic energy is never formed either: a kick of
+    :math:`h` changes it by :math:`-h \rho^T v + \tfrac{1}{2} h^2 \rho^T
+    \hat{S} \rho`, and a rotation not at all. A singular :math:`S_0` (cells
+    with no prior spread) leaves those elements at the mode.
+
+    Each draw starts from the last with a new velocity and travels a quarter
+    period, :data:`_QUARTER`, in steps of the tuned :math:`h` (jittered by
+    :data:`_JITTER`). The burn-in, from the mode, tunes :math:`h` to an
+    acceptance rate of :data:`_TARGET` by dual averaging (Hoffman and
+    Gelman, 2014), starting from one step a draw; its draws are left out.
+    A path the model cannot follow (it overflows) is rejected.
+    """
+
+    def __init__(self, solution: "GaussNewton"):
+        problem, analytic = solution.problem, solution.analytic
+        self.problem = problem
+        self.analytic = analytic
+        self.gamma = analytic.gamma
+        self.mode = solution.mode
+        self.mode_y = solution.mode_y
+        self.mean = analytic.estimate()
+        J = analytic.problem._operator.data
+        self.J, self.J_T = J, J._transpose()
+        self.solve_S_z = problem.obs_cov.data._solver()
+        self.z = problem.obs.values
+        self.c = problem._offset_values()
+
+    def point(self, x: np.ndarray) -> _Point:
+        r"""
+        Return the state `x` with :math:`R`, :math:`\rho` and :math:`\hat{S} \rho` there.
+
+        Raises
+        ------
+        ValueError, FloatingPointError, OverflowError, numpy.linalg.LinAlgError
+            If the model cannot model `x`, or the result is not finite.
+        """
+        problem, gamma = self.problem, self.gamma
+        with np.errstate(over="raise", invalid="raise"):
+            r = self.z - problem._apply(x) - self.c
+            dx = x - self.mode
+            d = np.asarray(self.J @ dx, dtype=float)
+            weighted = np.asarray(self.solve_S_z(np.column_stack([r, d])))
+            R = float(self.mode_y @ dx) + 0.5 * gamma * (
+                float(r @ weighted[:, 0]) - float(d @ weighted[:, 1])
+            )
+            rho = self.mode_y - gamma * (
+                problem._gradient(x, weighted[:, 0])
+                + np.asarray(self.J_T @ weighted[:, 1], dtype=float)
+            )
+            S_rho = self.analytic._cov_times(rho[:, None])[:, 0]
+        if not (math.isfinite(R) and np.isfinite(S_rho).all()):
+            raise FloatingPointError("The remainder is not finite.")
+        return _Point(x, R, rho, S_rho)
+
+    def travel(
+        self, start: _Point, v: np.ndarray, h: float, steps: int
+    ) -> tuple[_Point, float]:
+        """Return where the path from `start` with the velocity `v` is after `steps` steps of `h`, and the change of the energy along it."""
+        mode = self.mode
+        cos, sin = math.cos(h), math.sin(h)
+        here = start
+        change = -0.5 * h * float(here.rho @ v) + 0.125 * h * h * float(
+            here.rho @ here.S_rho
+        )
+        v = v - 0.5 * h * here.S_rho
+        for step in range(steps):
+            a = here.x - mode
+            x = mode + a * cos + v * sin
+            v = v * cos - a * sin
+            here = self.point(x)
+            kick = h if step < steps - 1 else 0.5 * h
+            change += -kick * float(here.rho @ v) + 0.5 * kick * kick * float(
+                here.rho @ here.S_rho
+            )
+            v = v - kick * here.S_rho
+        return here, change + (here.R - start.R)
+
+    def move(
+        self, here: _Point, v: np.ndarray, test: float, h: float, steps: int
+    ) -> tuple[_Point, float]:
+        """Return the chain's next state from `here` (the path's end if the Metropolis test `test` passes, else `here`) and the path's acceptance probability."""
+        try:
+            with np.errstate(over="raise", invalid="raise"):
+                end, change = self.travel(here, v, h, steps)
+        except _FAILED:
+            return here, 0.0
+        if change <= 0.0:
+            alpha = 1.0
+        else:  # a NaN change is rejected
+            alpha = math.exp(-change) if change < math.inf else 0.0
+        return (end if test < alpha else here), alpha
+
+    def moves(
+        self, count: int, rng: np.random.Generator
+    ) -> Iterator[tuple[np.ndarray, float, float]]:
+        """Yield `count` velocities, each with the uniform number of its test and its jitter, drawn from `rng` in blocks of :data:`_BLOCK`."""
+        done = 0
+        while done < count:
+            block = min(_BLOCK, count - done)
+            V = self.analytic.sample(block, rng) - self.mean[:, None]
+            tests = rng.random(block)
+            jitters = rng.uniform(1.0 - _JITTER, 1.0 + _JITTER, block)
+            for j in range(block):
+                yield V[:, j], float(tests[j]), float(jitters[j])
+            done += block
+
+    def tune(self, burn_in: int, rng: np.random.Generator) -> _Tuning:
+        """
+        Return the step tuned over `burn_in` draws from the mode, by dual averaging (Hoffman and Gelman, 2014, algorithm 5) of its logarithm, and where they ended.
+
+        It starts from one step a draw, and the step stays between
+        :data:`_QUARTER` over :data:`_MOST_STEPS` and :data:`_QUARTER`. With
+        no burn-in, the step is a whole quarter period.
+        """
+        here = self.point(np.array(self.mode))
+        longest, shortest = math.log(_QUARTER), math.log(_QUARTER / _MOST_STEPS)
+        target = math.log(10.0 * _QUARTER)
+        log_h, log_mean, error, accepted = longest, longest, 0.0, 0.0
+        for m, (v, test, jitter) in enumerate(self.moves(burn_in, rng), start=1):
+            steps = _steps(math.exp(log_h))
+            here, alpha = self.move(here, v, test, _QUARTER / steps * jitter, steps)
+            accepted += alpha
+            error += ((_TARGET - alpha) - error) / (m + 10)
+            log_h = min(max(target - math.sqrt(m) / 0.05 * error, shortest), longest)
+            weight = m**-0.75
+            log_mean = weight * log_h + (1.0 - weight) * log_mean
+        acceptance = accepted / burn_in if burn_in else math.nan
+        return _Tuning(math.exp(log_mean), here, acceptance)
+
+    def run(
+        self, start: _Point, N: int, rng: np.random.Generator, step: float
+    ) -> tuple[np.ndarray, _Point, float]:
+        """Return `N` draws (``n x N``) of the chain from `start` at the step `step`, with velocities and tests drawn from `rng`, where it ended, and its acceptance rate."""
+        steps = _steps(step)
+        draws = np.empty((len(start.x), N))
+        here, accepted = start, 0.0
+        for j, (v, test, jitter) in enumerate(self.moves(N, rng)):
+            here, alpha = self.move(here, v, test, _QUARTER / steps * jitter, steps)
+            accepted += alpha
+            draws[:, j] = here.x
+        return draws, here, accepted / N
+
+
+_IMPRECISE = 0.1
+"""The relative error of a standard deviation from the kept draws above which a solve warns."""
+
+_ROWS = 256
+"""The rows whose autocorrelation is computed at once."""
+
+
+def _autocorrelation_times(draws: np.ndarray) -> np.ndarray:
+    r"""
+    Return the integrated autocorrelation time :math:`\tau` of each row of `draws` (a chain, one column per draw), by Sokal's adaptive window.
+
+    :math:`\tau = 1 + 2 \sum_{k=1}^{w} \rho_k`, with :math:`\rho_k` the
+    autocorrelation at lag :math:`k` (by FFT) and the window :math:`w` the
+    first at least five times its :math:`\tau`. A chain has
+    :math:`N / \tau` effective draws. A row that never moves has
+    :math:`\tau = 1`. It reads one chain, so a chain that rarely visits a
+    tail gives too small a :math:`\tau`: a diagnostic, not a guarantee.
+    """
+    n, N = draws.shape
+    tau = np.ones(n)
+    if N < 3:
+        return tau
+    windows = np.arange(1, N)
+    for first in range(0, n, _ROWS):
+        rows = slice(first, min(n, first + _ROWS))
+        x = draws[rows] - draws[rows].mean(axis=1, keepdims=True)
+        f = np.fft.rfft(x, 2 * N, axis=1)
+        acf = np.fft.irfft(f * np.conj(f), 2 * N, axis=1)[:, :N]
+        variance = acf[:, 0]
+        moves = variance > 0
+        if not moves.any():
+            continue
+        taus = 1.0 + 2.0 * np.cumsum(acf[moves, 1:] / variance[moves, None], axis=1)
+        stop = windows[None, :] >= 5.0 * taus
+        window = np.where(stop.any(axis=1), stop.argmax(axis=1), N - 2)
+        block = tau[rows]
+        block[moves] = np.maximum(taus[np.arange(len(window)), window], 1.0)
+        tau[rows] = block
+    return tau
+
+
+def _warn_if_imprecise(tau: np.ndarray, draws: int) -> None:
+    r"""
+    Log a warning when the kept draws mix so slowly that a standard deviation from them is uncertain by more than :data:`_IMPRECISE`.
+
+    The relative error of a standard deviation from :math:`N` draws with
+    autocorrelation time :math:`\tau` is about :math:`\sqrt{\tau / (2 N)}`.
+    """
+    error = np.sqrt(tau / (2.0 * draws))
+    slow = error > _IMPRECISE
+    if not slow.any():
+        return
+    worst = int(np.argmax(tau))
+    logger.warning(
+        "The posterior's draws mix slowly: %d state elements have a standard "
+        "deviation from the %d kept draws uncertain by more than %d%%, the worst "
+        "(element %d) by about %d%% (%.0f draws for each independent one). The "
+        "posterior bends much over its spread, along a direction the Gaussian at "
+        "the mode does not follow; raise draws= for those elements' spread, or "
+        "read the totals the data constrain, which mix faster.",
+        int(slow.sum()),
+        draws,
+        round(100 * _IMPRECISE),
+        worst,
+        round(100 * float(error[worst])),
+        float(tau[worst]),
+    )
+
+
+def _steps(step: float) -> int:
+    """Return the number of steps of about `step` that make a quarter period, at most :data:`_MOST_STEPS`."""
+    return max(1, min(_MOST_STEPS, math.ceil(_QUARTER / step - 1e-9)))
 
 
 def _with_obs(linear: Problem, obs: Vector) -> Problem:
