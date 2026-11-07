@@ -7,7 +7,9 @@ solves one problem from start to finish; :doc:`/getting_started/terminology` def
 :doc:`synthetic` tests an inversion on data whose answer is known; :doc:`bounds`
 holds the state to bounds (a flux that cannot be negative); :doc:`nonlinear`
 solves a problem whose forward is a model that is not linear; :doc:`positive`
-keeps a flux positive by solving for its logarithm or its softplus.
+keeps a flux positive by solving for its logarithm or its softplus; and
+:doc:`comparison` runs the analytic, bounded, lognormal and softplus methods
+on one problem, to choose among them.
 
 .. contents:: On this page
    :local:
@@ -702,4 +704,5 @@ when it is read.
    bounds
    nonlinear
    positive
+   comparison
    examples/index
