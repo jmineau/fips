@@ -53,6 +53,32 @@ Checking the Jacobian
 
    taylortest
 
+Fluxes that stay positive
+~~~~~~~~~~~~~~~~~~~~~~~~~
+Two models that solve for a variable :math:`u` whose transform, on one block,
+is a positive flux; the other blocks pass through. The guide is
+:doc:`/user_guide/positive`.
+
+.. autosummary::
+   :toctree: api/
+
+   LognormalForward
+   LognormalForward.H
+   LognormalForward.block
+   LognormalForward.reference
+   LognormalForward.__call__
+   LognormalForward.jacobian
+   LognormalForward.transform
+   LognormalForward.prior_for
+   SoftplusForward
+   SoftplusForward.H
+   SoftplusForward.block
+   SoftplusForward.scale
+   SoftplusForward.__call__
+   SoftplusForward.jacobian
+   SoftplusForward.transform
+   SoftplusForward.prior_for
+
 Serialization
 ~~~~~~~~~~~~~
 A problem with a model pickles when the model does: a class defined at the
