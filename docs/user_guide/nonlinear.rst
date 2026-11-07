@@ -9,11 +9,12 @@ saturates), the forward map is a model :math:`F` and the observations are
 :math:`z = F(x) + c + e`. The rule: **write the model and its Jacobian as a**
 :class:`~fips.ForwardModel`, **and** ``fips.solve(problem, "gauss_newton")``
 **solves the problem linearized at its last estimate, again and again, until the
-estimate stops moving.** It ends at the mode of the posterior, and reports the
-Gaussian of the problem linearized there. That Gaussian is the posterior when
-the model is close to linear over the posterior's spread; when the model bends
-a lot it is an approximation, and :meth:`~fips.Posterior.trials` measures how
-good.
+estimate stops moving.** It ends at the mode of the posterior, and draws the
+posterior itself for its uncertainty, by Hamiltonian Monte Carlo started at the
+mode and steered by the Gaussian of the problem linearized there. That
+Gaussian is the posterior when the model is close to linear over the
+posterior's spread; when the model bends a lot it is not, and the draws still
+are.
 
 .. contents:: On this page
    :local:
@@ -172,34 +173,42 @@ the estimate may be further from the mode than the last step, and the solve
 logs a warning saying so.
 
 
-What the posterior at the mode is
----------------------------------
+What the posterior reports
+--------------------------
 
 The **estimate** is the mode: the state where the cost :math:`(x - x_0)^T
 S_0^{-1} (x - x_0) + \gamma (z - F(x) - c)^T S_z^{-1} (z - F(x) - c)` is least.
-``post.mean`` raises. The rest comes from two places:
+``post.mean`` raises. The rest comes from three places:
 
 - **the model at the mode**: :attr:`~fips.Posterior.modeled_obs` is
   :math:`F(\hat{x}) + c`, and the residuals, :attr:`~fips.Posterior.rmse`,
   :attr:`~fips.Posterior.r2`, :attr:`~fips.Posterior.chi2` (the cost at the
   mode) and its two misfits are the model's;
-- **the Gaussian at the mode**: the covariance, the variances, the gain, the
-  averaging kernel, DOFS, the information content, the innovation covariance
-  and :meth:`~fips.Posterior.sample` are those of the problem linearized at
-  the last step, one step of :math:`d^2 < \mathrm{tol} \cdot n` from the mode.
-  :meth:`~fips.Posterior.chi2_tests` tests the model's innovation and residual
-  against that Gaussian's covariances, so its p-values are approximate.
+- **draws of the posterior**, :math:`p(x \mid z) \propto e^{-\chi^2(x)/2}`:
+  :attr:`~fips.Posterior.variances`, :meth:`~fips.Posterior.cov` (of the
+  state, or of aggregates :math:`W x`), :meth:`~fips.Posterior.uncertainty`
+  and :meth:`~fips.Posterior.sample`. The variances and covariances are those
+  of ``draws`` (2000) kept draws, made at their first use from ``seed``, after
+  a ``burn_in`` (200) that tunes the sampler;
+- **the Gaussian at the mode**, the analytic posterior of the problem
+  linearized at the last step, one step of :math:`d^2 < \mathrm{tol} \cdot n`
+  from the mode: the gain, the averaging kernel, DOFS, the information
+  content and the innovation covariance. :meth:`~fips.Posterior.chi2_tests`
+  tests the model's innovation and residual against that Gaussian's
+  covariances, so its p-values are approximate. To compare, that Gaussian is
+  ``fips.solve(problem.linearized(post.estimate))``.
 
 :attr:`~fips.Posterior.problem` is the problem you solved, with the model.
 :meth:`~fips.Posterior.with_data` solves again, from the last linearization,
-so :meth:`~fips.Posterior.trials` works; there is no
+and draws again, so :meth:`~fips.Posterior.trials` works (running the sampler
+in each trial: ``draws=`` fewer makes it quicker); there is no
 :meth:`~fips.Posterior.with_gamma` (the linearization depends on gamma), and
 :meth:`~fips.Posterior.recovery`, whose exact answer needs an estimate linear
 in the data, points to ``trials``.
 
 A statement about the flux, not the log scale factor, goes through the model's
 transform: the flux at the mode is :math:`r\, e^{\hat{x}}`, and the total from
-draws of the Gaussian at the mode:
+draws of the posterior:
 
 .. ipython:: python
 
@@ -209,35 +218,71 @@ draws of the Gaussian at the mode:
    pd.Series({"truth": (inventory * np.exp(truth)).values.sum(), "at the mode": flux_at_mode, "mean of draws": totals.mean(), "std of draws": totals.std()}).round(2)
 
 
-When it is wrong
-----------------
+How the posterior is drawn
+--------------------------
 
-The Gaussian at the mode is the posterior of a linear problem. For a model that
-bends over the posterior's spread, the posterior is skewed, and that Gaussian
-covers the truth less often than it claims. :meth:`~fips.Posterior.trials`
-measures it in the problem's own world: each trial draws a truth from the
-prior, makes its data through the model, and solves them. Here with a prior
-standard deviation of 0.3 (a factor of 1.35 either way) and of 1.5 (a factor
-of 4.5), with noisier data. A model that bends this much makes Gauss-Newton
-slow (each step a constant factor of the last), so the strong world gets more
-steps:
+The sampler is Hamiltonian Monte Carlo: each draw starts from the last with a
+random velocity and follows a path on which the cost is a potential energy,
+and a Metropolis test accepts the path's end or keeps the start, which makes
+the chain's draws those of the posterior exactly, whatever the paths are. The
+paths are steered by the Gaussian at the mode, in two ways (Shahbaba et al.,
+2014, split HMC): the velocities are its draws less its mean, and the part of
+the cost that Gaussian accounts for is followed exactly, as a rotation about
+the mode (a quarter turn makes a draw of that Gaussian independent of its
+start); only the rest, the cost less the Gaussian's, is followed in steps,
+whose length the ``burn_in`` tunes to accept 90% of the paths. A model that is
+linear has no rest: every path is a quarter turn of one step and is accepted,
+and the draws are exact and independent. The more the model bends over the
+posterior's spread, the more steps a path takes (a median of 16 over 200 data
+sets of a Salt Lake Valley-shaped flux problem with a log standard deviation
+of 1, at most 38). No inverse of
+the prior covariance is formed, so a prior with zero spread somewhere (a
+cell with no inventory) works.
+
+Each step evaluates the model and the product of its Jacobian's transpose with
+a vector (``fips.LognormalForward`` and ``fips.SoftplusForward`` form no
+Jacobian for it; a model of your own forms one with ``jacobian``), and one
+product with the covariance of the Gaussian at the mode. The draws are
+correlated, a few draws apart for most elements; a solve logs a warning when
+some element's draws mix so slowly that its standard deviation is uncertain by
+more than 10%, and ``draws=`` asks for more. The tuned step and the burn-in's
+acceptance rate are logged at the INFO level. A wrong Jacobian does not make
+the draws wrong (the Metropolis test corrects the paths), but the step falls
+until a draw takes hundreds of steps, and the solve warns: check the Jacobian
+with :func:`fips.taylortest`.
+
+How well the draws cover
+------------------------
+
+In the problem's own world the draws' intervals should hold the truth as often
+as they claim, for any model: each trial draws a truth from the prior, makes
+its data through the model, and solves them. Here with a prior standard
+deviation of 0.3 (a factor of 1.35 either way) and of 1.5 (a factor of 4.5),
+noisier data, and fewer draws and trials than a study would use, to keep the
+page quick; each cell's interval is the quantiles of its draws:
 
 .. ipython:: python
 
-   def own_world(std):
-       """Coverage and the mean standardized error in the problem's own world, over 400 trials."""
+   def own_world(std, trials=40):
+       """How often each cell's 68% and 95% intervals from the draws hold the truth, in the problem's own world."""
        _, obs = build(fips.Vector(np.zeros(25), observed), std, 0.5).simulate(rng=3)
-       post = fips.solve(build(obs, std, 0.5), "gauss_newton", max_iterations=200)
-       table = post.trials(n=400, rng=4)
-       z = (table["estimate"] - table["truth"]) / table["posterior_std"]
-       return {"coverage_68": (z.abs() <= 1.0).mean(), "coverage_95": (z.abs() <= 1.96).mean(), "mean_z": z.mean(), "std_z": z.std()}
+       post = fips.solve(build(obs, std, 0.5), "gauss_newton", max_iterations=200, burn_in=50)
+       g = np.random.default_rng(4)
+       inside = {0.68: [], 0.95: []}
+       for _ in range(trials):
+           truth, data = post.problem.simulate(rng=g)
+           draws = post.with_data(data).sample(150, rng=g)
+           for level in inside:
+               low, high = draws.quantile(0.5 - level / 2, axis=1), draws.quantile(0.5 + level / 2, axis=1)
+               inside[level].append(((low.values <= truth.values) & (truth.values <= high.values)).mean())
+       return {f"coverage_{round(100 * level)}": np.mean(v) for level, v in inside.items()}
 
    pd.DataFrame({std: own_world(std) for std in (0.3, 1.5)}).T.round(3)
 
-At 0.3 the model is nearly linear over the posterior, and the Gaussian at the
-mode covers as it claims, at both levels; the errors lean a little one way
-(about a seventh of a standard deviation: the mode is not the mean of a
-posterior that is skewed at all). At 1.5 its 95% intervals cover about 92% of
-the time, the errors lean twice as far and spread 15% wider than the
-Gaussian says: it is narrower than the posterior on its long side. The same
-table grouped by cell, or over totals (``W=``), says where it matters.
+Both cover about as they claim (40 trials of 10 cells know a coverage to
+about 0.02). :meth:`~fips.Posterior.trials` runs the same loop and reads each
+trial's interval as the mode plus or minus a multiple of the draws' standard
+deviation: where the posterior is skewed that is not the posterior's interval,
+and at 1.5 it held the truth 93% of the time at 95% (the Gaussian at the mode,
+read the same way, 92%). For a total, read the draws' quantiles too
+(:doc:`positive`).

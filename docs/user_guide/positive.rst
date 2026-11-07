@@ -14,8 +14,8 @@ where it is large, bending to stay above zero near zero. Each is a forward
 model (:doc:`nonlinear`): the state, its prior and its covariance are in
 :math:`u`'s units, ``model.prior_for`` gives the prior on :math:`u` whose flux
 has the mean and standard deviation you mean, ``fips.solve(problem,
-"gauss_newton")`` finds the mode, and ``model.transform`` maps the estimate, or
-draws of the posterior, back to the flux.
+"gauss_newton")`` finds the mode and draws the posterior, and
+``model.transform`` maps the estimate, or the draws, back to the flux.
 
 .. contents:: On this page
    :local:
@@ -123,31 +123,32 @@ The problem, with data made from a truth drawn from that prior:
    len(post.iterations)
 
 The estimate is the mode of :math:`u`. :meth:`~fips.LognormalForward.transform`
-maps it to the flux, :math:`r\, e^{\hat{u}}`: the **median** of each cell's
-flux under the Gaussian at the mode, not its mean (which is :math:`e^{\hat
-\sigma^2/2}` times it). The transform is monotone, so a cell's interval in
-:math:`u` maps to its interval of the flux:
+maps it to the flux, :math:`r\, e^{\hat{u}}`, the flux at the mode: near each
+cell's posterior **median**, not its mean (which is higher, by about
+:math:`e^{\hat\sigma^2/2}`). :meth:`~fips.Posterior.sample` draws :math:`u` from
+the posterior itself, one column per draw (by Hamiltonian Monte Carlo:
+:doc:`nonlinear`), and ``transform`` maps each draw to the flux. A cell's
+interval is the quantiles of its draws:
 
 .. ipython:: python
 
    flux = model.transform(post.estimate).to_series("flux")
-   low, high = (model.transform(post.estimate + k * np.sqrt(post.variances)) for k in (-1.96, 1.96))
-   pd.DataFrame({"truth": model.transform(truth).to_series("flux"), "inventory": inventory, "at the mode": flux, "low": low.to_series("flux"), "high": high.to_series("flux")}).iloc[3:7].round(2)
+   draws = model.transform(post.sample(4000, rng=2))
+   low, high = draws.quantile(0.025, axis=1), draws.quantile(0.975, axis=1)
+   pd.DataFrame({"truth": model.transform(truth).to_series("flux"), "inventory": inventory, "at the mode": flux, "low": low.to_numpy(), "high": high.to_numpy()}, index=flux.index).iloc[3:7].round(2)
 
-A total is a sum of lognormal fluxes, which has no closed form. Draws do it:
-:meth:`~fips.Posterior.sample` draws :math:`u` from the Gaussian at the mode,
-one column per draw, ``transform`` maps each draw to the flux, and the total of
-each column is a draw of the total:
+A total is a sum of lognormal fluxes, which has no closed form. The draws do
+it: the total of each column is a draw of the total.
 
 .. ipython:: python
 
-   draws = model.transform(post.sample(4000, rng=2))
    totals = draws.sum()
    pd.Series({"truth": model.transform(truth).values.sum(), "inventory": inventory.sum(), "sum at the mode": flux.sum(), "mean of draws": totals.mean(), "2.5%": totals.quantile(0.025), "97.5%": totals.quantile(0.975)}).round(1)
 
 Sum the draws after the transform: ``post.sample(n, W=W)`` aggregates
 :math:`u`, and the transform of a sum of log factors is not a total of fluxes.
-Read the section below before you report that interval.
+:attr:`~fips.Posterior.variances` and :meth:`~fips.Posterior.cov` are those
+of the kept draws (``draws=2000`` of them), in :math:`u`.
 
 
 Cells with no reference
@@ -206,12 +207,14 @@ zero:
 The same ``transform`` reads the median flux at the mode and maps draws.
 
 
-When the Gaussian at the mode misreads a total
-----------------------------------------------
+Why a total comes from draws of the posterior
+---------------------------------------------
 
-The posterior of :math:`u` is not Gaussian, and the Gaussian at the mode can be
-far from it for a function of many cells. Two cells whose total is observed
-closely, each with a prior factor of :math:`e = 2.7` either way, show why:
+The posterior of :math:`u` is not Gaussian, and the Gaussian at the mode (the
+analytic posterior of the problem linearized at the mode,
+``fips.solve(problem.linearized(post.estimate))``) can be far from it for a
+function of many cells. Two cells whose total is observed closely, each with a
+prior factor of :math:`e = 2.7` either way, show why:
 
 .. ipython:: python
 
@@ -220,57 +223,89 @@ closely, each with a prior factor of :math:`e = 2.7` either way, show why:
    pair = fips.LognormalForward(fips.Operator(np.ones((1, 2)), one, two), 1.0)
    m, s = pair.prior_for(1.0, np.sqrt(np.e - 1.0))  # sigma = 1
    problem = fips.Problem(m, fips.Independent().with_std(s), fips.Vector([2.0], one), fips.Independent().with_std(0.05), pair)
-   totals = pair.transform(fips.solve(problem, "gauss_newton").sample(20000, rng=0)).sum()
-   round(totals.mean(), 2), round(totals.std(), 2)
+   post2 = fips.solve(problem, "gauss_newton")
+   gaussian = pair.transform(fips.solve(problem.linearized(post2.estimate)).sample(2000, rng=0)).sum()
+   exact = pair.transform(post2.sample(2000, rng=0)).sum()
+   pd.DataFrame({"Gaussian at the mode": gaussian.agg(["mean", "std"]), "posterior": exact.agg(["mean", "std"])}).round(2)
 
-The data say the total is :math:`2.00 \pm 0.05`; the draws say :math:`2.6 \pm
-0.9`. The states that give that total lie on a curve, :math:`e^{u_a} +
-e^{u_b} = 2`; the Gaussian at the mode lies along the curve's tangent, and on
-the tangent the sum of the exponentials is never below 2. The flux at the
-mode is right (1 and 1); the draws are not. A footprint sees a sum of cells, so
-this is the case of a flux inversion, and it grows with the prior's spread.
+The data say the total is :math:`2.00 \pm 0.05`, and so do the posterior's
+draws; the Gaussian at the mode's say :math:`2.6 \pm 0.9`. The states that give
+that total lie on a curve, :math:`e^{u_a} + e^{u_b} = 2`; the Gaussian at the
+mode lies along the curve's tangent, and on the tangent the sum of the
+exponentials is never below 2. The flux at the mode is right (1 and 1); the
+Gaussian's draws are not. A footprint sees a sum of cells, so this is the case
+of a flux inversion, and it grows with the prior's spread. The sampler uses
+the Gaussian at the mode only to move (:doc:`nonlinear`), and its draws are of
+the posterior.
+
 In this page's problem, in its own world (each trial draws a truth from the
-prior and makes its data through the model), with :meth:`~fips.Posterior.with_data`
-for each trial's posterior:
+prior and makes its data through the model), with
+:meth:`~fips.Posterior.with_data` for each trial's posterior and fewer kept
+draws to keep the page quick:
 
 .. ipython:: python
 
-   def own_world(factor, trials=200):
-       """The bias of two totals and the coverage of the draws' 95% interval, for a prior standard deviation of `factor` times the inventory."""
+   def own_world(factor, trials=30):
+       """The bias of the total at the mode, and how often the total's 95% interval holds the truth: from the posterior's draws, and from the Gaussian at the mode's."""
        mu, sigma = model.prior_for(inventory, factor * inventory)
-       post = fips.solve(build(obs, model, mu, sigma), "gauss_newton")
+       post = fips.solve(build(obs, model, mu, sigma), "gauss_newton", draws=200, burn_in=50)
        g = np.random.default_rng(3)
        rows = []
        for _ in range(trials):
            truth, data = post.problem.simulate(rng=g)
            trial = post.with_data(data)
-           totals = model.transform(trial.sample(400, rng=g)).sum()
            true = model.transform(truth).values.sum()
-           rows.append([model.transform(trial.estimate).values.sum() - true, totals.mean() - true, totals.quantile(0.025) <= true <= totals.quantile(0.975)])
-       bias_mode, bias_draws, covered = np.mean(rows, axis=0)
-       return {"bias, sum at the mode": bias_mode / inventory.sum(), "bias, mean of draws": bias_draws / inventory.sum(), "95% coverage": covered}
+           posterior = model.transform(trial.sample(200, rng=g)).sum()
+           at_mode = model.transform(fips.solve(trial.problem.linearized(trial.estimate)).sample(200, rng=g)).sum()
+           rows.append([model.transform(trial.estimate).values.sum() - true, posterior.quantile(0.025) <= true <= posterior.quantile(0.975), at_mode.quantile(0.025) <= true <= at_mode.quantile(0.975)])
+       bias, posterior, at_mode = np.mean(rows, axis=0)
+       return {"bias at the mode": bias / inventory.sum(), "covered, posterior": posterior, "covered, Gaussian": at_mode}
 
 .. ipython:: python
 
    pd.DataFrame({factor: own_world(factor) for factor in (0.3, 1.0)}).T.round(3)
 
-With a prior of 30% the draws' interval covers about as it claims. With 100%
-(a log standard deviation of 0.83) the mean of the draws is above the truth on
-average and the interval misses it about one time in four, while the sum of
-the flux at the mode stays unbiased. In a larger world shaped like the Salt
-Lake Valley's (400 cells, three sites, three quarters of the cells with an
-averaging kernel below 0.1, a log standard deviation of 1), the draws' 95%
-interval held the true total in 29% of 200 trials for ``LognormalForward`` and
-40% for ``SoftplusForward``, the mean of the draws was 30% high, and the sum
-of the flux at the mode was within 3%; each cell's 95% interval held its truth
-91 to 92% of the time.
+Thirty trials know a coverage to about 0.04, so read the table for its
+contrast: with a prior of 100% (a log standard deviation of 0.83) the Gaussian
+at the mode's interval misses the truth about one time in four, the posterior's
+holds it about as often as it claims, and the sum of the flux at the mode stays
+unbiased with either prior.
 
-So: report the **sum of the flux at the mode** as the total, read each
-**cell's interval** from the Gaussian at the mode, and treat an interval of a
-total from these draws as a lower bound on the uncertainty, to be checked in
-your problem's own world with :meth:`~fips.Posterior.trials` and a loop like
-the one above. For a total with an interval that covers, :doc:`bounds`
-samples its posterior exactly.
+In a larger world shaped like the Salt Lake Valley's (400 cells, three sites,
+three quarters of the cells with an averaging kernel below 0.1, a log standard
+deviation of 1), over 200 trials with 1000 kept draws each, the 95% interval
+of the total held the truth in 95.5% of them for ``LognormalForward`` and 96%
+for ``SoftplusForward`` (21% and 40% from the Gaussian at the mode), and each
+cell's 95% interval, the quantiles of its draws, in 94.7% and 94.6%. Read
+symmetrically about the mode with the draws' standard deviation, as
+:meth:`~fips.Posterior.trials` reads it, a cell's interval held the truth in
+92%: the posterior is skewed there.
+
+So: report the total and its interval from the posterior's draws, and each
+cell's interval from its draws (or from :attr:`~fips.Posterior.variances`).
+The sum of the flux at the mode is a point estimate of the total near its
+median.
+
+
+What a draw costs
+-----------------
+
+The draws are made at the first use of :attr:`~fips.Posterior.variances`,
+:meth:`~fips.Posterior.cov` or :meth:`~fips.Posterior.sample`, after a
+``burn_in`` of 200 that tunes the sampler's step, and kept. Each draw follows a
+path of steps (one for a model that is linear, more where it bends: medians of
+16 and 20 in the Salt Lake Valley-shaped world), and each step evaluates the
+model and the product of its Jacobian's transpose with a vector (a transform
+forms no Jacobian), and multiplies by the covariance of the Gaussian at the
+mode. In the Salt Lake Valley-shaped world (400 cells, 120 observations) a draw
+took 5 to 10 ms (a step about 0.5 ms), so the 2200 of a solve 10 to 20 s, on
+one core; the same footprint as a linear model, 0.7 ms (one step). A trial of
+:meth:`~fips.Posterior.trials` draws its own. The draws are correlated: most
+cells' have an autocorrelation time of 1 to 3 draws there (the slowest, tens),
+so 2000 draws give a standard deviation to about 3%; ``draws=`` asks for more.
+A solve logs a warning when some element's draws mix so slowly that its
+standard deviation is uncertain by more than 10% (in the two cells above, along
+the curve: the total, which the data constrain, mixes in a few draws).
 
 
 Which to use
@@ -283,8 +318,10 @@ Which to use
   of :math:`10 \pm 2`, whatever its size) and the flux is near zero only in
   some cells, where it bends instead of going below.
 - ``"bounded"`` (:doc:`bounds`) when the prior is the Gaussian one and only
-  the negative part is wrong: the posterior is the Gaussian truncated at zero,
-  and fips draws from it exactly, so a total's interval covers.
+  the negative part is wrong: the posterior is the Gaussian truncated at zero.
+
+fips draws each posterior exactly, so in its own world a total's interval
+covers.
 
 Both transforms make the problem nonlinear, more so the wider the prior:
 Gauss-Newton takes more steps (in the Salt Lake Valley-shaped world at a log
