@@ -170,7 +170,11 @@ a few posterior standard deviations, which one linearization would have missed:
 Near the mode, :math:`d^2` falls by orders of magnitude a step. When it falls
 only by a constant factor, the model bends much over the posterior's spread,
 the estimate may be further from the mode than the last step, and the solve
-logs a warning saying so.
+logs a warning saying so. A model written by hand gives only its Jacobian, so
+its steps are Gauss-Newton's; for :class:`~fips.LognormalForward` and
+:class:`~fips.SoftplusForward`, whose second derivatives fips knows, the steps
+are Newton's where those are better, and the solve takes about half as many
+where Gauss-Newton's crawl (:doc:`positive`).
 
 
 What the posterior reports

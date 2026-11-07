@@ -115,8 +115,9 @@ class _Transformed(ForwardModel):
     r"""
     The machinery of a model :math:`F(x) = H\, [T(u); \text{the other blocks}]`, with :math:`T` element-wise on one block.
 
-    A subclass gives :meth:`_values` (:math:`T` on the block's values) and
-    :meth:`_slopes` (:math:`T'`), and its public methods.
+    A subclass gives :meth:`_values` (:math:`T` on the block's values),
+    :meth:`_slopes` (:math:`T'`) and :meth:`_second_derivatives`
+    (:math:`T''`, for Newton's steps), and its public methods.
     """
 
     def __init__(self, H: Operator, block: str | None):
@@ -157,6 +158,10 @@ class _Transformed(ForwardModel):
     @abstractmethod
     def _slopes(self, u: np.ndarray) -> np.ndarray:
         """Return the derivative of the transform at the block's values `u`."""
+
+    @abstractmethod
+    def _second_derivatives(self, u: np.ndarray) -> np.ndarray:
+        """Return the second derivative of the transform at the block's values `u`."""
 
     def _on_cols(self, x: Vector) -> np.ndarray:
         """Return the values of the state `x` in the order of the model's columns."""
@@ -227,6 +232,20 @@ class _Transformed(ForwardModel):
         u = x[self._slice]
         gradient[self._slice] *= self._finite(u, self._slopes(u))
         return gradient
+
+    def _curvature(self, x: np.ndarray, v: np.ndarray) -> np.ndarray:
+        r"""
+        Return the diagonal of :math:`\sum_k v_k \nabla^2 F_k(x)`: :math:`T''(u) \circ (H^T v)` on the block, zero off it.
+
+        :math:`F_k = \sum_i H_{ki} T(u_i)` plus the other blocks' linear
+        terms, so each :math:`\nabla^2 F_k` is the diagonal
+        :math:`H_{ki} T''(u_i)` on the block.
+        """
+        curvature = np.zeros(len(x))
+        u = x[self._slice]
+        weighted = np.asarray(self._H_T @ v, dtype=float)[self._slice]
+        curvature[self._slice] = self._finite(u, self._second_derivatives(u)) * weighted
+        return curvature
 
     def _transform(self, x: "Vector | pd.DataFrame") -> "Vector | pd.DataFrame":
         """Return `x` (a state, or draws of it, one column each) with the block transformed, on its own labels."""
@@ -377,6 +396,10 @@ class LognormalForward(_Transformed):
 
     def _slopes(self, u: np.ndarray) -> np.ndarray:
         """Return the derivative of :math:`r e^u`, which is itself."""
+        return self._values(u)
+
+    def _second_derivatives(self, u: np.ndarray) -> np.ndarray:
+        """Return the second derivative of :math:`r e^u`, itself again."""
         return self._values(u)
 
     def __call__(self, x: Vector) -> Vector:
@@ -852,6 +875,11 @@ class SoftplusForward(_Transformed):
     def _slopes(self, u: np.ndarray) -> np.ndarray:
         """Return the logistic function of :math:`u/s`."""
         return expit(u / self._scale)
+
+    def _second_derivatives(self, u: np.ndarray) -> np.ndarray:
+        r"""Return the derivative of the logistic function of :math:`u/s`, :math:`\sigma (1 - \sigma) / s`."""
+        s = self._scale
+        return expit(u / s) * expit(-u / s) / s  # no cancellation in 1 - sigma
 
     def __call__(self, x: Vector) -> Vector:
         r"""

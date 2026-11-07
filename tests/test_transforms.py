@@ -25,6 +25,14 @@ does not use the code under test, in layers:
    convention in place of the mean, softplus's Jacobian as ``exp(u)``) fail
    the tests above.
 7. **Refusals and pickling.**
+8. **Newton under the transform.** The curvature is the derivative of
+   ``J^T v`` by differences; the mode is Gauss-Newton's alone (both analytic
+   forms, a bias block, a singular prior, labels in another order, an
+   aggregation) and SciPy's BFGS minimum; each step is the dense iteration's
+   (Newton's with the whole Hessian, or Gauss-Newton's), which a curvature
+   with its sign flipped, doubled or halved fails; the draws are
+   Gauss-Newton's given the same mode; fewer steps in a Salt Lake
+   Valley-shaped world.
 """
 
 import dataclasses
@@ -36,7 +44,7 @@ import pytest
 import scipy.sparse as sps
 from scipy import integrate
 from scipy.linalg import block_diag, cholesky
-from scipy.optimize import least_squares
+from scipy.optimize import least_squares, minimize
 from scipy.special import ndtri
 from scipy.stats import norm
 
@@ -48,7 +56,7 @@ from fips.linalg import (
     KroneckerOperator,
     SparseOperator,
 )
-from fips.transforms import _softplus_moments
+from fips.transforms import _softplus_moments, _Transformed
 
 # ---------------------------------------------------------------------------
 # The user guide's model, at the top level so that it pickles
@@ -1042,3 +1050,348 @@ def test_an_aggregated_problem_keeps_the_model(kind):
     )
     post = fips.solve(problem.aggregate(W), "gauss_newton")
     assert len(post.modeled_obs) == 4
+
+
+# ---------------------------------------------------------------------------
+# 8. Newton under the transform
+# ---------------------------------------------------------------------------
+
+
+def gauss_newton_only(monkeypatch) -> None:
+    """The transforms without their curvature: every step Gauss-Newton's, as for a model fips did not write."""
+    monkeypatch.setattr(_Transformed, "_curvature", lambda self, x, v: None)
+
+
+@pytest.mark.parametrize("kind", KINDS)
+@pytest.mark.parametrize("permuted", [False, True])
+def test_the_curvature_is_the_derivative_of_the_gradient(kind, permuted):
+    """The diagonal the model returns is the Jacobian of ``J(x)^T v`` by central differences, which is diagonal on the block and zero off it; through the problem's order too."""
+    case = Case.random(kind, 20, 6, 9, k=2)
+    problem = case.problem(permuted=permuted)
+    rng = np.random.default_rng(3)
+    x = case.x_0 + rng.normal(0.0, 0.5, len(case.x_0))
+    v = rng.normal(0.0, 1.0, len(case.z))
+    curvature = problem._curvature(x, v)
+    h = 1e-6
+    columns = []
+    for j in range(len(x)):
+        e = np.zeros(len(x))
+        e[j] = h
+        columns.append(
+            (problem._gradient(x + e, v) - problem._gradient(x - e, v)) / (2 * h)
+        )
+    np.testing.assert_allclose(
+        np.column_stack(columns), np.diag(curvature), rtol=1e-6, atol=1e-8
+    )
+    np.testing.assert_array_equal(curvature[case.n :], 0.0)
+    expected = case.d2T(x[: case.n]) * (case.H[:, : case.n].T @ v)
+    np.testing.assert_allclose(curvature[: case.n], expected, rtol=1e-12)
+
+
+def test_a_model_fips_did_not_write_has_no_curvature():
+    """A hand-written model (the guide's) has none, so its steps are Gauss-Newton's."""
+    case = Case.random("lognormal", 21, 4, 6)
+    state, obs = case.spaces()
+    H = Operator(case.H, obs, state)
+    model = ScaledInventory(H, Vector(case.reference, state))
+    assert model._curvature(case.x_0, np.ones(6)) is None
+
+
+@pytest.mark.usefixtures("analytic_form")
+@pytest.mark.parametrize("kind", KINDS)
+@pytest.mark.parametrize("k", [0, 2])
+def test_newton_reaches_the_gauss_newton_mode(monkeypatch, kind, k):
+    """With and without a bias block, in both analytic forms: the same mode as Gauss-Newton's alone, to roundoff at a tight tol and well inside the default tol's error, in no more steps."""
+    case = Case.random(kind, 22, 9, 14, k=k, std=0.8)
+    newton = fips.solve(case.problem(), "gauss_newton", **TIGHT)
+    default = fips.solve(case.problem(), "gauss_newton")
+    gauss_newton_only(monkeypatch)
+    alone = fips.solve(case.problem(), "gauss_newton", **TIGHT)
+    s = case.gaussian_std(alone.estimate.values)
+    assert np.abs((newton.estimate.values - alone.estimate.values) / s).max() < 1e-9
+    assert np.abs((default.estimate.values - alone.estimate.values) / s).max() < 1e-3
+    assert len(newton.iterations) < len(alone.iterations)
+    assert_mode(newton, case)
+
+
+@pytest.mark.parametrize("kind", KINDS)
+def test_newton_with_a_singular_prior_and_labels_in_another_order(monkeypatch, kind):
+    """Cells with no prior spread stay at the prior and the others reach Gauss-Newton's mode, H sparse on reversed labels; no inverse of S_0 is needed."""
+    case = Case.random(kind, 23, 8, 12, k=2, std=0.8)
+    s = np.sqrt(np.diag(case.S_0)).copy()
+    C = case.S_0 / np.outer(s, s)
+    s[[1, 4]] = 0.0
+    singular = dataclasses.replace(case, S_0=np.outer(s, s) * C)
+    newton = fips.solve(
+        singular.problem(sparse=True, permuted=True), "gauss_newton", **TIGHT
+    )
+    np.testing.assert_array_equal(newton.estimate.values[[1, 4]], case.x_0[[1, 4]])
+    gauss_newton_only(monkeypatch)
+    alone = fips.solve(singular.problem(), "gauss_newton", **TIGHT)
+    std = np.sqrt(alone._solution.analytic.variances())
+    moved = std > 0
+    difference = (newton.estimate.values - alone.estimate.values)[moved] / std[moved]
+    assert np.abs(difference).max() < 1e-9
+    assert len(newton.iterations) < len(alone.iterations)
+
+
+@pytest.mark.parametrize("kind", KINDS)
+def test_an_aggregated_problem_takes_newton_steps_to_the_same_mode(monkeypatch, kind):
+    """Problem.aggregate passes the curvature through the aggregation: W^T v weights the model's."""
+    case = Case.random(kind, 24, 6, 16, std=0.8)
+    problem = case.problem()
+    W = fips.aggregate.sum(
+        problem.obs.space,
+        by=pd.Series(np.arange(16) // 2, index=problem.obs.space.select("conc")),
+    )
+    aggregated = problem.aggregate(W)
+    v = np.random.default_rng(0).normal(size=8)
+    np.testing.assert_allclose(
+        aggregated._curvature(case.x_0, v),
+        problem._curvature(case.x_0, W.dense().T @ v),
+        rtol=1e-13,
+    )
+    newton = fips.solve(aggregated, "gauss_newton", **TIGHT)
+    gauss_newton_only(monkeypatch)
+    alone = fips.solve(aggregated, "gauss_newton", **TIGHT)
+    std = np.sqrt(alone._solution.analytic.variances())
+    assert np.abs((newton.estimate.values - alone.estimate.values) / std).max() < 1e-9
+
+
+@pytest.mark.parametrize("kind", KINDS)
+@pytest.mark.parametrize("n, m", SIZES)
+def test_the_newton_mode_is_bfgs_minimum(kind, n, m):
+    """SciPy's BFGS on the cost written densely (no Gauss-Newton, no Newton) finds the same mode, to its own precision."""
+    case = Case.random(kind, 25, n, m, k=1, std=0.8)
+    post = fips.solve(case.problem(), "gauss_newton", **TIGHT)
+    fit = minimize(
+        case.cost,
+        case.x_0,
+        jac=lambda x: 2 * case.gradient(x),
+        method="BFGS",
+        options={"gtol": 1e-9, "maxiter": 5000},
+    )
+    s = case.gaussian_std(fit.x)
+    assert np.abs((post.estimate.values - fit.x) / s).max() < 1e-5
+    assert post.chi2 == pytest.approx(fit.fun, rel=1e-10)
+
+
+def dense_steps(
+    case: Case, tol: float, steps: int
+) -> tuple[list[float], list[float], list[str]]:
+    r"""
+    The iterations written densely: the cost after each step, its :math:`d^2`, and which step it was.
+
+    At each state, Gauss-Newton's step :math:`-A^{-1} g` (with :math:`A =
+    S_0^{-1} + J^T S_z^{-1} J`) and, where the whole Hessian (``Case.hessian``)
+    has a Cholesky factor, Newton's; each halved until the cost does not rise;
+    the one of lower cost taken (Newton's on a tie). A whole Gauss-Newton step
+    with :math:`d^2 = \delta^T A \delta` below ``tol * n`` is the last; each
+    step's :math:`d^2` is in the :math:`A` of the state it starts from.
+    """
+    x = case.x_0.copy()
+    current = case.cost(x)
+    costs, d2s, kinds = [], [], []
+    for _ in range(steps):
+        g = case.gradient(x)
+        J = case.J(x)
+        A = np.linalg.inv(case.S_0) + J.T @ np.linalg.solve(case.S_z, J)
+        gauss_newton = -np.linalg.solve(A, g)
+        d2 = gauss_newton @ A @ gauss_newton
+        if d2 < tol * len(x):
+            costs.append(case.cost(x + gauss_newton))
+            d2s.append(d2)
+            kinds.append("last")
+            break
+        candidates = {"gauss_newton": gauss_newton}
+        hessian = case.hessian(x)
+        try:
+            np.linalg.cholesky(hessian)
+        except np.linalg.LinAlgError:
+            pass
+        else:
+            candidates["newton"] = -np.linalg.solve(hessian, g)
+        taken = {}
+        for kind, step in candidates.items():
+            fraction = 1.0
+            while case.cost(x + fraction * step) > current + 1e-12 * abs(current):
+                fraction /= 2
+            taken[kind] = x + fraction * step
+        kind = min(taken, key=lambda k: (case.cost(taken[k]), k != "newton"))
+        d2s.append((taken[kind] - x) @ A @ (taken[kind] - x))
+        x = taken[kind]
+        current = case.cost(x)
+        costs.append(current)
+        kinds.append(kind)
+    return costs, d2s, kinds
+
+
+def assert_dense_steps(post: fips.Posterior, case: Case, tol: float) -> None:
+    """The steps' costs and their d2 (those above roundoff) are the dense iterations'."""
+    costs, d2s, kinds = dense_steps(case, tol, len(post.iterations))
+    assert len(kinds) == len(post.iterations)
+    np.testing.assert_allclose(post.iterations["cost"].values, costs, rtol=1e-9)
+    # a Newton step is solved to 1e-6 of its length (_SOLVED), which moves the
+    # next steps' d2 by up to about 1e-4; a wrong curvature moves them by factors
+    d2s = np.array(d2s)
+    above = d2s > 1e-10
+    np.testing.assert_allclose(
+        post.iterations["d2"].values[above], d2s[above], rtol=1e-3
+    )
+
+
+@pytest.mark.parametrize("kind", KINDS)
+@pytest.mark.parametrize("n, m", SIZES)
+def test_each_step_is_the_lower_of_newton_and_gauss_newton(kind, n, m):
+    """Each step's cost is that of the same iterations written densely, with the whole Hessian inverted: Newton's where it is positive definite and lower."""
+    case = Case.random(kind, 26, n, m, k=1, std=0.8)
+    post = fips.solve(case.problem(), "gauss_newton", tol=1e-12)
+    assert "newton" in dense_steps(case, 1e-12, len(post.iterations))[2]
+    assert_dense_steps(post, case, 1e-12)
+
+
+def wrong_curvature(factor: float):
+    """A mutant whose curvature is the right one times `factor` (-1: the sign of D flipped)."""
+    real = _Transformed._curvature
+
+    def wrong(self, x, v):
+        return factor * real(self, x, v)
+
+    return wrong
+
+
+@pytest.mark.parametrize("factor", [-1.0, 2.0, 0.5])
+@pytest.mark.parametrize("kind", KINDS)
+def test_a_wrong_curvature_fails(monkeypatch, kind, factor):
+    """
+    The curvature with its sign flipped, doubled or halved gives other steps than the dense iterations.
+
+    The mode is still the mode (the steps are halved until the cost falls,
+    and the last is Gauss-Newton's), so a wrong curvature shows only in the
+    steps: here, and as more steps in the Salt Lake Valley-shaped world.
+    """
+    monkeypatch.setattr(_Transformed, "_curvature", wrong_curvature(factor))
+    case = Case.random(kind, 26, 6, 15, k=1, std=0.8)
+    post = fips.solve(case.problem(), "gauss_newton", tol=1e-12)
+    assert_mode(fips.solve(case.problem(), "gauss_newton", **TIGHT), case)
+    with pytest.raises(AssertionError):
+        assert_dense_steps(post, case, 1e-12)
+
+
+@pytest.mark.parametrize("kind", KINDS)
+def test_the_draws_are_gauss_newtons_given_the_same_mode(monkeypatch, kind):
+    """The sampler's mass is the Gaussian of the problem linearized at the last iterate: at a tight tol both paths end at the mode, and give the same draws from the same seed."""
+    case = Case.random(kind, 27, 6, 10, k=1, std=0.8)
+    newton = fips.solve(case.problem(), "gauss_newton", draws=300, burn_in=50, **TIGHT)
+    gauss_newton_only(monkeypatch)
+    alone = fips.solve(case.problem(), "gauss_newton", draws=300, burn_in=50, **TIGHT)
+    std = np.sqrt(alone._solution.analytic.variances())
+    np.testing.assert_allclose(
+        newton._solution.point, alone._solution.point, rtol=0, atol=1e-9 * std.min()
+    )
+    np.testing.assert_allclose(newton._solution.analytic.variances(), std**2, rtol=1e-9)
+    a, b = newton.sample(200, rng=3).to_numpy(), alone.sample(200, rng=3).to_numpy()
+    assert np.abs((a - b) / std[:, None]).max() < 1e-8
+    np.testing.assert_allclose(
+        newton.variances.values, alone.variances.values, rtol=1e-8
+    )
+
+
+def slv_shaped(kind: str, side: int = 10, m: int = 40, log_std: float = 1.0):
+    """
+    A Salt Lake Valley-shaped problem: `side` x `side` cells, `m` observations at three receptors, each seeing the cells upwind in a random direction (a sparse footprint), a lognormal inventory, and prior_for's prior with a flux uncertainty of a log standard deviation `log_std`, correlated over two cells.
+
+    Returns a function of a seed that gives the problem of a truth drawn from
+    the prior and its data.
+    """
+    rng = np.random.default_rng(0)
+    gx, gy = np.meshgrid(np.arange(side), np.arange(side))
+    xy = np.c_[gx.ravel(), gy.ravel()].astype(float)
+    cells = Space({"flux": pd.MultiIndex.from_arrays(xy.T, names=["x", "y"])})
+    obs = Space({"ch4": pd.RangeIndex(m, name="obs_id")})
+    receptors = rng.uniform(0, side - 1, (3, 2))[rng.integers(0, 3, m)]
+    H = np.zeros((m, side * side))
+    for i in range(m):
+        angle = rng.uniform(0, 2 * np.pi)
+        d = xy - receptors[i]
+        along = d @ np.array([np.cos(angle), np.sin(angle)])
+        across = d @ np.array([-np.sin(angle), np.cos(angle)])
+        H[i] = np.exp(-np.abs(across) - np.maximum(along, 0) / 3.0) * (along > -1)
+    H[H < 0.02] = 0.0
+    H = Operator(sps.csr_array(H / H.sum(axis=1, keepdims=True) * 5.0), obs, cells)
+    inventory = pd.Series(rng.lognormal(0.0, 0.8, side * side), index=cells.index)
+    cv = np.sqrt(np.expm1(log_std**2))
+    if kind == "lognormal":
+        model = LognormalForward(H, inventory)
+        mu, sigma = model.prior_for(model.reference, model.reference * cv)
+    else:
+        model = SoftplusForward(H, scale=float(inventory.median()))
+        mu, sigma = model.prior_for(inventory, inventory * cv)
+    distance = np.sqrt(((xy[:, None, :] - xy[None, :, :]) ** 2).sum(-1))
+    s = sigma.values
+    prior_cov = Covariance(s[:, None] * np.exp(-distance / 2.0) * s[None, :], cells)
+
+    def problem(seed: int) -> fips.Problem:
+        def with_obs(z):
+            return fips.Problem(
+                prior=mu,
+                prior_cov=prior_cov,
+                obs=Vector(z, obs),
+                obs_cov=fips.Independent().with_std(0.3),
+                forward=model,
+                offset=1900.0,
+            )
+
+        _, z = with_obs(np.zeros(m)).simulate(rng=seed)
+        return with_obs(z.values)
+
+    return problem
+
+
+def steps_in_the_slv_shaped_world(kind: str, trials: int, **world) -> np.ndarray:
+    """The steps each trial's solve takes, at the default options."""
+    problem = slv_shaped(kind, **world)
+    return np.array(
+        [
+            len(
+                fips.solve(problem(seed), "gauss_newton", max_iterations=500).iterations
+            )
+            for seed in range(trials)
+        ]
+    )
+
+
+@pytest.mark.parametrize("kind", KINDS)
+def test_newton_takes_fewer_steps_in_a_slv_shaped_world(monkeypatch, kind):
+    """
+    At a log standard deviation of 1, on 100 cells and 40 observations, Newton takes fewer steps than Gauss-Newton alone, and never many.
+
+    Measured (20 trials): lognormal, Gauss-Newton a median of 8 steps and at
+    most 25, Newton 6 and 7; softplus, Gauss-Newton 13.5 and 40, Newton 9 and
+    11. In the user guide's world, 400 cells and 120 observations (200
+    trials): lognormal, Gauss-Newton 9 and 23, Newton 7 and 14; softplus,
+    Gauss-Newton 18 and 153, Newton 9 and 14. There a wrong curvature takes
+    more steps (50 trials, medians: lognormal 10 with its sign flipped and 10
+    doubled, against 7; softplus 17, at most 75, and 12, against 9), but half
+    the curvature takes about as many (8 and 8): the dense steps above catch
+    all three.
+    """
+    newton = steps_in_the_slv_shaped_world(kind, 20)
+    gauss_newton_only(monkeypatch)
+    alone = steps_in_the_slv_shaped_world(kind, 20)
+    assert np.median(newton) < np.median(alone)
+    assert newton.max() < alone.max()
+    assert newton.sum() < 0.8 * alone.sum()
+
+
+@pytest.mark.parametrize("kind, seed", [("lognormal", 1), ("softplus", 3)])
+def test_where_newton_is_not_positive_definite_the_step_is_gauss_newtons(
+    caplog, kind, seed
+):
+    """A wide prior (a log standard deviation of 1.5): far from the mode the Newton matrix has a direction of negative curvature, that step is Gauss-Newton's, and the solve still ends at the mode."""
+    case = Case.random(kind, seed, 8, 12, k=1, std=1.5)
+    with caplog.at_level("DEBUG", logger="fips.methods.gauss_newton"):
+        post = fips.solve(case.problem(), "gauss_newton", **TIGHT)
+    assert "The Newton matrix is not positive definite" in caplog.text
+    assert "Newton's)" in caplog.text  # and Newton steps elsewhere
+    assert_mode(post, case)
