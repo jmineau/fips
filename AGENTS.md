@@ -22,8 +22,8 @@ with a Gaussian prior and Gaussian errors, `z = H x + c + e` (or `F(x)`, a
 `ForwardModel` the caller writes with its Jacobian), whose state and
 observations are labeled by pandas indexes in named blocks: exact for a linear
 problem; with bounds on the state, its mode and draws of the Gaussian truncated
-to the bounds; with a forward model, its mode by Gauss-Newton and the Gaussian
-at the mode. fips samples the posteriors it cannot give in closed form. Labels
+to the bounds; with a forward model, its mode by Gauss-Newton and draws of its
+posterior. fips samples the posteriors it cannot give in closed form. Labels
 are matched, never positions; each matrix is kept in its cheapest form (dense,
 sparse, diagonal, Kronecker factors). Beta: the API may change between
 releases. PyPI and import name `fips`.
@@ -61,7 +61,7 @@ src/fips/
                     Information (n x n); `_choose` picks the form by size
     bounded.py      BoundedOptions; Bounded: the mode by an active set on the
                     analytic posterior, draws by exact HMC (_Sampler)
-    gauss_newton.py GaussNewtonOptions; GaussNewton: the mode by solving linearizations
+    gauss_newton.py GaussNewtonOptions; GaussNewton: the mode by solving linearizations, draws by HMC
   linalg/           the unlabeled forms (public as fips.linalg)
     forms.py        LinearOperator and the Dense-, Sparse- and DiagonalOperator it builds
     block.py        BlockDiagonalOperator
@@ -171,11 +171,10 @@ ensemble method fits. **A method's default options on a linear, unbounded
 problem give the analytic posterior** (`"bounded"` with no finite bound and
 `"gauss_newton"` with an operator return the analytic solution itself):
 `tests/test_oracle.py` runs every registered method, with its defaults, against the closed-form posterior and the
-permutation test. A method that samples is held to exact answers in small
-cases (`scipy.stats.truncnorm`, numerical integration) within Monte Carlo
-errors that count its draws' autocorrelation, to the rank of the truth among
-its draws in its own world (`tests/test_bounded.py`), and to a wrong variant
-that those tests must fail.
+permutation test. A method that samples is held to exact answers in small cases
+(`truncnorm`, integration; Monte Carlo errors counting autocorrelation), to the
+truth's rank among its draws in its own world, and to wrong variants that fail
+them (`tests/test_bounded.py`, `tests/test_gauss_newton.py`).
 
 ## Dev commands
 
@@ -224,7 +223,7 @@ an outside solver loses the labels) and delegates factorizations and storage to
 SciPy (`scipy.linalg`, `scipy.sparse`, `LinearOperator`, `eigsh`).
 pylops is read, not installed or copied (LGPL). GSTools only in an extra,
 if `covariance/kernels.py` outgrows its kernels. fips writes the samplers its
-methods need (exact HMC for the bounded posterior) on NumPy and SciPy. The other inverse-problem libraries (pyOE, hippylib, pyemu, the
+methods need (HMC: exact for the bounded posterior, split at the Gaussian at the mode for a model) on NumPy and SciPy. The other inverse-problem libraries (pyOE, hippylib, pyemu, the
 Yadav and Michalak code) are test oracles, not dependencies. A new runtime
 dependency needs a reason, proposed first.
 
@@ -291,10 +290,11 @@ dependency needs a reason, proposed first.
   and kept outside the frozen fields (not pickled). A draw costs one `O(n)`
   reflection per bound its path reaches, about as many as there are elements
   near a bound, so `trials` of a bounded posterior runs a sampler per trial.
-- **A Gauss-Newton posterior holds the user's problem, with the model**
-  (`modeled_obs`, `chi2`, the misfits are the model's at the mode; `with_data`
-  solves again from the last linearization, reusing its factors), and the
-  analytic solution linearized at the last iterate (gain, `cov`, DOFS, and the
-  `H` of the averaging kernel and `innovation_cov`: `Posterior._linear`). Every
-  iterate is `x_0 + S_0 y`, so `d2` needs no `S_0^-1`. A step that raises the
-  cost is halved; only a whole step stops.
+- **A Gauss-Newton posterior holds the user's problem, with the model** (`modeled_obs`, `chi2`, the
+  misfits: the model's at the mode; `with_data` solves again from the last linearization, reusing its
+  factors), and the Gaussian at the mode, the analytic solution linearized at the last iterate (gain,
+  DOFS, the `H` of `A` and `innovation_cov`: `Posterior._linear`). `variances`, `cov(W)`, `sample`:
+  draws of the posterior (`_Sampler`, HMC split at that Gaussian: its rotation exact, the rest kicks, a
+  Metropolis test), kept as `"bounded"`'s. Iterates and draws are `x_0 + S_0 y`: no `S_0^-1`. A draw is
+  a few `F`, `J^T v` (`ForwardModel._gradient`) and `S_hat v`; `trials` samples each trial. A step that
+  raises the cost is halved; only a whole step stops.

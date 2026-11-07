@@ -19,12 +19,14 @@ factors.
 """
 
 import logging
+from functools import cached_property
 from typing import Any
 
 import numpy as np
 
 from fips.covariance import Covariance, CovarianceModel
 from fips.forward import ForwardModel, _Aggregated, _differentiated, _evaluated
+from fips.linalg import LinearOperator
 from fips.operator import Operator
 from fips.space import Space
 from fips.vector import Vector
@@ -430,15 +432,14 @@ class Problem:
         state, observed = self._prior.space, self._obs.space
         if modeled is None:
             modeled = self._apply(values)
-        J = _differentiated(model, self._to_model(values))
-        form = J._on(observed, state)
+        form, name = self._jacobian(values)
         offset = self._offset_values() + modeled - np.asarray(form @ values)
         return type(self)(
             prior=self._prior,
             prior_cov=self._prior_cov,
             obs=self._obs,
             obs_cov=self._obs_cov,
-            forward=Operator(form, observed, state, name=J.name),
+            forward=Operator(form, observed, state, name=name),
             offset=Vector(
                 offset,
                 observed,
@@ -778,14 +779,45 @@ class Problem:
             ]
         return values
 
-    def _to_model(self, values: np.ndarray) -> np.ndarray:
-        """Return the state `values` (in the prior's order) in the order of the forward model's columns."""
+    @cached_property
+    def _model_order(
+        self,
+    ) -> tuple[np.ndarray | None, np.ndarray | None, np.ndarray | None]:
+        """
+        The positions that put the forward model's labels in the problem's order, found once (None where the orders are the same).
+
+        The state's position of each of the model's columns (for
+        :meth:`_to_model`), the model's row of each observation (for
+        :meth:`_apply` and :meth:`_jacobian`), and the model's column of each
+        state element (for :meth:`_jacobian`). Not pickled: a problem read
+        back finds them again.
+        """
         model = self._forward
         assert isinstance(model, ForwardModel)  # called for a model only
-        state = self._prior.space
-        if model.cols is state:
-            return values
-        return values[model.cols._align(state, "the prior", "The model's columns")]
+
+        def kept(positions: np.ndarray) -> np.ndarray | None:
+            """Return `positions`, or None if they keep the order."""
+            same = np.array_equal(positions, np.arange(len(positions)))
+            return None if same else positions
+
+        state, observed = self._prior.space, self._obs.space
+        to_model = None
+        to_state = None
+        if model.cols is not state:
+            positions = model.cols._align(state, "the prior", "The model's columns")
+            to_model = kept(positions)
+            to_state = None if to_model is None else np.argsort(positions)
+        rows = None
+        if model.rows is not observed:
+            rows = kept(
+                observed._align(model.rows, "the model's rows", "The model's rows")
+            )
+        return to_model, rows, to_state
+
+    def _to_model(self, values: np.ndarray) -> np.ndarray:
+        """Return the state `values` (in the prior's order) in the order of the forward model's columns."""
+        to_model = self._model_order[0]
+        return values if to_model is None else values[to_model]
 
     def _apply(self, values: np.ndarray) -> np.ndarray:
         """
@@ -800,12 +832,48 @@ class Problem:
         if isinstance(forward, Operator):
             return forward.data @ values
         modeled = _evaluated(forward, self._to_model(values))
-        observed = self._obs.space
-        if forward.rows is observed:
-            return modeled
-        return modeled[
-            observed._align(forward.rows, "the model's rows", "The model's rows")
-        ]
+        rows = self._model_order[1]
+        return modeled if rows is None else modeled[rows]
+
+    def _gradient(self, values: np.ndarray, v: np.ndarray) -> np.ndarray:
+        """
+        Return :math:`J(x)^T v` for the state values `x` (in the prior's order) and `v` on the observations, in the prior's order.
+
+        Through the model's ``_gradient``, which a model with a cheaper
+        product than its Jacobian's has.
+        """
+        model = self._forward
+        assert isinstance(model, ForwardModel)  # called for a model only
+        _, rows, to_state = self._model_order
+        if rows is not None:
+            on_rows = np.empty(len(v))
+            on_rows[rows] = v
+            v = on_rows
+        gradient = model._gradient(self._to_model(values), v)
+        return gradient if to_state is None else gradient[to_state]
+
+    def _jacobian(self, values: np.ndarray) -> tuple[LinearOperator, str | None]:
+        """
+        Return the Jacobian of the forward model at the state `values` (in the prior's order), its rows and columns in the problem's order, and its name.
+
+        Raises
+        ------
+        TypeError, ValueError
+            If the model's ``jacobian`` does not return an Operator with
+            exactly the model's labels.
+        """
+        model = self._forward
+        assert isinstance(model, ForwardModel)  # called for a model only
+        J = _differentiated(model, self._to_model(values))
+        form = J.data
+        _, rows, cols = self._model_order
+        if rows is not None or cols is not None:
+            m, n = form.shape
+            form = form._select(
+                np.arange(m) if rows is None else rows,
+                np.arange(n) if cols is None else cols,
+            )
+        return form, J.name
 
     def _offset_values(self) -> np.ndarray:
         """Return the offset's values, zeros where there is none."""
