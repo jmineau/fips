@@ -1,0 +1,1031 @@
+"""
+Tests for ``fips.LognormalForward`` and ``fips.SoftplusForward``: forward models that keep one block of the state positive.
+
+A wrong Jacobian, a wrong prior correspondence or a misread posterior still
+gives a labeled answer of the right shape, so each is held to an answer that
+does not use the code under test, in layers:
+
+1. **The Taylor test** of each model's Jacobian: dense and sparse ``H``, a
+   bias block that passes through, labels in another order, a zero reference.
+2. **Hand-written models.** ``LognormalForward`` gives the mode and the
+   posterior of the user guide's ``ScaledInventory``; both models' values and
+   Jacobians are the formulas written with NumPy.
+3. **The mode against an independent optimizer**: SciPy's ``least_squares``
+   on the whitened residual of the cost, polished by Newton's method with the
+   cost's whole Hessian, with fewer and more state elements than
+   observations, a bias block and a Kronecker prior.
+4. **The prior correspondence**: ``prior_for`` gives a ``u`` whose flux has
+   the mean and standard deviation asked for, against the closed form
+   (lognormal), SciPy's adaptive ``quad`` (softplus) and Monte Carlo draws
+   (both); the lognormal's flux correlations against their formula.
+5. **Its own world**, through ``Posterior.trials`` and draws through the
+   transform: the intervals of the cells and of the total cover about as
+   often as they claim when the prior is narrow.
+6. **Wrong variants** (a Jacobian without the reference, the median
+   convention in place of the mean, softplus's Jacobian as ``exp(u)``) fail
+   the tests above.
+7. **Refusals and pickling.**
+"""
+
+import dataclasses
+import pickle
+
+import numpy as np
+import pandas as pd
+import pytest
+import scipy.sparse as sps
+from scipy import integrate
+from scipy.linalg import block_diag, cholesky
+from scipy.optimize import least_squares
+from scipy.special import ndtri
+from scipy.stats import norm
+
+import fips
+from fips import Covariance, LognormalForward, Operator, SoftplusForward, Space, Vector
+from fips.linalg import (
+    DenseOperator,
+    DiagonalOperator,
+    KroneckerOperator,
+    SparseOperator,
+)
+from fips.transforms import _softplus_moments
+
+# ---------------------------------------------------------------------------
+# The user guide's model, at the top level so that it pickles
+# ---------------------------------------------------------------------------
+
+
+class ScaledInventory(fips.ForwardModel):
+    """The observations of an inventory scaled by exp(x): F(x) = H (r * exp(x)), as the nonlinear guide writes it."""
+
+    def __init__(self, H, reference):
+        super().__init__(H.rows, H.cols)
+        self.H = H
+        self.reference = reference
+
+    def __call__(self, x):
+        return self.H @ (self.reference * np.exp(x))
+
+    def jacobian(self, x):
+        flux = (self.reference * np.exp(x)).values
+        return self.H @ fips.Operator(DiagonalOperator(flux), x.space, x.space)
+
+
+# ---------------------------------------------------------------------------
+# Problems as arrays, and the references written with them
+# ---------------------------------------------------------------------------
+
+
+@dataclasses.dataclass
+class Case:
+    """
+    A problem as arrays: ``z = H [T(u); b] + c + e``, the state ``x = [u; b]`` with ``x ~ N(x_0, S_0)``.
+
+    `n` flux cells and `k` bias elements; ``H`` is ``m x (n + k)``. The
+    transform is the lognormal's ``r e^u`` or the softplus's ``s log(1 +
+    e^{u/s})``, written here with NumPy.
+    """
+
+    kind: str
+    n: int
+    k: int
+    reference: np.ndarray
+    scale: float
+    x_0: np.ndarray
+    S_0: np.ndarray
+    H: np.ndarray
+    S_z: np.ndarray
+    z: np.ndarray
+    c: np.ndarray
+    flux_index: pd.Index | None = None
+    """The flux cells' labels; by default ``c0, c1, ...`` named ``cell``."""
+
+    @classmethod
+    def random(
+        cls,
+        kind: str,
+        seed: int,
+        n: int,
+        m: int,
+        k: int = 0,
+        std: float = 0.5,
+        zeros: int = 0,
+        scale: float = 0.7,
+        S_0: np.ndarray | None = None,
+    ) -> "Case":
+        """A correlated prior, a dense footprint, and data from a truth drawn from the prior (`zeros` cells with no reference)."""
+        rng = np.random.default_rng(seed)
+        i = np.arange(n)
+        if S_0 is None:
+            C = np.exp(-np.abs(i[:, None] - i[None, :]) / 3.0)
+            s = std * rng.uniform(0.7, 1.3, n)
+            if kind == "softplus":
+                s = s * 2.0
+            S_0 = s[:, None] * C * s[None, :]
+        if k:
+            S_0 = block_diag(S_0, np.eye(k) * 0.3**2)
+        reference = rng.uniform(0.5, 2.0, n)
+        reference[rng.choice(n, zeros, replace=False)] = 0.0
+        if kind == "lognormal":
+            u_0 = rng.normal(0.0, 0.3, n)
+        else:  # some cells near the bend, some far above it
+            u_0 = rng.normal(0.8, 1.0, n)
+        x_0 = np.concatenate([u_0, np.zeros(k)])
+        H = rng.uniform(0.0, 1.0, (m, n + k))
+        H[:, n:] = (rng.integers(0, k, m)[:, None] == np.arange(k)) if k else 0.0
+        S_z = np.diag(rng.uniform(0.01, 0.04, m))
+        c = rng.normal(2.0, 0.1, m)
+        case = cls(kind, n, k, reference, scale, x_0, S_0, H, S_z, np.zeros(m), c)
+        truth = x_0 + cholesky(S_0, lower=True) @ rng.standard_normal(n + k)
+        case.z = case.F(truth) + c + rng.normal(0.0, np.sqrt(np.diag(S_z)))
+        return case
+
+    # the transform, its first and second derivatives
+    def T(self, u: np.ndarray) -> np.ndarray:
+        """The flux of `u`."""
+        if self.kind == "lognormal":
+            return self.reference * np.exp(u)
+        return self.scale * np.log1p(np.exp(u / self.scale))
+
+    def dT(self, u: np.ndarray) -> np.ndarray:
+        """Its slope."""
+        if self.kind == "lognormal":
+            return self.reference * np.exp(u)
+        return 1.0 / (1.0 + np.exp(-u / self.scale))
+
+    def d2T(self, u: np.ndarray) -> np.ndarray:
+        """Its curvature."""
+        if self.kind == "lognormal":
+            return self.reference * np.exp(u)
+        g = self.dT(u)
+        return g * (1.0 - g) / self.scale
+
+    def F(self, x: np.ndarray) -> np.ndarray:
+        """The model."""
+        return self.H @ np.concatenate([self.T(x[: self.n]), x[self.n :]])
+
+    def J(self, x: np.ndarray) -> np.ndarray:
+        """Its Jacobian."""
+        slopes = np.concatenate([self.dT(x[: self.n]), np.ones(self.k)])
+        return self.H * slopes[None, :]
+
+    def residual(self, x: np.ndarray) -> np.ndarray:
+        """The data's residual."""
+        return self.z - self.F(x) - self.c
+
+    def cost(self, x: np.ndarray) -> float:
+        """The MAP cost, the chi-squared at `x`."""
+        r, dx = self.residual(x), x - self.x_0
+        return float(
+            r @ np.linalg.solve(self.S_z, r) + dx @ np.linalg.solve(self.S_0, dx)
+        )
+
+    def gradient(self, x: np.ndarray) -> np.ndarray:
+        """Half the gradient of the cost."""
+        w = np.linalg.solve(self.S_z, self.residual(x))
+        return np.linalg.solve(self.S_0, x - self.x_0) - self.J(x).T @ w
+
+    def hessian(self, x: np.ndarray) -> np.ndarray:
+        """Half the cost's whole Hessian, the transform's curvature included (which Gauss-Newton leaves out)."""
+        w = np.linalg.solve(self.S_z, self.residual(x))
+        J = self.J(x)
+        curvature = np.concatenate(
+            [self.d2T(x[: self.n]) * (self.H[:, : self.n].T @ w), np.zeros(self.k)]
+        )
+        return (
+            np.linalg.inv(self.S_0)
+            + J.T @ np.linalg.solve(self.S_z, J)
+            - np.diag(curvature)
+        )
+
+    def least_squares(self) -> np.ndarray:
+        """The minimizer of the cost by SciPy's Levenberg-Marquardt on the whitened, stacked residual."""
+        L_z = cholesky(self.S_z, lower=True)
+        L_0 = cholesky(self.S_0, lower=True)
+
+        def residual(x):
+            return np.concatenate(
+                [
+                    np.linalg.solve(L_z, self.residual(x)),
+                    np.linalg.solve(L_0, x - self.x_0),
+                ]
+            )
+
+        def jacobian(x):
+            return np.vstack([-np.linalg.solve(L_z, self.J(x)), np.linalg.inv(L_0)])
+
+        fit = least_squares(
+            residual,
+            self.x_0,
+            jac=jacobian,
+            method="lm",
+            xtol=1e-15,
+            ftol=1e-15,
+            gtol=1e-15,
+        )
+        return fit.x
+
+    def mode(self) -> np.ndarray:
+        """The minimizer to roundoff: :meth:`least_squares`, then Newton's method with the whole Hessian."""
+        x = self.least_squares()
+        for _ in range(4):
+            x = x - np.linalg.solve(self.hessian(x), self.gradient(x))
+        return x
+
+    def gaussian_std(self, x: np.ndarray) -> np.ndarray:
+        """The standard deviations of the Gaussian at `x` (Gauss-Newton's)."""
+        J = self.J(x)
+        P = np.linalg.inv(self.S_0) + J.T @ np.linalg.solve(self.S_z, J)
+        return np.sqrt(np.diag(np.linalg.inv(P)))
+
+    # the labeled problem
+    def spaces(self) -> tuple[Space, Space]:
+        """The state (a ``flux`` block, and a ``bias`` block if `k`) and the observations."""
+        flux = self.flux_index
+        if flux is None:
+            flux = pd.Index([f"c{j}" for j in range(self.n)], name="cell")
+        blocks = {"flux": flux}
+        if self.k:
+            blocks["bias"] = pd.Index([f"s{j}" for j in range(self.k)], name="site")
+        m = len(self.z)
+        return Space(blocks), Space(
+            {"conc": pd.Index([f"o{j}" for j in range(m)], name="obs_id")}
+        )
+
+    def operator(self, sparse: bool = False, permuted: bool = False) -> Operator:
+        """``H`` labeled; `sparse` holds it as a SciPy matrix, `permuted` reverses its rows and columns."""
+        state, obs = self.spaces()
+        H = Operator(sps.csr_array(self.H) if sparse else self.H, obs, state)
+        if permuted:
+            rows = Space({"conc": obs.select("conc")[::-1]})
+            cols = Space({b: state.select(b)[::-1] for b in state.names})
+            H = H.align(rows, cols)
+        return H
+
+    def model(self, H: Operator | None = None) -> "LognormalForward | SoftplusForward":
+        """The fips model of this case."""
+        H = self.operator() if H is None else H
+        if self.kind == "lognormal":
+            labels = self.spaces()[0].select("flux")  # matched to H's by label
+            return LognormalForward(
+                H, pd.Series(self.reference, index=labels), block="flux"
+            )
+        return SoftplusForward(H, block="flux", scale=self.scale)
+
+    def problem(self, prior_cov=None, **operator) -> fips.Problem:
+        """The labeled problem; `operator` as :meth:`operator` takes it."""
+        state, obs = self.spaces()
+        return fips.Problem(
+            prior=Vector(self.x_0, state),
+            prior_cov=Covariance(self.S_0, state) if prior_cov is None else prior_cov,
+            obs=Vector(self.z, obs),
+            obs_cov=Covariance(self.S_z, obs),
+            forward=self.model(self.operator(**operator)),
+            offset=Vector(self.c, obs),
+        )
+
+
+KINDS = ["lognormal", "softplus"]
+SIZES = [(6, 15), (15, 6)]
+"""Fewer, then more state elements than observations."""
+TIGHT = {"tol": 1e-22, "max_iterations": 200}
+"""Options with which the iterations go on to roundoff."""
+
+
+def assert_mode(post: fips.Posterior, case: Case, atol: float = 1e-9) -> None:
+    """The estimate is the minimizer of the cost within `atol` posterior standard deviations, against SciPy's least squares and Newton's method, and the cost's gradient is zero there."""
+    x = post.estimate.values
+    scipy_mode = case.least_squares()
+    s = case.gaussian_std(scipy_mode)
+    assert np.abs((x - scipy_mode) / s).max() < 1e-6
+    reference = case.mode()
+    error = np.abs((x - reference) / s).max()
+    assert error < atol, error
+    assert np.abs(case.gradient(x) * s).max() < atol
+    assert post.chi2 == pytest.approx(case.cost(reference), rel=1e-9)
+
+
+# ---------------------------------------------------------------------------
+# 1. The Taylor test
+# ---------------------------------------------------------------------------
+
+
+def check_taylor(case: Case, **operator) -> None:
+    """The Taylor test passes at the prior and at a random state, in a random direction and in one that moves the bias block alone."""
+    model = case.model(case.operator(**operator))
+    state, _ = case.spaces()
+    rng = np.random.default_rng(1)
+    for x in (case.x_0, case.x_0 + rng.normal(0.0, 0.5, len(case.x_0))):
+        assert fips.taylortest(model, Vector(x, state))
+        if case.k:
+            dx = np.concatenate([np.zeros(case.n), rng.normal(0.0, 1.0, case.k)])
+            assert fips.taylortest(model, Vector(x, state), Vector(dx, state))
+
+
+@pytest.mark.parametrize("kind", KINDS)
+@pytest.mark.parametrize("sparse", [False, True])
+@pytest.mark.parametrize("permuted", [False, True])
+def test_the_jacobian_passes_the_taylor_test(kind, sparse, permuted):
+    """With a bias block, dense or sparse H, labels in another order, and two cells without a reference."""
+    case = Case.random(kind, 0, 8, 12, k=2, zeros=2 if kind == "lognormal" else 0)
+    check_taylor(case, sparse=sparse, permuted=permuted)
+
+
+@pytest.mark.parametrize("kind", KINDS)
+def test_the_jacobian_keeps_the_form_of_H(kind):
+    """A sparse H gives a sparse Jacobian with H's pattern, a dense one a dense Jacobian."""
+    case = Case.random(kind, 1, 6, 9, k=1)
+    case.H[case.H < 0.6] = 0.0
+    state, _ = case.spaces()
+    x = Vector(case.x_0, state)
+    sparse = case.model(case.operator(sparse=True)).jacobian(x)
+    assert isinstance(sparse.data, SparseOperator)
+    assert sparse.data.matrix.nnz == np.count_nonzero(case.H)
+    assert isinstance(case.model().jacobian(x).data, DenseOperator)
+
+
+# ---------------------------------------------------------------------------
+# 2. Hand-written models
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize("kind", KINDS)
+@pytest.mark.parametrize("permuted", [False, True])
+def test_the_values_and_the_jacobian_are_the_formulas(kind, permuted):
+    """F(x) and J(x), labeled in the model's order, are the NumPy formulas on the problem's."""
+    case = Case.random(kind, 2, 7, 10, k=2, zeros=1 if kind == "lognormal" else 0)
+    model = case.model(case.operator(permuted=permuted))
+    state, obs = case.spaces()
+    x = case.x_0 + np.random.default_rng(3).normal(0.0, 0.6, len(case.x_0))
+    modeled = model(Vector(x, state)).align(obs).values
+    np.testing.assert_allclose(modeled, case.F(x), rtol=1e-13)
+    J = model.jacobian(Vector(x, state)).align(obs, state).dense()
+    np.testing.assert_allclose(J, case.J(x), rtol=1e-13, atol=1e-15)
+    flux = model.transform(Vector(x, state))
+    assert flux.space is state
+    np.testing.assert_allclose(flux["flux"].values, case.T(x[: case.n]), rtol=1e-13)
+    np.testing.assert_array_equal(flux["bias"].values, x[case.n :])
+
+
+def test_softplus_is_computed_without_overflow():
+    """Far above the scale the flux is u and the slope 1, far below it about s e^{u/s} and 0, with no warning."""
+    case = Case.random("softplus", 3, 4, 5, scale=0.5)
+    state, _ = case.spaces()
+    model = case.model()
+    u = np.array([1e4, 40.0, -40.0, -1e4])
+    flux = model.transform(Vector(u, state)).values
+    np.testing.assert_allclose(flux[:2], u[:2], rtol=1e-15)
+    np.testing.assert_allclose(flux[2], 0.5 * np.exp(-80.0), rtol=1e-12)
+    assert flux[3] == 0.0
+    slopes = (model.jacobian(Vector(u, state)).dense() / case.H)[0]
+    assert slopes[0] == 1.0 and slopes[3] == 0.0
+
+
+def test_lognormal_is_the_guides_scaled_inventory():
+    """On the guide's problem, LognormalForward and ScaledInventory give the same model, Jacobian, mode, iterations and posterior."""
+    rng = np.random.default_rng(0)
+    cells = Space({"flux": pd.RangeIndex(10, name="cell")})
+    observed = Space({"ch4": pd.RangeIndex(25, name="obs_id")})
+    footprint = rng.uniform(0.0, 1.0, (25, 10)) * (rng.uniform(size=(25, 10)) < 0.4)
+    H = Operator(footprint, observed, cells)
+    inventory = Vector(rng.uniform(0.5, 2.0, 10), cells)
+
+    def build(model, obs):
+        return fips.Problem(
+            prior=Vector(np.zeros(10), cells),
+            prior_cov=fips.Exponential("cell", 2.0).with_std(0.5),
+            obs=obs,
+            obs_cov=fips.Independent().with_std(0.2),
+            forward=model,
+            offset=1900.0,
+        )
+
+    guide = ScaledInventory(H, inventory)
+    ours = LognormalForward(H, inventory)
+    _, obs = build(guide, Vector(np.zeros(25), observed)).simulate(rng=1)
+    x = Vector(rng.normal(0.0, 0.5, 10), cells)
+    np.testing.assert_allclose(ours(x).values, guide(x).values, rtol=1e-15)
+    np.testing.assert_allclose(
+        ours.jacobian(x).dense(), guide.jacobian(x).dense(), rtol=1e-15
+    )
+    a = fips.solve(build(guide, obs), "gauss_newton")
+    b = fips.solve(build(ours, obs), "gauss_newton")
+    assert len(a.iterations) == len(b.iterations)
+    np.testing.assert_allclose(
+        b.estimate.values, a.estimate.values, rtol=1e-13, atol=1e-15
+    )
+    np.testing.assert_allclose(b.variances.values, a.variances.values, rtol=1e-12)
+    assert b.chi2 == pytest.approx(a.chi2, rel=1e-13)
+    draws = b.sample(200, rng=2)
+    np.testing.assert_allclose(
+        ours.transform(draws).to_numpy(),
+        inventory.values[:, None] * np.exp(draws.to_numpy()),
+        rtol=1e-15,
+    )
+
+
+# ---------------------------------------------------------------------------
+# 3. The mode against an independent optimizer
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.usefixtures("analytic_form")
+@pytest.mark.parametrize("kind", KINDS)
+@pytest.mark.parametrize("n, m", SIZES)
+@pytest.mark.parametrize("k", [0, 2])
+def test_the_mode_is_the_minimizer_of_the_cost(kind, n, m, k):
+    """The estimate minimizes the cost, with and without a bias block, in both analytic forms."""
+    case = Case.random(kind, 4, n, m, k=k)
+    post = fips.solve(case.problem(), "gauss_newton", **TIGHT)
+    assert len(post.iterations) > 3  # nonlinear enough to iterate
+    assert_mode(post, case)
+
+
+@pytest.mark.parametrize("kind", KINDS)
+def test_a_sparse_permuted_operator_gives_the_same_mode(kind):
+    """H held sparse, its labels in another order, gives the mode of the dense one."""
+    case = Case.random(kind, 5, 7, 11, k=2)
+    dense = fips.solve(case.problem(), "gauss_newton", **TIGHT)
+    other = fips.solve(
+        case.problem(sparse=True, permuted=True), "gauss_newton", **TIGHT
+    )
+    np.testing.assert_allclose(other.estimate.values, dense.estimate.values, atol=1e-12)
+    assert_mode(other, case)
+
+
+@pytest.mark.usefixtures("analytic_form")
+@pytest.mark.parametrize("kind", KINDS)
+def test_a_kronecker_prior_gives_the_mode_of_the_dense_prior(kind):
+    """A Kronecker prior on the flux block, beside a bias block, through the iterations."""
+    rng = np.random.default_rng(7)
+    times, cells = 3, 4
+    T = np.exp(-np.abs(np.subtract.outer(np.arange(times), np.arange(times))) / 2.0)
+    X = np.exp(-np.abs(np.subtract.outer(np.arange(cells), np.arange(cells))) / 1.5)
+    std = rng.uniform(0.3, 0.6, times * cells) * (2.0 if kind == "softplus" else 1.0)
+    kron = KroneckerOperator([T, X], std=std)
+    case = Case.random(kind, 7, times * cells, 9, k=2, S_0=kron.dense())
+    case.flux_index = pd.MultiIndex.from_product(
+        [range(times), range(cells)], names=["time", "cell"]
+    )
+    state, _ = case.spaces()
+    prior_cov = Covariance.block_diag(
+        flux=Covariance(kron, Space({"flux": state.select("flux")})),
+        bias=Covariance(np.eye(2) * 0.3**2, Space({"bias": state.select("bias")})),
+    )
+    post = fips.solve(case.problem(prior_cov=prior_cov), "gauss_newton", **TIGHT)
+    assert isinstance(post._linear.prior_cov.data.blocks[0], KroneckerOperator)
+    assert_mode(post, case)
+
+
+def test_a_cell_without_a_reference_changes_nothing_else():
+    """Its flux stays zero, and whatever prior its u has, the other cells' mode is the same (the guide's claim)."""
+    case = Case.random("lognormal", 8, 8, 12, zeros=2)
+    zero = case.reference == 0
+    post = fips.solve(case.problem(), "gauss_newton", **TIGHT)
+    assert_mode(post, case)
+    model = post.problem.forward
+    np.testing.assert_array_equal(model.transform(post.estimate).values[zero], 0.0)
+    # no prior spread at those cells (as prior_for gives them): the same mode elsewhere
+    s = np.sqrt(np.diag(case.S_0)).copy()
+    C = case.S_0 / np.outer(s, s)
+    s[zero] = 0.0
+    other = dataclasses.replace(case, S_0=np.outer(s, s) * C)
+    again = fips.solve(other.problem(), "gauss_newton", **TIGHT)
+    np.testing.assert_allclose(
+        again.estimate.values[~zero], post.estimate.values[~zero], rtol=1e-9, atol=1e-11
+    )
+
+
+# ---------------------------------------------------------------------------
+# 4. The prior correspondence
+# ---------------------------------------------------------------------------
+
+
+def one_cell_model(kind: str, n: int, reference=1.0, scale: float = 1.0):
+    """A model on `n` cells and one observation of them all."""
+    state = Space({"flux": pd.RangeIndex(n, name="cell")})
+    H = Operator(
+        np.ones((1, n)), Space({"conc": pd.RangeIndex(1, name="obs_id")}), state
+    )
+    if kind == "lognormal":
+        return LognormalForward(H, reference)
+    return SoftplusForward(H, scale=scale)
+
+
+def check_prior_by_draws(
+    model, mean: np.ndarray, std: np.ndarray, draws: int = 400_000
+) -> None:
+    """Draws of u from prior_for, through the transform, have the mean and the standard deviation asked for, within 4.5 Monte Carlo standard errors."""
+    mu, sigma = model.prior_for(
+        pd.Series(mean, index=model.H.cols.select("flux")),
+        pd.Series(std, index=model.H.cols.select("flux")),
+    )
+    u = mu.values[:, None] + sigma.values[:, None] * np.random.default_rng(
+        0
+    ).standard_normal((len(mean), draws))
+    flux = model.transform(pd.DataFrame(u, index=model.cols.index)).to_numpy()
+    se_mean = flux.std(axis=1) / np.sqrt(draws)
+    assert np.all(np.abs(flux.mean(axis=1) - mean) < 4.5 * se_mean), (
+        flux.mean(axis=1),
+        mean,
+    )
+    # the standard error of a standard deviation, from the fourth moment
+    dev = flux - flux.mean(axis=1, keepdims=True)
+    m4, var = (dev**4).mean(axis=1), (dev**2).mean(axis=1)
+    se_std = np.sqrt((m4 - var**2) / draws) / (2 * np.sqrt(var))
+    assert np.all(np.abs(flux.std(axis=1) - std) < 4.5 * se_std), (
+        flux.std(axis=1),
+        std,
+    )
+
+
+def test_the_lognormal_prior_has_the_flux_moments_exactly():
+    """Mu and sigma give the mean and the standard deviation in closed form, and by draws; the reference need not be the mean."""
+    reference = np.array([1.0, 2.0, 0.5, 3.0])
+    mean = np.array([1.0, 2.0, 1.0, 0.3])
+    std = np.array([0.3, 2.0, 0.1, 0.6])
+    model = one_cell_model(
+        "lognormal", 4, pd.Series(reference, index=pd.RangeIndex(4, name="cell"))
+    )
+    mu, sigma = model.prior_for(
+        pd.Series(mean, index=pd.RangeIndex(4, name="cell")),
+        pd.Series(std, index=pd.RangeIndex(4, name="cell")),
+    )
+    m, v = mu.values, sigma.values**2
+    np.testing.assert_allclose(reference * np.exp(m + v / 2), mean, rtol=1e-14)
+    np.testing.assert_allclose(
+        reference * np.exp(m + v / 2) * np.sqrt(np.expm1(v)), std, rtol=1e-13
+    )
+    check_prior_by_draws(model, mean, std)
+
+
+def test_the_lognormal_flux_correlation_is_the_formula():
+    """Two cells whose u correlate by rho: their fluxes correlate by (e^{rho s_i s_j} - 1) / sqrt((e^{s_i^2} - 1)(e^{s_j^2} - 1)), as prior_for says."""
+    s_i, s_j, rho = 1.0, 0.6, 0.5
+    L = cholesky(
+        np.array([[s_i**2, rho * s_i * s_j], [rho * s_i * s_j, s_j**2]]), lower=True
+    )
+    u = L @ np.random.default_rng(1).standard_normal((2, 2_000_000))
+    flux = np.exp(u)
+    measured = np.corrcoef(flux)[0, 1]
+    formula = np.expm1(rho * s_i * s_j) / np.sqrt(np.expm1(s_i**2) * np.expm1(s_j**2))
+    assert abs(measured - formula) < 0.01
+    assert formula < rho
+
+
+def softplus_moments_by_quad(a: float, b: float) -> tuple[float, float]:
+    """The mean and standard deviation of log(1 + e^t), t ~ N(a, b^2), by SciPy's adaptive quad in the standard normal variable, split at the bend."""
+    bend = -a / b
+    points = [bend] if -14 < bend < 14 else None
+
+    def f(x):
+        return np.logaddexp(0.0, a + b * x)
+
+    mean = integrate.quad(
+        lambda x: f(x) * norm.pdf(x),
+        -14,
+        14,
+        points=points,
+        limit=500,
+        epsabs=0,
+        epsrel=1e-12,
+    )[0]
+    var = integrate.quad(
+        lambda x: (f(x) - mean) ** 2 * norm.pdf(x),
+        -14,
+        14,
+        points=points,
+        limit=500,
+        epsabs=0,
+        epsrel=1e-12,
+    )[0]
+    return mean, np.sqrt(var)
+
+
+@pytest.mark.parametrize(
+    "a, b",
+    [
+        (-20.0, 0.5),
+        (-3.0, 2.0),
+        (-1.0, 0.3),
+        (0.0, 1.0),
+        (1.5, 4.0),
+        (5.0, 0.2),
+        (30.0, 8.0),
+        (0.0, 1e3),
+        (-10.0, 30.0),
+    ],
+)
+def test_the_softplus_moments_are_quads(a, b):
+    """The quadrature behind prior_for gives SciPy's quad to 1e-11, far below the bend, across it, far above it and far wider than it."""
+    mean, std, _ = _softplus_moments(np.array([a]), np.array([b]))
+    ref_mean, ref_std = softplus_moments_by_quad(a, b)
+    assert mean[0] == pytest.approx(ref_mean, rel=1e-11)
+    assert std[0] == pytest.approx(ref_std, rel=1e-11)
+
+
+def test_the_softplus_moments_derivatives_are_their_differences():
+    """The derivatives Newton's method steps with are the moments' central differences."""
+    a = np.array([-3.0, 0.0, 2.0, 50.0])
+    b = np.array([0.7, 2.0, 5.0, 3.0])
+    _, _, J = _softplus_moments(a, b)
+    h = 1e-6
+    for k, (da, db) in enumerate([(h, 0.0), (0.0, h)]):
+        up = _softplus_moments(a + da, b + db)
+        down = _softplus_moments(a - da, b - db)
+        for moment in (0, 1):
+            np.testing.assert_allclose(
+                J[:, moment, k],
+                (up[moment] - down[moment]) / (2 * h),
+                rtol=1e-6,
+                atol=1e-9,
+            )
+
+
+@pytest.mark.parametrize("scale", [1.0, 0.05, 30.0])
+def test_the_softplus_prior_has_the_flux_moments(scale):
+    """By quad to 1e-9 and by draws, from far below the scale to far above it, narrow to wide, at three scales."""
+    mean = scale * np.array([0.01, 0.3, 1.0, 1.0, 3.0, 50.0, 0.5])
+    std = mean * np.array([0.5, 2.0, 1.0, 0.1, 0.8, 0.2, 10.0])
+    model = one_cell_model("softplus", len(mean), scale=scale)
+    labels = model.H.cols.select("flux")
+    mu, sigma = model.prior_for(
+        pd.Series(mean, index=labels), pd.Series(std, index=labels)
+    )
+    for j in range(len(mean)):
+        ref_mean, ref_std = softplus_moments_by_quad(
+            mu.values[j] / scale, sigma.values[j] / scale
+        )
+        assert ref_mean * scale == pytest.approx(mean[j], rel=1e-9)
+        assert ref_std * scale == pytest.approx(std[j], rel=1e-9)
+    check_prior_by_draws(model, mean, std)
+
+
+def test_the_softplus_prior_matches_over_many_orders_of_magnitude():
+    """Means from 1e-6 to 1e6 scales and standard deviations from 1e-6 to 1e3 times the mean, each matched to 1e-9 by its own quadrature."""
+    rng = np.random.default_rng(0)
+    mean = 10 ** rng.uniform(-6, 6, 400)
+    std = mean * 10 ** rng.uniform(-6, 3, 400)
+    model = one_cell_model("softplus", 400)
+    labels = model.H.cols.select("flux")
+    mu, sigma = model.prior_for(
+        pd.Series(mean, index=labels), pd.Series(std, index=labels)
+    )
+    got_mean, got_std, _ = _softplus_moments(mu.values, sigma.values)
+    np.testing.assert_allclose(got_mean, mean, rtol=1e-9)
+    np.testing.assert_allclose(got_std, std, rtol=1e-9)
+
+
+def test_far_above_the_scale_the_softplus_prior_is_the_flux_prior():
+    """Where the flux is far above the bend, u's prior is the flux's; with no spread, the u whose flux is the mean."""
+    model = one_cell_model("softplus", 3, scale=0.1)
+    labels = model.H.cols.select("flux")
+    mu, sigma = model.prior_for(
+        pd.Series([100.0, 50.0, 0.2], index=labels),
+        pd.Series([1.0, 2.0, 0.0], index=labels),
+    )
+    np.testing.assert_allclose(mu.values[:2], [100.0, 50.0], rtol=1e-12)
+    np.testing.assert_allclose(sigma.values, [1.0, 2.0, 0.0], rtol=1e-12)
+    assert 0.1 * np.logaddexp(0.0, mu.values[2] / 0.1) == pytest.approx(0.2, rel=1e-14)
+
+
+def test_prior_for_on_labels_in_another_order_and_with_a_bias_block():
+    """Mean and std are matched by label, and the answer is on the block's labels, in the model's order."""
+    case = Case.random("lognormal", 9, 5, 7, k=2, zeros=1)
+    model = case.model(case.operator(permuted=True))
+    labels = model.H.cols.select("flux")
+    order = pd.Index([f"c{j}" for j in range(5)]).get_indexer(labels)
+    mean = pd.Series(
+        case.reference * 1.5, index=pd.Index([f"c{j}" for j in range(5)], name="cell")
+    )
+    mu, sigma = model.prior_for(mean[::-1], 0.5 * mean)
+    assert mu.space.names == ("flux",)
+    assert mu.space.select("flux").equals(labels)
+    r = case.reference[order]
+    expected = np.where(r > 0, np.log(1.5) - np.log1p(0.25) / 2, 0.0)
+    np.testing.assert_allclose(mu.values, expected, rtol=1e-14, atol=1e-15)
+    np.testing.assert_allclose(
+        sigma.values, np.where(r > 0, np.sqrt(np.log1p(0.25)), 0.0), rtol=1e-14
+    )
+
+
+# ---------------------------------------------------------------------------
+# 5. Its own world
+# ---------------------------------------------------------------------------
+
+
+def own_world(kind: str, seed: int, n: int = 8, m: int = 20, std: float = 0.2):
+    """A problem whose prior is prior_for's (each cell's flux of mean 1 to 2, standard deviation `std` times it for lognormal), its model and the posterior of one draw's data."""
+    rng = np.random.default_rng(seed)
+    state = Space({"flux": pd.Index([f"c{j}" for j in range(n)], name="cell")})
+    obs = Space({"conc": pd.RangeIndex(m, name="obs_id")})
+    H = Operator(rng.uniform(0.0, 1.0, (m, n)), obs, state)
+    mean = pd.Series(rng.uniform(1.0, 2.0, n), index=state.select("flux"))
+    if kind == "lognormal":
+        model = LognormalForward(H, mean)
+        cv = np.sqrt(np.expm1(std**2))
+    else:
+        model = SoftplusForward(H, scale=0.5)
+        cv = std
+    mu, sigma = model.prior_for(mean, cv * mean)
+    i = np.arange(n)
+    C = np.exp(-np.abs(i[:, None] - i[None, :]) / 2.0)
+    s = sigma.values
+
+    def problem(z: np.ndarray) -> fips.Problem:
+        return fips.Problem(
+            prior=mu,
+            prior_cov=Covariance(s[:, None] * C * s[None, :], state),
+            obs=Vector(z, obs),
+            obs_cov=fips.Independent().with_std(0.3),
+            forward=model,
+        )
+
+    _, z = problem(np.zeros(m)).simulate(rng=rng)
+    return model, fips.solve(problem(z.values), "gauss_newton")
+
+
+def coverage_of_cells_and_total(model, post, trials: int, draws: int, level: float):
+    """
+    The fraction of trials whose interval at `level` holds the truth: each cell's (from trials, whose intervals in u are the flux's, the transform being monotone) and the total flux's (the quantiles of draws of the Gaussian at the mode, through the transform).
+
+    Returns each with its Monte Carlo standard error.
+    """
+    rng = np.random.default_rng(10)
+    z = ndtri(0.5 + level / 2)
+    table = post.trials(n=trials, rng=11)
+    inside = (table["estimate"] - table["truth"]).abs() <= z * table["posterior_std"]
+    by_trial = inside.groupby(level="trial").mean()
+    totals_covered = []
+    world = post.problem
+    for _ in range(trials):
+        truth, obs = world.simulate(rng=rng)
+        trial = post.with_data(obs)
+        flux = model.transform(trial.sample(draws, rng=rng)).sum()
+        low, high = np.quantile(flux, [0.5 - level / 2, 0.5 + level / 2])
+        total = model.transform(truth).values.sum()
+        totals_covered.append(low <= total <= high)
+    cells = (float(by_trial.mean()), float(by_trial.std() / np.sqrt(trials)))
+    p = float(np.mean(totals_covered))
+    return cells, (p, np.sqrt(level * (1 - level) / trials))
+
+
+@pytest.mark.parametrize("kind", KINDS)
+def test_in_a_narrow_prior_the_intervals_of_cells_and_totals_cover(kind):
+    """
+    A truth drawn from prior_for's prior and data through the model: the Gaussian at the mode covers near its level, for the cells and for the total read from draws.
+
+    The flux's prior standard deviation is a fifth of its mean (lognormal:
+    a log standard deviation of 0.2). Measured (seed 0, 200 trials, 300 draws
+    each), at 90% and 68%: lognormal cells 0.897 and 0.696 (Monte Carlo
+    standard errors 0.009, 0.012), totals 0.865 and 0.625 (0.021, 0.033);
+    softplus cells 0.898 and 0.694, totals 0.905 and 0.680. The lognormal
+    totals already lean low: the user guide measures that in wider priors.
+    """
+    model, post = own_world(kind, 0)
+    for level in (0.9, 0.68):
+        (cells, cells_se), (total, total_se) = coverage_of_cells_and_total(
+            model, post, 200, 300, level
+        )
+        assert abs(cells - level) < 4 * cells_se + 0.01, (level, cells, cells_se)
+        assert abs(total - level) < 4 * total_se + 0.01, (level, total, total_se)
+
+
+# ---------------------------------------------------------------------------
+# 6. Wrong variants fail the tests above
+# ---------------------------------------------------------------------------
+
+
+def without_the_reference(monkeypatch):
+    """The lognormal's Jacobian scaled by e^u, without the reference."""
+    monkeypatch.setattr(LognormalForward, "_slopes", lambda self, u: np.exp(u))
+
+
+def the_median_convention(monkeypatch):
+    """prior_for with the reference as the median: mu = log(m / r), without -sigma^2 / 2."""
+    real = LognormalForward.prior_for
+
+    def wrong(self, mean, std):
+        mu, sigma = real(self, mean, std)
+        return mu + sigma * sigma / 2, sigma
+
+    monkeypatch.setattr(LognormalForward, "prior_for", wrong)
+
+
+def softplus_slope_as_exp(monkeypatch):
+    """Softplus's Jacobian with e^{u/s} in place of the logistic function."""
+    monkeypatch.setattr(
+        SoftplusForward, "_slopes", lambda self, u: np.exp(u / self.scale)
+    )
+
+
+@pytest.mark.parametrize(
+    "mutant, kind, check",
+    [
+        (without_the_reference, "lognormal", "taylor"),
+        (without_the_reference, "lognormal", "mode"),
+        (the_median_convention, "lognormal", "prior"),
+        (softplus_slope_as_exp, "softplus", "taylor"),
+        (softplus_slope_as_exp, "softplus", "mode"),
+    ],
+)
+def test_a_wrong_variant_fails(monkeypatch, mutant, kind, check):
+    """Each wrong variant fails a check the right one passes."""
+    mutant(monkeypatch)
+    case = Case.random(kind, 4, 6, 15, k=2)
+    with pytest.raises((AssertionError, RuntimeError)):
+        if check == "taylor":
+            check_taylor(case)
+        elif check == "mode":
+            assert_mode(fips.solve(case.problem(), "gauss_newton", **TIGHT), case)
+        else:
+            model = one_cell_model(
+                kind, 3, pd.Series([1.0, 2.0, 0.5], index=pd.RangeIndex(3, name="cell"))
+            )
+            check_prior_by_draws(
+                model, np.array([1.0, 2.0, 0.5]), np.array([0.5, 1.0, 0.25])
+            )
+
+
+# ---------------------------------------------------------------------------
+# 7. Refusals and pickling
+# ---------------------------------------------------------------------------
+
+
+def two_block_operator() -> Operator:
+    """H on a flux block of three cells and a bias block of one site."""
+    state = Space(
+        {
+            "flux": pd.Index(["a", "b", "c"], name="cell"),
+            "bias": pd.Index(["s"], name="site"),
+        }
+    )
+    return Operator(
+        np.ones((2, 4)), Space({"conc": pd.RangeIndex(2, name="obs_id")}), state
+    )
+
+
+@pytest.mark.parametrize(
+    "reference, error, match",
+    [
+        (
+            pd.Series([1.0, 2.0], index=pd.Index(["a", "b"], name="cell")),
+            ValueError,
+            r"labels of block 'flux' missing.*'c'",
+        ),
+        (
+            pd.Series(
+                [1.0, 2.0, 3.0, 4.0], index=pd.Index(["a", "b", "c", "d"], name="cell")
+            ),
+            ValueError,
+            r"only in reference.*'d'",
+        ),
+        (
+            pd.Series([1.0, -2.0, 3.0], index=pd.Index(["a", "b", "c"], name="cell")),
+            ValueError,
+            r"negative at 1 labels.*'b'",
+        ),
+        (
+            pd.Series([1.0, np.inf, 3.0], index=pd.Index(["a", "b", "c"], name="cell")),
+            ValueError,
+            r"not finite.*'b'",
+        ),
+        (np.ones(3), TypeError, "array has no labels"),
+        (
+            pd.Series([1.0, 2.0, 3.0], index=pd.Index(["a", "b", "c"], name="site")),
+            ValueError,
+            "levels",
+        ),
+    ],
+)
+def test_a_wrong_reference_is_refused(reference, error, match):
+    """A reference on other labels, negative, not finite or without labels raises, naming what is wrong."""
+    with pytest.raises(error, match=match):
+        LognormalForward(two_block_operator(), reference, block="flux")
+
+
+def test_the_block_and_the_operator_are_checked():
+    """An unknown block, a missing block= with several blocks, and an H that is not an Operator."""
+    H = two_block_operator()
+    with pytest.raises(KeyError, match=r"No block named 'fluxes'"):
+        SoftplusForward(H, block="fluxes")
+    with pytest.raises(ValueError, match=r"block="):
+        LognormalForward(H, 1.0)
+    with pytest.raises(TypeError, match="Operator"):
+        SoftplusForward(H.dense(), block="flux")
+    model = SoftplusForward(H, block="flux")
+    assert model.block == "flux" and model.H is H
+    assert "SoftplusForward(block: 'flux'" in repr(model)
+
+
+@pytest.mark.parametrize("scale", [0.0, -1.0, np.inf, "big"])
+def test_a_wrong_scale_is_refused(scale):
+    """The scale is a positive, finite number."""
+    with pytest.raises(ValueError, match="scale"):
+        SoftplusForward(two_block_operator(), block="flux", scale=scale)
+
+
+def test_an_overflow_is_refused_naming_the_cell():
+    """A u whose flux overflows raises a ValueError naming its label (which Gauss-Newton's step halving catches); a cell with no reference never overflows."""
+    H = two_block_operator()
+    model = LognormalForward(
+        H, pd.Series([1.0, 0.0, 1.0], index=H.cols.select("flux")), block="flux"
+    )
+    x = Vector([1e3, 1e4, 0.0, 0.0], H.cols)
+    with pytest.raises(ValueError, match=r"overflows at 1 labels.*'a'"):
+        model(x)
+    with pytest.raises(ValueError, match="overflows"):
+        model.jacobian(x)
+    np.testing.assert_array_equal(
+        model.transform(Vector([0.0, 1e4, 0.0, 2.0], H.cols)).values,
+        [1.0, 0.0, 1.0, 2.0],
+    )
+
+
+def test_transform_takes_states_and_draws_by_label():
+    """A state in another order comes back in its order; draws with rows shuffled are transformed row by row; anything else is refused."""
+    H = two_block_operator()
+    model = LognormalForward(
+        H, pd.Series([1.0, 2.0, 3.0], index=H.cols.select("flux")), block="flux"
+    )
+    x = Vector([0.0, np.log(2.0), 1.0, 5.0], H.cols)
+    order = [3, 1, 0, 2]
+    shuffled = Vector(x.values[order], Space.from_index(H.cols.index[order]))
+    np.testing.assert_allclose(
+        model.transform(shuffled).align(H.cols).values, [1.0, 4.0, 3 * np.e, 5.0]
+    )
+    draws = pd.DataFrame(np.outer(x.values, [1.0, 0.0]), index=H.cols.index).iloc[
+        [2, 3, 0, 1]
+    ]
+    flux = model.transform(draws)
+    assert flux.index.equals(draws.index)
+    np.testing.assert_allclose(
+        flux.loc[H.cols.index].to_numpy()[:, 1], [1.0, 2.0, 3.0, 0.0]
+    )
+    with pytest.raises(TypeError, match="Vector.*DataFrame"):
+        model.transform(x.values)
+    with pytest.raises(ValueError, match="draws' rows"):
+        model.transform(draws.iloc[1:])
+
+
+def test_prior_for_refuses_what_it_cannot_make():
+    """A lognormal flux is never zero nor below zero, and is zero where the reference is; a softplus flux is above zero."""
+    H = two_block_operator()
+    labels = H.cols.select("flux")
+    lognormal = LognormalForward(
+        H, pd.Series([1.0, 0.0, 1.0], index=labels), block="flux"
+    )
+    with pytest.raises(
+        ValueError, match=r"mean is not zero at 1 labels where the reference is.*'b'"
+    ):
+        lognormal.prior_for(1.0, pd.Series([1.0, 0.0, 1.0], index=labels))
+    with pytest.raises(ValueError, match=r"std is not zero.*'b'"):
+        lognormal.prior_for(pd.Series([1.0, 0.0, 1.0], index=labels), 1.0)
+    with pytest.raises(ValueError, match=r"mean is zero at 1 labels.*'c'"):
+        lognormal.prior_for(pd.Series([1.0, 0.0, 0.0], index=labels), 0.0)
+    with pytest.raises(ValueError, match=r"std is negative"):
+        lognormal.prior_for(
+            pd.Series([1.0, 0.0, 1.0], index=labels),
+            pd.Series([1.0, 0.0, -1.0], index=labels),
+        )
+    with pytest.raises(TypeError, match="array"):
+        lognormal.prior_for(np.ones(3), 1.0)
+    softplus = SoftplusForward(H, block="flux")
+    with pytest.raises(ValueError, match=r"not positive at 1 labels.*'a'"):
+        softplus.prior_for(pd.Series([0.0, 1.0, 1.0], index=labels), 1.0)
+
+
+@pytest.mark.parametrize("kind", KINDS)
+def test_a_problem_and_its_posterior_pickle(kind):
+    """The problem with each model and its posterior pickle, and give the same answers."""
+    case = Case.random(kind, 16, 5, 8, k=1)
+    problem = case.problem(sparse=True)
+    post = fips.solve(problem, "gauss_newton")
+    again = pickle.loads(pickle.dumps(post))
+    np.testing.assert_array_equal(again.estimate.values, post.estimate.values)
+    np.testing.assert_array_equal(again.variances.values, post.variances.values)
+    model, loaded = post.problem.forward, again.problem.forward
+    np.testing.assert_array_equal(
+        loaded.transform(again.estimate).values, model.transform(post.estimate).values
+    )
+    obs = Vector(case.z + 0.1, problem.obs.space)
+    np.testing.assert_array_equal(
+        again.with_data(obs).estimate.values, post.with_data(obs).estimate.values
+    )
+    copy = pickle.loads(pickle.dumps(problem))
+    np.testing.assert_array_equal(
+        copy.predict(copy.prior).values, problem.predict(problem.prior).values
+    )
+
+
+@pytest.mark.parametrize("kind", KINDS)
+def test_an_aggregated_problem_keeps_the_model(kind):
+    """Problem.aggregate follows the model with the aggregation, and solves."""
+    case = Case.random(kind, 17, 5, 8)
+    problem = case.problem()
+    W = fips.aggregate.sum(
+        problem.obs.space,
+        by=pd.Series(np.arange(8) // 2, index=problem.obs.space.select("conc")),
+    )
+    post = fips.solve(problem.aggregate(W), "gauss_newton")
+    assert len(post.modeled_obs) == 4
