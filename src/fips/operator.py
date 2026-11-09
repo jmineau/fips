@@ -786,6 +786,86 @@ class Operator:
             "op.data @ x to compute by position."
         )
 
+    def __call__(self, x: Vector) -> Vector:
+        r"""
+        Return the observations the state `x` models: the product :math:`H x`.
+
+        An operator is a forward model whose Jacobian is constant: as a
+        problem's ``forward``, ``H(x)`` is what a
+        :class:`~fips.ForwardModel`'s ``F(x)`` is, the same as ``H @ x``.
+        Code that reads a problem's forward through ``forward(x)`` and
+        ``forward.jacobian(x)`` (:class:`fips.forward.Forward`) holds for a
+        linear problem and for a model.
+
+        Parameters
+        ----------
+        x : Vector
+            A vector with exactly the labels of :attr:`cols`, in any order.
+
+        Returns
+        -------
+        Vector
+            :math:`H x`, on :attr:`rows`.
+
+        Raises
+        ------
+        TypeError
+            If `x` is not a Vector.
+        ValueError
+            If its labels are not exactly those of :attr:`cols`.
+
+        See Also
+        --------
+        __matmul__ : The same product, ``H @ x``.
+        jacobian : The operator itself, the Jacobian of :math:`H x`.
+
+        Examples
+        --------
+        >>> import numpy as np
+        >>> import pandas as pd
+        >>> import fips
+        >>> state = fips.Space({"flux": pd.Index(["a", "b"], name="cell")})
+        >>> observed = fips.Space({"co2": pd.RangeIndex(2, name="obs_id")})
+        >>> H = fips.Operator(np.array([[1.0, 2.0], [0.0, 1.0]]), observed, state)
+        >>> x = fips.Vector([1.0, 1.0], state)
+        >>> H(x).values
+        array([3., 1.])
+        >>> H.jacobian(x) is H
+        True
+        """
+        if not isinstance(x, Vector):
+            raise TypeError(
+                f"An Operator as a forward model takes a Vector on its columns, "
+                f"not {type(x).__name__}."
+            )
+        return Vector(self._data @ x.align(self._cols).values, self._rows)
+
+    def jacobian(self, x: Vector) -> "Operator":
+        r"""
+        Return the Jacobian of :math:`H x` at `x`: the operator itself, at every state.
+
+        A linear forward model's derivatives do not depend on the state, so
+        `x` is not read. With :meth:`__call__`, this makes an operator a
+        forward model (:class:`fips.forward.Forward`), as a
+        :class:`~fips.ForwardModel` is.
+
+        Parameters
+        ----------
+        x : Vector
+            A state; not read.
+
+        Returns
+        -------
+        Operator
+            This operator.
+
+        See Also
+        --------
+        __call__ : The product :math:`H x`.
+        fips.ForwardModel.jacobian : A model's Jacobian, which depends on the state.
+        """
+        return self
+
     def _combine(self, other: "Operator", sign: float) -> "Operator":
         """Return ``self + sign * other``, with `other` aligned to this operator's labels."""
         if not isinstance(other, Operator):

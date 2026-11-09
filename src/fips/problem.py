@@ -28,7 +28,13 @@ import numpy as np
 import pandas as pd
 
 from fips.covariance import Covariance, CovarianceModel
-from fips.forward import ForwardModel, _Aggregated, _differentiated, _evaluated
+from fips.forward import (
+    Forward,
+    ForwardModel,
+    _Aggregated,
+    _differentiated,
+    _evaluated,
+)
 from fips.linalg import LinearOperator
 from fips.operator import Operator
 from fips.space import Space
@@ -177,14 +183,14 @@ class Problem:
         prior_cov: "Covariance | CovarianceModel",
         obs: Vector,
         obs_cov: "Covariance | CovarianceModel",
-        forward: "Operator | ForwardModel",
+        forward: Forward,
         offset: "Vector | float | None" = None,
     ):
         self._prior = _vector(prior, "prior")
         self._obs = _vector(obs, "obs")
         state, observed = self._prior.space, self._obs.space
 
-        self._forward: Operator | ForwardModel
+        self._forward: Forward
         if isinstance(forward, Operator):
             self._forward = Operator(
                 forward._on(
@@ -261,8 +267,16 @@ class Problem:
         return self._obs_cov
 
     @property
-    def forward(self) -> "Operator | ForwardModel":
-        """The forward operator, :math:`H` (rows on the observations, columns on the prior), or the forward model, :math:`F`, as given."""
+    def forward(self) -> Forward:
+        """
+        The forward map: the forward operator, :math:`H` (rows on the observations, columns on the prior), or the forward model, :math:`F`, as given.
+
+        Either is a forward model (:class:`fips.forward.Forward`):
+        ``problem.forward(x)`` is :math:`H x` or :math:`F(x)`, and
+        ``problem.forward.jacobian(x)`` is :math:`H` or :math:`J(x)`. An
+        operator also multiplies, ``problem.forward @ x``, and gives its
+        matrix (``.data``, ``.dense()``).
+        """
         return self._forward
 
     @property
@@ -760,6 +774,7 @@ class Problem:
                 form @ forward.data, rows, self._prior.space, name=forward.name
             )
         else:
+            assert isinstance(forward, ForwardModel)  # the other kind Problem takes
             forward = _Aggregated(forward, Operator(form, rows, observed, name=W.name))
         return type(self)(
             prior=self._prior,

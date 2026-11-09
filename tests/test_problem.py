@@ -574,6 +574,26 @@ class Quadratic(fips.ForwardModel):
         return scale @ self.H
 
 
+@pytest.mark.parametrize("kind", ["operator", "model"])
+def test_a_problems_forward_is_a_forward_model_of_either_kind(kind):
+    """``problem.forward(x)`` and ``problem.forward.jacobian(x)`` mean the same for an operator and a model, so one piece of code reads both."""
+    H = Operator(H_VALUES, OBS, STATE)
+    problem = Problem(
+        **_inputs(forward=H if kind == "operator" else Quadratic(H), offset=0.5)
+    )
+    x = TestForwardModel.X
+    forward = problem.forward
+    np.testing.assert_allclose(
+        (forward(x) + 0.5).align(OBS).values, problem.predict(x).values
+    )
+    np.testing.assert_allclose(
+        forward.jacobian(x).dense(), problem.linearized(x).forward.dense()
+    )
+    if kind == "operator":
+        assert forward.jacobian(x) is forward
+        np.testing.assert_array_equal((forward @ x).values, forward(x).values)
+
+
 class TestForwardModel:
     """A problem whose forward is a model: its labels are checked, and predict, simulate, linearized and aggregate run it."""
 
