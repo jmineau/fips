@@ -59,12 +59,13 @@ class TestSolve:
             "bounded",
             "gauss_newton",
             "ensemble",
+            "variational",
         ]
 
     def test_unknown_method_lists_the_methods(self):
         with pytest.raises(
             ValueError,
-            match=r"Unknown method 'analytc'; the methods are: analytic, bounded, gauss_newton, ensemble\.",
+            match=r"Unknown method 'analytc'; the methods are: analytic, bounded, gauss_newton, ensemble, variational\.",
         ):
             fips.solve(_problem(), "analytc")
 

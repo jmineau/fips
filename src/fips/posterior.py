@@ -53,7 +53,7 @@ class Solution(Protocol):
     observations (``problem.obs``). The posterior labels them, and computes
     each one once.
 
-    Eight members are optional, and a posterior whose solution lacks one says
+    Nine members are optional, and a posterior whose solution lacks one says
     so when it is asked for the feature (or, for ``linearized``, uses its own
     problem):
 
@@ -72,9 +72,13 @@ class Solution(Protocol):
       `rng` (:meth:`Posterior.sample`).
     - ``at_bound() -> np.ndarray``: which state elements sit on a bound at the
       estimate, booleans (``n``; :attr:`Posterior.at_bound`).
-    - ``iterations() -> tuple[np.ndarray, np.ndarray]``: for each iteration of
-      an iterated method, the size of its step and the cost after it
+    - ``iterations() -> tuple[np.ndarray, ...]``: for each iteration of
+      an iterated method, the size of its step and the cost after it, and
+      for a method that solves by conjugate gradients their iterations
       (:attr:`Posterior.iterations`).
+    - ``spectrum() -> np.ndarray``: for a low-rank posterior, the eigenvalues
+      of the prior-preconditioned Hessian it keeps, from the largest
+      (:attr:`Posterior.eigenvalues`).
     - ``linearized() -> Problem``: for a method that solves a problem with a
       forward model, the linear problem its gain is of (the problem
       linearized where its last solve was made). The averaging kernel and
@@ -106,7 +110,11 @@ class Solution(Protocol):
     its estimate. The ``"ensemble"`` method's estimate is the mean of its
     updated members; its variances, covariances and gain are those of the
     members, and its DOFS, information content and chi-squared the analytic
-    formulas with the members' covariance of the modeled observations.
+    formulas with the members' covariance of the modeled observations. The
+    ``"variational"`` method's estimate is the solution of conjugate
+    gradients (the mode, with a forward model); its variances, covariances,
+    gain, DOFS and information content are those of its low-rank posterior,
+    exact when its rank reaches the problem's.
     Such answers are estimates or approximations, and
     :meth:`Posterior.trials` measures how good they are.
 
@@ -694,13 +702,18 @@ class Posterior:
         number of state elements. ``cost`` is the cost at the step's estimate,
         :math:`\gamma` times the data misfit plus the state misfit; the last is
         :attr:`chi2`. Near the mode, Gauss-Newton's ``d2`` falls by orders of
-        magnitude a step, and the cost settles.
+        magnitude a step, and the cost settles. ``"variational"`` takes the
+        same steps for a forward model (one for a linear problem), each solved
+        by conjugate gradients, and adds their number, ``cg_iterations`` (each
+        a product with :math:`H` and one with :math:`H^T`).
 
         Returns
         -------
         pandas.DataFrame
             One row per step, indexed by ``iteration`` (from 1), with the
-            columns ``d2`` and ``cost``; its length is the number of steps.
+            columns ``d2`` and ``cost`` (and ``cg_iterations`` for a method
+            that solves by conjugate gradients); its length is the number of
+            steps.
 
         Raises
         ------
@@ -751,10 +764,60 @@ class Posterior:
         array([1.496, 3.003])
         """
         history = self._optional("iterations", "the steps of an iterated solve")
-        d2, cost = history()
+        d2, cost, *cg = history()
+        columns = {
+            "d2": np.asarray(d2, dtype=float),
+            "cost": np.asarray(cost, dtype=float),
+        }
+        if cg:
+            columns["cg_iterations"] = np.asarray(cg[0], dtype=int)
         return pd.DataFrame(
-            {"d2": np.asarray(d2, dtype=float), "cost": np.asarray(cost, dtype=float)},
-            index=pd.RangeIndex(1, len(d2) + 1, name="iteration"),
+            columns, index=pd.RangeIndex(1, len(d2) + 1, name="iteration")
+        )
+
+    @cached_property
+    def eigenvalues(self) -> pd.DataFrame:
+        r"""
+        The eigenvalues a low-rank posterior keeps, and the DOFS each adds: whether its rank was enough.
+
+        ``"variational"`` keeps the ``rank`` leading eigenpairs of the
+        prior-preconditioned Hessian, :math:`\tilde{H} = \gamma R^T H^T
+        S_z^{-1} H R` (:math:`S_0 = R R^T`). Along the eigenvector of
+        :math:`\tilde\lambda_j` the data remove the share
+        :math:`\tilde\lambda_j / (1 + \tilde\lambda_j)` of the prior's
+        variance, which is that pair's DOFS; the directions left out keep
+        the prior's variance. When the last pairs add little to DOFS (their
+        eigenvalues well below 1), ``rank`` held what the data inform; when
+        they add much, a larger ``rank`` lowers the variances further.
+
+        Returns
+        -------
+        pandas.DataFrame
+            One row per pair, indexed by ``pair`` (from 1, the largest
+            eigenvalue first), with the columns ``eigenvalue``
+            (:math:`\tilde\lambda_j`), ``dofs`` (its share) and
+            ``cumulative_dofs``, whose last value is :attr:`dofs`.
+
+        Raises
+        ------
+        TypeError
+            If the method keeps no low-rank posterior (its solution has no
+            ``spectrum``), as for the analytic method.
+
+        See Also
+        --------
+        fips.methods.variational.VariationalOptions : ``rank``.
+        """
+        spectrum = self._optional("spectrum", "the eigenvalues of a low-rank posterior")
+        eigenvalues = np.asarray(spectrum(), dtype=float)
+        dofs = eigenvalues / (1.0 + eigenvalues)
+        return pd.DataFrame(
+            {
+                "eigenvalue": eigenvalues,
+                "dofs": dofs,
+                "cumulative_dofs": np.cumsum(dofs),
+            },
+            index=pd.RangeIndex(1, len(eigenvalues) + 1, name="pair"),
         )
 
     def _aggregation(self, W: Operator) -> LinearOperator:
