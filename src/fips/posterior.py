@@ -95,7 +95,8 @@ class Solution(Protocol):
     estimate, exactly or as Laplace's approximation, so that its
     :meth:`chi2` and :meth:`information` give the evidence, says so with
     ``evidence_is_laplace = True``; without it, a posterior has no
-    :attr:`~Posterior.log_evidence`.
+    :attr:`~Posterior.log_evidence`, and the solution's ``no_evidence``, a
+    sentence, if it has one, says why.
 
     A method whose posterior is not Gaussian in closed form answers each
     question as its docstring says. The bounded method's estimate is the mode;
@@ -2126,11 +2127,22 @@ class Posterior:
         ``"bounded"`` method gives it only with no finite bound, when its
         posterior is the analytic one.
 
+        For the ``"variational"`` method, it is the same formula with the
+        information content of its low-rank posterior: exact for a linear
+        problem at full rank. Below the problem's rank it leaves out
+        :math:`\tfrac{1}{2} \sum \ln(1 + \tilde\lambda_j)` of the pairs not
+        kept, so it is biased high, more for a larger prior; a maximum over
+        the settings would choose too large a prior. It is refused when the
+        last pair kept still has an eigenvalue above 1 (the solve warns of
+        it): raise ``rank`` until the last eigenvalues of :attr:`eigenvalues`
+        are well below 1.
+
         Raises
         ------
         TypeError
             If the method's posterior is not the Gaussian at its estimate (a
-            bounded posterior with a finite bound).
+            bounded posterior with a finite bound, an ensemble), or its rank
+            left out pairs that still hold information (``"variational"``).
         numpy.linalg.LinAlgError
             If :math:`S_z` is not positive-definite.
 
@@ -2184,17 +2196,12 @@ class Posterior:
         [-5.609, -4.624, -3.5]
         """
         if not getattr(self._solution, "evidence_is_laplace", False):
+            reason = getattr(self._solution, "no_evidence", None) or (
+                "its posterior is not the Gaussian at its estimate, so the "
+                "chi-squared and the information content do not give it."
+            )
             raise TypeError(
-                "The method that solved this problem gives no log evidence "
-                f"({type(self._solution).__name__}'s evidence_is_laplace is "
-                "false or unset): its posterior is not the Gaussian at its "
-                "estimate, so the chi-squared and the information content do not "
-                "give it. With bounds on the state, the exact evidence is the "
-                "Gaussian one times the probability of the bounds under the "
-                "posterior over their probability under the prior, both "
-                "orthant probabilities of a correlated Gaussian, which fips does "
-                "not compute. The evidence of the problem without bounds is "
-                "fips.solve(problem).log_evidence."
+                f"The method that solved this problem gives no log evidence: {reason}"
             )
         m, gamma = len(self._problem.obs), self._gamma
         return -0.5 * float(

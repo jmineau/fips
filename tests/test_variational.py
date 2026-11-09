@@ -304,6 +304,65 @@ def test_rank_too_small_warns(caplog):
     assert "Raise rank" not in caplog.text
 
 
+def test_the_evidence_below_the_problems_rank_is_refused():
+    """
+    Below the problem's rank the low-rank evidence leaves out half the log of ``1 +`` each eigenvalue not kept, so it is biased high: refused while the last pair kept has an eigenvalue above 1, exact at full rank.
+
+    Six cells seen by nine observations (exact log evidence -10.005): rank 1
+    gave -4.60, rank 3 -7.86, rank 5 -9.60, each high by half the log of ``1
+    +`` the eigenvalues left out, and a sweep of the prior scale peaked at 2
+    or 4 instead of 1.
+    """
+    rng = np.random.default_rng(9)
+    state = fips.Space({"flux": pd.RangeIndex(6, name="cell")})
+    observed = fips.Space({"co2": pd.RangeIndex(9, name="obs_id")})
+    problem = fips.Problem(
+        prior=fips.Vector(np.zeros(6), state),
+        prior_cov=fips.Independent().with_std(1.0),
+        obs=fips.Vector(rng.normal(size=9), observed),
+        obs_cov=fips.Independent().with_std(0.3),
+        forward=fips.Operator(rng.normal(size=(9, 6)), observed, state),
+    )
+    exact = fips.solve(problem).log_evidence
+    full = fips.solve(problem, "variational", rank=6, tol=TIGHT)
+    assert full.log_evidence == pytest.approx(exact, rel=1e-10)
+    for rank in (1, 3, 5):
+        low = fips.solve(problem, "variational", rank=rank, tol=TIGHT)
+        tilde = full.eigenvalues["eigenvalue"].to_numpy()
+        assert low.eigenvalues["eigenvalue"].iloc[-1] > 1.0
+        # what it would be: high by the information of the pairs left out
+        biased = exact + 0.5 * np.log1p(tilde[rank:]).sum()
+        terms = low._solution.information() - full._solution.information()
+        assert terms == pytest.approx(-0.5 * np.log1p(tilde[rank:]).sum(), rel=1e-8)
+        assert biased > exact + 0.1
+        with pytest.raises(TypeError, match="biased high.*Raise rank"):
+            _ = low.log_evidence
+    # at a gamma where the last pair kept holds little, the evidence is given
+    small = fips.solve(problem, "variational", rank=5, tol=TIGHT, gamma=1e-4)
+    assert small.eigenvalues["eigenvalue"].iloc[-1] < 1.0
+    assert np.isfinite(small.log_evidence)
+
+
+def test_a_rank_deficient_forward_at_full_rank_neither_warns_nor_refuses(caplog):
+    """Every pair computed (``rank`` at least ``min(m, r)``) and those at roundoff dropped: the low-rank posterior is the exact one, so the solve does not warn and the evidence is the analytic one."""
+    rng = np.random.default_rng(0)
+    state = fips.Space({"flux": pd.RangeIndex(6, name="cell")})
+    observed = fips.Space({"co2": pd.RangeIndex(9, name="obs_id")})
+    H = 5.0 * rng.normal(size=(9, 2)) @ rng.normal(size=(2, 6))  # rank 2
+    problem = fips.Problem(
+        prior=fips.Vector(np.zeros(6), state),
+        prior_cov=fips.Independent().with_std(1.0),
+        obs=fips.Vector(rng.normal(size=9), observed),
+        obs_cov=fips.Independent().with_std(0.1),
+        forward=fips.Operator(H, observed, state),
+    )
+    with caplog.at_level("WARNING", logger="fips.methods.variational"):
+        post = fips.solve(problem, "variational", rank=100, tol=TIGHT)
+    assert len(post.eigenvalues) == 2 and post.eigenvalues["eigenvalue"].min() > 1e3
+    assert "Raise rank" not in caplog.text
+    assert post.log_evidence == pytest.approx(fips.solve(problem).log_evidence)
+
+
 def test_draws_are_the_low_rank_posterior():
     """Draws at a rank below the problem's have the low-rank posterior's mean and covariance (Monte Carlo error)."""
     problem = build(seed=10)
@@ -375,7 +434,8 @@ def test_no_n_by_n_matrix_is_formed(prior, monkeypatch):
     tracemalloc.start()
     try:
         post = fips.solve(problem, "variational", rank=20)
-        _ = post.variances, post.dofs, post.dofs_per_element, post.log_evidence
+        # the log evidence's terms: at this rank the evidence itself is refused
+        _ = post.variances, post.dofs, post.dofs_per_element, post.information_content
         _ = post.cov(W), post.sample(3, rng=0), post.eigenvalues, post.chi2_tests()
         _, peak = tracemalloc.get_traced_memory()
     finally:

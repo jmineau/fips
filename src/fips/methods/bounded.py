@@ -45,7 +45,7 @@ import math
 import numbers
 from collections.abc import Iterator, Mapping
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, ClassVar
 
 import numpy as np
 from numpy.linalg import LinAlgError
@@ -880,6 +880,15 @@ class Bounded:
         at a mode on the bound would not give it.
         """
         return not (np.isfinite(self.lower).any() or np.isfinite(self.upper).any())
+
+    no_evidence: ClassVar[str] = (
+        "with bounds on the state, the exact evidence is the Gaussian one "
+        "times the probability of the bounds under the posterior over their "
+        "probability under the prior, both orthant probabilities of a "
+        "correlated Gaussian, which fips does not compute. The evidence of the "
+        "problem without bounds is fips.solve(problem).log_evidence."
+    )
+    """Why a bounded posterior gives no log evidence."""
 
     def sample(self, N: int, rng: np.random.Generator) -> np.ndarray:
         """Return `N` new draws of the truncated posterior (``n x N``): a chain from the mode, its first ``burn_in`` left out."""
