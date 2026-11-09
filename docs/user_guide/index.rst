@@ -11,7 +11,8 @@ holds the state to bounds (a flux that cannot be negative); :doc:`nonlinear`
 solves a problem whose forward is a model that is not linear; :doc:`positive`
 keeps a flux positive by solving for its logarithm or its softplus; and
 :doc:`comparison` runs the analytic, bounded, lognormal and softplus methods
-on one problem, to choose among them.
+on one problem, to choose among them; :doc:`variational` solves a problem too
+large to factor, from products alone.
 
 .. contents:: On this page
    :local:
@@ -358,7 +359,9 @@ methods), and its one option is the regularization factor ``gamma``.
 ``"bounded"`` holds the state to bounds (:doc:`bounds`), ``"gauss_newton"``
 finds the mode of a problem whose forward is a model that is not linear
 (:doc:`nonlinear`), and ``"ensemble"`` updates members drawn from the prior
-with the runs of a model that has no Jacobian (:doc:`ensemble`). An unknown method or option raises with the names it knows.
+with the runs of a model that has no Jacobian (:doc:`ensemble`), and
+``"variational"`` solves a problem too large to factor by conjugate gradients,
+with a low-rank posterior (:doc:`variational`). An unknown method or option raises with the names it knows.
 
 The analytic method factors the problem once, in one of two forms that give
 the same posterior. The whitened form works in the observations' size: it
@@ -715,4 +718,5 @@ when it is read.
    positive
    comparison
    ensemble
+   variational
    examples/index
