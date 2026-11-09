@@ -66,8 +66,8 @@ linearized problem, the Gaussian at the mode: the analytic posterior of the
 problem linearized at the last iterate, one step of :math:`d^2 <
 \mathrm{tol} \cdot n` from the mode. Its estimate is the mode, and its gain,
 DOFS and information content are those of the Gaussian at the mode. Its
-variances, the covariance of aggregates and its draws are those of the
-posterior itself, :math:`p(x \mid z) \propto e^{-\chi^2(x)/2}`, drawn by
+variances, the covariance of aggregates, the mean, the intervals and its draws
+are those of the posterior itself, :math:`p(x \mid z) \propto e^{-\chi^2(x)/2}`, drawn by
 Hamiltonian Monte Carlo (``_Sampler``): the Gaussian at the mode is its mass
 and its exactly solved part, the rest of the cost its kicks, and a Metropolis
 test keeps the chain exact. Where the model bends over the posterior's
@@ -230,8 +230,9 @@ class GaussNewton:
     - the estimate is the mode, not the mean, and is not linear in the
       observations (no ``estimate_is_mean``, no ``estimate_is_linear``);
     - the variances and the covariance of aggregates are those of the kept
-      draws of the posterior (``draws`` of them, after a ``burn_in`` that
-      tunes the sampler, from ``seed``), about their mean, and
+      draws of the posterior (:meth:`kept`: ``draws`` of them, after a
+      ``burn_in`` that tunes the sampler, from ``seed``), about their mean,
+      and so are the posterior's mean and intervals (the draws' quantiles);
       :meth:`sample` draws more;
     - the gain, DOFS and the information content are those of the Gaussian
       at the mode (``analytic``'s); the posterior reads the averaging kernel
@@ -312,8 +313,8 @@ class GaussNewton:
                 )
         return tuning
 
-    def _kept(self) -> np.ndarray:
-        """Return the kept draws (``n x draws``), drawn from the seed at the first call, with a warning if they mix too slowly for their variances."""
+    def kept(self) -> np.ndarray:
+        """Return the kept draws (``n x draws``), which the variances, the covariances, the mean and the intervals are read from: drawn from the seed at the first call, with a warning if they mix too slowly for their variances."""
         kept = self.__dict__.get("_draws")
         if kept is None:
             draws = self.options.draws
@@ -352,13 +353,13 @@ class GaussNewton:
 
     def variances(self) -> np.ndarray:
         """Return the variances of the kept draws."""
-        kept = self._kept()
+        kept = self.kept()
         centered = kept - kept.mean(axis=1, keepdims=True)
         return np.einsum("ij,ij->i", centered, centered) / (kept.shape[1] - 1)
 
     def cov(self, W: LinearOperator | None = None) -> np.ndarray:
         """Return the covariance of the kept draws, ``n x n``, or of their aggregates ``W x``, ``k x k``."""
-        kept = self._kept()
+        kept = self.kept()
         Y = kept if W is None else np.asarray(W @ kept, dtype=float)
         centered = Y - Y.mean(axis=1, keepdims=True)
         S = centered @ centered.T / (Y.shape[1] - 1)

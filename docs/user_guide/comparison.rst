@@ -204,14 +204,13 @@ cells and each cell. Every method's posterior is read the same way, from
   over the cells divided by that of the inventory: 1 is no better than the
   prior.
 
-This is :meth:`~fips.Posterior.trials`' loop, written out, for two reasons.
+This is :meth:`~fips.Posterior.trials`' loop, written out, because
 ``trials`` compares totals of the state, and a transform's state is
-:math:`u`: a total of the flux is not a linear function of :math:`u`. And
-``trials`` reads an interval as the estimate plus or minus 1.96 of the
-posterior's standard deviations, which for a skewed posterior is not the
-posterior's interval, and for ``"bounded"`` is centered on the mode, which is
-not the mean (below, the bounded method's own world shows what that costs).
-Every world draws from one generator and every method's draws from another,
+:math:`u`: a total of the flux is not a linear function of :math:`u`. Its
+intervals are read the same way: ``trials``' ``lower`` and ``upper`` are the
+quantiles of each trial's draws for a sampled posterior (``"bounded"``, a
+transform) and the estimate plus or minus 1.96 standard deviations for the
+analytic one, which is that posterior's interval. Every world draws from one generator and every method's draws from another,
 so the four methods get the same data, trial for trial:
 
 .. ipython:: python
@@ -292,15 +291,16 @@ model's cell error is the lowest; in its own world each method's intervals
 hold the truth about as often as they claim. The rest is within the noise.
 
 For the analytic posterior, ``trials`` on the same seed (the same data) gives
-the bias of the estimate's total and the coverage of the estimate plus or
-minus 1.96 standard deviations: the loop's, within the noise of its 100 draws:
+the bias of the estimate's total and the coverage of its interval, the
+estimate plus or minus 1.96 standard deviations: the loop's, within the noise
+of its 100 draws:
 
 .. ipython:: python
 
    W = fips.Operator(np.ones((1, side * side)), fips.Space({"total": pd.Index(["valley"], name="what")}), state)
    table = solve("analytic", start).trials(lognormal_world, trials, rng=1, W=W)
    error = (table["estimate"] - table["truth"]) / inventory.values.sum()
-   round(float(error.mean()), 3), round(float((error.abs() <= 1.96 * table["posterior_std"] / inventory.values.sum()).mean()), 3)
+   round(float(error.mean()), 3), round(float(((table["lower"] <= table["truth"]) & (table["truth"] <= table["upper"])).mean()), 3)
 
 
 At the Salt Lake Valley's size
@@ -458,10 +458,13 @@ low (five standard errors), its cells' intervals are a little too wide
 
 **Which interval to read.** Every interval here is a quantile of the draws.
 For the analytic posterior that is the estimate plus or minus 1.96 standard
-deviations, so ``trials`` reads it right. For the others, and for any total
-of a transform's flux, take the quantiles of :meth:`~fips.Posterior.sample`:
-read the other way, the bounded method's cells covered 0.90 in its own world
-(0.945 from quantiles), and its total 0.025 (0.955).
+deviations; for a sampled one, ``"bounded"`` or a transform, the quantiles of
+its draws, which is how :meth:`~fips.Posterior.uncertainty` and
+:meth:`~fips.Posterior.trials` give its ``lower`` and ``upper``. Read as the
+mode plus or minus 1.96 standard deviations instead, the bounded method's
+cells covered 0.90 in its own world (0.945 from quantiles), and its total
+0.025 (0.955). A total of a transform's flux is not a total of its state:
+take it from :meth:`~fips.Posterior.sample`.
 
 These numbers are for one problem: a prior of 131% correlated over two cells,
 these footprints and this noise. Another inversion's own trials, at its own

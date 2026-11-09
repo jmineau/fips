@@ -49,7 +49,8 @@ class UnavailableError(AttributeError, TypeError):
     A :class:`Posterior` has every member for every method except those that
     need more of the method than a :class:`Solution` gives (its docstring
     lists them, and which method has which): :attr:`~Posterior.mean` of a
-    method whose estimate is a mode, :attr:`~Posterior.at_bound` of one with
+    method whose estimate is a mode it keeps no draws of,
+    :attr:`~Posterior.at_bound` of one with
     no bounds, :attr:`~Posterior.log_evidence` of one whose posterior is not
     the Gaussian at its estimate, and so on. It is an :class:`AttributeError`,
     so ``hasattr(post, "at_bound")`` is False and generic code can ask a
@@ -78,7 +79,7 @@ class UnavailableError(AttributeError, TypeError):
     >>> bounded = fips.solve(problem, "bounded", lower=0.0)
     >>> hasattr(analytic, "at_bound"), hasattr(bounded, "at_bound")
     (False, True)
-    >>> hasattr(bounded, "mean")  # the bounded estimate is a mode
+    >>> hasattr(bounded, "log_evidence")  # no exact evidence with bounds
     False
     """
 
@@ -94,7 +95,7 @@ class Solution(Protocol):
     observations (``problem.obs``). The posterior labels them, and computes
     each one once.
 
-    Nine members are optional, and a posterior whose solution lacks one says
+    Ten members are optional, and a posterior whose solution lacks one says
     so when it is asked for the feature (or, for ``linearized``, uses its own
     problem):
 
@@ -111,6 +112,11 @@ class Solution(Protocol):
     - ``sample(N, rng) -> np.ndarray``: ``N`` draws from the posterior, one per
       column (``n x N``), made with the :class:`numpy.random.Generator`
       `rng` (:meth:`Posterior.sample`).
+    - ``kept() -> np.ndarray``: for a sampled posterior, the draws it keeps
+      (``n x N``) and reads its variances and covariances from. The posterior
+      reads its :attr:`~Posterior.mean` and its intervals (the ``lower`` and
+      ``upper`` of :meth:`Posterior.uncertainty` and :meth:`Posterior.trials`)
+      from them too: their mean and their quantiles.
     - ``at_bound() -> np.ndarray``: which state elements sit on a bound at the
       estimate, booleans (``n``; :attr:`Posterior.at_bound`).
     - ``iterations() -> tuple[np.ndarray, ...]``: for each iteration of
@@ -127,8 +133,9 @@ class Solution(Protocol):
       it, from the posterior's problem.
 
     And a solution whose :meth:`estimate` is the posterior mean says so with a
-    class attribute ``estimate_is_mean = True``; without it, a posterior has
-    no :attr:`~Posterior.mean`. One whose estimate is linear in the
+    class attribute ``estimate_is_mean = True``; without it, a posterior's
+    :attr:`~Posterior.mean` is that of the ``kept`` draws, and without those
+    it has none. One whose estimate is linear in the
     observations, :math:`\hat{x} = x_0 + K (z - H x_0 - c)` with the
     :math:`K` of :meth:`gain` whatever the values of :math:`z`, says so with
     ``estimate_is_linear = True``; without it, a posterior has no
@@ -141,14 +148,14 @@ class Solution(Protocol):
 
     A method whose posterior is not Gaussian in closed form answers each
     question as its docstring says. The bounded method's estimate is the mode;
-    its variances and covariances are those of draws of its posterior (a
-    Gaussian truncated to the bounds); its gain, DOFS and information content
-    are those of the Gaussian at the mode, with the elements on a bound held
-    there; and its chi-squared terms are those of the mode. The
-    ``"gauss_newton"`` method's estimate is the mode; its variances and
-    covariances are those of draws of its posterior; its gain, DOFS and
-    information content those of the Gaussian of the problem linearized where
-    its last step was made; and its chi-squared terms those of the model at
+    its mean, variances, covariances and intervals are those of the draws it
+    keeps of its posterior (a Gaussian truncated to the bounds); its gain,
+    DOFS and information content are those of the Gaussian at the mode, with
+    the elements on a bound held there; and its chi-squared terms are those
+    of the mode. The ``"gauss_newton"`` method's estimate is the mode; its
+    mean, variances, covariances and intervals are those of the draws it
+    keeps of its posterior; its gain, DOFS and information content those of
+    the Gaussian of the problem linearized where its last step was made; and its chi-squared terms those of the model at
     its estimate. The ``"ensemble"`` method's estimate is the mean of its
     updated members; its variances, covariances and gain are those of the
     members, and its DOFS, information content and chi-squared the analytic
@@ -398,6 +405,24 @@ def _largest_variance(Xt: np.ndarray | None, cov: LinearOperator) -> np.ndarray:
     return (np.abs(Xt).T @ sigma) ** 2
 
 
+def _checked_level(level: float) -> float:
+    """
+    Return `level`, the probability of an interval, as a float.
+
+    Raises
+    ------
+    ValueError
+        If it is not a number strictly between 0 and 1.
+    """
+    if (
+        isinstance(level, bool)
+        or not isinstance(level, numbers.Real)
+        or not 0.0 < level < 1.0
+    ):
+        raise ValueError(f"level is a probability between 0 and 1, got {level!r}.")
+    return float(level)
+
+
 _VARIANCE_RTOL = float(np.sqrt(np.finfo(float).eps))
 """How far below zero a variance may be and be roundoff: 1.5e-8 of its scale (:func:`_std`)."""
 
@@ -456,9 +481,10 @@ class Posterior:
     **A posterior's members belong to the kind of answer, not the method.**
     There are three kinds: a *Gaussian* posterior (``estimate`` is its mean
     and the covariance is known), a *sampled* one (``estimate`` is the mode,
-    and the spread is that of draws) and a *low-rank* one (the covariance is
-    kept as ``rank`` directions). A member its kind cannot give raises
-    :class:`~fips.UnavailableError` (for a property, ``hasattr`` is then False):
+    and the mean, the spread and the intervals are those of draws) and a
+    *low-rank* one (the covariance is kept as ``rank`` directions). A member
+    its kind cannot give raises :class:`~fips.UnavailableError` (for a
+    property, ``hasattr`` is then False):
 
     .. list-table::
        :header-rows: 1
@@ -486,8 +512,12 @@ class Posterior:
          - the prior's less ``rank`` pairs: too large below the problem's rank
        * - ``mean``
          - yes
-         - raises
+         - the kept draws' mean
          - yes (linear problem); raises (forward model)
+       * - ``lower``, ``upper`` (``uncertainty``, ``trials``)
+         - the estimate plus or minus ``z`` standard deviations
+         - the kept draws' quantiles
+         - the estimate plus or minus ``z`` standard deviations
        * - ``with_gamma``
          - yes
          - ``"bounded"``: yes; ``"gauss_newton"``: raises (its linearization
@@ -665,31 +695,66 @@ class Posterior:
         values = self._solution.estimate()
         return Vector(values, self._problem.prior.space, name="estimate")
 
-    @property
+    @cached_property
     def mean(self) -> Vector:
         """
-        The posterior mean, :attr:`estimate` itself.
+        The posterior mean, on the prior's space.
 
-        A Gaussian posterior (the analytic method, an ensemble) has its mean
-        as its estimate, and so does the variational method's on a linear
-        problem. A sampled posterior (``"bounded"`` with a finite bound,
-        ``"gauss_newton"``) and the variational method's with a forward model
-        give a mode, which is not the mean: they raise
-        :class:`~fips.UnavailableError`. The tiers are in the table on
-        :class:`Posterior`.
+        A Gaussian posterior (the analytic method, an ensemble, the variational
+        method's on a linear problem) has its mean as its estimate: this is
+        :attr:`estimate` itself. A sampled posterior (``"bounded"`` with a
+        finite bound, ``"gauss_newton"`` with a forward model) has the mode as
+        its estimate, and its mean is that of the draws it keeps, the center of
+        the spread its :attr:`variances` measure (a Monte Carlo estimate, as
+        they are). The mean of aggregates is ``W @ post.mean``. The variational
+        method's posterior with a forward model gives a mode and keeps no
+        draws: it raises :class:`~fips.UnavailableError`. The tiers are in the
+        table on :class:`Posterior`.
 
         Raises
         ------
         UnavailableError
-            If the method's estimate is not the posterior mean (an
-            :class:`AttributeError`).
+            If the method's estimate is not the posterior mean and it keeps no
+            draws (an :class:`AttributeError`).
+
+        See Also
+        --------
+        estimate : The point estimate: the mean, or the mode.
+        uncertainty : The standard deviations and intervals, of the state or of aggregates.
+
+        Examples
+        --------
+        A bounded posterior whose analytic estimate is below the bound: the
+        mode is on the bound, and the mean of the draws inside the box.
+
+        >>> import numpy as np
+        >>> import pandas as pd
+        >>> import fips
+        >>> state = fips.Space({"flux": pd.Index(["a", "b"], name="cell")})
+        >>> observed = fips.Space({"co2": pd.RangeIndex(1, name="obs_id")})
+        >>> problem = fips.Problem(
+        ...     prior=fips.Vector([0.5, 0.5], state),
+        ...     prior_cov=fips.Independent().with_std(0.5),
+        ...     obs=fips.Vector([-0.4], observed),
+        ...     obs_cov=fips.Independent().with_std(0.1),
+        ...     forward=fips.Operator(np.ones((1, 2)), observed, state),
+        ... )
+        >>> post = fips.solve(problem, "bounded", lower=0.0)
+        >>> post.estimate.values.tolist()  # the mode
+        [0.0, 0.0]
+        >>> post.mean.values.round(2).tolist()  # the draws' mean
+        [0.02, 0.02]
         """
-        if not getattr(self._solution, "estimate_is_mean", False):
+        if getattr(self._solution, "estimate_is_mean", False):
+            return self.estimate
+        kept = getattr(self._solution, "kept", None)
+        if kept is None:
             raise UnavailableError(
                 "The method that solved this problem does not give the posterior "
-                "mean; its point estimate is `estimate`."
+                "mean (its estimate is a mode, and it keeps no draws); its point "
+                "estimate is `estimate`."
             )
-        return self.estimate
+        return Vector(kept().mean(axis=1), self._problem.prior.space, name="mean")
 
     @cached_property
     def variances(self) -> Vector:
@@ -703,7 +768,7 @@ class Posterior:
         default 2000 a standard deviation good to about 1.5% away from the
         bounds and to about 12% for an element whose analytic estimate is one
         to four standard deviations outside its bound; the solve warns past
-        10%), about their mean, not about the mode; the ``"gauss_newton"`` method those
+        10%), about their mean (:attr:`mean`), not about the mode; the ``"gauss_newton"`` method those
         of its kept draws of the posterior of its forward model, the same
         way; the ``"ensemble"`` method those of its updated members.
 
@@ -713,6 +778,35 @@ class Posterior:
         """
         values = self._solution.variances()
         return Vector(values, self._problem.prior.space, name="variance")
+
+    def _interval(
+        self, W_form: LinearOperator | None, std: np.ndarray, level: float
+    ) -> tuple[np.ndarray, np.ndarray]:
+        r"""
+        Return the lower and upper ends of the central interval of probability `level` of each state element or each row of `W_form`.
+
+        A sampled posterior's (one whose solution keeps draws, ``kept``) is
+        from the ``(1 - level) / 2`` quantile of its draws (aggregated first,
+        :math:`W x`) to their ``(1 + level) / 2`` one: the posterior's own
+        interval, wherever it is skewed or piled against a bound. Any other's
+        is the estimate plus or minus :math:`z` times `std`, its standard
+        deviations, with :math:`z` the normal's ``(1 + level) / 2`` quantile
+        (1.96 for 0.95): the Gaussian's interval.
+        """
+        kept = getattr(self._solution, "kept", None)
+        if kept is not None:
+            draws = kept()
+            if W_form is not None:
+                draws = np.asarray(W_form @ draws, dtype=float)
+            lower, upper = np.quantile(
+                draws, [(1.0 - level) / 2.0, (1.0 + level) / 2.0], axis=1
+            )
+            return lower, upper
+        center = self.estimate.values
+        if W_form is not None:
+            center = np.asarray(W_form @ center, dtype=float)
+        half = float(ndtri((1.0 + level) / 2.0)) * std
+        return center - half, center + half
 
     @cached_property
     def at_bound(self) -> pd.Series:
@@ -1046,9 +1140,11 @@ class Posterior:
         Wt = None if W_form is None else W_form._transpose().dense()  # n x k
         return _largest_variance(Wt, self._problem.prior_cov.data)
 
-    def uncertainty(self, W: Operator | None = None) -> pd.DataFrame:
+    def uncertainty(
+        self, W: Operator | None = None, level: float = 0.95
+    ) -> pd.DataFrame:
         r"""
-        Return the prior and posterior uncertainty of each aggregate, and how much the observations reduce it.
+        Return the prior and posterior uncertainty of each aggregate, how much the observations reduce it, and its posterior interval.
 
         The standard deviation of each row of :math:`W x` before the
         observations, :math:`\sqrt{\operatorname{diag} W S_0 W^T}`, and after,
@@ -1060,11 +1156,22 @@ class Posterior:
         with ``C`` the weights of the rows of ``W``), whose uncertainty
         includes the covariance between the totals.
 
+        The interval is the posterior's own. For a sampled posterior
+        (``"bounded"`` with a finite bound, ``"gauss_newton"`` with a forward
+        model) it is from quantiles of the kept draws of :math:`W x`, which
+        need not be centered on the estimate (the mode) nor symmetric about
+        it; for any other it is the estimate plus or minus :math:`z`
+        posterior standard deviations, with :math:`z` the normal's quantile
+        (1.96 for 0.95).
+
         Parameters
         ----------
         W : Operator, optional
             An aggregation, as :meth:`cov` takes it: one row per aggregate. By
             default, one row per state element.
+        level : float, default 0.95
+            The probability of the interval, between 0 and 1: from the
+            ``(1 - level) / 2`` quantile to the ``(1 + level) / 2`` one.
 
         Returns
         -------
@@ -1072,18 +1179,21 @@ class Posterior:
             One row per aggregate, on the aggregation's rows (or the state's
             labels): ``prior_std``, ``posterior_std`` and ``reduction``,
             :math:`1 - \sigma_{posterior} / \sigma_{prior}` (a fraction; NaN
-            where the prior standard deviation is 0). A variance below zero by
-            more than roundoff, which only a prior error or model-data
-            mismatch covariance that is not positive semidefinite can give,
-            makes its standard deviation and the reduction NaN, with a
-            logged warning (as in :meth:`recovery`).
+            where the prior standard deviation is 0), then ``lower`` and
+            ``upper``, the ends of the posterior interval of probability
+            `level`. A variance below zero by more than roundoff, which only
+            a prior error or model-data mismatch covariance that is not
+            positive semidefinite can give, makes its standard deviation, the
+            reduction and a Gaussian interval NaN, with a logged warning (as
+            in :meth:`recovery`).
 
         Raises
         ------
         TypeError
             If `W` is not an Operator.
         ValueError
-            If the columns of `W` do not have exactly the state's labels.
+            If the columns of `W` do not have exactly the state's labels, or
+            `level` is not between 0 and 1.
 
         See Also
         --------
@@ -1119,42 +1229,47 @@ class Posterior:
         >>> post = fips.solve(problem)
         >>> monthly = fips.aggregate.sum(prior.space, by="month")
         >>> post.uncertainty(monthly).droplevel("block").round(3).reset_index()
-           month  prior_std  posterior_std  reduction
-        0      1      0.707          0.528      0.253
-        1      2      0.707          0.586      0.171
+           month  prior_std  posterior_std  reduction  lower  upper
+        0      1      0.707          0.528      0.253 -0.370  1.701
+        1      2      0.707          0.586      0.171 -0.225  2.072
         >>> change = fips.Operator(
         ...     np.array([[-1.0, 1.0]]),
         ...     fips.Space({"change": pd.Index(["2 - 1"], name="months")}),
         ...     monthly.rows,
         ... )
         >>> post.uncertainty(change @ monthly).round(3).reset_index()
-            block months  prior_std  posterior_std  reduction
-        0  change  2 - 1        1.0          0.921      0.079
+            block months  prior_std  posterior_std  reduction  lower  upper
+        0  change  2 - 1        1.0          0.921      0.079 -1.547  2.063
 
         The change is more uncertain than either month's total: the two
         totals' posterior errors are negatively correlated (the observations
         see their sum better than how it splits), and the covariance between
         the rows enters the change's variance.
         """
+        level = _checked_level(level)
         if W is None:
             prior = self._problem.prior_cov.variances.values
             posterior = self.variances.values
-            scale = self._prior_scale(None)
+            W_form = None
             index = self._problem.prior.index
         else:
             posterior = self.cov(W).variances.values  # checks W against the state
             prior = self._problem.prior_cov.aggregate(W).variances.values
-            scale = self._prior_scale(self._aggregation(W))
+            W_form = self._aggregation(W)
             index = W.rows.index
+        scale = self._prior_scale(W_form)
         prior_std = _std(prior, scale, "prior variances")
         posterior_std = _std(posterior, scale, "posterior variances")
         with np.errstate(divide="ignore", invalid="ignore"):
             reduction = np.where(prior_std > 0, 1.0 - posterior_std / prior_std, np.nan)
+        lower, upper = self._interval(W_form, posterior_std, level)
         return pd.DataFrame(
             {
                 "prior_std": prior_std,
                 "posterior_std": posterior_std,
                 "reduction": reduction,
+                "lower": lower,
+                "upper": upper,
             },
             index=index,
         )
@@ -3098,9 +3213,10 @@ class Posterior:
         *,
         W: Operator | None = None,
         W_world: Operator | None = None,
+        level: float = 0.95,
     ) -> pd.DataFrame:
         r"""
-        Return the truth and the estimate of each total in `n` trials of data made by `world`: the sampled :meth:`recovery`.
+        Return the truth, the estimate and the interval of each total in `n` trials of data made by `world`: the sampled :meth:`recovery`.
 
         Each trial, the world makes a truth and its observations, this
         posterior solves the observations with its own assumptions
@@ -3112,7 +3228,11 @@ class Posterior:
         estimate is not linear in the observations (the spread it claims is
         then each trial's own). Where both apply, the
         table's bias, spread and coverage agree with ``recovery`` within their
-        Monte Carlo standard errors.
+        Monte Carlo standard errors. Each trial's interval is its posterior's
+        own, as :meth:`uncertainty` gives it: for a sampled posterior
+        (``"bounded"`` with a finite bound, ``"gauss_newton"`` with a forward
+        model) the quantiles of the trial's draws, not the estimate (the mode)
+        plus or minus a multiple of the standard deviation.
 
         Parameters
         ----------
@@ -3139,6 +3259,9 @@ class Posterior:
             The aggregation of the world's state to the same totals, as
             :meth:`recovery` takes it, for a world whose state has other
             labels than the posterior's.
+        level : float, default 0.95
+            The probability of each trial's interval, between 0 and 1, as
+            :meth:`uncertainty` takes it.
 
         Returns
         -------
@@ -3150,14 +3273,15 @@ class Posterior:
             :math:`\sqrt{\operatorname{diag} W \hat{S} W^T}`: the same in
             every trial of a method whose estimate is linear in the
             observations, and for any other that of the trial's own
-            posterior) and ``reduced_chi2`` (the trial's
+            posterior), ``lower`` and ``upper`` (the ends of the trial's
+            posterior interval of probability `level`, as
+            :meth:`uncertainty` gives them) and ``reduced_chi2`` (the trial's
             :attr:`reduced_chi2`, the same on every row of a trial). Its
             ``groupby`` over the totals (with ``dropna=False``: a state of
             several blocks is NaN on the levels a block lacks) gives the
             performance measures: the mean of ``estimate - truth`` is the
             bias, its standard deviation the spread, and the fraction of
-            trials with ``|estimate - truth| <= z * posterior_std`` the
-            coverage.
+            trials with ``lower <= truth <= upper`` the coverage.
 
         Raises
         ------
@@ -3167,10 +3291,11 @@ class Posterior:
             method cannot take new observations (its solution has no
             ``with_data``).
         ValueError
-            If `n` is not a positive integer; if the world's observations do
-            not have exactly this posterior's labels, or its truth not the
-            state's (without `W_world`); if `W_world` is given without `W`,
-            or its columns are not the truth's labels or its rows not `W`'s.
+            If `n` is not a positive integer, or `level` not between 0 and 1;
+            if the world's observations do not have exactly this posterior's
+            labels, or its truth not the state's (without `W_world`); if
+            `W_world` is given without `W`, or its columns are not the
+            truth's labels or its rows not `W`'s.
 
         See Also
         --------
@@ -3218,6 +3343,7 @@ class Posterior:
             raise ValueError(
                 f"n is the number of trials, a positive integer, got {n!r}."
             )
+        level = _checked_level(level)
         if W_world is not None and W is None:
             raise ValueError(
                 "W_world needs W: a world on other state labels is compared on "
@@ -3255,7 +3381,7 @@ class Posterior:
         claimed = claims(self) if linear else None
         del resolve  # with_data checks the observations' labels each trial
 
-        truths, estimates, chi2, stds = [], [], [], []
+        truths, estimates, chi2, stds, lowers, uppers = [], [], [], [], [], []
         for _ in range(n):
             drawn = make(generator)
             if (
@@ -3300,8 +3426,12 @@ class Posterior:
                 estimate if W_form is None else np.asarray(W_form @ estimate)
             )
             chi2.append(trial.reduced_chi2)
+            std = claims(trial) if claimed is None else claimed
             if claimed is None:
-                stds.append(claims(trial))
+                stds.append(std)
+            lower, upper = trial._interval(W_form, std, level)
+            lowers.append(lower)
+            uppers.append(upper)
         k = len(index)
         rows = pd.MultiIndex.from_arrays(
             [np.repeat(np.arange(n), k)]
@@ -3318,6 +3448,8 @@ class Posterior:
                 "posterior_std": (
                     np.tile(claimed, n) if claimed is not None else np.concatenate(stds)
                 ),
+                "lower": np.concatenate(lowers),
+                "upper": np.concatenate(uppers),
                 "reduced_chi2": np.repeat(np.asarray(chi2, dtype=float), k),
             },
             index=rows,

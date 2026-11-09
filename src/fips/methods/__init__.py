@@ -62,12 +62,13 @@ The bounded method's solution (``fips.methods.bounded.Bounded``) holds the
 analytic one and the mode, and answers the variances from draws of its
 truncated posterior and the gain from the Gaussian at the mode; it has no
 ``estimate_is_mean`` and no ``estimate_is_linear`` (the mode is not linear in
-the data), ``evidence_is_laplace`` only with no finite bound, and its ``with_gamma`` and ``with_data`` find the mode again on the
+the data), and its ``kept`` draws give the posterior's mean and intervals, ``evidence_is_laplace`` only with no finite bound, and its ``with_gamma`` and ``with_data`` find the mode again on the
 analytic factors. The Gauss-Newton method's solution
 (``fips.methods.gauss_newton.GaussNewton``) keeps its mode and the analytic
 solution of the problem linearized at its last iterate (a lognormal flux is
-such a forward model), answers the gain from it and the variances from draws
-of the posterior, which it preconditions, and its evidence is Laplace's from
+such a forward model), answers the gain from it and the variances, the mean
+and the intervals from its ``kept`` draws of the posterior, which it
+preconditions, and its evidence is Laplace's from
 the Gaussian at the mode; it has no ``with_gamma``, since its
 linearization depends on gamma. The ensemble method's solution
 (``fips.methods.ensemble.Ensemble``) keeps the prior members, their modeled

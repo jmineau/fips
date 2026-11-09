@@ -151,6 +151,9 @@ inversion is a function that builds the `Problem`.
   `posterior.Solution` with unlabeled arrays in the problem's order;
   `Posterior` labels them and writes the rest (averaging kernel, innovation
   covariance, Desroziers, leverage, scalars) from them.
+- **A sampled answer's mean and intervals are its draws'**: a solution that keeps draws (`kept()`: `"bounded"` with a
+  bound, `"gauss_newton"` with a model) gives `mean` as their mean beside the mode `estimate`, and every interval
+  (`uncertainty`'s and `trials`' `lower`, `upper`: `Posterior._interval`) their quantiles; any other's is `estimate +- z sd`.
 - **Covariance models** are frozen dataclasses checked in `__init__`. The 0.1
   builders' covariances are pinned bit for bit in `tests/test_covariance.py`:
   keep the order of the products (`(std_i * C_ij) * std_j`).
@@ -174,7 +177,7 @@ inversion is a function that builds the `Problem`.
 
 A module `methods/<name>.py` with three things: its options (a frozen dataclass
 with a `gamma` field, values checked in `__post_init__`), its solution (answers
-`posterior.Solution`; `with_gamma`, `with_data`, `sample`, `at_bound`, `estimate_is_mean`,
+`posterior.Solution`; `with_gamma`, `with_data`, `sample`, `kept` (a sampler's kept draws), `at_bound`, `estimate_is_mean`,
 `estimate_is_linear`, `evidence_is_laplace` (`no_evidence`, why not), and `innovation_precision` with `self_sensitivity` (for
 `Posterior.data_worth`) only if it can; a member it lacks raises `fips.UnavailableError`), and a function `(problem, options) -> Posterior`. Add a line to
 `_METHODS` in `methods/__init__.py`; its docstring says how a lognormal or an

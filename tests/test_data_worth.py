@@ -180,7 +180,13 @@ def test_uncertainty_matches_the_closed_form(prior, mismatch, gamma):
     Wd = W.dense()
     table = post.uncertainty(W)
     assert table.index.equals(W.rows.index)
-    assert list(table.columns) == ["prior_std", "posterior_std", "reduction"]
+    assert list(table.columns) == [
+        "prior_std",
+        "posterior_std",
+        "reduction",
+        "lower",
+        "upper",
+    ]
     prior_std = np.sqrt(np.diag(Wd @ S0 @ Wd.T))
     posterior_std = np.sqrt(np.diag(Wd @ S_hat @ Wd.T))
     np.testing.assert_allclose(table["prior_std"], prior_std, rtol=1e-10)

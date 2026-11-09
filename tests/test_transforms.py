@@ -776,7 +776,7 @@ def coverage_of_cells_and_total(model, post, trials: int, levels):
         z_cells.append(
             (trial.estimate.values - truth.values) / np.sqrt(trial.variances.values)
         )
-        kept = pd.DataFrame(trial._solution._kept(), index=index)
+        kept = pd.DataFrame(trial._solution.kept(), index=index)
         totals.append(model.transform(kept).sum().to_numpy())
         true_totals.append(model.transform(truth).values.sum())
     z_cells = np.array(z_cells)

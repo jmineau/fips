@@ -31,8 +31,8 @@ EXPECTED = {
     "analytic": ANALYTIC,
     "bounded, no finite bound": ANALYTIC,
     "gauss_newton, an operator": ANALYTIC,
-    "bounded": dict(zip(MEMBERS, "NYNNNNYNN", strict=True)),
-    "gauss_newton, a model": dict(zip(MEMBERS, "NNYNNNNYN", strict=True)),
+    "bounded": dict(zip(MEMBERS, "YYNNNNYNN", strict=True)),
+    "gauss_newton, a model": dict(zip(MEMBERS, "YNYNNNNYN", strict=True)),
     "ensemble": dict(zip(MEMBERS, "YYNNNNNNN", strict=True)),
     "variational, linear, full rank": dict(zip(MEMBERS, "YYYNNNNYY", strict=True)),
     "variational, linear, rank 1": dict(zip(MEMBERS, "YYNNNNNYY", strict=True)),
@@ -132,3 +132,67 @@ def test_the_reference_page_has_the_same_table():
     """The table is written twice (the docstring and ``docs/reference/posterior.rst``); one must not drift from the other."""
     page = (ROOT / "docs" / "reference" / "posterior.rst").read_text()
     assert table(page) == table(fips.Posterior.__doc__ or "")
+
+
+TOTAL_ROWS = fips.Space({"all": pd.Index(["all"], name="region")})
+
+
+@pytest.mark.parametrize(
+    "case",
+    [
+        "analytic",
+        "ensemble",
+        "variational, linear, rank 1",
+        "variational, model, rank 1",
+    ],
+)
+def test_an_interval_that_is_not_sampled_is_the_estimate_plus_or_minus_z_sd(
+    case, posts
+):
+    """A posterior with no kept draws reads its interval as the Gaussian's, about its estimate."""
+    post = posts[case]
+    total = fips.Operator(np.ones((1, 4)), TOTAL_ROWS, post.problem.prior.space)
+    for W, center in (
+        (None, post.estimate.values),
+        (total, [post.estimate.values.sum()]),
+    ):
+        table = post.uncertainty(W, level=0.9)
+        z = 1.6448536269514722  # the normal's 0.95 quantile
+        np.testing.assert_allclose(
+            table["lower"], center - z * table["posterior_std"], rtol=1e-12
+        )
+        np.testing.assert_allclose(
+            table["upper"], center + z * table["posterior_std"], rtol=1e-12
+        )
+
+
+@pytest.mark.parametrize("case", ["bounded", "gauss_newton, a model"])
+def test_a_sampled_answer_reads_its_mean_and_interval_from_its_draws(case, posts):
+    """A sampled posterior's mean is the kept draws' mean (not the mode), and its interval their quantiles, of the state or of a total."""
+    post = posts[case]
+    kept = post._solution.kept()
+    np.testing.assert_array_equal(post.mean.values, kept.mean(axis=1))
+    assert post.mean.space == post.estimate.space
+    assert post.mean is post.mean  # kept
+    total = fips.Operator(np.ones((1, 4)), TOTAL_ROWS, post.problem.prior.space)
+    for W, draws in ((None, kept), (total, kept.sum(axis=0, keepdims=True))):
+        table = post.uncertainty(W, level=0.8)
+        np.testing.assert_allclose(
+            table["lower"], np.quantile(draws, 0.1, axis=1), rtol=1e-12
+        )
+        np.testing.assert_allclose(
+            table["upper"], np.quantile(draws, 0.9, axis=1), rtol=1e-12
+        )
+        # the draws' standard deviation, as before
+        np.testing.assert_allclose(
+            table["posterior_std"], draws.std(axis=1, ddof=1), rtol=1e-10
+        )
+
+
+@pytest.mark.parametrize("level", [0.0, 1.0, -0.5, 1.5, True, "0.95", None])
+def test_an_interval_needs_a_probability(level, posts):
+    """``level`` is a number strictly between 0 and 1, in uncertainty and in trials."""
+    with pytest.raises(ValueError, match="level is a probability"):
+        posts["analytic"].uncertainty(level=level)
+    with pytest.raises(ValueError, match="level is a probability"):
+        posts["analytic"].trials(n=1, rng=0, level=level)
