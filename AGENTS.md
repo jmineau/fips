@@ -23,7 +23,9 @@ with a Gaussian prior and Gaussian errors, `z = H x + c + e` (or `F(x)`, a
 observations are labeled by pandas indexes in named blocks: exact for a linear
 problem; with bounds on the state, its mode and draws of the Gaussian truncated
 to the bounds; with a forward model, its mode by Gauss-Newton and draws of its
-posterior. fips samples the posteriors it cannot give in closed form. Labels
+posterior; with priors on the covariance settings, draws of the settings and
+of the state at each (`fips.hierarchical`). fips samples the posteriors it
+cannot give in closed form. Labels
 are matched, never positions; each matrix is kept in its cheapest form (dense,
 sparse, diagonal, Kronecker factors). Beta: the API may change between
 releases. PyPI and import name `fips`.
@@ -48,6 +50,9 @@ src/fips/
   problem.py        Problem: the inputs, checked once; predict, linearized, aggregate, restrict
   posterior.py      Posterior (labels a method's answer); the Solution and Options protocols
   aggregate.py      sum, mean (an aggregation W), offset_block
+  settings.py       hierarchical, Hierarchical, Prior (LogNormal, HalfNormal, Uniform): the settings
+                    by Metropolis on the exact evidence, the state drawn at each kept step;
+                    `_Built` (the caller's function) or `_Scales` (a Problem: the fast path)
   visualization.py  plot_comparison, the one plot (the `viz` extra: matplotlib)
   covariance/       Covariance and the models that write one down (public)
     covariance.py   Covariance: diagonal, block_diag, variances, solve, logdet, sqrt, sample,
@@ -71,7 +76,7 @@ docs/               Sphinx: guides, reference/ (by topic), examples/ (notebooks)
 ```
 
 Imports run one way: `space` < `vector`, `linalg` < `operator` < `forward` <
-`transforms`, `covariance` < `problem` < `posterior` < `methods`, with `aggregate` and
+`transforms`, `covariance` < `problem` < `posterior` < `methods` < `settings`, with `aggregate` and
 `visualization` on top. No import inside a function to dodge a cycle, none under `TYPE_CHECKING`.
 `Covariance` does not import the models: `models.py` sets
 `Covariance._block_diag_models`, so `Covariance.block_diag` takes model parts.
@@ -298,3 +303,10 @@ dependency needs a reason, proposed first.
   no `S_0^-1`. A draw is a few `F`, `J^T v` (`ForwardModel._gradient`), `S_hat v`. A step that raises the
   cost is halved. A transform's `_curvature` (diagonal; None for other models) adds Newton's step (CG
   preconditioned by `S_hat`), the lower cost taken; only a whole Gauss-Newton step (and Newton's) stops.
+- **`hierarchical`'s fast path reads every step from one eigendecomposition** (`_Factors._evidence_terms`,
+  `_draws_at`): at a prior-std factor `s` and a mismatch-covariance factor `c` the problem is the unscaled
+  one at `gamma = s^2 / c`, with chi2 over `s^2` and `m ln c` in the evidence (the information form's chi2
+  is `gamma q - gamma sum w b^2`, `q = d^T S_z^-1 d`). Its draws take each draw's normals in turn, as
+  `sample(1)` would, so one seed gives the fast and the general path the same chain and draws
+  (`tests/test_hierarchical.py`). The chain and the state's draws have their own streams (`spawn(2)`), and
+  `_accept` takes one uniform a step, so the chain does not depend on how the state is drawn.
