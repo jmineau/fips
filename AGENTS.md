@@ -25,7 +25,8 @@ problem; with bounds on the state, its mode and draws of the Gaussian truncated
 to the bounds; with a forward model, its mode by Gauss-Newton and draws of its
 posterior; with priors on the covariance settings, draws of the settings and
 of the state at each (`fips.hierarchical`); for a model that can only be run,
-an ensemble square-root update of members drawn from the prior (`"ensemble"`). fips samples the posteriors it
+an ensemble square-root update of members drawn from the prior (`"ensemble"`); too large to factor, CG and a
+low-rank posterior from products alone (`"variational"`). fips samples the posteriors it
 cannot give in closed form. Labels
 are matched, never positions; each matrix is kept in its cheapest form (dense,
 sparse, diagonal, Kronecker factors). Beta: the API may change between
@@ -45,7 +46,7 @@ src/fips/
   space.py          Space: ordered named blocks, the padded MultiIndex, select, align
   vector.py         Vector: values on a Space (read-only), from_series/from_blocks
   operator.py       Operator: a fips.linalg form with a Space on each axis
-  forward.py        ForwardModel (F and its Jacobian, written by the caller), taylortest
+  forward.py        ForwardModel (F and its Jacobian, or its products jvp/vjp), taylortest (and the adjoint)
   transforms.py     LognormalForward, SoftplusForward: H on a positive T(u) of one block; prior_for
                     (softplus moments by panels split at the bend: Gauss-Hermite fails past 2 scales)
   problem.py        Problem: the inputs, checked once; predict, linearized, aggregate, restrict
@@ -69,8 +70,9 @@ src/fips/
                     analytic posterior, draws by exact HMC (_Sampler)
     gauss_newton.py GaussNewtonOptions; GaussNewton: the mode by linearizations (Newton for a transform), draws by HMC
     ensemble.py     EnsembleOptions; Ensemble: batch EnSRF of the members and their runs (no Jacobian)
+    variational.py  VariationalOptions; Variational: CG on the whitened system, Lanczos pairs (rank)
   linalg/           the unlabeled forms (public as fips.linalg)
-    forms.py        LinearOperator and the Dense-, Sparse- and DiagonalOperator it builds
+    forms.py        LinearOperator and the Dense-, Sparse-, Diagonal- and MatrixFreeOperator it builds
     block.py        BlockDiagonalOperator
     kronecker.py    KroneckerOperator: a covariance kept as its factors
 tests/              pytest; test_oracle.py holds every exact method to the closed form
@@ -118,7 +120,8 @@ inversion is a function that builds the `Problem`.
   kept as given; code that needs `H` reads `problem._operator` (refuses it).
 - **A structure owns its data.** `Vector`, `Operator` and every form copy their
   input and make the copy read-only. A form built from arrays fips just made,
-  or from a parent's read-only arrays, uses `_adopt` (no second copy).
+  or from a parent's read-only arrays, uses `_adopt` (no second copy). A `MatrixFreeOperator`
+  keeps the SciPy operator it wraps; what is built from it stays products (`_MatrixFree*`).
 - **A covariance is symmetric and positive semidefinite.** `Covariance(...)`
   (so `from_frame`, `from_blocks` and `Covariance.diagonal`) checks a dense or
   sparse matrix's symmetry to 1e-10 of its largest entry, without densifying,
@@ -138,7 +141,7 @@ inversion is a function that builds the `Problem`.
   with `.data`, not `dense()` or `to_frame()`, except where a dense matrix is
   the point: the analytic method densifies `H S_0` (`m x n`), `H S_0 H^T` and a
   non-diagonal `S_z` (`m x m`; Gauss-Newton, each step's `J S_0`, `J S_0 J^T`),
-  and `post.cov()` forms `n x n` only when read.
+  and `post.cov()` forms `n x n` only when read. `"variational"` forms nothing `n x n` or `m x m`.
 - **The problem is the question, the posterior the answer.** `Problem` holds
   what needs no solve and no `m x m` matrix (`predict`; `linearized`,
   `aggregate`, `restrict` make a new problem through `__init__`; `restrict`
@@ -179,7 +182,8 @@ problem give the analytic posterior** (`"bounded"` with no finite bound and
 `"gauss_newton"` with an operator return the analytic solution itself):
 `tests/test_oracle.py` runs every registered method, with its defaults, against the closed-form posterior and the
 permutation test, except one registered `exact=False` (`"ensemble"`), held instead
-to its update's exactness for its own covariance and a `1/sqrt(N)` curve (`tests/test_ensemble.py`). A method that samples is held to exact answers in small cases
+to its update's exactness for its own covariance and a `1/sqrt(N)` curve (`tests/test_ensemble.py`);
+an iterative one is solved with its `_Method.oracle` options, held at its `oracle_rtol` (`"variational"`). A method that samples is held to exact answers in small cases
 (`truncnorm`, integration; Monte Carlo errors counting autocorrelation), to the
 truth's rank among its draws in its own world, and to wrong variants that fail
 them (`tests/test_bounded.py`, `tests/test_gauss_newton.py`).
