@@ -6,8 +6,10 @@ direction in which ``gamma`` moves a diagnostic, and ``K`` against its own
 equation. The tests here pin the numbers. Each output of the
 :class:`fips.Posterior` that :func:`fips.solve` returns is compared with the
 closed-form Gaussian posterior, written below with ``numpy.linalg`` and
-nothing from fips. They are parametrized over the registered methods, so a
-method registered later is held to them too, and over the two forms the
+nothing from fips. They are parametrized over the registered exact methods, so a
+method registered later is held to them too (one registered with
+``exact=False``, whose posterior only approaches the closed form as its
+ensemble grows, has its own convergence test), and over the two forms the
 analytic method factors in (the ``analytic_form`` fixture: whitened and
 information), whatever the size of the problem.
 
@@ -46,7 +48,8 @@ from fips.linalg import (
 )
 from fips.methods import _METHODS
 
-METHODS = available_methods()
+METHODS = [name for name in available_methods() if _METHODS[name].exact]
+"""The exact methods; an approximate one (``"ensemble"``) is held to its own convergence test."""
 
 RTOL = 1e-10
 """
