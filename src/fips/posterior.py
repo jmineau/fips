@@ -657,9 +657,11 @@ class Posterior:
         The analytic method computes them from its factors in
         :math:`O(m n)`, without the :math:`n \times n` covariance. The
         ``"bounded"`` method gives the variances of its kept draws of the
-        truncated posterior (``draws`` of them: a Monte Carlo estimate, a
-        standard deviation good to about 2% at the default 2000), about
-        their mean, not about the mode; the ``"gauss_newton"`` method those
+        truncated posterior (``draws`` of them: a Monte Carlo estimate, at the
+        default 2000 a standard deviation good to about 1.5% away from the
+        bounds and to about 12% for an element whose analytic estimate is one
+        to four standard deviations outside its bound; the solve warns past
+        10%), about their mean, not about the mode; the ``"gauss_newton"`` method those
         of its kept draws of the posterior of its forward model, the same
         way; the ``"ensemble"`` method those of its updated members.
 
@@ -1140,9 +1142,11 @@ class Posterior:
         to the bounds, by exact Hamiltonian Monte Carlo (Pakman and Paninski,
         2014): each call runs a chain from the mode, leaves out its first
         ``burn_in`` draws, and returns the next `n`. Each draw starts from the
-        last, so the draws are correlated (in the tests, about one effective
-        draw per draw for most elements, one per four or five for an element
-        whose analytic estimate is far outside its bound). A call costs a
+        last, so the draws are correlated: about one effective draw per draw
+        for an element away from its bounds, and one per 13 to 17 for an
+        element whose analytic estimate is one to four standard deviations
+        outside its bound, whose draws pile against it (one far outside mixes
+        faster). A call costs a
         reflection off a bound, an ``O(n)`` step, for each bound a path
         reaches: about as many per draw as there are elements near a bound.
 

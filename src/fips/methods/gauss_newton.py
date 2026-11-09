@@ -103,6 +103,7 @@ from numpy.linalg import LinAlgError
 
 from fips.linalg import LinearOperator
 from fips.linalg.forms import _read_only
+from fips.methods._draws import _warn_if_imprecise
 from fips.methods.analytic import AnalyticOptions, Information, Whitened, _factor
 from fips.operator import Operator
 from fips.posterior import Posterior
@@ -313,7 +314,7 @@ class GaussNewton:
             draws = self.options.draws
             kept = self.sample(draws, np.random.default_rng(self.options.seed))
             kept = self.__dict__["_draws"] = _read_only(kept)
-            _warn_if_imprecise(_autocorrelation_times(kept), draws)
+            _warn_if_imprecise(kept, logger, _SLOW_DRAWS)
         return kept
 
     def __getstate__(self) -> dict:
@@ -663,73 +664,12 @@ class _Sampler:
         return draws, here, accepted / N
 
 
-_IMPRECISE = 0.1
-"""The relative error of a standard deviation from the kept draws above which a solve warns."""
-
-_ROWS = 256
-"""The rows whose autocorrelation is computed at once."""
-
-
-def _autocorrelation_times(draws: np.ndarray) -> np.ndarray:
-    r"""
-    Return the integrated autocorrelation time :math:`\tau` of each row of `draws` (a chain, one column per draw), by Sokal's adaptive window.
-
-    :math:`\tau = 1 + 2 \sum_{k=1}^{w} \rho_k`, with :math:`\rho_k` the
-    autocorrelation at lag :math:`k` (by FFT) and the window :math:`w` the
-    first at least five times its :math:`\tau`. A chain has
-    :math:`N / \tau` effective draws. A row that never moves has
-    :math:`\tau = 1`. It reads one chain, so a chain that rarely visits a
-    tail gives too small a :math:`\tau`: a diagnostic, not a guarantee.
-    """
-    n, N = draws.shape
-    tau = np.ones(n)
-    if N < 3:
-        return tau
-    windows = np.arange(1, N)
-    for first in range(0, n, _ROWS):
-        rows = slice(first, min(n, first + _ROWS))
-        x = draws[rows] - draws[rows].mean(axis=1, keepdims=True)
-        f = np.fft.rfft(x, 2 * N, axis=1)
-        acf = np.fft.irfft(f * np.conj(f), 2 * N, axis=1)[:, :N]
-        variance = acf[:, 0]
-        moves = variance > 0
-        if not moves.any():
-            continue
-        taus = 1.0 + 2.0 * np.cumsum(acf[moves, 1:] / variance[moves, None], axis=1)
-        stop = windows[None, :] >= 5.0 * taus
-        window = np.where(stop.any(axis=1), stop.argmax(axis=1), N - 2)
-        block = tau[rows]
-        block[moves] = np.maximum(taus[np.arange(len(window)), window], 1.0)
-        tau[rows] = block
-    return tau
-
-
-def _warn_if_imprecise(tau: np.ndarray, draws: int) -> None:
-    r"""
-    Log a warning when the kept draws mix so slowly that a standard deviation from them is uncertain by more than :data:`_IMPRECISE`.
-
-    The relative error of a standard deviation from :math:`N` draws with
-    autocorrelation time :math:`\tau` is about :math:`\sqrt{\tau / (2 N)}`.
-    """
-    error = np.sqrt(tau / (2.0 * draws))
-    slow = error > _IMPRECISE
-    if not slow.any():
-        return
-    worst = int(np.argmax(tau))
-    logger.warning(
-        "The posterior's draws mix slowly: %d state elements have a standard "
-        "deviation from the %d kept draws uncertain by more than %d%%, the worst "
-        "(element %d) by about %d%% (%.0f draws for each independent one). The "
-        "posterior bends much over its spread, along a direction the Gaussian at "
-        "the mode does not follow; raise draws= for those elements' spread, or "
-        "read the totals the data constrain, which mix faster.",
-        int(slow.sum()),
-        draws,
-        round(100 * _IMPRECISE),
-        worst,
-        round(100 * float(error[worst])),
-        float(tau[worst]),
-    )
+_SLOW_DRAWS = (
+    "The posterior bends much over its spread, along a direction the Gaussian "
+    "at the mode does not follow; raise draws= for those elements' spread, or "
+    "read the totals the data constrain, which mix faster."
+)
+"""What the slow-mixing warning of the kept draws says of the cause and the remedy."""
 
 
 def _steps(step: float) -> int:

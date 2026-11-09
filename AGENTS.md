@@ -71,6 +71,7 @@ src/fips/
     gauss_newton.py GaussNewtonOptions; GaussNewton: the mode by linearizations (Newton for a transform), draws by HMC
     ensemble.py     EnsembleOptions; Ensemble: batch EnSRF of the members and their runs (no Jacobian)
     variational.py  VariationalOptions; Variational: CG on the whitened system, Lanczos pairs (rank)
+    _draws.py       a chain's autocorrelation and the error of its standard deviations; the warning past 10%
   linalg/           the unlabeled forms (public as fips.linalg)
     forms.py        LinearOperator and the Dense-, Sparse-, Diagonal- and MatrixFreeOperator it builds
     block.py        BlockDiagonalOperator

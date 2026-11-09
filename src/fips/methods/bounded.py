@@ -53,6 +53,7 @@ from scipy.linalg import cho_factor, cho_solve
 
 from fips.linalg import DenseOperator, LinearOperator
 from fips.linalg.forms import _read_only
+from fips.methods._draws import _warn_if_imprecise
 from fips.methods.analytic import AnalyticOptions, Information, Whitened, _factor
 from fips.operator import Operator
 from fips.posterior import Posterior
@@ -189,10 +190,17 @@ class BoundedOptions:
         With no finite bound, the posterior is the analytic one.
     draws : int, default 2000
         The number of draws of the truncated posterior kept for its variances
-        and the covariance of aggregates (Monte Carlo estimates: the relative
-        error of a standard deviation is about :math:`1 / \sqrt{2\,
-        \text{draws}}` for independent draws, 1.6% at 2000, and a little more
-        for these, which are correlated).
+        and the covariance of aggregates. They are Monte Carlo estimates from a
+        chain: each draw is exact, but starts from the last. At 2000, a
+        standard deviation is good to about 1.5% for an element away from its
+        bounds (:math:`1 / \sqrt{2\, \text{draws}}`, as for independent
+        draws), and to about 12% (root mean square over 24 solves; 25% at
+        worst) for an element whose analytic estimate is one to four standard
+        deviations outside its bound: its draws pile against the bound and mix
+        slowly (an autocorrelation time of 13 to 17 draws). One far outside
+        mixes faster. The error falls as :math:`1/\sqrt{\text{draws}}`; the
+        solve warns when a standard deviation is uncertain by more than 10%,
+        and says how many draws would do.
     burn_in : int, default 20
         The draws made and left out before those kept, from the mode. Each
         draw of the sampler travels a quarter period, after which a Gaussian
@@ -294,6 +302,14 @@ def _resolve(
         else:
             values[where] = value
     return values
+
+
+_SLOW_DRAWS = (
+    "The draws are exact but each starts from the last, and an element whose "
+    "analytic estimate is one to a few posterior standard deviations outside "
+    "its bound mixes slowest; raise draws= for those elements' spread."
+)
+"""What the slow-mixing warning of the kept draws says of the cause and the remedy."""
 
 
 class _Columns:
@@ -821,7 +837,7 @@ class Bounded:
         return sampler
 
     def _kept(self) -> np.ndarray:
-        """Return the kept draws (``n x draws``), drawn from the seed at the first call."""
+        """Return the kept draws (``n x draws``), drawn from the seed at the first call, with a warning if they mix too slowly for their variances."""
         kept = self.__dict__.get("_draws")
         if kept is None:
             logger.debug(
@@ -831,6 +847,7 @@ class Bounded:
             )
             kept = self.sample(self.draws, np.random.default_rng(self.seed))
             kept = self.__dict__["_draws"] = _read_only(kept)
+            _warn_if_imprecise(kept, logger, _SLOW_DRAWS)
         return kept
 
     def _conditioned(self) -> tuple[np.ndarray, np.ndarray, np.ndarray]:

@@ -46,7 +46,7 @@ from scipy.stats import norm, truncnorm
 import fips
 from fips import Covariance, Operator, Problem, Space, Vector
 from fips.linalg import KroneckerOperator
-from fips.methods import bounded
+from fips.methods import _draws, bounded
 from fips.methods.analytic import Information, Whitened
 from fips.methods.bounded import Bounded, BoundedOptions
 
@@ -652,6 +652,57 @@ def test_the_sampler_reflects_in_the_posterior_metric(monkeypatch):
     mean, cov = truncated_moments_2d(x_hat, S, lower, upper)
     with pytest.raises(AssertionError):
         assert_moments(draws, mean, cov)
+
+
+def test_the_error_of_a_chains_standard_deviation():
+    """``_std_errors`` is ``1/sqrt(2N)`` for independent Gaussian draws and ``sqrt(tau/(2N))`` for a Gaussian AR(1) chain (``tau = (1 + rho)/(1 - rho)`` for its squares, ``rho^2``), the spread of the standard deviation over many such chains."""
+    rng = np.random.default_rng(0)
+    N, chains = 2000, 400
+    independent = rng.standard_normal((chains, N))
+    error, _ = _draws._std_errors(independent)
+    assert np.median(error) == pytest.approx(1 / np.sqrt(2 * N), rel=0.1)
+    rho = 0.9
+    ar = np.empty((chains, N))
+    ar[:, 0] = rng.standard_normal(chains)
+    for k in range(1, N):
+        ar[:, k] = rho * ar[:, k - 1] + np.sqrt(1 - rho**2) * rng.standard_normal(
+            chains
+        )
+    error, tau = _draws._std_errors(ar)
+    expected = np.sqrt((1 + rho**2) / (1 - rho**2) / (2 * N))
+    assert np.median(error) == pytest.approx(expected, rel=0.15)
+    spread = ar.std(axis=1, ddof=1).std() / ar.std(axis=1, ddof=1).mean()
+    assert spread == pytest.approx(expected, rel=0.15)
+    assert np.all(_draws._std_errors(np.ones((2, 50)))[0] == 0.0)  # never moves
+
+
+def test_draws_piled_against_a_bound_warn_how_many_would_do(caplog):
+    """
+    Cells whose analytic estimates are 2.7 standard deviations below their bound: their draws pile against it and mix slowly, so a standard deviation from 300 draws is uncertain by 10% to 40%, and the solve warns, saying how many draws would bring it to 10%; cells away from a bound do not warn.
+
+    One chain's estimate of that error varies (from 5% to 30% at 500 draws
+    over ten seeds for one such cell), so four are drawn, and the warning
+    needs one. At the default 2000 draws the error of such a cell is about
+    12% (rms over 24 solves of a correlated 3-cell problem, where the free
+    cells were good to 1.4%), near the warning's threshold.
+    """
+    x_hat = np.array([3.0, -2.7, -2.7, -2.7, -2.7, 4.0])
+    with caplog.at_level("WARNING", logger="fips.methods.bounded"):
+        post = fips.solve(
+            gaussian_problem(x_hat, np.eye(6)), "bounded", lower=0.0, draws=300
+        )
+        _ = post.variances
+    assert "The posterior's draws mix slowly" in caplog.text
+    assert "draws would bring it to 10%" in caplog.text
+    error, _ = _draws._std_errors(np.asarray(post._solution._kept()))
+    assert error[1:5].max() > 0.1 and error[[0, 5]].max() < 0.07
+    caplog.clear()
+    with caplog.at_level("WARNING", logger="fips.methods.bounded"):
+        far = fips.solve(
+            gaussian_problem(-x_hat, np.eye(6)), "bounded", lower=-10.0, draws=300
+        )
+        _ = far.variances
+    assert "mix slowly" not in caplog.text
 
 
 def test_kept_draws_give_the_variances_and_covariances():

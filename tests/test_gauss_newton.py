@@ -60,6 +60,7 @@ import fips
 from fips import Covariance, ForwardModel, Operator, Problem, Space, Vector
 from fips.linalg import DiagonalOperator, KroneckerOperator
 from fips.methods import gauss_newton
+from fips.methods._draws import _autocorrelation_times
 from fips.methods.analytic import Information, Whitened
 from fips.methods.gauss_newton import GaussNewton, GaussNewtonOptions
 from fips.problem import Problem as _Problem
@@ -1134,7 +1135,7 @@ def test_a_linear_model_draws_the_analytic_posterior(n, m):
     assert tuning.acceptance > 1 - 1e-9
     N = 4000
     draws = post.sample(N, rng=0).to_numpy()
-    assert gauss_newton._autocorrelation_times(draws).max() < 1.3
+    assert _autocorrelation_times(draws).max() < 1.3
     mean, S = ref.estimate.values, ref.cov().dense()
     variance = np.diag(S)
     assert_within(draws.mean(axis=1), np.sqrt(variance / N), mean)
@@ -1342,7 +1343,7 @@ def test_with_data_draws_the_posterior_of_the_new_data():
     fresh = fips.solve(other.problem(), "gauss_newton", draws=1000, burn_in=100)
     a, b = again._solution._kept(), fresh._solution._kept()
     # each chain's errors, with its own autocorrelation time
-    tau_a, tau_b = (gauss_newton._autocorrelation_times(d) for d in (a, b))
+    tau_a, tau_b = (_autocorrelation_times(d) for d in (a, b))
     se = np.sqrt((a.var(axis=1) * tau_a + b.var(axis=1) * tau_b) / 1000)
     assert np.all(np.abs(a.mean(axis=1) - b.mean(axis=1)) < 4.5 * se)
     se_log = np.sqrt(2 * (tau_a + tau_b) / 1000)
