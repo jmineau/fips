@@ -112,7 +112,7 @@ from fips.linalg import LinearOperator
 from fips.linalg.forms import _read_only
 from fips.methods.analytic import AnalyticOptions
 from fips.operator import Operator
-from fips.posterior import Posterior
+from fips.posterior import Posterior, UnavailableError
 from fips.problem import Problem
 
 logger = logging.getLogger(__name__)
@@ -651,12 +651,12 @@ class Variational:
 
         Raises
         ------
-        TypeError
+        UnavailableError
             With a forward model, whose linearization depends on gamma: solve
             again.
         """
         if not self.estimate_is_mean:
-            raise TypeError(
+            raise UnavailableError(
                 "The variational solution of a problem with a forward model has no "
                 "with_gamma: its linearization depends on gamma. Solve again with "
                 'fips.solve(problem, "variational", gamma=...).'

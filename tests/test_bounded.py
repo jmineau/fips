@@ -298,8 +298,9 @@ def test_no_bound_is_the_analytic_posterior_bit_for_bit(bounds):
     )
     assert post.dofs == analytic.dofs
     assert post.chi2 == analytic.chi2
-    with pytest.raises(TypeError, match="no at_bound"):
+    with pytest.raises(fips.UnavailableError, match="No finite bound was given"):
         _ = post.at_bound
+    assert not hasattr(post, "at_bound")
     # with_gamma keeps the bounded options
     assert post.with_gamma(0.5).options == dataclasses.replace(post.options, gamma=0.5)
 
@@ -964,6 +965,11 @@ def test_what_a_bounded_posterior_cannot_give():
         post.candidate_worth(problem.forward, problem.obs_cov, "obs_id", W)
     with pytest.raises(TypeError, match="no at_bound"):
         _ = fips.solve(problem).at_bound
+    analytic = fips.solve(problem)
+    assert not hasattr(analytic, "at_bound") and hasattr(post, "at_bound")
+    assert not hasattr(analytic, "iterations") and not hasattr(analytic, "eigenvalues")
+    with pytest.raises(fips.UnavailableError, match="orthant probabilities"):
+        _ = post.log_evidence
 
 
 def test_pickle_round_trip():

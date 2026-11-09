@@ -537,6 +537,7 @@ class TestPickle:
 def test_exported():
     assert fips.Problem is Problem
     assert fips.Posterior is Posterior
+    assert fips.UnavailableError is fips.posterior.UnavailableError
     assert callable(fips.solve)
     for gone in (
         "InverseProblem",
@@ -698,6 +699,26 @@ class TestAnotherMethod:
         with pytest.raises(AttributeError, match="does not give the posterior mean"):
             _ = other.mean
         assert not hasattr(other, "mean")
+
+    def test_what_a_method_cannot_give_is_one_error_hasattr_sees(self, problem, other):
+        """Every refusal of a member the method cannot give is an UnavailableError: an AttributeError, so ``hasattr`` is False for a property, and still a TypeError."""
+        assert issubclass(fips.UnavailableError, AttributeError)
+        assert issubclass(fips.UnavailableError, TypeError)
+        for name in ("mean", "at_bound", "iterations", "eigenvalues", "log_evidence"):
+            assert not hasattr(other, name), name
+            with pytest.raises(fips.UnavailableError):
+                getattr(other, name)
+        calls = {
+            "with_gamma": lambda: other.with_gamma(2.0),
+            "with_data": lambda: other.with_data(problem.obs),
+            "sample": lambda: other.sample(3),
+            "recovery": lambda: other.recovery(),
+        }
+        for call in calls.values():
+            with pytest.raises(fips.UnavailableError):
+                call()
+            with pytest.raises(TypeError):  # as before
+                call()
 
     def test_pickles(self, other):
         loaded = pickle.loads(pickle.dumps(other))

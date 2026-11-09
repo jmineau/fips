@@ -313,6 +313,15 @@ class Ensemble:
     estimate_is_mean: ClassVar[bool] = True
     """The estimate is the mean of the updated ensemble."""
 
+    no_evidence: ClassVar[str] = (
+        "the ensemble's chi-squared and information content are those of the "
+        "sample covariance of its members' modeled observations, with an error "
+        "that does not fall below the number of observations over the number "
+        "of members, so the evidence from them is not claimed. For a linear "
+        "problem, the exact evidence is fips.solve(problem).log_evidence."
+    )
+    """Why an ensemble posterior gives no log evidence."""
+
     problem: Problem
     """The problem that was solved."""
     gamma: float

@@ -185,6 +185,19 @@ without an :math:`n \times n` matrix.
    Posterior.data_worth
    Posterior.candidate_worth
 
+What a method cannot give
+~~~~~~~~~~~~~~~~~~~~~~~~~
+A member that needs more of the method than its solution gives (the mean of
+a mode, the elements on a bound of a method without bounds, the evidence of a
+posterior that is not Gaussian) raises :class:`UnavailableError`, an
+:class:`AttributeError` and a :class:`TypeError`: ``hasattr(post,
+"at_bound")`` is False where it would raise.
+
+.. autosummary::
+   :toctree: api/
+
+   UnavailableError
+
 Serialization
 ~~~~~~~~~~~~~
 A posterior pickles with the standard library (``pickle.dump(post, file)``):

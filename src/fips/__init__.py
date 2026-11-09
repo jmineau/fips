@@ -35,7 +35,7 @@ from .covariance import (
 from .forward import ForwardModel, taylortest
 from .methods import available_methods, solve
 from .operator import Operator
-from .posterior import Posterior
+from .posterior import Posterior, UnavailableError
 from .problem import Problem
 from .settings import HalfNormal, Hierarchical, LogNormal, Prior, Uniform, hierarchical
 from .space import Space
@@ -69,6 +69,7 @@ __all__ = [
     "solve",
     "available_methods",
     "Posterior",
+    "UnavailableError",
     "hierarchical",
     "Hierarchical",
     "Prior",
