@@ -296,8 +296,11 @@ class Case:
 KINDS = ["lognormal", "softplus"]
 SIZES = [(6, 15), (15, 6)]
 """Fewer, then more state elements than observations."""
-TIGHT = {"tol": 1e-22, "max_iterations": 200}
-"""Options with which the iterations go on to roundoff."""
+TIGHT = {"tol": 1e-20, "max_iterations": 200}
+"""Options with which the iterations go on close to roundoff, for the modes compared at 1e-9 of a standard deviation (the step counts are compared at ``STEPS``)."""
+
+STEPS = {"tol": 1e-14, "max_iterations": 200}
+"""Options for counting the steps to the mode: ``tol * n`` far above where Newton's steps bounce, so the count does not depend on the BLAS (they bounced from 1e-18 to 1e-15 in the whitened form on NumPy 1.24 and SciPy 1.12, at 1e-23 on newer ones)."""
 
 
 def assert_mode(post: fips.Posterior, case: Case, atol: float = 1e-9) -> None:
@@ -1136,22 +1139,18 @@ def test_a_model_fips_did_not_write_has_no_curvature():
 @pytest.mark.parametrize("kind", KINDS)
 @pytest.mark.parametrize("k", [0, 2])
 def test_newton_reaches_the_gauss_newton_mode(monkeypatch, kind, k):
-    """
-    With and without a bias block, in both analytic forms: the same mode as Gauss-Newton's alone, to roundoff at a tight tol and well inside the default tol's error.
-
-    The steps each takes are compared over many problems
-    (``test_newton_takes_fewer_steps_in_a_slv_shaped_world``), not here: on
-    one small problem the lower cost at each step is not always fewer steps
-    (to a d2 of 1e-8 the lognormal case takes 9 against Gauss-Newton's 7).
-    """
+    """With and without a bias block, in both analytic forms: the same mode as Gauss-Newton's alone, to roundoff at a tight tol and well inside the default tol's error, in fewer steps (counted at a tol far above roundoff)."""
     case = Case.random(kind, 22, 9, 14, k=k, std=0.8)
     newton = fips.solve(case.problem(), "gauss_newton", **TIGHT)
     default = fips.solve(case.problem(), "gauss_newton")
+    newton_steps = len(fips.solve(case.problem(), "gauss_newton", **STEPS).iterations)
     gauss_newton_only(monkeypatch)
     alone = fips.solve(case.problem(), "gauss_newton", **TIGHT)
+    alone_steps = len(fips.solve(case.problem(), "gauss_newton", **STEPS).iterations)
     s = case.gaussian_std(alone.estimate.values)
     assert np.abs((newton.estimate.values - alone.estimate.values) / s).max() < 1e-9
     assert np.abs((default.estimate.values - alone.estimate.values) / s).max() < 1e-3
+    assert newton_steps < alone_steps
     assert_mode(newton, case)
 
 
@@ -1342,7 +1341,7 @@ def test_the_draws_are_gauss_newtons_given_the_same_mode(monkeypatch, kind):
     )
     np.testing.assert_allclose(newton._solution.analytic.variances(), std**2, rtol=1e-9)
     a, b = newton.sample(200, rng=3).to_numpy(), alone.sample(200, rng=3).to_numpy()
-    assert np.abs((a - b) / std[:, None]).max() < 1e-8
+    assert np.abs((a - b) / std[:, None]).max() < 1e-7  # the paths amplify 1e-9
     np.testing.assert_allclose(
         newton.variances.values, alone.variances.values, rtol=1e-8
     )
@@ -1435,21 +1434,29 @@ def test_newton_takes_fewer_steps_in_a_slv_shaped_world(monkeypatch, kind):
     assert newton.sum() < 0.8 * alone.sum()
 
 
-@pytest.mark.parametrize("kind, seed", [("lognormal", 1), ("softplus", 11)])
+@pytest.mark.parametrize("kind, seed", [("lognormal", 1), ("softplus", 1)])
 def test_where_newton_is_not_positive_definite_the_step_is_gauss_newtons(
     caplog, kind, seed
 ):
     """
     A wide prior (a log standard deviation of 1.5): far from the mode the Newton matrix has a direction of negative curvature, that step is Gauss-Newton's, and the solve still ends at the mode.
 
-    The seeds are ones whose first step, from the prior, meets it by a wide
-    margin (a curvature of -3e5 against Gauss-Newton's 3e4, and -6e5 against
-    2e5), so that every platform's solve does: a case that meets it only
-    late, at roundoff, does on some and not on others.
+    Far from the mode: the step after the warning has a d2 above 1, not one
+    at roundoff (the softplus case of seed 3 met it only there, at a
+    curvature of -5e-27, and not on another BLAS).
     """
     case = Case.random(kind, seed, 8, 12, k=1, std=1.5)
     with caplog.at_level("DEBUG", logger="fips.methods.gauss_newton"):
         post = fips.solve(case.problem(), "gauss_newton", **TIGHT)
-    assert "The Newton matrix is not positive definite" in caplog.text
+    messages = [record.getMessage() for record in caplog.records]
+    warned = [
+        i
+        for i, m in enumerate(messages)
+        if "Newton matrix is not positive definite" in m
+    ]
+    assert warned
+    after = next(m for m in messages[warned[0] :] if "d2 = " in m)
+    assert after.startswith("Gauss-Newton step")
+    assert float(after.split("d2 = ")[1].split(" ")[0]) > 1.0
     assert "Newton's)" in caplog.text  # and Newton steps elsewhere
     assert_mode(post, case)

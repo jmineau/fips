@@ -286,8 +286,8 @@ class Arrays:
         return iterates, d2
 
 
-TIGHT = {"tol": 1e-22, "max_iterations": 100}
-"""Options with which the iterations go on to roundoff, for the comparisons with the dense references."""
+TIGHT = {"tol": 1e-20, "max_iterations": 100}
+"""Options with which the iterations go on close to roundoff, for the comparisons with the dense references (a tol of 1e-22 asked for steps at roundoff itself, which depend on the BLAS)."""
 
 SIZES = [(6, 15), (15, 6)]
 """Fewer, then more state elements than observations."""
