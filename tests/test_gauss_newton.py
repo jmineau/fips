@@ -674,6 +674,32 @@ def test_the_taylor_test_refuses_what_is_not_a_model():
         fips.taylortest(ExpModel(H), Vector(arrays.x_0, other))
 
 
+def test_the_taylor_test_refuses_a_step_that_tests_nothing():
+    """A ``dx`` of zeros, an infinite one, or one so small that the output does not move above roundoff, has a zero remainder at every step, which a Jacobian wrong by 2 passed: each is refused by name; the default ``dx`` fails it."""
+    arrays = Arrays.random(12, 6, 9)
+    state, obs = arrays.spaces()
+    H = Operator(arrays.H, obs, state)
+    x = Vector(arrays.x_0, state)
+    wrong = ExpModel(H, scale=2.0)
+    assert not fips.taylortest(wrong, x)
+    for values in (np.zeros(6), np.r_[np.inf, np.ones(5)]):  # a Vector refuses NaN
+        with pytest.raises(ValueError, match="dx must be finite and not zero"):
+            fips.taylortest(wrong, x, dx=Vector(values, state))
+    with pytest.raises(ValueError, match="barely changes along dx"):
+        fips.taylortest(wrong, x, dx=Vector(np.full(6, 1e-16), state))
+    # a little above roundoff at the largest step, the remainder is at roundoff
+    # whatever the Jacobian: the probe's case, a step of 1e-12 on its model
+    for scale in (1.0, 2.0):
+        with pytest.raises(ValueError, match="barely changes along dx"):
+            fips.taylortest(
+                ExpModel(H, scale=scale), x, dx=Vector(np.full(6, 1e-13), state)
+            )
+    # a direction the observations do not see: nothing to test either
+    blind = Operator(np.c_[arrays.H[:, :5], np.zeros(9)], obs, state)
+    with pytest.raises(ValueError, match="barely changes along dx"):
+        fips.taylortest(ExpModel(blind), x, dx=Vector(np.r_[np.zeros(5), 1.0], state))
+
+
 # ---------------------------------------------------------------------------
 # 5. Wrong variants of the method fail the tests above
 # ---------------------------------------------------------------------------

@@ -438,6 +438,9 @@ _STEPS = 30
 _ORDER = 1.8
 """The order of the remainder :func:`taylortest` asks for at its smallest steps: 2 for a right Jacobian, 1 for a wrong one."""
 
+_SEEN = 1e6
+"""How many times its roundoff the model's output must change at :func:`taylortest`'s largest step for a remainder at roundoff to pass: a Jacobian off by a millionth of the change or more would have shown."""
+
 _ADJOINT = 1e-10
 r"""How far :math:`\langle J v, w \rangle` and :math:`\langle v, J^T w \rangle` may differ in :func:`taylortest`, relative to the size of their terms: roundoff of an exact discrete adjoint, far below a wrong one's."""
 
@@ -457,7 +460,9 @@ def taylortest(
     remainder falls by at least :math:`2^{1.8}` per halving at its three
     smallest steps above roundoff (:math:`10^3` times the machine epsilon of
     :math:`\lVert F \rVert`). A remainder at roundoff from the start (a model
-    whose Jacobian is exact, such as a linear one) passes. The orders are
+    whose Jacobian is exact, such as a linear one) passes, if the output moved
+    by a million times its roundoff at the largest step; with a `dx` too small
+    for that, any Jacobian would pass, and the test raises. The orders are
     logged at DEBUG.
 
     The Jacobian is the one fips solves with: ``jacobian(x)``, or for a model
@@ -496,7 +501,11 @@ def taylortest(
         and an Operator.
     ValueError
         If `x` or `dx` does not have exactly the model's columns' labels, or
-        what the model returns does not have exactly its labels.
+        what the model returns does not have exactly its labels; `dx` is zero
+        everywhere or not finite; or the remainder is at roundoff while the
+        model's output changes by less than a million times roundoff at the
+        largest step along `dx` (a step far too small, or a direction the
+        observations do not see), where any Jacobian would pass.
 
     See Also
     --------
@@ -557,6 +566,11 @@ def taylortest(
         direction = np.random.default_rng(seed).standard_normal(len(point)) * size
     else:
         direction = on_cols(dx, "dx")
+        if not np.isfinite(direction).all() or not direction.any():
+            raise ValueError(
+                "dx must be finite and not zero everywhere: it is the direction "
+                "of the steps, and a zero step leaves nothing to test."
+            )
     F0 = _evaluated(model, point)
     J = _differentiated(model, point).data
     if not dottest(J, rtol=_ADJOINT, seed=seed):
@@ -570,10 +584,12 @@ def taylortest(
     eps = np.finfo(float).eps
     steps = 0.5 ** np.arange(1, _STEPS + 1)
     remainders, floors = [], []
+    changes = []
     for step in steps:
         F = _evaluated(model, point + step * direction)
         remainders.append(float(np.linalg.norm(F - F0 - step * Jdx)))
         floors.append(1e3 * eps * float(np.linalg.norm(F) + np.linalg.norm(F0)))
+        changes.append(float(np.linalg.norm(F - F0)))
     r, floor = np.array(remainders), np.array(floors)
     above = np.isfinite(r) & (r > floor)
     pairs = np.flatnonzero(above[:-1] & above[1:])
@@ -582,7 +598,21 @@ def taylortest(
         logger.debug("Taylor test: the remainder is at roundoff (%s).", exact)
         if not exact:
             logger.info("Taylor test: the remainder is not at roundoff.")
-        return exact
+            return False
+        # a remainder at roundoff says the Jacobian is right only if the
+        # output moved well above roundoff, where a wrong one would show
+        finite = np.isfinite(r)
+        first = int(np.argmax(finite))
+        if not (finite.any() and changes[first] > _SEEN * floor[first]):
+            raise ValueError(
+                "The model's output barely changes along dx, even at the largest "
+                f"step that it models (by {changes[first]:.3g}, against a roundoff "
+                f"of {floor[first]:.3g}), so the remainder is at roundoff whatever "
+                "the Jacobian: the test cannot tell a right one from a wrong one. "
+                "Give a dx that moves the observations, such as one of the size of "
+                "x (the default)."
+            )
+        return True
     orders = np.log2(r[pairs] / r[pairs + 1])
     logger.debug(
         "Taylor test: the remainder's order at each halving of the step, from the "
