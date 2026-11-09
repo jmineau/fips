@@ -184,8 +184,9 @@ class BoundedOptions:
         (or ``inf`` for `upper`) where an element has none; a dict maps block
         names to a number or a Vector on that block's labels, and leaves the
         blocks it does not name unbounded (``lower={"flux": 0.0}`` keeps a
-        bias block free). None is no bound. With no finite bound, the
-        posterior is the analytic one.
+        bias block free). A finite number on a state of several blocks bounds
+        them all, and the solve logs a warning naming them. None is no bound.
+        With no finite bound, the posterior is the analytic one.
     draws : int, default 2000
         The number of draws of the truncated posterior kept for its variances
         and the covariance of aggregates (Monte Carlo estimates: the relative
@@ -1059,6 +1060,26 @@ def _logdet(S: np.ndarray) -> float:
     return 2.0 * float(np.log(np.diagonal(factor)).sum())
 
 
+def _warn_if_every_block(options: BoundedOptions, state: Space) -> None:
+    """Log a warning when a finite bound given as a number bounds a state of several blocks: every block, a bias block too, which is rarely meant."""
+    if len(state.names) < 2:
+        return
+    for side in ("lower", "upper"):
+        bound = getattr(options, side)
+        if isinstance(bound, float) and math.isfinite(bound):
+            logger.warning(
+                "%s=%g bounds every block of the state: %s. A bias or an offset "
+                "block is usually free; to bound only some blocks, give a dict, "
+                "such as %s={%r: %g}.",
+                side,
+                bound,
+                _listed(state.names),
+                side,
+                state.names[0],
+                bound,
+            )
+
+
 def _bounded(problem: Problem, options: BoundedOptions) -> Posterior:
     """Factor the problem as the analytic method does, then hold the estimate to the bounds; with no finite bound, the analytic posterior."""
     if not isinstance(problem.forward, Operator):
@@ -1070,6 +1091,7 @@ def _bounded(problem: Problem, options: BoundedOptions) -> Posterior:
             "the bounds (the logarithm of a positive flux)."
         )
     state = problem.prior.space
+    _warn_if_every_block(options, state)
     lower = _resolve(options.lower, state, "lower")
     upper = _resolve(options.upper, state, "upper")
     crossed = ~(lower < upper)

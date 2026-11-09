@@ -193,8 +193,8 @@ thousand elements, most of them near zero, took about 20 ms a draw (40 s for
 2000), and one of three thousand about 0.1 s a draw, on one machine; a state
 far from its bounds bounces little and costs little. The draws are made only
 when a spread is asked for, and a smaller ``draws`` (``fips.solve(problem,
-"bounded", lower=0.0, draws=500)``) costs proportionally less, with a larger
-Monte Carlo error.
+"bounded", lower={"flux": 0.0}, draws=500)``) costs proportionally less, with a
+larger Monte Carlo error.
 
 :meth:`~fips.Posterior.trials` asks each trial's posterior for its spread, so
 a bounded posterior draws in every trial: keep ``draws`` small there.

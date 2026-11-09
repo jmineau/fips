@@ -468,6 +468,26 @@ def test_bounds_by_block_leave_the_other_blocks_free(given):
     assert post.at_bound["flux"].any() and not post.at_bound["bias"].any()
 
 
+def test_a_number_on_several_blocks_bounds_them_all_and_warns(caplog):
+    """``lower=0.0`` on a flux and a bias block holds the bias at zero too, which is rarely meant: the solve warns, naming the blocks; a dict, a single block or an infinite number does not."""
+    arrays, state = _two_blocks(4)
+    problem = arrays.problem(state)
+    with caplog.at_level("WARNING", logger="fips.methods.bounded"):
+        post = fips.solve(problem, "bounded", lower=0.0, draws=20)
+    assert "lower=0 bounds every block of the state: 'flux', 'bias'" in caplog.text
+    assert "lower={'flux': 0}" in caplog.text
+    assert np.all(post.estimate["bias"].values == 0.0)  # what the warning is about
+    caplog.clear()
+    with caplog.at_level("WARNING", logger="fips.methods.bounded"):
+        fips.solve(problem, "bounded", lower={"flux": 0.0}, draws=20)
+        fips.solve(problem, "bounded", lower=-math.inf, upper={"flux": 5.0}, draws=20)
+        fips.solve(Arrays.random(0, 6, 8).problem(), "bounded", lower=0.0, draws=20)
+    assert "every block" not in caplog.text
+    with caplog.at_level("WARNING", logger="fips.methods.bounded"):
+        fips.solve(problem, "bounded", upper=9.0, draws=20)
+    assert "upper=9 bounds every block" in caplog.text
+
+
 @pytest.mark.usefixtures("analytic_form")
 @pytest.mark.parametrize("seed", range(3))
 def test_input_order_does_not_change_the_labeled_mode(seed):
