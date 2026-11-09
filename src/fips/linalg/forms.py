@@ -1430,7 +1430,9 @@ def as_linear_operator(x: LinearOperatorLike) -> LinearOperator:
 
 
 def dottest(
-    op: _SciPyLinearOperator, rtol: float = 1e-12, seed: int | None = 0
+    op: _SciPyLinearOperator,
+    rtol: float = 1e-12,
+    rng: int | np.random.Generator | None = 0,
 ) -> bool:
     """
     Check that ``op.rmatvec`` is the adjoint of ``op.matvec``.
@@ -1446,8 +1448,11 @@ def dottest(
         them.
     rtol : float, default 1e-12
         Relative tolerance.
-    seed : int, optional
-        Seed of the random vectors.
+    rng : int, numpy.random.Generator or None, default 0
+        A seed, or the generator to draw the random vectors from (used as
+        given, so a generator passed on is advanced; None draws from fresh
+        entropy), as :meth:`fips.Posterior.sample` takes it. A solve has a
+        ``seed``, a draw takes an ``rng``; this check draws.
 
     Returns
     -------
@@ -1461,8 +1466,8 @@ def dottest(
     >>> dottest(DenseOperator(np.arange(6.0).reshape(2, 3)))
     True
     """
-    rng = np.random.default_rng(seed)
-    x, y = rng.standard_normal(op.shape[1]), rng.standard_normal(op.shape[0])
+    draw = np.random.default_rng(rng)
+    x, y = draw.standard_normal(op.shape[1]), draw.standard_normal(op.shape[0])
     Ax, ATy = op.matvec(x), op.rmatvec(y)
     size = np.linalg.norm(Ax) * np.linalg.norm(y) + np.linalg.norm(x) * np.linalg.norm(
         ATy

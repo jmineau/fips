@@ -695,6 +695,39 @@ def test_the_adjoint_test():
     assert fips.taylortest(explicit.forward, x)
 
 
+@pytest.mark.parametrize("rng", [3, np.random.default_rng(3), None])
+def test_the_checks_take_an_rng_like_a_draw(rng):
+    """``taylortest`` and ``dottest`` take an int, a Generator or None as ``sample`` does, and no longer a ``seed``."""
+    explicit, products = lognormal_problem(seed=5)
+    model = products.forward
+    x = fips.Vector(
+        np.random.default_rng(1).normal(size=len(products.prior)), model.cols
+    )
+    wrong = WrongAdjoint(model.H, model.reference, model.rows, model.cols)
+    assert fips.taylortest(model, x, rng=rng)
+    assert not fips.taylortest(wrong, x, rng=rng)
+    assert dottest(model.jacobian(x).data, rtol=1e-10, rng=rng)
+    assert not dottest(wrong.jacobian(x).data, rtol=1e-10, rng=rng)
+    with pytest.raises(TypeError, match="seed"):
+        # pyrefly: ignore[unexpected-keyword]
+        fips.taylortest(model, x, seed=0)
+    with pytest.raises(TypeError, match="seed"):
+        # pyrefly: ignore[unexpected-keyword]
+        dottest(model.jacobian(x).data, seed=0)
+
+
+def test_a_generator_is_used_as_given():
+    """A Generator passed to a check is advanced (so one generator gives different vectors each call); an int repeats."""
+    explicit, products = lognormal_problem(seed=5)
+    J = products.forward.jacobian(
+        fips.Vector(np.zeros(len(products.prior)), products.forward.cols)
+    ).data
+    rng = np.random.default_rng(0)
+    before = rng.bit_generator.state
+    assert dottest(J, rng=rng)
+    assert rng.bit_generator.state != before
+
+
 def test_a_model_with_one_product_has_no_jacobian():
     """A model that writes jvp but not vjp (or neither) has no Jacobian, and says what to write."""
 

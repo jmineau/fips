@@ -446,7 +446,10 @@ r"""How far :math:`\langle J v, w \rangle` and :math:`\langle v, J^T w \rangle` 
 
 
 def taylortest(
-    model: ForwardModel, x: Vector, dx: Vector | None = None, seed: int | None = 0
+    model: ForwardModel,
+    x: Vector,
+    dx: Vector | None = None,
+    rng: int | np.random.Generator | None = 0,
 ) -> bool:
     r"""
     Check that a model's Jacobian is the derivative of the model, by a Taylor test, and that its transpose is its adjoint.
@@ -485,8 +488,12 @@ def taylortest(
         The direction of the steps, on the model's columns. By default normal
         draws, each scaled by its element's size in `x` (where an element is
         zero, by the mean size of `x`; 1 if `x` is zero).
-    seed : int, optional
-        The seed of the default direction.
+    rng : int, numpy.random.Generator or None, default 0
+        A seed, or the generator to draw from (used as given, so a generator
+        passed on is advanced; None draws from fresh entropy), as
+        :meth:`fips.Posterior.sample` takes it: the default direction, then
+        the vectors of the adjoint check. A solve has a ``seed``, a draw takes
+        an ``rng``; this check draws.
 
     Returns
     -------
@@ -560,10 +567,11 @@ def taylortest(
         return v.values[cols._align(v.space, what, f"{what} and the model's columns")]
 
     point = on_cols(x, "x")
+    draw = np.random.default_rng(rng)
     if dx is None:
         size = np.abs(point)
         size[size == 0] = size.mean() if size.any() else 1.0
-        direction = np.random.default_rng(seed).standard_normal(len(point)) * size
+        direction = draw.standard_normal(len(point)) * size
     else:
         direction = on_cols(dx, "dx")
         if not np.isfinite(direction).all() or not direction.any():
@@ -573,7 +581,7 @@ def taylortest(
             )
     F0 = _evaluated(model, point)
     J = _differentiated(model, point).data
-    if not dottest(J, rtol=_ADJOINT, seed=seed):
+    if not dottest(J, rtol=_ADJOINT, rng=draw):
         logger.info(
             "Taylor test: the transpose of %s's Jacobian is not its adjoint (vjp "
             "is not the transpose of jvp).",
