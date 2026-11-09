@@ -20,6 +20,7 @@ posterior (:meth:`Posterior.sample <fips.Posterior.sample>`), to the flux.
   bending to stay above zero within about :math:`s` of it.
 """
 
+import contextlib
 import math
 import numbers
 from abc import abstractmethod
@@ -28,6 +29,7 @@ from typing import overload
 
 import numpy as np
 import pandas as pd
+from numpy.linalg import LinAlgError
 from numpy.polynomial.legendre import leggauss
 from scipy.special import expit
 
@@ -584,7 +586,7 @@ class LognormalForward(_Transformed):
             if bad.any():
                 raise ValueError(
                     f"The {what} is not zero at {int(bad.sum())} labels where the "
-                    "reference is, whose flux is zero whatever u is: "
+                    "reference is zero, whose flux is zero whatever u is: "
                     f"{_listed(labels.index[bad])}. A source the reference has "
                     "not got needs a reference there, or SoftplusForward."
                 )
@@ -693,7 +695,21 @@ def _softplus_chunk(
     return mean, std, jac
 
 
-def _softplus_match(m: np.ndarray, s: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+def _steps(A: np.ndarray, b: np.ndarray) -> np.ndarray:
+    """Return the solution of each cell's 2 x 2 system ``A x = b`` (``k x 2``), NaN for a cell whose matrix is singular."""
+    try:
+        return np.linalg.solve(A, b[:, :, None])[:, :, 0]
+    except LinAlgError:  # some cell is singular: the others one by one
+        x = np.full(b.shape, np.nan)
+        for k in range(len(b)):
+            with contextlib.suppress(LinAlgError):
+                x[k] = np.linalg.solve(A[k], b[k])
+        return x
+
+
+def _softplus_match(
+    m: np.ndarray, s: np.ndarray, cells: pd.Index
+) -> tuple[np.ndarray, np.ndarray]:
     r"""
     Return :math:`a, b` with :math:`\log(1 + e^t)`, :math:`t \sim N(a, b^2)`, of mean `m` and standard deviation `s` (both positive).
 
@@ -708,7 +724,9 @@ def _softplus_match(m: np.ndarray, s: np.ndarray) -> tuple[np.ndarray, np.ndarra
     Raises
     ------
     RuntimeError
-        If some cell does not reach a relative error of ``_ACCEPTED``.
+        If some cell does not reach a relative error of ``_ACCEPTED`` (its
+        Newton matrix singular, or its steps stalled), naming `cells`, the
+        labels of the cells.
     """
     log_m, log_s = np.log(m), np.log(s)
 
@@ -750,7 +768,7 @@ def _softplus_match(m: np.ndarray, s: np.ndarray) -> tuple[np.ndarray, np.ndarra
         if not len(pending):
             break
         with np.errstate(invalid="ignore"):
-            step = np.linalg.solve(dr[pending], -r[pending][:, :, None])[:, :, 0]
+            step = _steps(dr[pending], -r[pending])
         step[~np.isfinite(step)] = 0.0
         fraction, moved = 1.0, np.zeros(len(pending), dtype=bool)
         for _ in range(40):  # halve each cell's step until its error falls
@@ -775,7 +793,7 @@ def _softplus_match(m: np.ndarray, s: np.ndarray) -> tuple[np.ndarray, np.ndarra
             f"The softplus prior did not match the mean and standard deviation in "
             f"{int(failed.sum())} cells (relative error up to {worst.max():.2g}), "
             f"such as a mean of {m[failed][0]:.4g} and a standard deviation of "
-            f"{s[failed][0]:.4g} times the scale."
+            f"{s[failed][0]:.4g} times the scale: {_listed(cells[failed])}."
         )
     b = np.exp(beta)
     return alpha * b, b
@@ -1039,7 +1057,9 @@ class SoftplusForward(_Transformed):
         # no spread: the u whose flux is the mean, log(e^m - 1)
         mu[fixed] = m[fixed] + np.log(-np.expm1(-m[fixed]))
         if (~fixed).any():
-            mu[~fixed], sigma[~fixed] = _softplus_match(m[~fixed], s_flux[~fixed])
+            mu[~fixed], sigma[~fixed] = _softplus_match(
+                m[~fixed], s_flux[~fixed], labels.index[~fixed]
+            )
         return (
             Vector._adopt(mu * scale, labels, "prior"),
             Vector._adopt(sigma * scale, labels, "prior_std"),

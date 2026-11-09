@@ -160,8 +160,8 @@ class GaussNewtonOptions:
     ValueError
         If `gamma` is not a positive, finite number, `max_iterations` is not a
         positive integer, `tol` is not a positive, finite number, `draws` is
-        not a positive integer, or `burn_in` or `seed` is not a nonnegative
-        one.
+        not an integer of at least 2, or `burn_in` or `seed` is not a
+        nonnegative one.
     """
 
     gamma: float = 1.0
@@ -196,15 +196,20 @@ class GaussNewtonOptions:
         if not (math.isfinite(tol) and tol > 0):
             raise ValueError(f"tol must be positive and finite, got {tol}.")
         object.__setattr__(self, "tol", tol)
-        for name, least in (("draws", 1), ("burn_in", 0), ("seed", 0)):
+        for name, least in (("draws", 2), ("burn_in", 0), ("seed", 0)):
             value = getattr(self, name)
             if (
                 not isinstance(value, numbers.Integral)
                 or isinstance(value, bool)
                 or value < least
             ):
-                kind = "a positive" if least else "a nonnegative"
-                raise ValueError(f"{name} must be {kind} integer, got {value!r}.")
+                kind = {2: "an", 0: "a nonnegative"}[least]
+                at_least = (
+                    " of at least 2 (a variance needs two draws)" if least else ""
+                )
+                raise ValueError(
+                    f"{name} must be {kind} integer{at_least}, got {value!r}."
+                )
             object.__setattr__(self, name, int(value))
 
 

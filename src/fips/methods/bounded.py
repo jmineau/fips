@@ -213,9 +213,9 @@ class BoundedOptions:
     ValueError
         If `gamma` is not a positive, finite number; a bound is NaN, or a
         bound no value can satisfy (``lower`` of ``inf``); both bounds are
-        numbers and `lower` is not below `upper`; or `draws` is not a positive
-        integer, `burn_in` not a nonnegative one, or `seed` not a nonnegative
-        integer. A bound's labels are checked against the state by
+        numbers and `lower` is not below `upper`; or `draws` is not an
+        integer of at least 2, `burn_in` not a nonnegative one, or `seed` not
+        a nonnegative integer. A bound's labels are checked against the state by
         :func:`fips.solve`.
     TypeError
         If a bound is not a number, a Vector, a dict or None, or a dict has a
@@ -246,15 +246,20 @@ class BoundedOptions:
             )
         object.__setattr__(self, "lower", lower)
         object.__setattr__(self, "upper", upper)
-        for name, least in (("draws", 1), ("burn_in", 0), ("seed", 0)):
+        for name, least in (("draws", 2), ("burn_in", 0), ("seed", 0)):
             value = getattr(self, name)
             if (
                 not isinstance(value, numbers.Integral)
                 or isinstance(value, bool)
                 or value < least
             ):
-                kind = "a positive" if least else "a nonnegative"
-                raise ValueError(f"{name} must be {kind} integer, got {value!r}.")
+                kind = {2: "an", 0: "a nonnegative"}[least]
+                at_least = (
+                    " of at least 2 (a variance needs two draws)" if least else ""
+                )
+                raise ValueError(
+                    f"{name} must be {kind} integer{at_least}, got {value!r}."
+                )
             object.__setattr__(self, name, int(value))
 
 

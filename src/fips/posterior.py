@@ -36,7 +36,7 @@ from fips.covariance import Covariance, CovarianceModel
 from fips.linalg import LinearOperator
 from fips.linalg.forms import _adopt, _solve_psd
 from fips.operator import Operator
-from fips.problem import Problem, _covariance
+from fips.problem import Problem, _covariance, _vector
 from fips.vector import Vector
 
 logger = logging.getLogger(__name__)
@@ -2670,6 +2670,7 @@ class Posterior:
             solution has no ``with_data``).
         """
         resolve = self._optional("with_data", "the posterior of other observations")
+        obs = _vector(obs, "obs")
         problem = self._problem
         space = problem.obs.space
         positions = space._align(

@@ -1021,6 +1021,8 @@ def test_what_a_bounded_posterior_cannot_give():
     assert not hasattr(analytic, "iterations") and not hasattr(analytic, "eigenvalues")
     with pytest.raises(fips.UnavailableError, match="orthant probabilities"):
         _ = post.log_evidence
+    with pytest.raises(TypeError, match="obs must be a Vector, got ndarray"):
+        post.with_data(problem.obs.values)
 
 
 def test_pickle_round_trip():
@@ -1082,7 +1084,8 @@ def test_options_are_frozen_hashable_and_keep_a_dict_through_replace():
         ({"lower": "0"}, TypeError, "lower is a number or a Vector, not str"),
         ({"lower": True}, TypeError, "not bool"),
         ({"lower": {0: 0.0}}, TypeError, "block names, strings"),
-        ({"draws": 0}, ValueError, "draws must be a positive integer"),
+        ({"draws": 0}, ValueError, "draws must be an integer of at least 2"),
+        ({"draws": 1}, ValueError, "draws must be an integer of at least 2"),
         ({"burn_in": -1}, ValueError, "burn_in must be a nonnegative integer"),
         ({"seed": 1.5}, ValueError, "seed must be a nonnegative integer"),
         ({"gamma": -1.0}, ValueError, "gamma must be positive"),

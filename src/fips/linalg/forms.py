@@ -25,6 +25,7 @@ from scipy.linalg.lapack import get_lapack_funcs
 from scipy.sparse.csgraph import connected_components
 from scipy.sparse.linalg import LinearOperator as _SciPyLinearOperator
 from scipy.sparse.linalg import splu
+from scipy.sparse.linalg._interface import _CustomLinearOperator
 
 logger = logging.getLogger(__name__)
 
@@ -1104,6 +1105,20 @@ class DiagonalOperator(LinearOperator):
         return DiagonalOperator._adopt(np.sqrt(self.values))
 
 
+def _has_adjoint(op: _SciPyLinearOperator) -> bool:
+    """Return whether a SciPy linear operator can apply its transpose: one made with ``rmatvec`` or ``rmatmat``, or a subclass that writes either or its adjoint."""
+    if isinstance(op, _CustomLinearOperator):
+        return any(
+            getattr(op, f"_CustomLinearOperator__{name}_impl", None) is not None
+            for name in ("rmatvec", "rmatmat")
+        )
+    base = _SciPyLinearOperator
+    return any(
+        getattr(type(op), name) is not getattr(base, name)
+        for name in ("_rmatvec", "_rmatmat", "_adjoint")
+    )
+
+
 class MatrixFreeOperator(LinearOperator):
     r"""
     A matrix known only by its products, :math:`A x` and :math:`A^T y`, never by its entries.
@@ -1136,7 +1151,8 @@ class MatrixFreeOperator(LinearOperator):
     Raises
     ------
     TypeError
-        If `op` is not a SciPy linear operator, or is a fips form already.
+        If `op` is not a SciPy linear operator, is a fips form already, or
+        has no ``rmatvec`` (nor ``rmatmat``, nor an adjoint of its own).
 
     See Also
     --------
@@ -1168,6 +1184,13 @@ class MatrixFreeOperator(LinearOperator):
             raise TypeError(
                 "MatrixFreeOperator wraps a SciPy LinearOperator that is not a "
                 f"fips form, got {type(op).__name__}."
+            )
+        if not _has_adjoint(op):
+            raise TypeError(
+                "MatrixFreeOperator needs the transpose's products too: this SciPy "
+                "LinearOperator has no rmatvec (nor rmatmat); give "
+                "LinearOperator(shape, matvec=..., rmatvec=...), and check it "
+                "with fips.linalg.dottest."
             )
         self._op = op
         super().__init__(op.shape)

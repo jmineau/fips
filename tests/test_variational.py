@@ -20,6 +20,7 @@ import pandas as pd
 import pytest
 import scipy.sparse as sp
 from scipy.sparse.linalg import LinearOperator as SciPyOperator
+from scipy.sparse.linalg import aslinearoperator
 
 import fips
 from fips.linalg import (
@@ -749,6 +750,21 @@ def test_matrix_free_form_stays_matrix_free():
     assert isinstance(fips.linalg.as_linear_operator(form._op), MatrixFreeOperator)
     with pytest.raises(TypeError):
         MatrixFreeOperator(D)
+
+
+def test_a_matrix_free_operator_without_its_transpose_is_refused():
+    """A SciPy operator given only ``matvec`` cannot apply ``H^T``, which every solve needs: refused when it is wrapped, by name, not at the solve with SciPy's ``'NoneType' object is not callable``; ``rmatmat`` alone, or an operator SciPy made with its own adjoint, will do."""
+    A = np.random.default_rng(0).normal(size=(4, 3))
+    with pytest.raises(TypeError, match="has no rmatvec"):
+        MatrixFreeOperator(SciPyOperator(A.shape, matvec=lambda x: A @ x))
+    with pytest.raises(TypeError, match="has no rmatvec"):
+        fips.linalg.as_linear_operator(SciPyOperator(A.shape, matvec=lambda x: A @ x))
+    by_rmatmat = MatrixFreeOperator(
+        SciPyOperator(A.shape, matvec=lambda x: A @ x, rmatmat=lambda Y: A.T @ Y)
+    )
+    np.testing.assert_allclose(by_rmatmat._transpose().dense(), A.T)
+    for op in (aslinearoperator(A), aslinearoperator(A).T):
+        assert dottest(MatrixFreeOperator(op))
 
 
 def test_kronecker_and_block_roots_have_transposes():

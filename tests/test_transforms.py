@@ -997,10 +997,13 @@ def test_prior_for_refuses_what_it_cannot_make():
         H, pd.Series([1.0, 0.0, 1.0], index=labels), block="flux"
     )
     with pytest.raises(
-        ValueError, match=r"mean is not zero at 1 labels where the reference is.*'b'"
+        ValueError,
+        match=r"mean is not zero at 1 labels where the reference is zero, .*'b'",
     ):
         lognormal.prior_for(1.0, pd.Series([1.0, 0.0, 1.0], index=labels))
-    with pytest.raises(ValueError, match=r"std is not zero.*'b'"):
+    with pytest.raises(
+        ValueError, match=r"std is not zero .* reference is zero, .*'b'"
+    ):
         lognormal.prior_for(pd.Series([1.0, 0.0, 1.0], index=labels), 1.0)
     with pytest.raises(ValueError, match=r"mean is zero at 1 labels.*'c'"):
         lognormal.prior_for(pd.Series([1.0, 0.0, 0.0], index=labels), 0.0)
@@ -1014,6 +1017,25 @@ def test_prior_for_refuses_what_it_cannot_make():
     softplus = SoftplusForward(H, block="flux")
     with pytest.raises(ValueError, match=r"not positive at 1 labels.*'a'"):
         softplus.prior_for(pd.Series([0.0, 1.0, 1.0], index=labels), 1.0)
+
+
+def test_a_singular_softplus_newton_matrix_is_a_runtime_error(monkeypatch):
+    """
+    Where Newton's 2 x 2 matrix is singular in a cell, its step is skipped and the cell fails to match: a RuntimeError naming the cells, as the docstring says, not numpy's LinAlgError.
+
+    ``prior_for(1e-8, 1e3)`` with a scale of 0.5 (a standard deviation 1e11
+    times the mean) met a singular matrix on NumPy 2.5 and not on 1.24, so
+    the solve is made singular everywhere here.
+    """
+    H = two_block_operator()
+    softplus = SoftplusForward(H, block="flux")
+
+    def singular(A, b):
+        raise np.linalg.LinAlgError("Singular matrix")
+
+    monkeypatch.setattr(np.linalg, "solve", singular)
+    with pytest.raises(RuntimeError, match=r"did not match .* in 3 cells.*'a'.*'c'"):
+        softplus.prior_for(1.0, 1.0)
 
 
 @pytest.mark.parametrize("kind", KINDS)

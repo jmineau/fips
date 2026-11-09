@@ -873,6 +873,7 @@ def test_a_solve_that_does_not_converge_raises():
         ({"gamma": -1.0}, "gamma"),
         ({"draws": 0}, "draws"),
         ({"draws": True}, "draws"),
+        ({"draws": 1}, "draws must be an integer of at least 2"),
         ({"burn_in": -1}, "burn_in"),
         ({"seed": 1.5}, "seed"),
     ],
