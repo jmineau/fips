@@ -24,7 +24,7 @@ import pandas as pd
 import pytest
 import scipy.sparse as sp
 from scipy.stats import chi2 as chi2_distribution
-from scipy.stats import norm
+from scipy.stats import multivariate_normal, norm
 
 import fips
 from fips import (
@@ -88,6 +88,7 @@ class ClosedForm:
     G: np.ndarray
     reduced_chi2: float
     misfits: tuple[float, float]
+    log_evidence: float
     scale: dict[str, float]
 
 
@@ -120,6 +121,9 @@ def closed_form(z, x_0, H, S_0, S_z, c) -> ClosedForm:
     d = x_hat - x_0
     misfits = (float(r @ inv(S_z) @ r), float(d @ inv(S_0) @ d))
     chi2 = sum(misfits) / len(z)
+    # The evidence: the density of z under N(H x_0 + c, G), the state integrated out
+    log_evidence = float(multivariate_normal(H @ x_0 + c, G).logpdf(z))
+    _, logdet_G = np.linalg.slogdet(G)
 
     a = np.abs
     scale = {
@@ -132,6 +136,7 @@ def closed_form(z, x_0, H, S_0, S_z, c) -> ClosedForm:
         "y": (a(H) @ a(x_hat)).max() + a(c).max(),
         "G": (a(H) @ a(S_0) @ a(H.T)).max() + a(S_z).max(),
         "chi2": chi2,
+        "log_evidence": abs(logdet_G) + chi2 * len(z) + len(z) * np.log(2 * np.pi),
     }
     return ClosedForm(
         x_hat=x_hat,
@@ -146,6 +151,7 @@ def closed_form(z, x_0, H, S_0, S_z, c) -> ClosedForm:
         G=H @ S_0 @ H.T + S_z,
         reduced_chi2=float(chi2),
         misfits=misfits,
+        log_evidence=log_evidence,
         scale=scale,
     )
 
@@ -364,6 +370,9 @@ def check_posterior(
         post.data_misfit, data / gamma, sc["chi2"] * len(o) / gamma, at("data_misfit")
     )
     assert_close(post.state_misfit, state, sc["chi2"] * len(o), at("state_misfit"))
+    assert_close(
+        post.log_evidence, expected.log_evidence, sc["log_evidence"], at("log_evidence")
+    )
 
 
 def rodgers_test(C: np.ndarray, v: np.ndarray) -> tuple[float, int]:
@@ -938,7 +947,15 @@ def test_permutation(method, seed):
             sc[key],
             f"seed {seed}: {name}",
         )
-    for diag in ["dofs", "chi2", "reduced_chi2", "r2", "rmse", "uncertainty_reduction"]:
+    for diag in [
+        "dofs",
+        "chi2",
+        "reduced_chi2",
+        "log_evidence",
+        "r2",
+        "rmse",
+        "uncertainty_reduction",
+    ]:
         got = getattr(shuffled, diag)
         want = getattr(ref, diag)
         assert_close(got, want, abs(want), f"seed {seed}: {diag}")

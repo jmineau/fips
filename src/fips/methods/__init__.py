@@ -29,7 +29,10 @@ below:
   linear problem its gain is of), ``estimate_is_mean = True`` when its
   estimate is the posterior mean, and ``estimate_is_linear = True`` when its
   estimate is :math:`x_0 + K (z - H x_0 - c)` with the gain of ``gain()``
-  (what ``Posterior.recovery`` needs); a posterior whose solution lacks one
+  (what ``Posterior.recovery`` needs), and ``evidence_is_laplace = True``
+  when its posterior is the Gaussian at its estimate, exactly or
+  approximately, so that ``chi2()`` and ``information()`` give the evidence
+  (``Posterior.log_evidence``); a posterior whose solution lacks one
   of them raises when that feature is asked for;
 - a function from a :class:`~fips.Problem` and the options to
   ``Posterior(problem, solution, options)``.
@@ -48,12 +51,13 @@ The bounded method's solution (``fips.methods.bounded.Bounded``) holds the
 analytic one and the mode, and answers the variances from draws of its
 truncated posterior and the gain from the Gaussian at the mode; it has no
 ``estimate_is_mean`` and no ``estimate_is_linear`` (the mode is not linear in
-the data), and its ``with_gamma`` and ``with_data`` find the mode again on the
+the data), ``evidence_is_laplace`` only with no finite bound, and its ``with_gamma`` and ``with_data`` find the mode again on the
 analytic factors. The Gauss-Newton method's solution
 (``fips.methods.gauss_newton.GaussNewton``) keeps its mode and the analytic
 solution of the problem linearized at its last iterate (a lognormal flux is
 such a forward model), answers the gain from it and the variances from draws
-of the posterior, which it preconditions; it has no ``with_gamma``, since its
+of the posterior, which it preconditions, and its evidence is Laplace's from
+the Gaussian at the mode; it has no ``with_gamma``, since its
 linearization depends on gamma. An ensemble method would keep its posterior ensemble and
 answer from the sample mean and covariance (``estimate_is_mean = True``), and
 could not change gamma without solving again either. A method imports

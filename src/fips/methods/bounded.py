@@ -868,6 +868,18 @@ class Bounded:
         """Return which elements are held at a bound at the mode (boolean, ``n``)."""
         return self.side != 0
 
+    @property
+    def evidence_is_laplace(self) -> bool:
+        """
+        Whether the log evidence is the Gaussian one: only with no finite bound, when the posterior is the analytic one.
+
+        With a bound, the exact evidence is the Gaussian one times the ratio
+        of the probabilities of the box under the posterior and under the
+        prior, orthant probabilities of a correlated Gaussian, and a Gaussian
+        at a mode on the bound would not give it.
+        """
+        return not (np.isfinite(self.lower).any() or np.isfinite(self.upper).any())
+
     def sample(self, N: int, rng: np.random.Generator) -> np.ndarray:
         """Return `N` new draws of the truncated posterior (``n x N``): a chain from the mode, its first ``burn_in`` left out."""
         sampler = self._sampler()

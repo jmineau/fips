@@ -780,6 +780,17 @@ class Problem:
         return values
 
     @cached_property
+    def _obs_logdet(self) -> float:
+        r"""
+        :math:`\ln \lvert S_z \rvert`, from the form's own factors, computed once.
+
+        :attr:`Posterior.log_evidence <fips.Posterior.log_evidence>` needs it
+        at every gamma, and the posteriors of a sweep share their problem. Not
+        pickled: a problem read back computes it again.
+        """
+        return self._obs_cov.logdet()
+
+    @cached_property
     def _model_order(
         self,
     ) -> tuple[np.ndarray | None, np.ndarray | None, np.ndarray | None]:

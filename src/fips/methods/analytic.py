@@ -158,6 +158,8 @@ class _Factors:
 
     estimate_is_linear: ClassVar[bool] = True
     r"""The estimate is linear in the observations, :math:`x_0 + K (z - H x_0 - c)` with the gain :math:`K` of ``gain``."""
+    evidence_is_laplace: ClassVar[bool] = True
+    """The posterior is Gaussian, so its log evidence is the exact one from the chi-squared and the information content."""
 
     problem: Problem
     """The problem that was factored."""

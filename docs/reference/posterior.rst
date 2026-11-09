@@ -122,6 +122,7 @@ Diagnostics
    Posterior.data_misfit
    Posterior.state_misfit
    Posterior.reduced_chi2
+   Posterior.log_evidence
    Posterior.chi2_tests
    Posterior.r2
    Posterior.rmse
