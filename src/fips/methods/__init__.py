@@ -121,7 +121,7 @@ _METHODS: dict[str, _Method] = {
     "variational": _Method(
         VariationalOptions,
         _variational,
-        oracle=MappingProxyType({"tol": 1e-13}),
+        oracle=MappingProxyType({"cg_tol": 1e-13}),
         oracle_rtol=1e-8,
     ),
 }
@@ -170,8 +170,8 @@ def solve(problem: Problem, method: str = "analytic", **options: Any) -> Posteri
         ``"ensemble"``, ``gamma``, ``members``, ``predicted``,
         ``localization``, ``obs_localization`` and ``seed`` (see
         :class:`~fips.methods.ensemble.EnsembleOptions`); for
-        ``"variational"``, ``gamma``, ``rank``, ``tol``,
-        ``max_cg_iterations``, ``max_iterations`` and ``outer_tol`` (see
+        ``"variational"``, ``gamma``, ``rank``, ``cg_tol``,
+        ``max_cg_iterations``, ``max_iterations`` and ``tol`` (see
         :class:`~fips.methods.variational.VariationalOptions`).
 
     Returns

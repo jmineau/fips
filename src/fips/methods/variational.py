@@ -25,14 +25,14 @@ the whitened normal equations
 matrix is the identity plus a positive semidefinite one, so its eigenvalues
 are at least 1, and conjugate gradients (``_cg``) solve them in a number of
 products set by how many eigenvalues of :math:`\tilde{H}` stand above 1,
-not by ``n``. CG stops when the residual is below ``tol`` times the right
+not by ``n``. CG stops when the residual is below ``cg_tol`` times the right
 side. With a forward model the same solve is the inner step of Gauss-Newton
 (incremental 4D-Var): at each iterate :math:`x_i` the problem linearized
 there (:meth:`Problem.linearized <fips.Problem.linearized>`) is solved by
 CG, started from :math:`\xi_i`, and the iterations stop by Rodgers' rule, as
 ``"gauss_newton"``'s do: the step measured in the posterior covariance of
 that solve, :math:`d^2 = \Delta\xi^T (I + \tilde{H}_i) \Delta\xi`, below
-``outer_tol`` times ``n``. A step that raises the cost is halved until it
+``tol`` times ``n``. A step that raises the cost is halved until it
 does not.
 
 **The uncertainty.** The posterior covariance is :math:`\hat{S} = R (I +
@@ -138,23 +138,23 @@ class VariationalOptions:
         the prior in the others: exact when ``rank`` reaches the problem's
         rank, conservative (variances too large, DOFS too small) below it.
         Each pair costs about two products with :math:`H` and :math:`H^T`.
-    tol : float, default 1e-8
+    cg_tol : float, default 1e-8
         The tolerance of the iterative solves: conjugate gradients stop when
-        the residual of the whitened normal equations is below ``tol`` times
-        their right side, and Lanczos when each eigenvalue is good to ``tol``
+        the residual of the whitened normal equations is below ``cg_tol`` times
+        their right side, and Lanczos when each eigenvalue is good to ``cg_tol``
         relative (``eigsh``'s ``tol``). The error of the estimate, measured in
-        the posterior covariance, is at most ``tol`` times the length of the
+        the posterior covariance, is at most ``cg_tol`` times the length of the
         right side. Below 1: the prior, where CG starts, is at 1.
     max_cg_iterations : int, default 1000
         The most conjugate-gradient iterations of one solve; a solve that has
-        not reached ``tol`` by then raises.
+        not reached ``cg_tol`` by then raises.
     max_iterations : int, default 50
         For a forward model, the most Gauss-Newton steps (each a CG solve of
         the problem linearized at the last estimate), as for
         ``"gauss_newton"``; a solve that has not stopped by then raises.
-    outer_tol : float, default 1e-6
+    tol : float, default 1e-6
         For a forward model, the step at which the Gauss-Newton steps stop,
-        :math:`d^2 <` ``outer_tol`` :math:`\cdot\, n`, Rodgers' rule as
+        :math:`d^2 <` ``tol`` :math:`\cdot\, n`, Rodgers' rule as
         ``"gauss_newton"``'s ``tol`` (its default too).
 
     Raises
@@ -162,7 +162,7 @@ class VariationalOptions:
     ValueError
         If `gamma` is not a positive, finite number, `rank`,
         `max_cg_iterations` or `max_iterations` is not a positive integer,
-        `tol` or `outer_tol` is not a positive, finite number, or `tol` is
+        `cg_tol` or `tol` is not a positive, finite number, or `cg_tol` is
         not below 1.
     """
 
@@ -170,14 +170,14 @@ class VariationalOptions:
     """The regularization factor: the model-data mismatch is divided by it."""
     rank: int = 100
     """The number of eigenpairs of the low-rank posterior."""
-    tol: float = 1e-8
+    cg_tol: float = 1e-8
     """The relative tolerance of the conjugate gradients and of Lanczos."""
     max_cg_iterations: int = 1000
     """The most conjugate-gradient iterations of one solve."""
     max_iterations: int = 50
     """For a forward model, the most Gauss-Newton steps."""
-    outer_tol: float = 1e-6
-    r"""For a forward model, the steps stop when :math:`d^2 <` ``outer_tol`` :math:`\cdot\, n`."""
+    tol: float = 1e-6
+    r"""For a forward model, the steps stop when :math:`d^2 <` ``tol`` :math:`\cdot\, n`."""
 
     def __post_init__(self):
         object.__setattr__(self, "gamma", AnalyticOptions(self.gamma).gamma)
@@ -190,7 +190,7 @@ class VariationalOptions:
             ):
                 raise ValueError(f"{name} must be a positive integer, got {value!r}.")
             object.__setattr__(self, name, int(value))
-        for name in ("tol", "outer_tol"):
+        for name in ("cg_tol", "tol"):
             value = getattr(self, name)
             try:
                 number = float(value)
@@ -199,11 +199,11 @@ class VariationalOptions:
             if not (math.isfinite(number) and number > 0):
                 raise ValueError(f"{name} must be positive and finite, got {number}.")
             object.__setattr__(self, name, number)
-        if self.tol >= 1.0:
+        if self.cg_tol >= 1.0:
             raise ValueError(
-                f"tol must be below 1, got {self.tol}: it is the residual of the "
+                f"cg_tol must be below 1, got {self.cg_tol}: it is the residual of the "
                 "conjugate gradients relative to the right side, and the start, "
-                "the prior, has a relative residual of 1 (tol=1 returns the prior)."
+                "the prior, has a relative residual of 1 (cg_tol=1 returns the prior)."
             )
 
 
@@ -272,12 +272,16 @@ class _Hessian(LinearOperator):
 
 
 def _cg(
-    system: _System, b: np.ndarray, start: np.ndarray, tol: float, max_iterations: int
+    system: _System,
+    b: np.ndarray,
+    start: np.ndarray,
+    cg_tol: float,
+    max_iterations: int,
 ) -> tuple[np.ndarray, int]:
     r"""
     Return the solution of :math:`(I + \tilde{H}) \xi = b` by conjugate gradients from `start`, and the iterations taken.
 
-    It stops when the residual's length is at most `tol` times `b`'s; a
+    It stops when the residual's length is at most `cg_tol` times `b`'s; a
     start that already is (a Gauss-Newton iterate at the mode) takes none.
     The matrix is the identity plus a positive semidefinite one, so every
     search direction has positive curvature.
@@ -290,7 +294,7 @@ def _cg(
     size = float(np.linalg.norm(b))
     if size == 0.0:
         return np.zeros_like(b), 0
-    target = tol * size
+    target = cg_tol * size
     xi = np.array(start, dtype=float)
     r = b - xi - system.hessian(xi[:, None])[:, 0] if xi.any() else np.array(b)
     rr = float(r @ r)
@@ -310,7 +314,7 @@ def _cg(
     raise RuntimeError(
         f"The conjugate gradients did not converge in {max_iterations} iterations: "
         f"the residual is {math.sqrt(rr) / size:.3g} of the right side, above "
-        f"tol = {tol:.3g}. Raise max_cg_iterations, or tol; a prior-preconditioned "
+        f"cg_tol = {cg_tol:.3g}. Raise max_cg_iterations, or cg_tol; a prior-preconditioned "
         "Hessian with very large eigenvalues (observations far more precise than "
         "the prior) converges slowly."
     )
@@ -322,7 +326,7 @@ def _shrinkage(eigenvalues: np.ndarray) -> np.ndarray:
 
 
 def _eigenpairs(
-    system: _System, rank: int, tol: float
+    system: _System, rank: int, cg_tol: float
 ) -> tuple[np.ndarray, np.ndarray]:
     r"""
     Return the leading eigenvalues of :math:`\tilde{H} / \gamma` (the gamma-free matrix :math:`N`, from the largest) and their eigenvectors (``r x k``), with ``k`` at most `rank`.
@@ -332,7 +336,7 @@ def _eigenpairs(
     is formed from ``r`` products and eigendecomposed (``eigh``); otherwise
     Lanczos finds the pairs from products (``eigsh``, ``which="LA"``, a
     seeded start so that a solve is reproducible). Eigenvalues at roundoff of
-    the largest (below ``r * eps`` of it, or for Lanczos ``tol`` of it) are
+    the largest (below ``r * eps`` of it, or for Lanczos ``cg_tol`` of it) are
     dropped: they are directions the data do not see.
 
     Raises
@@ -354,16 +358,16 @@ def _eigenpairs(
         try:
             values, vectors = (
                 np.asarray(a)
-                for a in eigsh(_Hessian(system), k=k, which="LA", tol=tol, v0=start)
+                for a in eigsh(_Hessian(system), k=k, which="LA", tol=cg_tol, v0=start)
             )
         except ArpackNoConvergence as error:
             raise RuntimeError(
                 f"Lanczos did not find the {k} leading eigenpairs of the "
-                "prior-preconditioned Hessian; lower rank, or raise tol."
+                "prior-preconditioned Hessian; lower rank, or raise cg_tol."
             ) from error
         order = np.argsort(values)[::-1]
         eigenvalues, vectors = values[order], vectors[:, order]
-        floor = max(r * np.finfo(float).eps, tol)
+        floor = max(r * np.finfo(float).eps, cg_tol)
     kept = eigenvalues > floor * eigenvalues.max(initial=0.0)
     return (
         np.ascontiguousarray(eigenvalues[kept]) / system.gamma,
@@ -611,7 +615,7 @@ class Variational:
             b = system.whiten(d[:, None])[:, 0]
             options = self.options
             solved, _ = _cg(
-                system, b, np.zeros_like(b), options.tol, options.max_cg_iterations
+                system, b, np.zeros_like(b), options.cg_tol, options.max_cg_iterations
             )
             innovation = gamma * system.weighted_norm(d) - float(b @ solved)
             r = z - problem._apply(self.mode) - problem._offset_values()
@@ -681,14 +685,14 @@ def _linear(
     d = system.innovation()
     b = system.whiten(d[:, None])[:, 0]
     xi, iterations = _cg(
-        system, b, np.zeros_like(b), options.tol, options.max_cg_iterations
+        system, b, np.zeros_like(b), options.cg_tol, options.max_cg_iterations
     )
     modeled = system.modeled(xi[:, None])[:, 0]  # H R xi
     data = system.weighted_norm(d - modeled)
     state = float(xi @ xi)
     d2 = state + gamma * system.weighted_norm(modeled)
     if keep is None:
-        eigenvalues, V = _eigenpairs(system, options.rank, options.tol)
+        eigenvalues, V = _eigenpairs(system, options.rank, options.cg_tol)
         _report(gamma * eigenvalues, options.rank < min(system.r, len(d)))
         G = np.asarray(system.R @ V, dtype=float)
     else:
@@ -746,7 +750,7 @@ def _iterate(
     gamma, n = options.gamma, len(problem.prior)
     x_0, z = problem.prior.values, problem.obs.values
     c = problem._offset_values()
-    limit = options.outer_tol * n
+    limit = options.tol * n
     root = problem.prior_cov.data._root
     solve_S_z = problem.obs_cov.data._solver()
 
@@ -778,7 +782,7 @@ def _iterate(
         linear = problem._linearized(x, modeled)
         system = _System(linear, gamma)
         b = system.whiten(system.innovation()[:, None])[:, 0]
-        new, iterations = _cg(system, b, xi, options.tol, options.max_cg_iterations)
+        new, iterations = _cg(system, b, xi, options.cg_tol, options.max_cg_iterations)
         step = new - xi
         d2 = float(step @ step) + gamma * system.weighted_norm(
             system.modeled(step[:, None])[:, 0]
@@ -818,11 +822,11 @@ def _iterate(
         if converged:
             point_xi = xi
             xi = xi + fraction * step
-            eigenvalues, V = _eigenpairs(system, options.rank, options.tol)
+            eigenvalues, V = _eigenpairs(system, options.rank, options.cg_tol)
             _report(gamma * eigenvalues, options.rank < min(system.r, len(z)))
             logger.info(
                 "Gauss-Newton converged in %d steps, %d CG iterations in all: the "
-                "last step's d2 is %.3g, below outer_tol * n = %.3g.",
+                "last step's d2 is %.3g, below tol * n = %.3g.",
                 i,
                 sum(cgs),
                 d2,
@@ -848,9 +852,7 @@ def _iterate(
             solution.__dict__["_system_"] = system
             return solution
         xi, here = xi + fraction * step, taken
-    raise RuntimeError(
-        _unconverged(options.max_iterations, whole, d2s, limit, "outer_tol")
-    )
+    raise RuntimeError(_unconverged(options.max_iterations, whole, d2s, limit))
 
 
 def _variational(problem: Problem, options: VariationalOptions) -> Posterior:

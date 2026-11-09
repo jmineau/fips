@@ -2,7 +2,7 @@
 The variational method: conjugate gradients and a low-rank posterior, from products alone.
 
 ``tests/test_oracle.py`` holds it to the closed form at its registered
-``tol`` (``oracle``), with the default ``rank`` above every oracle problem's
+``cg_tol`` (``oracle``), with the default ``rank`` above every oracle problem's
 rank. Here: the same agreement on larger problems, with Kronecker and
 block-diagonal priors used through their factors, and with a matrix-free
 forward operator; the low-rank posterior as ``rank`` grows (variances that
@@ -35,7 +35,7 @@ from fips.methods import variational
 from fips.methods.variational import VariationalOptions
 
 TIGHT = 1e-12
-"""The ``tol`` the comparisons with the analytic posterior solve at."""
+"""The ``cg_tol`` the comparisons with the analytic posterior solve at."""
 
 CLOSE = 1e-8
 """The relative tolerance they hold the posterior to, at ``TIGHT``."""
@@ -153,11 +153,11 @@ def assert_matches_analytic(post: fips.Posterior, problem: fips.Problem) -> None
         {"rank": 0},
         {"rank": 2.5},
         {"rank": True},
-        {"tol": 0.0},
-        {"tol": "small"},
-        {"tol": 1.0},
-        {"tol": 2.0},
-        {"outer_tol": np.inf},
+        {"cg_tol": 0.0},
+        {"cg_tol": "small"},
+        {"cg_tol": 1.0},
+        {"cg_tol": 2.0},
+        {"tol": np.inf},
         {"max_cg_iterations": 0},
         {"max_iterations": -1},
         {"gamma": -1.0},
@@ -170,16 +170,27 @@ def test_options_refuse_bad_values(kwargs):
 
 
 def test_a_tol_of_one_is_refused_by_name():
-    """CG starts at the prior, whose relative residual is 1: ``tol=1`` would stop there and return the prior."""
-    with pytest.raises(ValueError, match="tol must be below 1, got 1.0"):
-        fips.solve(build(seed=1), "variational", tol=1.0)
-    VariationalOptions(tol=0.5, outer_tol=10.0)  # outer_tol is a step size, not a ratio
+    """CG starts at the prior, whose relative residual is 1: ``cg_tol=1`` would stop there and return the prior."""
+    with pytest.raises(ValueError, match="cg_tol must be below 1, got 1.0"):
+        fips.solve(build(seed=1), "variational", cg_tol=1.0)
+    VariationalOptions(cg_tol=0.5, tol=10.0)  # tol is a step size, not a ratio
+
+
+def test_the_old_option_names_are_gone():
+    """``tol`` stops the outer steps, as in ``"gauss_newton"``; the conjugate gradients' tolerance is ``cg_tol``; ``outer_tol`` no longer exists."""
+    with pytest.raises(ValueError, match="no option 'outer_tol'"):
+        fips.solve(build(), "variational", outer_tol=1e-6)
+    options = VariationalOptions()
+    assert (options.tol, options.cg_tol) == (1e-6, 1e-8)
+    with pytest.raises(ValueError, match="cg_tol must be below 1"):
+        VariationalOptions(cg_tol=1.0)
+    VariationalOptions(tol=1.0)  # the outer rule is d2 < tol * n, not a ratio
 
 
 def test_options_are_registered():
     """``fips.solve`` knows the method and its options."""
     assert "variational" in fips.available_methods()
-    with pytest.raises(ValueError, match="rank, tol"):
+    with pytest.raises(ValueError, match="rank, cg_tol"):
         fips.solve(build(), "variational", ranks=3)
 
 
@@ -194,7 +205,7 @@ def test_options_are_registered():
 def test_full_rank_is_the_analytic_posterior(prior, sparse, gamma):
     """With rank at the problem's rank, every output equals the analytic posterior's to the CG tolerance."""
     problem = build(seed=3, prior=prior, sparse=sparse)
-    post = fips.solve(problem, "variational", gamma=gamma, tol=TIGHT)
+    post = fips.solve(problem, "variational", gamma=gamma, cg_tol=TIGHT)
     assert len(post.eigenvalues) == min(len(problem.prior), len(problem.obs))
     assert_matches_analytic(post, problem)
     assert post.mean is post.estimate
@@ -204,8 +215,8 @@ def test_full_rank_is_the_analytic_posterior(prior, sparse, gamma):
 def test_lanczos_and_the_dense_eigendecomposition_agree():
     """A rank below half the whitened state goes through Lanczos; the pairs are the dense eigendecomposition's."""
     problem = build(seed=4, times=6, cells=8, m=40)
-    by_lanczos = fips.solve(problem, "variational", rank=10, tol=TIGHT)
-    by_dense = fips.solve(problem, "variational", rank=40, tol=TIGHT)
+    by_lanczos = fips.solve(problem, "variational", rank=10, cg_tol=TIGHT)
+    by_dense = fips.solve(problem, "variational", rank=40, cg_tol=TIGHT)
     assert_same(
         by_lanczos.eigenvalues["eigenvalue"],
         by_dense.eigenvalues["eigenvalue"].iloc[:10],
@@ -215,7 +226,7 @@ def test_lanczos_and_the_dense_eigendecomposition_agree():
 
 
 def test_default_tol_is_close():
-    """At the default tol the estimate is far inside its uncertainty from the analytic one (within 1e-4 of a posterior standard deviation)."""
+    """At the default cg_tol the estimate is far inside its uncertainty from the analytic one (within 1e-4 of a posterior standard deviation)."""
     problem = build(seed=5, times=6, cells=10, m=50)
     post = fips.solve(problem, "variational")
     exact = fips.solve(problem)
@@ -240,7 +251,7 @@ def test_matrix_free_forward_operator():
         forward=forward,
         offset=problem.offset,
     )
-    post = fips.solve(free, "variational", tol=TIGHT)
+    post = fips.solve(free, "variational", cg_tol=TIGHT)
     assert_matches_analytic(post, problem)
     assert_same(
         fips.solve(free).estimate.values,
@@ -270,7 +281,7 @@ def test_matrix_free_forward_in_another_order():
         offset=problem.offset,
     )
     assert isinstance(free.forward.data, MatrixFreeOperator)
-    assert_matches_analytic(fips.solve(free, "variational", tol=TIGHT), problem)
+    assert_matches_analytic(fips.solve(free, "variational", cg_tol=TIGHT), problem)
 
 
 # ---------------------------------------------------------------------------
@@ -289,7 +300,7 @@ def test_rank_curve_is_monotone():
     exact = fips.solve(problem)
     errors, dofs = [], []
     for rank in (1, 2, 5, 10, 20, 35, 50):
-        post = fips.solve(problem, "variational", rank=rank, tol=TIGHT)
+        post = fips.solve(problem, "variational", rank=rank, cg_tol=TIGHT)
         excess = post.variances.values - exact.variances.values
         assert excess.min() > -1e-10 * exact.variances.values.max()
         errors.append(float(excess.max()))
@@ -334,10 +345,10 @@ def test_the_evidence_below_the_problems_rank_is_refused():
         forward=fips.Operator(rng.normal(size=(9, 6)), observed, state),
     )
     exact = fips.solve(problem).log_evidence
-    full = fips.solve(problem, "variational", rank=6, tol=TIGHT)
+    full = fips.solve(problem, "variational", rank=6, cg_tol=TIGHT)
     assert full.log_evidence == pytest.approx(exact, rel=1e-10)
     for rank in (1, 3, 5):
-        low = fips.solve(problem, "variational", rank=rank, tol=TIGHT)
+        low = fips.solve(problem, "variational", rank=rank, cg_tol=TIGHT)
         tilde = full.eigenvalues["eigenvalue"].to_numpy()
         assert low.eigenvalues["eigenvalue"].iloc[-1] > 1.0
         # what it would be: high by the information of the pairs left out
@@ -348,7 +359,7 @@ def test_the_evidence_below_the_problems_rank_is_refused():
         with pytest.raises(TypeError, match="biased high.*Raise rank"):
             _ = low.log_evidence
     # at a gamma where the last pair kept holds little, the evidence is given
-    small = fips.solve(problem, "variational", rank=5, tol=TIGHT, gamma=1e-4)
+    small = fips.solve(problem, "variational", rank=5, cg_tol=TIGHT, gamma=1e-4)
     assert small.eigenvalues["eigenvalue"].iloc[-1] < 1.0
     assert np.isfinite(small.log_evidence)
 
@@ -367,7 +378,7 @@ def test_a_rank_deficient_forward_at_full_rank_neither_warns_nor_refuses(caplog)
         forward=fips.Operator(H, observed, state),
     )
     with caplog.at_level("WARNING", logger="fips.methods.variational"):
-        post = fips.solve(problem, "variational", rank=100, tol=TIGHT)
+        post = fips.solve(problem, "variational", rank=100, cg_tol=TIGHT)
     assert len(post.eigenvalues) == 2 and post.eigenvalues["eigenvalue"].min() > 1e3
     assert "Raise rank" not in caplog.text
     assert post.log_evidence == pytest.approx(fips.solve(problem).log_evidence)
@@ -398,7 +409,7 @@ def test_lambda_in_place_of_its_shrinkage_fails(monkeypatch):
     r"""The low-rank term with :math:`\lambda` in place of :math:`\lambda / (1 + \lambda)` gives variances the comparison refuses."""
     problem = build(seed=11)
     monkeypatch.setattr(variational, "_shrinkage", lambda eigenvalues: eigenvalues)
-    post = fips.solve(problem, "variational", tol=TIGHT)
+    post = fips.solve(problem, "variational", cg_tol=TIGHT)
     with pytest.raises(AssertionError, match="variances"):
         assert_matches_analytic(post, problem)
 
@@ -414,7 +425,7 @@ def test_solve_without_the_prior_preconditioning_fails(monkeypatch):
         self.R, self.R_T = identity, identity
 
     monkeypatch.setattr(variational._System, "__init__", unpreconditioned)
-    post = fips.solve(problem, "variational", tol=TIGHT)
+    post = fips.solve(problem, "variational", cg_tol=TIGHT)
     with pytest.raises(AssertionError, match="estimate"):
         assert_matches_analytic(post, problem)
 
@@ -472,7 +483,7 @@ def test_a_problem_whose_covariance_would_not_fit():
 def test_with_data_and_with_gamma_are_a_fresh_solve():
     """``with_data`` and ``with_gamma`` give what a fresh solve gives (one CG solve each, the eigenvectors kept)."""
     problem = build(seed=15)
-    post = fips.solve(problem, "variational", tol=TIGHT)
+    post = fips.solve(problem, "variational", cg_tol=TIGHT)
     _, obs = problem.simulate(rng=np.random.default_rng(99))
     again = fips.solve(
         fips.Problem(
@@ -484,12 +495,12 @@ def test_with_data_and_with_gamma_are_a_fresh_solve():
             offset=problem.offset,
         ),
         "variational",
-        tol=TIGHT,
+        cg_tol=TIGHT,
     )
     twin = post.with_data(obs)
     assert_same(twin.estimate.values, again.estimate.values, "with_data estimate")
     assert_same(twin.variances.values, again.variances.values, "with_data variances")
-    fresh = fips.solve(problem, "variational", gamma=3.0, tol=TIGHT)
+    fresh = fips.solve(problem, "variational", gamma=3.0, cg_tol=TIGHT)
     scaled = post.with_gamma(3.0)
     for name in ("estimate", "variances", "dofs_per_element"):
         assert_same(getattr(scaled, name).values, getattr(fresh, name).values, name)
@@ -515,7 +526,7 @@ def test_no_recovery_but_trials():
 
 
 def test_cg_that_does_not_converge_raises():
-    """A solve whose conjugate gradients have not reached tol raises, saying what to change."""
+    """A solve whose conjugate gradients have not reached cg_tol raises, saying what to change."""
     with pytest.raises(RuntimeError, match="max_cg_iterations"):
         fips.solve(build(seed=18), "variational", max_cg_iterations=1)
 
@@ -589,7 +600,7 @@ def test_forward_model_matches_gauss_newton():
     linearization is another point one step from the mode).
     """
     problem, _ = lognormal_problem(seed=1)
-    post = fips.solve(problem, "variational", tol=TIGHT, outer_tol=1e-14)
+    post = fips.solve(problem, "variational", cg_tol=TIGHT, tol=1e-14)
     newton = fips.solve(problem, "gauss_newton", tol=1e-14, draws=10, burn_in=0)
     sd = np.sqrt(newton._solution.analytic.variances())
     assert np.abs(post.estimate.values - newton.estimate.values).max() < 1e-6 * sd.min()
@@ -617,8 +628,8 @@ def test_forward_model_matches_gauss_newton():
 def test_products_only_model_is_the_jacobian_model():
     """A model written with jvp and vjp gives the posterior of the same model written with jacobian, never forming its Jacobian."""
     explicit, products = lognormal_problem(seed=2)
-    a = fips.solve(explicit, "variational", tol=TIGHT, outer_tol=1e-14)
-    b = fips.solve(products, "variational", tol=TIGHT, outer_tol=1e-14)
+    a = fips.solve(explicit, "variational", cg_tol=TIGHT, tol=1e-14)
+    b = fips.solve(products, "variational", cg_tol=TIGHT, tol=1e-14)
     assert isinstance(b._solution.linear.forward.data, MatrixFreeOperator)
     assert_same(b.estimate.values, a.estimate.values, "estimate", rtol=1e-9)
     assert_same(b.variances.values, a.variances.values, "variances", rtol=1e-7)
@@ -629,7 +640,7 @@ def test_products_only_model_is_the_jacobian_model():
 def test_forward_model_with_data_and_no_with_gamma():
     """With a forward model, with_data solves again (the same as a fresh solve) and with_gamma refuses."""
     problem, _ = lognormal_problem(seed=3)
-    post = fips.solve(problem, "variational", tol=TIGHT, outer_tol=1e-14)
+    post = fips.solve(problem, "variational", cg_tol=TIGHT, tol=1e-14)
     with pytest.raises(TypeError, match="with_gamma"):
         post.with_gamma(2.0)
     obs = fips.Vector(problem.obs.values * 1.05, problem.obs.space)
@@ -642,8 +653,8 @@ def test_forward_model_with_data_and_no_with_gamma():
             forward=problem.forward,
         ),
         "variational",
-        tol=TIGHT,
-        outer_tol=1e-14,
+        cg_tol=TIGHT,
+        tol=1e-14,
     )
     assert_same(
         post.with_data(obs).estimate.values, fresh.estimate.values, "estimate", 1e-7
