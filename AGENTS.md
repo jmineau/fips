@@ -175,8 +175,8 @@ inversion is a function that builds the `Problem`.
 A module `methods/<name>.py` with three things: its options (a frozen dataclass
 with a `gamma` field, values checked in `__post_init__`), its solution (answers
 `posterior.Solution`; `with_gamma`, `with_data`, `sample`, `at_bound`, `estimate_is_mean`,
-`estimate_is_linear`, `evidence_is_laplace`, and `innovation_precision` with `self_sensitivity` (for
-`Posterior.data_worth`) only if it can), and a function `(problem, options) -> Posterior`. Add a line to
+`estimate_is_linear`, `evidence_is_laplace` (`no_evidence`, why not), and `innovation_precision` with `self_sensitivity` (for
+`Posterior.data_worth`) only if it can; a member it lacks raises `fips.UnavailableError`), and a function `(problem, options) -> Posterior`. Add a line to
 `_METHODS` in `methods/__init__.py`; its docstring says how a lognormal or an
 ensemble method fits. **A method's default options on a linear, unbounded
 problem give the analytic posterior** (`"bounded"` with no finite bound and
