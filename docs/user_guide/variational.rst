@@ -331,9 +331,10 @@ a thousandth of a posterior standard deviation). ``"gauss_newton"`` forms the Ja
 products, a column at a time) and draws the posterior itself; the variational
 method never forms it, and its uncertainty is the low-rank Gaussian at the
 mode, Laplace's approximation, which is not the posterior where the model
-bends much over the posterior's spread (:doc:`positive`). It has no
-``with_gamma`` with a forward model (the linearization depends on
-:math:`\gamma`); ``with_data`` solves again from the last linearization.
+bends much over the posterior's spread (:doc:`positive`). Its posterior is
+the low-rank kind, and :ref:`the table <posterior-members>` says what that
+gives (no ``with_gamma`` with a forward model, since the linearization depends
+on :math:`\gamma`); ``with_data`` solves again from the last linearization.
 
 Out of this method, for now: bounds on the state, checkpointing an adjoint
 model, and a preconditioner for the conjugate gradients beyond the prior's

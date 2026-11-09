@@ -453,47 +453,85 @@ class Posterior:
     (:attr:`innovation_cov`); what needs neither is on the
     :class:`~fips.Problem` (:meth:`~fips.Problem.predict`).
 
-    Every member works for every method, except those that need more of the
-    method than a :class:`Solution` gives: :attr:`mean` (where the estimate is
-    the mean), :meth:`with_gamma` and :meth:`with_data` (where the method can
-    answer without solving again), :meth:`recovery` and
-    :meth:`candidate_worth` (where the estimate is linear in the
-    observations), :meth:`data_worth`, :meth:`sample` (where the method can
-    draw from its posterior), :attr:`at_bound` (where it has bounds),
-    :attr:`iterations` (where it iterates), :attr:`eigenvalues` (where the
-    posterior is low-rank) and :attr:`log_evidence` (where the posterior is
-    the Gaussian at the estimate); asked for one, a posterior raises
-    :class:`~fips.UnavailableError` (for a property, ``hasattr`` is then
-    False). The analytic
-    method has all but :attr:`at_bound`, :attr:`iterations` and
-    :attr:`eigenvalues`. The ``"bounded"`` method
-    (:class:`~fips.methods.bounded.BoundedOptions`) has :meth:`with_gamma`,
-    :meth:`with_data`, :meth:`sample` and :attr:`at_bound`, and
-    :attr:`log_evidence` only with no finite bound; its estimate is
-    the mode of the posterior with bounds on the state, and its variances are
-    those of draws of that posterior. The ``"gauss_newton"`` method
-    (:class:`~fips.methods.gauss_newton.GaussNewtonOptions`), for a problem
-    with a forward model, has :meth:`with_data`, :meth:`sample`,
-    :attr:`iterations` and :attr:`log_evidence` (Laplace's approximation);
-    its estimate is the mode, its variances are those of
-    draws of its posterior, and its gain and averaging kernel are those of
-    the Gaussian at the mode. Its
-    :attr:`problem` is the problem with the model, as solved; what needs a
-    linear forward operator (the averaging kernel, :attr:`innovation_cov`)
-    reads the Jacobian of the last step.
-    The ``"ensemble"`` method
-    (:class:`~fips.methods.ensemble.EnsembleOptions`) has :attr:`mean`,
-    :meth:`with_gamma`, :meth:`with_data` and :meth:`sample` (its updated
-    members, at most as many as it has); its estimate, variances, gain and
-    diagnostics are those of its members, which approach the analytic
-    posterior as they grow, and what needs :math:`H` (the averaging kernel,
-    :attr:`dofs_per_element`) raises for a model. The ``"variational"``
-    method (:class:`~fips.methods.variational.VariationalOptions`) has
-    :meth:`with_data`, :meth:`sample`, :attr:`iterations` and
-    :attr:`eigenvalues`, and for a linear problem :attr:`mean` and
-    :meth:`with_gamma`; :attr:`log_evidence` unless its ``rank`` left out
-    pairs that still hold information; its variances and gain are those of
-    its low-rank posterior.
+    **A posterior's members belong to the kind of answer, not the method.**
+    There are three kinds: a *Gaussian* posterior (``estimate`` is its mean
+    and the covariance is known), a *sampled* one (``estimate`` is the mode,
+    and the spread is that of draws) and a *low-rank* one (the covariance is
+    kept as ``rank`` directions). A member its kind cannot give raises
+    :class:`~fips.UnavailableError` (for a property, ``hasattr`` is then False):
+
+    .. list-table::
+       :header-rows: 1
+       :stub-columns: 1
+       :widths: 16 28 28 28
+
+       * - Member
+         - Gaussian
+         - Sampled
+         - Low-rank
+       * - Methods
+         - ``"analytic"``; ``"ensemble"``; ``"variational"`` on a linear problem
+           with ``rank`` at the problem's rank
+         - ``"bounded"`` with a finite bound; ``"gauss_newton"`` with a forward
+           model
+         - ``"variational"`` with ``rank`` below the problem's rank, or with a
+           forward model (the Gaussian at the mode)
+       * - ``estimate``
+         - the mean
+         - the mode
+         - the mean (linear problem), the mode (forward model)
+       * - ``variances``, ``cov``
+         - exact (an ensemble's: those of its members)
+         - those of the kept draws (a Monte Carlo estimate)
+         - the prior's less ``rank`` pairs: too large below the problem's rank
+       * - ``mean``
+         - yes
+         - raises
+         - yes (linear problem); raises (forward model)
+       * - ``with_gamma``
+         - yes
+         - ``"bounded"``: yes; ``"gauss_newton"``: raises (its linearization
+           depends on gamma)
+         - yes (linear problem); raises (forward model)
+       * - ``log_evidence``
+         - yes; ``"ensemble"``: raises
+         - ``"gauss_newton"``: Laplace's; ``"bounded"``: raises
+         - yes (Laplace's with a forward model) unless ``rank`` left out pairs
+           that still hold information
+       * - ``recovery``, ``data_worth``, ``candidate_worth``
+         - ``"analytic"`` only: they need an estimate linear in the observations
+         - raises
+         - raises
+       * - ``at_bound``
+         - raises
+         - ``"bounded"`` with a finite bound
+         - raises
+       * - ``iterations``
+         - ``"variational"`` only
+         - ``"gauss_newton"`` only
+         - yes
+       * - ``eigenvalues``
+         - ``"variational"`` only
+         - raises
+         - yes
+
+    ``"bounded"`` with no finite bound and ``"gauss_newton"`` with a linear
+    operator return the analytic solution itself, so they are Gaussian. Every
+    posterior has ``estimate``, ``variances``, ``cov``, :meth:`uncertainty`,
+    :meth:`sample`, :meth:`with_data`, :meth:`trials`, :attr:`kalman_gain`,
+    :meth:`chi2_tests` and :meth:`summary`; what needs the forward model as an
+    operator (the averaging kernel, :attr:`innovation_cov`,
+    :attr:`dofs_per_element`, :meth:`leverage`) raises for the ensemble with a
+    model, and ``"gauss_newton"`` reads the Jacobian of its last step for
+    them.
+    An ensemble's :meth:`sample` returns its updated members, at most as many
+    as it has; a ``"gauss_newton"`` posterior's :attr:`problem` is the problem
+    with the model, as solved. Each method's options are its own class
+    (:class:`~fips.methods.analytic.AnalyticOptions`,
+    :class:`~fips.methods.bounded.BoundedOptions`,
+    :class:`~fips.methods.gauss_newton.GaussNewtonOptions`,
+    :class:`~fips.methods.ensemble.EnsembleOptions`,
+    :class:`~fips.methods.variational.VariationalOptions`).
 
     Parameters
     ----------
@@ -632,9 +670,13 @@ class Posterior:
         """
         The posterior mean, :attr:`estimate` itself.
 
-        The analytic method's posterior is Gaussian, so its estimate is its
-        mean. A posterior whose method gives another point estimate (a mode)
-        has no mean.
+        A Gaussian posterior (the analytic method, an ensemble) has its mean
+        as its estimate, and so does the variational method's on a linear
+        problem. A sampled posterior (``"bounded"`` with a finite bound,
+        ``"gauss_newton"``) and the variational method's with a forward model
+        give a mode, which is not the mean: they raise
+        :class:`~fips.UnavailableError`. The tiers are in the table on
+        :class:`Posterior`.
 
         Raises
         ------
@@ -676,6 +718,9 @@ class Posterior:
     def at_bound(self) -> pd.Series:
         r"""
         Which state elements sit on a bound at the estimate: True where one does.
+
+        Only the sampled posterior of ``"bounded"`` with a finite bound has
+        it; any other posterior raises :class:`~fips.UnavailableError`.
 
         A method with bounds on the state (``"bounded"``) moves an element that
         the analytic estimate puts outside its bounds onto the bound, and may
@@ -758,6 +803,10 @@ class Posterior:
     def iterations(self) -> pd.DataFrame:
         r"""
         The steps of an iterated method: how far each moved the estimate, and the cost after it.
+
+        Only an iterated method has it, ``"gauss_newton"`` (a sampled
+        posterior) and ``"variational"``; any other posterior raises
+        :class:`~fips.UnavailableError`.
 
         ``"gauss_newton"`` solves the problem linearized at its last estimate,
         from the prior, until a step is small (Rodgers' rule): ``d2`` is the
@@ -844,6 +893,10 @@ class Posterior:
     def eigenvalues(self) -> pd.DataFrame:
         r"""
         The eigenvalues a low-rank posterior keeps, and the DOFS each adds: whether its rank was enough.
+
+        Only the variational method keeps them (a low-rank posterior, or a
+        Gaussian one at the problem's rank); any other posterior raises
+        :class:`~fips.UnavailableError`.
 
         ``"variational"`` keeps the ``rank`` leading eigenpairs of the
         prior-preconditioned Hessian, :math:`\tilde{H} = \gamma R^T H^T
@@ -1271,6 +1324,11 @@ class Posterior:
         r"""
         Return what each group of observations adds to the certainty of each aggregate, and its share of DOFS.
 
+        Only the analytic method's Gaussian posterior has it (the estimate
+        must be linear in the observations, and the innovation covariance
+        exact); a sampled, ensemble or variational posterior raises
+        :class:`~fips.UnavailableError`.
+
         For each group (a site, a platform, a month), the posterior standard
         deviation of each aggregate without the group's observations and with
         them (this posterior), without solving again. Removing the
@@ -1462,6 +1520,10 @@ class Posterior:
     ) -> pd.DataFrame:
         r"""
         Return what each group of candidate observations, not in the problem, would add to the certainty of each aggregate.
+
+        Only the analytic method's Gaussian posterior has it, as
+        :meth:`data_worth`; a sampled, ensemble or variational posterior
+        raises :class:`~fips.UnavailableError`.
 
         Candidate observations are rows of a forward operator that the
         problem does not have (a new site, another platform, a season not yet
@@ -2151,6 +2213,11 @@ class Posterior:
         r"""
         The log of the evidence: the probability density of the observations given the problem's settings, with the state integrated out.
 
+        A Gaussian posterior has it (not an ensemble's), ``"gauss_newton"``
+        (a sampled posterior) gives Laplace's, and a low-rank one has it
+        unless its ``rank`` left out pairs that still hold information; any
+        other posterior raises :class:`~fips.UnavailableError`.
+
         With the state integrated out, the observations of a linear problem
         are Gaussian, :math:`z \sim N(H x_0 + c, G)` with :math:`G = H S_0 H^T
         + S_z/\gamma` (:attr:`innovation_cov`), so
@@ -2581,6 +2648,10 @@ class Posterior:
         r"""
         Return the posterior of the same problem with another regularization factor.
 
+        A Gaussian or low-rank posterior of a linear problem has it, and so
+        does ``"bounded"``; ``"gauss_newton"`` and a variational solve with a
+        forward model raise :class:`~fips.UnavailableError`.
+
         :func:`fips.solve` factors the analytic method's matrix by Cholesky
         at its own gamma. The first call eigendecomposes it (about the cost
         of a solve) and keeps that, since the eigendecomposition reads the
@@ -2753,6 +2824,11 @@ class Posterior:
     ) -> pd.DataFrame:
         r"""
         Return how well the estimate recovers the truth when the data come from `world`: exactly, without sampling.
+
+        Only the analytic method's Gaussian posterior has it (the estimate
+        must be linear in the observations); a sampled, ensemble or
+        variational posterior raises :class:`~fips.UnavailableError`, and
+        :meth:`trials` measures it by sampling instead.
 
         The exact answer of the Monte Carlo loop over ``world.simulate(rng)``
         and :meth:`with_data`. The estimate is linear in the observations,

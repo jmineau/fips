@@ -143,9 +143,11 @@ What the posterior is, for the ensemble:
 - :meth:`~fips.Posterior.with_data` and :meth:`~fips.Posterior.with_gamma`
   reuse the runs, so :meth:`~fips.Posterior.trials` runs the model only to make
   each trial's data;
-- :meth:`~fips.Posterior.recovery` and :attr:`~fips.Posterior.log_evidence`
-  are refused (the evidence of a sample covariance is not the evidence), and
-  what needs :math:`H` (:meth:`~fips.Posterior.averaging_kernel`,
+- what a Gaussian posterior gives and an ensemble's does not
+  (:meth:`~fips.Posterior.recovery`, :attr:`~fips.Posterior.log_evidence`: the
+  evidence of a sample covariance is not the evidence) is in :ref:`the table
+  <posterior-members>`, and what needs :math:`H`
+  (:meth:`~fips.Posterior.averaging_kernel`,
   :attr:`~fips.Posterior.dofs_per_element`) raises for a model.
 
 
