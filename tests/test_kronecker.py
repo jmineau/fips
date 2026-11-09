@@ -10,6 +10,7 @@ against the solve from the dense matrix. The operators come from
 """
 
 import copy
+import inspect
 import logging
 import pickle
 from dataclasses import dataclass
@@ -1080,7 +1081,8 @@ def _compare(post, ref):
     """Every Posterior output of `post` against `ref`, at 1e-10."""
     for name in POSTERIOR_OUTPUTS:
         value, expected = getattr(post, name), getattr(ref, name)
-        if callable(value):  # cov, averaging_kernel, desroziers: with no argument
+        # cov, averaging_kernel, desroziers: with no argument (an Operator is callable too)
+        if inspect.ismethod(value):
             value, expected = value(), expected()
         if isinstance(value, pd.DataFrame):  # desroziers
             assert value.index.equals(expected.index), name

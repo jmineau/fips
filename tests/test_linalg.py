@@ -1,6 +1,7 @@
 """Tests for fips.linalg: each form against its dense equivalent, and the solve on every form."""
 
 import copy
+import inspect
 import os
 import pickle
 from concurrent.futures import ThreadPoolExecutor
@@ -1118,7 +1119,8 @@ def _assert_same_posterior(post, ref) -> None:
     """Every Posterior output of `post` matches `ref`."""
     for name in POSTERIOR_OUTPUTS:
         value, expected = getattr(post, name), getattr(ref, name)
-        if callable(value):  # cov, averaging_kernel, desroziers: with no argument
+        # cov, averaging_kernel, desroziers: with no argument (an Operator is callable too)
+        if inspect.ismethod(value):
             value, expected = value(), expected()
         if isinstance(value, pd.DataFrame):  # desroziers
             assert value.index.equals(expected.index), name
