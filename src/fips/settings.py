@@ -800,7 +800,9 @@ def hierarchical(
         log_evidence, payload = target.evaluate(values)
         return log_prior + log_evidence, payload
 
-    chain_rng, state_rng = np.random.default_rng(seed).spawn(2)
+    chain_rng, state_rng = (
+        np.random.default_rng(child) for child in np.random.SeedSequence(seed).spawn(2)
+    )
     start = np.array([p._to_unbounded(p.median) for p in priors])
     mode, laplace = _laplace(lambda u: evaluate(u)[0], start, names)
     root = np.linalg.cholesky(laplace)

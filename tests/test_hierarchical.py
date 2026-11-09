@@ -332,6 +332,36 @@ def test_seeds_reproduce(result):
     assert not np.allclose(result.settings.values, other.settings.values)
 
 
+class _WithoutSpawn:
+    """A Generator as NumPy 1.24 has it: no ``spawn`` (it came in 1.25)."""
+
+    def __init__(self, generator):
+        self._generator = generator
+
+    def __getattr__(self, name):
+        if name == "spawn":
+            raise AttributeError("'Generator' object has no attribute 'spawn'")
+        return getattr(self._generator, name)
+
+
+def test_the_chains_are_seeded_without_generator_spawn(monkeypatch):
+    """The declared floor, NumPy 1.24.2, has no ``Generator.spawn``: the streams come from ``SeedSequence(seed).spawn``, so a run is the same with a Generator that lacks it."""
+    before = fips.hierarchical(build_tiny, {"std": PRIOR_STD}, draws=30, burn_in=20)
+    real = np.random.default_rng
+
+    def default_rng(seed=None):
+        generator = real(seed)
+        return (
+            generator
+            if isinstance(seed, np.random.SeedSequence)
+            else _WithoutSpawn(generator)
+        )
+
+    monkeypatch.setattr(np.random, "default_rng", default_rng)
+    after = fips.hierarchical(build_tiny, {"std": PRIOR_STD}, draws=30, burn_in=20)
+    pd.testing.assert_frame_equal(before.settings, after.settings)
+
+
 def test_the_result_pickles(result):
     loaded = pickle.loads(pickle.dumps(result))
     pd.testing.assert_frame_equal(loaded.settings, result.settings)
