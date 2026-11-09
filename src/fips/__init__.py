@@ -10,6 +10,8 @@ A :class:`Problem` puts the prior, the observations, the forward operator (or
 a :class:`ForwardModel` that is not linear, with its Jacobian;
 :class:`LognormalForward` and :class:`SoftplusForward` keep a flux positive)
 and the covariances together, and :func:`solve` returns its :class:`Posterior`.
+With priors on the covariance settings, :func:`hierarchical` draws them from
+their posterior and the state at each draw (:class:`Hierarchical`).
 :mod:`fips.aggregate` sums or averages a space by group (the observations to
 daily means, the state to monthly totals), and :func:`offset_block` adds a
 block of offsets to the state.
@@ -35,6 +37,7 @@ from .methods import available_methods, solve
 from .operator import Operator
 from .posterior import Posterior
 from .problem import Problem
+from .settings import HalfNormal, Hierarchical, LogNormal, Prior, Uniform, hierarchical
 from .space import Space
 from .transforms import LognormalForward, SoftplusForward
 from .vector import Vector
@@ -66,6 +69,12 @@ __all__ = [
     "solve",
     "available_methods",
     "Posterior",
+    "hierarchical",
+    "Hierarchical",
+    "Prior",
+    "LogNormal",
+    "HalfNormal",
+    "Uniform",
     "aggregate",
     "offset_block",
 ]

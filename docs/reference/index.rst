@@ -13,6 +13,7 @@ problem uses them. The words are defined in :doc:`/getting_started/terminology`.
    covariance
    problem
    posterior
+   hierarchical
    aggregate
    visualization
    linalg
