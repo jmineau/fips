@@ -971,6 +971,7 @@ def _iterate(
     current = here.cost(gamma)
 
     d2s: list[float] = []
+    whole: list[float] = []  # the d2 the stopping rule compares, of each whole step
     costs: list[float] = []
     newton_steps = 0
     for i in range(1, options.max_iterations + 1):
@@ -984,6 +985,7 @@ def _iterate(
         # None for a model without a curvature: Gauss-Newton's step alone
         newton_step = _newton_step(problem, analytic, here, step, gamma, solve_S_z)
         converged = d2 < limit and (newton_step is None or newton_step[2] < limit)
+        whole.append(d2 if newton_step is None else max(d2, newton_step[2]))
         rise = math.inf if converged else current + _RISE * abs(current)
         # Newton's step first, so that it is kept on a tie
         candidates = [(step, dy, d2, False)]
@@ -1053,15 +1055,30 @@ def _iterate(
                 options=options,
             )
         here, current, analytic = taken, trial, None
-    shown = [f"{d:.3g}" for d in d2s]
+    raise RuntimeError(_unconverged(options.max_iterations, whole, d2s, limit))
+
+
+def _shown(values: list[float]) -> str:
+    """Return the values as text, the first three and the last four when there are more than eight."""
+    shown = [f"{d:.3g}" for d in values]
     if len(shown) > 8:
         shown = [*shown[:3], "...", *shown[-4:]]
-    raise RuntimeError(
-        f"Gauss-Newton did not converge in {options.max_iterations} steps: the last "
-        f"step's d2 is {d2s[-1]:.3g}, above tol * n = {limit:.3g} (the steps' d2: "
-        f"{', '.join(shown)}). If they are still falling, raise max_iterations; if not, check "
-        "the Jacobian with fips.taylortest(problem.forward, x), or the problem may "
-        "be too nonlinear for Gauss-Newton from the prior."
+    return ", ".join(shown)
+
+
+def _unconverged(
+    steps: int, whole: list[float], taken: list[float], limit: float, what: str = "tol"
+) -> str:
+    """Return the message of iterations that did not stop: the d2 the rule compared (each whole step's, before its line search), and the d2 of the steps as taken."""
+    return (
+        f"Gauss-Newton did not converge in {steps} steps: the last whole step's d2 "
+        f"is {whole[-1]:.3g}, above {what} * n = {limit:.3g} (the rule compares each "
+        f"step's d2 before it is shortened: {_shown(whole)}; as taken: "
+        f"{_shown(taken)}). If they are still falling, raise max_iterations. A "
+        "whole step that does not shrink while the steps taken do (each shortened "
+        "to keep the cost falling) points to the Jacobian: check it with "
+        "fips.taylortest(problem.forward, x). Or the problem may be too nonlinear "
+        "for Gauss-Newton from the prior."
     )
 
 

@@ -111,6 +111,7 @@ from scipy.sparse.linalg import ArpackNoConvergence, eigsh
 from fips.linalg import LinearOperator
 from fips.linalg.forms import _read_only
 from fips.methods.analytic import AnalyticOptions
+from fips.methods.gauss_newton import _unconverged
 from fips.operator import Operator
 from fips.posterior import Posterior, UnavailableError
 from fips.problem import Problem
@@ -769,6 +770,7 @@ def _iterate(
         raise RuntimeError("The forward model cannot model the starting state.")
     current = gamma * here[0] + here[1]
     d2s: list[float] = []
+    whole: list[float] = []  # each whole step's d2, the one the stopping rule compares
     costs: list[float] = []
     cgs: list[int] = []
     for i in range(1, options.max_iterations + 1):
@@ -782,6 +784,7 @@ def _iterate(
             system.modeled(step[:, None])[:, 0]
         )
         converged = d2 < limit
+        whole.append(d2)
         fraction, taken = 1.0, None
         for _ in range(_HALVINGS):
             trial = cost(xi + fraction * step)
@@ -846,9 +849,7 @@ def _iterate(
             return solution
         xi, here = xi + fraction * step, taken
     raise RuntimeError(
-        f"Gauss-Newton did not converge in {options.max_iterations} steps: the last "
-        f"step's d2 is {d2s[-1]:.3g}, above outer_tol * n = {limit:.3g}. Raise "
-        "max_iterations, or check the Jacobian with fips.taylortest(problem.forward, x)."
+        _unconverged(options.max_iterations, whole, d2s, limit, "outer_tol")
     )
 
 

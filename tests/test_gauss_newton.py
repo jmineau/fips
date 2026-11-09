@@ -861,6 +861,32 @@ def test_a_solve_that_does_not_converge_raises():
         fips.solve(problem, "gauss_newton", max_iterations=2)
 
 
+def test_a_wrong_jacobian_that_stalls_reports_the_d2_the_rule_compared():
+    """A Jacobian twice too large: each whole step stays the same size while the steps taken shrink to roundoff (each shortened until the cost falls). The message reports the whole step's d2, which the rule compares, not the shortened one's, and points to the Jacobian."""
+    arrays = Arrays.random(12, 6, 9)
+    state, obs = arrays.spaces()
+    problem = arrays.problem()
+    wrong = Problem(
+        problem.prior,
+        problem.prior_cov,
+        problem.obs,
+        problem.obs_cov,
+        ExpModel(Operator(arrays.H, obs, state), scale=2.0),
+        offset=problem.offset,
+    )
+    with pytest.raises(RuntimeError) as raised:
+        fips.solve(wrong, "gauss_newton", max_iterations=30)
+    message = str(raised.value)
+    whole = float(message.split("last whole step's d2 is ")[1].split(",")[0])
+    assert whole > 6 * 1e-6  # above tol * n: it is what stopped the rule
+    taken = message.split("as taken: ")[1].split(")")[0].split(", ")
+    assert float(taken[-1]) < 1e-12 * whole  # the shortened steps, at roundoff
+    assert "does not shrink while the steps taken do" in message
+    assert "taylortest" in message
+    with pytest.raises(RuntimeError, match=r"last whole step's d2 is .* outer_tol"):
+        fips.solve(wrong, "variational", max_iterations=30)
+
+
 @pytest.mark.parametrize(
     "options, match",
     [
