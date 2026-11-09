@@ -17,6 +17,7 @@ Forms
    SparseOperator
    DiagonalOperator
    BlockDiagonalOperator
+   MatrixFreeOperator
 
 Building
 ~~~~~~~~
@@ -27,8 +28,8 @@ Building
 
 .. py:data:: LinearOperatorLike
 
-   The type of what :func:`as_linear_operator` takes: a form, a SciPy sparse
-   matrix or array, or a 2D array-like.
+   The type of what :func:`as_linear_operator` takes: a form, a SciPy linear
+   operator, a SciPy sparse matrix or array, or a 2D array-like.
 
 Linear algebra
 ~~~~~~~~~~~~~~

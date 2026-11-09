@@ -5,7 +5,8 @@ A :class:`~fips.Operator` holds its matrix in one of the forms here, and the
 solvers compute with them: a :class:`DenseOperator` (a NumPy array), a
 :class:`SparseOperator` (a SciPy sparse matrix), a :class:`DiagonalOperator`
 (the diagonal only), a :class:`BlockDiagonalOperator` (a form on each diagonal
-block, zeros between them) or a :class:`KroneckerOperator` (Kronecker factors).
+block, zeros between them), a :class:`KroneckerOperator` (Kronecker factors)
+or a :class:`MatrixFreeOperator` (a SciPy linear operator: products only).
 None of them has labels: the labels are the
 :class:`~fips.Space` on each axis of an :class:`~fips.Operator`.
 
@@ -15,7 +16,8 @@ Each is a :class:`scipy.sparse.linalg.LinearOperator`, so ``matvec``,
 - ``A @ B`` of two forms keeps the cheapest form that is exact: diagonal
   times diagonal is diagonal; sparse or diagonal times sparse is sparse; a
   product with a dense side is dense; a Kronecker form times a sparse one
-  (``H @ S_0``) is computed through the factors and is dense. ``A @ x`` with an
+  (``H @ S_0``) is computed through the factors and is dense; a product with a
+  matrix-free side is matrix-free, applied term by term. ``A @ x`` with an
   array is an array, as in SciPy.
 - ``A + B`` and ``A - B`` follow the same rule (an array counts as dense), and
   a scalar ``*`` or ``/`` keeps the form.
@@ -47,6 +49,7 @@ from fips.linalg.forms import (
     DiagonalOperator,
     LinearOperator,
     LinearOperatorLike,
+    MatrixFreeOperator,
     SparseOperator,
     as_linear_operator,
     dottest,
@@ -61,6 +64,7 @@ __all__ = [
     "DiagonalOperator",
     "BlockDiagonalOperator",
     "KroneckerOperator",
+    "MatrixFreeOperator",
     "as_linear_operator",
     "dottest",
 ]
