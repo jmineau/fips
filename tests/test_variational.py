@@ -154,6 +154,8 @@ def assert_matches_analytic(post: fips.Posterior, problem: fips.Problem) -> None
         {"rank": True},
         {"tol": 0.0},
         {"tol": "small"},
+        {"tol": 1.0},
+        {"tol": 2.0},
         {"outer_tol": np.inf},
         {"max_cg_iterations": 0},
         {"max_iterations": -1},
@@ -164,6 +166,13 @@ def test_options_refuse_bad_values(kwargs):
     """Every option is checked when the options are made."""
     with pytest.raises(ValueError):
         VariationalOptions(**kwargs)
+
+
+def test_a_tol_of_one_is_refused_by_name():
+    """CG starts at the prior, whose relative residual is 1: ``tol=1`` would stop there and return the prior."""
+    with pytest.raises(ValueError, match="tol must be below 1, got 1.0"):
+        fips.solve(build(seed=1), "variational", tol=1.0)
+    VariationalOptions(tol=0.5, outer_tol=10.0)  # outer_tol is a step size, not a ratio
 
 
 def test_options_are_registered():

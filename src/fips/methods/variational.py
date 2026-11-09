@@ -143,7 +143,7 @@ class VariationalOptions:
         their right side, and Lanczos when each eigenvalue is good to ``tol``
         relative (``eigsh``'s ``tol``). The error of the estimate, measured in
         the posterior covariance, is at most ``tol`` times the length of the
-        right side.
+        right side. Below 1: the prior, where CG starts, is at 1.
     max_cg_iterations : int, default 1000
         The most conjugate-gradient iterations of one solve; a solve that has
         not reached ``tol`` by then raises.
@@ -160,8 +160,9 @@ class VariationalOptions:
     ------
     ValueError
         If `gamma` is not a positive, finite number, `rank`,
-        `max_cg_iterations` or `max_iterations` is not a positive integer, or
-        `tol` or `outer_tol` is not a positive, finite number.
+        `max_cg_iterations` or `max_iterations` is not a positive integer,
+        `tol` or `outer_tol` is not a positive, finite number, or `tol` is
+        not below 1.
     """
 
     gamma: float = 1.0
@@ -197,6 +198,12 @@ class VariationalOptions:
             if not (math.isfinite(number) and number > 0):
                 raise ValueError(f"{name} must be positive and finite, got {number}.")
             object.__setattr__(self, name, number)
+        if self.tol >= 1.0:
+            raise ValueError(
+                f"tol must be below 1, got {self.tol}: it is the residual of the "
+                "conjugate gradients relative to the right side, and the start, "
+                "the prior, has a relative residual of 1 (tol=1 returns the prior)."
+            )
 
 
 class _System:
