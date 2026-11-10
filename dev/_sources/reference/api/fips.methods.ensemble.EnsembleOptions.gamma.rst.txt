@@ -1,0 +1,6 @@
+fips.methods.ensemble.EnsembleOptions.gamma
+===========================================
+
+.. currentmodule:: fips.methods.ensemble
+
+.. autoattribute:: EnsembleOptions.gamma

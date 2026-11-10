@@ -1,0 +1,6 @@
+fips.Problem.ensemble
+=====================
+
+.. currentmodule:: fips
+
+.. automethod:: Problem.ensemble

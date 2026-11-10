@@ -1,0 +1,6 @@
+fips.methods.ensemble.EnsembleOptions.predicted
+===============================================
+
+.. currentmodule:: fips.methods.ensemble
+
+.. autoattribute:: EnsembleOptions.predicted

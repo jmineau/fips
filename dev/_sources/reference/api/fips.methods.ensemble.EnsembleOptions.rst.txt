@@ -1,0 +1,27 @@
+﻿fips.methods.ensemble.EnsembleOptions
+=====================================
+
+.. currentmodule:: fips.methods.ensemble
+
+.. autoclass:: EnsembleOptions
+   :no-members:
+
+
+
+
+.. rubric:: Attributes
+
+.. autosummary::
+   :toctree:
+
+   ~EnsembleOptions.gamma
+   ~EnsembleOptions.localization
+   ~EnsembleOptions.members
+   ~EnsembleOptions.obs_localization
+   ~EnsembleOptions.predicted
+   ~EnsembleOptions.seed
+
+
+
+
+

@@ -1,0 +1,1209 @@
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>fips.methods.ensemble &#8212; fips 0.2.0b3.dev21+g2729ef234 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../_static/styles/theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
+<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/plot_directive.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sphinx_autodoc_typehints.css?v=057ac668" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/custom.css?v=4b8357b6" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="../../../_static/scripts/fontawesome.js?digest=18bd87630a240e9c25be"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
+<link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
+
+    <script src="../../../_static/documentation_options.js?v=70a3b4e6"></script>
+    <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../../_static/copybutton.js?v=f281be69"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/fips/methods/ensemble';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.23.0';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://jmineau.github.io/fips/switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'dev';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner =
+            true;
+        </script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="color-scheme" content="light dark"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.2" />
+  
+    
+    <script src="../../../_static/searchtools.js"></script>
+    <script src="../../../_static/language_data.js"></script>
+    <script src="../../../searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button type="button" class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class=" navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev21+g2729ef234 documentation - Home"/>
+    <img src="../../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev21+g2729ef234 documentation - Home"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class=" navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../getting_started/index.html">
+    Getting Started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../user_guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../reference/index.html">
+    API Reference
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+      
+        <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/jmineau/fips" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar hide-on-wide">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../getting_started/index.html">
+    Getting Started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../user_guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../reference/index.html">
+    API Reference
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-3"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-3"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-3"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-3">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+        
+          <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/jmineau/fips" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../../index.html" class="nav-link">Module code</a></li>
+    
+    
+    <li class="breadcrumb-item"><a href="../methods.html" class="nav-link">fips.methods</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">fips.methods.ensemble</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for fips.methods.ensemble</h1><div class="highlight"><pre>
+<span></span><span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">The ensemble method: a square-root ensemble Kalman update, for a forward model that can only be run.</span>
+
+<span class="sd">A transport model with no Jacobian (a TM5 or WRF configuration) cannot be</span>
+<span class="sd">linearized by hand, but it can be run. The ensemble method needs only its</span>
+<span class="sd">runs: :meth:`Problem.ensemble &lt;fips.Problem.ensemble&gt;` draws ``N`` members</span>
+<span class="sd">from the prior, the model is run on each (outside fips, or by fips when the</span>
+<span class="sd">problem's forward is an :class:`~fips.Operator` or a</span>
+<span class="sd">:class:`~fips.ForwardModel`), and ``fips.solve(problem, "ensemble",</span>
+<span class="sd">members=..., predicted=...)`` updates them with the observations. With an</span>
+<span class="sd">explicit :math:`H` it approximates what ``fips.solve(problem)`` gives exactly,</span>
+<span class="sd">with an error that falls as :math:`1/\sqrt{N}`.</span>
+
+<span class="sd">With the members' deviations from their mean, scaled, :math:`A = (X -</span>
+<span class="sd">\bar{x}) / \sqrt{N - 1}` (``n x N``), the modeled observations' :math:`B =</span>
+<span class="sd">(Y - \bar{y}) / \sqrt{N - 1}` (``m x N``, :math:`Y_{\cdot j} = F(x_j)`),</span>
+<span class="sd">the innovation :math:`d = z - c - \bar{y}` and :math:`R = S_z / \gamma`, the</span>
+<span class="sd">ensemble's prior covariance is :math:`P = A A^T` and the update is one batch</span>
+<span class="sd">update with every observation (a deterministic square-root filter, EnSRF:</span>
+<span class="sd">Whitaker and Hamill, 2002):</span>
+
+<span class="sd">.. math::</span>
+
+<span class="sd">    \bar{x}^a = \bar{x} + K d, \qquad</span>
+<span class="sd">    K = P_{xy} (P_{yy} + R)^{-1}, \qquad</span>
+<span class="sd">    A^a = A - \tilde{K} B,</span>
+
+<span class="sd">with :math:`P_{xy} = A B^T` and :math:`P_{yy} = B B^T`, each multiplied</span>
+<span class="sd">element by element by the user's localization weights when they are given</span>
+<span class="sd">(:math:`\rho_{xy} \circ P_{xy}`, :math:`\rho_{yy} \circ P_{yy}`). The</span>
+<span class="sd">observations are first whitened by :math:`S_z = L L^T` (its Cholesky factor,</span>
+<span class="sd">or the root of its diagonal), so that the mismatch is :math:`I / \gamma`;</span>
+<span class="sd">then with :math:`M = L^{-1} P_{yy} L^{-T} = Q \Lambda Q^T`, the reduced gain</span>
+<span class="sd">of the batch EnSRF (its symmetric square roots, Andrews 1968) is</span>
+
+<span class="sd">.. math::</span>
+
+<span class="sd">    \tilde{K} = P_{xy} L^{-T} \, G^{-1/2} (G^{1/2} + \gamma^{-1/2} I)^{-1},</span>
+<span class="sd">    \qquad G = M + I / \gamma,</span>
+
+<span class="sd">so that :math:`(I - \tilde{K} H) P (I - \tilde{K} H)^T = (I - K H) P`: the</span>
+<span class="sd">deviations' covariance after the update is the Kalman posterior of the</span>
+<span class="sd">ensemble's own :math:`P`, exactly, for any :math:`P` and any :math:`S_z`.</span>
+<span class="sd">Both roots are functions of :math:`M`, read from its eigendecomposition at</span>
+<span class="sd">any :math:`\gamma`. Without localization the same update is the ensemble</span>
+<span class="sd">transform :math:`A^a = A (I + S^T S)^{-1/2}` with :math:`S = \sqrt{\gamma}</span>
+<span class="sd">L^{-1} B` (the symmetric root, as in the ETKF), which keeps the members'</span>
+<span class="sd">mean, and fips computes it from the thin SVD :math:`L^{-1} B = U \Sigma V^T`</span>
+<span class="sd">(:math:`Q = U`, :math:`\Lambda = \Sigma^2`): :math:`O(m N \min(m, N))`, no</span>
+<span class="sd">``m x m`` or ``N x N`` factorization. With localization the update needs</span>
+<span class="sd">:math:`\rho_{yy} \circ P_{yy}`'s eigendecomposition (``m x m``) and</span>
+<span class="sd">:math:`\rho_{xy} \circ P_{xy}` (``n x m``, dense); the deviations' covariance</span>
+<span class="sd">is then not the localized Kalman posterior (a rank :math:`N - 1` ensemble</span>
+<span class="sd">cannot hold it), as in every localized square-root filter.</span>
+
+<span class="sd">Neither factorization depends on the values of the observations or on</span>
+<span class="sd">:math:`\gamma`, so ``with_data`` and ``with_gamma`` reuse the modeled</span>
+<span class="sd">ensemble: :meth:`Posterior.trials &lt;fips.Posterior.trials&gt;` runs the model</span>
+<span class="sd">once, not once per trial.</span>
+
+<span class="sd">The solution (:class:`Ensemble`) answers from the ensemble: the estimate is</span>
+<span class="sd">the mean of the updated members (``estimate_is_mean``); the variances, the</span>
+<span class="sd">covariance of aggregates and the gain are those of the deviations; DOFS,</span>
+<span class="sd">:math:`\operatorname{tr}(P_{yy} (P_{yy} + R)^{-1})`, the information content</span>
+<span class="sd">and chi-squared, :math:`d^T (P_{yy} + R)^{-1} d`, are those of the</span>
+<span class="sd">ensemble's covariances, which equal :math:`H P H^T` with a linear model;</span>
+<span class="sd">:meth:`Posterior.sample &lt;fips.Posterior.sample&gt;` returns the updated</span>
+<span class="sd">members themselves. Its estimate is not claimed to be linear in the</span>
+<span class="sd">observations (``recovery`` refuses; ``trials`` works), and its log evidence</span>
+<span class="sd">is not claimed at all: the ensemble's chi-squared and information content are</span>
+<span class="sd">those of a sample covariance, with an error that does not fall below the</span>
+<span class="sd">number of observations over :math:`N`.</span>
+
+<span class="sd">References</span>
+<span class="sd">----------</span>
+<span class="sd">Whitaker, J. S., and Hamill, T. M. (2002). Ensemble data assimilation without</span>
+<span class="sd">perturbed observations. *Monthly Weather Review*, 130(7), 1913-1924.</span>
+<span class="sd">https://doi.org/10.1175/1520-0493(2002)130&lt;1913:EDAWPO&gt;2.0.CO;2</span>
+
+<span class="sd">Tippett, M. K., Anderson, J. L., Bishop, C. H., Hamill, T. M., and Whitaker,</span>
+<span class="sd">J. S. (2003). Ensemble square root filters. *Monthly Weather Review*, 131(7),</span>
+<span class="sd">1485-1490. https://doi.org/10.1175/1520-0493(2003)131&lt;1485:ESRF&gt;2.0.CO;2</span>
+
+<span class="sd">Houtekamer, P. L., and Mitchell, H. L. (2001). A sequential ensemble Kalman</span>
+<span class="sd">filter for atmospheric data assimilation. *Monthly Weather Review*, 129(1),</span>
+<span class="sd">123-137. https://doi.org/10.1175/1520-0493(2001)129&lt;0123:ASEKFF&gt;2.0.CO;2</span>
+
+<span class="sd">Andrews, A. (1968). A square root formulation of the Kalman covariance</span>
+<span class="sd">equations. *AIAA Journal*, 6(6), 1165-1166. https://doi.org/10.2514/3.4696</span>
+<span class="sd">"""</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">dataclasses</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">math</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numbers</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span><span class="p">,</span> <span class="n">field</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">ClassVar</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">numpy.linalg</span><span class="w"> </span><span class="kn">import</span> <span class="n">LinAlgError</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">scipy.linalg</span><span class="w"> </span><span class="kn">import</span> <span class="n">cholesky</span><span class="p">,</span> <span class="n">eigh</span><span class="p">,</span> <span class="n">solve_triangular</span><span class="p">,</span> <span class="n">svd</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">fips.linalg</span><span class="w"> </span><span class="kn">import</span> <span class="n">DiagonalOperator</span><span class="p">,</span> <span class="n">LinearOperator</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fips.linalg.forms</span><span class="w"> </span><span class="kn">import</span> <span class="n">_read_only</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fips.methods.analytic</span><span class="w"> </span><span class="kn">import</span> <span class="n">AnalyticOptions</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fips.operator</span><span class="w"> </span><span class="kn">import</span> <span class="n">Operator</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fips.posterior</span><span class="w"> </span><span class="kn">import</span> <span class="n">Posterior</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fips.problem</span><span class="w"> </span><span class="kn">import</span> <span class="n">Problem</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fips.space</span><span class="w"> </span><span class="kn">import</span> <span class="n">Space</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="EnsembleOptions">
+<a class="viewcode-back" href="../../../reference/api/fips.methods.ensemble.EnsembleOptions.html#fips.methods.ensemble.EnsembleOptions">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">eq</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">EnsembleOptions</span><span class="p">:</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">    The options of the ``"ensemble"`` method.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    gamma : float, default 1.0</span>
+<span class="sd">        The regularization factor :math:`\gamma`, as for the analytic method</span>
+<span class="sd">        (:class:`~fips.methods.analytic.AnalyticOptions`): the model-data</span>
+<span class="sd">        mismatch is divided by it.</span>
+<span class="sd">    members : int or pandas.DataFrame</span>
+<span class="sd">        The prior ensemble. A DataFrame is the members</span>
+<span class="sd">        :meth:`Problem.ensemble &lt;fips.Problem.ensemble&gt;` returned (or any</span>
+<span class="sd">        others): one row per state element, labeled as ``problem.prior.index``</span>
+<span class="sd">        (in any order), one column per member (at least two, their labels</span>
+<span class="sd">        unique). A number draws that many members with</span>
+<span class="sd">        ``problem.ensemble(members, rng=seed)``. Without `predicted`, the</span>
+<span class="sd">        problem's forward (an :class:`~fips.Operator`, or a</span>
+<span class="sd">        :class:`~fips.ForwardModel`'s ``__call__``; no Jacobian is needed)</span>
+<span class="sd">        is run on each member.</span>
+<span class="sd">    predicted : pandas.DataFrame, optional</span>
+<span class="sd">        The model's output for each member, without the problem's offset (as</span>
+<span class="sd">        ``ForwardModel.__call__`` returns it, :math:`F(x_j)`): one row per</span>
+<span class="sd">        observation, labeled as ``problem.obs.index`` (in any order), and the</span>
+<span class="sd">        columns of `members` (in any order). Given, fips runs no model: this</span>
+<span class="sd">        is the second stage of a model that runs outside Python. It needs</span>
+<span class="sd">        `members` as a DataFrame, the members it was modeled from.</span>
+<span class="sd">    localization : Operator, optional</span>
+<span class="sd">        Weights :math:`\rho_{xy}` on the ensemble's covariance of the state</span>
+<span class="sd">        with the modeled observations: rows the state's labels, columns the</span>
+<span class="sd">        observations' (any order, any form). fips computes no distances:</span>
+<span class="sd">        the weights are yours (Gaspari and Cohn's function of the distance</span>
+<span class="sd">        between each cell and each observation, say). Without it, no</span>
+<span class="sd">        localization. It needs `obs_localization`.</span>
+<span class="sd">    obs_localization : Operator, optional</span>
+<span class="sd">        Weights :math:`\rho_{yy}` on the ensemble's covariance of the modeled</span>
+<span class="sd">        observations with each other: rows and columns the observations'</span>
+<span class="sd">        labels. It must be symmetric and give a positive semidefinite</span>
+<span class="sd">        :math:`\rho_{yy} \circ P_{yy}` (Gaspari and Cohn's function does).</span>
+<span class="sd">        It needs `localization`.</span>
+<span class="sd">    seed : int, default 0</span>
+<span class="sd">        The seed of the members drawn when `members` is a number.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        If `gamma` is not a positive, finite number; `members` is missing, a</span>
+<span class="sd">        number below 2 or a DataFrame with fewer than two columns or with</span>
+<span class="sd">        repeated column labels; `predicted` is given with a number of</span>
+<span class="sd">        members; only one of `localization` and `obs_localization` is given;</span>
+<span class="sd">        or `seed` is not a nonnegative integer.</span>
+<span class="sd">    TypeError</span>
+<span class="sd">        If `members` is neither an integer nor a DataFrame, `predicted` is not</span>
+<span class="sd">        a DataFrame, or a localization is not an Operator.</span>
+<span class="sd">    """</span>
+
+    <span class="n">gamma</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span>
+<span class="w">    </span><span class="sd">"""The regularization factor: the model-data mismatch is divided by it."""</span>
+    <span class="n">members</span><span class="p">:</span> <span class="s2">"int | pd.DataFrame | None"</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="w">    </span><span class="sd">"""The prior members (a DataFrame), or how many to draw."""</span>
+    <span class="n">predicted</span><span class="p">:</span> <span class="s2">"pd.DataFrame | None"</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="w">    </span><span class="sd">"""The model's output for each member, without the offset; None runs the problem's forward."""</span>
+    <span class="n">localization</span><span class="p">:</span> <span class="n">Operator</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""The weights :math:`\rho_{xy}` (state x observations), or None."""</span>
+    <span class="n">obs_localization</span><span class="p">:</span> <span class="n">Operator</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""The weights :math:`\rho_{yy}` (observations x observations), or None."""</span>
+    <span class="n">seed</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="w">    </span><span class="sd">"""The seed of the members drawn when `members` is a number."""</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">"gamma"</span><span class="p">,</span> <span class="n">AnalyticOptions</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">gamma</span><span class="p">)</span><span class="o">.</span><span class="n">gamma</span><span class="p">)</span>
+        <span class="n">members</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">members</span>
+        <span class="k">if</span> <span class="n">members</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">"The ensemble method needs members=: a number of members to draw "</span>
+                <span class="s2">"from the prior (the problem's forward is run on each), or the "</span>
+                <span class="s2">"DataFrame problem.ensemble(N) returned, with predicted= the "</span>
+                <span class="s2">"model's output for each."</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">members</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">members</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">"members needs at least two columns, got </span><span class="si">{</span><span class="n">members</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s2">."</span>
+                <span class="p">)</span>
+            <span class="k">if</span> <span class="n">members</span><span class="o">.</span><span class="n">columns</span><span class="o">.</span><span class="n">has_duplicates</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="s2">"The columns of members are the members' labels, and repeat: "</span>
+                    <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">list</span><span class="p">(</span><span class="n">members</span><span class="o">.</span><span class="n">columns</span><span class="p">[</span><span class="n">members</span><span class="o">.</span><span class="n">columns</span><span class="o">.</span><span class="n">duplicated</span><span class="p">()][:</span><span class="mi">5</span><span class="p">])</span><span class="si">}</span><span class="s2">."</span>
+                <span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">members</span><span class="p">,</span> <span class="n">numbers</span><span class="o">.</span><span class="n">Integral</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">members</span><span class="p">,</span> <span class="nb">bool</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">members</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">"members must be at least 2 (or a DataFrame), got </span><span class="si">{</span><span class="n">members</span><span class="si">}</span><span class="s2">."</span>
+                <span class="p">)</span>
+            <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">"members"</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">members</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                <span class="s2">"members is a number of members or the DataFrame of the members, "</span>
+                <span class="sa">f</span><span class="s2">"not </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">members</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">."</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">predicted</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">predicted</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                    <span class="s2">"predicted is a DataFrame (observations x members), not "</span>
+                    <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">predicted</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">."</span>
+                <span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">members</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="s2">"predicted needs members= as the DataFrame of the members it "</span>
+                    <span class="s2">"was modeled from (problem.ensemble returns it), not a number."</span>
+                <span class="p">)</span>
+        <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"localization"</span><span class="p">,</span> <span class="s2">"obs_localization"</span><span class="p">):</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">Operator</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> is an Operator of weights, not </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">value</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">."</span>
+                <span class="p">)</span>
+        <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">localization</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">)</span> <span class="o">!=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">obs_localization</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">"Localization needs both weights: localization= (state x "</span>
+                <span class="s2">"observations) and obs_localization= (observations x observations)."</span>
+            <span class="p">)</span>
+        <span class="n">seed</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">seed</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">seed</span><span class="p">,</span> <span class="n">numbers</span><span class="o">.</span><span class="n">Integral</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">seed</span><span class="p">,</span> <span class="nb">bool</span><span class="p">)</span> <span class="ow">or</span> <span class="n">seed</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"seed must be a nonnegative integer, got </span><span class="si">{</span><span class="n">seed</span><span class="si">!r}</span><span class="s2">."</span><span class="p">)</span>
+        <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">"seed"</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">seed</span><span class="p">))</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return the options, with the shapes of the DataFrames and Operators instead of their values."""</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">shape</span><span class="p">(</span><span class="n">value</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">            </span><span class="sd">"""Return the shape of a DataFrame or an Operator, or the repr of anything else."""</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span> <span class="o">|</span> <span class="n">Operator</span><span class="p">):</span>
+                <span class="n">rows</span><span class="p">,</span> <span class="n">cols</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">shape</span>
+                <span class="k">return</span> <span class="sa">f</span><span class="s2">"&lt;</span><span class="si">{</span><span class="n">rows</span><span class="si">}</span><span class="s2"> x </span><span class="si">{</span><span class="n">cols</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">value</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&gt;"</span>
+            <span class="k">return</span> <span class="nb">repr</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"EnsembleOptions(gamma=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">gamma</span><span class="si">!r}</span><span class="s2">, members=</span><span class="si">{</span><span class="n">shape</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">members</span><span class="p">)</span><span class="si">}</span><span class="s2">, "</span>
+            <span class="sa">f</span><span class="s2">"predicted=</span><span class="si">{</span><span class="n">shape</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">predicted</span><span class="p">)</span><span class="si">}</span><span class="s2">, "</span>
+            <span class="sa">f</span><span class="s2">"localization=</span><span class="si">{</span><span class="n">shape</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">localization</span><span class="p">)</span><span class="si">}</span><span class="s2">, "</span>
+            <span class="sa">f</span><span class="s2">"obs_localization=</span><span class="si">{</span><span class="n">shape</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">obs_localization</span><span class="p">)</span><span class="si">}</span><span class="s2">, seed=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">seed</span><span class="si">!r}</span><span class="s2">)"</span>
+        <span class="p">)</span></div>
+
+
+
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">eq</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Ensemble</span><span class="p">:</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">    The ensemble method's solution: the prior ensemble, its modeled observations, and the factors of the update.</span>
+
+<span class="sd">    The :class:`~fips.Posterior` asks it for every array it reports: it is</span>
+<span class="sd">    the method's :class:`~fips.posterior.Solution`. Every answer is written</span>
+<span class="sd">    from five arrays and the eigenvalues :math:`\lambda_k` (module docstring,</span>
+<span class="sd">    with :math:`Q` the eigenvectors of :math:`M` in the whitened</span>
+<span class="sd">    observations): :math:`F = P_{xy} L^{-T} Q` (``n x k``), :math:`E = Q^T</span>
+<span class="sd">    L^{-1} B` (``k x N``), the whitened innovation :math:`e = Q^T L^{-1} d`</span>
+<span class="sd">    (``k``) and the part of :math:`L^{-1} d` outside :math:`Q`. With</span>
+<span class="sd">    :math:`w_k = \gamma / (1 + \gamma \lambda_k)`:</span>
+
+<span class="sd">    .. math::</span>
+
+<span class="sd">        \bar{x}^a = \bar{x} + F (w \circ e), \qquad</span>
+<span class="sd">        K = F \operatorname{diag}(w) Q^T L^{-1}, \qquad</span>
+<span class="sd">        A^a = A - F \operatorname{diag}(c) E,</span>
+
+<span class="sd">    with :math:`c_k = \gamma / \big(\sqrt{1 + \gamma\lambda_k} (\sqrt{1 +</span>
+<span class="sd">    \gamma\lambda_k} + 1)\big)`, the reduced gain's weights. Only :math:`w`</span>
+<span class="sd">    and :math:`c` depend on :math:`\gamma`, and only :math:`e` on the</span>
+<span class="sd">    observations' values. Its answers:</span>
+
+<span class="sd">    - the estimate is the mean of the updated members, the posterior mean of</span>
+<span class="sd">      the ensemble (``estimate_is_mean``); the variances and the covariance</span>
+<span class="sd">      of aggregates are those of the updated deviations, :math:`A^a A^{aT}`;</span>
+<span class="sd">      :meth:`sample` returns updated members, at most :math:`N`;</span>
+<span class="sd">    - the gain is the ensemble's :math:`K`; DOFS is :math:`\sum_k w_k</span>
+<span class="sd">      \lambda_k = \operatorname{tr}(P_{yy} (P_{yy} + R)^{-1})`, the</span>
+<span class="sd">      information content :math:`\tfrac{1}{2} \sum_k \ln(1 + \gamma</span>
+<span class="sd">      \lambda_k)`, and chi-squared :math:`d^T (P_{yy} + R)^{-1} d`: the</span>
+<span class="sd">      analytic method's formulas with the ensemble's :math:`P_{yy}` for</span>
+<span class="sd">      :math:`H S_0 H^T`;</span>
+<span class="sd">    - the data misfit is that of the updated modeled observations,</span>
+<span class="sd">      :math:`\bar{y} + P_{yy} (P_{yy} + R)^{-1} d` (the modeled observations</span>
+<span class="sd">      of the estimate, for a linear model), and the state misfit is the</span>
+<span class="sd">      increment's in the ensemble's prior covariance, chi-squared less</span>
+<span class="sd">      gamma times the data misfit; Rodgers' four tests are written the same</span>
+<span class="sd">      way, so their degrees of freedom count at most :math:`N - 1`</span>
+<span class="sd">      directions for the increments;</span>
+<span class="sd">    - the diagonal of the averaging kernel, :math:`\operatorname{diag}(K</span>
+<span class="sd">      H)`, and the averaging kernel and innovation covariance the posterior</span>
+<span class="sd">      writes, need the problem's :math:`H` (an :class:`~fips.Operator`), and</span>
+<span class="sd">      raise for a model.</span>
+
+<span class="sd">    :meth:`with_gamma` and :meth:`with_data` reuse the factors. The updated</span>
+<span class="sd">    deviations at each gamma are computed once and shared by the solutions</span>
+<span class="sd">    ``with_data`` returns (not pickled).</span>
+<span class="sd">    """</span>
+
+    <span class="n">estimate_is_mean</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+<span class="w">    </span><span class="sd">"""The estimate is the mean of the updated ensemble."""</span>
+
+    <span class="n">problem</span><span class="p">:</span> <span class="n">Problem</span>
+<span class="w">    </span><span class="sd">"""The problem that was solved."""</span>
+    <span class="n">gamma</span><span class="p">:</span> <span class="nb">float</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""The regularization factor :math:`\gamma` the factors are read at."""</span>
+    <span class="n">prior_mean</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""The mean of the prior members, :math:`\bar{x}` (``n``)."""</span>
+    <span class="n">deviations</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""The prior members' deviations, scaled: :math:`A = (X - \bar{x}) / \sqrt{N - 1}` (``n x N``)."""</span>
+    <span class="n">predicted_mean</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""The mean of the modeled observations, :math:`\bar{y}` (``m``)."""</span>
+    <span class="n">obs_root</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""The root of :math:`S_z`: the square roots of a diagonal one (``m``), or its lower Cholesky factor :math:`L` (``m x m``)."""</span>
+    <span class="n">eigenvectors</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">""":math:`Q`, the eigenvectors of :math:`M` with an eigenvalue kept (``m x k``)."""</span>
+    <span class="n">eigenvalues</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">""":math:`\lambda_k`, the eigenvalues of :math:`M = L^{-1} P_{yy} L^{-T}` (``k``), clipped at zero."""</span>
+    <span class="n">F</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">""":math:`F = P_{xy} L^{-T} Q` (``n x k``), with :math:`P_{xy}` localized when weights were given."""</span>
+    <span class="n">E</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">""":math:`E = Q^T L^{-1} B` (``k x N``)."""</span>
+    <span class="n">innovation</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""The whitened innovation on the eigenvectors, :math:`e = Q^T L^{-1} d` (``k``)."""</span>
+    <span class="n">outside</span><span class="p">:</span> <span class="nb">float</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">""":math:`\lVert L^{-1} d - Q e \rVert^2`, the whitened innovation outside the eigenvectors (where :math:`\lambda = 0`)."""</span>
+    <span class="n">localized</span><span class="p">:</span> <span class="nb">bool</span>
+<span class="w">    </span><span class="sd">"""Whether the update was localized."""</span>
+    <span class="n">shared</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">,</span> <span class="n">kw_only</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="nb">repr</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="w">    </span><span class="sd">"""The updated deviations by gamma, computed once and shared with the solutions of other observations (not pickled)."""</span>
+
+    <span class="c1"># -- the update at gamma -------------------------------------------------------</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">weights</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""Return :math:`w_k = \gamma / (1 + \gamma \lambda_k)`."""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">gamma</span> <span class="o">/</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">gamma</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">eigenvalues</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_reduced</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""Return :math:`c_k = \gamma / (\sqrt{1 + \gamma\lambda_k} (\sqrt{1 + \gamma\lambda_k} + 1))`, the weights of the reduced gain."""</span>
+        <span class="n">root</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mf">1.0</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">gamma</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">eigenvalues</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">gamma</span> <span class="o">/</span> <span class="p">(</span><span class="n">root</span> <span class="o">*</span> <span class="p">(</span><span class="n">root</span> <span class="o">+</span> <span class="mf">1.0</span><span class="p">))</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_updated</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""Return the updated deviations :math:`A^a = A - F \operatorname{diag}(c) E` (``n x N``), computed once per gamma."""</span>
+        <span class="n">updated</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">shared</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">gamma</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">updated</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">updated</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">deviations</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">F</span> <span class="o">@</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_reduced</span><span class="p">()[:,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">E</span><span class="p">)</span>
+            <span class="n">updated</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">shared</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">gamma</span><span class="p">]</span> <span class="o">=</span> <span class="n">_read_only</span><span class="p">(</span><span class="n">updated</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">updated</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_whitened_basis</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""Return :math:`L^{-T} Q` (``m x k``): :math:`K = F \operatorname{diag}(w) (L^{-T} Q)^T`."""</span>
+        <span class="k">return</span> <span class="n">_whiten</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">obs_root</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">eigenvectors</span><span class="p">,</span> <span class="n">transpose</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="c1"># -- the Solution ----------------------------------------------------------------</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">estimate</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""Return the mean of the updated members, :math:`\bar{x} + F (w \circ e)`."""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">prior_mean</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">F</span> <span class="o">@</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">weights</span><span class="p">()</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">innovation</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">variances</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return the variances of the updated members."""</span>
+        <span class="n">updated</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_updated</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s2">"ij,ij-&gt;i"</span><span class="p">,</span> <span class="n">updated</span><span class="p">,</span> <span class="n">updated</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">cov</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">W</span><span class="p">:</span> <span class="n">LinearOperator</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return the covariance of the updated members, ``n x n``, or of their aggregates ``W x``, ``k x k``."""</span>
+        <span class="n">updated</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_updated</span><span class="p">()</span>
+        <span class="n">Y</span> <span class="o">=</span> <span class="n">updated</span> <span class="k">if</span> <span class="n">W</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">W</span> <span class="o">@</span> <span class="n">updated</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">Y</span> <span class="o">@</span> <span class="n">Y</span><span class="o">.</span><span class="n">T</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">gain</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">W</span><span class="p">:</span> <span class="n">LinearOperator</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""Return the ensemble's gain, :math:`K = P_{xy} (P_{yy} + R)^{-1}`, ``n x m``, or :math:`W K`."""</span>
+        <span class="n">F</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">F</span> <span class="k">if</span> <span class="n">W</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">W</span> <span class="o">@</span> <span class="bp">self</span><span class="o">.</span><span class="n">F</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">F</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">weights</span><span class="p">())</span> <span class="o">@</span> <span class="bp">self</span><span class="o">.</span><span class="n">_whitened_basis</span><span class="p">()</span><span class="o">.</span><span class="n">T</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">dofs</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""Return :math:`\operatorname{tr}(P_{yy} (P_{yy} + R)^{-1}) = \sum_k \gamma\lambda_k / (1 + \gamma\lambda_k)`."""</span>
+        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">weights</span><span class="p">()</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">eigenvalues</span><span class="p">))</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">dofs_per_element</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">        Return :math:`\operatorname{diag}(K H)`, with the problem's :math:`H`.</span>
+
+<span class="sd">        :math:`K H = F \operatorname{diag}(w) (H^T L^{-T} Q)^T`: one product</span>
+<span class="sd">        of :math:`H^T` with ``m x k``. With a linear model and no</span>
+<span class="sd">        localization its sum is :meth:`dofs`, since :math:`H P_{xy} =</span>
+<span class="sd">        P_{yy}`.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        TypeError</span>
+<span class="sd">            If the problem's forward is a model: the averaging kernel needs</span>
+<span class="sd">            :math:`H`.</span>
+<span class="sd">        """</span>
+        <span class="n">H</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">problem</span><span class="o">.</span><span class="n">_operator</span><span class="o">.</span><span class="n">data</span>
+        <span class="n">HtZ</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">H</span><span class="o">.</span><span class="n">_transpose</span><span class="p">()</span> <span class="o">@</span> <span class="bp">self</span><span class="o">.</span><span class="n">_whitened_basis</span><span class="p">(),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s2">"jk,k,jk-&gt;j"</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">F</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">weights</span><span class="p">(),</span> <span class="n">HtZ</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">information</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""Return :math:`\tfrac{1}{2} \ln \lvert I + \gamma M \rvert = \tfrac{1}{2} \sum_k \ln(1 + \gamma\lambda_k)`."""</span>
+        <span class="k">return</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log1p</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">gamma</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">eigenvalues</span><span class="p">)))</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">chi2</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""Return :math:`d^T (P_{yy} + R)^{-1} d = \gamma \lVert L^{-1} d - Q e \rVert^2 + \sum_k w_k e_k^2`."""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">gamma</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">outside</span> <span class="o">+</span> <span class="nb">float</span><span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">weights</span><span class="p">()</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">innovation</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">misfits</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">        Return the data misfit of the updated modeled observations and the state misfit of the increment, in the ensemble's prior covariance.</span>
+
+<span class="sd">        The updated modeled observations are :math:`\bar{y} + P_{yy} (P_{yy}</span>
+<span class="sd">        + R)^{-1} d`, so the whitened residual is :math:`e_k / (1 +</span>
+<span class="sd">        \gamma\lambda_k)` on the eigenvectors and the innovation outside</span>
+<span class="sd">        them: the data misfit is :math:`\lVert L^{-1} d - Q e \rVert^2 +</span>
+<span class="sd">        \sum_k e_k^2 / (1 + \gamma\lambda_k)^2`. The state misfit is</span>
+<span class="sd">        :math:`\sum_k \gamma^2 \lambda_k e_k^2 / (1 + \gamma\lambda_k)^2`, so</span>
+<span class="sd">        that :meth:`chi2` is gamma times the first plus the second (without</span>
+<span class="sd">        localization, the increment :math:`A u`'s :math:`\lVert u \rVert^2`</span>
+<span class="sd">        for the least :math:`u`).</span>
+<span class="sd">        """</span>
+        <span class="n">scale</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">gamma</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">eigenvalues</span>
+        <span class="n">e2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">innovation</span><span class="o">**</span><span class="mi">2</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">outside</span> <span class="o">+</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">e2</span> <span class="o">/</span> <span class="n">scale</span><span class="o">**</span><span class="mi">2</span><span class="p">))</span>
+        <span class="n">state</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">gamma</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">eigenvalues</span> <span class="o">*</span> <span class="n">e2</span> <span class="o">/</span> <span class="n">scale</span><span class="o">**</span><span class="mi">2</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">data</span><span class="p">,</span> <span class="n">state</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">chi2_tests</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">        Return Rodgers' four chi-squared tests, with the ensemble's covariances.</span>
+
+<span class="sd">        As the analytic method writes them, with the ensemble's</span>
+<span class="sd">        :math:`P_{yy}` for :math:`H S_0 H^T`: ``innovation`` and</span>
+<span class="sd">        ``residual`` are :meth:`chi2` with :math:`m` degrees of freedom; the</span>
+<span class="sd">        increments are :math:`\sum_k w_k e_k^2` over the eigenvalues above</span>
+<span class="sd">        roundoff, with their number (at most :math:`N - 1`) as the degrees of</span>
+<span class="sd">        freedom.</span>
+<span class="sd">        """</span>
+        <span class="n">chi2</span><span class="p">,</span> <span class="n">m</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">chi2</span><span class="p">(),</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">problem</span><span class="o">.</span><span class="n">obs</span><span class="p">)</span>
+        <span class="n">eigenvalues</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">eigenvalues</span>
+        <span class="n">roundoff</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">eigenvalues</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">finfo</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span><span class="o">.</span><span class="n">eps</span> <span class="o">*</span> <span class="n">eigenvalues</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">initial</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)</span>
+        <span class="n">kept</span> <span class="o">=</span> <span class="n">eigenvalues</span> <span class="o">&gt;</span> <span class="n">roundoff</span>
+        <span class="n">increment</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">weights</span><span class="p">()</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">innovation</span><span class="o">**</span><span class="mi">2</span><span class="p">)[</span><span class="n">kept</span><span class="p">]))</span>
+        <span class="n">rank</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">kept</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">"innovation"</span><span class="p">:</span> <span class="p">(</span><span class="n">chi2</span><span class="p">,</span> <span class="n">m</span><span class="p">),</span>
+            <span class="s2">"residual"</span><span class="p">:</span> <span class="p">(</span><span class="n">chi2</span><span class="p">,</span> <span class="n">m</span><span class="p">),</span>
+            <span class="s2">"modeled_increment"</span><span class="p">:</span> <span class="p">(</span><span class="n">increment</span><span class="p">,</span> <span class="n">rank</span><span class="p">),</span>
+            <span class="s2">"increment"</span><span class="p">:</span> <span class="p">(</span><span class="n">increment</span><span class="p">,</span> <span class="n">rank</span><span class="p">),</span>
+        <span class="p">}</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">sample</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">N</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">rng</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">Generator</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Return `N` of the updated members (``n x N``), chosen without replacement by `rng`, in the members' order.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            If `N` is more than the members.</span>
+<span class="sd">        """</span>
+        <span class="n">members</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">deviations</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">members</span> <span class="o">&lt;</span> <span class="n">N</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"The ensemble has </span><span class="si">{</span><span class="n">members</span><span class="si">}</span><span class="s2"> members, and its draws are its "</span>
+                <span class="sa">f</span><span class="s2">"members: ask for at most </span><span class="si">{</span><span class="n">members</span><span class="si">}</span><span class="s2">, not </span><span class="si">{</span><span class="n">N</span><span class="si">}</span><span class="s2">."</span>
+            <span class="p">)</span>
+        <span class="n">chosen</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">rng</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">members</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">N</span><span class="p">,</span> <span class="n">replace</span><span class="o">=</span><span class="kc">False</span><span class="p">))</span>
+        <span class="n">scale</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">members</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">estimate</span><span class="p">()[:,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">+</span> <span class="n">scale</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_updated</span><span class="p">()[:,</span> <span class="n">chosen</span><span class="p">]</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">with_gamma</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gamma</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"Ensemble"</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return the same ensemble's update at `gamma`: the factors do not depend on it."""</span>
+        <span class="k">return</span> <span class="n">dataclasses</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gamma</span><span class="o">=</span><span class="n">gamma</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">with_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">problem</span><span class="p">:</span> <span class="n">Problem</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"Ensemble"</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return the update of `problem`, this one's with other observation values: the same members and modeled observations, the innovation alone computed again."""</span>
+        <span class="n">innovation</span><span class="p">,</span> <span class="n">outside</span> <span class="o">=</span> <span class="n">_innovation</span><span class="p">(</span>
+            <span class="n">problem</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">predicted_mean</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">obs_root</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">eigenvectors</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">dataclasses</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span> <span class="n">problem</span><span class="o">=</span><span class="n">problem</span><span class="p">,</span> <span class="n">innovation</span><span class="o">=</span><span class="n">innovation</span><span class="p">,</span> <span class="n">outside</span><span class="o">=</span><span class="n">outside</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">__getstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return the fields for a pickle or a copy, without the shared updated deviations."""</span>
+        <span class="n">state</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">)</span>
+        <span class="n">state</span><span class="p">[</span><span class="s2">"shared"</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">return</span> <span class="n">state</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">__setstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Restore from a pickle or a copy, the arrays read-only again."""</span>
+        <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">state</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">state</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+                <span class="n">_read_only</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_whiten</span><span class="p">(</span><span class="n">root</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">X</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">transpose</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""Return :math:`L^{-1} X`, or :math:`L^{-T} X` with `transpose`, for the root of :math:`S_z` (``Ensemble.obs_root``)."""</span>
+    <span class="k">if</span> <span class="n">root</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">X</span> <span class="o">/</span> <span class="p">(</span><span class="n">root</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">]</span> <span class="k">if</span> <span class="n">X</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">2</span> <span class="k">else</span> <span class="n">root</span><span class="p">)</span>
+    <span class="n">trans</span> <span class="o">=</span> <span class="s2">"T"</span> <span class="k">if</span> <span class="n">transpose</span> <span class="k">else</span> <span class="s2">"N"</span>
+    <span class="c1"># np.asarray: SciPy is not annotated, and gives no array type</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">solve_triangular</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">lower</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">trans</span><span class="o">=</span><span class="n">trans</span><span class="p">))</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_obs_root</span><span class="p">(</span><span class="n">S_z</span><span class="p">:</span> <span class="n">LinearOperator</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Return the root of the model-data mismatch: the square roots of a diagonal one, or the Cholesky factor of any other, made dense.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    numpy.linalg.LinAlgError</span>
+<span class="sd">        If the mismatch is not positive-definite.</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">S_z</span><span class="p">,</span> <span class="n">DiagonalOperator</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">S_z</span><span class="o">.</span><span class="n">values</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">LinAlgError</span><span class="p">(</span>
+                <span class="s2">"The model-data mismatch has a variance that is not positive, so "</span>
+                <span class="s2">"it cannot whiten the observations."</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">S_z</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">))</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="c1"># np.asarray: SciPy is not annotated, and gives no array type</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">cholesky</span><span class="p">(</span><span class="n">S_z</span><span class="o">.</span><span class="n">dense</span><span class="p">(),</span> <span class="n">lower</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
+    <span class="k">except</span> <span class="n">LinAlgError</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">LinAlgError</span><span class="p">(</span>
+            <span class="s2">"The model-data mismatch is not positive-definite, so it cannot "</span>
+            <span class="s2">"whiten the observations."</span>
+        <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">err</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_innovation</span><span class="p">(</span>
+    <span class="n">problem</span><span class="p">:</span> <span class="n">Problem</span><span class="p">,</span> <span class="n">predicted_mean</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">root</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">Q</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""Return :math:`e = Q^T L^{-1} d` and :math:`\lVert L^{-1} d - Q e \rVert^2`, for :math:`d = z - c - \bar{y}`."""</span>
+    <span class="n">d</span> <span class="o">=</span> <span class="n">problem</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">values</span> <span class="o">-</span> <span class="n">problem</span><span class="o">.</span><span class="n">_offset_values</span><span class="p">()</span> <span class="o">-</span> <span class="n">predicted_mean</span>
+    <span class="n">whitened</span> <span class="o">=</span> <span class="n">_whiten</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">d</span><span class="p">)</span>
+    <span class="n">e</span> <span class="o">=</span> <span class="n">Q</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">whitened</span>
+    <span class="n">outside</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">((</span><span class="n">whitened</span> <span class="o">-</span> <span class="n">Q</span> <span class="o">@</span> <span class="n">e</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">_read_only</span><span class="p">(</span><span class="n">e</span><span class="p">),</span> <span class="n">outside</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_frame_values</span><span class="p">(</span>
+    <span class="n">frame</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">space</span><span class="p">:</span> <span class="n">Space</span><span class="p">,</span> <span class="n">columns</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Index</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n">what</span><span class="p">:</span> <span class="nb">str</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Return the values of `frame` with its rows in the order of `space` (and its columns in that of `columns`), and its columns.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        If the rows do not have exactly the space's labels, the columns not</span>
+<span class="sd">        exactly `columns`, or a value is not finite.</span>
+<span class="sd">    """</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">given</span> <span class="o">=</span> <span class="n">Space</span><span class="o">.</span><span class="n">from_index</span><span class="p">(</span><span class="n">frame</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+    <span class="k">except</span> <span class="p">(</span><span class="ne">TypeError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">)</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"The rows of </span><span class="si">{</span><span class="n">what</span><span class="si">}</span><span class="s2"> are not labels fips can read (</span><span class="si">{</span><span class="n">error</span><span class="si">}</span><span class="s2">); label "</span>
+            <span class="s2">"them as the problem's are (problem.prior.index, problem.obs.index)."</span>
+        <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="kc">None</span>
+    <span class="n">rows</span> <span class="o">=</span> <span class="n">space</span><span class="o">.</span><span class="n">_align</span><span class="p">(</span>
+        <span class="n">given</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"the rows of </span><span class="si">{</span><span class="n">what</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"The rows of </span><span class="si">{</span><span class="n">what</span><span class="si">}</span><span class="s2"> and the problem's"</span>
+    <span class="p">)</span>
+    <span class="n">values</span> <span class="o">=</span> <span class="n">frame</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">columns</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">frame</span><span class="o">.</span><span class="n">columns</span><span class="o">.</span><span class="n">has_duplicates</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">frame</span><span class="o">.</span><span class="n">columns</span><span class="o">.</span><span class="n">sort_values</span><span class="p">()</span><span class="o">.</span><span class="n">equals</span><span class="p">(</span>
+            <span class="n">columns</span><span class="o">.</span><span class="n">sort_values</span><span class="p">()</span>
+        <span class="p">):</span>
+            <span class="n">only_here</span> <span class="o">=</span> <span class="n">frame</span><span class="o">.</span><span class="n">columns</span><span class="o">.</span><span class="n">difference</span><span class="p">(</span><span class="n">columns</span><span class="p">)</span>
+            <span class="n">only_there</span> <span class="o">=</span> <span class="n">columns</span><span class="o">.</span><span class="n">difference</span><span class="p">(</span><span class="n">frame</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"The columns of </span><span class="si">{</span><span class="n">what</span><span class="si">}</span><span class="s2"> must be the members' labels, each once: "</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">list</span><span class="p">(</span><span class="n">only_here</span><span class="p">[:</span><span class="mi">5</span><span class="p">])</span><span class="si">}</span><span class="s2"> only in </span><span class="si">{</span><span class="n">what</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="nb">list</span><span class="p">(</span><span class="n">only_there</span><span class="p">[:</span><span class="mi">5</span><span class="p">])</span><span class="si">}</span><span class="s2"> "</span>
+                <span class="s2">"only in the members."</span>
+            <span class="p">)</span>
+        <span class="n">values</span> <span class="o">=</span> <span class="n">values</span><span class="p">[:,</span> <span class="n">frame</span><span class="o">.</span><span class="n">columns</span><span class="o">.</span><span class="n">get_indexer</span><span class="p">(</span><span class="n">columns</span><span class="p">)]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">columns</span> <span class="o">=</span> <span class="n">frame</span><span class="o">.</span><span class="n">columns</span>
+    <span class="n">values</span> <span class="o">=</span> <span class="n">values</span><span class="p">[</span><span class="n">rows</span><span class="p">]</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">values</span><span class="p">)):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">what</span><span class="si">}</span><span class="s2"> has values that are not finite."</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">values</span><span class="p">,</span> <span class="n">columns</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_members</span><span class="p">(</span>
+    <span class="n">problem</span><span class="p">:</span> <span class="n">Problem</span><span class="p">,</span> <span class="n">options</span><span class="p">:</span> <span class="n">EnsembleOptions</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Return the prior members (``n x N``) and their modeled observations (``m x N``), in the problem's orders."""</span>
+    <span class="n">members</span> <span class="o">=</span> <span class="n">options</span><span class="o">.</span><span class="n">members</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">members</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">):</span>
+        <span class="n">X</span><span class="p">,</span> <span class="n">columns</span> <span class="o">=</span> <span class="n">_frame_values</span><span class="p">(</span><span class="n">members</span><span class="p">,</span> <span class="n">problem</span><span class="o">.</span><span class="n">prior</span><span class="o">.</span><span class="n">space</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">"members"</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">members</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span>  <span class="c1"># EnsembleOptions checked it</span>
+        <span class="n">frame</span> <span class="o">=</span> <span class="n">problem</span><span class="o">.</span><span class="n">ensemble</span><span class="p">(</span><span class="n">members</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="n">options</span><span class="o">.</span><span class="n">seed</span><span class="p">)</span>
+        <span class="n">X</span><span class="p">,</span> <span class="n">columns</span> <span class="o">=</span> <span class="n">frame</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(),</span> <span class="n">frame</span><span class="o">.</span><span class="n">columns</span>
+    <span class="k">if</span> <span class="n">options</span><span class="o">.</span><span class="n">predicted</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">Y</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">_frame_values</span><span class="p">(</span><span class="n">options</span><span class="o">.</span><span class="n">predicted</span><span class="p">,</span> <span class="n">problem</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">space</span><span class="p">,</span> <span class="n">columns</span><span class="p">,</span> <span class="s2">"predicted"</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span>
+    <span class="n">forward</span> <span class="o">=</span> <span class="n">problem</span><span class="o">.</span><span class="n">forward</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">forward</span><span class="p">,</span> <span class="n">Operator</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">X</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">forward</span><span class="o">.</span><span class="n">data</span> <span class="o">@</span> <span class="n">X</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+        <span class="s2">"Running the forward model </span><span class="si">%s</span><span class="s2"> on </span><span class="si">%d</span><span class="s2"> members..."</span><span class="p">,</span>
+        <span class="nb">type</span><span class="p">(</span><span class="n">forward</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span>
+        <span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+    <span class="p">)</span>
+    <span class="n">Y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">column_stack</span><span class="p">([</span><span class="n">problem</span><span class="o">.</span><span class="n">_apply</span><span class="p">(</span><span class="n">X</span><span class="p">[:,</span> <span class="n">j</span><span class="p">])</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])])</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">Y</span><span class="p">)):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"The forward model gave values that are not finite."</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">X</span><span class="p">,</span> <span class="n">Y</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_weights</span><span class="p">(</span>
+    <span class="n">problem</span><span class="p">:</span> <span class="n">Problem</span><span class="p">,</span> <span class="n">options</span><span class="p">:</span> <span class="n">EnsembleOptions</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""Return the localization weights :math:`\rho_{xy}` (``n x m``) and :math:`\rho_{yy}` (``m x m``), dense, in the problem's orders."""</span>
+    <span class="n">state</span><span class="p">,</span> <span class="n">observed</span> <span class="o">=</span> <span class="n">problem</span><span class="o">.</span><span class="n">prior</span><span class="o">.</span><span class="n">space</span><span class="p">,</span> <span class="n">problem</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">space</span>
+    <span class="k">assert</span> <span class="n">options</span><span class="o">.</span><span class="n">localization</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">options</span><span class="o">.</span><span class="n">obs_localization</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+    <span class="n">rho_xy</span> <span class="o">=</span> <span class="n">options</span><span class="o">.</span><span class="n">localization</span><span class="o">.</span><span class="n">_on</span><span class="p">(</span>
+        <span class="n">state</span><span class="p">,</span> <span class="n">observed</span><span class="p">,</span> <span class="s2">"localization"</span><span class="p">,</span> <span class="p">(</span><span class="s2">"the prior"</span><span class="p">,</span> <span class="s2">"the observations"</span><span class="p">)</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">dense</span><span class="p">()</span>
+    <span class="n">rho_yy</span> <span class="o">=</span> <span class="n">options</span><span class="o">.</span><span class="n">obs_localization</span><span class="o">.</span><span class="n">_on</span><span class="p">(</span>
+        <span class="n">observed</span><span class="p">,</span>
+        <span class="n">observed</span><span class="p">,</span>
+        <span class="s2">"obs_localization"</span><span class="p">,</span>
+        <span class="p">(</span><span class="s2">"the observations"</span><span class="p">,</span> <span class="s2">"the observations"</span><span class="p">),</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">dense</span><span class="p">()</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="n">rho_yy</span><span class="p">,</span> <span class="n">rho_yy</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="mf">1e-12</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">rho_yy</span><span class="p">)</span><span class="o">.</span><span class="n">max</span><span class="p">()):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"obs_localization must be symmetric."</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">rho_xy</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">rho_yy</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_factor</span><span class="p">(</span><span class="n">problem</span><span class="p">:</span> <span class="n">Problem</span><span class="p">,</span> <span class="n">options</span><span class="p">:</span> <span class="n">EnsembleOptions</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Ensemble</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Draw or read the members, run or read their modeled observations, and factor the update."""</span>
+    <span class="n">X</span><span class="p">,</span> <span class="n">Y</span> <span class="o">=</span> <span class="n">_members</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="n">options</span><span class="p">)</span>
+    <span class="n">N</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">scale</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">N</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">x_bar</span><span class="p">,</span> <span class="n">y_bar</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span> <span class="n">Y</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">A</span> <span class="o">=</span> <span class="p">(</span><span class="n">X</span> <span class="o">-</span> <span class="n">x_bar</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">])</span> <span class="o">/</span> <span class="n">scale</span>
+    <span class="n">B</span> <span class="o">=</span> <span class="p">(</span><span class="n">Y</span> <span class="o">-</span> <span class="n">y_bar</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">])</span> <span class="o">/</span> <span class="n">scale</span>
+    <span class="n">root</span> <span class="o">=</span> <span class="n">_obs_root</span><span class="p">(</span><span class="n">problem</span><span class="o">.</span><span class="n">obs_cov</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+    <span class="n">B_white</span> <span class="o">=</span> <span class="n">_whiten</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">B</span><span class="p">)</span>  <span class="c1"># L^{-1} B, m x N</span>
+    <span class="k">if</span> <span class="n">options</span><span class="o">.</span><span class="n">localization</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># The thin SVD of L^{-1} B: M = U S^2 U^T, P_xy L^{-T} U = A V S</span>
+        <span class="n">U</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">Vt</span> <span class="o">=</span> <span class="n">svd</span><span class="p">(</span><span class="n">B_white</span><span class="p">,</span> <span class="n">full_matrices</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="n">Q</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">Vt</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">U</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">Vt</span><span class="p">)</span>
+        <span class="n">eigenvalues</span> <span class="o">=</span> <span class="n">s</span><span class="o">**</span><span class="mi">2</span>
+        <span class="n">F</span> <span class="o">=</span> <span class="n">A</span> <span class="o">@</span> <span class="p">(</span><span class="n">Vt</span><span class="o">.</span><span class="n">T</span> <span class="o">*</span> <span class="n">s</span><span class="p">)</span>
+        <span class="n">E</span> <span class="o">=</span> <span class="n">s</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="n">Vt</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">rho_xy</span><span class="p">,</span> <span class="n">rho_yy</span> <span class="o">=</span> <span class="n">_weights</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="n">options</span><span class="p">)</span>
+        <span class="n">P_yy</span> <span class="o">=</span> <span class="n">_whiten</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">rho_yy</span> <span class="o">*</span> <span class="p">(</span><span class="n">B</span> <span class="o">@</span> <span class="n">B</span><span class="o">.</span><span class="n">T</span><span class="p">))</span>  <span class="c1"># L^{-1} P_yy</span>
+        <span class="n">M</span> <span class="o">=</span> <span class="n">_whiten</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">P_yy</span><span class="o">.</span><span class="n">T</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>  <span class="c1"># L^{-1} P_yy L^{-T}</span>
+        <span class="n">M</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">M</span> <span class="o">+</span> <span class="n">M</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+        <span class="n">eigenvalues</span><span class="p">,</span> <span class="n">Q</span> <span class="o">=</span> <span class="n">eigh</span><span class="p">(</span><span class="n">M</span><span class="p">)</span>
+        <span class="n">eigenvalues</span><span class="p">,</span> <span class="n">Q</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">eigenvalues</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">Q</span><span class="p">)</span>
+        <span class="n">largest</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">eigenvalues</span><span class="p">)</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">initial</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">eigenvalues</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">initial</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)</span> <span class="o">&lt;</span> <span class="o">-</span><span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">finfo</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span><span class="o">.</span><span class="n">eps</span><span class="p">)</span> <span class="o">*</span> <span class="n">largest</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">"The localized covariance of the modeled observations has a "</span>
+                <span class="sa">f</span><span class="s2">"negative eigenvalue (</span><span class="si">{</span><span class="n">eigenvalues</span><span class="o">.</span><span class="n">min</span><span class="p">()</span><span class="si">:</span><span class="s2">.3g</span><span class="si">}</span><span class="s2">, the largest "</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">largest</span><span class="si">:</span><span class="s2">.3g</span><span class="si">}</span><span class="s2">): obs_localization must give a positive "</span>
+                <span class="s2">"semidefinite weighting (Gaspari and Cohn's function of the "</span>
+                <span class="s2">"distance does)."</span>
+            <span class="p">)</span>
+        <span class="n">eigenvalues</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="n">eigenvalues</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
+        <span class="n">P_xy</span> <span class="o">=</span> <span class="n">rho_xy</span> <span class="o">*</span> <span class="p">(</span><span class="n">A</span> <span class="o">@</span> <span class="n">B</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>  <span class="c1"># n x m</span>
+        <span class="n">F</span> <span class="o">=</span> <span class="n">_whiten</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">P_xy</span><span class="o">.</span><span class="n">T</span><span class="p">)</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">Q</span>  <span class="c1"># P_xy L^{-T} Q</span>
+        <span class="n">E</span> <span class="o">=</span> <span class="n">Q</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">B_white</span>
+    <span class="n">innovation</span><span class="p">,</span> <span class="n">outside</span> <span class="o">=</span> <span class="n">_innovation</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="n">y_bar</span><span class="p">,</span> <span class="n">root</span><span class="p">,</span> <span class="n">Q</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">Ensemble</span><span class="p">(</span>
+        <span class="n">problem</span><span class="o">=</span><span class="n">problem</span><span class="p">,</span>
+        <span class="n">gamma</span><span class="o">=</span><span class="n">options</span><span class="o">.</span><span class="n">gamma</span><span class="p">,</span>
+        <span class="n">prior_mean</span><span class="o">=</span><span class="n">_read_only</span><span class="p">(</span><span class="n">x_bar</span><span class="p">),</span>
+        <span class="n">deviations</span><span class="o">=</span><span class="n">_read_only</span><span class="p">(</span><span class="n">A</span><span class="p">),</span>
+        <span class="n">predicted_mean</span><span class="o">=</span><span class="n">_read_only</span><span class="p">(</span><span class="n">y_bar</span><span class="p">),</span>
+        <span class="n">obs_root</span><span class="o">=</span><span class="n">_read_only</span><span class="p">(</span><span class="n">root</span><span class="p">),</span>
+        <span class="n">eigenvectors</span><span class="o">=</span><span class="n">_read_only</span><span class="p">(</span><span class="n">Q</span><span class="p">),</span>
+        <span class="n">eigenvalues</span><span class="o">=</span><span class="n">_read_only</span><span class="p">(</span><span class="n">eigenvalues</span><span class="p">),</span>
+        <span class="n">F</span><span class="o">=</span><span class="n">_read_only</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ascontiguousarray</span><span class="p">(</span><span class="n">F</span><span class="p">)),</span>
+        <span class="n">E</span><span class="o">=</span><span class="n">_read_only</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ascontiguousarray</span><span class="p">(</span><span class="n">E</span><span class="p">)),</span>
+        <span class="n">innovation</span><span class="o">=</span><span class="n">innovation</span><span class="p">,</span>
+        <span class="n">outside</span><span class="o">=</span><span class="n">outside</span><span class="p">,</span>
+        <span class="n">localized</span><span class="o">=</span><span class="n">options</span><span class="o">.</span><span class="n">localization</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_ensemble</span><span class="p">(</span><span class="n">problem</span><span class="p">:</span> <span class="n">Problem</span><span class="p">,</span> <span class="n">options</span><span class="p">:</span> <span class="n">EnsembleOptions</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Posterior</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Update the prior ensemble with the observations."""</span>
+    <span class="k">return</span> <span class="n">Posterior</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="n">_factor</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="n">options</span><span class="p">),</span> <span class="n">options</span><span class="p">)</span>
+</pre></div>
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be"></script>
+<script defer src="../../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2025-2026, James Mineau.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.2.0.
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.23.0.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

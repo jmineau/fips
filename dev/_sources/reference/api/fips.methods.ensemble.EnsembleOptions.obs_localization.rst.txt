@@ -1,0 +1,6 @@
+fips.methods.ensemble.EnsembleOptions.obs\_localization
+=======================================================
+
+.. currentmodule:: fips.methods.ensemble
+
+.. autoattribute:: EnsembleOptions.obs_localization

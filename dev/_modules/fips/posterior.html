@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>fips.posterior &#8212; fips 0.2.0b3.dev20+gfcd9c64d2 documentation</title>
+    <title>fips.posterior &#8212; fips 0.2.0b3.dev21+g2729ef234 documentation</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../_static/documentation_options.js?v=04e3a186"></script>
+    <script src="../../_static/documentation_options.js?v=70a3b4e6"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -132,8 +132,8 @@
       
     
     
-    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev20+gfcd9c64d2 documentation - Home"/>
-    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev20+gfcd9c64d2 documentation - Home"/>
+    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev21+g2729ef234 documentation - Home"/>
+    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev21+g2729ef234 documentation - Home"/>
   
   
 </a></div>
@@ -528,7 +528,10 @@
 <span class="sd">    covariances are those of draws of its posterior; its gain, DOFS and</span>
 <span class="sd">    information content those of the Gaussian of the problem linearized where</span>
 <span class="sd">    its last step was made; and its chi-squared terms those of the model at</span>
-<span class="sd">    its estimate.</span>
+<span class="sd">    its estimate. The ``"ensemble"`` method's estimate is the mean of its</span>
+<span class="sd">    updated members; its variances, covariances and gain are those of the</span>
+<span class="sd">    members, and its DOFS, information content and chi-squared the analytic</span>
+<span class="sd">    formulas with the members' covariance of the modeled observations.</span>
 <span class="sd">    Such answers are estimates or approximations, and</span>
 <span class="sd">    :meth:`Posterior.trials` measures how good they are.</span>
 
@@ -885,6 +888,13 @@
 <span class="sd">    :attr:`problem` is the problem with the model, as solved; what needs a</span>
 <span class="sd">    linear forward operator (the averaging kernel, :attr:`innovation_cov`)</span>
 <span class="sd">    reads the Jacobian of the last step.</span>
+<span class="sd">    The ``"ensemble"`` method</span>
+<span class="sd">    (:class:`~fips.methods.ensemble.EnsembleOptions`) has :attr:`mean`,</span>
+<span class="sd">    :meth:`with_gamma`, :meth:`with_data` and :meth:`sample` (its updated</span>
+<span class="sd">    members, at most as many as it has); its estimate, variances, gain and</span>
+<span class="sd">    diagnostics are those of its members, which approach the analytic</span>
+<span class="sd">    posterior as they grow, and what needs :math:`H` (the averaging kernel,</span>
+<span class="sd">    :attr:`dofs_per_element`) raises for a model.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -1056,7 +1066,7 @@
 <span class="sd">        standard deviation good to about 2% at the default 2000), about</span>
 <span class="sd">        their mean, not about the mode; the ``"gauss_newton"`` method those</span>
 <span class="sd">        of its kept draws of the posterior of its forward model, the same</span>
-<span class="sd">        way.</span>
+<span class="sd">        way; the ``"ensemble"`` method those of its updated members.</span>
 
 <span class="sd">        See Also</span>
 <span class="sd">        --------</span>
@@ -1506,6 +1516,10 @@
 <span class="sd">        Jacobian's transpose (one for a linear model), each with a product of</span>
 <span class="sd">        the Gaussian at the mode's covariance.</span>
 
+<span class="sd">        The ``"ensemble"`` method's draws are its updated members: `n` of</span>
+<span class="sd">        them, chosen without replacement with `rng`, in the members' order.</span>
+<span class="sd">        It has no more, and raises for `n` above their number.</span>
+
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        n : int</span>
@@ -1538,8 +1552,9 @@
 <span class="sd">            If `W` is not an Operator; or the method cannot draw from its</span>
 <span class="sd">            posterior (its solution has no ``sample``).</span>
 <span class="sd">        ValueError</span>
-<span class="sd">            If `n` is not a positive integer, or the columns of `W` do not</span>
-<span class="sd">            have exactly the state's labels.</span>
+<span class="sd">            If `n` is not a positive integer (or, for the ensemble method, is</span>
+<span class="sd">            above its number of members), or the columns of `W` do not have</span>
+<span class="sd">            exactly the state's labels.</span>
 
 <span class="sd">        See Also</span>
 <span class="sd">        --------</span>

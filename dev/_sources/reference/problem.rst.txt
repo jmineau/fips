@@ -64,7 +64,8 @@ Without a solve
 ~~~~~~~~~~~~~~~
 What needs no solve and no :math:`m \times m` matrix is on the problem: what
 the problem predicts, a truth and its synthetic observations
-(:ref:`how to use them <synthetic-data>`), and the problems made from it (the
+(:ref:`how to use them <synthetic-data>`), members drawn from the prior for
+the ensemble method (:doc:`/user_guide/ensemble`), and the problems made from it (the
 observations aggregated, part of the state held at its prior). What depends on
 the solve is on the :class:`Posterior`.
 
@@ -73,6 +74,7 @@ the solve is on the :class:`Posterior`.
 
    Problem.predict
    Problem.simulate
+   Problem.ensemble
    Problem.linearized
    Problem.aggregate
    Problem.restrict
