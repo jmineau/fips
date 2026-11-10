@@ -1,0 +1,1094 @@
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Choosing a method &#8212; fips 0.2.0b3.dev18+gcd15cccf9 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../_static/plot_directive.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx_autodoc_typehints.css?v=057ac668" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=4b8357b6" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="../_static/scripts/fontawesome.js?digest=18bd87630a240e9c25be"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
+
+    <script src="../_static/documentation_options.js?v=fbf69674"></script>
+    <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=f281be69"></script>
+    <script>window.MathJax = {"options": {"processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'user_guide/comparison';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.23.0';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://jmineau.github.io/fips/switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'dev';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner =
+            true;
+        </script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Examples" href="examples/index.html" />
+    <link rel="prev" title="Fluxes that stay positive" href="positive.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="color-scheme" content="light dark"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.2" />
+  
+    
+    <script src="../_static/searchtools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <script src="../searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button type="button" class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class=" navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev18+gcd15cccf9 documentation - Home"/>
+    <img src="../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev18+gcd15cccf9 documentation - Home"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class=" navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../getting_started/index.html">
+    Getting Started
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../reference/index.html">
+    API Reference
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+      
+        <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/jmineau/fips" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button type="button" class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../getting_started/index.html">
+    Getting Started
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../reference/index.html">
+    API Reference
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-3"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-3"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-3"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-3">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+        
+          <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/jmineau/fips" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item pst-sidebar-collapse"><button type="button" id="pst-collapse-sidebar-button" aria-expanded="true" aria-controls="pst-primary-sidebar">
+  <svg class="pst-icon" role="img" aria-hidden="true" focusable="false" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+    <path fill="currentColor" d="M3 15.5C2.36232 15.5 1.74874 15.2564 1.28478 14.8189C0.820828 14.3815 0.541576 13.7832 0.504167 13.1467L0.5 13L0.5 3C0.499965 2.36232 0.743605 1.74874 1.18107 1.28478C1.61854 0.820828 2.21676 0.541576 2.85333 0.504167L3 0.5L13 0.5C13.6377 0.499965 14.2513 0.743605 14.7152 1.18107C15.1792 1.61854 15.4584 2.21676 15.4958 2.85333L15.5 3L15.5 13C15.5 13.6377 15.2564 14.2513 14.8189 14.7152C14.3815 15.1792 13.7832 15.4584 13.1467 15.4958L13 15.5L3 15.5ZM3 13.8333L10.5 13.8333L10.5 2.16667L3 2.16667C2.79589 2.16669 2.59889 2.24163 2.44636 2.37726C2.29383 2.5129 2.19638 2.69979 2.1725 2.9025L2.16667 3L2.16667 13C2.16669 13.2041 2.24163 13.4011 2.37726 13.5536C2.5129 13.7062 2.69979 13.8036 2.9025 13.8275L3 13.8333ZM6.65583 10.325L6.5775 10.2558L4.91083 8.58917C4.76735 8.44567 4.68116 8.25476 4.66843 8.05223C4.65569 7.84971 4.71729 7.6495 4.84167 7.48917L4.91083 7.41083L6.5775 5.74417C6.72747 5.59471 6.9287 5.50794 7.14032 5.50148C7.35194 5.49502 7.55809 5.56935 7.7169 5.70937C7.8757 5.8494 7.97525 6.04463 7.99533 6.25539C8.01541 6.46616 7.95451 6.67667 7.825 6.84417L7.75583 6.9225L6.67917 8L7.75583 9.0775C7.89931 9.22099 7.98551 9.41191 7.99824 9.61443C8.01097 9.81695 7.94938 10.0172 7.825 10.1775L7.75583 10.2558C7.61234 10.3993 7.42142 10.4855 7.2189 10.4982C7.01638 10.511 6.81617 10.4494 6.65583 10.325Z"/>
+  </svg>
+  <span class="pst-collapse-sidebar-label">Collapse Sidebar</span>
+  <span class="pst-expand-sidebar-label">Expand Sidebar</span>
+</button></div>
+        <div class="sidebar-primary-item">
+
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="synthetic.html">Synthetic experiments</a></li>
+<li class="toctree-l1"><a class="reference internal" href="bounds.html">Bounds on the state</a></li>
+<li class="toctree-l1"><a class="reference internal" href="nonlinear.html">A nonlinear forward model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="positive.html">Fluxes that stay positive</a></li>
+<li class="toctree-l1 current active"><a aria-current="page" class="current reference internal" href="#">Choosing a method</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="examples/index.html">Examples</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="examples/gravity_2d.html">Gravity: density below the surface</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples/flux_regional.html">A regional flux inversion</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples/synthetic_truth.html">Does the inversion recover a known flux?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples/data_worth.html">Which observations constrain a regional total?</a></li>
+</ul>
+</details></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="index.html" class="nav-link">User Guide</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Choosing a method</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="choosing-a-method">
+<span id="comparison"></span><h1>Choosing a method<a class="headerlink" href="#choosing-a-method" title="Link to this heading">#</a></h1>
+<p>fips solves a problem whose state cannot be negative (a flux, a
+concentration, a rate) in four ways: the analytic posterior, which ignores
+the bound, <code class="docutils literal notranslate"><span class="pre">&quot;bounded&quot;</span></code> with <code class="docutils literal notranslate"><span class="pre">lower=0</span></code>, and <code class="docutils literal notranslate"><span class="pre">&quot;gauss_newton&quot;</span></code> with a
+<a class="reference internal" href="../reference/api/fips.LognormalForward.html#fips.LognormalForward" title="fips.LognormalForward"><code class="xref py py-class docutils literal notranslate"><span class="pre">LognormalForward</span></code></a> or a <a class="reference internal" href="../reference/api/fips.SoftplusForward.html#fips.SoftplusForward" title="fips.SoftplusForward"><code class="xref py py-class docutils literal notranslate"><span class="pre">SoftplusForward</span></code></a>. This page
+runs the four on one example, a problem shaped like a Salt Lake Valley methane
+inversion (the flux of each cell of a grid, with an inventory as its prior,
+seen from a few sites), with one prior written four ways, and scores each on
+many sets of synthetic data (<a class="reference internal" href="synthetic.html"><span class="doc">Synthetic experiments</span></a>). What the example’s numbers
+say, in short:</p>
+<ul class="simple">
+<li><p><strong>for a total of the whole state (here, a basin’s), the analytic posterior
+is good enough</strong>: its total and its interval held in every world tried
+here, at a hundredth of the others’ cost or less;</p></li>
+<li><p><strong>for a map, the lognormal model is best</strong>, and its intervals are right
+when the flux is a factor of the inventory, correlated as its prior says;</p></li>
+<li><p><strong>bounds change the prior</strong>: a Gaussian truncated at zero has a higher mean
+than the Gaussian, so the draws of <code class="docutils literal notranslate"><span class="pre">&quot;bounded&quot;</span></code> put the total far above
+an inventory that is the mean. Its mode does not;</p></li>
+<li><p><strong>the softplus model</strong> is right in its own world, and about 5% low on the
+total in a lognormal one.</p></li>
+</ul>
+<p>The rest of the page is the experiment behind them, small enough to run here,
+then the same experiment at the Salt Lake Valley’s size.</p>
+<nav class="contents local" id="on-this-page">
+<p class="topic-title">On this page</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#the-problem" id="id3">The problem</a></p></li>
+<li><p><a class="reference internal" href="#two-worlds" id="id4">Two worlds</a></p></li>
+<li><p><a class="reference internal" href="#scoring" id="id5">Scoring</a></p></li>
+<li><p><a class="reference internal" href="#the-numbers" id="id6">The numbers</a></p></li>
+<li><p><a class="reference internal" href="#at-the-salt-lake-valley-s-size" id="id7">At the Salt Lake Valley’s size</a></p></li>
+<li><p><a class="reference internal" href="#what-the-numbers-mean" id="id8">What the numbers mean</a></p></li>
+<li><p><a class="reference internal" href="#what-each-costs" id="id9">What each costs</a></p></li>
+</ul>
+</nav>
+<section id="the-problem">
+<h2><a class="toc-backref" href="#id3" role="doc-backlink">The problem</a><a class="headerlink" href="#the-problem" title="Link to this heading">#</a></h2>
+<p>A grid of cells, two sites, and observations each of which sees the cells
+upwind of its site, in that hour’s wind direction:</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [1]: </span><span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
+
+<span class="gp">In [2]: </span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+<span class="gp">In [3]: </span><span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+
+<span class="gp">In [4]: </span><span class="kn">import</span><span class="w"> </span><span class="nn">fips</span>
+
+<span class="gp">In [5]: </span><span class="n">side</span><span class="p">,</span> <span class="n">n_obs</span><span class="p">,</span> <span class="n">n_sites</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">40</span><span class="p">,</span> <span class="mi">2</span>  <span class="c1"># cells on a side, observations, sites</span>
+
+<span class="gp">In [6]: </span><span class="n">trials</span><span class="p">,</span> <span class="n">n_draws</span> <span class="o">=</span> <span class="mi">40</span><span class="p">,</span> <span class="mi">100</span>  <span class="c1"># trials of each world, draws in each trial</span>
+
+<span class="gp">In [7]: </span><span class="n">rng</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [8]: </span><span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">side</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">side</span><span class="p">))</span>
+
+<span class="gp">In [9]: </span><span class="n">xy</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">c_</span><span class="p">[</span><span class="n">x</span><span class="o">.</span><span class="n">ravel</span><span class="p">(),</span> <span class="n">y</span><span class="o">.</span><span class="n">ravel</span><span class="p">()]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span>
+
+<span class="gp">In [10]: </span><span class="n">state</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Space</span><span class="p">({</span><span class="s2">"flux"</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">MultiIndex</span><span class="o">.</span><span class="n">from_arrays</span><span class="p">([</span><span class="n">xy</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">xy</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]],</span> <span class="n">names</span><span class="o">=</span><span class="p">[</span><span class="s2">"x"</span><span class="p">,</span> <span class="s2">"y"</span><span class="p">])})</span>
+
+<span class="gp">In [11]: </span><span class="n">observed</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Space</span><span class="p">({</span><span class="s2">"ch4"</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">RangeIndex</span><span class="p">(</span><span class="n">n_obs</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">"obs_id"</span><span class="p">)})</span>
+
+<span class="gp">In [12]: </span><span class="n">sites</span> <span class="o">=</span> <span class="n">rng</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">side</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="p">(</span><span class="n">n_sites</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
+
+<span class="gp">In [13]: </span><span class="n">at</span> <span class="o">=</span> <span class="n">rng</span><span class="o">.</span><span class="n">integers</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">n_sites</span><span class="p">,</span> <span class="n">n_obs</span><span class="p">)</span>  <span class="c1"># the site of each observation</span>
+</pre></div>
+</div>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [14]: </span><span class="n">footprint</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">n_obs</span><span class="p">,</span> <span class="n">side</span> <span class="o">*</span> <span class="n">side</span><span class="p">))</span>
+
+<span class="gp">In [15]: </span><span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_obs</span><span class="p">):</span>
+<span class="gp">   ....: </span>    <span class="n">wind</span> <span class="o">=</span> <span class="n">rng</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span>
+<span class="gp">   ....: </span>    <span class="n">along</span><span class="p">,</span> <span class="n">across</span> <span class="o">=</span> <span class="p">((</span><span class="n">xy</span> <span class="o">-</span> <span class="n">sites</span><span class="p">[</span><span class="n">at</span><span class="p">[</span><span class="n">i</span><span class="p">]])</span> <span class="o">@</span> <span class="p">[[</span><span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">wind</span><span class="p">),</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">wind</span><span class="p">)],</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">wind</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">wind</span><span class="p">)]])</span><span class="o">.</span><span class="n">T</span>
+<span class="gp">   ....: </span>    <span class="n">footprint</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">across</span><span class="p">)</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="n">along</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span> <span class="o">/</span> <span class="mf">3.0</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">along</span> <span class="o">&gt;</span> <span class="o">-</span><span class="mf">1.0</span><span class="p">)</span>
+<span class="gp">   ....: </span>
+</pre></div>
+</div>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [16]: </span><span class="n">footprint</span><span class="p">[</span><span class="n">footprint</span> <span class="o">&lt;</span> <span class="mf">0.02</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0</span>
+
+<span class="gp">In [17]: </span><span class="n">footprint</span> <span class="o">*=</span> <span class="mf">5.0</span> <span class="o">/</span> <span class="n">footprint</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">keepdims</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="gp">In [18]: </span><span class="n">H</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Operator</span><span class="p">(</span><span class="n">footprint</span><span class="p">,</span> <span class="n">observed</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span>
+
+<span class="gp">In [19]: </span><span class="n">inventory</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Vector</span><span class="p">(</span><span class="n">rng</span><span class="o">.</span><span class="n">lognormal</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.8</span><span class="p">,</span> <span class="n">side</span> <span class="o">*</span> <span class="n">side</span><span class="p">),</span> <span class="n">state</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>One prior, written four ways.</strong> Each cell’s prior flux has the inventory as
+its mean and 131% of it as its standard deviation (the spread of a lognormal
+of log standard deviation 1, the setting of the Salt Lake Valley-shaped tests
+in <a class="reference internal" href="positive.html"><span class="doc">Fluxes that stay positive</span></a>), and the errors are correlated over two cells. The
+analytic and bounded methods write it as a Gaussian of the flux;
+<code class="docutils literal notranslate"><span class="pre">prior_for</span></code> gives each transform the prior on <span class="math notranslate nohighlight">\(u\)</span> whose flux has the
+same mean and standard deviation, and the correlation is then that of
+<span class="math notranslate nohighlight">\(u\)</span>. The softplus model bends at the median inventory:</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [20]: </span><span class="n">std</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">e</span> <span class="o">-</span> <span class="mf">1.0</span><span class="p">)</span> <span class="o">*</span> <span class="n">inventory</span>
+
+<span class="gp">In [21]: </span><span class="n">lognormal</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">LognormalForward</span><span class="p">(</span><span class="n">H</span><span class="p">,</span> <span class="n">inventory</span><span class="o">.</span><span class="n">to_series</span><span class="p">(</span><span class="s2">"flux"</span><span class="p">))</span>
+
+<span class="gp">In [22]: </span><span class="n">softplus</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">SoftplusForward</span><span class="p">(</span><span class="n">H</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">inventory</span><span class="o">.</span><span class="n">values</span><span class="p">)))</span>
+
+<span class="gp">In [23]: </span><span class="n">priors</span> <span class="o">=</span> <span class="p">{</span>
+<span class="gp">   ....: </span>    <span class="s2">"analytic"</span><span class="p">:</span> <span class="p">(</span><span class="n">inventory</span><span class="p">,</span> <span class="n">std</span><span class="p">,</span> <span class="n">H</span><span class="p">),</span>
+<span class="gp">   ....: </span>    <span class="s2">"bounded"</span><span class="p">:</span> <span class="p">(</span><span class="n">inventory</span><span class="p">,</span> <span class="n">std</span><span class="p">,</span> <span class="n">H</span><span class="p">),</span>
+<span class="gp">   ....: </span>    <span class="s2">"lognormal"</span><span class="p">:</span> <span class="p">(</span><span class="o">*</span><span class="n">lognormal</span><span class="o">.</span><span class="n">prior_for</span><span class="p">(</span><span class="n">inventory</span><span class="p">,</span> <span class="n">std</span><span class="p">),</span> <span class="n">lognormal</span><span class="p">),</span>
+<span class="gp">   ....: </span>    <span class="s2">"softplus"</span><span class="p">:</span> <span class="p">(</span><span class="o">*</span><span class="n">softplus</span><span class="o">.</span><span class="n">prior_for</span><span class="p">(</span><span class="n">inventory</span><span class="p">,</span> <span class="n">std</span><span class="p">),</span> <span class="n">softplus</span><span class="p">),</span>
+<span class="gp">   ....: </span><span class="p">}</span>
+<span class="gp">   ....: </span>
+</pre></div>
+</div>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [24]: </span><span class="k">def</span><span class="w"> </span><span class="nf">build</span><span class="p">(</span><span class="n">method</span><span class="p">,</span> <span class="n">obs</span><span class="p">):</span>
+<span class="gp">   ....: </span><span class="w">    </span><span class="sd">"""The problem of the observations `obs`, as `method` writes it."""</span>
+<span class="gp">   ....: </span>    <span class="n">mean</span><span class="p">,</span> <span class="n">sd</span><span class="p">,</span> <span class="n">forward</span> <span class="o">=</span> <span class="n">priors</span><span class="p">[</span><span class="n">method</span><span class="p">]</span>
+<span class="gp">   ....: </span>    <span class="k">return</span> <span class="n">fips</span><span class="o">.</span><span class="n">Problem</span><span class="p">(</span>
+<span class="gp">   ....: </span>        <span class="n">prior</span><span class="o">=</span><span class="n">mean</span><span class="p">,</span>
+<span class="gp">   ....: </span>        <span class="n">prior_cov</span><span class="o">=</span><span class="n">fips</span><span class="o">.</span><span class="n">Exponential</span><span class="p">([</span><span class="s2">"x"</span><span class="p">,</span> <span class="s2">"y"</span><span class="p">],</span> <span class="mf">2.0</span><span class="p">)</span><span class="o">.</span><span class="n">with_std</span><span class="p">(</span><span class="n">sd</span><span class="p">),</span>
+<span class="gp">   ....: </span>        <span class="n">obs</span><span class="o">=</span><span class="n">obs</span><span class="p">,</span>
+<span class="gp">   ....: </span>        <span class="n">obs_cov</span><span class="o">=</span><span class="n">fips</span><span class="o">.</span><span class="n">Independent</span><span class="p">()</span><span class="o">.</span><span class="n">with_std</span><span class="p">(</span><span class="mf">0.3</span><span class="p">),</span>
+<span class="gp">   ....: </span>        <span class="n">forward</span><span class="o">=</span><span class="n">forward</span><span class="p">,</span>
+<span class="gp">   ....: </span>        <span class="n">offset</span><span class="o">=</span><span class="mf">1900.0</span><span class="p">,</span>
+<span class="gp">   ....: </span>    <span class="p">)</span>
+<span class="gp">   ....: </span>
+
+<span class="gp">In [25]: </span><span class="n">linear</span> <span class="o">=</span> <span class="n">build</span><span class="p">(</span><span class="s2">"analytic"</span><span class="p">,</span> <span class="n">fips</span><span class="o">.</span><span class="n">Vector</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n_obs</span><span class="p">),</span> <span class="n">observed</span><span class="p">))</span>
+
+<span class="gp">In [26]: </span><span class="n">start</span> <span class="o">=</span> <span class="n">linear</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">inventory</span><span class="p">)</span>  <span class="c1"># the data the inventory gives</span>
+</pre></div>
+</div>
+<p>Most cells are seen weakly, as in a valley with a few sites: about half have
+an averaging kernel below 0.1.</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [27]: </span><span class="n">seen</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">build</span><span class="p">(</span><span class="s2">"analytic"</span><span class="p">,</span> <span class="n">start</span><span class="p">))</span><span class="o">.</span><span class="n">dofs_per_element</span><span class="o">.</span><span class="n">values</span>
+
+<span class="gp">In [28]: </span><span class="nb">round</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">seen</span> <span class="o">&lt;</span> <span class="mf">0.1</span><span class="p">)),</span> <span class="mi">2</span><span class="p">)</span>
+<span class="gh">Out[28]: </span><span class="go">0.51</span>
+</pre></div>
+</div>
+<p>Each method’s solve, and its flux (a transform’s estimate and draws are
+<span class="math notranslate nohighlight">\(u\)</span>, and <code class="docutils literal notranslate"><span class="pre">transform</span></code> maps them to the flux). Each trial’s posterior is
+<code class="docutils literal notranslate"><span class="pre">post.with_data(obs)</span></code>; a <code class="docutils literal notranslate"><span class="pre">&quot;gauss_newton&quot;</span></code> one makes 50 draws to tune its
+sampler (<code class="docutils literal notranslate"><span class="pre">burn_in</span></code>) before those asked of it:</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [29]: </span><span class="k">def</span><span class="w"> </span><span class="nf">solve</span><span class="p">(</span><span class="n">method</span><span class="p">,</span> <span class="n">obs</span><span class="p">):</span>
+<span class="gp">   ....: </span><span class="w">    </span><span class="sd">"""The method's posterior of the observations `obs`."""</span>
+<span class="gp">   ....: </span>    <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">"analytic"</span><span class="p">:</span>
+<span class="gp">   ....: </span>        <span class="k">return</span> <span class="n">fips</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">build</span><span class="p">(</span><span class="n">method</span><span class="p">,</span> <span class="n">obs</span><span class="p">))</span>
+<span class="gp">   ....: </span>    <span class="k">if</span> <span class="n">method</span> <span class="o">==</span> <span class="s2">"bounded"</span><span class="p">:</span>
+<span class="gp">   ....: </span>        <span class="k">return</span> <span class="n">fips</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">build</span><span class="p">(</span><span class="n">method</span><span class="p">,</span> <span class="n">obs</span><span class="p">),</span> <span class="s2">"bounded"</span><span class="p">,</span> <span class="n">lower</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)</span>
+<span class="gp">   ....: </span>    <span class="k">return</span> <span class="n">fips</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">build</span><span class="p">(</span><span class="n">method</span><span class="p">,</span> <span class="n">obs</span><span class="p">),</span> <span class="s2">"gauss_newton"</span><span class="p">,</span> <span class="n">burn_in</span><span class="o">=</span><span class="mi">50</span><span class="p">)</span>
+<span class="gp">   ....: </span>
+
+<span class="gp">In [30]: </span><span class="k">def</span><span class="w"> </span><span class="nf">flux</span><span class="p">(</span><span class="n">method</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+<span class="gp">   ....: </span><span class="w">    </span><span class="sd">"""The flux of a state, or of draws: the transform's, or the state itself."""</span>
+<span class="gp">   ....: </span>    <span class="k">return</span> <span class="n">priors</span><span class="p">[</span><span class="n">method</span><span class="p">][</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">if</span> <span class="n">method</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"lognormal"</span><span class="p">,</span> <span class="s2">"softplus"</span><span class="p">)</span> <span class="k">else</span> <span class="n">x</span>
+<span class="gp">   ....: </span>
+</pre></div>
+</div>
+</section>
+<section id="two-worlds">
+<h2><a class="toc-backref" href="#id4" role="doc-backlink">Two worlds</a><a class="headerlink" href="#two-worlds" title="Link to this heading">#</a></h2>
+<p><strong>A lognormal truth.</strong> Each cell’s flux is the inventory times a lognormal
+factor whose mean is 1, so the inventory is the mean flux, and the
+logarithms of the factors correlate over two cells, as the priors do. The
+truth’s mean, standard deviation and correlations are the priors’; its shape
+is the lognormal model’s and none of the others’. This is the world of an
+inventory that is right on average and wrong by a factor in each place:</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [31]: </span><span class="n">field</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Exponential</span><span class="p">([</span><span class="s2">"x"</span><span class="p">,</span> <span class="s2">"y"</span><span class="p">],</span> <span class="mf">2.0</span><span class="p">)</span><span class="o">.</span><span class="n">with_std</span><span class="p">(</span><span class="mf">1.0</span><span class="p">)</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">state</span><span class="p">)</span>
+
+<span class="gp">In [32]: </span><span class="k">def</span><span class="w"> </span><span class="nf">lognormal_world</span><span class="p">(</span><span class="n">rng</span><span class="p">):</span>
+<span class="gp">   ....: </span><span class="w">    </span><span class="sd">"""A truth lognormal about the inventory (its mean), and the observations it gives."""</span>
+<span class="gp">   ....: </span>    <span class="n">truth</span> <span class="o">=</span> <span class="n">inventory</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">field</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">rng</span><span class="p">)</span> <span class="o">-</span> <span class="mf">0.5</span><span class="p">)</span>
+<span class="gp">   ....: </span>    <span class="k">return</span> <span class="n">truth</span><span class="p">,</span> <span class="n">linear</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">truth</span><span class="p">)</span> <span class="o">+</span> <span class="n">linear</span><span class="o">.</span><span class="n">obs_cov</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">rng</span><span class="p">)</span>
+<span class="gp">   ....: </span>
+</pre></div>
+</div>
+<p><strong>Each method’s own world.</strong> The truth is a draw from the method’s own prior
+and the data come through its own model, so an exact posterior’s intervals
+hold the truth as often as they claim. This checks that each method is right
+on its own terms. The lognormal model’s own world is the lognormal truth
+above. The bounded method’s prior is the Gaussian truncated at zero, which is
+the bounded posterior of a problem with no data, so its truths are that
+posterior’s draws:</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [33]: </span><span class="k">def</span><span class="w"> </span><span class="nf">own_world</span><span class="p">(</span><span class="n">method</span><span class="p">):</span>
+<span class="gp">   ....: </span><span class="w">    </span><span class="sd">"""Truths from the method's prior and data through its model, the truth as a flux."""</span>
+<span class="gp">   ....: </span>    <span class="n">problem</span> <span class="o">=</span> <span class="n">build</span><span class="p">(</span><span class="n">method</span><span class="p">,</span> <span class="n">start</span><span class="p">)</span>
+<span class="gp">   ....: </span>    <span class="k">def</span><span class="w"> </span><span class="nf">world</span><span class="p">(</span><span class="n">rng</span><span class="p">):</span>
+<span class="gp">   ....: </span>        <span class="n">truth</span><span class="p">,</span> <span class="n">obs</span> <span class="o">=</span> <span class="n">problem</span><span class="o">.</span><span class="n">simulate</span><span class="p">(</span><span class="n">rng</span><span class="o">=</span><span class="n">rng</span><span class="p">)</span>
+<span class="gp">   ....: </span>        <span class="k">return</span> <span class="n">flux</span><span class="p">(</span><span class="n">method</span><span class="p">,</span> <span class="n">truth</span><span class="p">),</span> <span class="n">obs</span>
+<span class="gp">   ....: </span>    <span class="k">return</span> <span class="n">world</span>
+<span class="gp">   ....: </span>
+</pre></div>
+</div>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [34]: </span><span class="n">nothing</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Space</span><span class="p">({</span><span class="s2">"ch4"</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">RangeIndex</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">"obs_id"</span><span class="p">)})</span>
+
+<span class="gp">In [35]: </span><span class="n">no_data</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Problem</span><span class="p">(</span><span class="n">inventory</span><span class="p">,</span> <span class="n">fips</span><span class="o">.</span><span class="n">Exponential</span><span class="p">([</span><span class="s2">"x"</span><span class="p">,</span> <span class="s2">"y"</span><span class="p">],</span> <span class="mf">2.0</span><span class="p">)</span><span class="o">.</span><span class="n">with_std</span><span class="p">(</span><span class="n">std</span><span class="p">),</span> <span class="n">fips</span><span class="o">.</span><span class="n">Vector</span><span class="p">([</span><span class="mf">0.0</span><span class="p">],</span> <span class="n">nothing</span><span class="p">),</span> <span class="n">fips</span><span class="o">.</span><span class="n">Independent</span><span class="p">()</span><span class="o">.</span><span class="n">with_std</span><span class="p">(</span><span class="mf">1.0</span><span class="p">),</span> <span class="n">fips</span><span class="o">.</span><span class="n">Operator</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="n">side</span> <span class="o">*</span> <span class="n">side</span><span class="p">)),</span> <span class="n">nothing</span><span class="p">,</span> <span class="n">state</span><span class="p">))</span>
+
+<span class="gp">In [36]: </span><span class="n">truncated</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">no_data</span><span class="p">,</span> <span class="s2">"bounded"</span><span class="p">,</span> <span class="n">lower</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">trials</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>  <span class="c1"># one truth a column</span>
+
+<span class="gp">In [37]: </span><span class="k">def</span><span class="w"> </span><span class="nf">truncated_world</span><span class="p">(</span><span class="n">rng</span><span class="p">,</span> <span class="n">truths</span><span class="o">=</span><span class="nb">iter</span><span class="p">(</span><span class="n">truncated</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">())):</span>
+<span class="gp">   ....: </span><span class="w">    </span><span class="sd">"""The bounded method's own world: the truncated prior's draws, one a trial."""</span>
+<span class="gp">   ....: </span>    <span class="n">truth</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Vector</span><span class="p">(</span><span class="nb">next</span><span class="p">(</span><span class="n">truths</span><span class="p">),</span> <span class="n">state</span><span class="p">)</span>
+<span class="gp">   ....: </span>    <span class="k">return</span> <span class="n">truth</span><span class="p">,</span> <span class="n">linear</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">truth</span><span class="p">)</span> <span class="o">+</span> <span class="n">linear</span><span class="o">.</span><span class="n">obs_cov</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">rng</span><span class="p">)</span>
+<span class="gp">   ....: </span>
+</pre></div>
+</div>
+</section>
+<section id="scoring">
+<h2><a class="toc-backref" href="#id5" role="doc-backlink">Scoring</a><a class="headerlink" href="#scoring" title="Link to this heading">#</a></h2>
+<p>Each trial, the world makes a truth and its data, the method solves them, and
+the trial’s posterior is compared with the truth, in flux: the total of all
+cells and each cell. Every method’s posterior is read the same way, from
+<code class="docutils literal notranslate"><span class="pre">n_draws</span></code> draws of it (<a class="reference internal" href="../reference/api/fips.Posterior.sample.html#fips.Posterior.sample" title="fips.Posterior.sample"><code class="xref py py-meth docutils literal notranslate"><span class="pre">sample()</span></code></a>):</p>
+<ul class="simple">
+<li><p><strong>the total</strong>: its estimate is the mean of the draws’ totals, its interval
+the 2.5% and 97.5% quantiles of the draws’ totals;</p></li>
+<li><p><strong>each cell</strong>: its interval is the quantiles of its draws, and its error is
+that of the estimate (the mode, or the analytic mean), as a root mean square
+over the cells divided by that of the inventory: 1 is no better than the
+prior.</p></li>
+</ul>
+<p>This is <a class="reference internal" href="../reference/api/fips.Posterior.trials.html#fips.Posterior.trials" title="fips.Posterior.trials"><code class="xref py py-meth docutils literal notranslate"><span class="pre">trials()</span></code></a>’ loop, written out, for two reasons.
+<code class="docutils literal notranslate"><span class="pre">trials</span></code> compares totals of the state, and a transform’s state is
+<span class="math notranslate nohighlight">\(u\)</span>: a total of the flux is not a linear function of <span class="math notranslate nohighlight">\(u\)</span>. And
+<code class="docutils literal notranslate"><span class="pre">trials</span></code> reads an interval as the estimate plus or minus 1.96 of the
+posterior’s standard deviations, which for a skewed posterior is not the
+posterior’s interval, and for <code class="docutils literal notranslate"><span class="pre">&quot;bounded&quot;</span></code> is centered on the mode, which is
+not the mean (below, the bounded method’s own world shows what that costs).
+Every world draws from one generator and every method’s draws from another,
+so the four methods get the same data, trial for trial:</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [38]: </span><span class="k">def</span><span class="w"> </span><span class="nf">score</span><span class="p">(</span><span class="n">method</span><span class="p">,</span> <span class="n">world</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+<span class="gp">   ....: </span><span class="w">    </span><span class="sd">"""Each trial's error and whether its 95% intervals (the draws' quantiles) hold the truth, in flux."""</span>
+<span class="gp">   ....: </span>    <span class="n">post</span><span class="p">,</span> <span class="n">rows</span><span class="p">,</span> <span class="n">clock</span> <span class="o">=</span> <span class="n">solve</span><span class="p">(</span><span class="n">method</span><span class="p">,</span> <span class="n">start</span><span class="p">),</span> <span class="p">[],</span> <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span>
+<span class="gp">   ....: </span>    <span class="n">g_world</span><span class="p">,</span> <span class="n">g_draws</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="n">seed</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="n">seed</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+<span class="gp">   ....: </span>    <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">trials</span><span class="p">):</span>
+<span class="gp">   ....: </span>        <span class="n">truth</span><span class="p">,</span> <span class="n">obs</span> <span class="o">=</span> <span class="n">world</span><span class="p">(</span><span class="n">g_world</span><span class="p">)</span>
+<span class="gp">   ....: </span>        <span class="n">trial</span> <span class="o">=</span> <span class="n">post</span><span class="o">.</span><span class="n">with_data</span><span class="p">(</span><span class="n">obs</span><span class="p">)</span>
+<span class="gp">   ....: </span>        <span class="n">t</span><span class="p">,</span> <span class="n">draws</span> <span class="o">=</span> <span class="n">truth</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="n">flux</span><span class="p">(</span><span class="n">method</span><span class="p">,</span> <span class="n">trial</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">n_draws</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="n">g_draws</span><span class="p">))</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
+<span class="gp">   ....: </span>        <span class="n">low</span><span class="p">,</span> <span class="n">high</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">quantile</span><span class="p">(</span><span class="n">draws</span><span class="p">,</span> <span class="p">[</span><span class="mf">0.025</span><span class="p">,</span> <span class="mf">0.975</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="gp">   ....: </span>        <span class="n">totals</span><span class="p">,</span> <span class="n">error</span> <span class="o">=</span> <span class="n">draws</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span> <span class="n">flux</span><span class="p">(</span><span class="n">method</span><span class="p">,</span> <span class="n">trial</span><span class="o">.</span><span class="n">estimate</span><span class="p">)</span><span class="o">.</span><span class="n">values</span> <span class="o">-</span> <span class="n">t</span>
+<span class="gp">   ....: </span>        <span class="n">rows</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+<span class="gp">   ....: </span>            <span class="p">{</span>
+<span class="gp">   ....: </span>                <span class="s2">"total error"</span><span class="p">:</span> <span class="n">totals</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span> <span class="o">-</span> <span class="n">t</span><span class="o">.</span><span class="n">sum</span><span class="p">(),</span>
+<span class="gp">   ....: </span>                <span class="s2">"total std"</span><span class="p">:</span> <span class="n">totals</span><span class="o">.</span><span class="n">std</span><span class="p">(),</span>
+<span class="gp">   ....: </span>                <span class="s2">"total covered"</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">quantile</span><span class="p">(</span><span class="n">totals</span><span class="p">,</span> <span class="mf">0.025</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="n">t</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">&lt;=</span> <span class="n">np</span><span class="o">.</span><span class="n">quantile</span><span class="p">(</span><span class="n">totals</span><span class="p">,</span> <span class="mf">0.975</span><span class="p">),</span>
+<span class="gp">   ....: </span>                <span class="s2">"cells covered"</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">((</span><span class="n">low</span> <span class="o">&lt;=</span> <span class="n">t</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">t</span> <span class="o">&lt;=</span> <span class="n">high</span><span class="p">)),</span>
+<span class="gp">   ....: </span>                <span class="s2">"cell error"</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">error</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">((</span><span class="n">inventory</span><span class="o">.</span><span class="n">values</span> <span class="o">-</span> <span class="n">t</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)),</span>
+<span class="gp">   ....: </span>            <span class="p">}</span>
+<span class="gp">   ....: </span>        <span class="p">)</span>
+<span class="gp">   ....: </span>    <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">rows</span><span class="p">)</span><span class="o">.</span><span class="n">assign</span><span class="p">(</span><span class="n">seconds</span><span class="o">=</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span> <span class="o">-</span> <span class="n">clock</span><span class="p">)</span> <span class="o">/</span> <span class="n">trials</span><span class="p">)</span>
+<span class="gp">   ....: </span>
+</pre></div>
+</div>
+<p>The summary has the total’s bias, its standard error, the spread of the
+total’s error over the trials and the spread the posterior claims (each as a
+fraction of the inventory’s total, as every bias on this page is), and how
+often the total’s interval holds the truth; then the cells’ coverage with its
+standard error, the cell error, and the seconds a trial takes:</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [39]: </span><span class="k">def</span><span class="w"> </span><span class="nf">summarize</span><span class="p">(</span><span class="n">table</span><span class="p">):</span>
+<span class="gp">   ....: </span><span class="w">    </span><span class="sd">"""The total's bias, spread and coverage, the cells' coverage and error, with standard errors."""</span>
+<span class="gp">   ....: </span>    <span class="n">n</span><span class="p">,</span> <span class="n">e</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">table</span><span class="p">),</span> <span class="n">table</span><span class="p">[</span><span class="s2">"total error"</span><span class="p">]</span> <span class="o">/</span> <span class="n">inventory</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+<span class="gp">   ....: </span>    <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span>
+<span class="gp">   ....: </span>        <span class="p">{</span>
+<span class="gp">   ....: </span>            <span class="s2">"bias"</span><span class="p">:</span> <span class="n">e</span><span class="o">.</span><span class="n">mean</span><span class="p">(),</span>
+<span class="gp">   ....: </span>            <span class="s2">"bias se"</span><span class="p">:</span> <span class="n">e</span><span class="o">.</span><span class="n">std</span><span class="p">()</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">n</span><span class="p">),</span>
+<span class="gp">   ....: </span>            <span class="s2">"spread"</span><span class="p">:</span> <span class="n">e</span><span class="o">.</span><span class="n">std</span><span class="p">(),</span>
+<span class="gp">   ....: </span>            <span class="s2">"claimed"</span><span class="p">:</span> <span class="n">table</span><span class="p">[</span><span class="s2">"total std"</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span> <span class="o">/</span> <span class="n">inventory</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">sum</span><span class="p">(),</span>
+<span class="gp">   ....: </span>            <span class="s2">"coverage"</span><span class="p">:</span> <span class="n">table</span><span class="p">[</span><span class="s2">"total covered"</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">(),</span>
+<span class="gp">   ....: </span>            <span class="s2">"cells"</span><span class="p">:</span> <span class="n">table</span><span class="p">[</span><span class="s2">"cells covered"</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">(),</span>
+<span class="gp">   ....: </span>            <span class="s2">"cells se"</span><span class="p">:</span> <span class="n">table</span><span class="p">[</span><span class="s2">"cells covered"</span><span class="p">]</span><span class="o">.</span><span class="n">std</span><span class="p">()</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">n</span><span class="p">),</span>
+<span class="gp">   ....: </span>            <span class="s2">"cell error"</span><span class="p">:</span> <span class="n">table</span><span class="p">[</span><span class="s2">"cell error"</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">(),</span>
+<span class="gp">   ....: </span>            <span class="s2">"s a trial"</span><span class="p">:</span> <span class="n">table</span><span class="p">[</span><span class="s2">"seconds"</span><span class="p">]</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+<span class="gp">   ....: </span>        <span class="p">}</span>
+<span class="gp">   ....: </span>    <span class="p">)</span>
+<span class="gp">   ....: </span>
+</pre></div>
+</div>
+</section>
+<section id="the-numbers">
+<h2><a class="toc-backref" href="#id6" role="doc-backlink">The numbers</a><a class="headerlink" href="#the-numbers" title="Link to this heading">#</a></h2>
+<p>The lognormal truth, 40 trials (about a minute):</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [40]: </span><span class="n">methods</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"analytic"</span><span class="p">,</span> <span class="s2">"bounded"</span><span class="p">,</span> <span class="s2">"lognormal"</span><span class="p">,</span> <span class="s2">"softplus"</span><span class="p">]</span>
+
+<span class="gp">In [41]: </span><span class="n">in_lognormal</span> <span class="o">=</span> <span class="p">{</span><span class="n">m</span><span class="p">:</span> <span class="n">score</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">lognormal_world</span><span class="p">)</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">methods</span><span class="p">}</span>
+
+<span class="gp">In [42]: </span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="n">m</span><span class="p">:</span> <span class="n">summarize</span><span class="p">(</span><span class="n">in_lognormal</span><span class="p">[</span><span class="n">m</span><span class="p">])</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">methods</span><span class="p">})</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="gh">Out[42]: </span>
+<span class="go">            bias  bias se  spread  claimed  coverage  cells  cells se  cell error  s a trial</span>
+<span class="go">analytic   0.036    0.017   0.108    0.122     0.925  0.950     0.007       0.632      0.001</span>
+<span class="go">bounded    0.228    0.013   0.082    0.066     0.075  0.894     0.009       0.618      0.095</span>
+<span class="go">lognormal  0.009    0.013   0.079    0.084     0.950  0.927     0.005       0.563      0.200</span>
+<span class="go">softplus   0.009    0.014   0.090    0.103     0.950  0.972     0.003       0.606      0.289</span>
+</pre></div>
+</div>
+<p>Each method in its own world (the lognormal model’s is the table above):</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [43]: </span><span class="n">own</span> <span class="o">=</span> <span class="p">{</span><span class="n">m</span><span class="p">:</span> <span class="n">score</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">own_world</span><span class="p">(</span><span class="n">m</span><span class="p">))</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">"analytic"</span><span class="p">,</span> <span class="s2">"softplus"</span><span class="p">]}</span>
+
+<span class="gp">In [44]: </span><span class="n">own</span><span class="p">[</span><span class="s2">"bounded"</span><span class="p">]</span> <span class="o">=</span> <span class="n">score</span><span class="p">(</span><span class="s2">"bounded"</span><span class="p">,</span> <span class="n">truncated_world</span><span class="p">)</span>
+
+<span class="gp">In [45]: </span><span class="n">own</span><span class="p">[</span><span class="s2">"lognormal"</span><span class="p">]</span> <span class="o">=</span> <span class="n">in_lognormal</span><span class="p">[</span><span class="s2">"lognormal"</span><span class="p">]</span>
+
+<span class="gp">In [46]: </span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="n">m</span><span class="p">:</span> <span class="n">summarize</span><span class="p">(</span><span class="n">own</span><span class="p">[</span><span class="n">m</span><span class="p">])</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">methods</span><span class="p">})</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="gh">Out[46]: </span>
+<span class="go">            bias  bias se  spread  claimed  coverage  cells  cells se  cell error  s a trial</span>
+<span class="go">analytic   0.029    0.018   0.113    0.122     0.950  0.927     0.006       0.566      0.001</span>
+<span class="go">bounded    0.006    0.016   0.102    0.097     0.925  0.929     0.005       0.429      0.016</span>
+<span class="go">lognormal  0.009    0.013   0.079    0.084     0.950  0.927     0.005       0.563      0.200</span>
+<span class="go">softplus   0.015    0.015   0.092    0.096     0.925  0.920     0.006       0.538      0.316</span>
+</pre></div>
+</div>
+<p>Forty trials know a coverage near 0.95 to about 0.034
+(<span class="math notranslate nohighlight">\(\sqrt{0.95 \cdot 0.05 / 40}\)</span>), and a bias to its <code class="docutils literal notranslate"><span class="pre">bias</span> <span class="pre">se</span></code>, so read
+these tables for their large differences, and the next section’s for the
+small ones. The large ones: in the lognormal truth the bounded draws’ total is
+more than 20% high and its interval rarely holds the truth, and the lognormal
+model’s cell error is the lowest; in its own world each method’s intervals
+hold the truth about as often as they claim. The rest is within the noise.</p>
+<p>For the analytic posterior, <code class="docutils literal notranslate"><span class="pre">trials</span></code> on the same seed (the same data) gives
+the bias of the estimate’s total and the coverage of the estimate plus or
+minus 1.96 standard deviations: the loop’s, within the noise of its 100 draws:</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [47]: </span><span class="n">W</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Operator</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="n">side</span> <span class="o">*</span> <span class="n">side</span><span class="p">)),</span> <span class="n">fips</span><span class="o">.</span><span class="n">Space</span><span class="p">({</span><span class="s2">"total"</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">([</span><span class="s2">"valley"</span><span class="p">],</span> <span class="n">name</span><span class="o">=</span><span class="s2">"what"</span><span class="p">)}),</span> <span class="n">state</span><span class="p">)</span>
+
+<span class="gp">In [48]: </span><span class="n">table</span> <span class="o">=</span> <span class="n">solve</span><span class="p">(</span><span class="s2">"analytic"</span><span class="p">,</span> <span class="n">start</span><span class="p">)</span><span class="o">.</span><span class="n">trials</span><span class="p">(</span><span class="n">lognormal_world</span><span class="p">,</span> <span class="n">trials</span><span class="p">,</span> <span class="n">rng</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">W</span><span class="o">=</span><span class="n">W</span><span class="p">)</span>
+
+<span class="gp">In [49]: </span><span class="n">error</span> <span class="o">=</span> <span class="p">(</span><span class="n">table</span><span class="p">[</span><span class="s2">"estimate"</span><span class="p">]</span> <span class="o">-</span> <span class="n">table</span><span class="p">[</span><span class="s2">"truth"</span><span class="p">])</span> <span class="o">/</span> <span class="n">inventory</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+
+<span class="gp">In [50]: </span><span class="nb">round</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">error</span><span class="o">.</span><span class="n">mean</span><span class="p">()),</span> <span class="mi">3</span><span class="p">),</span> <span class="nb">round</span><span class="p">(</span><span class="nb">float</span><span class="p">((</span><span class="n">error</span><span class="o">.</span><span class="n">abs</span><span class="p">()</span> <span class="o">&lt;=</span> <span class="mf">1.96</span> <span class="o">*</span> <span class="n">table</span><span class="p">[</span><span class="s2">"posterior_std"</span><span class="p">]</span> <span class="o">/</span> <span class="n">inventory</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span><span class="o">.</span><span class="n">mean</span><span class="p">()),</span> <span class="mi">3</span><span class="p">)</span>
+<span class="gh">Out[50]: </span><span class="go">(0.035, 0.95)</span>
+</pre></div>
+</div>
+</section>
+<section id="at-the-salt-lake-valley-s-size">
+<h2><a class="toc-backref" href="#id7" role="doc-backlink">At the Salt Lake Valley’s size</a><a class="headerlink" href="#at-the-salt-lake-valley-s-size" title="Link to this heading">#</a></h2>
+<p>The same experiment with 400 cells (20 on a side), 120 observations from
+three sites (69% of the cells with an averaging kernel below 0.1), 200 trials,
+and 400 draws in each after a <code class="docutils literal notranslate"><span class="pre">burn_in</span></code> of 100, on seed 1, was run on
+2026-11-06 (an hour and a half on one core). Its tables, with the standard
+error of each bias, and 0.015 for a coverage near 0.95:</p>
+<div class="pst-scrollable-table-container"><table class="table" id="id1">
+<caption><span class="caption-text">The lognormal truth (400 cells, 200 trials)</span><a class="headerlink" href="#id1" title="Link to this table">#</a></caption>
+<thead>
+<tr class="row-odd"><th class="head stub"></th>
+<th class="head"><p>bias (se)</p></th>
+<th class="head"><p>spread</p></th>
+<th class="head"><p>claimed</p></th>
+<th class="head"><p>coverage</p></th>
+<th class="head"><p>cells</p></th>
+<th class="head"><p>cell error</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><th class="stub"><p>analytic</p></th>
+<td><p>+0.007 (0.010)</p></td>
+<td><p>0.147</p></td>
+<td><p>0.165</p></td>
+<td><p>0.970</p></td>
+<td><p>0.955</p></td>
+<td><p>0.763</p></td>
+</tr>
+<tr class="row-odd"><th class="stub"><p>bounded</p></th>
+<td><p>+0.565 (0.010)</p></td>
+<td><p>0.136</p></td>
+<td><p>0.083</p></td>
+<td><p>0.010</p></td>
+<td><p>0.837</p></td>
+<td><p>0.750</p></td>
+</tr>
+<tr class="row-even"><th class="stub"><p>lognormal</p></th>
+<td><p>+0.001 (0.008)</p></td>
+<td><p>0.119</p></td>
+<td><p>0.115</p></td>
+<td><p>0.945</p></td>
+<td><p>0.944</p></td>
+<td><p>0.714</p></td>
+</tr>
+<tr class="row-odd"><th class="stub"><p>softplus</p></th>
+<td><p>-0.046 (0.009)</p></td>
+<td><p>0.130</p></td>
+<td><p>0.136</p></td>
+<td><p>0.960</p></td>
+<td><p>0.976</p></td>
+<td><p>0.759</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="pst-scrollable-table-container"><table class="table" id="id2">
+<caption><span class="caption-text">Each method’s own world (400 cells, 200 trials; the lognormal model’s is the table above)</span><a class="headerlink" href="#id2" title="Link to this table">#</a></caption>
+<thead>
+<tr class="row-odd"><th class="head stub"></th>
+<th class="head"><p>bias (se)</p></th>
+<th class="head"><p>spread</p></th>
+<th class="head"><p>claimed</p></th>
+<th class="head"><p>coverage</p></th>
+<th class="head"><p>cells</p></th>
+<th class="head"><p>cell error</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><th class="stub"><p>analytic</p></th>
+<td><p>+0.004 (0.011)</p></td>
+<td><p>0.162</p></td>
+<td><p>0.165</p></td>
+<td><p>0.975</p></td>
+<td><p>0.946</p></td>
+<td><p>0.692</p></td>
+</tr>
+<tr class="row-odd"><th class="stub"><p>bounded</p></th>
+<td><p>-0.005 (0.008)</p></td>
+<td><p>0.112</p></td>
+<td><p>0.111</p></td>
+<td><p>0.955</p></td>
+<td><p>0.945</p></td>
+<td><p>0.569</p></td>
+</tr>
+<tr class="row-even"><th class="stub"><p>softplus</p></th>
+<td><p>+0.002 (0.010)</p></td>
+<td><p>0.137</p></td>
+<td><p>0.133</p></td>
+<td><p>0.950</p></td>
+<td><p>0.942</p></td>
+<td><p>0.698</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>The cells’ coverages are known to about 0.002. The small world here shows the
+same pattern with less weight: the bounded total’s bias grows with the share
+of cells the data barely see (in the lognormal truth, with 40 trials: +0.11 at
+36 cells, +0.23 at 100, +0.39 at 144, +0.50 at 196 and +0.58 at 400).</p>
+<p><strong>A third world</strong>, a lognormal truth whose cells scatter about the inventory
+each on its own (no correlation, which no prior here assumes), at 400 cells:
+every total’s interval is too wide, since the priors say the cells’ errors add
+up and the truth’s mostly cancel (coverage 0.99 to 1.0 for the analytic,
+lognormal and softplus methods, whose claimed spreads are 1.4 to 1.6 times the
+real ones); the bounded total is +0.59 and its coverage 0. The lognormal
+model’s cells cover 0.86, against 0.93 for the analytic posterior’s: its prior
+in <span class="math notranslate nohighlight">\(u\)</span> holds the cells to each other more than this truth does. The
+order of the maps is the same (cell errors 0.84 lognormal, 0.87 bounded and
+softplus, 0.88 analytic).</p>
+</section>
+<section id="what-the-numbers-mean">
+<h2><a class="toc-backref" href="#id8" role="doc-backlink">What the numbers mean</a><a class="headerlink" href="#what-the-numbers-mean" title="Link to this heading">#</a></h2>
+<p><strong>Every method is right on its own terms.</strong> In its own world each one’s
+intervals hold the truth about as often as they claim, for the total and the
+cells, and its total is unbiased. The differences come from what each prior
+says when the world is not its own.</p>
+<p><strong>The analytic posterior is good enough for a basin total.</strong> In the lognormal
+truth its total is unbiased (+0.7%, with a standard error of 1.0%) and its
+interval holds the truth 97% of the time; its cells’ intervals cover 95.5%.
+The Gaussian posterior puts some cells below zero, but a total sums many
+cells, and here the sum of their errors is close enough to Gaussian.
+It costs a few milliseconds a solve.</p>
+<p><strong>The lognormal model makes the best map.</strong> Its cell error is 6% lower than
+the analytic posterior’s in the lognormal truth (0.714 against 0.763) and 4%
+lower with independent cells, and its total is as good as the analytic one,
+with an interval a third narrower (0.115 against 0.165) that still covers.
+Its cells’ intervals are right when the flux is a factor of the inventory with
+the correlations its prior assumes, and too narrow (0.86) when the truth’s
+factors are less correlated than its prior says. A cell with no inventory
+stays at zero (<a class="reference internal" href="positive.html"><span class="doc">Fluxes that stay positive</span></a>).</p>
+<p><strong>Bounds change the prior, and the change reaches the total.</strong> The bounded
+method’s prior is the Gaussian prior truncated at zero, and truncation raises
+the mean. A Gaussian truncated at zero never has a standard deviation above
+its mean, so none has the inventory as its mean and 131% of it as its
+standard deviation; and cells that are correlated and must all be positive
+are pushed up together. In this problem the truncated prior’s mean total is 2.36 times
+the inventory’s (the mean of the truths of the bounded method’s own world; a
+Gibbs sampler, independent of fips, gives 2.10 against fips’s 2.12 for a
+36-cell version). Where the data barely see a cell, its posterior is that
+prior, so the draws put the total above the truth by 56% of the inventory’s
+total when the inventory is the mean, and their interval almost never holds
+it. With a standard deviation of 50% of the inventory instead of 131%, the
+draws’ total was still 9% high (400 cells, 100 trials, a standard error of
+0.6%) and its interval held the truth in 57% of the trials. The mode is not
+moved: a weakly seen cell’s mode stays at its inventory, so the sum of the
+mode is within 2.5% of the truth in the lognormal worlds, and the mode’s map
+is about the analytic one (cell error 0.750 against 0.763). But the mode’s
+total is not the bounded posterior’s: in the bounded method’s own world,
+whose truths are the truncated prior’s, it is below the truth by 45% of the
+inventory’s total, and an interval of the mode’s total plus or minus 1.96
+standard deviations held the truth in 2.5% of the trials. So use
+<code class="docutils literal notranslate"><span class="pre">&quot;bounded&quot;</span></code> for a map that must not go below zero, and do not read a total,
+or a cell’s interval, from its draws unless the truncated prior is the prior
+you mean.</p>
+<p><strong>The softplus model</strong> is a Gaussian prior where the flux is large and bends
+near zero. Its own world is right; in the lognormal truth its total is 4.6%
+low (five standard errors), its cells’ intervals are a little too wide
+(0.976), and its map is about the analytic posterior’s.</p>
+<p><strong>Which interval to read.</strong> Every interval here is a quantile of the draws.
+For the analytic posterior that is the estimate plus or minus 1.96 standard
+deviations, so <code class="docutils literal notranslate"><span class="pre">trials</span></code> reads it right. For the others, and for any total
+of a transform’s flux, take the quantiles of <a class="reference internal" href="../reference/api/fips.Posterior.sample.html#fips.Posterior.sample" title="fips.Posterior.sample"><code class="xref py py-meth docutils literal notranslate"><span class="pre">sample()</span></code></a>:
+read the other way, the bounded method’s cells covered 0.90 in its own world
+(0.945 from quantiles), and its total 0.025 (0.955).</p>
+<p>These numbers are for one problem: a prior of 131% correlated over two cells,
+these footprints and this noise. Another inversion’s own trials, at its own
+size, say how its methods compare; this page is the code to run them.</p>
+</section>
+<section id="what-each-costs">
+<h2><a class="toc-backref" href="#id9" role="doc-backlink">What each costs</a><a class="headerlink" href="#what-each-costs" title="Link to this heading">#</a></h2>
+<p>At 400 cells, on one core: an analytic solve took 0.014 s, a bounded one
+0.016 s, and a <code class="docutils literal notranslate"><span class="pre">&quot;gauss_newton&quot;</span></code> one, which finds the mode, 0.05 to 0.06 s (a median of 7 Newton or
+Gauss-Newton steps, 9 for the softplus model in its own world). The spread is
+where they differ: the default 2000 draws took 6 s for <code class="docutils literal notranslate"><span class="pre">&quot;bounded&quot;</span></code>, 17 s
+for the lognormal model and 23 s for the softplus model, against no draws for
+the analytic posterior. A trial with 400 draws took 0.013 s for the analytic
+posterior, 0.2 to 1.7 s for <code class="docutils literal notranslate"><span class="pre">&quot;bounded&quot;</span></code> (more where more cells sit near the
+bound) and 4.4 to 5.2 s for either transform: 200 trials of a transform take
+about 17 minutes. The <code class="docutils literal notranslate"><span class="pre">s</span> <span class="pre">a</span> <span class="pre">trial</span></code> column above measures the same at the
+page’s size.</p>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="positive.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Fluxes that stay positive</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="examples/index.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Examples</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-problem">The problem</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#two-worlds">Two worlds</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#scoring">Scoring</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-numbers">The numbers</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#at-the-salt-lake-valley-s-size">At the Salt Lake Valley’s size</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#what-the-numbers-mean">What the numbers mean</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#what-each-costs">What each costs</a></li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+
+  <div class="tocsection sourcelink">
+    <a href="../_sources/user_guide/comparison.rst.txt">
+      <i class="fa-solid fa-file-lines"></i> Show Source
+    </a>
+  </div>
+</div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be"></script>
+<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2025-2026, James Mineau.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.2.0.
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.23.0.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>
