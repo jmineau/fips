@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>fips.linalg.forms &#8212; fips 0.2.0b3.dev23+g6690b3292 documentation</title>
+    <title>fips.linalg.forms &#8212; fips 0.2.0b3.dev24+gede7a6e40 documentation</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../../_static/documentation_options.js?v=fd62d9cc"></script>
+    <script src="../../../_static/documentation_options.js?v=42599d89"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -132,8 +132,8 @@
       
     
     
-    <img src="../../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev23+g6690b3292 documentation - Home"/>
-    <img src="../../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev23+g6690b3292 documentation - Home"/>
+    <img src="../../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev24+gede7a6e40 documentation - Home"/>
+    <img src="../../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev24+gede7a6e40 documentation - Home"/>
   
   
 </a></div>
@@ -1930,7 +1930,9 @@
 <div class="viewcode-block" id="dottest">
 <a class="viewcode-back" href="../../../reference/api/fips.linalg.dottest.html#fips.linalg.dottest">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">dottest</span><span class="p">(</span>
-    <span class="n">op</span><span class="p">:</span> <span class="n">_SciPyLinearOperator</span><span class="p">,</span> <span class="n">rtol</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-12</span><span class="p">,</span> <span class="n">seed</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">op</span><span class="p">:</span> <span class="n">_SciPyLinearOperator</span><span class="p">,</span>
+    <span class="n">rtol</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-12</span><span class="p">,</span>
+    <span class="n">rng</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">Generator</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Check that ``op.rmatvec`` is the adjoint of ``op.matvec``.</span>
@@ -1946,8 +1948,11 @@
 <span class="sd">        them.</span>
 <span class="sd">    rtol : float, default 1e-12</span>
 <span class="sd">        Relative tolerance.</span>
-<span class="sd">    seed : int, optional</span>
-<span class="sd">        Seed of the random vectors.</span>
+<span class="sd">    rng : int, numpy.random.Generator or None, default 0</span>
+<span class="sd">        A seed, or the generator to draw the random vectors from (used as</span>
+<span class="sd">        given, so a generator passed on is advanced; None draws from fresh</span>
+<span class="sd">        entropy), as :meth:`fips.Posterior.sample` takes it. A solve has a</span>
+<span class="sd">        ``seed``, a draw takes an ``rng``; this check draws.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
@@ -1961,8 +1966,8 @@
 <span class="sd">    &gt;&gt;&gt; dottest(DenseOperator(np.arange(6.0).reshape(2, 3)))</span>
 <span class="sd">    True</span>
 <span class="sd">    """</span>
-    <span class="n">rng</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span>
-    <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">rng</span><span class="o">.</span><span class="n">standard_normal</span><span class="p">(</span><span class="n">op</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span> <span class="n">rng</span><span class="o">.</span><span class="n">standard_normal</span><span class="p">(</span><span class="n">op</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">draw</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="n">rng</span><span class="p">)</span>
+    <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">draw</span><span class="o">.</span><span class="n">standard_normal</span><span class="p">(</span><span class="n">op</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span> <span class="n">draw</span><span class="o">.</span><span class="n">standard_normal</span><span class="p">(</span><span class="n">op</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
     <span class="n">Ax</span><span class="p">,</span> <span class="n">ATy</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">matvec</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">op</span><span class="o">.</span><span class="n">rmatvec</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
     <span class="n">size</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">Ax</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">y</span><span class="p">)</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span>
         <span class="n">ATy</span>

@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>fips.methods.variational &#8212; fips 0.2.0b3.dev23+g6690b3292 documentation</title>
+    <title>fips.methods.variational &#8212; fips 0.2.0b3.dev24+gede7a6e40 documentation</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../../_static/documentation_options.js?v=fd62d9cc"></script>
+    <script src="../../../_static/documentation_options.js?v=42599d89"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -132,8 +132,8 @@
       
     
     
-    <img src="../../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev23+g6690b3292 documentation - Home"/>
-    <img src="../../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev23+g6690b3292 documentation - Home"/>
+    <img src="../../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev24+gede7a6e40 documentation - Home"/>
+    <img src="../../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev24+gede7a6e40 documentation - Home"/>
   
   
 </a></div>
@@ -451,14 +451,14 @@
 <span class="sd">matrix is the identity plus a positive semidefinite one, so its eigenvalues</span>
 <span class="sd">are at least 1, and conjugate gradients (``_cg``) solve them in a number of</span>
 <span class="sd">products set by how many eigenvalues of :math:`\tilde{H}` stand above 1,</span>
-<span class="sd">not by ``n``. CG stops when the residual is below ``tol`` times the right</span>
+<span class="sd">not by ``n``. CG stops when the residual is below ``cg_tol`` times the right</span>
 <span class="sd">side. With a forward model the same solve is the inner step of Gauss-Newton</span>
 <span class="sd">(incremental 4D-Var): at each iterate :math:`x_i` the problem linearized</span>
 <span class="sd">there (:meth:`Problem.linearized &lt;fips.Problem.linearized&gt;`) is solved by</span>
 <span class="sd">CG, started from :math:`\xi_i`, and the iterations stop by Rodgers' rule, as</span>
 <span class="sd">``"gauss_newton"``'s do: the step measured in the posterior covariance of</span>
 <span class="sd">that solve, :math:`d^2 = \Delta\xi^T (I + \tilde{H}_i) \Delta\xi`, below</span>
-<span class="sd">``outer_tol`` times ``n``. A step that raises the cost is halved until it</span>
+<span class="sd">``tol`` times ``n``. A step that raises the cost is halved until it</span>
 <span class="sd">does not.</span>
 
 <span class="sd">**The uncertainty.** The posterior covariance is :math:`\hat{S} = R (I +</span>
@@ -566,23 +566,23 @@
 <span class="sd">        the prior in the others: exact when ``rank`` reaches the problem's</span>
 <span class="sd">        rank, conservative (variances too large, DOFS too small) below it.</span>
 <span class="sd">        Each pair costs about two products with :math:`H` and :math:`H^T`.</span>
-<span class="sd">    tol : float, default 1e-8</span>
+<span class="sd">    cg_tol : float, default 1e-8</span>
 <span class="sd">        The tolerance of the iterative solves: conjugate gradients stop when</span>
-<span class="sd">        the residual of the whitened normal equations is below ``tol`` times</span>
-<span class="sd">        their right side, and Lanczos when each eigenvalue is good to ``tol``</span>
+<span class="sd">        the residual of the whitened normal equations is below ``cg_tol`` times</span>
+<span class="sd">        their right side, and Lanczos when each eigenvalue is good to ``cg_tol``</span>
 <span class="sd">        relative (``eigsh``'s ``tol``). The error of the estimate, measured in</span>
-<span class="sd">        the posterior covariance, is at most ``tol`` times the length of the</span>
+<span class="sd">        the posterior covariance, is at most ``cg_tol`` times the length of the</span>
 <span class="sd">        right side. Below 1: the prior, where CG starts, is at 1.</span>
 <span class="sd">    max_cg_iterations : int, default 1000</span>
 <span class="sd">        The most conjugate-gradient iterations of one solve; a solve that has</span>
-<span class="sd">        not reached ``tol`` by then raises.</span>
+<span class="sd">        not reached ``cg_tol`` by then raises.</span>
 <span class="sd">    max_iterations : int, default 50</span>
 <span class="sd">        For a forward model, the most Gauss-Newton steps (each a CG solve of</span>
 <span class="sd">        the problem linearized at the last estimate), as for</span>
 <span class="sd">        ``"gauss_newton"``; a solve that has not stopped by then raises.</span>
-<span class="sd">    outer_tol : float, default 1e-6</span>
+<span class="sd">    tol : float, default 1e-6</span>
 <span class="sd">        For a forward model, the step at which the Gauss-Newton steps stop,</span>
-<span class="sd">        :math:`d^2 &lt;` ``outer_tol`` :math:`\cdot\, n`, Rodgers' rule as</span>
+<span class="sd">        :math:`d^2 &lt;` ``tol`` :math:`\cdot\, n`, Rodgers' rule as</span>
 <span class="sd">        ``"gauss_newton"``'s ``tol`` (its default too).</span>
 
 <span class="sd">    Raises</span>
@@ -590,7 +590,7 @@
 <span class="sd">    ValueError</span>
 <span class="sd">        If `gamma` is not a positive, finite number, `rank`,</span>
 <span class="sd">        `max_cg_iterations` or `max_iterations` is not a positive integer,</span>
-<span class="sd">        `tol` or `outer_tol` is not a positive, finite number, or `tol` is</span>
+<span class="sd">        `cg_tol` or `tol` is not a positive, finite number, or `cg_tol` is</span>
 <span class="sd">        not below 1.</span>
 <span class="sd">    """</span>
 
@@ -598,14 +598,14 @@
 <span class="w">    </span><span class="sd">"""The regularization factor: the model-data mismatch is divided by it."""</span>
     <span class="n">rank</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">100</span>
 <span class="w">    </span><span class="sd">"""The number of eigenpairs of the low-rank posterior."""</span>
-    <span class="n">tol</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-8</span>
+    <span class="n">cg_tol</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-8</span>
 <span class="w">    </span><span class="sd">"""The relative tolerance of the conjugate gradients and of Lanczos."""</span>
     <span class="n">max_cg_iterations</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1000</span>
 <span class="w">    </span><span class="sd">"""The most conjugate-gradient iterations of one solve."""</span>
     <span class="n">max_iterations</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">50</span>
 <span class="w">    </span><span class="sd">"""For a forward model, the most Gauss-Newton steps."""</span>
-    <span class="n">outer_tol</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-6</span>
-<span class="w">    </span><span class="sa">r</span><span class="sd">"""For a forward model, the steps stop when :math:`d^2 &lt;` ``outer_tol`` :math:`\cdot\, n`."""</span>
+    <span class="n">tol</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-6</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""For a forward model, the steps stop when :math:`d^2 &lt;` ``tol`` :math:`\cdot\, n`."""</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">"gamma"</span><span class="p">,</span> <span class="n">AnalyticOptions</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">gamma</span><span class="p">)</span><span class="o">.</span><span class="n">gamma</span><span class="p">)</span>
@@ -618,7 +618,7 @@
             <span class="p">):</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> must be a positive integer, got </span><span class="si">{</span><span class="n">value</span><span class="si">!r}</span><span class="s2">."</span><span class="p">)</span>
             <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">value</span><span class="p">))</span>
-        <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"tol"</span><span class="p">,</span> <span class="s2">"outer_tol"</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"cg_tol"</span><span class="p">,</span> <span class="s2">"tol"</span><span class="p">):</span>
             <span class="n">value</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
             <span class="k">try</span><span class="p">:</span>
                 <span class="n">number</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
@@ -627,11 +627,11 @@
             <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">number</span><span class="p">)</span> <span class="ow">and</span> <span class="n">number</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">):</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> must be positive and finite, got </span><span class="si">{</span><span class="n">number</span><span class="si">}</span><span class="s2">."</span><span class="p">)</span>
             <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">number</span><span class="p">)</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">tol</span> <span class="o">&gt;=</span> <span class="mf">1.0</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">cg_tol</span> <span class="o">&gt;=</span> <span class="mf">1.0</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">"tol must be below 1, got </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">tol</span><span class="si">}</span><span class="s2">: it is the residual of the "</span>
+                <span class="sa">f</span><span class="s2">"cg_tol must be below 1, got </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">cg_tol</span><span class="si">}</span><span class="s2">: it is the residual of the "</span>
                 <span class="s2">"conjugate gradients relative to the right side, and the start, "</span>
-                <span class="s2">"the prior, has a relative residual of 1 (tol=1 returns the prior)."</span>
+                <span class="s2">"the prior, has a relative residual of 1 (cg_tol=1 returns the prior)."</span>
             <span class="p">)</span></div>
 
 
@@ -701,12 +701,16 @@
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_cg</span><span class="p">(</span>
-    <span class="n">system</span><span class="p">:</span> <span class="n">_System</span><span class="p">,</span> <span class="n">b</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">start</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">tol</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">max_iterations</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">system</span><span class="p">:</span> <span class="n">_System</span><span class="p">,</span>
+    <span class="n">b</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">start</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">cg_tol</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">max_iterations</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">    Return the solution of :math:`(I + \tilde{H}) \xi = b` by conjugate gradients from `start`, and the iterations taken.</span>
 
-<span class="sd">    It stops when the residual's length is at most `tol` times `b`'s; a</span>
+<span class="sd">    It stops when the residual's length is at most `cg_tol` times `b`'s; a</span>
 <span class="sd">    start that already is (a Gauss-Newton iterate at the mode) takes none.</span>
 <span class="sd">    The matrix is the identity plus a positive semidefinite one, so every</span>
 <span class="sd">    search direction has positive curvature.</span>
@@ -719,7 +723,7 @@
     <span class="n">size</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">b</span><span class="p">))</span>
     <span class="k">if</span> <span class="n">size</span> <span class="o">==</span> <span class="mf">0.0</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">b</span><span class="p">),</span> <span class="mi">0</span>
-    <span class="n">target</span> <span class="o">=</span> <span class="n">tol</span> <span class="o">*</span> <span class="n">size</span>
+    <span class="n">target</span> <span class="o">=</span> <span class="n">cg_tol</span> <span class="o">*</span> <span class="n">size</span>
     <span class="n">xi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
     <span class="n">r</span> <span class="o">=</span> <span class="n">b</span> <span class="o">-</span> <span class="n">xi</span> <span class="o">-</span> <span class="n">system</span><span class="o">.</span><span class="n">hessian</span><span class="p">(</span><span class="n">xi</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">])[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="n">xi</span><span class="o">.</span><span class="n">any</span><span class="p">()</span> <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
     <span class="n">rr</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">r</span> <span class="o">@</span> <span class="n">r</span><span class="p">)</span>
@@ -739,7 +743,7 @@
     <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
         <span class="sa">f</span><span class="s2">"The conjugate gradients did not converge in </span><span class="si">{</span><span class="n">max_iterations</span><span class="si">}</span><span class="s2"> iterations: "</span>
         <span class="sa">f</span><span class="s2">"the residual is </span><span class="si">{</span><span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">rr</span><span class="p">)</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">size</span><span class="si">:</span><span class="s2">.3g</span><span class="si">}</span><span class="s2"> of the right side, above "</span>
-        <span class="sa">f</span><span class="s2">"tol = </span><span class="si">{</span><span class="n">tol</span><span class="si">:</span><span class="s2">.3g</span><span class="si">}</span><span class="s2">. Raise max_cg_iterations, or tol; a prior-preconditioned "</span>
+        <span class="sa">f</span><span class="s2">"cg_tol = </span><span class="si">{</span><span class="n">cg_tol</span><span class="si">:</span><span class="s2">.3g</span><span class="si">}</span><span class="s2">. Raise max_cg_iterations, or cg_tol; a prior-preconditioned "</span>
         <span class="s2">"Hessian with very large eigenvalues (observations far more precise than "</span>
         <span class="s2">"the prior) converges slowly."</span>
     <span class="p">)</span>
@@ -751,7 +755,7 @@
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_eigenpairs</span><span class="p">(</span>
-    <span class="n">system</span><span class="p">:</span> <span class="n">_System</span><span class="p">,</span> <span class="n">rank</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">tol</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">system</span><span class="p">:</span> <span class="n">_System</span><span class="p">,</span> <span class="n">rank</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">cg_tol</span><span class="p">:</span> <span class="nb">float</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">    Return the leading eigenvalues of :math:`\tilde{H} / \gamma` (the gamma-free matrix :math:`N`, from the largest) and their eigenvectors (``r x k``), with ``k`` at most `rank`.</span>
@@ -761,7 +765,7 @@
 <span class="sd">    is formed from ``r`` products and eigendecomposed (``eigh``); otherwise</span>
 <span class="sd">    Lanczos finds the pairs from products (``eigsh``, ``which="LA"``, a</span>
 <span class="sd">    seeded start so that a solve is reproducible). Eigenvalues at roundoff of</span>
-<span class="sd">    the largest (below ``r * eps`` of it, or for Lanczos ``tol`` of it) are</span>
+<span class="sd">    the largest (below ``r * eps`` of it, or for Lanczos ``cg_tol`` of it) are</span>
 <span class="sd">    dropped: they are directions the data do not see.</span>
 
 <span class="sd">    Raises</span>
@@ -783,16 +787,16 @@
         <span class="k">try</span><span class="p">:</span>
             <span class="n">values</span><span class="p">,</span> <span class="n">vectors</span> <span class="o">=</span> <span class="p">(</span>
                 <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
-                <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">eigsh</span><span class="p">(</span><span class="n">_Hessian</span><span class="p">(</span><span class="n">system</span><span class="p">),</span> <span class="n">k</span><span class="o">=</span><span class="n">k</span><span class="p">,</span> <span class="n">which</span><span class="o">=</span><span class="s2">"LA"</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="n">tol</span><span class="p">,</span> <span class="n">v0</span><span class="o">=</span><span class="n">start</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">eigsh</span><span class="p">(</span><span class="n">_Hessian</span><span class="p">(</span><span class="n">system</span><span class="p">),</span> <span class="n">k</span><span class="o">=</span><span class="n">k</span><span class="p">,</span> <span class="n">which</span><span class="o">=</span><span class="s2">"LA"</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="n">cg_tol</span><span class="p">,</span> <span class="n">v0</span><span class="o">=</span><span class="n">start</span><span class="p">)</span>
             <span class="p">)</span>
         <span class="k">except</span> <span class="n">ArpackNoConvergence</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
                 <span class="sa">f</span><span class="s2">"Lanczos did not find the </span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s2"> leading eigenpairs of the "</span>
-                <span class="s2">"prior-preconditioned Hessian; lower rank, or raise tol."</span>
+                <span class="s2">"prior-preconditioned Hessian; lower rank, or raise cg_tol."</span>
             <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">error</span>
         <span class="n">order</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">values</span><span class="p">)[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
         <span class="n">eigenvalues</span><span class="p">,</span> <span class="n">vectors</span> <span class="o">=</span> <span class="n">values</span><span class="p">[</span><span class="n">order</span><span class="p">],</span> <span class="n">vectors</span><span class="p">[:,</span> <span class="n">order</span><span class="p">]</span>
-        <span class="n">floor</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">r</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">finfo</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span><span class="o">.</span><span class="n">eps</span><span class="p">,</span> <span class="n">tol</span><span class="p">)</span>
+        <span class="n">floor</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">r</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">finfo</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span><span class="o">.</span><span class="n">eps</span><span class="p">,</span> <span class="n">cg_tol</span><span class="p">)</span>
     <span class="n">kept</span> <span class="o">=</span> <span class="n">eigenvalues</span> <span class="o">&gt;</span> <span class="n">floor</span> <span class="o">*</span> <span class="n">eigenvalues</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">initial</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)</span>
     <span class="k">return</span> <span class="p">(</span>
         <span class="n">np</span><span class="o">.</span><span class="n">ascontiguousarray</span><span class="p">(</span><span class="n">eigenvalues</span><span class="p">[</span><span class="n">kept</span><span class="p">])</span> <span class="o">/</span> <span class="n">system</span><span class="o">.</span><span class="n">gamma</span><span class="p">,</span>
@@ -1040,7 +1044,7 @@
             <span class="n">b</span> <span class="o">=</span> <span class="n">system</span><span class="o">.</span><span class="n">whiten</span><span class="p">(</span><span class="n">d</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">])[:,</span> <span class="mi">0</span><span class="p">]</span>
             <span class="n">options</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span>
             <span class="n">solved</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">_cg</span><span class="p">(</span>
-                <span class="n">system</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">b</span><span class="p">),</span> <span class="n">options</span><span class="o">.</span><span class="n">tol</span><span class="p">,</span> <span class="n">options</span><span class="o">.</span><span class="n">max_cg_iterations</span>
+                <span class="n">system</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">b</span><span class="p">),</span> <span class="n">options</span><span class="o">.</span><span class="n">cg_tol</span><span class="p">,</span> <span class="n">options</span><span class="o">.</span><span class="n">max_cg_iterations</span>
             <span class="p">)</span>
             <span class="n">innovation</span> <span class="o">=</span> <span class="n">gamma</span> <span class="o">*</span> <span class="n">system</span><span class="o">.</span><span class="n">weighted_norm</span><span class="p">(</span><span class="n">d</span><span class="p">)</span> <span class="o">-</span> <span class="nb">float</span><span class="p">(</span><span class="n">b</span> <span class="o">@</span> <span class="n">solved</span><span class="p">)</span>
             <span class="n">r</span> <span class="o">=</span> <span class="n">z</span> <span class="o">-</span> <span class="n">problem</span><span class="o">.</span><span class="n">_apply</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mode</span><span class="p">)</span> <span class="o">-</span> <span class="n">problem</span><span class="o">.</span><span class="n">_offset_values</span><span class="p">()</span>
@@ -1110,14 +1114,14 @@
     <span class="n">d</span> <span class="o">=</span> <span class="n">system</span><span class="o">.</span><span class="n">innovation</span><span class="p">()</span>
     <span class="n">b</span> <span class="o">=</span> <span class="n">system</span><span class="o">.</span><span class="n">whiten</span><span class="p">(</span><span class="n">d</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">])[:,</span> <span class="mi">0</span><span class="p">]</span>
     <span class="n">xi</span><span class="p">,</span> <span class="n">iterations</span> <span class="o">=</span> <span class="n">_cg</span><span class="p">(</span>
-        <span class="n">system</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">b</span><span class="p">),</span> <span class="n">options</span><span class="o">.</span><span class="n">tol</span><span class="p">,</span> <span class="n">options</span><span class="o">.</span><span class="n">max_cg_iterations</span>
+        <span class="n">system</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">b</span><span class="p">),</span> <span class="n">options</span><span class="o">.</span><span class="n">cg_tol</span><span class="p">,</span> <span class="n">options</span><span class="o">.</span><span class="n">max_cg_iterations</span>
     <span class="p">)</span>
     <span class="n">modeled</span> <span class="o">=</span> <span class="n">system</span><span class="o">.</span><span class="n">modeled</span><span class="p">(</span><span class="n">xi</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">])[:,</span> <span class="mi">0</span><span class="p">]</span>  <span class="c1"># H R xi</span>
     <span class="n">data</span> <span class="o">=</span> <span class="n">system</span><span class="o">.</span><span class="n">weighted_norm</span><span class="p">(</span><span class="n">d</span> <span class="o">-</span> <span class="n">modeled</span><span class="p">)</span>
     <span class="n">state</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">xi</span> <span class="o">@</span> <span class="n">xi</span><span class="p">)</span>
     <span class="n">d2</span> <span class="o">=</span> <span class="n">state</span> <span class="o">+</span> <span class="n">gamma</span> <span class="o">*</span> <span class="n">system</span><span class="o">.</span><span class="n">weighted_norm</span><span class="p">(</span><span class="n">modeled</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">keep</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">eigenvalues</span><span class="p">,</span> <span class="n">V</span> <span class="o">=</span> <span class="n">_eigenpairs</span><span class="p">(</span><span class="n">system</span><span class="p">,</span> <span class="n">options</span><span class="o">.</span><span class="n">rank</span><span class="p">,</span> <span class="n">options</span><span class="o">.</span><span class="n">tol</span><span class="p">)</span>
+        <span class="n">eigenvalues</span><span class="p">,</span> <span class="n">V</span> <span class="o">=</span> <span class="n">_eigenpairs</span><span class="p">(</span><span class="n">system</span><span class="p">,</span> <span class="n">options</span><span class="o">.</span><span class="n">rank</span><span class="p">,</span> <span class="n">options</span><span class="o">.</span><span class="n">cg_tol</span><span class="p">)</span>
         <span class="n">_report</span><span class="p">(</span><span class="n">gamma</span> <span class="o">*</span> <span class="n">eigenvalues</span><span class="p">,</span> <span class="n">options</span><span class="o">.</span><span class="n">rank</span> <span class="o">&lt;</span> <span class="nb">min</span><span class="p">(</span><span class="n">system</span><span class="o">.</span><span class="n">r</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">d</span><span class="p">)))</span>
         <span class="n">G</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">system</span><span class="o">.</span><span class="n">R</span> <span class="o">@</span> <span class="n">V</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
@@ -1175,7 +1179,7 @@
     <span class="n">gamma</span><span class="p">,</span> <span class="n">n</span> <span class="o">=</span> <span class="n">options</span><span class="o">.</span><span class="n">gamma</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">problem</span><span class="o">.</span><span class="n">prior</span><span class="p">)</span>
     <span class="n">x_0</span><span class="p">,</span> <span class="n">z</span> <span class="o">=</span> <span class="n">problem</span><span class="o">.</span><span class="n">prior</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="n">problem</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">values</span>
     <span class="n">c</span> <span class="o">=</span> <span class="n">problem</span><span class="o">.</span><span class="n">_offset_values</span><span class="p">()</span>
-    <span class="n">limit</span> <span class="o">=</span> <span class="n">options</span><span class="o">.</span><span class="n">outer_tol</span> <span class="o">*</span> <span class="n">n</span>
+    <span class="n">limit</span> <span class="o">=</span> <span class="n">options</span><span class="o">.</span><span class="n">tol</span> <span class="o">*</span> <span class="n">n</span>
     <span class="n">root</span> <span class="o">=</span> <span class="n">problem</span><span class="o">.</span><span class="n">prior_cov</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">_root</span>
     <span class="n">solve_S_z</span> <span class="o">=</span> <span class="n">problem</span><span class="o">.</span><span class="n">obs_cov</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">_solver</span><span class="p">()</span>
 
@@ -1207,7 +1211,7 @@
         <span class="n">linear</span> <span class="o">=</span> <span class="n">problem</span><span class="o">.</span><span class="n">_linearized</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">modeled</span><span class="p">)</span>
         <span class="n">system</span> <span class="o">=</span> <span class="n">_System</span><span class="p">(</span><span class="n">linear</span><span class="p">,</span> <span class="n">gamma</span><span class="p">)</span>
         <span class="n">b</span> <span class="o">=</span> <span class="n">system</span><span class="o">.</span><span class="n">whiten</span><span class="p">(</span><span class="n">system</span><span class="o">.</span><span class="n">innovation</span><span class="p">()[:,</span> <span class="kc">None</span><span class="p">])[:,</span> <span class="mi">0</span><span class="p">]</span>
-        <span class="n">new</span><span class="p">,</span> <span class="n">iterations</span> <span class="o">=</span> <span class="n">_cg</span><span class="p">(</span><span class="n">system</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">xi</span><span class="p">,</span> <span class="n">options</span><span class="o">.</span><span class="n">tol</span><span class="p">,</span> <span class="n">options</span><span class="o">.</span><span class="n">max_cg_iterations</span><span class="p">)</span>
+        <span class="n">new</span><span class="p">,</span> <span class="n">iterations</span> <span class="o">=</span> <span class="n">_cg</span><span class="p">(</span><span class="n">system</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">xi</span><span class="p">,</span> <span class="n">options</span><span class="o">.</span><span class="n">cg_tol</span><span class="p">,</span> <span class="n">options</span><span class="o">.</span><span class="n">max_cg_iterations</span><span class="p">)</span>
         <span class="n">step</span> <span class="o">=</span> <span class="n">new</span> <span class="o">-</span> <span class="n">xi</span>
         <span class="n">d2</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">step</span> <span class="o">@</span> <span class="n">step</span><span class="p">)</span> <span class="o">+</span> <span class="n">gamma</span> <span class="o">*</span> <span class="n">system</span><span class="o">.</span><span class="n">weighted_norm</span><span class="p">(</span>
             <span class="n">system</span><span class="o">.</span><span class="n">modeled</span><span class="p">(</span><span class="n">step</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">])[:,</span> <span class="mi">0</span><span class="p">]</span>
@@ -1247,11 +1251,11 @@
         <span class="k">if</span> <span class="n">converged</span><span class="p">:</span>
             <span class="n">point_xi</span> <span class="o">=</span> <span class="n">xi</span>
             <span class="n">xi</span> <span class="o">=</span> <span class="n">xi</span> <span class="o">+</span> <span class="n">fraction</span> <span class="o">*</span> <span class="n">step</span>
-            <span class="n">eigenvalues</span><span class="p">,</span> <span class="n">V</span> <span class="o">=</span> <span class="n">_eigenpairs</span><span class="p">(</span><span class="n">system</span><span class="p">,</span> <span class="n">options</span><span class="o">.</span><span class="n">rank</span><span class="p">,</span> <span class="n">options</span><span class="o">.</span><span class="n">tol</span><span class="p">)</span>
+            <span class="n">eigenvalues</span><span class="p">,</span> <span class="n">V</span> <span class="o">=</span> <span class="n">_eigenpairs</span><span class="p">(</span><span class="n">system</span><span class="p">,</span> <span class="n">options</span><span class="o">.</span><span class="n">rank</span><span class="p">,</span> <span class="n">options</span><span class="o">.</span><span class="n">cg_tol</span><span class="p">)</span>
             <span class="n">_report</span><span class="p">(</span><span class="n">gamma</span> <span class="o">*</span> <span class="n">eigenvalues</span><span class="p">,</span> <span class="n">options</span><span class="o">.</span><span class="n">rank</span> <span class="o">&lt;</span> <span class="nb">min</span><span class="p">(</span><span class="n">system</span><span class="o">.</span><span class="n">r</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">z</span><span class="p">)))</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
                 <span class="s2">"Gauss-Newton converged in </span><span class="si">%d</span><span class="s2"> steps, </span><span class="si">%d</span><span class="s2"> CG iterations in all: the "</span>
-                <span class="s2">"last step's d2 is </span><span class="si">%.3g</span><span class="s2">, below outer_tol * n = </span><span class="si">%.3g</span><span class="s2">."</span><span class="p">,</span>
+                <span class="s2">"last step's d2 is </span><span class="si">%.3g</span><span class="s2">, below tol * n = </span><span class="si">%.3g</span><span class="s2">."</span><span class="p">,</span>
                 <span class="n">i</span><span class="p">,</span>
                 <span class="nb">sum</span><span class="p">(</span><span class="n">cgs</span><span class="p">),</span>
                 <span class="n">d2</span><span class="p">,</span>
@@ -1277,9 +1281,7 @@
             <span class="n">solution</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">[</span><span class="s2">"_system_"</span><span class="p">]</span> <span class="o">=</span> <span class="n">system</span>
             <span class="k">return</span> <span class="n">solution</span>
         <span class="n">xi</span><span class="p">,</span> <span class="n">here</span> <span class="o">=</span> <span class="n">xi</span> <span class="o">+</span> <span class="n">fraction</span> <span class="o">*</span> <span class="n">step</span><span class="p">,</span> <span class="n">taken</span>
-    <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
-        <span class="n">_unconverged</span><span class="p">(</span><span class="n">options</span><span class="o">.</span><span class="n">max_iterations</span><span class="p">,</span> <span class="n">whole</span><span class="p">,</span> <span class="n">d2s</span><span class="p">,</span> <span class="n">limit</span><span class="p">,</span> <span class="s2">"outer_tol"</span><span class="p">)</span>
-    <span class="p">)</span>
+    <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="n">_unconverged</span><span class="p">(</span><span class="n">options</span><span class="o">.</span><span class="n">max_iterations</span><span class="p">,</span> <span class="n">whole</span><span class="p">,</span> <span class="n">d2s</span><span class="p">,</span> <span class="n">limit</span><span class="p">))</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_variational</span><span class="p">(</span><span class="n">problem</span><span class="p">:</span> <span class="n">Problem</span><span class="p">,</span> <span class="n">options</span><span class="p">:</span> <span class="n">VariationalOptions</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Posterior</span><span class="p">:</span>

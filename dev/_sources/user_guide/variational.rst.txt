@@ -12,7 +12,7 @@ factors, and solve with** ``fips.solve(problem, "variational", rank=k)``. It
 needs only products, :math:`H v`, :math:`H^T w`, the prior's root through its
 factors and solves with :math:`S_z`, and never forms anything :math:`n \times
 n` or :math:`m \times m`. Its estimate is the analytic one, by conjugate
-gradients, to ``tol``; its uncertainty is a low-rank posterior: the prior, less
+gradients, to ``cg_tol``; its uncertainty is a low-rank posterior: the prior, less
 what the ``k`` directions the data inform most remove. Check
 :attr:`post.eigenvalues <fips.Posterior.eigenvalues>` to see whether ``k`` was
 enough.
@@ -116,7 +116,7 @@ checked against the exact one:
    post.iterations
 
 The estimate is the analytic one far inside its uncertainty (the conjugate
-gradients stop when their residual is below ``tol``, 1e-8 of the right side,
+gradients stop when their residual is below ``cg_tol``, 1e-8 of the right side,
 by default). It took one solve of about 120 iterations: the data have about
 170 degrees of freedom among the 9,600 cells, and conjugate gradients converge
 in about as many steps as there are directions that stand out, not in

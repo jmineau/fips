@@ -14,10 +14,10 @@
 .. autosummary::
    :toctree:
 
+   ~VariationalOptions.cg_tol
    ~VariationalOptions.gamma
    ~VariationalOptions.max_cg_iterations
    ~VariationalOptions.max_iterations
-   ~VariationalOptions.outer_tol
    ~VariationalOptions.rank
    ~VariationalOptions.tol
 

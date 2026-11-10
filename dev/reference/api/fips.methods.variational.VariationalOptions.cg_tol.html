@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>fips.methods.variational.VariationalOptions.outer_tol &#8212; fips 0.2.0b3.dev23+g6690b3292 documentation</title>
+    <title>fips.methods.variational.VariationalOptions.cg_tol &#8212; fips 0.2.0b3.dev24+gede7a6e40 documentation</title>
   
   
   
@@ -42,14 +42,12 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../_static/documentation_options.js?v=fd62d9cc"></script>
+    <script src="../../_static/documentation_options.js?v=42599d89"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../../_static/copybutton.js?v=f281be69"></script>
-    <script>window.MathJax = {"options": {"processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
-    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = 'reference/api/fips.methods.variational.VariationalOptions.outer_tol';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'reference/api/fips.methods.variational.VariationalOptions.cg_tol';</script>
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.23.0';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://jmineau.github.io/fips/switcher.json';
@@ -60,8 +58,8 @@
     <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="fips.methods.variational.VariationalOptions.rank" href="fips.methods.variational.VariationalOptions.rank.html" />
-    <link rel="prev" title="fips.methods.variational.VariationalOptions.max_iterations" href="fips.methods.variational.VariationalOptions.max_iterations.html" />
+    <link rel="next" title="fips.methods.variational.VariationalOptions.gamma" href="fips.methods.variational.VariationalOptions.gamma.html" />
+    <link rel="prev" title="fips.methods.variational.VariationalOptions" href="fips.methods.variational.VariationalOptions.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
@@ -137,8 +135,8 @@
       
     
     
-    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev23+g6690b3292 documentation - Home"/>
-    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev23+g6690b3292 documentation - Home"/>
+    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev24+gede7a6e40 documentation - Home"/>
+    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev24+gede7a6e40 documentation - Home"/>
   
   
 </a></div>
@@ -690,10 +688,10 @@
 </ul>
 </details></li>
 <li class="toctree-l2 current active has-children"><a class="reference internal" href="fips.methods.variational.VariationalOptions.html">fips.methods.variational.VariationalOptions</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l3 current active"><a aria-current="page" class="current reference internal" href="#">fips.methods.variational.VariationalOptions.cg_tol</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.methods.variational.VariationalOptions.gamma.html">fips.methods.variational.VariationalOptions.gamma</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.methods.variational.VariationalOptions.max_cg_iterations.html">fips.methods.variational.VariationalOptions.max_cg_iterations</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.methods.variational.VariationalOptions.max_iterations.html">fips.methods.variational.VariationalOptions.max_iterations</a></li>
-<li class="toctree-l3 current active"><a aria-current="page" class="current reference internal" href="#">fips.methods.variational.VariationalOptions.outer_tol</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.methods.variational.VariationalOptions.rank.html">fips.methods.variational.VariationalOptions.rank</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.methods.variational.VariationalOptions.tol.html">fips.methods.variational.VariationalOptions.tol</a></li>
 </ul>
@@ -997,7 +995,7 @@
     
     <li class="breadcrumb-item"><a href="fips.methods.variational.VariationalOptions.html" class="nav-link">fips.methods.variational.VariationalOptions</a></li>
     
-    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">fips.methods.variational.VariationalOptions.outer_tol</span></li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">fips.methods.variational.VariationalOptions.cg_tol</span></li>
   </ul>
 </nav>
 </div>
@@ -1014,12 +1012,12 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="fips-methods-variational-variationaloptions-outer-tol">
-<h1>fips.methods.variational.VariationalOptions.outer_tol<a class="headerlink" href="#fips-methods-variational-variationaloptions-outer-tol" title="Link to this heading">#</a></h1>
+  <section id="fips-methods-variational-variationaloptions-cg-tol">
+<h1>fips.methods.variational.VariationalOptions.cg_tol<a class="headerlink" href="#fips-methods-variational-variationaloptions-cg-tol" title="Link to this heading">#</a></h1>
 <dl class="py attribute">
-<dt class="sig sig-object py" id="fips.methods.variational.VariationalOptions.outer_tol">
-<span class="sig-prename descclassname"><span class="pre">VariationalOptions.</span></span><span class="sig-name descname"><span class="pre">outer_tol</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><span class="pre">float</span></a></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1e-06</span></span><a class="headerlink" href="#fips.methods.variational.VariationalOptions.outer_tol" title="Link to this definition">#</a></dt>
-<dd><p>For a forward model, the steps stop when <span class="math notranslate nohighlight">\(d^2 &lt;\)</span> <code class="docutils literal notranslate"><span class="pre">outer_tol</span></code> <span class="math notranslate nohighlight">\(\cdot\, n\)</span>.</p>
+<dt class="sig sig-object py" id="fips.methods.variational.VariationalOptions.cg_tol">
+<span class="sig-prename descclassname"><span class="pre">VariationalOptions.</span></span><span class="sig-name descname"><span class="pre">cg_tol</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><span class="pre">float</span></a></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1e-08</span></span><a class="headerlink" href="#fips.methods.variational.VariationalOptions.cg_tol" title="Link to this definition">#</a></dt>
+<dd><p>The relative tolerance of the conjugate gradients and of Lanczos.</p>
 </dd></dl>
 
 </section>
@@ -1035,20 +1033,20 @@
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="fips.methods.variational.VariationalOptions.max_iterations.html"
+       href="fips.methods.variational.VariationalOptions.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">fips.methods.variational.VariationalOptions.max_iterations</p>
+        <p class="prev-next-title">fips.methods.variational.VariationalOptions</p>
       </div>
     </a>
     <a class="right-next"
-       href="fips.methods.variational.VariationalOptions.rank.html"
+       href="fips.methods.variational.VariationalOptions.gamma.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">fips.methods.variational.VariationalOptions.rank</p>
+        <p class="prev-next-title">fips.methods.variational.VariationalOptions.gamma</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -1071,14 +1069,14 @@
   </div>
   <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#fips.methods.variational.VariationalOptions.outer_tol"><code class="docutils literal notranslate"><span class="pre">VariationalOptions.outer_tol</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#fips.methods.variational.VariationalOptions.cg_tol"><code class="docutils literal notranslate"><span class="pre">VariationalOptions.cg_tol</span></code></a></li>
 </ul>
   </nav></div>
 
   <div class="sidebar-secondary-item">
 
   <div class="tocsection sourcelink">
-    <a href="../../_sources/reference/api/fips.methods.variational.VariationalOptions.outer_tol.rst.txt">
+    <a href="../../_sources/reference/api/fips.methods.variational.VariationalOptions.cg_tol.rst.txt">
       <i class="fa-solid fa-file-lines"></i> Show Source
     </a>
   </div>
