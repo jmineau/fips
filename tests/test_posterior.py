@@ -693,6 +693,8 @@ class TestAnotherMethod:
             other.with_gamma(2.0)
         with pytest.raises(TypeError, match="_DenseSolution has no with_data"):
             other.with_data(problem.obs)
+        with pytest.raises(TypeError, match="cannot give draws from the posterior"):
+            other.sample(3)
         with pytest.raises(AttributeError, match="does not give the posterior mean"):
             _ = other.mean
         assert not hasattr(other, "mean")
