@@ -29,8 +29,10 @@ class ForwardModel(ABC):
     r"""
     A forward model: the map :math:`F` from the state to the observations, and its Jacobian.
 
-    Subclass it and write two methods, then pass an instance to
-    :class:`~fips.Problem` as ``forward=``:
+    Subclass it and write two methods (only the first for the ensemble
+    method, ``fips.solve(problem, "ensemble", ...)``, which runs the model
+    and needs no Jacobian), then pass an instance to :class:`~fips.Problem`
+    as ``forward=``:
 
     - ``__call__(x)``: the observations the state `x` models, without the
       offset, :math:`F(x)`, a :class:`~fips.Vector` on :attr:`rows`;
@@ -139,10 +141,13 @@ class ForwardModel(ABC):
             :math:`F(x)`, on :attr:`rows` (its labels in any order).
         """
 
-    @abstractmethod
     def jacobian(self, x: Vector) -> Operator:
         r"""
         Return the Jacobian of the model at `x`: :math:`J_{ij} = \partial F_i / \partial x_j`.
+
+        ``"gauss_newton"`` and :func:`taylortest` need it; the ensemble method
+        only runs the model, so a model solved with it need not write one.
+        This one raises.
 
         Parameters
         ----------
@@ -154,7 +159,17 @@ class ForwardModel(ABC):
         Operator
             :math:`J(x)`, its rows the labels of :attr:`rows` and its columns
             those of :attr:`cols` (in any order).
+
+        Raises
+        ------
+        NotImplementedError
+            Unless the subclass writes it.
         """
+        raise NotImplementedError(
+            f"{type(self).__name__} has no jacobian: write one to solve with "
+            '"gauss_newton" or check it with taylortest, or solve with '
+            '"ensemble", which only runs the model.'
+        )
 
     def _gradient(self, x: np.ndarray, v: np.ndarray) -> np.ndarray:
         r"""

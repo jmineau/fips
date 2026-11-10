@@ -9,7 +9,9 @@ A forward map that is not linear, :math:`z = F(x) + c + e`, is a
 and its Jacobian at a state (an :class:`Operator`). A :class:`Problem` takes
 it as ``forward=``; :meth:`Problem.linearized` is the linear problem at a
 state, and ``fips.solve(problem, "gauss_newton")`` finds the mode of the
-posterior (:class:`~fips.methods.gauss_newton.GaussNewtonOptions`).
+posterior (:class:`~fips.methods.gauss_newton.GaussNewtonOptions`). A
+model solved with ``"ensemble"`` needs only ``__call__``
+(:doc:`/user_guide/ensemble`).
 :func:`taylortest` checks the Jacobian against the model, as
 :func:`fips.linalg.dottest` checks an operator's transpose. The guide is
 :doc:`/user_guide/nonlinear`.

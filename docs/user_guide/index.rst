@@ -355,9 +355,10 @@ Solving and the posterior
 :class:`~fips.Posterior`, the answer. The method is ``"analytic"`` by default
 (the closed-form Gaussian posterior; :func:`fips.available_methods` lists the
 methods), and its one option is the regularization factor ``gamma``.
-``"bounded"`` holds the state to bounds (:doc:`bounds`), and ``"gauss_newton"``
+``"bounded"`` holds the state to bounds (:doc:`bounds`), ``"gauss_newton"``
 finds the mode of a problem whose forward is a model that is not linear
-(:doc:`nonlinear`). An unknown method or option raises with the names it knows.
+(:doc:`nonlinear`), and ``"ensemble"`` updates members drawn from the prior
+with the runs of a model that has no Jacobian (:doc:`ensemble`). An unknown method or option raises with the names it knows.
 
 The analytic method factors the problem once, in one of two forms that give
 the same posterior. The whitened form works in the observations' size: it
@@ -713,4 +714,5 @@ when it is read.
    nonlinear
    positive
    comparison
+   ensemble
    examples/index

@@ -103,7 +103,10 @@ class Solution(Protocol):
     covariances are those of draws of its posterior; its gain, DOFS and
     information content those of the Gaussian of the problem linearized where
     its last step was made; and its chi-squared terms those of the model at
-    its estimate.
+    its estimate. The ``"ensemble"`` method's estimate is the mean of its
+    updated members; its variances, covariances and gain are those of the
+    members, and its DOFS, information content and chi-squared the analytic
+    formulas with the members' covariance of the modeled observations.
     Such answers are estimates or approximations, and
     :meth:`Posterior.trials` measures how good they are.
 
@@ -424,6 +427,13 @@ class Posterior:
     :attr:`problem` is the problem with the model, as solved; what needs a
     linear forward operator (the averaging kernel, :attr:`innovation_cov`)
     reads the Jacobian of the last step.
+    The ``"ensemble"`` method
+    (:class:`~fips.methods.ensemble.EnsembleOptions`) has :attr:`mean`,
+    :meth:`with_gamma`, :meth:`with_data` and :meth:`sample` (its updated
+    members, at most as many as it has); its estimate, variances, gain and
+    diagnostics are those of its members, which approach the analytic
+    posterior as they grow, and what needs :math:`H` (the averaging kernel,
+    :attr:`dofs_per_element`) raises for a model.
 
     Parameters
     ----------
@@ -590,7 +600,7 @@ class Posterior:
         standard deviation good to about 2% at the default 2000), about
         their mean, not about the mode; the ``"gauss_newton"`` method those
         of its kept draws of the posterior of its forward model, the same
-        way.
+        way; the ``"ensemble"`` method those of its updated members.
 
         See Also
         --------
@@ -1025,6 +1035,10 @@ class Posterior:
         Jacobian's transpose (one for a linear model), each with a product of
         the Gaussian at the mode's covariance.
 
+        The ``"ensemble"`` method's draws are its updated members: `n` of
+        them, chosen without replacement with `rng`, in the members' order.
+        It has no more, and raises for `n` above their number.
+
         Parameters
         ----------
         n : int
@@ -1057,8 +1071,9 @@ class Posterior:
             If `W` is not an Operator; or the method cannot draw from its
             posterior (its solution has no ``sample``).
         ValueError
-            If `n` is not a positive integer, or the columns of `W` do not
-            have exactly the state's labels.
+            If `n` is not a positive integer (or, for the ensemble method, is
+            above its number of members), or the columns of `W` do not have
+            exactly the state's labels.
 
         See Also
         --------

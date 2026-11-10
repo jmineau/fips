@@ -24,7 +24,8 @@ observations are labeled by pandas indexes in named blocks: exact for a linear
 problem; with bounds on the state, its mode and draws of the Gaussian truncated
 to the bounds; with a forward model, its mode by Gauss-Newton and draws of its
 posterior; with priors on the covariance settings, draws of the settings and
-of the state at each (`fips.hierarchical`). fips samples the posteriors it
+of the state at each (`fips.hierarchical`); for a model that can only be run,
+an ensemble square-root update of members drawn from the prior (`"ensemble"`). fips samples the posteriors it
 cannot give in closed form. Labels
 are matched, never positions; each matrix is kept in its cheapest form (dense,
 sparse, diagonal, Kronecker factors). Beta: the API may change between
@@ -67,11 +68,12 @@ src/fips/
     bounded.py      BoundedOptions; Bounded: the mode by an active set on the
                     analytic posterior, draws by exact HMC (_Sampler)
     gauss_newton.py GaussNewtonOptions; GaussNewton: the mode by linearizations (Newton for a transform), draws by HMC
+    ensemble.py     EnsembleOptions; Ensemble: batch EnSRF of the members and their runs (no Jacobian)
   linalg/           the unlabeled forms (public as fips.linalg)
     forms.py        LinearOperator and the Dense-, Sparse- and DiagonalOperator it builds
     block.py        BlockDiagonalOperator
     kronecker.py    KroneckerOperator: a covariance kept as its factors
-tests/              pytest; test_oracle.py holds every method to the closed form
+tests/              pytest; test_oracle.py holds every exact method to the closed form
 docs/               Sphinx: guides, reference/ (by topic), examples/ (notebooks)
 ```
 
@@ -176,7 +178,8 @@ ensemble method fits. **A method's default options on a linear, unbounded
 problem give the analytic posterior** (`"bounded"` with no finite bound and
 `"gauss_newton"` with an operator return the analytic solution itself):
 `tests/test_oracle.py` runs every registered method, with its defaults, against the closed-form posterior and the
-permutation test. A method that samples is held to exact answers in small cases
+permutation test, except one registered `exact=False` (`"ensemble"`), held instead
+to its update's exactness for its own covariance and a `1/sqrt(N)` curve (`tests/test_ensemble.py`). A method that samples is held to exact answers in small cases
 (`truncnorm`, integration; Monte Carlo errors counting autocorrelation), to the
 truth's rank among its draws in its own world, and to wrong variants that fail
 them (`tests/test_bounded.py`, `tests/test_gauss_newton.py`).

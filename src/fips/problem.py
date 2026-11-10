@@ -12,17 +12,20 @@ the observations' spaces: :func:`fips.solve` then computes by position.
 The problem is the question, and the :class:`~fips.Posterior` that
 :func:`fips.solve` returns is the answer. The problem holds what needs no
 solve and no ``m x m`` matrix (:meth:`Problem.predict`, and
-:meth:`Problem.simulate` for a synthetic truth and its observations), and makes other
+:meth:`Problem.simulate` for a synthetic truth and its observations,
+:meth:`Problem.ensemble` for members drawn from the prior), and makes other
 problems from itself (:meth:`Problem.aggregate`, :meth:`Problem.restrict`);
 the posterior holds what depends on the solve or on the ``m x m`` matrix it
 factors.
 """
 
 import logging
+import numbers
 from functools import cached_property
 from typing import Any
 
 import numpy as np
+import pandas as pd
 
 from fips.covariance import Covariance, CovarianceModel
 from fips.forward import ForwardModel, _Aggregated, _differentiated, _evaluated
@@ -765,6 +768,94 @@ class Problem:
             obs_cov=self._obs_cov.aggregate(W),
             forward=forward,
             offset=offset,
+        )
+
+    def ensemble(
+        self, n: int, rng: "int | np.random.Generator | None" = None
+    ) -> pd.DataFrame:
+        r"""
+        Return `n` members drawn from the prior, one column each: the first stage of the ensemble method.
+
+        Each member is :math:`x_0 + \delta_j - \bar{\delta}`, with
+        :math:`\delta_j \sim N(0, S_0)` drawn through the prior error
+        covariance's root and their mean :math:`\bar{\delta}` taken out, so
+        the members' mean is the prior exactly and their sample covariance,
+        :math:`\sum_j (x_j - x_0)(x_j - x_0)^T / (n - 1)`, has the mean
+        :math:`S_0`. Run the forward model on each member (the second stage,
+        outside fips: on a cluster, one run a member), then give both to
+        ``fips.solve(problem, "ensemble", members=members,
+        predicted=modeled)``.
+
+        Parameters
+        ----------
+        n : int
+            The number of members, at least 2.
+        rng : int, numpy.random.Generator or None, default None
+            A seed, or the generator to draw from, as :meth:`simulate` takes
+            it. The standard normals are drawn as one ``columns x n`` array.
+
+        Returns
+        -------
+        pandas.DataFrame
+            One row per state element, labeled as ``problem.prior.index``, and
+            one column per member, a ``RangeIndex`` named ``member``.
+
+        Raises
+        ------
+        ValueError
+            If `n` is not an integer of at least 2.
+        numpy.linalg.LinAlgError
+            If the prior error covariance has a clearly negative eigenvalue.
+
+        See Also
+        --------
+        fips.methods.ensemble.EnsembleOptions : The second stage's options.
+        simulate : One draw of a truth and its observations.
+
+        Examples
+        --------
+        >>> import numpy as np
+        >>> import pandas as pd
+        >>> import fips
+        >>> cells = pd.Index(["a", "b"], name="cell")
+        >>> prior = fips.Vector.from_series(pd.Series(1.0, index=cells), block="flux")
+        >>> obs = fips.Vector(
+        ...     [1.5, 0.5, 1.8], fips.Space({"co2": pd.RangeIndex(3, name="obs_id")})
+        ... )
+        >>> H = fips.Operator(
+        ...     np.array([[1.0, 0.0], [0.0, 1.0], [1.0, 1.0]]), obs.space, prior.space
+        ... )
+        >>> problem = fips.Problem(
+        ...     prior=prior,
+        ...     prior_cov=fips.Independent().with_std(0.5),
+        ...     obs=obs,
+        ...     obs_cov=fips.Independent().with_std(0.2),
+        ...     forward=H,
+        ... )
+        >>> members = problem.ensemble(100, rng=0)
+        >>> members.shape
+        (2, 100)
+        >>> members.mean(axis=1).round(12).tolist()  # the prior, exactly
+        [1.0, 1.0]
+        >>> modeled = pd.DataFrame(
+        ...     H.data @ members.to_numpy(), index=obs.index, columns=members.columns
+        ... )
+        >>> post = fips.solve(problem, "ensemble", members=members, predicted=modeled)
+        >>> post.estimate.values.round(2)  # the analytic one is [1.37, 0.51]
+        array([1.36, 0.51])
+        """
+        if not isinstance(n, numbers.Integral) or isinstance(n, bool) or n < 2:
+            raise ValueError(
+                f"n is the number of members, an integer of at least 2, got {n!r}."
+            )
+        rng = np.random.default_rng(rng)
+        root = self._prior_cov.data._root
+        draws = np.asarray(root @ rng.standard_normal((root.shape[1], int(n))))
+        draws -= draws.mean(axis=1, keepdims=True)
+        return pd.DataFrame(
+            self._prior.values[:, None] + draws,
+            index=self._prior.index,
+            columns=pd.RangeIndex(int(n), name="member"),
         )
 
     def _state_values(

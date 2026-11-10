@@ -9,7 +9,9 @@ the closed-form Gaussian posterior; ``"bounded"``
 (:mod:`fips.methods.bounded`), that posterior with bounds on the state: its
 mode, and draws of the Gaussian truncated to the bounds; and
 ``"gauss_newton"`` (:mod:`fips.methods.gauss_newton`), the mode of the
-posterior of a problem with a forward model, and draws of that posterior.
+posterior of a problem with a forward model, and draws of that posterior; and
+``"ensemble"`` (:mod:`fips.methods.ensemble`), a square-root ensemble Kalman
+update of members drawn from the prior, for a model that can only be run.
 
 A method is a module here with three things, and a line in ``_METHODS``
 below:
@@ -39,7 +41,9 @@ below:
 
 A method's default options on a linear problem with no bounds give the
 analytic posterior: ``tests/test_oracle.py`` runs every registered method,
-with its default options, against the closed form.
+with its default options, against the closed form. A method registered with
+``exact=False`` (the ensemble, which approaches it only as its members grow)
+is left out of the oracle and has its own convergence test.
 
 The :class:`~fips.Posterior` puts the labels on, keeps each output, and
 writes everything else (the averaging kernel, the innovation covariance,
@@ -58,9 +62,11 @@ solution of the problem linearized at its last iterate (a lognormal flux is
 such a forward model), answers the gain from it and the variances from draws
 of the posterior, which it preconditions, and its evidence is Laplace's from
 the Gaussian at the mode; it has no ``with_gamma``, since its
-linearization depends on gamma. An ensemble method would keep its posterior ensemble and
-answer from the sample mean and covariance (``estimate_is_mean = True``), and
-could not change gamma without solving again either. A method imports
+linearization depends on gamma. The ensemble method's solution
+(``fips.methods.ensemble.Ensemble``) keeps the prior members, their modeled
+observations and the factors of the update, and answers from the updated
+members (``estimate_is_mean = True``); its ``with_gamma`` and ``with_data``
+reuse the modeled members. A method imports
 :mod:`fips.posterior`; :mod:`fips.posterior` never imports a method.
 """
 
@@ -71,6 +77,7 @@ from typing import Any
 
 from fips.methods.analytic import AnalyticOptions, _analytic
 from fips.methods.bounded import BoundedOptions, _bounded
+from fips.methods.ensemble import EnsembleOptions, _ensemble
 from fips.methods.gauss_newton import GaussNewtonOptions, _gauss_newton
 from fips.posterior import Posterior
 from fips.problem import Problem
@@ -80,16 +87,19 @@ logger = logging.getLogger(__name__)
 
 @dataclass(frozen=True)
 class _Method:
-    """A registered method: the dataclass of its options and the function that solves."""
+    """A registered method: the dataclass of its options, the function that solves, and whether it is exact."""
 
     options: type
     solve: Callable[[Problem, Any], Posterior]
+    exact: bool = True
+    """False for a method whose posterior approaches the analytic one only as a number of members grows (``tests/test_oracle.py`` holds the others to it)."""
 
 
 _METHODS: dict[str, _Method] = {
     "analytic": _Method(AnalyticOptions, _analytic),
     "bounded": _Method(BoundedOptions, _bounded),
     "gauss_newton": _Method(GaussNewtonOptions, _gauss_newton),
+    "ensemble": _Method(EnsembleOptions, _ensemble, exact=False),
 }
 """The methods by name."""
 
@@ -120,7 +130,9 @@ def solve(problem: Problem, method: str = "analytic", **options: Any) -> Posteri
         The name of a method (see :func:`available_methods`). ``"analytic"``
         is the closed-form Gaussian posterior; ``"bounded"`` the posterior
         with bounds on the state; ``"gauss_newton"`` the mode of the
-        posterior of a problem with a forward model, and draws of it.
+        posterior of a problem with a forward model, and draws of it;
+        ``"ensemble"`` the update of an ensemble of members, for a model that
+        can only be run.
     **options
         The method's options, by name: for ``"analytic"``, ``gamma`` (see
         :class:`~fips.methods.analytic.AnalyticOptions`); for ``"bounded"``,
@@ -128,7 +140,10 @@ def solve(problem: Problem, method: str = "analytic", **options: Any) -> Posteri
         (see :class:`~fips.methods.bounded.BoundedOptions`); for
         ``"gauss_newton"``, ``gamma``, ``max_iterations``, ``tol``, ``draws``,
         ``burn_in`` and ``seed`` (see
-        :class:`~fips.methods.gauss_newton.GaussNewtonOptions`).
+        :class:`~fips.methods.gauss_newton.GaussNewtonOptions`); for
+        ``"ensemble"``, ``gamma``, ``members``, ``predicted``,
+        ``localization``, ``obs_localization`` and ``seed`` (see
+        :class:`~fips.methods.ensemble.EnsembleOptions`).
 
     Returns
     -------
