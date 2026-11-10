@@ -18,8 +18,8 @@ does not use the code under test, in layers:
    the mean and standard deviation asked for, against the closed form
    (lognormal), SciPy's adaptive ``quad`` (softplus) and Monte Carlo draws
    (both); the lognormal's flux correlations against their formula.
-5. **Its own world**, through ``Posterior.trials`` and draws through the
-   transform: the intervals of the cells and of the total cover about as
+5. **Its own world**, through each trial's posterior and its draws through
+   the transform: the intervals of the cells and of the total cover about as
    often as they claim when the prior is narrow.
 6. **Wrong variants** (a Jacobian without the reference, the median
    convention in place of the mean, softplus's Jacobian as ``exp(u)``) fail
@@ -414,7 +414,9 @@ def test_lognormal_is_the_guides_scaled_inventory():
     np.testing.assert_allclose(
         b.estimate.values, a.estimate.values, rtol=1e-13, atol=1e-15
     )
-    np.testing.assert_allclose(b.variances.values, a.variances.values, rtol=1e-12)
+    np.testing.assert_allclose(
+        b._solution.analytic.variances(), a._solution.analytic.variances(), rtol=1e-12
+    )
     assert b.chi2 == pytest.approx(a.chi2, rel=1e-13)
     draws = b.sample(200, rng=2)
     np.testing.assert_allclose(
@@ -714,8 +716,10 @@ def test_prior_for_on_labels_in_another_order_and_with_a_bias_block():
 # ---------------------------------------------------------------------------
 
 
-def own_world(kind: str, seed: int, n: int = 8, m: int = 20, std: float = 0.2):
-    """A problem whose prior is prior_for's (each cell's flux of mean 1 to 2, standard deviation `std` times it for lognormal), its model and the posterior of one draw's data."""
+def own_world(
+    kind: str, seed: int, n: int = 8, m: int = 20, std: float = 0.2, **options
+):
+    """A problem whose prior is prior_for's (each cell's flux of mean 1 to 2, standard deviation `std` times it for lognormal), its model and the posterior of one draw's data, solved with `options`."""
     rng = np.random.default_rng(seed)
     state = Space({"flux": pd.Index([f"c{j}" for j in range(n)], name="cell")})
     obs = Space({"conc": pd.RangeIndex(m, name="obs_id")})
@@ -742,51 +746,60 @@ def own_world(kind: str, seed: int, n: int = 8, m: int = 20, std: float = 0.2):
         )
 
     _, z = problem(np.zeros(m)).simulate(rng=rng)
-    return model, fips.solve(problem(z.values), "gauss_newton")
+    return model, fips.solve(problem(z.values), "gauss_newton", **options)
 
 
-def coverage_of_cells_and_total(model, post, trials: int, draws: int, level: float):
+def coverage_of_cells_and_total(model, post, trials: int, levels):
     """
-    The fraction of trials whose interval at `level` holds the truth: each cell's (from trials, whose intervals in u are the flux's, the transform being monotone) and the total flux's (the quantiles of draws of the Gaussian at the mode, through the transform).
+    The fraction of trials whose interval at each level holds the truth: each cell's (the posterior standard deviation about the mode, as ``trials`` reports it; the transform is monotone, so an interval in u is the flux's) and the total flux's (the quantiles of the posterior's kept draws, through the transform).
 
-    Returns each with its Monte Carlo standard error.
+    Returns, for each level, both with their Monte Carlo standard errors.
     """
     rng = np.random.default_rng(10)
-    z = ndtri(0.5 + level / 2)
-    table = post.trials(n=trials, rng=11)
-    inside = (table["estimate"] - table["truth"]).abs() <= z * table["posterior_std"]
-    by_trial = inside.groupby(level="trial").mean()
-    totals_covered = []
     world = post.problem
+    index = world.prior.space.index
+    z_cells, totals, true_totals = [], [], []
     for _ in range(trials):
         truth, obs = world.simulate(rng=rng)
         trial = post.with_data(obs)
-        flux = model.transform(trial.sample(draws, rng=rng)).sum()
-        low, high = np.quantile(flux, [0.5 - level / 2, 0.5 + level / 2])
-        total = model.transform(truth).values.sum()
-        totals_covered.append(low <= total <= high)
-    cells = (float(by_trial.mean()), float(by_trial.std() / np.sqrt(trials)))
-    p = float(np.mean(totals_covered))
-    return cells, (p, np.sqrt(level * (1 - level) / trials))
+        z_cells.append(
+            (trial.estimate.values - truth.values) / np.sqrt(trial.variances.values)
+        )
+        kept = pd.DataFrame(trial._solution._kept(), index=index)
+        totals.append(model.transform(kept).sum().to_numpy())
+        true_totals.append(model.transform(truth).values.sum())
+    z_cells = np.array(z_cells)
+    out = {}
+    for level in levels:
+        inside = (np.abs(z_cells) <= ndtri(0.5 + level / 2)).mean(axis=1)
+        covered = [
+            np.quantile(t, 0.5 - level / 2) <= true <= np.quantile(t, 0.5 + level / 2)
+            for t, true in zip(totals, true_totals, strict=True)
+        ]
+        out[level] = (
+            (float(inside.mean()), float(inside.std() / np.sqrt(trials))),
+            (float(np.mean(covered)), np.sqrt(level * (1 - level) / trials)),
+        )
+    return out
 
 
 @pytest.mark.parametrize("kind", KINDS)
 def test_in_a_narrow_prior_the_intervals_of_cells_and_totals_cover(kind):
     """
-    A truth drawn from prior_for's prior and data through the model: the Gaussian at the mode covers near its level, for the cells and for the total read from draws.
+    A truth drawn from prior_for's prior and data through the model: the posterior's draws cover near their level, for the cells and for the total.
 
     The flux's prior standard deviation is a fifth of its mean (lognormal:
-    a log standard deviation of 0.2). Measured (seed 0, 200 trials, 300 draws
-    each), at 90% and 68%: lognormal cells 0.897 and 0.696 (Monte Carlo
-    standard errors 0.009, 0.012), totals 0.865 and 0.625 (0.021, 0.033);
-    softplus cells 0.898 and 0.694, totals 0.905 and 0.680. The lognormal
-    totals already lean low: the user guide measures that in wider priors.
+    a log standard deviation of 0.2). Measured (seed 0, 150 trials, 300 kept
+    draws each), at 90% and 68%: lognormal cells 0.911 and 0.700 (Monte Carlo
+    standard errors 0.008, 0.015), totals 0.900 and 0.680 (0.024, 0.038);
+    softplus cells 0.910 and 0.701, totals 0.893 and 0.700. The totals from
+    draws of the Gaussian at the mode leaned low here (lognormal 0.865 and
+    0.625 at 200 trials); the user guide measures that in wider priors.
     """
-    model, post = own_world(kind, 0)
-    for level in (0.9, 0.68):
-        (cells, cells_se), (total, total_se) = coverage_of_cells_and_total(
-            model, post, 200, 300, level
-        )
+    model, post = own_world(kind, 0, draws=300, burn_in=50)
+    for level, ((cells, cells_se), (total, total_se)) in coverage_of_cells_and_total(
+        model, post, 150, (0.9, 0.68)
+    ).items():
         assert abs(cells - level) < 4 * cells_se + 0.01, (level, cells, cells_se)
         assert abs(total - level) < 4 * total_se + 0.01, (level, total, total_se)
 
