@@ -1,0 +1,6 @@
+fips.Posterior.iterations
+=========================
+
+.. currentmodule:: fips
+
+.. autoproperty:: Posterior.iterations

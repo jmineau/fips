@@ -64,6 +64,15 @@ The words
        linearized), the observation operator, the sensitivity matrix or, in
        atmospheric transport, the footprints. :meth:`Problem.predict
        <fips.Problem.predict>` gives :math:`H x + c` for any state.
+   * - **forward model**
+     - :math:`F`
+     - ``forward`` (a :class:`~fips.ForwardModel`)
+     - A map from the state to the observations that is not linear,
+       :math:`z = F(x) + c + \varepsilon`, written with its Jacobian
+       :math:`J(x)`, the forward operator of the problem linearized at
+       :math:`x` (:meth:`Problem.linearized <fips.Problem.linearized>`). Its
+       posterior's estimate is the mode (``"gauss_newton"``,
+       :doc:`/user_guide/nonlinear`).
    * - **offset**
      - :math:`c`
      - ``offset``

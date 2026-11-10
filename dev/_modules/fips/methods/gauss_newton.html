@@ -1,0 +1,1002 @@
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>fips.methods.gauss_newton &#8212; fips 0.2.0b3.dev14+gaab1d8443 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../_static/styles/theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
+<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/plot_directive.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sphinx_autodoc_typehints.css?v=057ac668" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/custom.css?v=4b8357b6" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="../../../_static/scripts/fontawesome.js?digest=18bd87630a240e9c25be"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
+<link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
+
+    <script src="../../../_static/documentation_options.js?v=cb65ae00"></script>
+    <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../../_static/copybutton.js?v=f281be69"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/fips/methods/gauss_newton';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.23.0';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://jmineau.github.io/fips/switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'dev';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner =
+            true;
+        </script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="color-scheme" content="light dark"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.2" />
+  
+    
+    <script src="../../../_static/searchtools.js"></script>
+    <script src="../../../_static/language_data.js"></script>
+    <script src="../../../searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button type="button" class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class=" navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev14+gaab1d8443 documentation - Home"/>
+    <img src="../../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev14+gaab1d8443 documentation - Home"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class=" navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../getting_started/index.html">
+    Getting Started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../user_guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../reference/index.html">
+    API Reference
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+      
+        <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/jmineau/fips" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar hide-on-wide">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../getting_started/index.html">
+    Getting Started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../user_guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../reference/index.html">
+    API Reference
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-3"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-3"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-3"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-3">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+        
+          <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/jmineau/fips" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../../index.html" class="nav-link">Module code</a></li>
+    
+    
+    <li class="breadcrumb-item"><a href="../methods.html" class="nav-link">fips.methods</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">fips.methods.gauss_newton</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for fips.methods.gauss_newton</h1><div class="highlight"><pre>
+<span></span><span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">The Gauss-Newton method: the mode of the posterior of a problem with a forward model.</span>
+
+<span class="sd">With a forward model :math:`F` (:class:`~fips.ForwardModel`) the observations</span>
+<span class="sd">are :math:`z = F(x) + c + e`, and the posterior is not Gaussian. Its mode, the</span>
+<span class="sd">estimate, is the state where the cost</span>
+
+<span class="sd">.. math::</span>
+
+<span class="sd">    \chi^2(x) = (x - x_0)^T S_0^{-1} (x - x_0)</span>
+<span class="sd">        + \gamma\, (z - F(x) - c)^T S_z^{-1} (z - F(x) - c)</span>
+
+<span class="sd">is least. ``_gauss_newton`` finds it as Rodgers (2000, chapter 5) does:</span>
+<span class="sd">from the prior, each step solves the problem linearized at the last estimate</span>
+<span class="sd">(:meth:`Problem.linearized &lt;fips.Problem.linearized&gt;`, with the Jacobian</span>
+<span class="sd">:math:`J_i` at :math:`x_i`) by the analytic method,</span>
+
+<span class="sd">.. math::</span>
+
+<span class="sd">    x_{i+1} = x_0 + K_i \big(z - F(x_i) - c + J_i (x_i - x_0)\big),</span>
+
+<span class="sd">and it stops when the step is small in the metric of the posterior</span>
+<span class="sd">covariance of that solve (Rodgers' rule, :math:`d_i^2 \ll n`):</span>
+
+<span class="sd">.. math::</span>
+
+<span class="sd">    d_i^2 = (x_{i+1} - x_i)^T \hat{S}_i^{-1} (x_{i+1} - x_i)</span>
+<span class="sd">        &lt; \mathrm{tol} \cdot n, \qquad</span>
+<span class="sd">    \hat{S}_i^{-1} = S_0^{-1} + \gamma J_i^T S_z^{-1} J_i.</span>
+
+<span class="sd">A step that overshoots, so that the cost at its estimate is higher than at</span>
+<span class="sd">the last one, is halved until it is not (a line search on the cost; the</span>
+<span class="sd">direction is still Gauss-Newton's, so the mode is the same), and only a whole</span>
+<span class="sd">step below the rule stops the iterations. The rule measures the step, not the</span>
+<span class="sd">distance to the mode: when the steps fall by a constant factor near 1 (a model</span>
+<span class="sd">that bends much over the posterior's spread), the solve logs a warning that</span>
+<span class="sd">the estimate may be further from the mode (``_warn_if_slow``).</span>
+
+<span class="sd">:math:`\hat{S}_i^{-1}` is never formed. Every estimate is :math:`x_0 + S_0 y`</span>
+<span class="sd">with :math:`y = J_i^T u_i` (:math:`u_i` the analytic solve's :math:`(J_i S_0</span>
+<span class="sd">J_i^T + S_z/\gamma)^{-1}` times its innovation), so the prior term of</span>
+<span class="sd">:math:`d^2` is :math:`\Delta y^T S_0 \Delta y` (no inverse of :math:`S_0`,</span>
+<span class="sd">which may be singular) and its data term :math:`\gamma (J_i \delta)^T</span>
+<span class="sd">S_z^{-1} (J_i \delta)`, a solve with the mismatch factored once.</span>
+
+<span class="sd">The solution (:class:`GaussNewton`) keeps the analytic solution of the last</span>
+<span class="sd">linearized problem. Its estimate is the mode, and its covariance, gain, DOFS</span>
+<span class="sd">and draws are those of the Gaussian at the mode: the analytic posterior of</span>
+<span class="sd">the problem linearized at the last iterate, one step of :math:`d^2 &lt;</span>
+<span class="sd">\mathrm{tol} \cdot n` from the mode. The misfits and the chi-squared are the</span>
+<span class="sd">cost's terms at the mode, from the model itself. With a forward operator</span>
+<span class="sd">(a linear problem) ``_gauss_newton`` returns the analytic solution itself.</span>
+
+<span class="sd">References</span>
+<span class="sd">----------</span>
+<span class="sd">Rodgers, C. D. (2000). *Inverse Methods for Atmospheric Sounding: Theory and</span>
+<span class="sd">Practice*, chapter 5. World Scientific. https://doi.org/10.1142/3171</span>
+<span class="sd">"""</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">math</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numbers</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">fips.linalg</span><span class="w"> </span><span class="kn">import</span> <span class="n">LinearOperator</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fips.linalg.forms</span><span class="w"> </span><span class="kn">import</span> <span class="n">_read_only</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fips.methods.analytic</span><span class="w"> </span><span class="kn">import</span> <span class="n">AnalyticOptions</span><span class="p">,</span> <span class="n">Information</span><span class="p">,</span> <span class="n">Whitened</span><span class="p">,</span> <span class="n">_factor</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fips.operator</span><span class="w"> </span><span class="kn">import</span> <span class="n">Operator</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fips.posterior</span><span class="w"> </span><span class="kn">import</span> <span class="n">Posterior</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fips.problem</span><span class="w"> </span><span class="kn">import</span> <span class="n">Problem</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fips.vector</span><span class="w"> </span><span class="kn">import</span> <span class="n">Vector</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="GaussNewtonOptions">
+<a class="viewcode-back" href="../../../reference/api/fips.methods.gauss_newton.GaussNewtonOptions.html#fips.methods.gauss_newton.GaussNewtonOptions">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">GaussNewtonOptions</span><span class="p">:</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">    The options of the ``"gauss_newton"`` method.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    gamma : float, default 1.0</span>
+<span class="sd">        The regularization factor :math:`\gamma`, as for the analytic method</span>
+<span class="sd">        (:class:`~fips.methods.analytic.AnalyticOptions`): the model-data</span>
+<span class="sd">        mismatch is divided by it.</span>
+<span class="sd">    max_iterations : int, default 50</span>
+<span class="sd">        The most steps to take. A solve that has not stopped by then raises.</span>
+<span class="sd">        A mildly nonlinear problem stops in a few; a strongly nonlinear one</span>
+<span class="sd">        can take tens, its steps' ``d2`` falling by a constant factor.</span>
+<span class="sd">    tol : float, default 1e-6</span>
+<span class="sd">        The step at which the iterations stop: when :math:`d^2`, the step</span>
+<span class="sd">        measured in the posterior covariance, is below ``tol`` times the</span>
+<span class="sd">        number of state elements :math:`n`. Rodgers' rule asks for</span>
+<span class="sd">        :math:`d^2 \ll n`; at the default the last step is a thousandth of a</span>
+<span class="sd">        posterior standard deviation (root mean square), and the estimate is</span>
+<span class="sd">        within about that of the mode: far inside its uncertainty, for an</span>
+<span class="sd">        iteration or two more than a looser rule. Each step costs a factoring</span>
+<span class="sd">        of the problem linearized at the last estimate.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        If `gamma` is not a positive, finite number, `max_iterations` is not a</span>
+<span class="sd">        positive integer, or `tol` is not a positive, finite number.</span>
+<span class="sd">    """</span>
+
+    <span class="n">gamma</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span>
+<span class="w">    </span><span class="sd">"""The regularization factor: the model-data mismatch is divided by it."""</span>
+    <span class="n">max_iterations</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">50</span>
+<span class="w">    </span><span class="sd">"""The most steps to take."""</span>
+    <span class="n">tol</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-6</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""The iterations stop when :math:`d^2 &lt;` ``tol`` :math:`\cdot\, n`."""</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">"gamma"</span><span class="p">,</span> <span class="n">AnalyticOptions</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">gamma</span><span class="p">)</span><span class="o">.</span><span class="n">gamma</span><span class="p">)</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_iterations</span>
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">numbers</span><span class="o">.</span><span class="n">Integral</span><span class="p">)</span>
+            <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">bool</span><span class="p">)</span>
+            <span class="ow">or</span> <span class="n">value</span> <span class="o">&lt;</span> <span class="mi">1</span>
+        <span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"max_iterations must be a positive integer, got </span><span class="si">{</span><span class="n">value</span><span class="si">!r}</span><span class="s2">."</span>
+            <span class="p">)</span>
+        <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">"max_iterations"</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">value</span><span class="p">))</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">tol</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tol</span><span class="p">)</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">TypeError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"tol must be a number, got </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">tol</span><span class="si">!r}</span><span class="s2">."</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="kc">None</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">tol</span><span class="p">)</span> <span class="ow">and</span> <span class="n">tol</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"tol must be positive and finite, got </span><span class="si">{</span><span class="n">tol</span><span class="si">}</span><span class="s2">."</span><span class="p">)</span>
+        <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">"tol"</span><span class="p">,</span> <span class="n">tol</span><span class="p">)</span></div>
+
+
+
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">eq</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">GaussNewton</span><span class="p">:</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">    The Gauss-Newton method's solution: the mode, and the Gaussian of the problem linearized at the last iterate.</span>
+
+<span class="sd">    It keeps the problem with the forward model (``problem``), the analytic</span>
+<span class="sd">    solution of the last linearized problem (``analytic``, whose estimate is</span>
+<span class="sd">    the mode), the state that problem was linearized at, and each step's</span>
+<span class="sd">    :math:`d^2` and the cost after it. The :class:`~fips.Posterior` asks it</span>
+<span class="sd">    for every array it reports: it is the method's</span>
+<span class="sd">    :class:`~fips.posterior.Solution`. Its answers, by what each needs:</span>
+
+<span class="sd">    - the estimate is the mode, not the mean, and is not linear in the</span>
+<span class="sd">      observations (no ``estimate_is_mean``, no ``estimate_is_linear``);</span>
+<span class="sd">    - the variances, the covariance of aggregates, the gain, DOFS, the</span>
+<span class="sd">      information content and the draws are those of the Gaussian at the</span>
+<span class="sd">      mode (``analytic``'s); the posterior reads the averaging kernel and the</span>
+<span class="sd">      innovation covariance from the linearized problem (``linearized``);</span>
+<span class="sd">    - the misfits and the chi-squared are the terms of the cost at the mode,</span>
+<span class="sd">      with the residual :math:`z - F(\hat{x}) - c` of the model itself;</span>
+<span class="sd">    - :meth:`with_data` solves again, starting from the last linearization;</span>
+<span class="sd">      there is no ``with_gamma``: the linearization depends on gamma.</span>
+
+<span class="sd">    Every estimate is :math:`x_0 + S_0 y`, and the solution keeps the</span>
+<span class="sd">    :math:`y` of the mode and of the last linearization point, so the state</span>
+<span class="sd">    misfit and :math:`d^2` need no inverse of :math:`S_0`.</span>
+<span class="sd">    """</span>
+
+    <span class="n">problem</span><span class="p">:</span> <span class="n">Problem</span>
+<span class="w">    </span><span class="sd">"""The problem with the forward model."""</span>
+    <span class="n">analytic</span><span class="p">:</span> <span class="s2">"Whitened | Information"</span>
+<span class="w">    </span><span class="sd">"""The analytic solution of the problem linearized at :attr:`point`; its estimate is the mode."""</span>
+    <span class="n">mode</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""The mode, :math:`\hat{x}`."""</span>
+    <span class="n">mode_y</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">""":math:`y` with :math:`\hat{x} = x_0 + S_0 y`."""</span>
+    <span class="n">point</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
+<span class="w">    </span><span class="sd">"""The state of the last linearization, one step from the mode."""</span>
+    <span class="n">point_y</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">""":math:`y` with :attr:`point` :math:`= x_0 + S_0 y`."""</span>
+    <span class="n">d2</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""Each step's :math:`d^2`, in the metric of its solve's posterior covariance (a step taken at half its length has a quarter of its whole one's)."""</span>
+    <span class="n">cost</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""The cost at each step's estimate, :math:`\gamma` times the data misfit plus the state misfit."""</span>
+    <span class="n">data_misfit</span><span class="p">:</span> <span class="nb">float</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""The data misfit at the mode, :math:`r^T S_z^{-1} r` with :math:`r = z - F(\hat{x}) - c`."""</span>
+    <span class="n">state_misfit</span><span class="p">:</span> <span class="nb">float</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""The state misfit at the mode, :math:`(\hat{x} - x_0)^T S_0^{-1} (\hat{x} - x_0) = y^T S_0 y`."""</span>
+    <span class="n">options</span><span class="p">:</span> <span class="n">GaussNewtonOptions</span>
+<span class="w">    </span><span class="sd">"""The options it solved with (and :meth:`with_data` solves with)."""</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">__getstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return the fields for a pickle or a copy."""</span>
+        <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">__setstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Restore from a pickle or a copy, the arrays read-only again."""</span>
+        <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">state</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">state</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+                <span class="n">_read_only</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">estimate</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return the mode."""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">mode</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">variances</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return the variances of the Gaussian at the mode."""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">analytic</span><span class="o">.</span><span class="n">variances</span><span class="p">()</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">cov</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">W</span><span class="p">:</span> <span class="n">LinearOperator</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return the covariance of the Gaussian at the mode, or of aggregates of it."""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">analytic</span><span class="o">.</span><span class="n">cov</span><span class="p">(</span><span class="n">W</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">gain</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">W</span><span class="p">:</span> <span class="n">LinearOperator</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return the gain of the problem linearized at the last iterate, or :math:`W` times it."""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">analytic</span><span class="o">.</span><span class="n">gain</span><span class="p">(</span><span class="n">W</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">dofs</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return DOFS of the Gaussian at the mode."""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">analytic</span><span class="o">.</span><span class="n">dofs</span><span class="p">()</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">dofs_per_element</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return the diagonal of the averaging kernel at the mode."""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">analytic</span><span class="o">.</span><span class="n">dofs_per_element</span><span class="p">()</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">information</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return the information content of the Gaussian at the mode."""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">analytic</span><span class="o">.</span><span class="n">information</span><span class="p">()</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">sample</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">N</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">rng</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">Generator</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return `N` draws of the Gaussian at the mode (``n x N``)."""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">analytic</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="n">rng</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">misfits</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""Return the data and the state misfits at the mode."""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_misfit</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">state_misfit</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">chi2</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""Return the cost at the mode, :math:`\gamma` times the data misfit plus the state misfit."""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">analytic</span><span class="o">.</span><span class="n">gamma</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_misfit</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">state_misfit</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">chi2_tests</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">        Return Rodgers' four chi-squared tests at the mode, with the covariances of the Gaussian at the mode.</span>
+
+<span class="sd">        With :math:`G = J S_0 J^T + S_z/\gamma` (:math:`J` the Jacobian of the</span>
+<span class="sd">        last linearization): the innovation :math:`d = z - F(x_0) - c` of the</span>
+<span class="sd">        model itself gives :math:`d^T G^{-1} d`; the residual :math:`r = z -</span>
+<span class="sd">        F(\hat{x}) - c` gives :math:`u^T G u`, with :math:`u = \gamma S_z^{-1}</span>
+<span class="sd">        r`; the increment :math:`\hat{x} - x_0 = S_0 y` is measured in the</span>
+<span class="sd">        directions the observations constrain, as the analytic method does</span>
+<span class="sd">        (``_increment_chi2_at``), and the modeled increment with it. The</span>
+<span class="sd">        chi-squared values are those of the model at the mode; the degrees of</span>
+<span class="sd">        freedom are those of the linearized problem, so the p-values are</span>
+<span class="sd">        approximate.</span>
+<span class="sd">        """</span>
+        <span class="n">problem</span><span class="p">,</span> <span class="n">analytic</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">problem</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">analytic</span>
+        <span class="n">gamma</span><span class="p">,</span> <span class="n">m</span> <span class="o">=</span> <span class="n">analytic</span><span class="o">.</span><span class="n">gamma</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">problem</span><span class="o">.</span><span class="n">obs</span><span class="p">)</span>
+        <span class="n">z</span> <span class="o">=</span> <span class="n">problem</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">values</span>
+        <span class="n">d</span> <span class="o">=</span> <span class="n">z</span> <span class="o">-</span> <span class="n">problem</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">problem</span><span class="o">.</span><span class="n">prior</span><span class="p">)</span><span class="o">.</span><span class="n">values</span>
+        <span class="n">innovation</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">d</span> <span class="o">@</span> <span class="n">analytic</span><span class="o">.</span><span class="n">_precision_times</span><span class="p">(</span><span class="n">d</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">])[:,</span> <span class="mi">0</span><span class="p">])</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="n">z</span> <span class="o">-</span> <span class="n">problem</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">Vector</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mode</span><span class="p">,</span> <span class="n">problem</span><span class="o">.</span><span class="n">prior</span><span class="o">.</span><span class="n">space</span><span class="p">))</span><span class="o">.</span><span class="n">values</span>
+        <span class="n">S_z</span> <span class="o">=</span> <span class="n">problem</span><span class="o">.</span><span class="n">obs_cov</span><span class="o">.</span><span class="n">data</span>
+        <span class="n">u</span> <span class="o">=</span> <span class="n">gamma</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">S_z</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">r</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+        <span class="n">Jtu</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">analytic</span><span class="o">.</span><span class="n">problem</span><span class="o">.</span><span class="n">_operator</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">_transpose</span><span class="p">()</span> <span class="o">@</span> <span class="n">u</span><span class="p">)</span>
+        <span class="n">residual</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="nb">float</span><span class="p">(</span><span class="n">Jtu</span> <span class="o">@</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">problem</span><span class="o">.</span><span class="n">prior_cov</span><span class="o">.</span><span class="n">data</span> <span class="o">@</span> <span class="n">Jtu</span><span class="p">))</span>
+            <span class="o">+</span> <span class="nb">float</span><span class="p">(</span><span class="n">u</span> <span class="o">@</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">S_z</span> <span class="o">@</span> <span class="n">u</span><span class="p">))</span> <span class="o">/</span> <span class="n">gamma</span>
+        <span class="p">)</span>
+        <span class="n">increment</span><span class="p">,</span> <span class="n">rank</span> <span class="o">=</span> <span class="n">analytic</span><span class="o">.</span><span class="n">_increment_chi2_at</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mode_y</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">"innovation"</span><span class="p">:</span> <span class="p">(</span><span class="n">innovation</span><span class="p">,</span> <span class="n">m</span><span class="p">),</span>
+            <span class="s2">"residual"</span><span class="p">:</span> <span class="p">(</span><span class="n">residual</span><span class="p">,</span> <span class="n">m</span><span class="p">),</span>
+            <span class="s2">"modeled_increment"</span><span class="p">:</span> <span class="p">(</span><span class="n">increment</span><span class="p">,</span> <span class="n">rank</span><span class="p">),</span>
+            <span class="s2">"increment"</span><span class="p">:</span> <span class="p">(</span><span class="n">increment</span><span class="p">,</span> <span class="n">rank</span><span class="p">),</span>
+        <span class="p">}</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">iterations</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""Return each step's :math:`d^2` and the cost after it."""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">d2</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">cost</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">linearized</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Problem</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return the problem linearized at the last iterate, which the gain is of."""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">analytic</span><span class="o">.</span><span class="n">problem</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">with_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">problem</span><span class="p">:</span> <span class="n">Problem</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"GaussNewton"</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Return the solution of `problem`, this one's with other observation values: Gauss-Newton again, from the last linearization.</span>
+
+<span class="sd">        The first step reuses the factors of the last linearized problem (they</span>
+<span class="sd">        do not depend on the observations' values), so it costs a product.</span>
+<span class="sd">        """</span>
+        <span class="k">return</span> <span class="n">_iterate</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="bp">self</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_with_obs</span><span class="p">(</span><span class="n">linear</span><span class="p">:</span> <span class="n">Problem</span><span class="p">,</span> <span class="n">obs</span><span class="p">:</span> <span class="n">Vector</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Problem</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Return the linear problem `linear` with the observations `obs`, on its labels."""</span>
+    <span class="k">return</span> <span class="nb">type</span><span class="p">(</span><span class="n">linear</span><span class="p">)(</span>
+        <span class="n">prior</span><span class="o">=</span><span class="n">linear</span><span class="o">.</span><span class="n">prior</span><span class="p">,</span>
+        <span class="n">prior_cov</span><span class="o">=</span><span class="n">linear</span><span class="o">.</span><span class="n">prior_cov</span><span class="p">,</span>
+        <span class="n">obs</span><span class="o">=</span><span class="n">obs</span><span class="p">,</span>
+        <span class="n">obs_cov</span><span class="o">=</span><span class="n">linear</span><span class="o">.</span><span class="n">obs_cov</span><span class="p">,</span>
+        <span class="n">forward</span><span class="o">=</span><span class="n">linear</span><span class="o">.</span><span class="n">forward</span><span class="p">,</span>
+        <span class="n">offset</span><span class="o">=</span><span class="n">linear</span><span class="o">.</span><span class="n">offset</span><span class="p">,</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_d2</span><span class="p">(</span>
+    <span class="n">dy</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">J_step</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">S_0</span><span class="p">:</span> <span class="n">LinearOperator</span><span class="p">,</span>
+    <span class="n">solve_S_z</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">],</span>
+    <span class="n">gamma</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">    Return a step's :math:`d^2 = \delta^T (S_0^{-1} + \gamma J^T S_z^{-1} J) \delta`, with neither inverse of :math:`S_0` nor :math:`\hat{S}^{-1}`.</span>
+
+<span class="sd">    The step is :math:`\delta = S_0 \Delta y` (both estimates are :math:`x_0 +</span>
+<span class="sd">    S_0 y`), so its prior term is :math:`\Delta y^T S_0 \Delta y`, and its</span>
+<span class="sd">    data term :math:`\gamma (J \delta)^T S_z^{-1} (J \delta)`, with `J_step`</span>
+<span class="sd">    :math:`= J \delta` and `solve_S_z` the solve with :math:`S_z`.</span>
+<span class="sd">    """</span>
+    <span class="n">prior</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">dy</span> <span class="o">@</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">S_0</span> <span class="o">@</span> <span class="n">dy</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">prior</span> <span class="o">+</span> <span class="n">gamma</span> <span class="o">*</span> <span class="nb">float</span><span class="p">(</span><span class="n">J_step</span> <span class="o">@</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">solve_S_z</span><span class="p">(</span><span class="n">J_step</span><span class="p">)))</span>
+
+
+<span class="n">_HALVINGS</span> <span class="o">=</span> <span class="mi">30</span>
+<span class="sd">"""The most times a step is halved before the cost stops rising along it."""</span>
+
+<span class="n">_SLOW</span> <span class="o">=</span> <span class="mf">10.0</span>
+<span class="sd">"""How many times ``tol * n`` the distance left to the mode (in d2), read from the last two steps, may be before a solve warns that it converged slowly."""</span>
+
+<span class="n">_RISE</span> <span class="o">=</span> <span class="mf">1e-12</span>
+<span class="sd">"""How much the cost may rise along a step, relative, and the step still be taken (roundoff near the mode)."""</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_warn_if_slow</span><span class="p">(</span><span class="n">d2s</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span> <span class="n">limit</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">    Log a warning when the steps fell so slowly that the estimate may be further from the mode than the stopping rule meant.</span>
+
+<span class="sd">    Rodgers' rule measures the step, not the distance to the mode. When each</span>
+<span class="sd">    step is a factor :math:`q` of the last (Gauss-Newton converges so, by a</span>
+<span class="sd">    constant factor, when the model bends much over the posterior's spread),</span>
+<span class="sd">    the steps still to come add up to :math:`q / (1 - q)` of the last one, so</span>
+<span class="sd">    the distance left is about :math:`(q / (1 - q))^2 d_k^2` in :math:`d^2`.</span>
+<span class="sd">    :math:`q` is read from the last two steps, :math:`q^2 = d_k^2 /</span>
+<span class="sd">    d_{k-1}^2`. It warns when that distance is above ``_SLOW`` times</span>
+<span class="sd">    ``tol * n`` (`limit`): for a last step near the limit, :math:`q` above</span>
+<span class="sd">    about 3/4.</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">d2s</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">2</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">d2s</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span>
+    <span class="n">q</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">d2s</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="n">d2s</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">])</span>
+    <span class="n">left</span> <span class="o">=</span> <span class="p">(</span><span class="n">q</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">q</span><span class="p">))</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">d2s</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="k">if</span> <span class="n">q</span> <span class="o">&lt;</span> <span class="mi">1</span> <span class="k">else</span> <span class="n">math</span><span class="o">.</span><span class="n">inf</span>
+    <span class="k">if</span> <span class="n">left</span> <span class="o">&lt;=</span> <span class="n">_SLOW</span> <span class="o">*</span> <span class="n">limit</span><span class="p">:</span>
+        <span class="k">return</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+        <span class="s2">"Gauss-Newton converged slowly: each step was about </span><span class="si">%.2f</span><span class="s2"> of the last, so "</span>
+        <span class="s2">"the estimate may still be about </span><span class="si">%.3g</span><span class="s2"> from the mode (as d2), above tol * "</span>
+        <span class="s2">"n = </span><span class="si">%.3g</span><span class="s2">. Lower tol to get closer. A model that bends this much over the "</span>
+        <span class="s2">"posterior's spread is also where the Gaussian at the mode is least right "</span>
+        <span class="s2">"(check it with post.trials)."</span><span class="p">,</span>
+        <span class="n">q</span><span class="p">,</span>
+        <span class="n">left</span><span class="p">,</span>
+        <span class="n">limit</span><span class="p">,</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_iterate</span><span class="p">(</span>
+    <span class="n">problem</span><span class="p">:</span> <span class="n">Problem</span><span class="p">,</span> <span class="n">options</span><span class="p">:</span> <span class="n">GaussNewtonOptions</span><span class="p">,</span> <span class="n">start</span><span class="p">:</span> <span class="n">GaussNewton</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">GaussNewton</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Return the Gauss-Newton solution of `problem`, from the prior or from the last linearization of `start` (a solution of the same problem with other observations).</span>
+
+<span class="sd">    Each step goes to the analytic estimate of the problem linearized at the</span>
+<span class="sd">    last estimate. A step whose cost is higher than the last estimate's (the</span>
+<span class="sd">    linearization overshot) is halved until it is not; only a whole step</span>
+<span class="sd">    small enough stops the iterations, so a halved step never does.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    RuntimeError</span>
+<span class="sd">        If the iterations have not stopped after ``max_iterations``, or the</span>
+<span class="sd">        cost rises along a step however short.</span>
+<span class="sd">    """</span>
+    <span class="n">gamma</span> <span class="o">=</span> <span class="n">options</span><span class="o">.</span><span class="n">gamma</span>
+    <span class="n">S_0</span> <span class="o">=</span> <span class="n">problem</span><span class="o">.</span><span class="n">prior_cov</span><span class="o">.</span><span class="n">data</span>
+    <span class="n">solve_S_z</span> <span class="o">=</span> <span class="n">problem</span><span class="o">.</span><span class="n">obs_cov</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">_solver</span><span class="p">()</span>  <span class="c1"># factored once for every step</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">problem</span><span class="o">.</span><span class="n">prior</span><span class="p">)</span>
+    <span class="n">z</span> <span class="o">=</span> <span class="n">problem</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">values</span>
+    <span class="n">c</span> <span class="o">=</span> <span class="n">problem</span><span class="o">.</span><span class="n">_offset_values</span><span class="p">()</span>
+    <span class="n">limit</span> <span class="o">=</span> <span class="n">options</span><span class="o">.</span><span class="n">tol</span> <span class="o">*</span> <span class="n">n</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">cost</span><span class="p">(</span><span class="n">modeled</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""Return the data and the state misfits of the state ``x_0 + S_0 y`` that models `modeled`."""</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="n">z</span> <span class="o">-</span> <span class="n">modeled</span> <span class="o">-</span> <span class="n">c</span>
+        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">r</span> <span class="o">@</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">solve_S_z</span><span class="p">(</span><span class="n">r</span><span class="p">))),</span> <span class="nb">float</span><span class="p">(</span><span class="n">y</span> <span class="o">@</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">S_0</span> <span class="o">@</span> <span class="n">y</span><span class="p">))</span>
+
+    <span class="n">analytic</span><span class="p">:</span> <span class="n">Whitened</span> <span class="o">|</span> <span class="n">Information</span> <span class="o">|</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="n">start</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">problem</span><span class="o">.</span><span class="n">prior</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+        <span class="n">analytic</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">start</span><span class="o">.</span><span class="n">point</span><span class="p">,</span> <span class="n">start</span><span class="o">.</span><span class="n">point_y</span>
+        <span class="n">linear</span> <span class="o">=</span> <span class="n">_with_obs</span><span class="p">(</span><span class="n">start</span><span class="o">.</span><span class="n">analytic</span><span class="o">.</span><span class="n">problem</span><span class="p">,</span> <span class="n">problem</span><span class="o">.</span><span class="n">obs</span><span class="p">)</span>
+        <span class="n">analytic</span> <span class="o">=</span> <span class="n">start</span><span class="o">.</span><span class="n">analytic</span><span class="o">.</span><span class="n">with_data</span><span class="p">(</span><span class="n">linear</span><span class="p">)</span>
+    <span class="n">modeled</span> <span class="o">=</span> <span class="n">problem</span><span class="o">.</span><span class="n">_apply</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+    <span class="n">data</span><span class="p">,</span> <span class="n">state</span> <span class="o">=</span> <span class="n">cost</span><span class="p">(</span><span class="n">modeled</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+    <span class="n">current</span> <span class="o">=</span> <span class="n">gamma</span> <span class="o">*</span> <span class="n">data</span> <span class="o">+</span> <span class="n">state</span>
+
+    <span class="n">d2s</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">costs</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">options</span><span class="o">.</span><span class="n">max_iterations</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">analytic</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">analytic</span> <span class="o">=</span> <span class="n">_factor</span><span class="p">(</span><span class="n">problem</span><span class="o">.</span><span class="n">_linearized</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">modeled</span><span class="p">),</span> <span class="n">gamma</span><span class="p">)</span>
+        <span class="n">J</span> <span class="o">=</span> <span class="n">analytic</span><span class="o">.</span><span class="n">problem</span><span class="o">.</span><span class="n">_operator</span><span class="o">.</span><span class="n">data</span>
+        <span class="n">x_full</span> <span class="o">=</span> <span class="n">analytic</span><span class="o">.</span><span class="n">estimate</span><span class="p">()</span>
+        <span class="n">y_full</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">J</span><span class="o">.</span><span class="n">_transpose</span><span class="p">()</span> <span class="o">@</span> <span class="n">analytic</span><span class="o">.</span><span class="n">_innovation_precision_times</span><span class="p">())</span>
+        <span class="n">step</span><span class="p">,</span> <span class="n">dy</span> <span class="o">=</span> <span class="n">x_full</span> <span class="o">-</span> <span class="n">x</span><span class="p">,</span> <span class="n">y_full</span> <span class="o">-</span> <span class="n">y</span>
+        <span class="n">d2</span> <span class="o">=</span> <span class="n">_d2</span><span class="p">(</span><span class="n">dy</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">J</span> <span class="o">@</span> <span class="n">step</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">),</span> <span class="n">S_0</span><span class="p">,</span> <span class="n">solve_S_z</span><span class="p">,</span> <span class="n">gamma</span><span class="p">)</span>
+        <span class="n">converged</span> <span class="o">=</span> <span class="n">d2</span> <span class="o">&lt;</span> <span class="n">limit</span>
+        <span class="n">fraction</span><span class="p">,</span> <span class="n">failure</span><span class="p">,</span> <span class="n">modeled_new</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">modeled</span>
+        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">_HALVINGS</span><span class="p">):</span>
+            <span class="n">x_new</span><span class="p">,</span> <span class="n">y_new</span> <span class="o">=</span> <span class="n">x</span> <span class="o">+</span> <span class="n">fraction</span> <span class="o">*</span> <span class="n">step</span><span class="p">,</span> <span class="n">y</span> <span class="o">+</span> <span class="n">fraction</span> <span class="o">*</span> <span class="n">dy</span>
+            <span class="c1"># a step too far can overflow the model (inf, or the NaN of 0 * inf,</span>
+            <span class="c1"># which a Vector refuses): it is taken shorter</span>
+            <span class="k">with</span> <span class="n">np</span><span class="o">.</span><span class="n">errstate</span><span class="p">(</span><span class="n">over</span><span class="o">=</span><span class="s2">"ignore"</span><span class="p">,</span> <span class="n">invalid</span><span class="o">=</span><span class="s2">"ignore"</span><span class="p">):</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">modeled_new</span> <span class="o">=</span> <span class="n">problem</span><span class="o">.</span><span class="n">_apply</span><span class="p">(</span><span class="n">x_new</span><span class="p">)</span>
+                <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">FloatingPointError</span><span class="p">,</span> <span class="ne">OverflowError</span><span class="p">)</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
+                    <span class="n">failure</span><span class="p">,</span> <span class="n">finite</span> <span class="o">=</span> <span class="n">error</span><span class="p">,</span> <span class="kc">False</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">finite</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">modeled_new</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">())</span>
+                    <span class="k">if</span> <span class="n">finite</span><span class="p">:</span>
+                        <span class="n">data</span><span class="p">,</span> <span class="n">state</span> <span class="o">=</span> <span class="n">cost</span><span class="p">(</span><span class="n">modeled_new</span><span class="p">,</span> <span class="n">y_new</span><span class="p">)</span>
+            <span class="n">trial</span> <span class="o">=</span> <span class="n">gamma</span> <span class="o">*</span> <span class="n">data</span> <span class="o">+</span> <span class="n">state</span> <span class="k">if</span> <span class="n">finite</span> <span class="k">else</span> <span class="n">math</span><span class="o">.</span><span class="n">inf</span>
+            <span class="k">if</span> <span class="n">finite</span> <span class="ow">and</span> <span class="p">(</span><span class="n">converged</span> <span class="ow">or</span> <span class="n">trial</span> <span class="o">&lt;=</span> <span class="n">current</span> <span class="o">+</span> <span class="n">_RISE</span> <span class="o">*</span> <span class="nb">abs</span><span class="p">(</span><span class="n">current</span><span class="p">)):</span>
+                <span class="k">break</span>
+            <span class="n">fraction</span> <span class="o">/=</span> <span class="mi">2</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"The cost rises along Gauss-Newton's step </span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2"> however short the "</span>
+                <span class="s2">"step: the Jacobian is not the derivative of the model at the last "</span>
+                <span class="s2">"estimate (check it with fips.taylortest(problem.forward, x)), or "</span>
+                <span class="s2">"the model does not give finite observations near it."</span>
+            <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">failure</span>
+        <span class="k">if</span> <span class="n">fraction</span> <span class="o">&lt;</span> <span class="mf">1.0</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+                <span class="s2">"Gauss-Newton step </span><span class="si">%d</span><span class="s2"> overshot: taken at </span><span class="si">%g</span><span class="s2"> of its length."</span><span class="p">,</span>
+                <span class="n">i</span><span class="p">,</span>
+                <span class="n">fraction</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="n">d2s</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">d2</span> <span class="o">*</span> <span class="n">fraction</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+        <span class="n">costs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">trial</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+            <span class="s2">"Gauss-Newton step </span><span class="si">%d</span><span class="s2">: d2 = </span><span class="si">%.3g</span><span class="s2"> (it stops below </span><span class="si">%.3g</span><span class="s2">), cost </span><span class="si">%.6g</span><span class="s2">."</span><span class="p">,</span>
+            <span class="n">i</span><span class="p">,</span>
+            <span class="n">d2s</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span>
+            <span class="n">limit</span><span class="p">,</span>
+            <span class="n">trial</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">converged</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                <span class="s2">"Gauss-Newton converged in </span><span class="si">%d</span><span class="s2"> steps: the last step's d2 is </span><span class="si">%.3g</span><span class="s2">, "</span>
+                <span class="s2">"below tol * n = </span><span class="si">%.3g</span><span class="s2">."</span><span class="p">,</span>
+                <span class="n">i</span><span class="p">,</span>
+                <span class="n">d2</span><span class="p">,</span>
+                <span class="n">limit</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">_warn_if_slow</span><span class="p">(</span><span class="n">d2s</span><span class="p">,</span> <span class="n">limit</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">GaussNewton</span><span class="p">(</span>
+                <span class="n">problem</span><span class="o">=</span><span class="n">problem</span><span class="p">,</span>
+                <span class="n">analytic</span><span class="o">=</span><span class="n">analytic</span><span class="p">,</span>
+                <span class="n">mode</span><span class="o">=</span><span class="n">_read_only</span><span class="p">(</span><span class="n">x_new</span><span class="p">),</span>
+                <span class="n">mode_y</span><span class="o">=</span><span class="n">_read_only</span><span class="p">(</span><span class="n">y_new</span><span class="p">),</span>
+                <span class="n">point</span><span class="o">=</span><span class="n">_read_only</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">x</span><span class="p">)),</span>
+                <span class="n">point_y</span><span class="o">=</span><span class="n">_read_only</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">y</span><span class="p">)),</span>
+                <span class="n">d2</span><span class="o">=</span><span class="n">_read_only</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">d2s</span><span class="p">)),</span>
+                <span class="n">cost</span><span class="o">=</span><span class="n">_read_only</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">costs</span><span class="p">)),</span>
+                <span class="n">data_misfit</span><span class="o">=</span><span class="n">data</span><span class="p">,</span>
+                <span class="n">state_misfit</span><span class="o">=</span><span class="n">state</span><span class="p">,</span>
+                <span class="n">options</span><span class="o">=</span><span class="n">options</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">modeled</span><span class="p">,</span> <span class="n">current</span><span class="p">,</span> <span class="n">analytic</span> <span class="o">=</span> <span class="n">x_new</span><span class="p">,</span> <span class="n">y_new</span><span class="p">,</span> <span class="n">modeled_new</span><span class="p">,</span> <span class="n">trial</span><span class="p">,</span> <span class="kc">None</span>
+    <span class="n">shown</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">d</span><span class="si">:</span><span class="s2">.3g</span><span class="si">}</span><span class="s2">"</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">d2s</span><span class="p">]</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">shown</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">8</span><span class="p">:</span>
+        <span class="n">shown</span> <span class="o">=</span> <span class="p">[</span><span class="o">*</span><span class="n">shown</span><span class="p">[:</span><span class="mi">3</span><span class="p">],</span> <span class="s2">"..."</span><span class="p">,</span> <span class="o">*</span><span class="n">shown</span><span class="p">[</span><span class="o">-</span><span class="mi">4</span><span class="p">:]]</span>
+    <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+        <span class="sa">f</span><span class="s2">"Gauss-Newton did not converge in </span><span class="si">{</span><span class="n">options</span><span class="o">.</span><span class="n">max_iterations</span><span class="si">}</span><span class="s2"> steps: the last "</span>
+        <span class="sa">f</span><span class="s2">"step's d2 is </span><span class="si">{</span><span class="n">d2s</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="si">:</span><span class="s2">.3g</span><span class="si">}</span><span class="s2">, above tol * n = </span><span class="si">{</span><span class="n">limit</span><span class="si">:</span><span class="s2">.3g</span><span class="si">}</span><span class="s2"> (the steps' d2: "</span>
+        <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">shown</span><span class="p">)</span><span class="si">}</span><span class="s2">). If they are still falling, raise max_iterations; if not, check "</span>
+        <span class="s2">"the Jacobian with fips.taylortest(problem.forward, x), or the problem may "</span>
+        <span class="s2">"be too nonlinear for Gauss-Newton from the prior."</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_gauss_newton</span><span class="p">(</span><span class="n">problem</span><span class="p">:</span> <span class="n">Problem</span><span class="p">,</span> <span class="n">options</span><span class="p">:</span> <span class="n">GaussNewtonOptions</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Posterior</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Find the mode by Gauss-Newton; with a forward operator, the analytic posterior itself."""</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">problem</span><span class="o">.</span><span class="n">forward</span><span class="p">,</span> <span class="n">Operator</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">Posterior</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="n">_factor</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="n">options</span><span class="o">.</span><span class="n">gamma</span><span class="p">),</span> <span class="n">options</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">Posterior</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="n">_iterate</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="n">options</span><span class="p">),</span> <span class="n">options</span><span class="p">)</span>
+</pre></div>
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be"></script>
+<script defer src="../../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2025-2026, James Mineau.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.2.0.
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.23.0.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

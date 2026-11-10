@@ -1,0 +1,6 @@
+﻿fips.taylortest
+===============
+
+.. currentmodule:: fips
+
+.. autofunction:: taylortest

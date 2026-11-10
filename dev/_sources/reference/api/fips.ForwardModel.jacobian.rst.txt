@@ -1,0 +1,6 @@
+fips.ForwardModel.jacobian
+==========================
+
+.. currentmodule:: fips
+
+.. automethod:: ForwardModel.jacobian

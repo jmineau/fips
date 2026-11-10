@@ -29,6 +29,7 @@
    :toctree:
 
    ~Problem.aggregate
+   ~Problem.linearized
    ~Problem.predict
    ~Problem.restrict
    ~Problem.simulate

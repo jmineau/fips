@@ -1,0 +1,6 @@
+fips.methods.gauss\_newton.GaussNewtonOptions.max\_iterations
+=============================================================
+
+.. currentmodule:: fips.methods.gauss_newton
+
+.. autoattribute:: GaussNewtonOptions.max_iterations

@@ -1,0 +1,6 @@
+fips.methods.gauss\_newton.GaussNewtonOptions.gamma
+===================================================
+
+.. currentmodule:: fips.methods.gauss_newton
+
+.. autoattribute:: GaussNewtonOptions.gamma

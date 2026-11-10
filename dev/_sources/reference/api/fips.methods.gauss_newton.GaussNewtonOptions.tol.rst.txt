@@ -1,0 +1,6 @@
+fips.methods.gauss\_newton.GaussNewtonOptions.tol
+=================================================
+
+.. currentmodule:: fips.methods.gauss_newton
+
+.. autoattribute:: GaussNewtonOptions.tol

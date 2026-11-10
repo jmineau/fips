@@ -1,0 +1,6 @@
+fips.ForwardModel.\_\_call\_\_
+==============================
+
+.. currentmodule:: fips
+
+.. automethod:: ForwardModel.__call__

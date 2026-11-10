@@ -5,7 +5,8 @@ This guide takes fips's objects one at a time, in the order a problem uses
 them, and says what each is for before how to call it. :doc:`/getting_started/first_problem`
 solves one problem from start to finish; :doc:`/getting_started/terminology` defines the words;
 :doc:`synthetic` tests an inversion on data whose answer is known; :doc:`bounds`
-holds the state to bounds (a flux that cannot be negative).
+holds the state to bounds (a flux that cannot be negative); :doc:`nonlinear`
+solves a problem whose forward is a model that is not linear.
 
 .. contents:: On this page
    :local:
@@ -349,8 +350,9 @@ Solving and the posterior
 :class:`~fips.Posterior`, the answer. The method is ``"analytic"`` by default
 (the closed-form Gaussian posterior; :func:`fips.available_methods` lists the
 methods), and its one option is the regularization factor ``gamma``.
-``"bounded"`` holds the state to bounds (:doc:`bounds`). An unknown method or
-option raises with the names it knows.
+``"bounded"`` holds the state to bounds (:doc:`bounds`), and ``"gauss_newton"``
+finds the mode of a problem whose forward is a model that is not linear
+(:doc:`nonlinear`). An unknown method or option raises with the names it knows.
 
 The analytic method factors the problem once, in one of two forms that give
 the same posterior. The whitened form works in the observations' size: it
@@ -697,4 +699,5 @@ when it is read.
 
    synthetic
    bounds
+   nonlinear
    examples/index

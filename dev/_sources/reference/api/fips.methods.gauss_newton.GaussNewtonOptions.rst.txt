@@ -1,0 +1,24 @@
+﻿fips.methods.gauss\_newton.GaussNewtonOptions
+=============================================
+
+.. currentmodule:: fips.methods.gauss_newton
+
+.. autoclass:: GaussNewtonOptions
+   :no-members:
+
+
+
+
+.. rubric:: Attributes
+
+.. autosummary::
+   :toctree:
+
+   ~GaussNewtonOptions.gamma
+   ~GaussNewtonOptions.max_iterations
+   ~GaussNewtonOptions.tol
+
+
+
+
+

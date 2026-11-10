@@ -1,0 +1,6 @@
+fips.Problem.linearized
+=======================
+
+.. currentmodule:: fips
+
+.. automethod:: Problem.linearized

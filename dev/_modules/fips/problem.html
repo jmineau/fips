@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>fips.problem &#8212; fips 0.2.0b3.dev13+g2cc2af407 documentation</title>
+    <title>fips.problem &#8212; fips 0.2.0b3.dev14+gaab1d8443 documentation</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../_static/documentation_options.js?v=c87b751f"></script>
+    <script src="../../_static/documentation_options.js?v=cb65ae00"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -132,8 +132,8 @@
       
     
     
-    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev13+g2cc2af407 documentation - Home"/>
-    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev13+g2cc2af407 documentation - Home"/>
+    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev14+gaab1d8443 documentation - Home"/>
+    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev14+gaab1d8443 documentation - Home"/>
   
   
 </a></div>
@@ -424,11 +424,13 @@
 <span></span><span class="sd">"""</span>
 <span class="sd">Inverse problems: the inputs of a solve, on their labels.</span>
 
-<span class="sd">A :class:`Problem` holds the prior, the observations, the forward operator,</span>
-<span class="sd">the two covariances and an optional offset of a linear inverse problem,</span>
-<span class="sd">``obs = forward @ state + offset + error``. It checks their labels once,</span>
-<span class="sd">when it is built, and puts every input on the prior's and the observations'</span>
-<span class="sd">spaces: :func:`fips.solve` then computes by position.</span>
+<span class="sd">A :class:`Problem` holds the prior, the observations, the forward map, the</span>
+<span class="sd">two covariances and an optional offset of an inverse problem,</span>
+<span class="sd">``obs = forward(state) + offset + error``. The forward map is an</span>
+<span class="sd">:class:`~fips.Operator` (a linear problem, ``forward @ state``) or a</span>
+<span class="sd">:class:`~fips.ForwardModel` the caller writes, with its Jacobian. It checks</span>
+<span class="sd">their labels once, when it is built, and puts every input on the prior's and</span>
+<span class="sd">the observations' spaces: :func:`fips.solve` then computes by position.</span>
 
 <span class="sd">The problem is the question, and the :class:`~fips.Posterior` that</span>
 <span class="sd">:func:`fips.solve` returns is the answer. The problem holds what needs no</span>
@@ -445,6 +447,7 @@
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">fips.covariance</span><span class="w"> </span><span class="kn">import</span> <span class="n">Covariance</span><span class="p">,</span> <span class="n">CovarianceModel</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fips.forward</span><span class="w"> </span><span class="kn">import</span> <span class="n">ForwardModel</span><span class="p">,</span> <span class="n">_Aggregated</span><span class="p">,</span> <span class="n">_differentiated</span><span class="p">,</span> <span class="n">_evaluated</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">fips.operator</span><span class="w"> </span><span class="kn">import</span> <span class="n">Operator</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">fips.space</span><span class="w"> </span><span class="kn">import</span> <span class="n">Space</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">fips.vector</span><span class="w"> </span><span class="kn">import</span> <span class="n">Vector</span>
@@ -487,15 +490,20 @@
 <a class="viewcode-back" href="../../reference/api/fips.Problem.html#fips.Problem">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">Problem</span><span class="p">:</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">"""</span>
-<span class="sd">    A linear inverse problem: what is known before the observations, and the observations.</span>
+<span class="sd">    An inverse problem: what is known before the observations, and the observations.</span>
 
 <span class="sd">    The state is :math:`x \sim N(x_0, S_0)` (the prior), and the observations</span>
-<span class="sd">    are :math:`z = H x + c + e` with :math:`e \sim N(0, S_z)`. Every input is</span>
-<span class="sd">    labeled, and the labels are checked once, here, by an exact join: the</span>
-<span class="sd">    forward operator, the covariances and the offset must have exactly the</span>
-<span class="sd">    labels of the prior or of the observations, in any order. Each is then put</span>
-<span class="sd">    in the order of the prior's and the observations' spaces. A problem is not</span>
-<span class="sd">    changed after it is built; :func:`fips.solve` solves it.</span>
+<span class="sd">    are :math:`z = H x + c + e` with :math:`e \sim N(0, S_z)`: a linear</span>
+<span class="sd">    problem, whose forward operator :math:`H` is an</span>
+<span class="sd">    :class:`~fips.Operator`. With a forward model, a</span>
+<span class="sd">    :class:`~fips.ForwardModel` :math:`F` the caller writes with its Jacobian,</span>
+<span class="sd">    they are :math:`z = F(x) + c + e`. Every input is labeled, and the labels</span>
+<span class="sd">    are checked once, here, by an exact join: the forward operator or the</span>
+<span class="sd">    model, the covariances and the offset must have exactly the labels of the</span>
+<span class="sd">    prior or of the observations, in any order. Each is then put in the order</span>
+<span class="sd">    of the prior's and the observations' spaces (a model is kept as it is,</span>
+<span class="sd">    and its inputs and outputs are put in its order when it is called). A</span>
+<span class="sd">    problem is not changed after it is built; :func:`fips.solve` solves it.</span>
 
 <span class="sd">    The problem is the question: it holds what needs no solve and no</span>
 <span class="sd">    ``m x m`` matrix, such as :meth:`predict`, and it makes other questions</span>
@@ -516,9 +524,12 @@
 <span class="sd">        The model-data mismatch :math:`S_z`, the covariance of the</span>
 <span class="sd">        observation error; a model is built on the observations' space. It</span>
 <span class="sd">        must be positive-definite.</span>
-<span class="sd">    forward : Operator</span>
+<span class="sd">    forward : Operator or ForwardModel</span>
 <span class="sd">        The forward operator :math:`H`, from the state (its columns) to the</span>
-<span class="sd">        observations (its rows).</span>
+<span class="sd">        observations (its rows); or a forward model :math:`F` with its</span>
+<span class="sd">        Jacobian (:class:`~fips.ForwardModel`), whose rows have the</span>
+<span class="sd">        observations' labels and whose columns the prior's. A problem with a</span>
+<span class="sd">        model is solved by ``fips.solve(problem, "gauss_newton")``.</span>
 <span class="sd">    offset : Vector or float, optional</span>
 <span class="sd">        The part of the observations the state does not explain, :math:`c`</span>
 <span class="sd">        (a background): a vector on the observations' labels, or one value</span>
@@ -529,15 +540,16 @@
 <span class="sd">    TypeError</span>
 <span class="sd">        If an input is not of a type named above.</span>
 <span class="sd">    ValueError</span>
-<span class="sd">        If the forward operator, a covariance or the offset does not have</span>
-<span class="sd">        exactly the labels of the space it is put on: a block or a label on</span>
-<span class="sd">        one side and not the other. The message names them. Also if every</span>
+<span class="sd">        If the forward operator or model, a covariance or the offset does not</span>
+<span class="sd">        have exactly the labels of the space it is put on: a block or a label</span>
+<span class="sd">        on one side and not the other. The message names them. Also if every</span>
 <span class="sd">        variance of the prior error covariance is zero (some may be: an</span>
 <span class="sd">        element known exactly, a bias block given as 0).</span>
 
 <span class="sd">    See Also</span>
 <span class="sd">    --------</span>
 <span class="sd">    fips.solve : Solve a problem; it returns a :class:`~fips.Posterior`.</span>
+<span class="sd">    fips.ForwardModel : A forward map that is not linear, with its Jacobian.</span>
 
 <span class="sd">    Notes</span>
 <span class="sd">    -----</span>
@@ -585,25 +597,45 @@
         <span class="n">prior_cov</span><span class="p">:</span> <span class="s2">"Covariance | CovarianceModel"</span><span class="p">,</span>
         <span class="n">obs</span><span class="p">:</span> <span class="n">Vector</span><span class="p">,</span>
         <span class="n">obs_cov</span><span class="p">:</span> <span class="s2">"Covariance | CovarianceModel"</span><span class="p">,</span>
-        <span class="n">forward</span><span class="p">:</span> <span class="n">Operator</span><span class="p">,</span>
+        <span class="n">forward</span><span class="p">:</span> <span class="s2">"Operator | ForwardModel"</span><span class="p">,</span>
         <span class="n">offset</span><span class="p">:</span> <span class="s2">"Vector | float | None"</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_prior</span> <span class="o">=</span> <span class="n">_vector</span><span class="p">(</span><span class="n">prior</span><span class="p">,</span> <span class="s2">"prior"</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_obs</span> <span class="o">=</span> <span class="n">_vector</span><span class="p">(</span><span class="n">obs</span><span class="p">,</span> <span class="s2">"obs"</span><span class="p">)</span>
         <span class="n">state</span><span class="p">,</span> <span class="n">observed</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_prior</span><span class="o">.</span><span class="n">space</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_obs</span><span class="o">.</span><span class="n">space</span>
 
-        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">forward</span><span class="p">,</span> <span class="n">Operator</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">"forward must be an Operator, got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">forward</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">. Build "</span>
-                <span class="s2">"one with Operator(matrix, rows, cols), Operator.from_blocks or "</span>
-                <span class="s2">"Operator.from_frame."</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_forward</span><span class="p">:</span> <span class="n">Operator</span> <span class="o">|</span> <span class="n">ForwardModel</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">forward</span><span class="p">,</span> <span class="n">Operator</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_forward</span> <span class="o">=</span> <span class="n">Operator</span><span class="p">(</span>
+                <span class="n">forward</span><span class="o">.</span><span class="n">_on</span><span class="p">(</span>
+                    <span class="n">observed</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="s2">"forward"</span><span class="p">,</span> <span class="p">(</span><span class="s2">"the observations"</span><span class="p">,</span> <span class="s2">"the prior"</span><span class="p">)</span>
+                <span class="p">),</span>
+                <span class="n">observed</span><span class="p">,</span>
+                <span class="n">state</span><span class="p">,</span>
+                <span class="n">name</span><span class="o">=</span><span class="n">forward</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
             <span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_forward</span> <span class="o">=</span> <span class="n">Operator</span><span class="p">(</span>
-            <span class="n">forward</span><span class="o">.</span><span class="n">_on</span><span class="p">(</span><span class="n">observed</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="s2">"forward"</span><span class="p">,</span> <span class="p">(</span><span class="s2">"the observations"</span><span class="p">,</span> <span class="s2">"the prior"</span><span class="p">)),</span>
-            <span class="n">observed</span><span class="p">,</span>
-            <span class="n">state</span><span class="p">,</span>
-            <span class="n">name</span><span class="o">=</span><span class="n">forward</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
-        <span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">forward</span><span class="p">,</span> <span class="n">ForwardModel</span><span class="p">):</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">rows</span><span class="p">,</span> <span class="n">cols</span> <span class="o">=</span> <span class="n">forward</span><span class="o">.</span><span class="n">rows</span><span class="p">,</span> <span class="n">forward</span><span class="o">.</span><span class="n">cols</span>
+            <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">"The forward model </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">forward</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2"> has no rows or "</span>
+                    <span class="s2">"cols: its __init__ must call super().__init__(rows, cols)."</span>
+                <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="kc">None</span>
+            <span class="n">observed</span><span class="o">.</span><span class="n">_align</span><span class="p">(</span>
+                <span class="n">rows</span><span class="p">,</span> <span class="s2">"the rows of forward"</span><span class="p">,</span> <span class="s2">"The rows of forward and the observations"</span>
+            <span class="p">)</span>
+            <span class="n">state</span><span class="o">.</span><span class="n">_align</span><span class="p">(</span>
+                <span class="n">cols</span><span class="p">,</span> <span class="s2">"the columns of forward"</span><span class="p">,</span> <span class="s2">"The columns of forward and the prior"</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_forward</span> <span class="o">=</span> <span class="n">forward</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"forward must be an Operator or a ForwardModel, got "</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">forward</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">. Build an operator with Operator(matrix, "</span>
+                <span class="s2">"rows, cols), Operator.from_blocks or Operator.from_frame; a map "</span>
+                <span class="s2">"that is not linear is a subclass of fips.ForwardModel."</span>
+            <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_prior_cov</span> <span class="o">=</span> <span class="n">_covariance</span><span class="p">(</span><span class="n">prior_cov</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="s2">"prior_cov"</span><span class="p">,</span> <span class="s2">"the prior"</span><span class="p">)</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">state</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_prior_cov</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">diagonal</span><span class="p">()</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
@@ -649,9 +681,29 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_obs_cov</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Operator</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">"""The forward operator, :math:`H`: rows on the observations, columns on the prior."""</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"Operator | ForwardModel"</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""The forward operator, :math:`H` (rows on the observations, columns on the prior), or the forward model, :math:`F`, as given."""</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_forward</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_operator</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Operator</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        The forward operator, for what needs a linear forward.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        TypeError</span>
+<span class="sd">            If the forward is a model.</span>
+<span class="sd">        """</span>
+        <span class="n">forward</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_forward</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">forward</span><span class="p">,</span> <span class="n">Operator</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">forward</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+            <span class="s2">"This needs a linear forward operator, and the problem's forward is a "</span>
+            <span class="sa">f</span><span class="s2">"model, </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">forward</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">. Solve the problem with "</span>
+            <span class="s1">'fips.solve(problem, "gauss_newton"), or linearize it at a state x '</span>
+            <span class="s2">"with problem.linearized(x)."</span>
+        <span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">offset</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Vector</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
@@ -662,7 +714,7 @@
 <a class="viewcode-back" href="../../reference/api/fips.Problem.predict.html#fips.Problem.predict">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">predict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">Vector</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Vector</span><span class="p">:</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
-<span class="sd">        Return the observations the state `x` models, :math:`H x + c`.</span>
+<span class="sd">        Return the observations the state `x` models, :math:`H x + c` (:math:`F(x) + c` with a forward model).</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -673,8 +725,8 @@
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        Vector</span>
-<span class="sd">            :math:`H x + c` (with the offset :math:`c`, if any) on the</span>
-<span class="sd">            observations' space.</span>
+<span class="sd">            :math:`H x + c` (with the offset :math:`c`, if any), or</span>
+<span class="sd">            :math:`F(x) + c` with a forward model, on the observations' space.</span>
 
 <span class="sd">        Raises</span>
 <span class="sd">        ------</span>
@@ -710,13 +762,120 @@
 <span class="sd">        &gt;&gt;&gt; problem.predict(problem.prior).values</span>
 <span class="sd">        array([1.5, 1.5, 2.5])</span>
 <span class="sd">        """</span>
-        <span class="n">state</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_prior</span><span class="o">.</span><span class="n">space</span>
-        <span class="n">values</span> <span class="o">=</span> <span class="n">_vector</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="s2">"x"</span><span class="p">)</span><span class="o">.</span><span class="n">values</span>
-        <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">space</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">state</span><span class="p">:</span>
-            <span class="n">values</span> <span class="o">=</span> <span class="n">values</span><span class="p">[</span><span class="n">state</span><span class="o">.</span><span class="n">_align</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">space</span><span class="p">,</span> <span class="s2">"x"</span><span class="p">,</span> <span class="s2">"x and the prior"</span><span class="p">)]</span>
-        <span class="n">predicted</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_apply</span><span class="p">(</span><span class="n">values</span><span class="p">)</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_offset_values</span><span class="p">()</span>
+        <span class="n">predicted</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_apply</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_state_values</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="s2">"x"</span><span class="p">))</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_offset_values</span><span class="p">()</span>
         <span class="k">return</span> <span class="n">Vector</span><span class="p">(</span><span class="n">predicted</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_obs</span><span class="o">.</span><span class="n">space</span><span class="p">)</span></div>
 
+
+<div class="viewcode-block" id="Problem.linearized">
+<a class="viewcode-back" href="../../reference/api/fips.Problem.linearized.html#fips.Problem.linearized">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">linearized</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">Vector</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"Problem"</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">        Return the linear problem at the state `x`: the forward model replaced by its tangent there.</span>
+
+<span class="sd">        With a forward model :math:`F` and its Jacobian :math:`J = J(x)`,</span>
+<span class="sd">        :math:`F(x') \approx F(x) + J (x' - x)`, so the problem linearized at</span>
+<span class="sd">        `x` has the forward operator :math:`J` and the offset :math:`c + F(x)</span>
+<span class="sd">        - J x`. It predicts what the model does at `x` itself, and near `x` to</span>
+<span class="sd">        first order. Its analytic solve, ``fips.solve(problem.linearized(x))``,</span>
+<span class="sd">        is one step of Gauss-Newton from `x`; ``fips.solve(problem,</span>
+<span class="sd">        "gauss_newton")`` repeats the step from the prior until the estimate</span>
+<span class="sd">        stops moving.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        x : Vector</span>
+<span class="sd">            The state to linearize at, on the prior's labels (in any order).</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Problem</span>
+<span class="sd">            The linear problem (of the same class), with the same prior,</span>
+<span class="sd">            observations and covariances. A problem whose forward is an</span>
+<span class="sd">            operator is linear already, and is returned itself.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        TypeError</span>
+<span class="sd">            If `x` is not a Vector, or the model's Jacobian is not an</span>
+<span class="sd">            Operator.</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            If `x` does not have exactly the prior's labels, or what the model</span>
+<span class="sd">            returns does not have exactly its labels.</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        --------</span>
+<span class="sd">        fips.ForwardModel : The model and its Jacobian.</span>
+<span class="sd">        fips.taylortest : Check the Jacobian against the model.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; import numpy as np</span>
+<span class="sd">        &gt;&gt;&gt; import pandas as pd</span>
+<span class="sd">        &gt;&gt;&gt; import fips</span>
+<span class="sd">        &gt;&gt;&gt; from fips.linalg import DiagonalOperator</span>
+<span class="sd">        &gt;&gt;&gt; class Square(fips.ForwardModel):</span>
+<span class="sd">        ...     def __call__(self, x):</span>
+<span class="sd">        ...         return fips.Vector(x.values**2, self.rows)</span>
+<span class="sd">        ...</span>
+<span class="sd">        ...     def jacobian(self, x):</span>
+<span class="sd">        ...         form = DiagonalOperator(2 * x.values)</span>
+<span class="sd">        ...         return fips.Operator(form, self.rows, x.space)</span>
+<span class="sd">        &gt;&gt;&gt; state = fips.Space({"flux": pd.Index(["a", "b"], name="cell")})</span>
+<span class="sd">        &gt;&gt;&gt; observed = fips.Space({"co2": pd.Index(["o1", "o2"], name="obs_id")})</span>
+<span class="sd">        &gt;&gt;&gt; problem = fips.Problem(</span>
+<span class="sd">        ...     prior=fips.Vector([1.0, 2.0], state),</span>
+<span class="sd">        ...     prior_cov=fips.Independent().with_std(1.0),</span>
+<span class="sd">        ...     obs=fips.Vector([1.5, 3.0], observed),</span>
+<span class="sd">        ...     obs_cov=fips.Independent().with_std(0.1),</span>
+<span class="sd">        ...     forward=Square(observed, state),</span>
+<span class="sd">        ...     offset=10.0,</span>
+<span class="sd">        ... )</span>
+<span class="sd">        &gt;&gt;&gt; linear = problem.linearized(problem.prior)</span>
+<span class="sd">        &gt;&gt;&gt; linear.forward.dense()</span>
+<span class="sd">        array([[2., 0.],</span>
+<span class="sd">               [0., 4.]])</span>
+<span class="sd">        &gt;&gt;&gt; linear.offset.values  # c + F(x) - J x</span>
+<span class="sd">        array([9., 6.])</span>
+<span class="sd">        &gt;&gt;&gt; linear.predict(problem.prior).values  # F(x) + c at x itself</span>
+<span class="sd">        array([11., 14.])</span>
+<span class="sd">        """</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_forward</span><span class="p">,</span> <span class="n">Operator</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_linearized</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_state_values</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="s2">"x"</span><span class="p">))</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_linearized</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">values</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">modeled</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"Problem"</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">        Return the problem linearized at the state `values` (in the prior's order); `modeled` is :math:`F(x)` when it is known.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        TypeError</span>
+<span class="sd">            If the forward is an operator.</span>
+<span class="sd">        """</span>
+        <span class="n">model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_forward</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">ForwardModel</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">"Only a problem with a forward model is linearized."</span><span class="p">)</span>
+        <span class="n">state</span><span class="p">,</span> <span class="n">observed</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_prior</span><span class="o">.</span><span class="n">space</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_obs</span><span class="o">.</span><span class="n">space</span>
+        <span class="k">if</span> <span class="n">modeled</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">modeled</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_apply</span><span class="p">(</span><span class="n">values</span><span class="p">)</span>
+        <span class="n">J</span> <span class="o">=</span> <span class="n">_differentiated</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_to_model</span><span class="p">(</span><span class="n">values</span><span class="p">))</span>
+        <span class="n">form</span> <span class="o">=</span> <span class="n">J</span><span class="o">.</span><span class="n">_on</span><span class="p">(</span><span class="n">observed</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span>
+        <span class="n">offset</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_offset_values</span><span class="p">()</span> <span class="o">+</span> <span class="n">modeled</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">form</span> <span class="o">@</span> <span class="n">values</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)(</span>
+            <span class="n">prior</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_prior</span><span class="p">,</span>
+            <span class="n">prior_cov</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_prior_cov</span><span class="p">,</span>
+            <span class="n">obs</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_obs</span><span class="p">,</span>
+            <span class="n">obs_cov</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_obs_cov</span><span class="p">,</span>
+            <span class="n">forward</span><span class="o">=</span><span class="n">Operator</span><span class="p">(</span><span class="n">form</span><span class="p">,</span> <span class="n">observed</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">J</span><span class="o">.</span><span class="n">name</span><span class="p">),</span>
+            <span class="n">offset</span><span class="o">=</span><span class="n">Vector</span><span class="p">(</span>
+                <span class="n">offset</span><span class="p">,</span>
+                <span class="n">observed</span><span class="p">,</span>
+                <span class="n">name</span><span class="o">=</span><span class="kc">None</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_offset</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">_offset</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+            <span class="p">),</span>
+        <span class="p">)</span>
 
 <div class="viewcode-block" id="Problem.simulate">
 <a class="viewcode-back" href="../../reference/api/fips.Problem.simulate.html#fips.Problem.simulate">[docs]</a>
@@ -821,11 +980,7 @@
             <span class="n">draw</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_prior_cov</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">rng</span><span class="p">)</span>
             <span class="n">truth</span> <span class="o">=</span> <span class="n">Vector</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_prior</span><span class="o">.</span><span class="n">values</span> <span class="o">+</span> <span class="n">draw</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">values</span> <span class="o">=</span> <span class="n">_vector</span><span class="p">(</span><span class="n">truth</span><span class="p">,</span> <span class="s2">"truth"</span><span class="p">)</span><span class="o">.</span><span class="n">values</span>
-            <span class="k">if</span> <span class="n">truth</span><span class="o">.</span><span class="n">space</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">state</span><span class="p">:</span>
-                <span class="n">values</span> <span class="o">=</span> <span class="n">values</span><span class="p">[</span>
-                    <span class="n">state</span><span class="o">.</span><span class="n">_align</span><span class="p">(</span><span class="n">truth</span><span class="o">.</span><span class="n">space</span><span class="p">,</span> <span class="s2">"truth"</span><span class="p">,</span> <span class="s2">"The truth and the prior"</span><span class="p">)</span>
-                <span class="p">]</span>
+            <span class="n">values</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_state_values</span><span class="p">(</span><span class="n">truth</span><span class="p">,</span> <span class="s2">"truth"</span><span class="p">,</span> <span class="s2">"The truth and the prior"</span><span class="p">)</span>
             <span class="n">truth</span> <span class="o">=</span> <span class="n">Vector</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">truth</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
         <span class="n">noise</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_obs_cov</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">rng</span><span class="p">)</span>
         <span class="n">obs</span> <span class="o">=</span> <span class="n">Vector</span><span class="p">(</span>
@@ -879,6 +1034,10 @@
 
 <span class="sd">        Raises</span>
 <span class="sd">        ------</span>
+<span class="sd">        TypeError</span>
+<span class="sd">            If the forward is a model: holding elements at their prior puts</span>
+<span class="sd">            what they add to the observations into the offset, which is a</span>
+<span class="sd">            constant only when the forward is linear.</span>
 <span class="sd">        ValueError</span>
 <span class="sd">            If `keep` has a block or a label that the prior lacks.</span>
 
@@ -916,6 +1075,16 @@
 <span class="sd">        """</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">keep</span><span class="p">,</span> <span class="n">Space</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"keep must be a Space, got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">keep</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">."</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_forward</span><span class="p">,</span> <span class="n">Operator</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                <span class="s2">"restrict needs a linear forward operator, and this problem's "</span>
+                <span class="sa">f</span><span class="s2">"forward is a model, </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_forward</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">: holding "</span>
+                <span class="s2">"elements at their prior puts what they add to the observations "</span>
+                <span class="s2">"into the offset, which is a constant only when the forward is "</span>
+                <span class="s2">"linear. Restrict the problem linearized at a state, "</span>
+                <span class="s2">"problem.linearized(x).restrict(keep), or write the model on the "</span>
+                <span class="s2">"elements to keep."</span>
+            <span class="p">)</span>
         <span class="n">state</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_prior</span><span class="o">.</span><span class="n">space</span>
         <span class="n">kept</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">_subset</span><span class="p">(</span><span class="n">keep</span><span class="p">,</span> <span class="s2">"The space to keep"</span><span class="p">)</span>
         <span class="n">left_out</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">state</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">)</span>
@@ -956,7 +1125,9 @@
 <span class="sd">        :math:`W`: the observations :math:`W z`, the forward operator</span>
 <span class="sd">        :math:`W H`, the model-data mismatch :math:`W S_z W^T` and the offset</span>
 <span class="sd">        :math:`W c`. Each keeps the cheapest form (a sparse :math:`W` and a</span>
-<span class="sd">        diagonal :math:`S_z` give a sparse mismatch).</span>
+<span class="sd">        diagonal :math:`S_z` give a sparse mismatch). A forward model</span>
+<span class="sd">        :math:`F` is followed by the aggregation: the new problem's model is</span>
+<span class="sd">        :math:`W F(x)`, with the Jacobian :math:`W J(x)`.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -1018,24 +1189,63 @@
         <span class="n">offset</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_offset</span>
         <span class="k">if</span> <span class="n">offset</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">offset</span> <span class="o">=</span> <span class="n">Vector</span><span class="p">(</span><span class="n">form</span> <span class="o">@</span> <span class="n">offset</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="n">rows</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">offset</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+        <span class="n">forward</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_forward</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">forward</span><span class="p">,</span> <span class="n">Operator</span><span class="p">):</span>
+            <span class="n">forward</span> <span class="o">=</span> <span class="n">Operator</span><span class="p">(</span>
+                <span class="n">form</span> <span class="o">@</span> <span class="n">forward</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">rows</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_prior</span><span class="o">.</span><span class="n">space</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">forward</span><span class="o">.</span><span class="n">name</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">forward</span> <span class="o">=</span> <span class="n">_Aggregated</span><span class="p">(</span><span class="n">forward</span><span class="p">,</span> <span class="n">Operator</span><span class="p">(</span><span class="n">form</span><span class="p">,</span> <span class="n">rows</span><span class="p">,</span> <span class="n">observed</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">W</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
         <span class="k">return</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)(</span>
             <span class="n">prior</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_prior</span><span class="p">,</span>
             <span class="n">prior_cov</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_prior_cov</span><span class="p">,</span>
             <span class="n">obs</span><span class="o">=</span><span class="n">Vector</span><span class="p">(</span><span class="n">form</span> <span class="o">@</span> <span class="bp">self</span><span class="o">.</span><span class="n">_obs</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="n">rows</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_obs</span><span class="o">.</span><span class="n">name</span><span class="p">),</span>
             <span class="n">obs_cov</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_obs_cov</span><span class="o">.</span><span class="n">aggregate</span><span class="p">(</span><span class="n">W</span><span class="p">),</span>
-            <span class="n">forward</span><span class="o">=</span><span class="n">Operator</span><span class="p">(</span>
-                <span class="n">form</span> <span class="o">@</span> <span class="bp">self</span><span class="o">.</span><span class="n">_forward</span><span class="o">.</span><span class="n">data</span><span class="p">,</span>
-                <span class="n">rows</span><span class="p">,</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_prior</span><span class="o">.</span><span class="n">space</span><span class="p">,</span>
-                <span class="n">name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_forward</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
-            <span class="p">),</span>
+            <span class="n">forward</span><span class="o">=</span><span class="n">forward</span><span class="p">,</span>
             <span class="n">offset</span><span class="o">=</span><span class="n">offset</span><span class="p">,</span>
         <span class="p">)</span></div>
 
 
+    <span class="k">def</span><span class="w"> </span><span class="nf">_state_values</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">Vector</span><span class="p">,</span> <span class="n">what</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">pair</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return the values of the state `x` in the prior's order; `what` names it in the errors."""</span>
+        <span class="n">state</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_prior</span><span class="o">.</span><span class="n">space</span>
+        <span class="n">values</span> <span class="o">=</span> <span class="n">_vector</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">what</span><span class="p">)</span><span class="o">.</span><span class="n">values</span>
+        <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">space</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">state</span><span class="p">:</span>
+            <span class="n">values</span> <span class="o">=</span> <span class="n">values</span><span class="p">[</span>
+                <span class="n">state</span><span class="o">.</span><span class="n">_align</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">space</span><span class="p">,</span> <span class="n">what</span><span class="p">,</span> <span class="n">pair</span> <span class="ow">or</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">what</span><span class="si">}</span><span class="s2"> and the prior"</span><span class="p">)</span>
+            <span class="p">]</span>
+        <span class="k">return</span> <span class="n">values</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_to_model</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">values</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return the state `values` (in the prior's order) in the order of the forward model's columns."""</span>
+        <span class="n">model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_forward</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">ForwardModel</span><span class="p">)</span>  <span class="c1"># called for a model only</span>
+        <span class="n">state</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_prior</span><span class="o">.</span><span class="n">space</span>
+        <span class="k">if</span> <span class="n">model</span><span class="o">.</span><span class="n">cols</span> <span class="ow">is</span> <span class="n">state</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">values</span>
+        <span class="k">return</span> <span class="n">values</span><span class="p">[</span><span class="n">model</span><span class="o">.</span><span class="n">cols</span><span class="o">.</span><span class="n">_align</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="s2">"the prior"</span><span class="p">,</span> <span class="s2">"The model's columns"</span><span class="p">)]</span>
+
     <span class="k">def</span><span class="w"> </span><span class="nf">_apply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">values</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">"""Return :math:`H x` for the state values `x`, without the offset; a later forward model replaces it."""</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_forward</span><span class="o">.</span><span class="n">data</span> <span class="o">@</span> <span class="n">values</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Return :math:`H x`, or :math:`F(x)` with a forward model, for the state values `x` (in the prior's order), without the offset.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        TypeError, ValueError</span>
+<span class="sd">            If the model does not return a Vector with exactly its rows' labels.</span>
+<span class="sd">        """</span>
+        <span class="n">forward</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_forward</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">forward</span><span class="p">,</span> <span class="n">Operator</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">forward</span><span class="o">.</span><span class="n">data</span> <span class="o">@</span> <span class="n">values</span>
+        <span class="n">modeled</span> <span class="o">=</span> <span class="n">_evaluated</span><span class="p">(</span><span class="n">forward</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_to_model</span><span class="p">(</span><span class="n">values</span><span class="p">))</span>
+        <span class="n">observed</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_obs</span><span class="o">.</span><span class="n">space</span>
+        <span class="k">if</span> <span class="n">forward</span><span class="o">.</span><span class="n">rows</span> <span class="ow">is</span> <span class="n">observed</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">modeled</span>
+        <span class="k">return</span> <span class="n">modeled</span><span class="p">[</span>
+            <span class="n">observed</span><span class="o">.</span><span class="n">_align</span><span class="p">(</span><span class="n">forward</span><span class="o">.</span><span class="n">rows</span><span class="p">,</span> <span class="s2">"the model's rows"</span><span class="p">,</span> <span class="s2">"The model's rows"</span><span class="p">)</span>
+        <span class="p">]</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_offset_values</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">"""Return the offset's values, zeros where there is none."""</span>

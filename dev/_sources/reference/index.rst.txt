@@ -9,6 +9,7 @@ problem uses them. The words are defined in :doc:`/getting_started/terminology`.
 
    space
    operator
+   forward
    covariance
    problem
    posterior

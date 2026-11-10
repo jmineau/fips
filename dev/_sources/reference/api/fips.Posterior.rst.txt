@@ -22,6 +22,7 @@
    ~Posterior.estimate
    ~Posterior.information_content
    ~Posterior.innovation_cov
+   ~Posterior.iterations
    ~Posterior.kalman_gain
    ~Posterior.mean
    ~Posterior.modeled_obs
