@@ -4,7 +4,8 @@ User Guide
 This guide takes fips's objects one at a time, in the order a problem uses
 them, and says what each is for before how to call it. :doc:`/getting_started/first_problem`
 solves one problem from start to finish; :doc:`/getting_started/terminology` defines the words;
-:doc:`synthetic` tests an inversion on data whose answer is known; :doc:`bounds`
+:doc:`synthetic` tests an inversion on data whose answer is known; :doc:`settings`
+fits the covariance settings by maximizing the evidence; :doc:`bounds`
 holds the state to bounds (a flux that cannot be negative); :doc:`nonlinear`
 solves a problem whose forward is a model that is not linear; :doc:`positive`
 keeps a flux positive by solving for its logarithm or its softplus; and
@@ -541,7 +542,11 @@ design question ("which candidate site helps the total most") is one call:
 observation error variances the residuals diagnose with those the solve used,
 per observation or averaged over groups; :attr:`~fips.Posterior.reduced_chi2`
 is near 1 when the covariances are right; :meth:`~fips.Posterior.leverage`
-says which observations weigh most on a state.
+says which observations weigh most on a state. :attr:`~fips.Posterior.log_evidence`
+is the log probability of the observations given the covariances, with the
+state integrated out: the settings that maximize it are the
+maximum-likelihood ones, and :doc:`settings` fits them with
+:mod:`scipy.optimize`.
 
 :meth:`~fips.Posterior.chi2_tests` makes the reduced chi-squared a test
 (Rodgers, 2000, chapter 12), and adds the same test of three more vectors:
@@ -701,6 +706,7 @@ when it is read.
    :hidden:
 
    synthetic
+   settings
    bounds
    nonlinear
    positive

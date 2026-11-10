@@ -96,6 +96,7 @@ import math
 import numbers
 from collections.abc import Callable, Iterator
 from dataclasses import dataclass
+from typing import ClassVar
 
 import numpy as np
 from numpy.linalg import LinAlgError
@@ -240,6 +241,9 @@ class GaussNewton:
     :math:`y` of the mode and of the last linearization point, so the state
     misfit, :math:`d^2` and the sampler need no inverse of :math:`S_0`.
     """
+
+    evidence_is_laplace: ClassVar[bool] = True
+    """Its log evidence is Laplace's: the cost at the mode and the information content of the Gaussian there (exact for a linear model)."""
 
     problem: Problem
     """The problem with the forward model."""

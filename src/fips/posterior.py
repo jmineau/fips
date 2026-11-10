@@ -87,7 +87,11 @@ class Solution(Protocol):
     observations, :math:`\hat{x} = x_0 + K (z - H x_0 - c)` with the
     :math:`K` of :meth:`gain` whatever the values of :math:`z`, says so with
     ``estimate_is_linear = True``; without it, a posterior has no
-    :meth:`~Posterior.recovery`.
+    :meth:`~Posterior.recovery`. One whose posterior is the Gaussian at its
+    estimate, exactly or as Laplace's approximation, so that its
+    :meth:`chi2` and :meth:`information` give the evidence, says so with
+    ``evidence_is_laplace = True``; without it, a posterior has no
+    :attr:`~Posterior.log_evidence`.
 
     A method whose posterior is not Gaussian in closed form answers each
     question as its docstring says. The bounded method's estimate is the mode;
@@ -402,16 +406,19 @@ class Posterior:
     answer without solving again), :meth:`recovery` and
     :meth:`candidate_worth` (where the estimate is linear in the
     observations), :meth:`data_worth`, :meth:`sample` (where the method can
-    draw from its posterior), :attr:`at_bound` (where it has bounds) and
-    :attr:`iterations` (where it iterates). The analytic method has all but
-    :attr:`at_bound` and :attr:`iterations`. The ``"bounded"`` method
+    draw from its posterior), :attr:`at_bound` (where it has bounds),
+    :attr:`iterations` (where it iterates) and :attr:`log_evidence` (where
+    the posterior is the Gaussian at the estimate). The analytic method has
+    all but :attr:`at_bound` and :attr:`iterations`. The ``"bounded"`` method
     (:class:`~fips.methods.bounded.BoundedOptions`) has :meth:`with_gamma`,
-    :meth:`with_data`, :meth:`sample` and :attr:`at_bound`; its estimate is
+    :meth:`with_data`, :meth:`sample` and :attr:`at_bound`, and
+    :attr:`log_evidence` only with no finite bound; its estimate is
     the mode of the posterior with bounds on the state, and its variances are
     those of draws of that posterior. The ``"gauss_newton"`` method
     (:class:`~fips.methods.gauss_newton.GaussNewtonOptions`), for a problem
-    with a forward model, has :meth:`with_data`, :meth:`sample` and
-    :attr:`iterations`; its estimate is the mode, its variances are those of
+    with a forward model, has :meth:`with_data`, :meth:`sample`,
+    :attr:`iterations` and :attr:`log_evidence` (Laplace's approximation);
+    its estimate is the mode, its variances are those of
     draws of its posterior, and its gain and averaging kernel are those of
     the Gaussian at the mode. Its
     :attr:`problem` is the problem with the model, as solved; what needs a
@@ -1989,6 +1996,136 @@ class Posterior:
         chi2_tests : The test, with its p-value, and Rodgers' other three tests.
         """
         return self.chi2 / len(self._problem.obs)
+
+    @property
+    def log_evidence(self) -> float:
+        r"""
+        The log of the evidence: the probability density of the observations given the problem's settings, with the state integrated out.
+
+        With the state integrated out, the observations of a linear problem
+        are Gaussian, :math:`z \sim N(H x_0 + c, G)` with :math:`G = H S_0 H^T
+        + S_z/\gamma` (:attr:`innovation_cov`), so
+
+        .. math::
+            \ln p(z) = -\tfrac{1}{2} \left( d^T G^{-1} d + \ln \lvert G \rvert
+                + m \ln 2\pi \right)
+            = -\tfrac{1}{2} \left( \chi^2 + 2 \mathcal{H} + \ln \lvert S_z \rvert
+                - m \ln \gamma + m \ln 2\pi \right)
+
+        with :math:`d = z - H x_0 - c`, :math:`\chi^2` the :attr:`chi2`,
+        :math:`\mathcal{H}` the :attr:`information_content` and :math:`m` the number of
+        observations: :math:`\lvert G \rvert = \lvert S_z/\gamma \rvert \,
+        \lvert I + \gamma S_z^{-1} H S_0 H^T \rvert`, and the log of the
+        second factor is twice the information content. Every term but
+        :math:`\ln \lvert S_z \rvert` is one the solve computed, and that one
+        comes from the form's own factors (a Cholesky factorization of a dense
+        :math:`S_z`, the log of a diagonal one's entries), once per problem:
+        the posteriors of a sweep over gamma share it, and :meth:`with_gamma`
+        and :meth:`with_data` give the evidence without a new solve.
+        It holds for a singular :math:`S_0`; :math:`S_z` must be
+        positive-definite.
+
+        It is the likelihood of the settings the problem was built with, the
+        prior error covariance, the model-data mismatch and gamma: the
+        settings that maximize it are their maximum-likelihood estimates
+        (Michalak et al., 2005). Write a function that builds the problem from
+        the settings and maximize this over them, with
+        :func:`scipy.optimize.minimize` on its negative
+        (:doc:`/user_guide/settings`). The difference between two settings'
+        values is the log of their Bayes factor. It is a density of the
+        observations, so it depends on their units: compare only problems of
+        the same observations.
+
+        For the ``"gauss_newton"`` method, it is Laplace's approximation: the
+        same formula with the chi-squared of the model at the mode
+        (:attr:`chi2`) and the information content of the Gaussian there (the
+        Gauss-Newton curvature of the cost, at the last linearization, one
+        step from the mode). It is exact for a linear forward model; for a
+        model that bends, it is the evidence of the Gaussian at the mode, and
+        leaves out how the posterior departs from it (the skew its draws show,
+        :meth:`sample`): for a lognormal flux in a few cells with a log-std of
+        0.8, it was within about 0.1 of the evidence by importance sampling. The
+        ``"bounded"`` method gives it only with no finite bound, when its
+        posterior is the analytic one.
+
+        Raises
+        ------
+        TypeError
+            If the method's posterior is not the Gaussian at its estimate (a
+            bounded posterior with a finite bound).
+        numpy.linalg.LinAlgError
+            If :math:`S_z` is not positive-definite.
+
+        References
+        ----------
+        Michalak, A. M., Hirsch, A., Bruhwiler, L., Gurney, K. R., Peters, W.,
+        and Tans, P. P. (2005). Maximum likelihood estimation of covariance
+        parameters for Bayesian atmospheric trace gas surface flux inversions.
+        *Journal of Geophysical Research*, 110, D24107.
+        https://doi.org/10.1029/2005JD005970
+
+        Rodgers, C. D. (2000). *Inverse Methods for Atmospheric Sounding:
+        Theory and Practice*. World Scientific.
+
+        See Also
+        --------
+        chi2 : The chi-squared of the innovation, its first term.
+        information_content : Its second term, halved.
+        with_gamma : The posterior at another gamma, whose evidence costs a few products.
+
+        Examples
+        --------
+        >>> import numpy as np
+        >>> import pandas as pd
+        >>> from scipy.stats import multivariate_normal
+        >>> import fips
+        >>> cells = pd.Index(["a", "b"], name="cell")
+        >>> obs_id = pd.Index(["o1", "o2", "o3"], name="obs_id")
+        >>> prior = fips.Vector.from_series(pd.Series(0.0, index=cells), block="flux")
+        >>> obs = fips.Vector.from_series(
+        ...     pd.Series([1.0, 2.0, 3.0], index=obs_id), block="co2"
+        ... )
+        >>> H = np.array([[1.0, 0.0], [0.0, 1.0], [1.0, 1.0]])
+        >>> problem = fips.Problem(
+        ...     prior=prior,
+        ...     prior_cov=fips.Independent().with_std(1.0),
+        ...     obs=obs,
+        ...     obs_cov=fips.Independent().with_std(np.sqrt(0.1)),
+        ...     forward=fips.Operator(H, obs.space, prior.space),
+        ... )
+        >>> post = fips.solve(problem)
+        >>> round(post.log_evidence, 4)
+        -4.6236
+        >>> G = H @ H.T + 0.1 * np.eye(3)  # the innovation covariance
+        >>> round(float(multivariate_normal(np.zeros(3), G).logpdf(obs.values)), 4)
+        -4.6236
+
+        A sweep over gamma reads it from one eigendecomposition:
+
+        >>> [round(post.with_gamma(g).log_evidence, 3) for g in (0.1, 1.0, 10.0)]
+        [-5.609, -4.624, -3.5]
+        """
+        if not getattr(self._solution, "evidence_is_laplace", False):
+            raise TypeError(
+                "The method that solved this problem gives no log evidence "
+                f"({type(self._solution).__name__}'s evidence_is_laplace is "
+                "false or unset): its posterior is not the Gaussian at its "
+                "estimate, so the chi-squared and the information content do not "
+                "give it. With bounds on the state, the exact evidence is the "
+                "Gaussian one times the probability of the bounds under the "
+                "posterior over their probability under the prior, both "
+                "orthant probabilities of a correlated Gaussian, which fips does "
+                "not compute. The evidence of the problem without bounds is "
+                "fips.solve(problem).log_evidence."
+            )
+        m, gamma = len(self._problem.obs), self._gamma
+        return -0.5 * float(
+            self.chi2
+            + 2.0 * self.information_content
+            + self._problem._obs_logdet
+            - m * np.log(gamma)
+            + m * np.log(2.0 * np.pi)
+        )
 
     def chi2_tests(self) -> pd.DataFrame:
         r"""
