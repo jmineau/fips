@@ -49,12 +49,6 @@ https://doi.org/10.5194/gmd-7-303-2014
 Pakman, A., and Paninski, L. (2014). Exact Hamiltonian Monte Carlo for truncated
 multivariate Gaussians. *Journal of Computational and Graphical Statistics*,
 23(2), 518-542. https://doi.org/10.1080/10618600.2013.788448
-
-Nocedal, J., and Wright, S. J. (2006). *Numerical Optimization*, second
-edition, chapter 16. Springer.
-
-Lawson, C. L., and Hanson, R. J. (1974). *Solving Least Squares Problems*.
-Prentice-Hall.
 """
 
 import logging
@@ -85,7 +79,10 @@ _KKT_RTOL = float(np.sqrt(np.finfo(float).eps))
 """How far from the optimality conditions the mode may be, relative to the scale of the state (1.5e-8)."""
 
 _DECISION_RTOL = 1e-10
-"""How wrong the sign of a multiplier must be before the active set releases its element, relative to the scale of the state."""
+"""How far outside its bounds a free element, or how wrong the sign of a held element's multiplier, must be before the active set exchanges it, relative to the scale of the state."""
+
+_TRIES = 3
+"""The steps of block exchanges the active set takes without a new least count of broken conditions before it exchanges one element a step."""
 
 _BLOCK = 512
 """The number of velocities the sampler draws in one block."""
@@ -259,12 +256,12 @@ class BoundedOptions:
         mean sits less far above the prior's than the truncated one (for one
         element whose prior standard deviation equals its distance from a
         lower bound, 8% of that distance against 29%). Each draw costs an
-        active set, as the mode does, a step for each element it holds or
-        releases on the way. With a correlated prior whose standard
-        deviation equals its mean and weak data, a draw took 28 ms for 400
-        elements (70 on a bound in a typical draw) and 0.28 s for 2000 (120
-        on a bound: 9 minutes for 2000 draws), against 4 and 15 ms for a
-        truncated draw. Both keep the columns of the posterior covariance
+        active set, as the mode does: a few steps, each exchanging at once
+        every element to hold or release. With a correlated prior whose
+        standard deviation equals its mean and weak data, a draw took 1.7 ms
+        for 400 elements (70 on a bound in a typical draw) and 7.6 ms for
+        2000 (120 on a bound: 15 s for 2000 draws), against 4 and 14 ms for
+        a truncated draw. Both keep the columns of the posterior covariance
         at every element a draw reaches a bound at, up to all of them
         (``n x n``: 30 MiB for 2000 elements).
 
@@ -478,15 +475,9 @@ def _mode(
     Return the mode in the box, which side of its bound each element is held at (``1`` lower, ``-1`` upper, ``0`` free), and the multipliers.
 
     The mode minimizes :math:`\tfrac{1}{2} (x - \hat{x})^T P (x - \hat{x})`,
-    :math:`P = \hat{S}^{-1}`, over :math:`l \le x \le u`, by the primal
-    active-set method for a convex quadratic program (Nocedal and Wright,
-    2006, algorithm 16.3), here with bounds only: the method of which Lawson
-    and Hanson's nonnegative least squares, and its bounded variant, are the
-    least-squares case, with the step back to the box at the first element
-    that would leave it. It keeps a feasible
-    point and a working set :math:`a` of elements held at a bound,
-    :math:`b_a`. Holding them there, the least cost is the analytic posterior
-    conditioned on :math:`x_a = b_a`,
+    :math:`P = \hat{S}^{-1}`, over :math:`l \le x \le u`. It keeps a set
+    :math:`a` of elements held at a bound, :math:`b_a`. Holding them there,
+    the least cost is the analytic posterior conditioned on :math:`x_a = b_a`,
 
     .. math::
 
@@ -495,70 +486,75 @@ def _mode(
 
     whose gradient is :math:`P (x(a) - \hat{x}) = \lambda` (zero off
     :math:`a`): :math:`\lambda_a` are the multipliers, positive at a lower
-    bound and negative at an upper one when :math:`a` is right. Each step
-    moves toward :math:`x(a)` and stops at the first free element that would
-    leave the box, which joins :math:`a`; at :math:`x(a)` itself, an element
-    whose multiplier has the wrong sign leaves :math:`a` (the most wrong
-    first, measured as :math:`\lambda_i \hat{S}_{ii}`, the distance it pulls
-    the element), and with none the point is the mode. It starts from
-    :math:`\hat{x}` put into the box, with the elements it put on a bound in
-    :math:`a`. Each step lowers the cost or changes :math:`a` at the same
-    cost, so it ends (a degenerate problem could cycle among sets of the
-    same cost: ``10 n + 100`` steps at most, then it raises); only
-    :math:`\hat{S}_{:a}` is used (``columns``). The solve then checks the
-    optimality conditions of what it returns (``_kkt``).
+    bound and negative at an upper one when :math:`a` is right. :math:`x(a)`
+    is the mode when it is in the box and every multiplier has its sign
+    (the optimality conditions of the problem, a linear complementarity
+    problem whose matrix :math:`P` is positive definite, so the mode and its
+    :math:`a` are unique).
+
+    The set is found by block principal pivoting: starting from the elements
+    :math:`\hat{x}` puts outside the box, each step computes :math:`x(a)`
+    and exchanges at once every element that breaks a condition, a free one
+    outside the box joining :math:`a` at the bound it crossed and a held one
+    whose multiplier has the wrong sign leaving it. Wrong means beyond
+    :data:`_DECISION_RTOL` of the scale, measured for a multiplier as
+    :math:`\lambda_i \hat{S}_{ii}`, the distance it pulls the element. Block
+    exchanges can cycle; while the count of broken conditions falls they go
+    on, and after :data:`_TRIES` steps in a row without a new least count
+    each step exchanges only the broken element of the highest index
+    (Murty's rule), which ends for a positive-definite matrix, until the
+    count falls below its least again. A step costs one Cholesky factor of
+    :math:`\hat{S}_{aa}` and one product with :math:`\hat{S}_{:a}`
+    (``columns``); a few steps usually do, where exchanging one element a
+    step took one per element exchanged. ``10 n + 100`` steps at most, then
+    it raises. The solve then checks the optimality conditions of what it
+    returns (``_kkt``).
 
     Raises
     ------
     numpy.linalg.LinAlgError
         If :math:`\hat{S}_{aa}` is not positive definite (an element on a
         bound whose posterior variance is zero, or two whose errors the
-        posterior ties together), or the active set does not end.
+        posterior ties together), or the set does not end.
     """
     n = len(x_hat)
     side = np.zeros(n, dtype=np.int8)
     side[x_hat < lower] = 1
     side[x_hat > upper] = -1
-    x = np.clip(x_hat, lower, upper)
-    multipliers = np.zeros(n)
     tolerance = _DECISION_RTOL * scale
+    least, tries = n + 1, _TRIES
     for _ in range(10 * n + 100):
         active = np.flatnonzero(side)
-        if not len(active):
-            return x_hat.copy(), side, multipliers
-        bound = np.where(side[active] > 0, lower[active], upper[active])
-        S_a = columns(active)
-        lam = _conditioned_solve(S_a[active], bound - x_hat[active])
-        target = x_hat + S_a @ lam
-        target[active] = bound
-        step = target - x
-        free = side == 0
-        down = free & (step < 0) & np.isfinite(lower)
-        up = free & (step > 0) & np.isfinite(upper)
-        alpha, blocking, held = 1.0, -1, 0
-        if down.any():
-            reach = np.maximum(x[down] - lower[down], 0.0) / -step[down]
-            k = int(np.argmin(reach))
-            if reach[k] < alpha:
-                alpha, blocking, held = float(reach[k]), int(np.flatnonzero(down)[k]), 1
-        if up.any():
-            reach = np.maximum(upper[up] - x[up], 0.0) / step[up]
-            k = int(np.argmin(reach))
-            if reach[k] < alpha:
-                alpha, blocking, held = float(reach[k]), int(np.flatnonzero(up)[k]), -1
-        if blocking >= 0:
-            x = x + alpha * step
+        x = x_hat.copy()
+        lam = np.zeros(0)
+        if len(active):
+            bound = np.where(side[active] > 0, lower[active], upper[active])
+            S_a = columns(active)
+            lam = _conditioned_solve(S_a[active], bound - x_hat[active])
+            x = x_hat + S_a @ lam
             x[active] = bound
-            x[blocking] = lower[blocking] if held > 0 else upper[blocking]
-            side[blocking] = held
-            continue
-        x = target
+        free = side == 0
+        below = np.flatnonzero(free & (x < lower - tolerance))
+        above = np.flatnonzero(free & (x > upper + tolerance))
         pull = side[active] * lam * variances[active]  # below zero: the wrong sign
-        worst = int(np.argmin(pull))
-        if pull[worst] >= -tolerance:
+        wrong = active[pull < -tolerance]
+        broken = len(below) + len(above) + len(wrong)
+        if not broken:
+            multipliers = np.zeros(n)
             multipliers[active] = lam
             return x, side, multipliers
-        side[active[worst]] = 0
+        if broken < least:
+            least, tries = broken, _TRIES
+        elif tries:
+            tries -= 1
+        else:  # Murty's rule: only the broken element of the highest index
+            last = max(
+                below.max(initial=-1), above.max(initial=-1), wrong.max(initial=-1)
+            )
+            below, above, wrong = (k[k == last] for k in (below, above, wrong))
+        side[below] = 1
+        side[above] = -1
+        side[wrong] = 0
     raise LinAlgError(
         "The bounded mode was not found: the active set did not end after "
         f"{10 * n + 100} steps."

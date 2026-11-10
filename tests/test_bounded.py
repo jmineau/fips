@@ -717,6 +717,137 @@ def test_a_mode_that_fails_its_conditions_raises(monkeypatch):
         fips.solve(problem, "bounded", lower=0.0)
 
 
+class DenseColumns:
+    """The columns of a dense covariance, as ``bounded._Columns`` gives them, counting the products asked for (one per step of the active set, and one for the optimality conditions)."""
+
+    def __init__(self, S: np.ndarray):
+        self.S = S
+        self.calls = 0
+
+    def fetch(self, indices):
+        """Nothing to fetch."""
+
+    def __call__(self, indices):
+        """Return the columns `indices`."""
+        self.calls += 1
+        return self.S[:, indices]
+
+
+def _stressing(kind: str, rng: np.random.Generator):
+    """A posterior covariance, a point and bounds that stress the active set."""
+    n = int(rng.integers(5, 40))
+    i = np.arange(n)
+    lower, upper = np.zeros(n), np.full(n, np.inf)
+    if kind == "correlated":  # weak data: many elements at a bound
+        S = np.exp(-np.abs(i[:, None] - i[None, :]) / rng.uniform(1.0, 8.0))
+    elif kind == "sums":  # observations of sums: negative posterior correlations
+        m = int(rng.integers(1, n + 3))
+        H = (rng.random((m, n)) < 0.6) * rng.uniform(0.2, 1.0, (m, n))
+        S = np.linalg.inv(np.eye(n) + H.T @ H / rng.uniform(0.01, 0.5))
+    elif kind == "both bounds":
+        d = rng.uniform(0.1, 10.0, n)  # mixed scales
+        S = d[:, None] * np.exp(-np.abs(i[:, None] - i[None, :]) / 3.0) * d[None, :]
+        upper = np.where(rng.random(n) < 0.5, rng.uniform(0.5, 2.0, n) * d, np.inf)
+    else:  # nearly singular: correlated over far more than the state
+        S = np.exp(-np.abs(i[:, None] - i[None, :]) / rng.uniform(20.0, 200.0))
+        S += 1e-9 * np.eye(n)
+    S = 0.5 * (S + S.T)
+    sd = np.sqrt(np.diag(S))
+    x_hat = rng.normal(rng.normal(0.0, 0.5), 1.0, n) * sd
+    x_hat += np.linalg.cholesky(S) @ rng.normal(0.0, 1.0, n)
+    return S, x_hat, lower, upper
+
+
+KINDS = ["correlated", "sums", "both bounds", "nearly singular"]
+
+
+@pytest.mark.parametrize("kind", KINDS)
+def test_the_active_set_is_bvls_on_problems_that_stress_it(kind, monkeypatch):
+    """
+    The active set against SciPy's bounded least squares on 40 random problems of each kind, to 1e-9 posterior standard deviations (1e-5 for the nearly singular ones, whose reference loses digits), passing its own optimality conditions.
+
+    Each problem is solved twice: with block exchanges, and with ``_TRIES``
+    at 0, which exchanges one element a step whenever a step does not lower
+    the count of broken conditions. The two take different paths (other
+    counts of steps) to the same answer.
+    """
+    rng = np.random.default_rng(KINDS.index(kind))
+    held, default = 0, bounded._TRIES
+    steps = {}
+    for tries in (default, 0):
+        monkeypatch.setattr(bounded, "_TRIES", tries)
+        steps[tries] = 0
+        for _ in range(40):
+            S, x_hat, lower, upper = _stressing(kind, rng)
+            variances = np.diag(S).copy()
+            columns = DenseColumns(S)
+            mode, side, _, _ = bounded._checked_mode(
+                x_hat, lower, upper, columns, variances
+            )
+            steps[tries] += columns.calls
+            A = np.linalg.cholesky(np.linalg.inv(S)).T  # P = A^T A
+            reference = lsq_linear(
+                A, A @ x_hat, bounds=(lower, upper), method="bvls", tol=1e-15
+            ).x
+            tol = 1e-5 if kind == "nearly singular" else 1e-9
+            sd = np.sqrt(variances)
+            np.testing.assert_allclose(mode / sd, reference / sd, rtol=0, atol=tol)
+            held += int(np.count_nonzero(side))
+    assert held > 50  # the bounds bind
+    assert steps[0] != steps[default] or kind == "nearly singular"
+
+
+# Pure block exchanges cycle on this problem (found by a random search): the
+# sets of held elements repeat without end.
+_CYCLE_S = np.array(
+    [
+        [8.86284048, -0.16686836, -2.72464361, 2.39321376, 3.31117929],
+        [-0.16686836, 7.69281182, 3.35618843, -0.79169684, 3.24307671],
+        [-2.72464361, 3.35618843, 4.85486292, -0.40019067, 1.50847679],
+        [2.39321376, -0.79169684, -0.40019067, 1.59458569, 0.28649326],
+        [3.31117929, 3.24307671, 1.50847679, 0.28649326, 4.31101303],
+    ]
+)
+_CYCLE_X = np.array([-0.5206142, 3.67844478, -3.69877401, -1.22438935, -3.29766213])
+_CYCLE_UPPER = np.array([2.54584288, np.inf, 1.00099489, np.inf, np.inf])
+
+
+def test_block_exchanges_that_cycle_are_ended_by_one_exchange_a_step(monkeypatch):
+    """On a problem where exchanging every broken element at once cycles, the fallback to one exchange a step ends at the bounded least-squares answer; without it the active set runs to its cap and raises."""
+    lower, variances = np.zeros(5), np.diag(_CYCLE_S).copy()
+    mode, _, _, _ = bounded._checked_mode(
+        _CYCLE_X, lower, _CYCLE_UPPER, DenseColumns(_CYCLE_S), variances
+    )
+    A = np.linalg.cholesky(np.linalg.inv(_CYCLE_S)).T
+    reference = lsq_linear(
+        A, A @ _CYCLE_X, bounds=(lower, _CYCLE_UPPER), method="bvls", tol=1e-15
+    ).x
+    np.testing.assert_allclose(mode, reference, rtol=0, atol=1e-10)
+    monkeypatch.setattr(bounded, "_TRIES", 10**9)  # never fall back
+    with pytest.raises(LinAlgError, match="did not end"):
+        bounded._mode(
+            _CYCLE_X,
+            lower,
+            _CYCLE_UPPER,
+            DenseColumns(_CYCLE_S),
+            variances,
+            bounded._scale(_CYCLE_X, variances, lower, _CYCLE_UPPER),
+        )
+
+
+def test_the_active_set_takes_a_few_steps_where_one_exchange_a_step_took_many():
+    """A correlated draw with dozens of elements to hold or release takes a few steps of block exchanges, not one per element exchanged."""
+    rng = np.random.default_rng(5)
+    i = np.arange(200)
+    S = np.exp(-np.abs(i[:, None] - i[None, :]) / 5.0)
+    x_hat = np.linalg.cholesky(S) @ rng.normal(0.0, 1.0, 200)
+    lower, upper, variances = np.zeros(200), np.full(200, np.inf), np.ones(200)
+    columns = DenseColumns(S)
+    _, side, _ = bounded._mode(x_hat, lower, upper, columns, variances, 3.0)
+    exchanged = int(np.count_nonzero((x_hat < 0) != (side > 0)))
+    assert exchanged > 20 and columns.calls < 10
+
+
 # ---------------------------------------------------------------------------
 # 3. The sampler, against exact answers
 # ---------------------------------------------------------------------------
