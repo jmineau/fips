@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>fips.methods.gauss_newton &#8212; fips 0.2.0b3.dev15+gca734b8e2 documentation</title>
+    <title>fips.methods.gauss_newton &#8212; fips 0.2.0b3.dev16+g8790e27f7 documentation</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../../_static/documentation_options.js?v=9ef15731"></script>
+    <script src="../../../_static/documentation_options.js?v=86168d94"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -132,8 +132,8 @@
       
     
     
-    <img src="../../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev15+gca734b8e2 documentation - Home"/>
-    <img src="../../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev15+gca734b8e2 documentation - Home"/>
+    <img src="../../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev16+g8790e27f7 documentation - Home"/>
+    <img src="../../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev16+g8790e27f7 documentation - Home"/>
   
   
 </a></div>
@@ -470,26 +470,43 @@
 <span class="sd">S_z^{-1} (J_i \delta)`, a solve with the mismatch factored once.</span>
 
 <span class="sd">The solution (:class:`GaussNewton`) keeps the analytic solution of the last</span>
-<span class="sd">linearized problem. Its estimate is the mode, and its covariance, gain, DOFS</span>
-<span class="sd">and draws are those of the Gaussian at the mode: the analytic posterior of</span>
-<span class="sd">the problem linearized at the last iterate, one step of :math:`d^2 &lt;</span>
-<span class="sd">\mathrm{tol} \cdot n` from the mode. The misfits and the chi-squared are the</span>
-<span class="sd">cost's terms at the mode, from the model itself. With a forward operator</span>
-<span class="sd">(a linear problem) ``_gauss_newton`` returns the analytic solution itself.</span>
+<span class="sd">linearized problem, the Gaussian at the mode: the analytic posterior of the</span>
+<span class="sd">problem linearized at the last iterate, one step of :math:`d^2 &lt;</span>
+<span class="sd">\mathrm{tol} \cdot n` from the mode. Its estimate is the mode, and its gain,</span>
+<span class="sd">DOFS and information content are those of the Gaussian at the mode. Its</span>
+<span class="sd">variances, the covariance of aggregates and its draws are those of the</span>
+<span class="sd">posterior itself, :math:`p(x \mid z) \propto e^{-\chi^2(x)/2}`, drawn by</span>
+<span class="sd">Hamiltonian Monte Carlo (``_Sampler``): the Gaussian at the mode is its mass</span>
+<span class="sd">and its exactly solved part, the rest of the cost its kicks, and a Metropolis</span>
+<span class="sd">test keeps the chain exact. Where the model bends over the posterior's</span>
+<span class="sd">spread, the Gaussian at the mode is not the posterior (a total of lognormal</span>
+<span class="sd">fluxes from its draws runs high and covers the truth too rarely); the draws</span>
+<span class="sd">are. The misfits and the chi-squared are the cost's terms at the mode, from</span>
+<span class="sd">the model itself. With a forward operator (a linear problem)</span>
+<span class="sd">``_gauss_newton`` returns the analytic solution itself.</span>
 
 <span class="sd">References</span>
 <span class="sd">----------</span>
 <span class="sd">Rodgers, C. D. (2000). *Inverse Methods for Atmospheric Sounding: Theory and</span>
 <span class="sd">Practice*, chapter 5. World Scientific. https://doi.org/10.1142/3171</span>
+
+<span class="sd">Shahbaba, B., Lan, S., Johnson, W. O., and Neal, R. M. (2014). Split</span>
+<span class="sd">Hamiltonian Monte Carlo. *Statistics and Computing*, 24(3), 339-349.</span>
+<span class="sd">https://doi.org/10.1007/s11222-012-9373-1</span>
+
+<span class="sd">Hoffman, M. D., and Gelman, A. (2014). The No-U-Turn sampler: adaptively</span>
+<span class="sd">setting path lengths in Hamiltonian Monte Carlo. *Journal of Machine Learning</span>
+<span class="sd">Research*, 15, 1593-1623.</span>
 <span class="sd">"""</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">math</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">numbers</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Iterator</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">numpy.linalg</span><span class="w"> </span><span class="kn">import</span> <span class="n">LinAlgError</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">fips.linalg</span><span class="w"> </span><span class="kn">import</span> <span class="n">LinearOperator</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">fips.linalg.forms</span><span class="w"> </span><span class="kn">import</span> <span class="n">_read_only</span>
@@ -528,12 +545,31 @@
 <span class="sd">        within about that of the mode: far inside its uncertainty, for an</span>
 <span class="sd">        iteration or two more than a looser rule. Each step costs a factoring</span>
 <span class="sd">        of the problem linearized at the last estimate.</span>
+<span class="sd">    draws : int, default 2000</span>
+<span class="sd">        The number of draws of the posterior kept for its variances and the</span>
+<span class="sd">        covariance of aggregates (Monte Carlo estimates: the relative error of</span>
+<span class="sd">        a standard deviation is about :math:`\sqrt{\tau / (2\,</span>
+<span class="sd">        \text{draws}})`, with :math:`\tau` the draws' autocorrelation time,</span>
+<span class="sd">        about 1 to 3 for most elements, 2% to 3% at 2000). They are made at</span>
+<span class="sd">        the first use of the variances or covariances, and each trial of</span>
+<span class="sd">        :meth:`Posterior.trials &lt;fips.Posterior.trials&gt;` makes its own, so</span>
+<span class="sd">        fewer make trials quicker. There is no setting without draws: the</span>
+<span class="sd">        Gaussian at the mode, which is not the posterior where the model</span>
+<span class="sd">        bends, is ``fips.solve(problem.linearized(post.estimate))``.</span>
+<span class="sd">    burn_in : int, default 200</span>
+<span class="sd">        The draws made and left out before those kept, from the mode, while</span>
+<span class="sd">        the sampler tunes its step to an acceptance rate of 0.9.</span>
+<span class="sd">    seed : int, default 0</span>
+<span class="sd">        The seed of the tuning and the kept draws, so that a solve is</span>
+<span class="sd">        reproducible.</span>
 
 <span class="sd">    Raises</span>
 <span class="sd">    ------</span>
 <span class="sd">    ValueError</span>
 <span class="sd">        If `gamma` is not a positive, finite number, `max_iterations` is not a</span>
-<span class="sd">        positive integer, or `tol` is not a positive, finite number.</span>
+<span class="sd">        positive integer, `tol` is not a positive, finite number, `draws` is</span>
+<span class="sd">        not a positive integer, or `burn_in` or `seed` is not a nonnegative</span>
+<span class="sd">        one.</span>
 <span class="sd">    """</span>
 
     <span class="n">gamma</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span>
@@ -542,6 +578,12 @@
 <span class="w">    </span><span class="sd">"""The most steps to take."""</span>
     <span class="n">tol</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-6</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">"""The iterations stop when :math:`d^2 &lt;` ``tol`` :math:`\cdot\, n`."""</span>
+    <span class="n">draws</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2000</span>
+<span class="w">    </span><span class="sd">"""The number of draws of the posterior kept for its variances and covariances."""</span>
+    <span class="n">burn_in</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">200</span>
+<span class="w">    </span><span class="sd">"""The draws left out before those kept, while the sampler tunes its step."""</span>
+    <span class="n">seed</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="w">    </span><span class="sd">"""The seed of the tuning and of the kept draws."""</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">"gamma"</span><span class="p">,</span> <span class="n">AnalyticOptions</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">gamma</span><span class="p">)</span><span class="o">.</span><span class="n">gamma</span><span class="p">)</span>
@@ -561,36 +603,53 @@
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"tol must be a number, got </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">tol</span><span class="si">!r}</span><span class="s2">."</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="kc">None</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">tol</span><span class="p">)</span> <span class="ow">and</span> <span class="n">tol</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"tol must be positive and finite, got </span><span class="si">{</span><span class="n">tol</span><span class="si">}</span><span class="s2">."</span><span class="p">)</span>
-        <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">"tol"</span><span class="p">,</span> <span class="n">tol</span><span class="p">)</span></div>
+        <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">"tol"</span><span class="p">,</span> <span class="n">tol</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">least</span> <span class="ow">in</span> <span class="p">((</span><span class="s2">"draws"</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="s2">"burn_in"</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="s2">"seed"</span><span class="p">,</span> <span class="mi">0</span><span class="p">)):</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+            <span class="k">if</span> <span class="p">(</span>
+                <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">numbers</span><span class="o">.</span><span class="n">Integral</span><span class="p">)</span>
+                <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">bool</span><span class="p">)</span>
+                <span class="ow">or</span> <span class="n">value</span> <span class="o">&lt;</span> <span class="n">least</span>
+            <span class="p">):</span>
+                <span class="n">kind</span> <span class="o">=</span> <span class="s2">"a positive"</span> <span class="k">if</span> <span class="n">least</span> <span class="k">else</span> <span class="s2">"a nonnegative"</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> must be </span><span class="si">{</span><span class="n">kind</span><span class="si">}</span><span class="s2"> integer, got </span><span class="si">{</span><span class="n">value</span><span class="si">!r}</span><span class="s2">."</span><span class="p">)</span>
+            <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">value</span><span class="p">))</span></div>
 
 
 
 <span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">eq</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">GaussNewton</span><span class="p">:</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">"""</span>
-<span class="sd">    The Gauss-Newton method's solution: the mode, and the Gaussian of the problem linearized at the last iterate.</span>
+<span class="sd">    The Gauss-Newton method's solution: the mode, the Gaussian of the problem linearized at the last iterate, and draws of the posterior.</span>
 
 <span class="sd">    It keeps the problem with the forward model (``problem``), the analytic</span>
 <span class="sd">    solution of the last linearized problem (``analytic``, whose estimate is</span>
 <span class="sd">    the mode), the state that problem was linearized at, and each step's</span>
 <span class="sd">    :math:`d^2` and the cost after it. The :class:`~fips.Posterior` asks it</span>
 <span class="sd">    for every array it reports: it is the method's</span>
-<span class="sd">    :class:`~fips.posterior.Solution`. Its answers, by what each needs:</span>
+<span class="sd">    :class:`~fips.posterior.Solution`. The draws of the posterior are made at</span>
+<span class="sd">    their first use and kept (not pickled: a posterior read back draws them</span>
+<span class="sd">    again, the same, from the seed). Its answers, by what each needs:</span>
 
 <span class="sd">    - the estimate is the mode, not the mean, and is not linear in the</span>
 <span class="sd">      observations (no ``estimate_is_mean``, no ``estimate_is_linear``);</span>
-<span class="sd">    - the variances, the covariance of aggregates, the gain, DOFS, the</span>
-<span class="sd">      information content and the draws are those of the Gaussian at the</span>
-<span class="sd">      mode (``analytic``'s); the posterior reads the averaging kernel and the</span>
-<span class="sd">      innovation covariance from the linearized problem (``linearized``);</span>
+<span class="sd">    - the variances and the covariance of aggregates are those of the kept</span>
+<span class="sd">      draws of the posterior (``draws`` of them, after a ``burn_in`` that</span>
+<span class="sd">      tunes the sampler, from ``seed``), about their mean, and</span>
+<span class="sd">      :meth:`sample` draws more;</span>
+<span class="sd">    - the gain, DOFS and the information content are those of the Gaussian</span>
+<span class="sd">      at the mode (``analytic``'s); the posterior reads the averaging kernel</span>
+<span class="sd">      and the innovation covariance from the linearized problem</span>
+<span class="sd">      (``linearized``);</span>
 <span class="sd">    - the misfits and the chi-squared are the terms of the cost at the mode,</span>
 <span class="sd">      with the residual :math:`z - F(\hat{x}) - c` of the model itself;</span>
-<span class="sd">    - :meth:`with_data` solves again, starting from the last linearization;</span>
-<span class="sd">      there is no ``with_gamma``: the linearization depends on gamma.</span>
+<span class="sd">    - :meth:`with_data` solves again, starting from the last linearization,</span>
+<span class="sd">      and its draws are its own; there is no ``with_gamma``: the</span>
+<span class="sd">      linearization depends on gamma.</span>
 
 <span class="sd">    Every estimate is :math:`x_0 + S_0 y`, and the solution keeps the</span>
 <span class="sd">    :math:`y` of the mode and of the last linearization point, so the state</span>
-<span class="sd">    misfit and :math:`d^2` need no inverse of :math:`S_0`.</span>
+<span class="sd">    misfit, :math:`d^2` and the sampler need no inverse of :math:`S_0`.</span>
 <span class="sd">    """</span>
 
     <span class="n">problem</span><span class="p">:</span> <span class="n">Problem</span>
@@ -616,9 +675,61 @@
     <span class="n">options</span><span class="p">:</span> <span class="n">GaussNewtonOptions</span>
 <span class="w">    </span><span class="sd">"""The options it solved with (and :meth:`with_data` solves with)."""</span>
 
+    <span class="c1"># -- the draws, kept outside the frozen fields -------------------------------</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_sampler</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"_Sampler"</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return the sampler of this solution's posterior, made once."""</span>
+        <span class="n">sampler</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"_sampler_"</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">sampler</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">sampler</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">[</span><span class="s2">"_sampler_"</span><span class="p">]</span> <span class="o">=</span> <span class="n">_Sampler</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">sampler</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_tuning</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"_Tuning"</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return the sampler's step, tuned over the burn-in from the mode at the first call (its generator a child of the seed's, apart from the kept draws')."""</span>
+        <span class="n">tuning</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"_tuning_"</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">tuning</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="p">(</span><span class="n">child</span><span class="p">,)</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">SeedSequence</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">seed</span><span class="p">)</span><span class="o">.</span><span class="n">spawn</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">tuning</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sampler</span><span class="p">()</span><span class="o">.</span><span class="n">tune</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">burn_in</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="n">child</span><span class="p">)</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">[</span><span class="s2">"_tuning_"</span><span class="p">]</span> <span class="o">=</span> <span class="n">tuning</span>
+            <span class="n">steps</span> <span class="o">=</span> <span class="n">_steps</span><span class="p">(</span><span class="n">tuning</span><span class="o">.</span><span class="n">step</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                <span class="s2">"The posterior sampler's step is </span><span class="si">%.3g</span><span class="s2">, </span><span class="si">%d</span><span class="s2"> steps a draw, after a "</span>
+                <span class="s2">"burn-in of </span><span class="si">%d</span><span class="s2"> draws accepted at </span><span class="si">%.2f</span><span class="s2">."</span><span class="p">,</span>
+                <span class="n">tuning</span><span class="o">.</span><span class="n">step</span><span class="p">,</span>
+                <span class="n">steps</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">burn_in</span><span class="p">,</span>
+                <span class="n">tuning</span><span class="o">.</span><span class="n">acceptance</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="n">steps</span> <span class="o">&gt;=</span> <span class="n">_MANY_STEPS</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                    <span class="s2">"The posterior sampler takes </span><span class="si">%d</span><span class="s2"> steps a draw: the posterior "</span>
+                    <span class="s2">"bends very much over its spread, or the Jacobian is not the "</span>
+                    <span class="s2">"derivative of the model (a wrong one leaves the draws exact "</span>
+                    <span class="s2">"but makes each cost hundreds of steps; check it with "</span>
+                    <span class="s2">"fips.taylortest(problem.forward, post.estimate))."</span><span class="p">,</span>
+                    <span class="n">steps</span><span class="p">,</span>
+                <span class="p">)</span>
+        <span class="k">return</span> <span class="n">tuning</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_kept</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return the kept draws (``n x draws``), drawn from the seed at the first call, with a warning if they mix too slowly for their variances."""</span>
+        <span class="n">kept</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"_draws"</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">kept</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">draws</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">draws</span>
+            <span class="n">kept</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">draws</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">seed</span><span class="p">))</span>
+            <span class="n">kept</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">[</span><span class="s2">"_draws"</span><span class="p">]</span> <span class="o">=</span> <span class="n">_read_only</span><span class="p">(</span><span class="n">kept</span><span class="p">)</span>
+            <span class="n">_warn_if_imprecise</span><span class="p">(</span><span class="n">_autocorrelation_times</span><span class="p">(</span><span class="n">kept</span><span class="p">),</span> <span class="n">draws</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">kept</span>
+
     <span class="k">def</span><span class="w"> </span><span class="nf">__getstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">"""Return the fields for a pickle or a copy."""</span>
-        <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">)</span>
+<span class="w">        </span><span class="sd">"""Return the fields for a pickle or a copy, without the caches (the draws are made again, the same, from the seed)."""</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="n">name</span><span class="p">:</span> <span class="n">value</span>
+            <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"_sampler_"</span><span class="p">,</span> <span class="s2">"_tuning_"</span><span class="p">,</span> <span class="s2">"_draws"</span><span class="p">)</span>
+        <span class="p">}</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">__setstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">"""Restore from a pickle or a copy, the arrays read-only again."""</span>
@@ -627,17 +738,32 @@
             <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
                 <span class="n">_read_only</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
 
+    <span class="c1"># -- the Solution ------------------------------------------------------------</span>
+
     <span class="k">def</span><span class="w"> </span><span class="nf">estimate</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">"""Return the mode."""</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">mode</span>
 
+    <span class="k">def</span><span class="w"> </span><span class="nf">sample</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">N</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">rng</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">Generator</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return `N` new draws of the posterior (``n x N``): the chain from where the burn-in ended, at its tuned step."""</span>
+        <span class="n">tuning</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tuning</span><span class="p">()</span>
+        <span class="n">draws</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">acceptance</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sampler</span><span class="p">()</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">tuning</span><span class="o">.</span><span class="n">point</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">rng</span><span class="p">,</span> <span class="n">tuning</span><span class="o">.</span><span class="n">step</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">"</span><span class="si">%d</span><span class="s2"> draws of the posterior, accepted at </span><span class="si">%.2f</span><span class="s2">."</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">acceptance</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">draws</span>
+
     <span class="k">def</span><span class="w"> </span><span class="nf">variances</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">"""Return the variances of the Gaussian at the mode."""</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">analytic</span><span class="o">.</span><span class="n">variances</span><span class="p">()</span>
+<span class="w">        </span><span class="sd">"""Return the variances of the kept draws."""</span>
+        <span class="n">kept</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_kept</span><span class="p">()</span>
+        <span class="n">centered</span> <span class="o">=</span> <span class="n">kept</span> <span class="o">-</span> <span class="n">kept</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">keepdims</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s2">"ij,ij-&gt;i"</span><span class="p">,</span> <span class="n">centered</span><span class="p">,</span> <span class="n">centered</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">kept</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">cov</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">W</span><span class="p">:</span> <span class="n">LinearOperator</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">"""Return the covariance of the Gaussian at the mode, or of aggregates of it."""</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">analytic</span><span class="o">.</span><span class="n">cov</span><span class="p">(</span><span class="n">W</span><span class="p">)</span>
+<span class="w">        </span><span class="sd">"""Return the covariance of the kept draws, ``n x n``, or of their aggregates ``W x``, ``k x k``."""</span>
+        <span class="n">kept</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_kept</span><span class="p">()</span>
+        <span class="n">Y</span> <span class="o">=</span> <span class="n">kept</span> <span class="k">if</span> <span class="n">W</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">W</span> <span class="o">@</span> <span class="n">kept</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+        <span class="n">centered</span> <span class="o">=</span> <span class="n">Y</span> <span class="o">-</span> <span class="n">Y</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">keepdims</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">S</span> <span class="o">=</span> <span class="n">centered</span> <span class="o">@</span> <span class="n">centered</span><span class="o">.</span><span class="n">T</span> <span class="o">/</span> <span class="p">(</span><span class="n">Y</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="k">return</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">S</span> <span class="o">+</span> <span class="n">S</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">gain</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">W</span><span class="p">:</span> <span class="n">LinearOperator</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">"""Return the gain of the problem linearized at the last iterate, or :math:`W` times it."""</span>
@@ -654,10 +780,6 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">information</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">"""Return the information content of the Gaussian at the mode."""</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">analytic</span><span class="o">.</span><span class="n">information</span><span class="p">()</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">sample</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">N</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">rng</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">Generator</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">"""Return `N` draws of the Gaussian at the mode (``n x N``)."""</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">analytic</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="n">rng</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">misfits</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">"""Return the data and the state misfits at the mode."""</span>
@@ -719,6 +841,307 @@
 <span class="sd">        do not depend on the observations' values), so it costs a product.</span>
 <span class="sd">        """</span>
         <span class="k">return</span> <span class="n">_iterate</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="bp">self</span><span class="p">)</span>
+
+
+<span class="n">_QUARTER</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">pi</span>
+<span class="sd">"""The time each draw travels: a quarter period of the Gaussian at the mode, after which a draw of that Gaussian would be independent of its start."""</span>
+
+<span class="n">_TARGET</span> <span class="o">=</span> <span class="mf">0.9</span>
+<span class="sd">"""The acceptance rate the step is tuned to during the burn-in."""</span>
+
+<span class="n">_JITTER</span> <span class="o">=</span> <span class="mf">0.2</span>
+<span class="sd">"""Each draw's step is the tuned one times a uniform number within this fraction of 1, so that no path is periodic."""</span>
+
+<span class="n">_MOST_STEPS</span> <span class="o">=</span> <span class="mi">1000</span>
+<span class="sd">"""The most steps a draw takes: the step is never tuned below a quarter period over this."""</span>
+
+<span class="n">_MANY_STEPS</span> <span class="o">=</span> <span class="mi">200</span>
+<span class="sd">"""The steps a draw takes at which a solve warns that the posterior bends very much or the Jacobian is wrong."""</span>
+
+<span class="n">_BLOCK</span> <span class="o">=</span> <span class="mi">512</span>
+<span class="sd">"""The number of velocities the sampler draws in one block."""</span>
+
+<span class="n">_FAILED</span> <span class="o">=</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">FloatingPointError</span><span class="p">,</span> <span class="ne">OverflowError</span><span class="p">,</span> <span class="n">LinAlgError</span><span class="p">)</span>
+<span class="sd">"""What a model (or a transform) raises at a state it cannot model: a path that reaches one is rejected."""</span>
+
+
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">_Point</span><span class="p">:</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""A state of the chain with what the next path needs there: the remainder :math:`R(x)`, its gradient :math:`\rho(x)` and :math:`\hat{S} \rho(x)`."""</span>
+
+    <span class="n">x</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
+    <span class="n">R</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">rho</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
+    <span class="n">S_rho</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
+
+
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">_Tuning</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""What the burn-in leaves: the tuned step, the state it ended at, and its acceptance rate."""</span>
+
+    <span class="n">step</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">point</span><span class="p">:</span> <span class="n">_Point</span>
+    <span class="n">acceptance</span><span class="p">:</span> <span class="nb">float</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">_Sampler</span><span class="p">:</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">    Hamiltonian Monte Carlo for the posterior of a problem with a forward model, split at the Gaussian at the mode.</span>
+
+<span class="sd">    The posterior is :math:`p(x \mid z) \propto e^{-U(x)}`, :math:`U` half</span>
+<span class="sd">    the cost. Write it as the Gaussian at the mode times the rest,</span>
+<span class="sd">    :math:`U = U_G + R`, with :math:`U_G(x) = \tfrac{1}{2} (x - \hat{x})^T</span>
+<span class="sd">    \hat{S}^{-1} (x - \hat{x})` (:math:`\hat{S}` the covariance of the</span>
+<span class="sd">    problem linearized at the last iterate, ``analytic``). The momentum's</span>
+<span class="sd">    mass is :math:`\hat{S}^{-1}`, so a velocity is a draw of :math:`N(0,</span>
+<span class="sd">    \hat{S})`: the analytic method's exact draws less their mean</span>
+<span class="sd">    (``analytic.sample``). The dynamics of :math:`U_G` with that mass are a</span>
+<span class="sd">    rotation, solved exactly, as for the bounded method's sampler:</span>
+
+<span class="sd">    .. math::</span>
+
+<span class="sd">        x(t) = \hat{x} + (x - \hat{x}) \cos t + v \sin t, \qquad</span>
+<span class="sd">        v(t) = v \cos t - (x - \hat{x}) \sin t,</span>
+
+<span class="sd">    and :math:`R` acts as kicks, :math:`v \leftarrow v - h \hat{S} \nabla R`,</span>
+<span class="sd">    half a step before and after each rotation by :math:`h` (Strang</span>
+<span class="sd">    splitting: Shahbaba et al., 2014). The path is symplectic and reversible,</span>
+<span class="sd">    so a Metropolis test on the change of :math:`H = U + \tfrac{1}{2} v^T</span>
+<span class="sd">    \hat{S}^{-1} v` makes the chain exact whatever :math:`\hat{S}` and</span>
+<span class="sd">    :math:`h` are; they set only how fast it mixes. Where the posterior is</span>
+<span class="sd">    the Gaussian at the mode (a linear model), :math:`\nabla R = 0`, every</span>
+<span class="sd">    path is accepted, and one step of a quarter period is an exact,</span>
+<span class="sd">    independent draw.</span>
+
+<span class="sd">    :math:`S_0^{-1}` is never needed. With :math:`\hat{x} = x_0 + S_0</span>
+<span class="sd">    \hat{y}` (``mode_y``) and every state in :math:`x_0` plus the range of</span>
+<span class="sd">    :math:`S_0` (the velocities and kicks are), in the state whitened by</span>
+<span class="sd">    :math:`S_0` the remainder is</span>
+
+<span class="sd">    .. math::</span>
+
+<span class="sd">        R(x) = \hat{y}^T (x - \hat{x}) + \tfrac{\gamma}{2} \big(r^T S_z^{-1} r</span>
+<span class="sd">            - d^T S_z^{-1} d\big), \qquad r = z - F(x) - c, \quad</span>
+<span class="sd">            d = J_* (x - \hat{x}),</span>
+
+<span class="sd">    up to a constant, with :math:`J_*` the Jacobian of the last</span>
+<span class="sd">    linearization; its gradient is :math:`\rho = \hat{y} - \gamma J(x)^T</span>
+<span class="sd">    S_z^{-1} r - \gamma J_*^T S_z^{-1} d`, so a kick is :math:`\hat{S} \rho`</span>
+<span class="sd">    (``_cov_times``). The kinetic energy is never formed either: a kick of</span>
+<span class="sd">    :math:`h` changes it by :math:`-h \rho^T v + \tfrac{1}{2} h^2 \rho^T</span>
+<span class="sd">    \hat{S} \rho`, and a rotation not at all. A singular :math:`S_0` (cells</span>
+<span class="sd">    with no prior spread) leaves those elements at the mode.</span>
+
+<span class="sd">    Each draw starts from the last with a new velocity and travels a quarter</span>
+<span class="sd">    period, :data:`_QUARTER`, in steps of the tuned :math:`h` (jittered by</span>
+<span class="sd">    :data:`_JITTER`). The burn-in, from the mode, tunes :math:`h` to an</span>
+<span class="sd">    acceptance rate of :data:`_TARGET` by dual averaging (Hoffman and</span>
+<span class="sd">    Gelman, 2014), starting from one step a draw; its draws are left out.</span>
+<span class="sd">    A path the model cannot follow (it overflows) is rejected.</span>
+<span class="sd">    """</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">solution</span><span class="p">:</span> <span class="s2">"GaussNewton"</span><span class="p">):</span>
+        <span class="n">problem</span><span class="p">,</span> <span class="n">analytic</span> <span class="o">=</span> <span class="n">solution</span><span class="o">.</span><span class="n">problem</span><span class="p">,</span> <span class="n">solution</span><span class="o">.</span><span class="n">analytic</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">problem</span> <span class="o">=</span> <span class="n">problem</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">analytic</span> <span class="o">=</span> <span class="n">analytic</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">gamma</span> <span class="o">=</span> <span class="n">analytic</span><span class="o">.</span><span class="n">gamma</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="o">=</span> <span class="n">solution</span><span class="o">.</span><span class="n">mode</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mode_y</span> <span class="o">=</span> <span class="n">solution</span><span class="o">.</span><span class="n">mode_y</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mean</span> <span class="o">=</span> <span class="n">analytic</span><span class="o">.</span><span class="n">estimate</span><span class="p">()</span>
+        <span class="n">J</span> <span class="o">=</span> <span class="n">analytic</span><span class="o">.</span><span class="n">problem</span><span class="o">.</span><span class="n">_operator</span><span class="o">.</span><span class="n">data</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">J</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">J_T</span> <span class="o">=</span> <span class="n">J</span><span class="p">,</span> <span class="n">J</span><span class="o">.</span><span class="n">_transpose</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">solve_S_z</span> <span class="o">=</span> <span class="n">problem</span><span class="o">.</span><span class="n">obs_cov</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">_solver</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">z</span> <span class="o">=</span> <span class="n">problem</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">values</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">c</span> <span class="o">=</span> <span class="n">problem</span><span class="o">.</span><span class="n">_offset_values</span><span class="p">()</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">point</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_Point</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">        Return the state `x` with :math:`R`, :math:`\rho` and :math:`\hat{S} \rho` there.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        ValueError, FloatingPointError, OverflowError, numpy.linalg.LinAlgError</span>
+<span class="sd">            If the model cannot model `x`, or the result is not finite.</span>
+<span class="sd">        """</span>
+        <span class="n">problem</span><span class="p">,</span> <span class="n">gamma</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">problem</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gamma</span>
+        <span class="k">with</span> <span class="n">np</span><span class="o">.</span><span class="n">errstate</span><span class="p">(</span><span class="n">over</span><span class="o">=</span><span class="s2">"raise"</span><span class="p">,</span> <span class="n">invalid</span><span class="o">=</span><span class="s2">"raise"</span><span class="p">):</span>
+            <span class="n">r</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">z</span> <span class="o">-</span> <span class="n">problem</span><span class="o">.</span><span class="n">_apply</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">c</span>
+            <span class="n">dx</span> <span class="o">=</span> <span class="n">x</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">mode</span>
+            <span class="n">d</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">J</span> <span class="o">@</span> <span class="n">dx</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+            <span class="n">weighted</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">solve_S_z</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">column_stack</span><span class="p">([</span><span class="n">r</span><span class="p">,</span> <span class="n">d</span><span class="p">])))</span>
+            <span class="n">R</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mode_y</span> <span class="o">@</span> <span class="n">dx</span><span class="p">)</span> <span class="o">+</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">gamma</span> <span class="o">*</span> <span class="p">(</span>
+                <span class="nb">float</span><span class="p">(</span><span class="n">r</span> <span class="o">@</span> <span class="n">weighted</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">])</span> <span class="o">-</span> <span class="nb">float</span><span class="p">(</span><span class="n">d</span> <span class="o">@</span> <span class="n">weighted</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">])</span>
+            <span class="p">)</span>
+            <span class="n">rho</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mode_y</span> <span class="o">-</span> <span class="n">gamma</span> <span class="o">*</span> <span class="p">(</span>
+                <span class="n">problem</span><span class="o">.</span><span class="n">_gradient</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">weighted</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">])</span>
+                <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">J_T</span> <span class="o">@</span> <span class="n">weighted</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+            <span class="p">)</span>
+            <span class="n">S_rho</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">analytic</span><span class="o">.</span><span class="n">_cov_times</span><span class="p">(</span><span class="n">rho</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">])[:,</span> <span class="mi">0</span><span class="p">]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">R</span><span class="p">)</span> <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">S_rho</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">()):</span>
+            <span class="k">raise</span> <span class="ne">FloatingPointError</span><span class="p">(</span><span class="s2">"The remainder is not finite."</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">_Point</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">R</span><span class="p">,</span> <span class="n">rho</span><span class="p">,</span> <span class="n">S_rho</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">travel</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">start</span><span class="p">:</span> <span class="n">_Point</span><span class="p">,</span> <span class="n">v</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">h</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">steps</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">_Point</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""Return where the path from `start` with the velocity `v` is after `steps` steps of `h`, and the change of the energy along it."""</span>
+        <span class="n">mode</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mode</span>
+        <span class="n">cos</span><span class="p">,</span> <span class="n">sin</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">h</span><span class="p">),</span> <span class="n">math</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">h</span><span class="p">)</span>
+        <span class="n">here</span> <span class="o">=</span> <span class="n">start</span>
+        <span class="n">change</span> <span class="o">=</span> <span class="o">-</span><span class="mf">0.5</span> <span class="o">*</span> <span class="n">h</span> <span class="o">*</span> <span class="nb">float</span><span class="p">(</span><span class="n">here</span><span class="o">.</span><span class="n">rho</span> <span class="o">@</span> <span class="n">v</span><span class="p">)</span> <span class="o">+</span> <span class="mf">0.125</span> <span class="o">*</span> <span class="n">h</span> <span class="o">*</span> <span class="n">h</span> <span class="o">*</span> <span class="nb">float</span><span class="p">(</span>
+            <span class="n">here</span><span class="o">.</span><span class="n">rho</span> <span class="o">@</span> <span class="n">here</span><span class="o">.</span><span class="n">S_rho</span>
+        <span class="p">)</span>
+        <span class="n">v</span> <span class="o">=</span> <span class="n">v</span> <span class="o">-</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">h</span> <span class="o">*</span> <span class="n">here</span><span class="o">.</span><span class="n">S_rho</span>
+        <span class="k">for</span> <span class="n">step</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">steps</span><span class="p">):</span>
+            <span class="n">a</span> <span class="o">=</span> <span class="n">here</span><span class="o">.</span><span class="n">x</span> <span class="o">-</span> <span class="n">mode</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">mode</span> <span class="o">+</span> <span class="n">a</span> <span class="o">*</span> <span class="n">cos</span> <span class="o">+</span> <span class="n">v</span> <span class="o">*</span> <span class="n">sin</span>
+            <span class="n">v</span> <span class="o">=</span> <span class="n">v</span> <span class="o">*</span> <span class="n">cos</span> <span class="o">-</span> <span class="n">a</span> <span class="o">*</span> <span class="n">sin</span>
+            <span class="n">here</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">point</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+            <span class="n">kick</span> <span class="o">=</span> <span class="n">h</span> <span class="k">if</span> <span class="n">step</span> <span class="o">&lt;</span> <span class="n">steps</span> <span class="o">-</span> <span class="mi">1</span> <span class="k">else</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">h</span>
+            <span class="n">change</span> <span class="o">+=</span> <span class="o">-</span><span class="n">kick</span> <span class="o">*</span> <span class="nb">float</span><span class="p">(</span><span class="n">here</span><span class="o">.</span><span class="n">rho</span> <span class="o">@</span> <span class="n">v</span><span class="p">)</span> <span class="o">+</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">kick</span> <span class="o">*</span> <span class="n">kick</span> <span class="o">*</span> <span class="nb">float</span><span class="p">(</span>
+                <span class="n">here</span><span class="o">.</span><span class="n">rho</span> <span class="o">@</span> <span class="n">here</span><span class="o">.</span><span class="n">S_rho</span>
+            <span class="p">)</span>
+            <span class="n">v</span> <span class="o">=</span> <span class="n">v</span> <span class="o">-</span> <span class="n">kick</span> <span class="o">*</span> <span class="n">here</span><span class="o">.</span><span class="n">S_rho</span>
+        <span class="k">return</span> <span class="n">here</span><span class="p">,</span> <span class="n">change</span> <span class="o">+</span> <span class="p">(</span><span class="n">here</span><span class="o">.</span><span class="n">R</span> <span class="o">-</span> <span class="n">start</span><span class="o">.</span><span class="n">R</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">move</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">here</span><span class="p">:</span> <span class="n">_Point</span><span class="p">,</span> <span class="n">v</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">test</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">h</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">steps</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">_Point</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""Return the chain's next state from `here` (the path's end if the Metropolis test `test` passes, else `here`) and the path's acceptance probability."""</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">with</span> <span class="n">np</span><span class="o">.</span><span class="n">errstate</span><span class="p">(</span><span class="n">over</span><span class="o">=</span><span class="s2">"raise"</span><span class="p">,</span> <span class="n">invalid</span><span class="o">=</span><span class="s2">"raise"</span><span class="p">):</span>
+                <span class="n">end</span><span class="p">,</span> <span class="n">change</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">travel</span><span class="p">(</span><span class="n">here</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="n">steps</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">_FAILED</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">here</span><span class="p">,</span> <span class="mf">0.0</span>
+        <span class="k">if</span> <span class="n">change</span> <span class="o">&lt;=</span> <span class="mf">0.0</span><span class="p">:</span>
+            <span class="n">alpha</span> <span class="o">=</span> <span class="mf">1.0</span>
+        <span class="k">else</span><span class="p">:</span>  <span class="c1"># a NaN change is rejected</span>
+            <span class="n">alpha</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">change</span><span class="p">)</span> <span class="k">if</span> <span class="n">change</span> <span class="o">&lt;</span> <span class="n">math</span><span class="o">.</span><span class="n">inf</span> <span class="k">else</span> <span class="mf">0.0</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">end</span> <span class="k">if</span> <span class="n">test</span> <span class="o">&lt;</span> <span class="n">alpha</span> <span class="k">else</span> <span class="n">here</span><span class="p">),</span> <span class="n">alpha</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">moves</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">count</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">rng</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">Generator</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">"""Yield `count` velocities, each with the uniform number of its test and its jitter, drawn from `rng` in blocks of :data:`_BLOCK`."""</span>
+        <span class="n">done</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">while</span> <span class="n">done</span> <span class="o">&lt;</span> <span class="n">count</span><span class="p">:</span>
+            <span class="n">block</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">_BLOCK</span><span class="p">,</span> <span class="n">count</span> <span class="o">-</span> <span class="n">done</span><span class="p">)</span>
+            <span class="n">V</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">analytic</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">block</span><span class="p">,</span> <span class="n">rng</span><span class="p">)</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">mean</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">]</span>
+            <span class="n">tests</span> <span class="o">=</span> <span class="n">rng</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="n">block</span><span class="p">)</span>
+            <span class="n">jitters</span> <span class="o">=</span> <span class="n">rng</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="n">_JITTER</span><span class="p">,</span> <span class="mf">1.0</span> <span class="o">+</span> <span class="n">_JITTER</span><span class="p">,</span> <span class="n">block</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">block</span><span class="p">):</span>
+                <span class="k">yield</span> <span class="n">V</span><span class="p">[:,</span> <span class="n">j</span><span class="p">],</span> <span class="nb">float</span><span class="p">(</span><span class="n">tests</span><span class="p">[</span><span class="n">j</span><span class="p">]),</span> <span class="nb">float</span><span class="p">(</span><span class="n">jitters</span><span class="p">[</span><span class="n">j</span><span class="p">])</span>
+            <span class="n">done</span> <span class="o">+=</span> <span class="n">block</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">tune</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">burn_in</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">rng</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">Generator</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_Tuning</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Return the step tuned over `burn_in` draws from the mode, by dual averaging (Hoffman and Gelman, 2014, algorithm 5) of its logarithm, and where they ended.</span>
+
+<span class="sd">        It starts from one step a draw, and the step stays between</span>
+<span class="sd">        :data:`_QUARTER` over :data:`_MOST_STEPS` and :data:`_QUARTER`. With</span>
+<span class="sd">        no burn-in, the step is a whole quarter period.</span>
+<span class="sd">        """</span>
+        <span class="n">here</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">point</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mode</span><span class="p">))</span>
+        <span class="n">longest</span><span class="p">,</span> <span class="n">shortest</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">_QUARTER</span><span class="p">),</span> <span class="n">math</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">_QUARTER</span> <span class="o">/</span> <span class="n">_MOST_STEPS</span><span class="p">)</span>
+        <span class="n">target</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mf">10.0</span> <span class="o">*</span> <span class="n">_QUARTER</span><span class="p">)</span>
+        <span class="n">log_h</span><span class="p">,</span> <span class="n">log_mean</span><span class="p">,</span> <span class="n">error</span><span class="p">,</span> <span class="n">accepted</span> <span class="o">=</span> <span class="n">longest</span><span class="p">,</span> <span class="n">longest</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span>
+        <span class="k">for</span> <span class="n">m</span><span class="p">,</span> <span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">test</span><span class="p">,</span> <span class="n">jitter</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">moves</span><span class="p">(</span><span class="n">burn_in</span><span class="p">,</span> <span class="n">rng</span><span class="p">),</span> <span class="n">start</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+            <span class="n">steps</span> <span class="o">=</span> <span class="n">_steps</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">log_h</span><span class="p">))</span>
+            <span class="n">here</span><span class="p">,</span> <span class="n">alpha</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">move</span><span class="p">(</span><span class="n">here</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">test</span><span class="p">,</span> <span class="n">_QUARTER</span> <span class="o">/</span> <span class="n">steps</span> <span class="o">*</span> <span class="n">jitter</span><span class="p">,</span> <span class="n">steps</span><span class="p">)</span>
+            <span class="n">accepted</span> <span class="o">+=</span> <span class="n">alpha</span>
+            <span class="n">error</span> <span class="o">+=</span> <span class="p">((</span><span class="n">_TARGET</span> <span class="o">-</span> <span class="n">alpha</span><span class="p">)</span> <span class="o">-</span> <span class="n">error</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">m</span> <span class="o">+</span> <span class="mi">10</span><span class="p">)</span>
+            <span class="n">log_h</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">target</span> <span class="o">-</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">m</span><span class="p">)</span> <span class="o">/</span> <span class="mf">0.05</span> <span class="o">*</span> <span class="n">error</span><span class="p">,</span> <span class="n">shortest</span><span class="p">),</span> <span class="n">longest</span><span class="p">)</span>
+            <span class="n">weight</span> <span class="o">=</span> <span class="n">m</span><span class="o">**-</span><span class="mf">0.75</span>
+            <span class="n">log_mean</span> <span class="o">=</span> <span class="n">weight</span> <span class="o">*</span> <span class="n">log_h</span> <span class="o">+</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="n">weight</span><span class="p">)</span> <span class="o">*</span> <span class="n">log_mean</span>
+        <span class="n">acceptance</span> <span class="o">=</span> <span class="n">accepted</span> <span class="o">/</span> <span class="n">burn_in</span> <span class="k">if</span> <span class="n">burn_in</span> <span class="k">else</span> <span class="n">math</span><span class="o">.</span><span class="n">nan</span>
+        <span class="k">return</span> <span class="n">_Tuning</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">log_mean</span><span class="p">),</span> <span class="n">here</span><span class="p">,</span> <span class="n">acceptance</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">run</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">start</span><span class="p">:</span> <span class="n">_Point</span><span class="p">,</span> <span class="n">N</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">rng</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">Generator</span><span class="p">,</span> <span class="n">step</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">_Point</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""Return `N` draws (``n x N``) of the chain from `start` at the step `step`, with velocities and tests drawn from `rng`, where it ended, and its acceptance rate."""</span>
+        <span class="n">steps</span> <span class="o">=</span> <span class="n">_steps</span><span class="p">(</span><span class="n">step</span><span class="p">)</span>
+        <span class="n">draws</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">start</span><span class="o">.</span><span class="n">x</span><span class="p">),</span> <span class="n">N</span><span class="p">))</span>
+        <span class="n">here</span><span class="p">,</span> <span class="n">accepted</span> <span class="o">=</span> <span class="n">start</span><span class="p">,</span> <span class="mf">0.0</span>
+        <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">test</span><span class="p">,</span> <span class="n">jitter</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">moves</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="n">rng</span><span class="p">)):</span>
+            <span class="n">here</span><span class="p">,</span> <span class="n">alpha</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">move</span><span class="p">(</span><span class="n">here</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">test</span><span class="p">,</span> <span class="n">_QUARTER</span> <span class="o">/</span> <span class="n">steps</span> <span class="o">*</span> <span class="n">jitter</span><span class="p">,</span> <span class="n">steps</span><span class="p">)</span>
+            <span class="n">accepted</span> <span class="o">+=</span> <span class="n">alpha</span>
+            <span class="n">draws</span><span class="p">[:,</span> <span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">here</span><span class="o">.</span><span class="n">x</span>
+        <span class="k">return</span> <span class="n">draws</span><span class="p">,</span> <span class="n">here</span><span class="p">,</span> <span class="n">accepted</span> <span class="o">/</span> <span class="n">N</span>
+
+
+<span class="n">_IMPRECISE</span> <span class="o">=</span> <span class="mf">0.1</span>
+<span class="sd">"""The relative error of a standard deviation from the kept draws above which a solve warns."""</span>
+
+<span class="n">_ROWS</span> <span class="o">=</span> <span class="mi">256</span>
+<span class="sd">"""The rows whose autocorrelation is computed at once."""</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_autocorrelation_times</span><span class="p">(</span><span class="n">draws</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">    Return the integrated autocorrelation time :math:`\tau` of each row of `draws` (a chain, one column per draw), by Sokal's adaptive window.</span>
+
+<span class="sd">    :math:`\tau = 1 + 2 \sum_{k=1}^{w} \rho_k`, with :math:`\rho_k` the</span>
+<span class="sd">    autocorrelation at lag :math:`k` (by FFT) and the window :math:`w` the</span>
+<span class="sd">    first at least five times its :math:`\tau`. A chain has</span>
+<span class="sd">    :math:`N / \tau` effective draws. A row that never moves has</span>
+<span class="sd">    :math:`\tau = 1`. It reads one chain, so a chain that rarely visits a</span>
+<span class="sd">    tail gives too small a :math:`\tau`: a diagnostic, not a guarantee.</span>
+<span class="sd">    """</span>
+    <span class="n">n</span><span class="p">,</span> <span class="n">N</span> <span class="o">=</span> <span class="n">draws</span><span class="o">.</span><span class="n">shape</span>
+    <span class="n">tau</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">N</span> <span class="o">&lt;</span> <span class="mi">3</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">tau</span>
+    <span class="n">windows</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">N</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">first</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">_ROWS</span><span class="p">):</span>
+        <span class="n">rows</span> <span class="o">=</span> <span class="nb">slice</span><span class="p">(</span><span class="n">first</span><span class="p">,</span> <span class="nb">min</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">first</span> <span class="o">+</span> <span class="n">_ROWS</span><span class="p">))</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">draws</span><span class="p">[</span><span class="n">rows</span><span class="p">]</span> <span class="o">-</span> <span class="n">draws</span><span class="p">[</span><span class="n">rows</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">keepdims</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">f</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">fft</span><span class="o">.</span><span class="n">rfft</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">N</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">acf</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">fft</span><span class="o">.</span><span class="n">irfft</span><span class="p">(</span><span class="n">f</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">conj</span><span class="p">(</span><span class="n">f</span><span class="p">),</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">N</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)[:,</span> <span class="p">:</span><span class="n">N</span><span class="p">]</span>
+        <span class="n">variance</span> <span class="o">=</span> <span class="n">acf</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span>
+        <span class="n">moves</span> <span class="o">=</span> <span class="n">variance</span> <span class="o">&gt;</span> <span class="mi">0</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">moves</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+            <span class="k">continue</span>
+        <span class="n">taus</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">+</span> <span class="mf">2.0</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span><span class="n">acf</span><span class="p">[</span><span class="n">moves</span><span class="p">,</span> <span class="mi">1</span><span class="p">:]</span> <span class="o">/</span> <span class="n">variance</span><span class="p">[</span><span class="n">moves</span><span class="p">,</span> <span class="kc">None</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">stop</span> <span class="o">=</span> <span class="n">windows</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="p">:]</span> <span class="o">&gt;=</span> <span class="mf">5.0</span> <span class="o">*</span> <span class="n">taus</span>
+        <span class="n">window</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">stop</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span> <span class="n">stop</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span> <span class="n">N</span> <span class="o">-</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="n">block</span> <span class="o">=</span> <span class="n">tau</span><span class="p">[</span><span class="n">rows</span><span class="p">]</span>
+        <span class="n">block</span><span class="p">[</span><span class="n">moves</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="n">taus</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">window</span><span class="p">)),</span> <span class="n">window</span><span class="p">],</span> <span class="mf">1.0</span><span class="p">)</span>
+        <span class="n">tau</span><span class="p">[</span><span class="n">rows</span><span class="p">]</span> <span class="o">=</span> <span class="n">block</span>
+    <span class="k">return</span> <span class="n">tau</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_warn_if_imprecise</span><span class="p">(</span><span class="n">tau</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">draws</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">    Log a warning when the kept draws mix so slowly that a standard deviation from them is uncertain by more than :data:`_IMPRECISE`.</span>
+
+<span class="sd">    The relative error of a standard deviation from :math:`N` draws with</span>
+<span class="sd">    autocorrelation time :math:`\tau` is about :math:`\sqrt{\tau / (2 N)}`.</span>
+<span class="sd">    """</span>
+    <span class="n">error</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">tau</span> <span class="o">/</span> <span class="p">(</span><span class="mf">2.0</span> <span class="o">*</span> <span class="n">draws</span><span class="p">))</span>
+    <span class="n">slow</span> <span class="o">=</span> <span class="n">error</span> <span class="o">&gt;</span> <span class="n">_IMPRECISE</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">slow</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+        <span class="k">return</span>
+    <span class="n">worst</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">tau</span><span class="p">))</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+        <span class="s2">"The posterior's draws mix slowly: </span><span class="si">%d</span><span class="s2"> state elements have a standard "</span>
+        <span class="s2">"deviation from the </span><span class="si">%d</span><span class="s2"> kept draws uncertain by more than </span><span class="si">%d%%</span><span class="s2">, the worst "</span>
+        <span class="s2">"(element </span><span class="si">%d</span><span class="s2">) by about </span><span class="si">%d%%</span><span class="s2"> (</span><span class="si">%.0f</span><span class="s2"> draws for each independent one). The "</span>
+        <span class="s2">"posterior bends much over its spread, along a direction the Gaussian at "</span>
+        <span class="s2">"the mode does not follow; raise draws= for those elements' spread, or "</span>
+        <span class="s2">"read the totals the data constrain, which mix faster."</span><span class="p">,</span>
+        <span class="nb">int</span><span class="p">(</span><span class="n">slow</span><span class="o">.</span><span class="n">sum</span><span class="p">()),</span>
+        <span class="n">draws</span><span class="p">,</span>
+        <span class="nb">round</span><span class="p">(</span><span class="mi">100</span> <span class="o">*</span> <span class="n">_IMPRECISE</span><span class="p">),</span>
+        <span class="n">worst</span><span class="p">,</span>
+        <span class="nb">round</span><span class="p">(</span><span class="mi">100</span> <span class="o">*</span> <span class="nb">float</span><span class="p">(</span><span class="n">error</span><span class="p">[</span><span class="n">worst</span><span class="p">])),</span>
+        <span class="nb">float</span><span class="p">(</span><span class="n">tau</span><span class="p">[</span><span class="n">worst</span><span class="p">]),</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_steps</span><span class="p">(</span><span class="n">step</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Return the number of steps of about `step` that make a quarter period, at most :data:`_MOST_STEPS`."""</span>
+    <span class="k">return</span> <span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">min</span><span class="p">(</span><span class="n">_MOST_STEPS</span><span class="p">,</span> <span class="n">math</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">_QUARTER</span> <span class="o">/</span> <span class="n">step</span> <span class="o">-</span> <span class="mf">1e-9</span><span class="p">)))</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_with_obs</span><span class="p">(</span><span class="n">linear</span><span class="p">:</span> <span class="n">Problem</span><span class="p">,</span> <span class="n">obs</span><span class="p">:</span> <span class="n">Vector</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Problem</span><span class="p">:</span>

@@ -1,0 +1,6 @@
+fips.methods.gauss\_newton.GaussNewtonOptions.burn\_in
+======================================================
+
+.. currentmodule:: fips.methods.gauss_newton
+
+.. autoattribute:: GaussNewtonOptions.burn_in

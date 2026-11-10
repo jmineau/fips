@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>fips.solve &#8212; fips 0.2.0b3.dev15+gca734b8e2 documentation</title>
+    <title>fips.solve &#8212; fips 0.2.0b3.dev16+g8790e27f7 documentation</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../_static/documentation_options.js?v=9ef15731"></script>
+    <script src="../../_static/documentation_options.js?v=86168d94"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -135,8 +135,8 @@
       
     
     
-    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev15+gca734b8e2 documentation - Home"/>
-    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev15+gca734b8e2 documentation - Home"/>
+    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev16+g8790e27f7 documentation - Home"/>
+    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev16+g8790e27f7 documentation - Home"/>
   
   
 </a></div>
@@ -664,8 +664,11 @@
 </ul>
 </details></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="fips.methods.gauss_newton.GaussNewtonOptions.html">fips.methods.gauss_newton.GaussNewtonOptions</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="fips.methods.gauss_newton.GaussNewtonOptions.burn_in.html">fips.methods.gauss_newton.GaussNewtonOptions.burn_in</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fips.methods.gauss_newton.GaussNewtonOptions.draws.html">fips.methods.gauss_newton.GaussNewtonOptions.draws</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.methods.gauss_newton.GaussNewtonOptions.gamma.html">fips.methods.gauss_newton.GaussNewtonOptions.gamma</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.methods.gauss_newton.GaussNewtonOptions.max_iterations.html">fips.methods.gauss_newton.GaussNewtonOptions.max_iterations</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fips.methods.gauss_newton.GaussNewtonOptions.seed.html">fips.methods.gauss_newton.GaussNewtonOptions.seed</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.methods.gauss_newton.GaussNewtonOptions.tol.html">fips.methods.gauss_newton.GaussNewtonOptions.tol</a></li>
 </ul>
 </details></li>
@@ -934,12 +937,13 @@
 <li><p><strong>method</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></span>) – The name of a method (see <a class="reference internal" href="fips.available_methods.html#fips.available_methods" title="fips.available_methods"><code class="xref py py-func docutils literal notranslate"><span class="pre">available_methods()</span></code></a>). <code class="docutils literal notranslate"><span class="pre">&quot;analytic&quot;</span></code>
 is the closed-form Gaussian posterior; <code class="docutils literal notranslate"><span class="pre">&quot;bounded&quot;</span></code> the posterior
 with bounds on the state; <code class="docutils literal notranslate"><span class="pre">&quot;gauss_newton&quot;</span></code> the mode of the
-posterior of a problem with a forward model.</p></li>
+posterior of a problem with a forward model, and draws of it.</p></li>
 <li><p><strong>**options</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.15)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code></a></span>) – The method’s options, by name: for <code class="docutils literal notranslate"><span class="pre">&quot;analytic&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">gamma</span></code> (see
 <a class="reference internal" href="fips.methods.analytic.AnalyticOptions.html#fips.methods.analytic.AnalyticOptions" title="fips.methods.analytic.AnalyticOptions"><code class="xref py py-class docutils literal notranslate"><span class="pre">AnalyticOptions</span></code></a>); for <code class="docutils literal notranslate"><span class="pre">&quot;bounded&quot;</span></code>,
 <code class="docutils literal notranslate"><span class="pre">gamma</span></code>, <code class="docutils literal notranslate"><span class="pre">lower</span></code>, <code class="docutils literal notranslate"><span class="pre">upper</span></code>, <code class="docutils literal notranslate"><span class="pre">draws</span></code>, <code class="docutils literal notranslate"><span class="pre">burn_in</span></code> and <code class="docutils literal notranslate"><span class="pre">seed</span></code>
 (see <a class="reference internal" href="fips.methods.bounded.BoundedOptions.html#fips.methods.bounded.BoundedOptions" title="fips.methods.bounded.BoundedOptions"><code class="xref py py-class docutils literal notranslate"><span class="pre">BoundedOptions</span></code></a>); for
-<code class="docutils literal notranslate"><span class="pre">&quot;gauss_newton&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">gamma</span></code>, <code class="docutils literal notranslate"><span class="pre">max_iterations</span></code> and <code class="docutils literal notranslate"><span class="pre">tol</span></code> (see
+<code class="docutils literal notranslate"><span class="pre">&quot;gauss_newton&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">gamma</span></code>, <code class="docutils literal notranslate"><span class="pre">max_iterations</span></code>, <code class="docutils literal notranslate"><span class="pre">tol</span></code>, <code class="docutils literal notranslate"><span class="pre">draws</span></code>,
+<code class="docutils literal notranslate"><span class="pre">burn_in</span></code> and <code class="docutils literal notranslate"><span class="pre">seed</span></code> (see
 <a class="reference internal" href="fips.methods.gauss_newton.GaussNewtonOptions.html#fips.methods.gauss_newton.GaussNewtonOptions" title="fips.methods.gauss_newton.GaussNewtonOptions"><code class="xref py py-class docutils literal notranslate"><span class="pre">GaussNewtonOptions</span></code></a>).</p></li>
 </ul>
 </dd>

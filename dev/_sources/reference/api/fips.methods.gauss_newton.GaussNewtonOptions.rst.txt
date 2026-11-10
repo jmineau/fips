@@ -14,8 +14,11 @@
 .. autosummary::
    :toctree:
 
+   ~GaussNewtonOptions.burn_in
+   ~GaussNewtonOptions.draws
    ~GaussNewtonOptions.gamma
    ~GaussNewtonOptions.max_iterations
+   ~GaussNewtonOptions.seed
    ~GaussNewtonOptions.tol
 
 

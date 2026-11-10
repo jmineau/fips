@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>fips.Posterior.sample &#8212; fips 0.2.0b3.dev15+gca734b8e2 documentation</title>
+    <title>fips.Posterior.sample &#8212; fips 0.2.0b3.dev16+g8790e27f7 documentation</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../_static/documentation_options.js?v=9ef15731"></script>
+    <script src="../../_static/documentation_options.js?v=86168d94"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -137,8 +137,8 @@
       
     
     
-    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev15+gca734b8e2 documentation - Home"/>
-    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev15+gca734b8e2 documentation - Home"/>
+    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev16+g8790e27f7 documentation - Home"/>
+    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev16+g8790e27f7 documentation - Home"/>
   
   
 </a></div>
@@ -666,8 +666,11 @@
 </ul>
 </details></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="fips.methods.gauss_newton.GaussNewtonOptions.html">fips.methods.gauss_newton.GaussNewtonOptions</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="fips.methods.gauss_newton.GaussNewtonOptions.burn_in.html">fips.methods.gauss_newton.GaussNewtonOptions.burn_in</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fips.methods.gauss_newton.GaussNewtonOptions.draws.html">fips.methods.gauss_newton.GaussNewtonOptions.draws</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.methods.gauss_newton.GaussNewtonOptions.gamma.html">fips.methods.gauss_newton.GaussNewtonOptions.gamma</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.methods.gauss_newton.GaussNewtonOptions.max_iterations.html">fips.methods.gauss_newton.GaussNewtonOptions.max_iterations</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fips.methods.gauss_newton.GaussNewtonOptions.seed.html">fips.methods.gauss_newton.GaussNewtonOptions.seed</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.methods.gauss_newton.GaussNewtonOptions.tol.html">fips.methods.gauss_newton.GaussNewtonOptions.tol</a></li>
 </ul>
 </details></li>
@@ -957,11 +960,20 @@ draw per draw for most elements, one per four or five for an element
 whose analytic estimate is far outside its bound). A call costs a
 reflection off a bound, an <code class="docutils literal notranslate"><span class="pre">O(n)</span></code> step, for each bound a path
 reaches: about as many per draw as there are elements near a bound.</p>
-<p>The <code class="docutils literal notranslate"><span class="pre">&quot;gauss_newton&quot;</span></code> method draws the Gaussian at the mode, exactly
-as the analytic method draws the posterior of the problem linearized
-at its last step: a draw of the state of a nonlinear model’s problem
-(log scale factors), carried through the model or its transform, is a
-draw of what that Gaussian says of the result.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">&quot;gauss_newton&quot;</span></code> method draws the posterior of its forward
+model, <span class="math notranslate nohighlight">\(p(x \mid z) \propto e^{-\chi^2(x)/2}\)</span>, by Hamiltonian
+Monte Carlo with the Gaussian at the mode as its mass and the exactly
+solved part of its paths, and a Metropolis test: each call continues
+the chain from where the solve’s burn-in ended, at its tuned step
+(<code class="docutils literal notranslate"><span class="pre">GaussNewtonOptions</span></code>), and returns the next <cite>n</cite> draws. A draw of
+the state (log scale factors), carried through the model or its
+transform, is a draw of the result: a total of fluxes, its interval.
+The draws are correlated (an autocorrelation time of 1 to 3 draws for
+most elements in a Salt Lake Valley-shaped test; hundreds along a
+curve the data pin, which the totals they constrain do not share). A
+draw costs a few evaluations of the model and of the product of its
+Jacobian’s transpose (one for a linear model), each with a product of
+the Gaussian at the mode’s covariance.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">

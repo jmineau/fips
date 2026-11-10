@@ -1,0 +1,6 @@
+fips.methods.gauss\_newton.GaussNewtonOptions.seed
+==================================================
+
+.. currentmodule:: fips.methods.gauss_newton
+
+.. autoattribute:: GaussNewtonOptions.seed
