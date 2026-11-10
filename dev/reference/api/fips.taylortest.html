@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>fips.taylortest &#8212; fips 0.2.0b3.dev22+g0086be242 documentation</title>
+    <title>fips.taylortest &#8212; fips 0.2.0b3.dev23+g6690b3292 documentation</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../_static/documentation_options.js?v=0de11b26"></script>
+    <script src="../../_static/documentation_options.js?v=fd62d9cc"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -137,8 +137,8 @@
       
     
     
-    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev22+g0086be242 documentation - Home"/>
-    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev22+g0086be242 documentation - Home"/>
+    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev23+g6690b3292 documentation - Home"/>
+    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev23+g6690b3292 documentation - Home"/>
   
   
 </a></div>
@@ -773,6 +773,7 @@
 <li class="toctree-l2"><a class="reference internal" href="fips.Posterior.trials.html">fips.Posterior.trials</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.Posterior.data_worth.html">fips.Posterior.data_worth</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.Posterior.candidate_worth.html">fips.Posterior.candidate_worth</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fips.UnavailableError.html">fips.UnavailableError</a></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="fips.posterior.Solution.html">fips.posterior.Solution</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l3"><a class="reference internal" href="fips.posterior.Solution.chi2.html">fips.posterior.Solution.chi2</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.posterior.Solution.chi2_tests.html">fips.posterior.Solution.chi2_tests</a></li>
@@ -1025,7 +1026,9 @@ it is not (a sign flipped, a term missing). The test halves
 remainder falls by at least <span class="math notranslate nohighlight">\(2^{1.8}\)</span> per halving at its three
 smallest steps above roundoff (<span class="math notranslate nohighlight">\(10^3\)</span> times the machine epsilon of
 <span class="math notranslate nohighlight">\(\lVert F \rVert\)</span>). A remainder at roundoff from the start (a model
-whose Jacobian is exact, such as a linear one) passes. The orders are
+whose Jacobian is exact, such as a linear one) passes, if the output moved
+by a million times its roundoff at the largest step; with a <cite>dx</cite> too small
+for that, any Jacobian would pass, and the test raises. The orders are
 logged at DEBUG.</p>
 <p>The Jacobian is the one fips solves with: <code class="docutils literal notranslate"><span class="pre">jacobian(x)</span></code>, or for a model
 that writes only its products, <a class="reference internal" href="fips.ForwardModel.jvp.html#fips.ForwardModel.jvp" title="fips.ForwardModel.jvp"><code class="xref py py-meth docutils literal notranslate"><span class="pre">jvp()</span></code></a> and
@@ -1059,7 +1062,11 @@ transpose is the adjoint.</p>
 <li><p><a class="reference external" href="https://docs.python.org/3/builtins/exceptions.html#TypeError" title="(in Python v3.15)"><strong>TypeError</strong></a> – If <cite>model</cite> is not a ForwardModel, or it returns other than a Vector
     and an Operator.</p></li>
 <li><p><a class="reference external" href="https://docs.python.org/3/builtins/exceptions.html#ValueError" title="(in Python v3.15)"><strong>ValueError</strong></a> – If <cite>x</cite> or <cite>dx</cite> does not have exactly the model’s columns’ labels, or
-    what the model returns does not have exactly its labels.</p></li>
+    what the model returns does not have exactly its labels; <cite>dx</cite> is zero
+    everywhere or not finite; or the remainder is at roundoff while the
+    model’s output changes by less than a million times roundoff at the
+    largest step along <cite>dx</cite> (a step far too small, or a direction the
+    observations do not see), where any Jacobian would pass.</p></li>
 </ul>
 </dd>
 </dl>

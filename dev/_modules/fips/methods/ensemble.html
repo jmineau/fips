@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>fips.methods.ensemble &#8212; fips 0.2.0b3.dev22+g0086be242 documentation</title>
+    <title>fips.methods.ensemble &#8212; fips 0.2.0b3.dev23+g6690b3292 documentation</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../../_static/documentation_options.js?v=0de11b26"></script>
+    <script src="../../../_static/documentation_options.js?v=fd62d9cc"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -132,8 +132,8 @@
       
     
     
-    <img src="../../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev22+g0086be242 documentation - Home"/>
-    <img src="../../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev22+g0086be242 documentation - Home"/>
+    <img src="../../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev23+g6690b3292 documentation - Home"/>
+    <img src="../../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev23+g6690b3292 documentation - Home"/>
   
   
 </a></div>
@@ -741,6 +741,15 @@
 
     <span class="n">estimate_is_mean</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
 <span class="w">    </span><span class="sd">"""The estimate is the mean of the updated ensemble."""</span>
+
+    <span class="n">no_evidence</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="s2">"the ensemble's chi-squared and information content are those of the "</span>
+        <span class="s2">"sample covariance of its members' modeled observations, with an error "</span>
+        <span class="s2">"that does not fall below the number of observations over the number "</span>
+        <span class="s2">"of members, so the evidence from them is not claimed. For a linear "</span>
+        <span class="s2">"problem, the exact evidence is fips.solve(problem).log_evidence."</span>
+    <span class="p">)</span>
+<span class="w">    </span><span class="sd">"""Why an ensemble posterior gives no log evidence."""</span>
 
     <span class="n">problem</span><span class="p">:</span> <span class="n">Problem</span>
 <span class="w">    </span><span class="sd">"""The problem that was solved."""</span>

@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>fips.methods.bounded &#8212; fips 0.2.0b3.dev22+g0086be242 documentation</title>
+    <title>fips.methods.bounded &#8212; fips 0.2.0b3.dev23+g6690b3292 documentation</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../../_static/documentation_options.js?v=0de11b26"></script>
+    <script src="../../../_static/documentation_options.js?v=fd62d9cc"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -132,8 +132,8 @@
       
     
     
-    <img src="../../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev22+g0086be242 documentation - Home"/>
-    <img src="../../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev22+g0086be242 documentation - Home"/>
+    <img src="../../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev23+g6690b3292 documentation - Home"/>
+    <img src="../../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev23+g6690b3292 documentation - Home"/>
   
   
 </a></div>
@@ -471,7 +471,7 @@
 <span class="kn">import</span><span class="w"> </span><span class="nn">numbers</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Iterator</span><span class="p">,</span> <span class="n">Mapping</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">ClassVar</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">numpy.linalg</span><span class="w"> </span><span class="kn">import</span> <span class="n">LinAlgError</span>
@@ -479,6 +479,7 @@
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">fips.linalg</span><span class="w"> </span><span class="kn">import</span> <span class="n">DenseOperator</span><span class="p">,</span> <span class="n">LinearOperator</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">fips.linalg.forms</span><span class="w"> </span><span class="kn">import</span> <span class="n">_read_only</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fips.methods._draws</span><span class="w"> </span><span class="kn">import</span> <span class="n">_warn_if_imprecise</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">fips.methods.analytic</span><span class="w"> </span><span class="kn">import</span> <span class="n">AnalyticOptions</span><span class="p">,</span> <span class="n">Information</span><span class="p">,</span> <span class="n">Whitened</span><span class="p">,</span> <span class="n">_factor</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">fips.operator</span><span class="w"> </span><span class="kn">import</span> <span class="n">Operator</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">fips.posterior</span><span class="w"> </span><span class="kn">import</span> <span class="n">Posterior</span>
@@ -612,14 +613,22 @@
 <span class="sd">        (or ``inf`` for `upper`) where an element has none; a dict maps block</span>
 <span class="sd">        names to a number or a Vector on that block's labels, and leaves the</span>
 <span class="sd">        blocks it does not name unbounded (``lower={"flux": 0.0}`` keeps a</span>
-<span class="sd">        bias block free). None is no bound. With no finite bound, the</span>
-<span class="sd">        posterior is the analytic one.</span>
+<span class="sd">        bias block free). A finite number on a state of several blocks bounds</span>
+<span class="sd">        them all, and the solve logs a warning naming them. None is no bound.</span>
+<span class="sd">        With no finite bound, the posterior is the analytic one.</span>
 <span class="sd">    draws : int, default 2000</span>
 <span class="sd">        The number of draws of the truncated posterior kept for its variances</span>
-<span class="sd">        and the covariance of aggregates (Monte Carlo estimates: the relative</span>
-<span class="sd">        error of a standard deviation is about :math:`1 / \sqrt{2\,</span>
-<span class="sd">        \text{draws}}` for independent draws, 1.6% at 2000, and a little more</span>
-<span class="sd">        for these, which are correlated).</span>
+<span class="sd">        and the covariance of aggregates. They are Monte Carlo estimates from a</span>
+<span class="sd">        chain: each draw is exact, but starts from the last. At 2000, a</span>
+<span class="sd">        standard deviation is good to about 1.5% for an element away from its</span>
+<span class="sd">        bounds (:math:`1 / \sqrt{2\, \text{draws}}`, as for independent</span>
+<span class="sd">        draws), and to about 12% (root mean square over 24 solves; 25% at</span>
+<span class="sd">        worst) for an element whose analytic estimate is one to four standard</span>
+<span class="sd">        deviations outside its bound: its draws pile against the bound and mix</span>
+<span class="sd">        slowly (an autocorrelation time of 13 to 17 draws). One far outside</span>
+<span class="sd">        mixes faster. The error falls as :math:`1/\sqrt{\text{draws}}`; the</span>
+<span class="sd">        solve warns when a standard deviation is uncertain by more than 10%,</span>
+<span class="sd">        and says how many draws would do.</span>
 <span class="sd">    burn_in : int, default 20</span>
 <span class="sd">        The draws made and left out before those kept, from the mode. Each</span>
 <span class="sd">        draw of the sampler travels a quarter period, after which a Gaussian</span>
@@ -632,9 +641,9 @@
 <span class="sd">    ValueError</span>
 <span class="sd">        If `gamma` is not a positive, finite number; a bound is NaN, or a</span>
 <span class="sd">        bound no value can satisfy (``lower`` of ``inf``); both bounds are</span>
-<span class="sd">        numbers and `lower` is not below `upper`; or `draws` is not a positive</span>
-<span class="sd">        integer, `burn_in` not a nonnegative one, or `seed` not a nonnegative</span>
-<span class="sd">        integer. A bound's labels are checked against the state by</span>
+<span class="sd">        numbers and `lower` is not below `upper`; or `draws` is not an</span>
+<span class="sd">        integer of at least 2, `burn_in` not a nonnegative one, or `seed` not</span>
+<span class="sd">        a nonnegative integer. A bound's labels are checked against the state by</span>
 <span class="sd">        :func:`fips.solve`.</span>
 <span class="sd">    TypeError</span>
 <span class="sd">        If a bound is not a number, a Vector, a dict or None, or a dict has a</span>
@@ -665,15 +674,20 @@
             <span class="p">)</span>
         <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">"lower"</span><span class="p">,</span> <span class="n">lower</span><span class="p">)</span>
         <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">"upper"</span><span class="p">,</span> <span class="n">upper</span><span class="p">)</span>
-        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">least</span> <span class="ow">in</span> <span class="p">((</span><span class="s2">"draws"</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="s2">"burn_in"</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="s2">"seed"</span><span class="p">,</span> <span class="mi">0</span><span class="p">)):</span>
+        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">least</span> <span class="ow">in</span> <span class="p">((</span><span class="s2">"draws"</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="p">(</span><span class="s2">"burn_in"</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="s2">"seed"</span><span class="p">,</span> <span class="mi">0</span><span class="p">)):</span>
             <span class="n">value</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
             <span class="k">if</span> <span class="p">(</span>
                 <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">numbers</span><span class="o">.</span><span class="n">Integral</span><span class="p">)</span>
                 <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">bool</span><span class="p">)</span>
                 <span class="ow">or</span> <span class="n">value</span> <span class="o">&lt;</span> <span class="n">least</span>
             <span class="p">):</span>
-                <span class="n">kind</span> <span class="o">=</span> <span class="s2">"a positive"</span> <span class="k">if</span> <span class="n">least</span> <span class="k">else</span> <span class="s2">"a nonnegative"</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> must be </span><span class="si">{</span><span class="n">kind</span><span class="si">}</span><span class="s2"> integer, got </span><span class="si">{</span><span class="n">value</span><span class="si">!r}</span><span class="s2">."</span><span class="p">)</span>
+                <span class="n">kind</span> <span class="o">=</span> <span class="p">{</span><span class="mi">2</span><span class="p">:</span> <span class="s2">"an"</span><span class="p">,</span> <span class="mi">0</span><span class="p">:</span> <span class="s2">"a nonnegative"</span><span class="p">}[</span><span class="n">least</span><span class="p">]</span>
+                <span class="n">at_least</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="s2">" of at least 2 (a variance needs two draws)"</span> <span class="k">if</span> <span class="n">least</span> <span class="k">else</span> <span class="s2">""</span>
+                <span class="p">)</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> must be </span><span class="si">{</span><span class="n">kind</span><span class="si">}</span><span class="s2"> integer</span><span class="si">{</span><span class="n">at_least</span><span class="si">}</span><span class="s2">, got </span><span class="si">{</span><span class="n">value</span><span class="si">!r}</span><span class="s2">."</span>
+                <span class="p">)</span>
             <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">value</span><span class="p">))</span></div>
 
 
@@ -722,6 +736,14 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="n">values</span><span class="p">[</span><span class="n">where</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
     <span class="k">return</span> <span class="n">values</span>
+
+
+<span class="n">_SLOW_DRAWS</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="s2">"The draws are exact but each starts from the last, and an element whose "</span>
+    <span class="s2">"analytic estimate is one to a few posterior standard deviations outside "</span>
+    <span class="s2">"its bound mixes slowest; raise draws= for those elements' spread."</span>
+<span class="p">)</span>
+<span class="sd">"""What the slow-mixing warning of the kept draws says of the cause and the remedy."""</span>
 
 
 <span class="k">class</span><span class="w"> </span><span class="nc">_Columns</span><span class="p">:</span>
@@ -1249,7 +1271,7 @@
         <span class="k">return</span> <span class="n">sampler</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_kept</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">"""Return the kept draws (``n x draws``), drawn from the seed at the first call."""</span>
+<span class="w">        </span><span class="sd">"""Return the kept draws (``n x draws``), drawn from the seed at the first call, with a warning if they mix too slowly for their variances."""</span>
         <span class="n">kept</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"_draws"</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">kept</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
@@ -1259,6 +1281,7 @@
             <span class="p">)</span>
             <span class="n">kept</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">draws</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">seed</span><span class="p">))</span>
             <span class="n">kept</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">[</span><span class="s2">"_draws"</span><span class="p">]</span> <span class="o">=</span> <span class="n">_read_only</span><span class="p">(</span><span class="n">kept</span><span class="p">)</span>
+            <span class="n">_warn_if_imprecise</span><span class="p">(</span><span class="n">kept</span><span class="p">,</span> <span class="n">logger</span><span class="p">,</span> <span class="n">_SLOW_DRAWS</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">kept</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_conditioned</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
@@ -1308,6 +1331,15 @@
 <span class="sd">        at a mode on the bound would not give it.</span>
 <span class="sd">        """</span>
         <span class="k">return</span> <span class="ow">not</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lower</span><span class="p">)</span><span class="o">.</span><span class="n">any</span><span class="p">()</span> <span class="ow">or</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">upper</span><span class="p">)</span><span class="o">.</span><span class="n">any</span><span class="p">())</span>
+
+    <span class="n">no_evidence</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="s2">"with bounds on the state, the exact evidence is the Gaussian one "</span>
+        <span class="s2">"times the probability of the bounds under the posterior over their "</span>
+        <span class="s2">"probability under the prior, both orthant probabilities of a "</span>
+        <span class="s2">"correlated Gaussian, which fips does not compute. The evidence of the "</span>
+        <span class="s2">"problem without bounds is fips.solve(problem).log_evidence."</span>
+    <span class="p">)</span>
+<span class="w">    </span><span class="sd">"""Why a bounded posterior gives no log evidence."""</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">sample</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">N</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">rng</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">Generator</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">"""Return `N` new draws of the truncated posterior (``n x N``): a chain from the mode, its first ``burn_in`` left out."""</span>
@@ -1488,6 +1520,26 @@
     <span class="k">return</span> <span class="mf">2.0</span> <span class="o">*</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diagonal</span><span class="p">(</span><span class="n">factor</span><span class="p">))</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span>
 
 
+<span class="k">def</span><span class="w"> </span><span class="nf">_warn_if_every_block</span><span class="p">(</span><span class="n">options</span><span class="p">:</span> <span class="n">BoundedOptions</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">Space</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Log a warning when a finite bound given as a number bounds a state of several blocks: every block, a bias block too, which is rarely meant."""</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">state</span><span class="o">.</span><span class="n">names</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">return</span>
+    <span class="k">for</span> <span class="n">side</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"lower"</span><span class="p">,</span> <span class="s2">"upper"</span><span class="p">):</span>
+        <span class="n">bound</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">options</span><span class="p">,</span> <span class="n">side</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">bound</span><span class="p">,</span> <span class="nb">float</span><span class="p">)</span> <span class="ow">and</span> <span class="n">math</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">bound</span><span class="p">):</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                <span class="s2">"</span><span class="si">%s</span><span class="s2">=</span><span class="si">%g</span><span class="s2"> bounds every block of the state: </span><span class="si">%s</span><span class="s2">. A bias or an offset "</span>
+                <span class="s2">"block is usually free; to bound only some blocks, give a dict, "</span>
+                <span class="s2">"such as </span><span class="si">%s</span><span class="s2">={</span><span class="si">%r</span><span class="s2">: </span><span class="si">%g</span><span class="s2">}."</span><span class="p">,</span>
+                <span class="n">side</span><span class="p">,</span>
+                <span class="n">bound</span><span class="p">,</span>
+                <span class="n">_listed</span><span class="p">(</span><span class="n">state</span><span class="o">.</span><span class="n">names</span><span class="p">),</span>
+                <span class="n">side</span><span class="p">,</span>
+                <span class="n">state</span><span class="o">.</span><span class="n">names</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                <span class="n">bound</span><span class="p">,</span>
+            <span class="p">)</span>
+
+
 <span class="k">def</span><span class="w"> </span><span class="nf">_bounded</span><span class="p">(</span><span class="n">problem</span><span class="p">:</span> <span class="n">Problem</span><span class="p">,</span> <span class="n">options</span><span class="p">:</span> <span class="n">BoundedOptions</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Posterior</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""Factor the problem as the analytic method does, then hold the estimate to the bounds; with no finite bound, the analytic posterior."""</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">problem</span><span class="o">.</span><span class="n">forward</span><span class="p">,</span> <span class="n">Operator</span><span class="p">):</span>
@@ -1499,6 +1551,7 @@
             <span class="s2">"the bounds (the logarithm of a positive flux)."</span>
         <span class="p">)</span>
     <span class="n">state</span> <span class="o">=</span> <span class="n">problem</span><span class="o">.</span><span class="n">prior</span><span class="o">.</span><span class="n">space</span>
+    <span class="n">_warn_if_every_block</span><span class="p">(</span><span class="n">options</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span>
     <span class="n">lower</span> <span class="o">=</span> <span class="n">_resolve</span><span class="p">(</span><span class="n">options</span><span class="o">.</span><span class="n">lower</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="s2">"lower"</span><span class="p">)</span>
     <span class="n">upper</span> <span class="o">=</span> <span class="n">_resolve</span><span class="p">(</span><span class="n">options</span><span class="o">.</span><span class="n">upper</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="s2">"upper"</span><span class="p">)</span>
     <span class="n">crossed</span> <span class="o">=</span> <span class="o">~</span><span class="p">(</span><span class="n">lower</span> <span class="o">&lt;</span> <span class="n">upper</span><span class="p">)</span>

@@ -1,0 +1,6 @@
+﻿fips.UnavailableError
+=====================
+
+.. currentmodule:: fips
+
+.. autoexception:: UnavailableError

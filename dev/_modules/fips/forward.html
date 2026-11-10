@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>fips.forward &#8212; fips 0.2.0b3.dev22+g0086be242 documentation</title>
+    <title>fips.forward &#8212; fips 0.2.0b3.dev23+g6690b3292 documentation</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../_static/documentation_options.js?v=0de11b26"></script>
+    <script src="../../_static/documentation_options.js?v=fd62d9cc"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -132,8 +132,8 @@
       
     
     
-    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev22+g0086be242 documentation - Home"/>
-    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev22+g0086be242 documentation - Home"/>
+    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev23+g6690b3292 documentation - Home"/>
+    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev23+g6690b3292 documentation - Home"/>
   
   
 </a></div>
@@ -876,6 +876,9 @@
 <span class="n">_ORDER</span> <span class="o">=</span> <span class="mf">1.8</span>
 <span class="sd">"""The order of the remainder :func:`taylortest` asks for at its smallest steps: 2 for a right Jacobian, 1 for a wrong one."""</span>
 
+<span class="n">_SEEN</span> <span class="o">=</span> <span class="mf">1e6</span>
+<span class="sd">"""How many times its roundoff the model's output must change at :func:`taylortest`'s largest step for a remainder at roundoff to pass: a Jacobian off by a millionth of the change or more would have shown."""</span>
+
 <span class="n">_ADJOINT</span> <span class="o">=</span> <span class="mf">1e-10</span>
 <span class="sa">r</span><span class="sd">"""How far :math:`\langle J v, w \rangle` and :math:`\langle v, J^T w \rangle` may differ in :func:`taylortest`, relative to the size of their terms: roundoff of an exact discrete adjoint, far below a wrong one's."""</span>
 
@@ -897,7 +900,9 @@
 <span class="sd">    remainder falls by at least :math:`2^{1.8}` per halving at its three</span>
 <span class="sd">    smallest steps above roundoff (:math:`10^3` times the machine epsilon of</span>
 <span class="sd">    :math:`\lVert F \rVert`). A remainder at roundoff from the start (a model</span>
-<span class="sd">    whose Jacobian is exact, such as a linear one) passes. The orders are</span>
+<span class="sd">    whose Jacobian is exact, such as a linear one) passes, if the output moved</span>
+<span class="sd">    by a million times its roundoff at the largest step; with a `dx` too small</span>
+<span class="sd">    for that, any Jacobian would pass, and the test raises. The orders are</span>
 <span class="sd">    logged at DEBUG.</span>
 
 <span class="sd">    The Jacobian is the one fips solves with: ``jacobian(x)``, or for a model</span>
@@ -936,7 +941,11 @@
 <span class="sd">        and an Operator.</span>
 <span class="sd">    ValueError</span>
 <span class="sd">        If `x` or `dx` does not have exactly the model's columns' labels, or</span>
-<span class="sd">        what the model returns does not have exactly its labels.</span>
+<span class="sd">        what the model returns does not have exactly its labels; `dx` is zero</span>
+<span class="sd">        everywhere or not finite; or the remainder is at roundoff while the</span>
+<span class="sd">        model's output changes by less than a million times roundoff at the</span>
+<span class="sd">        largest step along `dx` (a step far too small, or a direction the</span>
+<span class="sd">        observations do not see), where any Jacobian would pass.</span>
 
 <span class="sd">    See Also</span>
 <span class="sd">    --------</span>
@@ -997,6 +1006,11 @@
         <span class="n">direction</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span><span class="o">.</span><span class="n">standard_normal</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">point</span><span class="p">))</span> <span class="o">*</span> <span class="n">size</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">direction</span> <span class="o">=</span> <span class="n">on_cols</span><span class="p">(</span><span class="n">dx</span><span class="p">,</span> <span class="s2">"dx"</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">direction</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">()</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">direction</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">"dx must be finite and not zero everywhere: it is the direction "</span>
+                <span class="s2">"of the steps, and a zero step leaves nothing to test."</span>
+            <span class="p">)</span>
     <span class="n">F0</span> <span class="o">=</span> <span class="n">_evaluated</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">point</span><span class="p">)</span>
     <span class="n">J</span> <span class="o">=</span> <span class="n">_differentiated</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">point</span><span class="p">)</span><span class="o">.</span><span class="n">data</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">dottest</span><span class="p">(</span><span class="n">J</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="n">_ADJOINT</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">):</span>
@@ -1010,10 +1024,12 @@
     <span class="n">eps</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">finfo</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span><span class="o">.</span><span class="n">eps</span>
     <span class="n">steps</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">**</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">_STEPS</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
     <span class="n">remainders</span><span class="p">,</span> <span class="n">floors</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[]</span>
+    <span class="n">changes</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">for</span> <span class="n">step</span> <span class="ow">in</span> <span class="n">steps</span><span class="p">:</span>
         <span class="n">F</span> <span class="o">=</span> <span class="n">_evaluated</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">point</span> <span class="o">+</span> <span class="n">step</span> <span class="o">*</span> <span class="n">direction</span><span class="p">)</span>
         <span class="n">remainders</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">F</span> <span class="o">-</span> <span class="n">F0</span> <span class="o">-</span> <span class="n">step</span> <span class="o">*</span> <span class="n">Jdx</span><span class="p">)))</span>
         <span class="n">floors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mf">1e3</span> <span class="o">*</span> <span class="n">eps</span> <span class="o">*</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">F</span><span class="p">)</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">F0</span><span class="p">)))</span>
+        <span class="n">changes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">F</span> <span class="o">-</span> <span class="n">F0</span><span class="p">)))</span>
     <span class="n">r</span><span class="p">,</span> <span class="n">floor</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">remainders</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">floors</span><span class="p">)</span>
     <span class="n">above</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">r</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">r</span> <span class="o">&gt;</span> <span class="n">floor</span><span class="p">)</span>
     <span class="n">pairs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">flatnonzero</span><span class="p">(</span><span class="n">above</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">&amp;</span> <span class="n">above</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
@@ -1022,7 +1038,21 @@
         <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">"Taylor test: the remainder is at roundoff (</span><span class="si">%s</span><span class="s2">)."</span><span class="p">,</span> <span class="n">exact</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">exact</span><span class="p">:</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">"Taylor test: the remainder is not at roundoff."</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">exact</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="c1"># a remainder at roundoff says the Jacobian is right only if the</span>
+        <span class="c1"># output moved well above roundoff, where a wrong one would show</span>
+        <span class="n">finite</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">r</span><span class="p">)</span>
+        <span class="n">first</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">finite</span><span class="p">))</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">finite</span><span class="o">.</span><span class="n">any</span><span class="p">()</span> <span class="ow">and</span> <span class="n">changes</span><span class="p">[</span><span class="n">first</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">_SEEN</span> <span class="o">*</span> <span class="n">floor</span><span class="p">[</span><span class="n">first</span><span class="p">]):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">"The model's output barely changes along dx, even at the largest "</span>
+                <span class="sa">f</span><span class="s2">"step that it models (by </span><span class="si">{</span><span class="n">changes</span><span class="p">[</span><span class="n">first</span><span class="p">]</span><span class="si">:</span><span class="s2">.3g</span><span class="si">}</span><span class="s2">, against a roundoff "</span>
+                <span class="sa">f</span><span class="s2">"of </span><span class="si">{</span><span class="n">floor</span><span class="p">[</span><span class="n">first</span><span class="p">]</span><span class="si">:</span><span class="s2">.3g</span><span class="si">}</span><span class="s2">), so the remainder is at roundoff whatever "</span>
+                <span class="s2">"the Jacobian: the test cannot tell a right one from a wrong one. "</span>
+                <span class="s2">"Give a dx that moves the observations, such as one of the size of "</span>
+                <span class="s2">"x (the default)."</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="kc">True</span>
     <span class="n">orders</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log2</span><span class="p">(</span><span class="n">r</span><span class="p">[</span><span class="n">pairs</span><span class="p">]</span> <span class="o">/</span> <span class="n">r</span><span class="p">[</span><span class="n">pairs</span> <span class="o">+</span> <span class="mi">1</span><span class="p">])</span>
     <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
         <span class="s2">"Taylor test: the remainder's order at each halving of the step, from the "</span>
