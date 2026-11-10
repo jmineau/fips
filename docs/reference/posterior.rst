@@ -185,13 +185,81 @@ without an :math:`n \times n` matrix.
    Posterior.data_worth
    Posterior.candidate_worth
 
-What a method cannot give
+.. _posterior-members:
+
+What a posterior can give
 ~~~~~~~~~~~~~~~~~~~~~~~~~
-A member that needs more of the method than its solution gives (the mean of
-a mode, the elements on a bound of a method without bounds, the evidence of a
-posterior that is not Gaussian) raises :class:`UnavailableError`, an
+A posterior's members belong to the kind of answer, not the method. There are
+three kinds: a *Gaussian* posterior (``estimate`` is its mean and the
+covariance is known), a *sampled* one (``estimate`` is the mode, and the spread
+is that of draws) and a *low-rank* one (the covariance is kept as ``rank``
+directions). A member its kind cannot give raises :class:`UnavailableError`, an
 :class:`AttributeError` and a :class:`TypeError`: ``hasattr(post,
 "at_bound")`` is False where it would raise.
+
+.. list-table::
+   :header-rows: 1
+   :stub-columns: 1
+   :widths: 16 28 28 28
+
+   * - Member
+     - Gaussian
+     - Sampled
+     - Low-rank
+   * - Methods
+     - ``"analytic"``; ``"ensemble"``; ``"variational"`` on a linear problem
+       with ``rank`` at the problem's rank
+     - ``"bounded"`` with a finite bound; ``"gauss_newton"`` with a forward
+       model
+     - ``"variational"`` with ``rank`` below the problem's rank, or with a
+       forward model (the Gaussian at the mode)
+   * - ``estimate``
+     - the mean
+     - the mode
+     - the mean (linear problem), the mode (forward model)
+   * - ``variances``, ``cov``
+     - exact (an ensemble's: those of its members)
+     - those of the kept draws (a Monte Carlo estimate)
+     - the prior's less ``rank`` pairs: too large below the problem's rank
+   * - ``mean``
+     - yes
+     - raises
+     - yes (linear problem); raises (forward model)
+   * - ``with_gamma``
+     - yes
+     - ``"bounded"``: yes; ``"gauss_newton"``: raises (its linearization
+       depends on gamma)
+     - yes (linear problem); raises (forward model)
+   * - ``log_evidence``
+     - yes; ``"ensemble"``: raises
+     - ``"gauss_newton"``: Laplace's; ``"bounded"``: raises
+     - yes (Laplace's with a forward model) unless ``rank`` left out pairs
+       that still hold information
+   * - ``recovery``, ``data_worth``, ``candidate_worth``
+     - ``"analytic"`` only: they need an estimate linear in the observations
+     - raises
+     - raises
+   * - ``at_bound``
+     - raises
+     - ``"bounded"`` with a finite bound
+     - raises
+   * - ``iterations``
+     - ``"variational"`` only
+     - ``"gauss_newton"`` only
+     - yes
+   * - ``eigenvalues``
+     - ``"variational"`` only
+     - raises
+     - yes
+
+``"bounded"`` with no finite bound and ``"gauss_newton"`` with a linear
+operator return the analytic solution itself, so they are Gaussian. Every
+posterior has ``estimate``, ``variances``, ``cov``, ``uncertainty``,
+``sample``, ``with_data``, ``trials``, ``kalman_gain``, ``chi2_tests`` and
+``summary``; what needs the forward model as an operator (the averaging kernel,
+``innovation_cov``, ``dofs_per_element``, ``leverage``) raises for the
+ensemble with a model, and ``"gauss_newton"`` reads the Jacobian of its last
+step for them. This table is the one in the :class:`Posterior` docstring.
 
 .. autosummary::
    :toctree: api/

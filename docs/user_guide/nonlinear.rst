@@ -205,10 +205,11 @@ S_0^{-1} (x - x_0) + \gamma (z - F(x) - c)^T S_z^{-1} (z - F(x) - c)` is least.
 :attr:`~fips.Posterior.problem` is the problem you solved, with the model.
 :meth:`~fips.Posterior.with_data` solves again, from the last linearization,
 and draws again, so :meth:`~fips.Posterior.trials` works (running the sampler
-in each trial: ``draws=`` fewer makes it quicker); there is no
-:meth:`~fips.Posterior.with_gamma` (the linearization depends on gamma), and
-:meth:`~fips.Posterior.recovery`, whose exact answer needs an estimate linear
-in the data, points to ``trials``.
+in each trial: ``draws=`` fewer makes it quicker). This is a sampled
+posterior, and :ref:`the table <posterior-members>` says what it cannot give:
+no :meth:`~fips.Posterior.with_gamma` (the linearization depends on gamma),
+and :meth:`~fips.Posterior.recovery`, whose exact answer needs an estimate
+linear in the data, points to ``trials``.
 
 A statement about the flux, not the log scale factor, goes through the model's
 transform: the flux at the mode is :math:`r\, e^{\hat{x}}`, and the total from
