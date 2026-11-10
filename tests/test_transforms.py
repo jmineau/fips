@@ -1064,7 +1064,7 @@ def gauss_newton_only(monkeypatch) -> None:
 
 def steps_to(post: fips.Posterior, d2: float = 1e-12) -> int:
     """
-    The steps a solve took to bring a step's d2 below `d2`, a tolerance far above roundoff.
+    The steps a solve took to bring a step's d2 below `d2`, a tolerance above roundoff.
 
     ``TIGHT``'s tolerance is at roundoff, where a step's d2 wanders about the
     limit: how many steps a solve spends there differs from one platform's
@@ -1114,7 +1114,14 @@ def test_a_model_fips_did_not_write_has_no_curvature():
 @pytest.mark.parametrize("kind", KINDS)
 @pytest.mark.parametrize("k", [0, 2])
 def test_newton_reaches_the_gauss_newton_mode(monkeypatch, kind, k):
-    """With and without a bias block, in both analytic forms: the same mode as Gauss-Newton's alone, to roundoff at a tight tol and well inside the default tol's error, in no more steps."""
+    """
+    With and without a bias block, in both analytic forms: the same mode as Gauss-Newton's alone, to roundoff at a tight tol and well inside the default tol's error.
+
+    The steps each takes are compared over many problems
+    (``test_newton_takes_fewer_steps_in_a_slv_shaped_world``), not here: on
+    one small problem the lower cost at each step is not always fewer steps
+    (to a d2 of 1e-8 the lognormal case takes 9 against Gauss-Newton's 7).
+    """
     case = Case.random(kind, 22, 9, 14, k=k, std=0.8)
     newton = fips.solve(case.problem(), "gauss_newton", **TIGHT)
     default = fips.solve(case.problem(), "gauss_newton")
@@ -1123,7 +1130,6 @@ def test_newton_reaches_the_gauss_newton_mode(monkeypatch, kind, k):
     s = case.gaussian_std(alone.estimate.values)
     assert np.abs((newton.estimate.values - alone.estimate.values) / s).max() < 1e-9
     assert np.abs((default.estimate.values - alone.estimate.values) / s).max() < 1e-3
-    assert steps_to(newton) <= steps_to(alone)
     assert_mode(newton, case)
 
 
@@ -1145,7 +1151,8 @@ def test_newton_with_a_singular_prior_and_labels_in_another_order(monkeypatch, k
     moved = std > 0
     difference = (newton.estimate.values - alone.estimate.values)[moved] / std[moved]
     assert np.abs(difference).max() < 1e-9
-    assert steps_to(newton) <= steps_to(alone)
+    # by a wide margin here: 9 against 14 (lognormal) and 11 against 71
+    assert steps_to(newton) < steps_to(alone)
 
 
 @pytest.mark.parametrize("kind", KINDS)
@@ -1240,16 +1247,25 @@ def dense_steps(
 
 
 def assert_dense_steps(post: fips.Posterior, case: Case, tol: float) -> None:
-    """The steps' costs and their d2 (those above roundoff) are the dense iterations'."""
+    """
+    The steps' costs are the dense iterations', and their d2 where a step is long enough for its kind to be clear.
+
+    Near the mode Newton's estimate and Gauss-Newton's have the same cost to
+    roundoff, so which of the two a step takes there differs from one
+    platform's BLAS to another's, and with it the step's d2 (by a few percent:
+    9.03e-10 for 9.35e-10 on one) and whether one more step follows. The costs
+    do not. A wrong curvature moves the first Newton step's d2, of 1e-5 to
+    1e-4 here, by 1% or more.
+    """
     costs, d2s, kinds = dense_steps(case, tol, len(post.iterations))
-    assert len(kinds) == len(post.iterations)
-    np.testing.assert_allclose(post.iterations["cost"].values, costs, rtol=1e-9)
-    # a Newton step is solved to 1e-6 of its length (_SOLVED), which moves the
-    # next steps' d2 by up to about 1e-4; a wrong curvature moves them by factors
-    d2s = np.array(d2s)
-    above = d2s > 1e-10
+    assert abs(len(kinds) - len(post.iterations)) <= 1
+    k = min(len(kinds), len(post.iterations))
+    np.testing.assert_allclose(post.iterations["cost"].values[:k], costs[:k], rtol=1e-9)
+    d2s = np.array(d2s[:k])
+    clear = d2s > 1e-6
+    assert clear.sum() >= 4
     np.testing.assert_allclose(
-        post.iterations["d2"].values[above], d2s[above], rtol=1e-3
+        post.iterations["d2"].values[:k][clear], d2s[clear], rtol=1e-3
     )
 
 
