@@ -177,10 +177,11 @@ class _Transformed(ForwardModel):
         """
         bad = ~np.isfinite(transformed)
         if bad.any():
-            rows = bad if bad.ndim == 1 else bad.any(axis=1)
+            # the labels' positions (of a state, or of any of its draws)
+            rows = np.flatnonzero(bad if bad.ndim == 1 else bad.any(axis=1))
             raise ValueError(
                 f"The transform of block {self._block!r} overflows at "
-                f"{int(rows.sum())} labels, where u is up to "
+                f"{len(rows)} labels, where u is up to "
                 f"{float(np.max(u[bad])):.4g}: {_listed(self._labels.index[rows])}. "
                 "A state this large is far outside any prior on u; check the "
                 "prior's units."
