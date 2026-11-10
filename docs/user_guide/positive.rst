@@ -329,7 +329,10 @@ Which to use
   of :math:`10 \pm 2`, whatever its size) and the flux is near zero only in
   some cells, where it bends instead of going below.
 - ``"bounded"`` (:doc:`bounds`) when the prior is the Gaussian one and only
-  the negative part is wrong: the posterior is the Gaussian truncated at zero.
+  the negative part is wrong: the posterior is the Gaussian truncated at zero,
+  whose total is above the Gaussian's where the data see little.
+
+:doc:`comparison` runs the three and the analytic posterior on one problem.
 
 fips draws each posterior exactly, so in its own world a total's interval
 covers.

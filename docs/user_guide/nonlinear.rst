@@ -289,4 +289,4 @@ trial's interval as the mode plus or minus a multiple of the draws' standard
 deviation: where the posterior is skewed that is not the posterior's interval,
 and at 1.5 it held the truth 93% of the time at 95% (the Gaussian at the mode,
 read the same way, 92%). For a total, read the draws' quantiles too
-(:doc:`positive`).
+(:doc:`positive`); :doc:`comparison` reads every method that way.
