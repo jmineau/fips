@@ -20,13 +20,15 @@
 ## Bridging Physics and Data
 Inverse problems in geophysics and atmospheric science often involve large state spaces, heterogeneous observation networks, and explicit matrix algebra. General-purpose optimization tools tend to make researchers strip away the labels of their data (times, places, instruments) and translate their physical models into bare arrays.
 
-**fips (Flexible Inverse Problem Solver)** solves linear inverse problems without losing the labels of your data:
+**fips (Flexible Inverse Problem Solver)** solves inverse problems without losing the labels of your data:
 
 - **Everything is matched by label**: every value carries a `pandas` index (time, latitude, site, ...). The inputs of a problem are matched by their labels, never by position, and a label on one side only is an error that names it.
 
 - **Built from named blocks**: a state of fluxes and offsets, observations from towers and satellites. Each block keeps its own labels, and a matrix is built block by block.
 
 - **The standard linear model**: observations are the forward operator times the state, plus an offset, plus an error. Plug in your forward operator (a Jacobian you computed), the prior and its covariance, and the observation covariance. Covariances are written as correlation models (exponential, Gaussian, Matérn, Kronecker products) with standard deviations.
+
+- **And past it**: bounds on the state (`"bounded"`, its mode and draws of the truncated posterior), and a forward model that is not linear, written with its Jacobian (`fips.ForwardModel`), whose posterior mode `"gauss_newton"` finds.
 
 - **Fast and exact**: each matrix is kept in its cheapest form (dense, sparse, diagonal, or Kronecker factors), and fips computes the exact Gaussian posterior with direct linear algebra, not sampling, for large state spaces in seconds.
 
