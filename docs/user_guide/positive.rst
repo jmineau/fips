@@ -120,7 +120,18 @@ The problem, with data made from a truth drawn from that prior:
 
    truth, obs = build(fips.Vector(np.zeros(30), observed)).simulate(rng=1)
    post = fips.solve(build(obs), "gauss_newton")
-   len(post.iterations)
+   post.iterations
+
+For a transform, ``"gauss_newton"`` finds the mode by Newton's method: the
+transform's second derivative is known, so each iteration also takes the step
+of the cost's whole Hessian (the Gauss-Newton matrix less a diagonal term on the
+block) and goes to whichever of the two estimates has the lower cost. Far from
+the mode, where the Newton matrix is not positive definite, the step is
+Gauss-Newton's. Where Gauss-Newton converges fast, as here, its steps are
+mostly the lower and the iterations are the same; where it crawls (a wide
+prior, below), Newton's take over near the mode and :math:`d^2` falls by
+squares. The mode is the one Gauss-Newton alone would reach, and the Gaussian
+at the mode is still the problem linearized there (:doc:`nonlinear`).
 
 The estimate is the mode of :math:`u`. :meth:`~fips.LognormalForward.transform`
 maps it to the flux, :math:`r\, e^{\hat{u}}`, the flux at the mode: near each
@@ -323,10 +334,10 @@ Which to use
 fips draws each posterior exactly, so in its own world a total's interval
 covers.
 
-Both transforms make the problem nonlinear, more so the wider the prior:
-Gauss-Newton takes more steps (in the Salt Lake Valley-shaped world at a log
-standard deviation of 1, from the prior: a median of 9 and at most 38 for the
-lognormal model; a median of 17 for the softplus model, and more than 50 in 3
-of 200 trials), and logs a warning when its steps fall slowly
-(:doc:`nonlinear`). A solve that has not stopped after
+Both transforms make the problem nonlinear, more so the wider the prior, and
+the solve takes more steps: in the Salt Lake Valley-shaped world at a log
+standard deviation of 1 (200 trials), a median of 7 and at most 14 for the
+lognormal model, 9 and 14 for the softplus model (Gauss-Newton's steps alone
+took 9 and 23, and 18 and 153). A solve logs a warning when its steps fall
+slowly (:doc:`nonlinear`), and one that has not stopped after
 ``max_iterations`` (50) raises; raise it, or narrow the prior.

@@ -61,7 +61,7 @@ src/fips/
                     Information (n x n); `_choose` picks the form by size
     bounded.py      BoundedOptions; Bounded: the mode by an active set on the
                     analytic posterior, draws by exact HMC (_Sampler)
-    gauss_newton.py GaussNewtonOptions; GaussNewton: the mode by solving linearizations, draws by HMC
+    gauss_newton.py GaussNewtonOptions; GaussNewton: the mode by linearizations (Newton for a transform), draws by HMC
   linalg/           the unlabeled forms (public as fips.linalg)
     forms.py        LinearOperator and the Dense-, Sparse- and DiagonalOperator it builds
     block.py        BlockDiagonalOperator
@@ -291,10 +291,10 @@ dependency needs a reason, proposed first.
   reflection per bound its path reaches, about as many as there are elements
   near a bound, so `trials` of a bounded posterior runs a sampler per trial.
 - **A Gauss-Newton posterior holds the user's problem, with the model** (`modeled_obs`, `chi2`, the
-  misfits: the model's at the mode; `with_data` solves again from the last linearization, reusing its
-  factors), and the Gaussian at the mode, the analytic solution linearized at the last iterate (gain,
-  DOFS, the `H` of `A` and `innovation_cov`: `Posterior._linear`). `variances`, `cov(W)`, `sample`:
-  draws of the posterior (`_Sampler`, HMC split at that Gaussian: its rotation exact, the rest kicks, a
-  Metropolis test), kept as `"bounded"`'s. Iterates and draws are `x_0 + S_0 y`: no `S_0^-1`. A draw is
-  a few `F`, `J^T v` (`ForwardModel._gradient`) and `S_hat v`; `trials` samples each trial. A step that
-  raises the cost is halved; only a whole step stops.
+  misfits: the model's at the mode; `with_data` solves again from the last linearization), and the
+  Gaussian at the mode, the analytic solution linearized at the last iterate (gain, DOFS, the `H` of `A`
+  and `innovation_cov`: `Posterior._linear`). `variances`, `cov(W)`, `sample`: draws (`_Sampler`, HMC
+  split at that Gaussian, a Metropolis test), kept as `"bounded"`'s. Iterates and draws are `x_0 + S_0 y`:
+  no `S_0^-1`. A draw is a few `F`, `J^T v` (`ForwardModel._gradient`), `S_hat v`. A step that raises the
+  cost is halved. A transform's `_curvature` (diagonal; None for other models) adds Newton's step (CG
+  preconditioned by `S_hat`), the lower cost taken; only a whole Gauss-Newton step (and Newton's) stops.
