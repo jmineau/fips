@@ -38,12 +38,13 @@ no Jacobian: the caller places one with `Operator.from_blocks`, or writes it.
 
 ```
 src/fips/
-  __init__.py       the public names: Space, Vector, Operator, Covariance, the models,
-                    Problem, solve, available_methods, Posterior, aggregate, offset_block
+  __init__.py       the public names (`__all__`), each from the module below that owns it
   space.py          Space: ordered named blocks, the padded MultiIndex, select, align
   vector.py         Vector: values on a Space (read-only), from_series/from_blocks
   operator.py       Operator: a fips.linalg form with a Space on each axis
   forward.py        ForwardModel (F and its Jacobian, written by the caller), taylortest
+  transforms.py     LognormalForward, SoftplusForward: H on a positive T(u) of one block; prior_for
+                    (softplus moments by panels split at the bend: Gauss-Hermite fails past 2 scales)
   problem.py        Problem: the inputs, checked once; predict, linearized, aggregate, restrict
   posterior.py      Posterior (labels a method's answer); the Solution and Options protocols
   aggregate.py      sum, mean (an aggregation W), offset_block
@@ -69,8 +70,8 @@ tests/              pytest; test_oracle.py holds every method to the closed form
 docs/               Sphinx: guides, reference/ (by topic), examples/ (notebooks)
 ```
 
-Imports run one way: `space` < `vector`, `linalg` < `operator` < `forward`,
-`covariance` < `problem` < `posterior` < `methods`, with `aggregate` and
+Imports run one way: `space` < `vector`, `linalg` < `operator` < `forward` <
+`transforms`, `covariance` < `problem` < `posterior` < `methods`, with `aggregate` and
 `visualization` on top. No import inside a function to dodge a cycle, none under `TYPE_CHECKING`.
 `Covariance` does not import the models: `models.py` sets
 `Covariance._block_diag_models`, so `Covariance.block_diag` takes model parts.

@@ -7,8 +7,9 @@ between two is an :class:`Operator` (a :class:`Covariance` from one to
 itself), kept in its cheapest form. A covariance is written as a correlation
 model with standard deviations: ``Exponential("time", "30D").with_std(std)``.
 A :class:`Problem` puts the prior, the observations, the forward operator (or
-a :class:`ForwardModel` that is not linear, with its Jacobian) and the
-covariances together, and :func:`solve` returns its :class:`Posterior`.
+a :class:`ForwardModel` that is not linear, with its Jacobian;
+:class:`LognormalForward` and :class:`SoftplusForward` keep a flux positive)
+and the covariances together, and :func:`solve` returns its :class:`Posterior`.
 :mod:`fips.aggregate` sums or averages a space by group (the observations to
 daily means, the state to monthly totals), and :func:`offset_block` adds a
 block of offsets to the state.
@@ -35,6 +36,7 @@ from .operator import Operator
 from .posterior import Posterior
 from .problem import Problem
 from .space import Space
+from .transforms import LognormalForward, SoftplusForward
 from .vector import Vector
 
 try:
@@ -51,6 +53,8 @@ __all__ = [
     "Operator",
     "ForwardModel",
     "taylortest",
+    "LognormalForward",
+    "SoftplusForward",
     "Covariance",
     "Exponential",
     "Gaussian",

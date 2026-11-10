@@ -33,7 +33,9 @@ derivatives :math:`J_{ij} = \partial F_i / \partial x_j` at :math:`x`, an
 Here the state is the logarithm of a scale factor of each cell's inventory
 :math:`r`, so the flux :math:`r\, e^{x}` cannot be negative and the prior is a
 factor of the inventory, not a flux. The model is :math:`F(x) = H (r\, e^{x})`
-and its Jacobian :math:`H \operatorname{diag}(r\, e^{x})`:
+and its Jacobian :math:`H \operatorname{diag}(r\, e^{x})` (fips has it ready
+made, with the prior that goes with it, as :class:`~fips.LognormalForward`:
+:doc:`positive`):
 
 .. ipython:: python
 
