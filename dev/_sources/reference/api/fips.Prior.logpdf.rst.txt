@@ -1,0 +1,6 @@
+fips.Prior.logpdf
+=================
+
+.. currentmodule:: fips
+
+.. automethod:: Prior.logpdf

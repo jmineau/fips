@@ -1,0 +1,6 @@
+fips.Uniform.logpdf
+===================
+
+.. currentmodule:: fips
+
+.. automethod:: Uniform.logpdf

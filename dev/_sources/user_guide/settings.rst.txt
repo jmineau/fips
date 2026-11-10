@@ -153,7 +153,8 @@ about the truth; their medians, over ten worlds, are within 2% of it:
 
 The scatter of the fits is the uncertainty of the settings, which the
 posterior at the fitted settings leaves out: it treats them as known. To carry
-it into the flux, the settings need a prior of their own and draws over them.
+it into the flux, the settings need a prior of their own and draws over them:
+:doc:`hierarchical` draws them.
 
 
 Against a reduced chi-squared of 1

@@ -1,0 +1,6 @@
+fips.LogNormal.mu
+=================
+
+.. currentmodule:: fips
+
+.. autoattribute:: LogNormal.mu

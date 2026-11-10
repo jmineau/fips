@@ -1,0 +1,6 @@
+fips.HalfNormal.scale
+=====================
+
+.. currentmodule:: fips
+
+.. autoattribute:: HalfNormal.scale

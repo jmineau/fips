@@ -1,0 +1,6 @@
+﻿fips.hierarchical
+=================
+
+.. currentmodule:: fips
+
+.. autofunction:: hierarchical

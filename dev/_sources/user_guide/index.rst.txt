@@ -5,7 +5,8 @@ This guide takes fips's objects one at a time, in the order a problem uses
 them, and says what each is for before how to call it. :doc:`/getting_started/first_problem`
 solves one problem from start to finish; :doc:`/getting_started/terminology` defines the words;
 :doc:`synthetic` tests an inversion on data whose answer is known; :doc:`settings`
-fits the covariance settings by maximizing the evidence; :doc:`bounds`
+fits the covariance settings by maximizing the evidence; :doc:`hierarchical`
+draws them from their posterior, so intervals hold their uncertainty; :doc:`bounds`
 holds the state to bounds (a flux that cannot be negative); :doc:`nonlinear`
 solves a problem whose forward is a model that is not linear; :doc:`positive`
 keeps a flux positive by solving for its logarithm or its softplus; and
@@ -707,6 +708,7 @@ when it is read.
 
    synthetic
    settings
+   hierarchical
    bounds
    nonlinear
    positive

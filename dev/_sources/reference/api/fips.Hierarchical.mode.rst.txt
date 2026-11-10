@@ -1,0 +1,6 @@
+fips.Hierarchical.mode
+======================
+
+.. currentmodule:: fips
+
+.. autoproperty:: Hierarchical.mode

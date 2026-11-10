@@ -1,0 +1,6 @@
+fips.Prior.median
+=================
+
+.. currentmodule:: fips
+
+.. autoproperty:: Prior.median

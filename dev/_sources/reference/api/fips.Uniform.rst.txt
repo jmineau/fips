@@ -1,0 +1,33 @@
+﻿fips.Uniform
+============
+
+.. currentmodule:: fips
+
+.. autoclass:: Uniform
+   :no-members:
+   :show-inheritance:
+
+
+
+
+.. rubric:: Attributes
+
+.. autosummary::
+   :toctree:
+
+   ~Uniform.high
+   ~Uniform.low
+   ~Uniform.median
+
+
+
+.. rubric:: Methods
+
+.. autosummary::
+   :toctree:
+
+   ~Uniform.logpdf
+   ~Uniform.sample
+
+
+

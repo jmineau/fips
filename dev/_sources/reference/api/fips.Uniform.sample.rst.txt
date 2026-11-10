@@ -1,0 +1,6 @@
+fips.Uniform.sample
+===================
+
+.. currentmodule:: fips
+
+.. automethod:: Uniform.sample

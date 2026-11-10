@@ -1,0 +1,6 @@
+fips.Uniform.high
+=================
+
+.. currentmodule:: fips
+
+.. autoattribute:: Uniform.high

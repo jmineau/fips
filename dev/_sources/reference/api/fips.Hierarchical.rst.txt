@@ -1,0 +1,37 @@
+﻿fips.Hierarchical
+=================
+
+.. currentmodule:: fips
+
+.. autoclass:: Hierarchical
+   :no-members:
+
+
+
+
+.. rubric:: Attributes
+
+.. autosummary::
+   :toctree:
+
+   ~Hierarchical.acceptance
+   ~Hierarchical.ess
+   ~Hierarchical.estimate
+   ~Hierarchical.mode
+   ~Hierarchical.settings
+   ~Hierarchical.variances
+
+
+
+.. rubric:: Methods
+
+.. autosummary::
+   :toctree:
+
+   ~Hierarchical.at
+   ~Hierarchical.cov
+   ~Hierarchical.sample
+   ~Hierarchical.uncertainty
+
+
+

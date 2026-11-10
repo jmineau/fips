@@ -1,0 +1,6 @@
+fips.Hierarchical.acceptance
+============================
+
+.. currentmodule:: fips
+
+.. autoproperty:: Hierarchical.acceptance

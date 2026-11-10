@@ -1,0 +1,6 @@
+fips.HalfNormal.sample
+======================
+
+.. currentmodule:: fips
+
+.. automethod:: HalfNormal.sample

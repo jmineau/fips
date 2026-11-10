@@ -1,0 +1,1687 @@
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>fips.settings &#8212; fips 0.2.0b3.dev20+gfcd9c64d2 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../_static/plot_directive.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx_autodoc_typehints.css?v=057ac668" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../_static/custom.css?v=4b8357b6" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="../../_static/scripts/fontawesome.js?digest=18bd87630a240e9c25be"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
+
+    <script src="../../_static/documentation_options.js?v=04e3a186"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/fips/settings';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.23.0';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://jmineau.github.io/fips/switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'dev';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner =
+            true;
+        </script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="color-scheme" content="light dark"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.2" />
+  
+    
+    <script src="../../_static/searchtools.js"></script>
+    <script src="../../_static/language_data.js"></script>
+    <script src="../../searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button type="button" class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class=" navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev20+gfcd9c64d2 documentation - Home"/>
+    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev20+gfcd9c64d2 documentation - Home"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class=" navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../getting_started/index.html">
+    Getting Started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../user_guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../reference/index.html">
+    API Reference
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+      
+        <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/jmineau/fips" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar hide-on-wide">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../getting_started/index.html">
+    Getting Started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../user_guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../reference/index.html">
+    API Reference
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-3"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-3"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-3"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-3">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+        
+          <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/jmineau/fips" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../index.html" class="nav-link">Module code</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">fips.settings</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for fips.settings</h1><div class="highlight"><pre>
+<span></span><span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">The covariance settings as unknowns: their priors, their posterior, and the state over them.</span>
+
+<span class="sd">Every problem rests on settings someone chose (the prior error's standard</span>
+<span class="sd">deviation and correlation length, the model-data mismatch's standard</span>
+<span class="sd">deviation). :func:`hierarchical` gives each setting a prior, draws the</span>
+<span class="sd">settings from their posterior,</span>
+
+<span class="sd">.. math::</span>
+
+<span class="sd">    p(s \mid z) \propto p(s) \, p(z \mid s),</span>
+
+<span class="sd">with :math:`p(z \mid s)` the exact evidence of the problem built at</span>
+<span class="sd">:math:`s` (:attr:`Posterior.log_evidence &lt;fips.Posterior.log_evidence&gt;`),</span>
+<span class="sd">and draws the state exactly from :math:`x \mid s, z` at each kept draw of the</span>
+<span class="sd">settings (:meth:`Posterior.sample &lt;fips.Posterior.sample&gt;`). The draws of the</span>
+<span class="sd">state are then draws of :math:`p(x \mid z)`, a mixture of the Gaussian</span>
+<span class="sd">posteriors of every setting, and their intervals hold the uncertainty of the</span>
+<span class="sd">settings. :class:`Hierarchical` holds them.</span>
+
+<span class="sd">The settings' priors are :class:`LogNormal`, :class:`HalfNormal` and</span>
+<span class="sd">:class:`Uniform`: each has a log density and a map to unbounded coordinates</span>
+<span class="sd">(the log of a positive setting, the logit of a bounded one), where the</span>
+<span class="sd">sampler works. The sampler is a random-walk Metropolis whose proposal is</span>
+<span class="sd">Laplace's approximation of the settings' posterior at its mode (a numerical</span>
+<span class="sd">Hessian), scaled during the burn-in towards an acceptance of 0.3 (Gelman,</span>
+<span class="sd">Roberts and Gilks, 1996): a few settings need no gradient, and each step costs</span>
+<span class="sd">one solve.</span>
+<span class="sd">"""</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">math</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numbers</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">ABC</span><span class="p">,</span> <span class="n">abstractmethod</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Mapping</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">numpy.linalg</span><span class="w"> </span><span class="kn">import</span> <span class="n">LinAlgError</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">scipy.optimize</span><span class="w"> </span><span class="kn">import</span> <span class="n">minimize</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">scipy.special</span><span class="w"> </span><span class="kn">import</span> <span class="n">log_expit</span><span class="p">,</span> <span class="n">logit</span><span class="p">,</span> <span class="n">ndtri</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">fips.covariance</span><span class="w"> </span><span class="kn">import</span> <span class="n">Covariance</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fips.linalg.forms</span><span class="w"> </span><span class="kn">import</span> <span class="n">_adopt</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fips.methods</span><span class="w"> </span><span class="kn">import</span> <span class="n">solve</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fips.methods.analytic</span><span class="w"> </span><span class="kn">import</span> <span class="n">AnalyticOptions</span><span class="p">,</span> <span class="n">Information</span><span class="p">,</span> <span class="n">Whitened</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fips.operator</span><span class="w"> </span><span class="kn">import</span> <span class="n">Operator</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fips.posterior</span><span class="w"> </span><span class="kn">import</span> <span class="n">Posterior</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fips.problem</span><span class="w"> </span><span class="kn">import</span> <span class="n">Problem</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fips.space</span><span class="w"> </span><span class="kn">import</span> <span class="n">Space</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fips.vector</span><span class="w"> </span><span class="kn">import</span> <span class="n">Vector</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+<span class="n">_LOG_2PI</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mf">2.0</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span>
+
+<span class="n">_SCALES</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"prior_scale"</span><span class="p">,</span> <span class="s2">"obs_scale"</span><span class="p">,</span> <span class="s2">"gamma"</span><span class="p">)</span>
+<span class="sd">"""The settings the scales-only fast path takes, when :func:`hierarchical` is given a problem."""</span>
+
+<span class="n">_ACCEPTANCE</span> <span class="o">=</span> <span class="mf">0.3</span>
+<span class="sd">"""The acceptance the burn-in steers the proposal's scale towards."""</span>
+
+
+<span class="c1"># -- the priors -------------------------------------------------------------</span>
+
+
+<div class="viewcode-block" id="Prior">
+<a class="viewcode-back" href="../../reference/api/fips.Prior.html#fips.Prior">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">Prior</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    The prior of one setting: its log density, and a map to unbounded coordinates, where the sampler works.</span>
+
+<span class="sd">    :class:`LogNormal`, :class:`HalfNormal` and :class:`Uniform` are the</span>
+<span class="sd">    ones fips has. A new one is a subclass with :meth:`logpdf`,</span>
+<span class="sd">    :meth:`sample`, and the three private members of the map</span>
+<span class="sd">    (``_to_unbounded``, ``_from_unbounded``, ``_log_density_unbounded``).</span>
+<span class="sd">    """</span>
+
+<div class="viewcode-block" id="Prior.logpdf">
+<a class="viewcode-back" href="../../reference/api/fips.Prior.logpdf.html#fips.Prior.logpdf">[docs]</a>
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">logpdf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return the log density at `x` (``-inf`` outside the support)."""</span></div>
+
+
+<div class="viewcode-block" id="Prior.sample">
+<a class="viewcode-back" href="../../reference/api/fips.Prior.sample.html#fips.Prior.sample">[docs]</a>
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">sample</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">rng</span><span class="p">:</span> <span class="s2">"int | np.random.Generator | None"</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return `n` draws, from a seed or a generator (as :meth:`fips.Posterior.sample` takes it)."""</span></div>
+
+
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_to_unbounded</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return the unbounded coordinate of `x`."""</span>
+
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_from_unbounded</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">u</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return the setting at the unbounded coordinate `u`."""</span>
+
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_log_density_unbounded</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">u</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""Return the log density of the unbounded coordinate, :math:`\ln p(x(u)) + \ln \lvert dx/du \rvert`."""</span>
+
+    <span class="nd">@property</span>
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">median</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""The prior median, where the search for the mode starts."""</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_positive</span><span class="p">(</span><span class="n">value</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">what</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Return `value` as a float, or raise unless it is positive and finite."""</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">bool</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">numbers</span><span class="o">.</span><span class="n">Real</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">what</span><span class="si">}</span><span class="s2"> is a number, got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">value</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">."</span><span class="p">)</span>
+    <span class="n">value</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="ow">and</span> <span class="n">value</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">what</span><span class="si">}</span><span class="s2"> must be positive and finite, got </span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s2">."</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">value</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_finite</span><span class="p">(</span><span class="n">value</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">what</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Return `value` as a float, or raise unless it is finite."""</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">bool</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">numbers</span><span class="o">.</span><span class="n">Real</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">what</span><span class="si">}</span><span class="s2"> is a number, got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">value</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">."</span><span class="p">)</span>
+    <span class="n">value</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">math</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">what</span><span class="si">}</span><span class="s2"> must be finite, got </span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s2">."</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">value</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">_Positive</span><span class="p">(</span><span class="n">Prior</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""A prior of a positive setting, sampled in its log."""</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_to_unbounded</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""Return :math:`\ln x`."""</span>
+        <span class="k">return</span> <span class="n">math</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_from_unbounded</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">u</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return :math:`e^u` (``inf`` past the largest float)."""</span>
+        <span class="k">return</span> <span class="n">math</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">u</span><span class="p">)</span> <span class="k">if</span> <span class="n">u</span> <span class="o">&lt;</span> <span class="mf">709.0</span> <span class="k">else</span> <span class="n">math</span><span class="o">.</span><span class="n">inf</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_log_density_unbounded</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">u</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""Return :math:`\ln p(e^u) + u`."""</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_from_unbounded</span><span class="p">(</span><span class="n">u</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">logpdf</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">+</span> <span class="n">u</span> <span class="k">if</span> <span class="mf">0.0</span> <span class="o">&lt;</span> <span class="n">x</span> <span class="o">&lt;</span> <span class="n">math</span><span class="o">.</span><span class="n">inf</span> <span class="k">else</span> <span class="o">-</span><span class="n">math</span><span class="o">.</span><span class="n">inf</span>
+
+
+<div class="viewcode-block" id="LogNormal">
+<a class="viewcode-back" href="../../reference/api/fips.LogNormal.html#fips.LogNormal">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">LogNormal</span><span class="p">(</span><span class="n">_Positive</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">    A lognormal prior: the log of the setting is normal, :math:`\ln s \sim N(\mu, \sigma^2)`.</span>
+
+<span class="sd">    The prior of a standard deviation or a length known to a factor:</span>
+<span class="sd">    ``LogNormal(np.log(2.0), 0.5)`` has its median at 2 and a 95% interval</span>
+<span class="sd">    from 0.75 to 5.3 (a factor :math:`e^{1.96 \sigma}` either side).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    mu : float</span>
+<span class="sd">        The mean of the log, the log of the median.</span>
+<span class="sd">    sigma : float</span>
+<span class="sd">        The standard deviation of the log, positive.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        If `mu` is not finite or `sigma` is not positive and finite.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; import numpy as np</span>
+<span class="sd">    &gt;&gt;&gt; import fips</span>
+<span class="sd">    &gt;&gt;&gt; prior = fips.LogNormal(np.log(2.0), 0.5)</span>
+<span class="sd">    &gt;&gt;&gt; round(prior.median, 3)</span>
+<span class="sd">    2.0</span>
+<span class="sd">    &gt;&gt;&gt; round(prior.logpdf(2.0), 4)</span>
+<span class="sd">    -0.9189</span>
+<span class="sd">    """</span>
+
+    <span class="n">mu</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span>
+<span class="w">    </span><span class="sd">"""The mean of the log of the setting."""</span>
+    <span class="n">sigma</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span>
+<span class="w">    </span><span class="sd">"""The standard deviation of the log of the setting."""</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Check the parameters."""</span>
+        <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">"mu"</span><span class="p">,</span> <span class="n">_finite</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mu</span><span class="p">,</span> <span class="s2">"LogNormal's mu"</span><span class="p">))</span>
+        <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">"sigma"</span><span class="p">,</span> <span class="n">_positive</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sigma</span><span class="p">,</span> <span class="s2">"LogNormal's sigma"</span><span class="p">))</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">median</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""The median, :math:`e^\mu`."""</span>
+        <span class="k">return</span> <span class="n">math</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mu</span><span class="p">)</span>
+
+<div class="viewcode-block" id="LogNormal.logpdf">
+<a class="viewcode-back" href="../../reference/api/fips.LogNormal.logpdf.html#fips.LogNormal.logpdf">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">logpdf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""Return :math:`-\ln x - \ln \sigma - \tfrac{1}{2} \ln 2\pi - (\ln x - \mu)^2 / 2\sigma^2` (``-inf`` at and below 0)."""</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">x</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="o">-</span><span class="n">math</span><span class="o">.</span><span class="n">inf</span>
+        <span class="n">u</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_log_density_unbounded</span><span class="p">(</span><span class="n">u</span><span class="p">)</span> <span class="o">-</span> <span class="n">u</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_log_density_unbounded</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">u</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""Return the normal log density of the log, :math:`N(\mu, \sigma^2)`."""</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="o">-</span><span class="n">math</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sigma</span><span class="p">)</span>
+            <span class="o">-</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">_LOG_2PI</span>
+            <span class="o">-</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">((</span><span class="n">u</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">mu</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">sigma</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
+        <span class="p">)</span>
+
+<div class="viewcode-block" id="LogNormal.sample">
+<a class="viewcode-back" href="../../reference/api/fips.LogNormal.sample.html#fips.LogNormal.sample">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">sample</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">rng</span><span class="p">:</span> <span class="s2">"int | np.random.Generator | None"</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""Return `n` draws, :math:`e^{\mu + \sigma \xi}`."""</span>
+        <span class="n">normals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="n">rng</span><span class="p">)</span><span class="o">.</span><span class="n">standard_normal</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mu</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">sigma</span> <span class="o">*</span> <span class="n">normals</span><span class="p">)</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="HalfNormal">
+<a class="viewcode-back" href="../../reference/api/fips.HalfNormal.html#fips.HalfNormal">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">HalfNormal</span><span class="p">(</span><span class="n">_Positive</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">    A half-normal prior: the absolute value of a normal of mean 0 and standard deviation `scale`.</span>
+
+<span class="sd">    A weak prior on a positive setting that is likely below a few times</span>
+<span class="sd">    `scale` and may be near zero: its median is :math:`0.674` `scale`, and</span>
+<span class="sd">    95% of it is below :math:`1.96` `scale`.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    scale : float</span>
+<span class="sd">        The standard deviation of the normal, positive.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        If `scale` is not positive and finite.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; import fips</span>
+<span class="sd">    &gt;&gt;&gt; prior = fips.HalfNormal(10.0)</span>
+<span class="sd">    &gt;&gt;&gt; round(prior.median, 3)</span>
+<span class="sd">    6.745</span>
+<span class="sd">    """</span>
+
+    <span class="n">scale</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span>
+<span class="w">    </span><span class="sd">"""The standard deviation of the normal the setting is the absolute value of."""</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Check the parameter."""</span>
+        <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">"scale"</span><span class="p">,</span> <span class="n">_positive</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">scale</span><span class="p">,</span> <span class="s2">"HalfNormal's scale"</span><span class="p">))</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">median</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""The median, :math:`\Phi^{-1}(0.75)` `scale`."""</span>
+        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">ndtri</span><span class="p">(</span><span class="mf">0.75</span><span class="p">))</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">scale</span>
+
+<div class="viewcode-block" id="HalfNormal.logpdf">
+<a class="viewcode-back" href="../../reference/api/fips.HalfNormal.logpdf.html#fips.HalfNormal.logpdf">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">logpdf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""Return :math:`\ln 2 - \ln \sigma - \tfrac{1}{2} \ln 2\pi - x^2 / 2\sigma^2` for :math:`x \ge 0` (``-inf`` below)."""</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">x</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="o">-</span><span class="n">math</span><span class="o">.</span><span class="n">inf</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="n">math</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mf">2.0</span><span class="p">)</span>
+            <span class="o">-</span> <span class="n">math</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">scale</span><span class="p">)</span>
+            <span class="o">-</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">_LOG_2PI</span>
+            <span class="o">-</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">x</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">scale</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="HalfNormal.sample">
+<a class="viewcode-back" href="../../reference/api/fips.HalfNormal.sample.html#fips.HalfNormal.sample">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">sample</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">rng</span><span class="p">:</span> <span class="s2">"int | np.random.Generator | None"</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""Return `n` draws, :math:`\lvert \sigma \xi \rvert`."""</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">scale</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="n">rng</span><span class="p">)</span><span class="o">.</span><span class="n">standard_normal</span><span class="p">(</span><span class="n">n</span><span class="p">))</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="Uniform">
+<a class="viewcode-back" href="../../reference/api/fips.Uniform.html#fips.Uniform">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Uniform</span><span class="p">(</span><span class="n">Prior</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">    A uniform prior on an interval, sampled in the logit of its position, :math:`\ln((s - a) / (b - s))`.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    low : float</span>
+<span class="sd">        The lower end of the interval.</span>
+<span class="sd">    high : float</span>
+<span class="sd">        The upper end, above `low`.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        If the ends are not finite, or `high` is not above `low`.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; import fips</span>
+<span class="sd">    &gt;&gt;&gt; prior = fips.Uniform(1.0, 9.0)</span>
+<span class="sd">    &gt;&gt;&gt; prior.median, round(prior.logpdf(2.0), 4), prior.logpdf(10.0)</span>
+<span class="sd">    (5.0, -2.0794, -inf)</span>
+<span class="sd">    """</span>
+
+    <span class="n">low</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span>
+<span class="w">    </span><span class="sd">"""The lower end of the interval."""</span>
+    <span class="n">high</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span>
+<span class="w">    </span><span class="sd">"""The upper end of the interval."""</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Check the ends."""</span>
+        <span class="n">low</span> <span class="o">=</span> <span class="n">_finite</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">low</span><span class="p">,</span> <span class="s2">"Uniform's low"</span><span class="p">)</span>
+        <span class="n">high</span> <span class="o">=</span> <span class="n">_finite</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">high</span><span class="p">,</span> <span class="s2">"Uniform's high"</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">high</span> <span class="o">&gt;</span> <span class="n">low</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Uniform's high (</span><span class="si">{</span><span class="n">high</span><span class="si">}</span><span class="s2">) must be above its low (</span><span class="si">{</span><span class="n">low</span><span class="si">}</span><span class="s2">)."</span><span class="p">)</span>
+        <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">"low"</span><span class="p">,</span> <span class="n">low</span><span class="p">)</span>
+        <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">"high"</span><span class="p">,</span> <span class="n">high</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">median</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""The middle of the interval."""</span>
+        <span class="k">return</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">low</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">high</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Uniform.logpdf">
+<a class="viewcode-back" href="../../reference/api/fips.Uniform.logpdf.html#fips.Uniform.logpdf">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">logpdf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""Return :math:`-\ln(b - a)` inside the interval, ``-inf`` outside."""</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">low</span> <span class="o">&lt;=</span> <span class="n">x</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">high</span><span class="p">:</span>
+            <span class="k">return</span> <span class="o">-</span><span class="n">math</span><span class="o">.</span><span class="n">inf</span>
+        <span class="k">return</span> <span class="o">-</span><span class="n">math</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">high</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">low</span><span class="p">)</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_to_unbounded</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return the logit of the position of `x` in the interval."""</span>
+        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">logit</span><span class="p">((</span><span class="n">x</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">low</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">high</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">low</span><span class="p">)))</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_from_unbounded</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">u</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return the setting whose position's logit is `u`."""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">low</span> <span class="o">+</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">high</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">low</span><span class="p">)</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">log_expit</span><span class="p">(</span><span class="n">u</span><span class="p">)))</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_log_density_unbounded</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">u</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""Return :math:`\ln \sigma(u) + \ln \sigma(-u)`, the logistic density of the logit."""</span>
+        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">log_expit</span><span class="p">(</span><span class="n">u</span><span class="p">)</span> <span class="o">+</span> <span class="n">log_expit</span><span class="p">(</span><span class="o">-</span><span class="n">u</span><span class="p">))</span>
+
+<div class="viewcode-block" id="Uniform.sample">
+<a class="viewcode-back" href="../../reference/api/fips.Uniform.sample.html#fips.Uniform.sample">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">sample</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">rng</span><span class="p">:</span> <span class="s2">"int | np.random.Generator | None"</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return `n` draws."""</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="n">rng</span><span class="p">)</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">low</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">high</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span></div>
+</div>
+
+
+
+<span class="c1"># -- what one step of the chain solves ---------------------------------------</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">_Built</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The general path: the caller's function from the settings to a problem (or a posterior), solved at each step."""</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">build</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]],</span> <span class="n">Any</span><span class="p">]):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">build</span> <span class="o">=</span> <span class="n">build</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">space</span><span class="p">:</span> <span class="n">Space</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="w">        </span><span class="sd">"""The state's labels of the first problem built (at the priors' medians), which the draws are put in the order of."""</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">posterior</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">values</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Posterior</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return the posterior at `values`: the built problem solved, or the posterior the function gave."""</span>
+        <span class="n">made</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">values</span><span class="p">))</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">made</span><span class="p">,</span> <span class="n">Problem</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">solve</span><span class="p">(</span><span class="n">made</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">made</span><span class="p">,</span> <span class="n">Posterior</span><span class="p">):</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">made</span><span class="o">.</span><span class="n">options</span><span class="p">,</span> <span class="n">AnalyticOptions</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                    <span class="s2">"hierarchical needs the exact evidence and exact draws of the "</span>
+                    <span class="s2">"analytic method, and the function gave a posterior of "</span>
+                    <span class="sa">f</span><span class="s2">"another method (</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">made</span><span class="o">.</span><span class="n">options</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">). Return the "</span>
+                    <span class="s2">"Problem, or fips.solve(problem, gamma=...)."</span>
+                <span class="p">)</span>
+            <span class="k">return</span> <span class="n">made</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+            <span class="s2">"The function hierarchical takes builds a Problem (or its analytic "</span>
+            <span class="sa">f</span><span class="s2">"Posterior) from a dict of settings; it returned </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">made</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">."</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">evaluate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">values</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""Return the log evidence at `values` and the posterior there (``-inf`` and None where a covariance is not positive-definite)."""</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">post</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">posterior</span><span class="p">(</span><span class="n">values</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">space</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">space</span> <span class="o">=</span> <span class="n">post</span><span class="o">.</span><span class="n">problem</span><span class="o">.</span><span class="n">prior</span><span class="o">.</span><span class="n">space</span>
+            <span class="k">return</span> <span class="n">post</span><span class="o">.</span><span class="n">log_evidence</span><span class="p">,</span> <span class="n">post</span>
+        <span class="k">except</span> <span class="n">LinAlgError</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">"The problem at </span><span class="si">%s</span><span class="s2"> did not solve (</span><span class="si">%s</span><span class="s2">)."</span><span class="p">,</span> <span class="n">values</span><span class="p">,</span> <span class="n">err</span><span class="p">)</span>
+            <span class="k">return</span> <span class="o">-</span><span class="n">math</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="kc">None</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">keep</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">post</span><span class="p">:</span> <span class="n">Posterior</span><span class="p">,</span> <span class="n">rng</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">Generator</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Return one exact draw of the state from a kept step's posterior, in the order of the first problem built.</span>
+
+<span class="sd">        Drawn at once, so the chain holds no more than two posteriors. A</span>
+<span class="sd">        posterior whose prior is in another order is reordered; one with</span>
+<span class="sd">        other labels raises.</span>
+<span class="sd">        """</span>
+        <span class="n">space</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">space</span>
+        <span class="k">assert</span> <span class="n">space</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>  <span class="c1"># the search for the mode built a problem</span>
+        <span class="n">draw</span> <span class="o">=</span> <span class="n">post</span><span class="o">.</span><span class="n">_optional</span><span class="p">(</span><span class="s2">"sample"</span><span class="p">,</span> <span class="s2">"draws from the posterior"</span><span class="p">)(</span><span class="mi">1</span><span class="p">,</span> <span class="n">rng</span><span class="p">)[:,</span> <span class="mi">0</span><span class="p">]</span>
+        <span class="n">other</span> <span class="o">=</span> <span class="n">post</span><span class="o">.</span><span class="n">problem</span><span class="o">.</span><span class="n">prior</span><span class="o">.</span><span class="n">space</span>
+        <span class="k">if</span> <span class="n">other</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">space</span> <span class="ow">and</span> <span class="n">other</span> <span class="o">!=</span> <span class="n">space</span><span class="p">:</span>
+            <span class="n">draw</span> <span class="o">=</span> <span class="n">draw</span><span class="p">[</span>
+                <span class="n">space</span><span class="o">.</span><span class="n">_align</span><span class="p">(</span>
+                    <span class="n">other</span><span class="p">,</span>
+                    <span class="s2">"the state of a built problem"</span><span class="p">,</span>
+                    <span class="s2">"The state of the problems built at two settings"</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="p">]</span>
+        <span class="k">return</span> <span class="n">draw</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">stack</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">kept</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Any</span><span class="p">],</span> <span class="n">rng</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">Generator</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Space</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""Return the state's space and the kept draws, ``n x N``."""</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">space</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>  <span class="c1"># the search for the mode built a problem</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">space</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">column_stack</span><span class="p">(</span><span class="n">kept</span><span class="p">)</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">_Scales</span><span class="p">:</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">    The fast path: the settings scale the problem's prior std (``prior_scale``) and its mismatch (``obs_scale``, or ``gamma``).</span>
+
+<span class="sd">    At :math:`s` = ``prior_scale`` and :math:`c` = ``obs_scale**2 /</span>
+<span class="sd">    gamma``, the innovation covariance is :math:`s^2 H S_0 H^T + c S_z = s^2</span>
+<span class="sd">    (H S_0 H^T + S_z / \gamma')` with :math:`\gamma' = s^2 / c`: the</span>
+<span class="sd">    evidence is the problem's at :math:`\gamma'`, with its chi-squared over</span>
+<span class="sd">    :math:`s^2`, and :math:`m \ln c` in place of :math:`- m \ln \gamma'`. One</span>
+<span class="sd">    eigendecomposition gives it at every step, in :math:`O(k)`</span>
+<span class="sd">    (``_evidence_terms``), and the draws of the state at every kept step in</span>
+<span class="sd">    one product (``_draws_at``).</span>
+<span class="sd">    """</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">problem</span><span class="p">:</span> <span class="n">Problem</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">problem</span> <span class="o">=</span> <span class="n">problem</span>
+        <span class="n">solution</span> <span class="o">=</span> <span class="n">solve</span><span class="p">(</span><span class="n">problem</span><span class="p">)</span><span class="o">.</span><span class="n">_solution</span>  <span class="c1"># raises for a forward model</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">solution</span><span class="p">,</span> <span class="p">(</span><span class="n">Whitened</span><span class="p">,</span> <span class="n">Information</span><span class="p">))</span>  <span class="c1"># the analytic method's</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">factors</span> <span class="o">=</span> <span class="n">solution</span><span class="o">.</span><span class="n">_eigendecomposition</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">obs_logdet</span> <span class="o">=</span> <span class="n">problem</span><span class="o">.</span><span class="n">_obs_logdet</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">scales</span><span class="p">(</span><span class="n">values</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""Return the prior std's scale and the mismatch covariance's, :math:`(s, c)`."""</span>
+        <span class="n">obs_scale</span> <span class="o">=</span> <span class="n">values</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"obs_scale"</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">values</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"prior_scale"</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">),</span> <span class="n">obs_scale</span> <span class="o">*</span> <span class="n">obs_scale</span> <span class="o">/</span> <span class="n">values</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+            <span class="s2">"gamma"</span><span class="p">,</span> <span class="mf">1.0</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">evaluate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">values</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""Return the log evidence at `values` and :math:`(\gamma', s)`, what a draw at them needs."""</span>
+        <span class="n">s</span><span class="p">,</span> <span class="n">c</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">scales</span><span class="p">(</span><span class="n">values</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="mf">0.0</span> <span class="o">&lt;</span> <span class="n">s</span> <span class="o">&lt;</span> <span class="n">math</span><span class="o">.</span><span class="n">inf</span> <span class="ow">and</span> <span class="mf">0.0</span> <span class="o">&lt;</span> <span class="n">c</span> <span class="o">&lt;</span> <span class="n">math</span><span class="o">.</span><span class="n">inf</span><span class="p">):</span>
+            <span class="k">return</span> <span class="o">-</span><span class="n">math</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="kc">None</span>
+        <span class="n">gamma</span> <span class="o">=</span> <span class="n">s</span> <span class="o">*</span> <span class="n">s</span> <span class="o">/</span> <span class="n">c</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="mf">0.0</span> <span class="o">&lt;</span> <span class="n">gamma</span> <span class="o">&lt;</span> <span class="n">math</span><span class="o">.</span><span class="n">inf</span><span class="p">:</span>
+            <span class="k">return</span> <span class="o">-</span><span class="n">math</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="kc">None</span>
+        <span class="k">with</span> <span class="n">np</span><span class="o">.</span><span class="n">errstate</span><span class="p">(</span><span class="nb">all</span><span class="o">=</span><span class="s2">"ignore"</span><span class="p">):</span>  <span class="c1"># a scale far out in the tails: no density</span>
+            <span class="n">chi2</span><span class="p">,</span> <span class="n">information</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">factors</span><span class="o">.</span><span class="n">_evidence_terms</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">gamma</span><span class="p">]))</span>
+            <span class="n">m</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">problem</span><span class="o">.</span><span class="n">obs</span><span class="p">)</span>
+            <span class="n">log_evidence</span> <span class="o">=</span> <span class="o">-</span><span class="mf">0.5</span> <span class="o">*</span> <span class="nb">float</span><span class="p">(</span>
+                <span class="n">chi2</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="p">(</span><span class="n">s</span> <span class="o">*</span> <span class="n">s</span><span class="p">)</span>
+                <span class="o">+</span> <span class="mf">2.0</span> <span class="o">*</span> <span class="n">information</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">obs_logdet</span>
+                <span class="o">+</span> <span class="n">m</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">c</span><span class="p">)</span>
+                <span class="o">+</span> <span class="n">m</span> <span class="o">*</span> <span class="n">_LOG_2PI</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">math</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">log_evidence</span><span class="p">):</span>
+            <span class="k">return</span> <span class="o">-</span><span class="n">math</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="kc">None</span>
+        <span class="k">return</span> <span class="n">log_evidence</span><span class="p">,</span> <span class="p">(</span><span class="n">gamma</span><span class="p">,</span> <span class="n">s</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">posterior</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">values</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Posterior</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return the posterior of the problem with its covariances scaled, solved."""</span>
+        <span class="n">s</span><span class="p">,</span> <span class="n">c</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">scales</span><span class="p">(</span><span class="n">values</span><span class="p">)</span>
+        <span class="n">problem</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">problem</span>
+        <span class="n">prior_cov</span><span class="p">,</span> <span class="n">obs_cov</span> <span class="o">=</span> <span class="n">problem</span><span class="o">.</span><span class="n">prior_cov</span> <span class="o">*</span> <span class="p">(</span><span class="n">s</span> <span class="o">*</span> <span class="n">s</span><span class="p">),</span> <span class="n">problem</span><span class="o">.</span><span class="n">obs_cov</span> <span class="o">*</span> <span class="n">c</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">prior_cov</span><span class="p">,</span> <span class="n">Covariance</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obs_cov</span><span class="p">,</span> <span class="n">Covariance</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">solve</span><span class="p">(</span>
+            <span class="n">Problem</span><span class="p">(</span>
+                <span class="n">prior</span><span class="o">=</span><span class="n">problem</span><span class="o">.</span><span class="n">prior</span><span class="p">,</span>
+                <span class="n">prior_cov</span><span class="o">=</span><span class="n">prior_cov</span><span class="p">,</span>
+                <span class="n">obs</span><span class="o">=</span><span class="n">problem</span><span class="o">.</span><span class="n">obs</span><span class="p">,</span>
+                <span class="n">obs_cov</span><span class="o">=</span><span class="n">obs_cov</span><span class="p">,</span>
+                <span class="n">forward</span><span class="o">=</span><span class="n">problem</span><span class="o">.</span><span class="n">forward</span><span class="p">,</span>
+                <span class="n">offset</span><span class="o">=</span><span class="n">problem</span><span class="o">.</span><span class="n">offset</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">keep</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">payload</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">rng</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">Generator</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""Return what a kept step's draw needs, :math:`(\gamma', s)`: the draws are made together, in :meth:`stack`."""</span>
+        <span class="k">return</span> <span class="n">payload</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">stack</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">kept</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Any</span><span class="p">],</span> <span class="n">rng</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">Generator</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Space</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""Return the state's space and one exact draw of the state at each kept :math:`(\gamma', s)`, in one product (``n x N``)."""</span>
+        <span class="n">gammas</span><span class="p">,</span> <span class="n">scales</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">kept</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">problem</span><span class="o">.</span><span class="n">prior</span><span class="o">.</span><span class="n">space</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">factors</span><span class="o">.</span><span class="n">_draws_at</span><span class="p">(</span><span class="n">gammas</span><span class="p">,</span> <span class="n">scales</span><span class="p">,</span> <span class="n">rng</span><span class="p">)</span>
+
+
+<span class="c1"># -- the sampler ----------------------------------------------------------------</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_accept</span><span class="p">(</span><span class="n">log_ratio</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">rng</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">Generator</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Return whether Metropolis accepts a proposal whose log density is `log_ratio` above the current one; one uniform each call."""</span>
+    <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="n">rng</span><span class="o">.</span><span class="n">random</span><span class="p">()</span> <span class="o">&lt;</span> <span class="n">math</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">log_ratio</span><span class="p">)))</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_hessian</span><span class="p">(</span><span class="n">f</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">],</span> <span class="nb">float</span><span class="p">],</span> <span class="n">u</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">h</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Return the Hessian of `f` at `u` by central differences of step `h`."""</span>
+    <span class="n">p</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">u</span><span class="p">)</span>
+    <span class="n">H</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">p</span><span class="p">,</span> <span class="n">p</span><span class="p">))</span>
+    <span class="n">f0</span> <span class="o">=</span> <span class="n">f</span><span class="p">(</span><span class="n">u</span><span class="p">)</span>
+    <span class="n">steps</span> <span class="o">=</span> <span class="n">h</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">p</span><span class="p">):</span>
+        <span class="n">H</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">f</span><span class="p">(</span><span class="n">u</span> <span class="o">+</span> <span class="n">steps</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="o">-</span> <span class="mf">2.0</span> <span class="o">*</span> <span class="n">f0</span> <span class="o">+</span> <span class="n">f</span><span class="p">(</span><span class="n">u</span> <span class="o">-</span> <span class="n">steps</span><span class="p">[</span><span class="n">i</span><span class="p">]))</span> <span class="o">/</span> <span class="p">(</span><span class="n">h</span> <span class="o">*</span> <span class="n">h</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">i</span><span class="p">):</span>
+            <span class="n">H</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">H</span><span class="p">[</span><span class="n">j</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">f</span><span class="p">(</span><span class="n">u</span> <span class="o">+</span> <span class="n">steps</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="n">steps</span><span class="p">[</span><span class="n">j</span><span class="p">])</span>
+                <span class="o">-</span> <span class="n">f</span><span class="p">(</span><span class="n">u</span> <span class="o">+</span> <span class="n">steps</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">-</span> <span class="n">steps</span><span class="p">[</span><span class="n">j</span><span class="p">])</span>
+                <span class="o">-</span> <span class="n">f</span><span class="p">(</span><span class="n">u</span> <span class="o">-</span> <span class="n">steps</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="n">steps</span><span class="p">[</span><span class="n">j</span><span class="p">])</span>
+                <span class="o">+</span> <span class="n">f</span><span class="p">(</span><span class="n">u</span> <span class="o">-</span> <span class="n">steps</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">-</span> <span class="n">steps</span><span class="p">[</span><span class="n">j</span><span class="p">])</span>
+            <span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="mf">4.0</span> <span class="o">*</span> <span class="n">h</span> <span class="o">*</span> <span class="n">h</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">H</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_laplace</span><span class="p">(</span>
+    <span class="n">log_density</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">],</span> <span class="nb">float</span><span class="p">],</span> <span class="n">start</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">names</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Return the mode of the settings' log posterior in unbounded coordinates and the covariance of Laplace's approximation there.</span>
+
+<span class="sd">    The mode by L-BFGS-B from `start` (the priors' medians); the covariance</span>
+<span class="sd">    is the inverse of the negative log density's Hessian, by central</span>
+<span class="sd">    differences. A direction the Hessian does not curve up in (a flat or</span>
+<span class="sd">    bent posterior) gets a variance of 1 in its unbounded coordinate (a</span>
+<span class="sd">    factor of :math:`e` in a positive setting), logged; the burn-in then</span>
+<span class="sd">    scales the proposal.</span>
+<span class="sd">    """</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">cost</span><span class="p">(</span><span class="n">u</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return the negative log density, large and finite where it has none (L-BFGS-B steps back from it)."""</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="n">log_density</span><span class="p">(</span><span class="n">u</span><span class="p">)</span>
+        <span class="k">return</span> <span class="o">-</span><span class="n">value</span> <span class="k">if</span> <span class="n">math</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="k">else</span> <span class="mf">1e300</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">math</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">log_density</span><span class="p">(</span><span class="n">start</span><span class="p">)):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">"The settings' log posterior is not finite at the priors' medians "</span>
+            <span class="sa">f</span><span class="s2">"(</span><span class="si">{</span><span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">names</span><span class="p">,</span><span class="w"> </span><span class="n">start</span><span class="p">,</span><span class="w"> </span><span class="n">strict</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span><span class="si">}</span><span class="s2"> in unbounded coordinates): the problem "</span>
+            <span class="s2">"there did not solve, or a prior gives it no density."</span>
+        <span class="p">)</span>
+    <span class="n">found</span> <span class="o">=</span> <span class="n">minimize</span><span class="p">(</span><span class="n">cost</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">"L-BFGS-B"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">found</span><span class="o">.</span><span class="n">success</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">"The search for the settings' mode stopped: </span><span class="si">%s</span><span class="s2">"</span><span class="p">,</span> <span class="n">found</span><span class="o">.</span><span class="n">message</span><span class="p">)</span>
+    <span class="n">mode</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">found</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+    <span class="n">curvature</span> <span class="o">=</span> <span class="n">_hessian</span><span class="p">(</span><span class="n">cost</span><span class="p">,</span> <span class="n">mode</span><span class="p">,</span> <span class="mf">1e-3</span><span class="p">)</span>
+    <span class="n">curvature</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">curvature</span> <span class="o">+</span> <span class="n">curvature</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+    <span class="n">eigenvalues</span><span class="p">,</span> <span class="n">vectors</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">eigh</span><span class="p">(</span><span class="n">curvature</span><span class="p">)</span>
+    <span class="n">flat</span> <span class="o">=</span> <span class="o">~</span><span class="p">(</span><span class="n">eigenvalues</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span> <span class="o">|</span> <span class="o">~</span><span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">eigenvalues</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">flat</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+            <span class="s2">"The settings' log posterior does not curve down in </span><span class="si">%d</span><span class="s2"> of its </span><span class="si">%d</span><span class="s2"> "</span>
+            <span class="s2">"directions at its mode (eigenvalues of the negative Hessian </span><span class="si">%s</span><span class="s2">): "</span>
+            <span class="s2">"the proposal takes a variance of 1 in them."</span><span class="p">,</span>
+            <span class="nb">int</span><span class="p">(</span><span class="n">flat</span><span class="o">.</span><span class="n">sum</span><span class="p">()),</span>
+            <span class="nb">len</span><span class="p">(</span><span class="n">eigenvalues</span><span class="p">),</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">array2string</span><span class="p">(</span><span class="n">eigenvalues</span><span class="p">,</span> <span class="n">precision</span><span class="o">=</span><span class="mi">3</span><span class="p">),</span>
+        <span class="p">)</span>
+        <span class="n">eigenvalues</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">flat</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="n">eigenvalues</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">mode</span><span class="p">,</span> <span class="p">(</span><span class="n">vectors</span> <span class="o">/</span> <span class="n">eigenvalues</span><span class="p">)</span> <span class="o">@</span> <span class="n">vectors</span><span class="o">.</span><span class="n">T</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_effective_size</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Return the effective sample size of the chain `x`, by Geyer's initial monotone sequence.</span>
+
+<span class="sd">    The autocorrelations, by FFT, are summed in pairs while the pairs are</span>
+<span class="sd">    positive, each pair at most the one before (Geyer, 1992); the size is</span>
+<span class="sd">    the number of draws over the integrated autocorrelation time.</span>
+<span class="sd">    """</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+    <span class="k">with</span> <span class="n">np</span><span class="o">.</span><span class="n">errstate</span><span class="p">(</span><span class="nb">all</span><span class="o">=</span><span class="s2">"ignore"</span><span class="p">):</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">x</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">initial</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)</span>  <span class="c1"># the FFT does not overflow</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">x</span><span class="p">)):</span>
+        <span class="k">return</span> <span class="n">math</span><span class="o">.</span><span class="n">nan</span>
+    <span class="n">sum_sq</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">x</span> <span class="o">@</span> <span class="n">x</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">n</span> <span class="o">&lt;</span> <span class="mi">4</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">sum_sq</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+    <span class="n">spectrum</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">fft</span><span class="o">.</span><span class="n">rfft</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">n</span><span class="p">)</span>
+    <span class="n">acf</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">fft</span><span class="o">.</span><span class="n">irfft</span><span class="p">(</span><span class="n">spectrum</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">conj</span><span class="p">(</span><span class="n">spectrum</span><span class="p">),</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">n</span><span class="p">)[:</span><span class="n">n</span><span class="p">]</span> <span class="o">/</span> <span class="n">sum_sq</span>
+    <span class="n">pairs</span> <span class="o">=</span> <span class="n">acf</span><span class="p">[</span><span class="mi">0</span> <span class="p">:</span> <span class="n">n</span> <span class="o">-</span> <span class="mi">1</span> <span class="p">:</span> <span class="mi">2</span><span class="p">]</span> <span class="o">+</span> <span class="n">acf</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="n">n</span><span class="p">:</span><span class="mi">2</span><span class="p">]</span>
+    <span class="n">negative</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">flatnonzero</span><span class="p">(</span><span class="n">pairs</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="n">pairs</span> <span class="o">=</span> <span class="n">pairs</span><span class="p">[:</span> <span class="n">negative</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">negative</span><span class="p">)</span> <span class="k">else</span> <span class="nb">len</span><span class="p">(</span><span class="n">pairs</span><span class="p">)]</span>
+    <span class="n">tau</span> <span class="o">=</span> <span class="o">-</span><span class="mf">1.0</span> <span class="o">+</span> <span class="mf">2.0</span> <span class="o">*</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">minimum</span><span class="o">.</span><span class="n">accumulate</span><span class="p">(</span><span class="n">pairs</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span>
+    <span class="k">return</span> <span class="n">n</span> <span class="o">/</span> <span class="nb">max</span><span class="p">(</span><span class="n">tau</span><span class="p">,</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="n">n</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_count</span><span class="p">(</span><span class="n">value</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">what</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">least</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Return `value` as an int, or raise unless it is an integer of at least `least`."""</span>
+    <span class="k">if</span> <span class="p">(</span>
+        <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">numbers</span><span class="o">.</span><span class="n">Integral</span><span class="p">)</span>
+        <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">bool</span><span class="p">)</span>
+        <span class="ow">or</span> <span class="n">value</span> <span class="o">&lt;</span> <span class="n">least</span>
+    <span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">what</span><span class="si">}</span><span class="s2"> must be an integer of at least </span><span class="si">{</span><span class="n">least</span><span class="si">}</span><span class="s2">, got </span><span class="si">{</span><span class="n">value</span><span class="si">!r}</span><span class="s2">."</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="hierarchical">
+<a class="viewcode-back" href="../../reference/api/fips.hierarchical.html#fips.hierarchical">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">hierarchical</span><span class="p">(</span>
+    <span class="n">build</span><span class="p">:</span> <span class="s2">"Callable[[dict[str, float]], Problem | Posterior] | Problem"</span><span class="p">,</span>
+    <span class="n">settings</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Prior</span><span class="p">],</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">draws</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2000</span><span class="p">,</span>
+    <span class="n">burn_in</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">500</span><span class="p">,</span>
+    <span class="n">seed</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"Hierarchical"</span><span class="p">:</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">    Draw the covariance settings from their posterior, and the state at each draw: the posterior with the settings' uncertainty.</span>
+
+<span class="sd">    The settings get priors (`settings`), and their posterior is</span>
+<span class="sd">    :math:`p(s \mid z) \propto p(s) \, p(z \mid s)`, with :math:`p(z \mid s)`</span>
+<span class="sd">    the exact evidence of the problem `build` makes at :math:`s`</span>
+<span class="sd">    (:attr:`Posterior.log_evidence &lt;fips.Posterior.log_evidence&gt;`, the</span>
+<span class="sd">    analytic method's). The sampler is a random-walk Metropolis in unbounded</span>
+<span class="sd">    coordinates (the log of a positive setting, the logit of a bounded one):</span>
+<span class="sd">    it starts at the posterior mode of the settings (L-BFGS-B from the</span>
+<span class="sd">    priors' medians), proposes from Laplace's approximation there (the</span>
+<span class="sd">    inverse of a numerical Hessian), and during the `burn_in` scales that</span>
+<span class="sd">    proposal towards an acceptance of 0.3 (a Robbins-Monro step on the log of</span>
+<span class="sd">    its scale; fixed after, so the kept chain is a Markov chain of the exact</span>
+<span class="sd">    posterior). Each step solves one problem. At each of the `draws` kept</span>
+<span class="sd">    steps, it draws the state exactly from the posterior at the chain's</span>
+<span class="sd">    settings (:meth:`Posterior.sample &lt;fips.Posterior.sample&gt;`), so the</span>
+<span class="sd">    state's draws are draws of :math:`p(x \mid z)`, the Gaussian posteriors</span>
+<span class="sd">    mixed over the settings' posterior.</span>
+
+<span class="sd">    **The fast path.** When the only settings are a factor on the prior error</span>
+<span class="sd">    standard deviation and one on the model-data mismatch's, pass the problem</span>
+<span class="sd">    at factors of 1 as `build`, and name the settings ``"prior_scale"`` (the</span>
+<span class="sd">    prior std times it) and ``"obs_scale"`` (the mismatch std times it), or</span>
+<span class="sd">    ``"gamma"`` instead of ``"obs_scale"`` (the mismatch covariance over it).</span>
+<span class="sd">    One eigendecomposition then gives the evidence at every step, in</span>
+<span class="sd">    :math:`O(m)` (or :math:`O(n)`) with no solve, and the state's draws at</span>
+<span class="sd">    every kept step in one product: a run costs about one eigendecomposition</span>
+<span class="sd">    of the problem, at any size.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    build : callable or Problem</span>
+<span class="sd">        The function from the settings (a dict of floats, by name) to the</span>
+<span class="sd">        :class:`~fips.Problem` they make, or to its analytic</span>
+<span class="sd">        :class:`~fips.Posterior` (``fips.solve(problem, gamma=s["gamma"])``,</span>
+<span class="sd">        to make gamma a setting). Or, for the fast path, the problem itself.</span>
+<span class="sd">    settings : mapping of str to Prior</span>
+<span class="sd">        The prior of each setting, by the name `build` reads it by:</span>
+<span class="sd">        :class:`LogNormal`, :class:`HalfNormal` or :class:`Uniform`. Its</span>
+<span class="sd">        order is the columns' of :attr:`Hierarchical.settings`.</span>
+<span class="sd">    draws : int, default 2000</span>
+<span class="sd">        The number of kept steps, each with one draw of the state.</span>
+<span class="sd">    burn_in : int, default 500</span>
+<span class="sd">        The steps before them, which tune the proposal and are not kept.</span>
+<span class="sd">    seed : int, default 0</span>
+<span class="sd">        The seed of the chain and of the state's draws, so that a run is</span>
+<span class="sd">        reproducible. The two have their own streams: the chain is the same</span>
+<span class="sd">        whatever the state's draws are.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    Hierarchical</span>
+<span class="sd">        The draws of the settings and of the state, and the diagnostics of</span>
+<span class="sd">        the chain.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    TypeError</span>
+<span class="sd">        If a setting's prior is not a :class:`Prior`, `build` is neither</span>
+<span class="sd">        callable nor a problem, or it makes neither a problem nor an analytic</span>
+<span class="sd">        posterior.</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        If `settings` is empty, the fast path is given other names than its</span>
+<span class="sd">        three (or both ``"obs_scale"`` and ``"gamma"``), `draws`, `burn_in` or</span>
+<span class="sd">        `seed` is not an integer in range, or the log posterior is not finite</span>
+<span class="sd">        at the priors' medians.</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    fips.Posterior.log_evidence : The evidence of one problem, which the chain reads.</span>
+<span class="sd">    fips.Posterior.sample : The state's draws at one setting.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    Gelman, A., Roberts, G. O., and Gilks, W. R. (1996). Efficient</span>
+<span class="sd">    Metropolis jumping rules. *Bayesian Statistics 5*, 599-607.</span>
+
+<span class="sd">    Geyer, C. J. (1992). Practical Markov chain Monte Carlo. *Statistical</span>
+<span class="sd">    Science*, 7(4), 473-483.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    The fast path: a factor on the prior std and one on the mismatch's, on a</span>
+<span class="sd">    problem of 60 observations of 20 cells, whose truth has a std of 2 and</span>
+<span class="sd">    whose observations an error of 0.5:</span>
+
+<span class="sd">    &gt;&gt;&gt; import numpy as np</span>
+<span class="sd">    &gt;&gt;&gt; import pandas as pd</span>
+<span class="sd">    &gt;&gt;&gt; import fips</span>
+<span class="sd">    &gt;&gt;&gt; rng = np.random.default_rng(2)</span>
+<span class="sd">    &gt;&gt;&gt; cells = fips.Space({"flux": pd.RangeIndex(20, name="cell")})</span>
+<span class="sd">    &gt;&gt;&gt; observed = fips.Space({"ch4": pd.RangeIndex(60, name="obs_id")})</span>
+<span class="sd">    &gt;&gt;&gt; H = fips.Operator(rng.uniform(0.0, 1.0, (60, 20)), observed, cells)</span>
+<span class="sd">    &gt;&gt;&gt; truth = fips.Vector(2.0 * rng.standard_normal(20), cells)</span>
+<span class="sd">    &gt;&gt;&gt; obs = H @ truth + fips.Vector(0.5 * rng.standard_normal(60), observed)</span>
+<span class="sd">    &gt;&gt;&gt; problem = fips.Problem(</span>
+<span class="sd">    ...     prior=fips.Vector(np.zeros(20), cells),</span>
+<span class="sd">    ...     prior_cov=fips.Independent().with_std(1.0),</span>
+<span class="sd">    ...     obs=obs,</span>
+<span class="sd">    ...     obs_cov=fips.Independent().with_std(1.0),</span>
+<span class="sd">    ...     forward=H,</span>
+<span class="sd">    ... )</span>
+<span class="sd">    &gt;&gt;&gt; result = fips.hierarchical(</span>
+<span class="sd">    ...     problem,</span>
+<span class="sd">    ...     {</span>
+<span class="sd">    ...         "prior_scale": fips.LogNormal(0.0, 1.0),</span>
+<span class="sd">    ...         "obs_scale": fips.LogNormal(0.0, 1.0),</span>
+<span class="sd">    ...     },</span>
+<span class="sd">    ...     draws=1000,</span>
+<span class="sd">    ...     burn_in=300,</span>
+<span class="sd">    ... )</span>
+<span class="sd">    &gt;&gt;&gt; result.settings.shape</span>
+<span class="sd">    (1000, 2)</span>
+<span class="sd">    &gt;&gt;&gt; low, high = result.settings.quantile([0.05, 0.95]).values</span>
+<span class="sd">    &gt;&gt;&gt; bool(np.all((low &lt; [2.0, 0.5]) &amp; (high &gt; [2.0, 0.5])))  # 90% intervals</span>
+<span class="sd">    True</span>
+
+<span class="sd">    The general path is a function from the settings to the problem; here</span>
+<span class="sd">    the same problem, so the same chain:</span>
+
+<span class="sd">    &gt;&gt;&gt; def build(s):</span>
+<span class="sd">    ...     return fips.Problem(</span>
+<span class="sd">    ...         prior=problem.prior,</span>
+<span class="sd">    ...         prior_cov=fips.Independent().with_std(s["prior_std"]),</span>
+<span class="sd">    ...         obs=obs,</span>
+<span class="sd">    ...         obs_cov=fips.Independent().with_std(s["mdm"]),</span>
+<span class="sd">    ...         forward=H,</span>
+<span class="sd">    ...     )</span>
+<span class="sd">    &gt;&gt;&gt; general = fips.hierarchical(</span>
+<span class="sd">    ...     build,</span>
+<span class="sd">    ...     {"prior_std": fips.LogNormal(0.0, 1.0), "mdm": fips.LogNormal(0.0, 1.0)},</span>
+<span class="sd">    ...     draws=1000,</span>
+<span class="sd">    ...     burn_in=300,</span>
+<span class="sd">    ... )</span>
+<span class="sd">    &gt;&gt;&gt; bool(np.allclose(general.settings.values, result.settings.values, rtol=1e-3))</span>
+<span class="sd">    True</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">settings</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">settings</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">"settings maps each setting's name to its prior, such as "</span>
+            <span class="s1">'{"prior_std": fips.LogNormal(0.0, 0.5)}; it is empty or not a mapping.'</span>
+        <span class="p">)</span>
+    <span class="n">names</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">settings</span><span class="p">)</span>
+    <span class="n">priors</span> <span class="o">=</span> <span class="p">[</span><span class="n">settings</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">names</span><span class="p">]</span>
+    <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">prior</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">names</span><span class="p">,</span> <span class="n">priors</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"A setting's name is a str, got </span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s2">."</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">prior</span><span class="p">,</span> <span class="n">Prior</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"The prior of setting </span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s2"> is a fips.LogNormal, HalfNormal or "</span>
+                <span class="sa">f</span><span class="s2">"Uniform, got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">prior</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">."</span>
+            <span class="p">)</span>
+    <span class="n">draws</span> <span class="o">=</span> <span class="n">_count</span><span class="p">(</span><span class="n">draws</span><span class="p">,</span> <span class="s2">"draws"</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">burn_in</span> <span class="o">=</span> <span class="n">_count</span><span class="p">(</span><span class="n">burn_in</span><span class="p">,</span> <span class="s2">"burn_in"</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="n">seed</span> <span class="o">=</span> <span class="n">_count</span><span class="p">(</span><span class="n">seed</span><span class="p">,</span> <span class="s2">"seed"</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="n">target</span><span class="p">:</span> <span class="n">_Built</span> <span class="o">|</span> <span class="n">_Scales</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">build</span><span class="p">,</span> <span class="n">Problem</span><span class="p">):</span>
+        <span class="n">unknown</span> <span class="o">=</span> <span class="p">[</span><span class="n">name</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">names</span> <span class="k">if</span> <span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">_SCALES</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">unknown</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"Given a problem, hierarchical samples only the scales of its "</span>
+                <span class="sa">f</span><span class="s2">"covariances, named </span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">repr</span><span class="p">,</span><span class="w"> </span><span class="n">_SCALES</span><span class="p">))</span><span class="si">}</span><span class="s2">; it has no "</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">repr</span><span class="p">,</span><span class="w"> </span><span class="n">unknown</span><span class="p">))</span><span class="si">}</span><span class="s2">. For other settings, pass a "</span>
+                <span class="s2">"function that builds the problem from them."</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="s2">"obs_scale"</span> <span class="ow">in</span> <span class="n">names</span> <span class="ow">and</span> <span class="s2">"gamma"</span> <span class="ow">in</span> <span class="n">names</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">"obs_scale and gamma both scale the model-data mismatch: give one."</span>
+            <span class="p">)</span>
+        <span class="n">target</span> <span class="o">=</span> <span class="n">_Scales</span><span class="p">(</span><span class="n">build</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="nb">callable</span><span class="p">(</span><span class="n">build</span><span class="p">):</span>
+        <span class="n">target</span> <span class="o">=</span> <span class="n">_Built</span><span class="p">(</span><span class="n">build</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+            <span class="s2">"build is a function from the settings to a Problem, or a Problem "</span>
+            <span class="sa">f</span><span class="s2">"(the fast path), got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">build</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">."</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">evaluate</span><span class="p">(</span><span class="n">u</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""Return the settings' log posterior at unbounded coordinates `u`, and what a draw of the state there needs."""</span>
+        <span class="n">log_prior</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span>
+            <span class="n">p</span><span class="o">.</span><span class="n">_log_density_unbounded</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">x</span><span class="p">))</span> <span class="k">for</span> <span class="n">p</span><span class="p">,</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">priors</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">math</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">log_prior</span><span class="p">):</span>
+            <span class="k">return</span> <span class="o">-</span><span class="n">math</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="kc">None</span>
+        <span class="n">values</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">n</span><span class="p">:</span> <span class="n">p</span><span class="o">.</span><span class="n">_from_unbounded</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+            <span class="k">for</span> <span class="n">n</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">names</span><span class="p">,</span> <span class="n">priors</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="p">}</span>
+        <span class="n">log_evidence</span><span class="p">,</span> <span class="n">payload</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="n">values</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">log_prior</span> <span class="o">+</span> <span class="n">log_evidence</span><span class="p">,</span> <span class="n">payload</span>
+
+    <span class="n">chain_rng</span><span class="p">,</span> <span class="n">state_rng</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span><span class="o">.</span><span class="n">spawn</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">start</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">p</span><span class="o">.</span><span class="n">_to_unbounded</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">median</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">priors</span><span class="p">])</span>
+    <span class="n">mode</span><span class="p">,</span> <span class="n">laplace</span> <span class="o">=</span> <span class="n">_laplace</span><span class="p">(</span><span class="k">lambda</span> <span class="n">u</span><span class="p">:</span> <span class="n">evaluate</span><span class="p">(</span><span class="n">u</span><span class="p">)[</span><span class="mi">0</span><span class="p">],</span> <span class="n">start</span><span class="p">,</span> <span class="n">names</span><span class="p">)</span>
+    <span class="n">root</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">cholesky</span><span class="p">(</span><span class="n">laplace</span><span class="p">)</span>
+    <span class="n">log_scale</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mf">2.38</span> <span class="o">/</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">names</span><span class="p">)))</span>
+    <span class="n">u</span> <span class="o">=</span> <span class="n">mode</span>
+    <span class="n">log_density</span><span class="p">,</span> <span class="n">payload</span> <span class="o">=</span> <span class="n">evaluate</span><span class="p">(</span><span class="n">u</span><span class="p">)</span>
+    <span class="n">chain</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">draws</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">names</span><span class="p">)))</span>
+    <span class="n">kept</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">accepted</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">step</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">burn_in</span> <span class="o">+</span> <span class="n">draws</span><span class="p">):</span>
+        <span class="n">proposal</span> <span class="o">=</span> <span class="n">u</span> <span class="o">+</span> <span class="n">math</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">log_scale</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">root</span> <span class="o">@</span> <span class="n">chain_rng</span><span class="o">.</span><span class="n">standard_normal</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">u</span><span class="p">)))</span>
+        <span class="n">proposed</span><span class="p">,</span> <span class="n">proposed_payload</span> <span class="o">=</span> <span class="n">evaluate</span><span class="p">(</span><span class="n">proposal</span><span class="p">)</span>
+        <span class="n">log_ratio</span> <span class="o">=</span> <span class="n">proposed</span> <span class="o">-</span> <span class="n">log_density</span> <span class="k">if</span> <span class="n">math</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">proposed</span><span class="p">)</span> <span class="k">else</span> <span class="o">-</span><span class="n">math</span><span class="o">.</span><span class="n">inf</span>
+        <span class="n">accept</span> <span class="o">=</span> <span class="n">_accept</span><span class="p">(</span><span class="n">log_ratio</span><span class="p">,</span> <span class="n">chain_rng</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">accept</span><span class="p">:</span>
+            <span class="n">u</span><span class="p">,</span> <span class="n">log_density</span><span class="p">,</span> <span class="n">payload</span> <span class="o">=</span> <span class="n">proposal</span><span class="p">,</span> <span class="n">proposed</span><span class="p">,</span> <span class="n">proposed_payload</span>
+        <span class="k">if</span> <span class="n">step</span> <span class="o">&lt;</span> <span class="n">burn_in</span><span class="p">:</span>
+            <span class="n">probability</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">log_ratio</span><span class="p">))</span>
+            <span class="n">log_scale</span> <span class="o">+=</span> <span class="p">(</span><span class="n">probability</span> <span class="o">-</span> <span class="n">_ACCEPTANCE</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">step</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">**</span> <span class="mf">0.6</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">chain</span><span class="p">[</span><span class="n">step</span> <span class="o">-</span> <span class="n">burn_in</span><span class="p">]</span> <span class="o">=</span> <span class="n">u</span>
+            <span class="n">kept</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">target</span><span class="o">.</span><span class="n">keep</span><span class="p">(</span><span class="n">payload</span><span class="p">,</span> <span class="n">state_rng</span><span class="p">))</span>
+            <span class="n">accepted</span> <span class="o">+=</span> <span class="n">accept</span>
+    <span class="n">values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+        <span class="p">[</span>
+            <span class="p">[</span><span class="n">p</span><span class="o">.</span><span class="n">_from_unbounded</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">x</span><span class="p">))</span> <span class="k">for</span> <span class="n">p</span><span class="p">,</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">priors</span><span class="p">,</span> <span class="n">row</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="kc">True</span><span class="p">)]</span>
+            <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">chain</span>
+        <span class="p">]</span>
+    <span class="p">)</span>
+    <span class="n">index</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">RangeIndex</span><span class="p">(</span><span class="n">draws</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">"draw"</span><span class="p">)</span>
+    <span class="n">space</span><span class="p">,</span> <span class="n">states</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">kept</span><span class="p">,</span> <span class="n">state_rng</span><span class="p">)</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">Hierarchical</span><span class="p">(</span>
+        <span class="n">target</span><span class="o">=</span><span class="n">target</span><span class="p">,</span>
+        <span class="n">names</span><span class="o">=</span><span class="n">names</span><span class="p">,</span>
+        <span class="n">settings</span><span class="o">=</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
+            <span class="n">values</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">index</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">(</span><span class="n">names</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">"setting"</span><span class="p">)</span>
+        <span class="p">),</span>
+        <span class="n">space</span><span class="o">=</span><span class="n">space</span><span class="p">,</span>
+        <span class="n">states</span><span class="o">=</span><span class="n">states</span><span class="p">,</span>
+        <span class="n">mode</span><span class="o">=</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span>
+            <span class="p">[</span><span class="n">p</span><span class="o">.</span><span class="n">_from_unbounded</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">x</span><span class="p">))</span> <span class="k">for</span> <span class="n">p</span><span class="p">,</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">priors</span><span class="p">,</span> <span class="n">mode</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="kc">True</span><span class="p">)],</span>
+            <span class="n">index</span><span class="o">=</span><span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">(</span><span class="n">names</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">"setting"</span><span class="p">),</span>
+            <span class="n">name</span><span class="o">=</span><span class="s2">"mode"</span><span class="p">,</span>
+        <span class="p">),</span>
+        <span class="n">acceptance</span><span class="o">=</span><span class="n">accepted</span> <span class="o">/</span> <span class="n">draws</span><span class="p">,</span>
+        <span class="n">proposal_scale</span><span class="o">=</span><span class="n">math</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">log_scale</span><span class="p">),</span>
+    <span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+        <span class="s2">"hierarchical: </span><span class="si">%d</span><span class="s2"> draws after </span><span class="si">%d</span><span class="s2"> burn-in steps; acceptance </span><span class="si">%.2f</span><span class="s2">; "</span>
+        <span class="s2">"effective sample sizes </span><span class="si">%s</span><span class="s2">."</span><span class="p">,</span>
+        <span class="n">draws</span><span class="p">,</span>
+        <span class="n">burn_in</span><span class="p">,</span>
+        <span class="n">result</span><span class="o">.</span><span class="n">acceptance</span><span class="p">,</span>
+        <span class="n">result</span><span class="o">.</span><span class="n">ess</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">to_dict</span><span class="p">(),</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">result</span></div>
+
+
+
+<span class="c1"># -- the result -----------------------------------------------------------------</span>
+
+
+<div class="viewcode-block" id="Hierarchical">
+<a class="viewcode-back" href="../../reference/api/fips.Hierarchical.html#fips.Hierarchical">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">Hierarchical</span><span class="p">:</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">    Draws of the covariance settings from their posterior, and of the state at each: the posterior with the settings' uncertainty.</span>
+
+<span class="sd">    :func:`hierarchical` builds it. It is not a :class:`~fips.Posterior`: the</span>
+<span class="sd">    posterior of the state is a mixture of Gaussians, one for each draw of the</span>
+<span class="sd">    settings, so its estimate, variances and covariances are those of the</span>
+<span class="sd">    draws of the state (``draws`` of them: a Monte Carlo estimate, a standard</span>
+<span class="sd">    deviation good to a few percent at the default 2000, more where the chain</span>
+<span class="sd">    is slow, :attr:`ess`). What is defined only for one Gaussian (the gain,</span>
+<span class="sd">    DOFS, the chi-squared tests, the evidence) is on the posterior at one</span>
+<span class="sd">    setting, :meth:`at`. The draws of the state are held as a ``state x</span>
+<span class="sd">    draws`` array.</span>
+
+<span class="sd">    Pickles with :mod:`pickle` when the function that builds the problem does</span>
+<span class="sd">    (a function defined at the top level of a module).</span>
+<span class="sd">    """</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">target</span><span class="p">:</span> <span class="s2">"_Built | _Scales"</span><span class="p">,</span>
+        <span class="n">names</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+        <span class="n">settings</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
+        <span class="n">space</span><span class="p">:</span> <span class="n">Space</span><span class="p">,</span>
+        <span class="n">states</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+        <span class="n">mode</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span>
+        <span class="n">acceptance</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">proposal_scale</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_target</span> <span class="o">=</span> <span class="n">target</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_names</span> <span class="o">=</span> <span class="n">names</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_settings</span> <span class="o">=</span> <span class="n">settings</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_space</span> <span class="o">=</span> <span class="n">space</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_states</span> <span class="o">=</span> <span class="n">states</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_states</span><span class="o">.</span><span class="n">flags</span><span class="o">.</span><span class="n">writeable</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_mode</span> <span class="o">=</span> <span class="n">mode</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_acceptance</span> <span class="o">=</span> <span class="n">acceptance</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_proposal_scale</span> <span class="o">=</span> <span class="n">proposal_scale</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return the settings, the number of draws and the acceptance."""</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"Hierarchical(settings=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_names</span><span class="si">}</span><span class="s2">, draws=</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_settings</span><span class="p">)</span><span class="si">}</span><span class="s2">, "</span>
+            <span class="sa">f</span><span class="s2">"acceptance=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_acceptance</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">)"</span>
+        <span class="p">)</span>
+
+    <span class="c1"># -- the settings ----------------------------------------------------------</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">settings</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""The kept draws of the settings: one row a draw (``draw``), one column a setting."""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_settings</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">mode</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""The posterior mode of the settings, where the chain started and Laplace's approximation was taken."""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mode</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">acceptance</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""The fraction of the kept steps whose proposal was accepted (near 0.3 when the burn-in tuned the proposal well)."""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_acceptance</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">ess</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        The effective sample size of each setting's draws: about as many independent draws as they are worth.</span>
+
+<span class="sd">        By Geyer's initial monotone sequence of autocorrelations. A Monte</span>
+<span class="sd">        Carlo standard error of a setting's mean is its standard deviation</span>
+<span class="sd">        over the root of this.</span>
+<span class="sd">        """</span>
+        <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span>
+            <span class="p">[</span>
+                <span class="n">_effective_size</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_settings</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">))</span>
+                <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_names</span>
+            <span class="p">],</span>
+            <span class="n">index</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_settings</span><span class="o">.</span><span class="n">columns</span><span class="p">,</span>
+            <span class="n">name</span><span class="o">=</span><span class="s2">"ess"</span><span class="p">,</span>
+        <span class="p">)</span>
+
+<div class="viewcode-block" id="Hierarchical.at">
+<a class="viewcode-back" href="../../reference/api/fips.Hierarchical.at.html#fips.Hierarchical.at">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">at</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">settings</span><span class="p">:</span> <span class="s2">"Mapping[str, float] | pd.Series"</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Posterior</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Return the posterior at one setting of every setting: the ordinary :class:`~fips.Posterior`, solved.</span>
+
+<span class="sd">        For what the mixture does not define: the gain, DOFS, the chi-squared</span>
+<span class="sd">        tests, the evidence. ``result.at(result.settings.median())``.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        settings : mapping or pandas.Series</span>
+<span class="sd">            A value for each setting, by name.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            If a setting is missing or unknown.</span>
+<span class="sd">        """</span>
+        <span class="n">values</span> <span class="o">=</span> <span class="p">{</span><span class="nb">str</span><span class="p">(</span><span class="n">k</span><span class="p">):</span> <span class="nb">float</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">dict</span><span class="p">(</span><span class="n">settings</span><span class="p">)</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+        <span class="n">missing</span> <span class="o">=</span> <span class="p">[</span><span class="n">name</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_names</span> <span class="k">if</span> <span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">values</span><span class="p">]</span>
+        <span class="n">unknown</span> <span class="o">=</span> <span class="p">[</span><span class="n">name</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">values</span> <span class="k">if</span> <span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_names</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">missing</span> <span class="ow">or</span> <span class="n">unknown</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"at takes a value for each of the settings </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_names</span><span class="si">}</span><span class="s2">; "</span>
+                <span class="sa">f</span><span class="s2">"missing </span><span class="si">{</span><span class="n">missing</span><span class="si">}</span><span class="s2">, unknown </span><span class="si">{</span><span class="n">unknown</span><span class="si">}</span><span class="s2">."</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_target</span><span class="o">.</span><span class="n">posterior</span><span class="p">({</span><span class="n">name</span><span class="p">:</span> <span class="n">values</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_names</span><span class="p">})</span></div>
+
+
+    <span class="c1"># -- the state -------------------------------------------------------------</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_aggregation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">W</span><span class="p">:</span> <span class="n">Operator</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return an aggregation's matrix with its columns in the state's order (as :class:`~fips.Posterior` checks it)."""</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">W</span><span class="p">,</span> <span class="n">Operator</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"An aggregation is an Operator, not </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">W</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">: build one "</span>
+                <span class="s2">"with Operator.from_frame or Operator.from_blocks."</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="n">W</span><span class="o">.</span><span class="n">_on</span><span class="p">(</span><span class="n">W</span><span class="o">.</span><span class="n">rows</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_space</span><span class="p">,</span> <span class="s2">"the aggregation"</span><span class="p">,</span> <span class="p">(</span><span class="s2">"its rows"</span><span class="p">,</span> <span class="s2">"the state"</span><span class="p">))</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_draws</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">W</span><span class="p">:</span> <span class="n">Operator</span> <span class="o">|</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""Return the draws of the state (or of `W` x) and their row labels."""</span>
+        <span class="k">if</span> <span class="n">W</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_states</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_space</span><span class="o">.</span><span class="n">index</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_aggregation</span><span class="p">(</span><span class="n">W</span><span class="p">)</span> <span class="o">@</span> <span class="bp">self</span><span class="o">.</span><span class="n">_states</span><span class="p">),</span> <span class="n">W</span><span class="o">.</span><span class="n">rows</span><span class="o">.</span><span class="n">index</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">estimate</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Vector</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""The posterior mean of the state, the mean of its draws: :math:`E[\hat{x}(s)]` over the settings' posterior."""</span>
+        <span class="k">return</span> <span class="n">Vector</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_states</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">_space</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">"estimate"</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">variances</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Vector</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">        The posterior variances of the state, those of its draws (about their mean).</span>
+
+<span class="sd">        By the law of total variance they are :math:`E[\operatorname{diag}</span>
+<span class="sd">        \hat{S}(s)] + \operatorname{var}[\hat{x}(s)]` over the settings'</span>
+<span class="sd">        posterior: the mean of each setting's variances, and the spread of</span>
+<span class="sd">        its estimates.</span>
+<span class="sd">        """</span>
+        <span class="k">return</span> <span class="n">Vector</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_states</span><span class="o">.</span><span class="n">var</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">ddof</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">_space</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">"variance"</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Hierarchical.cov">
+<a class="viewcode-back" href="../../reference/api/fips.Hierarchical.cov.html#fips.Hierarchical.cov">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">cov</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">W</span><span class="p">:</span> <span class="n">Operator</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Covariance</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Return the posterior covariance of the state, or of aggregates of it, from the draws.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        W : Operator, optional</span>
+<span class="sd">            An aggregation, as :meth:`Posterior.cov &lt;fips.Posterior.cov&gt;`</span>
+<span class="sd">            takes it: one row per aggregate, the state's labels as its</span>
+<span class="sd">            columns (in any order).</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Covariance</span>
+<span class="sd">            The covariance of the draws of :math:`x` (``n x n``, dense) or of</span>
+<span class="sd">            :math:`W x` (``k x k``).</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        TypeError</span>
+<span class="sd">            If `W` is not an Operator.</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            If the columns of `W` do not have exactly the state's labels.</span>
+<span class="sd">        """</span>
+        <span class="n">values</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_draws</span><span class="p">(</span><span class="n">W</span><span class="p">)</span>
+        <span class="n">space</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_space</span> <span class="k">if</span> <span class="n">W</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">W</span><span class="o">.</span><span class="n">rows</span>
+        <span class="n">covariance</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_2d</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">cov</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">ddof</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">Covariance</span><span class="o">.</span><span class="n">_computed</span><span class="p">(</span><span class="n">_adopt</span><span class="p">(</span><span class="n">covariance</span><span class="p">),</span> <span class="n">space</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">"posterior_cov"</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Hierarchical.uncertainty">
+<a class="viewcode-back" href="../../reference/api/fips.Hierarchical.uncertainty.html#fips.Hierarchical.uncertainty">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">uncertainty</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">W</span><span class="p">:</span> <span class="n">Operator</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">level</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.95</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Return the mean, standard deviation and central interval of each element or aggregate, from the draws.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        W : Operator, optional</span>
+<span class="sd">            An aggregation, as :meth:`cov` takes it. By default, one row per</span>
+<span class="sd">            state element.</span>
+<span class="sd">        level : float, default 0.95</span>
+<span class="sd">            The probability of the interval, between 0 and 1: the interval</span>
+<span class="sd">            is from the ``(1 - level) / 2`` quantile of the draws to the</span>
+<span class="sd">            ``(1 + level) / 2`` one.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        pandas.DataFrame</span>
+<span class="sd">            One row per element or aggregate: ``estimate`` (the mean of the</span>
+<span class="sd">            draws), ``posterior_std``, ``lower`` and ``upper``. There is no</span>
+<span class="sd">            prior column: the prior of the state depends on the settings.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        TypeError</span>
+<span class="sd">            If `W` is not an Operator.</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            If `level` is not between 0 and 1, or the columns of `W` do not</span>
+<span class="sd">            have exactly the state's labels.</span>
+<span class="sd">        """</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">level</span><span class="p">,</span> <span class="n">numbers</span><span class="o">.</span><span class="n">Real</span><span class="p">)</span> <span class="ow">and</span> <span class="mf">0.0</span> <span class="o">&lt;</span> <span class="n">level</span> <span class="o">&lt;</span> <span class="mf">1.0</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"level is a probability between 0 and 1, got </span><span class="si">{</span><span class="n">level</span><span class="si">!r}</span><span class="s2">."</span><span class="p">)</span>
+        <span class="n">values</span><span class="p">,</span> <span class="n">index</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_draws</span><span class="p">(</span><span class="n">W</span><span class="p">)</span>
+        <span class="n">lower</span><span class="p">,</span> <span class="n">upper</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">quantile</span><span class="p">(</span>
+            <span class="n">values</span><span class="p">,</span> <span class="p">[(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="n">level</span><span class="p">)</span> <span class="o">/</span> <span class="mf">2.0</span><span class="p">,</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">+</span> <span class="n">level</span><span class="p">)</span> <span class="o">/</span> <span class="mf">2.0</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
+            <span class="p">{</span>
+                <span class="s2">"estimate"</span><span class="p">:</span> <span class="n">values</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span>
+                <span class="s2">"posterior_std"</span><span class="p">:</span> <span class="n">values</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">ddof</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span>
+                <span class="s2">"lower"</span><span class="p">:</span> <span class="n">lower</span><span class="p">,</span>
+                <span class="s2">"upper"</span><span class="p">:</span> <span class="n">upper</span><span class="p">,</span>
+            <span class="p">},</span>
+            <span class="n">index</span><span class="o">=</span><span class="n">index</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Hierarchical.sample">
+<a class="viewcode-back" href="../../reference/api/fips.Hierarchical.sample.html#fips.Hierarchical.sample">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">sample</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">W</span><span class="p">:</span> <span class="n">Operator</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Return draws of the state from its posterior, mixed over the settings' draws: one column each.</span>
+
+<span class="sd">        The draws are those made at the kept steps of the chain, one at each</span>
+<span class="sd">        step's settings, so a column's draw belongs to the row of</span>
+<span class="sd">        :attr:`settings` its label names. Ask for fewer than were kept and</span>
+<span class="sd">        they are spread evenly along the chain, which takes them farther</span>
+<span class="sd">        apart in it.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        n : int, optional</span>
+<span class="sd">            The number of draws, at most the number kept; all by default.</span>
+<span class="sd">        W : Operator, optional</span>
+<span class="sd">            An aggregation, as :meth:`cov` takes it: the draws are then those</span>
+<span class="sd">            of :math:`W x`.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        pandas.DataFrame</span>
+<span class="sd">            One row per state element, labeled as the :attr:`estimate` is (or</span>
+<span class="sd">            one per row of `W`), and one column per draw, labeled by its row</span>
+<span class="sd">            of :attr:`settings` (``draw``).</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        TypeError</span>
+<span class="sd">            If `W` is not an Operator.</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            If `n` is not a positive integer of at most the kept draws, or the</span>
+<span class="sd">            columns of `W` do not have exactly the state's labels.</span>
+<span class="sd">        """</span>
+        <span class="n">kept</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_states</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">n</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">n</span> <span class="o">=</span> <span class="n">kept</span>
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">numbers</span><span class="o">.</span><span class="n">Integral</span><span class="p">)</span>
+            <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="nb">bool</span><span class="p">)</span>
+            <span class="ow">or</span> <span class="ow">not</span> <span class="mi">1</span> <span class="o">&lt;=</span> <span class="nb">int</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="n">kept</span>
+        <span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"n is a number of draws from 1 to the </span><span class="si">{</span><span class="n">kept</span><span class="si">}</span><span class="s2"> kept, got </span><span class="si">{</span><span class="n">n</span><span class="si">!r}</span><span class="s2">; "</span>
+                <span class="s2">"for more, run hierarchical with more draws."</span>
+            <span class="p">)</span>
+        <span class="n">values</span><span class="p">,</span> <span class="n">index</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_draws</span><span class="p">(</span><span class="n">W</span><span class="p">)</span>
+        <span class="n">chosen</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">kept</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">n</span><span class="p">)))</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
+            <span class="n">values</span><span class="p">[:,</span> <span class="n">chosen</span><span class="p">],</span>
+            <span class="n">index</span><span class="o">=</span><span class="n">index</span><span class="p">,</span>
+            <span class="n">columns</span><span class="o">=</span><span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_settings</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="n">chosen</span><span class="p">],</span> <span class="n">name</span><span class="o">=</span><span class="s2">"draw"</span><span class="p">),</span>
+        <span class="p">)</span></div>
+</div>
+
+</pre></div>
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be"></script>
+<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2025-2026, James Mineau.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.2.0.
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.23.0.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

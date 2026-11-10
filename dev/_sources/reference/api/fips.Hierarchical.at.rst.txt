@@ -1,0 +1,6 @@
+fips.Hierarchical.at
+====================
+
+.. currentmodule:: fips
+
+.. automethod:: Hierarchical.at

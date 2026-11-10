@@ -1,0 +1,6 @@
+fips.HalfNormal.median
+======================
+
+.. currentmodule:: fips
+
+.. autoproperty:: HalfNormal.median

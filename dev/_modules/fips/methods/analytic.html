@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>fips.methods.analytic &#8212; fips 0.2.0b3.dev19+ga4bfb9bc6 documentation</title>
+    <title>fips.methods.analytic &#8212; fips 0.2.0b3.dev20+gfcd9c64d2 documentation</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../../_static/documentation_options.js?v=bf0428a7"></script>
+    <script src="../../../_static/documentation_options.js?v=04e3a186"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -132,8 +132,8 @@
       
     
     
-    <img src="../../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev19+ga4bfb9bc6 documentation - Home"/>
-    <img src="../../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev19+ga4bfb9bc6 documentation - Home"/>
+    <img src="../../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev20+gfcd9c64d2 documentation - Home"/>
+    <img src="../../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev20+gfcd9c64d2 documentation - Home"/>
   
   
 </a></div>
@@ -463,6 +463,7 @@
 <span class="kn">import</span><span class="w"> </span><span class="nn">math</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Sequence</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span><span class="p">,</span> <span class="n">field</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">functools</span><span class="w"> </span><span class="kn">import</span> <span class="n">cached_property</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">ClassVar</span><span class="p">,</span> <span class="n">Self</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
@@ -719,6 +720,84 @@
         <span class="p">)</span> <span class="o">/</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">gamma</span><span class="p">)</span>
         <span class="n">innovations</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">problem</span><span class="o">.</span><span class="n">_operator</span><span class="o">.</span><span class="n">data</span> <span class="o">@</span> <span class="n">delta</span><span class="p">)</span> <span class="o">+</span> <span class="n">error</span>  <span class="c1"># m x N</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">estimate</span><span class="p">()[:,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">+</span> <span class="n">delta</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gain_times</span><span class="p">(</span><span class="n">innovations</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_eigendecomposition</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"Self"</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return these factors read from the eigendecomposition, at this gamma (done and kept as :meth:`with_gamma` does)."""</span>
+        <span class="k">return</span> <span class="bp">self</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">eigenvalues</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">with_gamma</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">gamma</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_evidence_terms</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gammas</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">        Return the chi-squared and the information content at each of `gammas`, from the eigendecomposition.</span>
+
+<span class="sd">        Both are sums over the eigenvalues, :math:`O(k)` for each gamma, with</span>
+<span class="sd">        no product of the factors: the information content is</span>
+<span class="sd">        :math:`\tfrac{1}{2} \sum_k \ln(1 + \gamma \lambda_k)`, and the</span>
+<span class="sd">        chi-squared is each form's sum (:meth:`_chi2_at`). The scales-only</span>
+<span class="sd">        fast path of :func:`fips.hierarchical` reads the evidence at every</span>
+<span class="sd">        step of its chain from these.</span>
+<span class="sd">        """</span>
+        <span class="n">factors</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_eigendecomposition</span><span class="p">()</span>
+        <span class="n">eigenvalues</span> <span class="o">=</span> <span class="n">factors</span><span class="o">.</span><span class="n">eigenvalues</span>
+        <span class="k">assert</span> <span class="n">eigenvalues</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>  <span class="c1"># _eigendecomposition gives them</span>
+        <span class="n">gammas</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">gammas</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+        <span class="n">weights</span> <span class="o">=</span> <span class="n">gammas</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">/</span> <span class="p">(</span><span class="n">gammas</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="n">eigenvalues</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="p">:]</span> <span class="o">+</span> <span class="mf">1.0</span><span class="p">)</span>
+        <span class="n">information</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">log1p</span><span class="p">(</span><span class="n">gammas</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="n">eigenvalues</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="p">:])</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">factors</span><span class="o">.</span><span class="n">_chi2_at</span><span class="p">(</span><span class="n">gammas</span><span class="p">,</span> <span class="n">weights</span><span class="p">),</span> <span class="n">information</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_chi2_at</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gammas</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">weights</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""Return the chi-squared at each of `gammas`, with `weights` their :math:`w_k` (``N x k``; each form defines it)."""</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_carry</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">D</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""Return a block of innovations `D` (``m x N``) in the form's basis, as :attr:`innovation` is the innovation's (each form defines it)."""</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_factor_times</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">V</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""Return the increment of the estimate for weighted components `V` (``k x N``): :math:`W^T V` or :math:`G V` (each form defines it)."""</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_draws_at</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">gammas</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">scales</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">rng</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">Generator</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">        Return one exact draw for each pair of `gammas` and `scales`, ``n x N``: a draw of the posterior with the prior std times the scale.</span>
+
+<span class="sd">        With the prior error covariance :math:`s^2 S_0` and the mismatch</span>
+<span class="sd">        :math:`c S_z`, the posterior's mean is this problem's at</span>
+<span class="sd">        :math:`\gamma = s^2 / c` and its covariance :math:`s^2` times this</span>
+<span class="sd">        problem's there. :meth:`sample` at :math:`(s, c)` is then</span>
+<span class="sd">        :math:`\hat{x}(\gamma) + s \big(\delta - K(\gamma) (H \delta + e)\big)`</span>
+<span class="sd">        with :math:`\delta \sim N(0, S_0)` and :math:`e \sim N(0, S_z /</span>
+<span class="sd">        \gamma)`. Each draw's normals are drawn from `rng` in turn, the prior's</span>
+<span class="sd">        then the mismatch's, as ``sample(1, rng)`` of each problem would draw</span>
+<span class="sd">        them, so a draw is that problem's own to roundoff. The gain is never</span>
+<span class="sd">        formed: one product with the factors for all the draws.</span>
+<span class="sd">        """</span>
+        <span class="n">factors</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_eigendecomposition</span><span class="p">()</span>
+        <span class="n">eigenvalues</span> <span class="o">=</span> <span class="n">factors</span><span class="o">.</span><span class="n">eigenvalues</span>
+        <span class="k">assert</span> <span class="n">eigenvalues</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>  <span class="c1"># _eigendecomposition gives them</span>
+        <span class="n">problem</span> <span class="o">=</span> <span class="n">factors</span><span class="o">.</span><span class="n">problem</span>
+        <span class="n">prior_root</span> <span class="o">=</span> <span class="n">problem</span><span class="o">.</span><span class="n">prior_cov</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">_root</span>
+        <span class="n">obs_root</span> <span class="o">=</span> <span class="n">problem</span><span class="o">.</span><span class="n">obs_cov</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">_root</span>
+        <span class="n">gammas</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">gammas</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+        <span class="n">scales</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">scales</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+        <span class="n">N</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">gammas</span><span class="p">)</span>
+        <span class="n">prior_normals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">prior_root</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">N</span><span class="p">))</span>
+        <span class="n">obs_normals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">obs_root</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">N</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N</span><span class="p">):</span>
+            <span class="n">prior_normals</span><span class="p">[:,</span> <span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">rng</span><span class="o">.</span><span class="n">standard_normal</span><span class="p">(</span><span class="n">prior_root</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+            <span class="n">obs_normals</span><span class="p">[:,</span> <span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">rng</span><span class="o">.</span><span class="n">standard_normal</span><span class="p">(</span><span class="n">obs_root</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="n">delta</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">prior_root</span> <span class="o">@</span> <span class="n">prior_normals</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+        <span class="n">error</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">obs_root</span> <span class="o">@</span> <span class="n">obs_normals</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">gammas</span><span class="p">)</span>
+        <span class="n">innovations</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">problem</span><span class="o">.</span><span class="n">_operator</span><span class="o">.</span><span class="n">data</span> <span class="o">@</span> <span class="n">delta</span><span class="p">)</span> <span class="o">+</span> <span class="n">error</span>  <span class="c1"># m x N</span>
+        <span class="n">weights</span> <span class="o">=</span> <span class="n">gammas</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="p">:]</span> <span class="o">/</span> <span class="p">(</span><span class="n">gammas</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="p">:]</span> <span class="o">*</span> <span class="n">eigenvalues</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">+</span> <span class="mf">1.0</span><span class="p">)</span>
+        <span class="n">carried</span> <span class="o">=</span> <span class="n">factors</span><span class="o">.</span><span class="n">_carry</span><span class="p">(</span><span class="n">innovations</span><span class="p">)</span>
+        <span class="n">components</span> <span class="o">=</span> <span class="n">factors</span><span class="o">.</span><span class="n">innovation</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">-</span> <span class="n">scales</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="p">:]</span> <span class="o">*</span> <span class="n">carried</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="n">problem</span><span class="o">.</span><span class="n">prior</span><span class="o">.</span><span class="n">values</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">]</span>
+            <span class="o">+</span> <span class="n">scales</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="p">:]</span> <span class="o">*</span> <span class="n">delta</span>
+            <span class="o">+</span> <span class="n">factors</span><span class="o">.</span><span class="n">_factor_times</span><span class="p">(</span><span class="n">weights</span> <span class="o">*</span> <span class="n">components</span><span class="p">)</span>
+        <span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">misfits</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
@@ -1071,6 +1150,18 @@
 <span class="w">        </span><span class="sa">r</span><span class="sd">"""Return :math:`K D = W^T (w \circ (B D))`: ``with_data``'s product for a block of innovations."""</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">W</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">weights</span><span class="p">()[:,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">whitener</span> <span class="o">@</span> <span class="n">D</span><span class="p">))</span>
 
+    <span class="k">def</span><span class="w"> </span><span class="nf">_chi2_at</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gammas</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">weights</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""Return :math:`\sum_k w_k e_k^2` at each gamma (:meth:`chi2`), :math:`O(m)` each."""</span>
+        <span class="k">return</span> <span class="n">weights</span> <span class="o">@</span> <span class="bp">self</span><span class="o">.</span><span class="n">innovation</span><span class="o">**</span><span class="mi">2</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_carry</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">D</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""Return :math:`B D`, the innovations whitened as :math:`e = B d` is."""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">whitener</span> <span class="o">@</span> <span class="n">D</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_factor_times</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">V</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""Return :math:`W^T V`."""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">W</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">V</span>
+
     <span class="k">def</span><span class="w"> </span><span class="nf">_cov_times</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">V</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">"""Return :math:`\hat{S} V = Q V - W^T (w \circ (W V))`: ``O(m n k)``, and a product of :math:`Q` in its own form."""</span>
         <span class="n">prior</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">problem</span><span class="o">.</span><span class="n">prior_cov</span><span class="o">.</span><span class="n">data</span> <span class="o">@</span> <span class="n">V</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
@@ -1384,6 +1475,34 @@
         <span class="n">Y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">problem</span><span class="o">.</span><span class="n">obs_cov</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">D</span><span class="p">))</span>
         <span class="n">HtY</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">problem</span><span class="o">.</span><span class="n">_operator</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">_transpose</span><span class="p">()</span> <span class="o">@</span> <span class="n">Y</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">G</span> <span class="o">@</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">weights</span><span class="p">()[:,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">G</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">HtY</span><span class="p">))</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_chi2_at</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gammas</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">weights</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">        Return the chi-squared at each gamma, :math:`\gamma q - \gamma \sum_k w_k b_k^2` with :math:`q = d^T S_z^{-1} d`: :math:`O(n)` each.</span>
+
+<span class="sd">        With :math:`\tilde{d} = S_z^{-1/2} d` and :math:`J = S_z^{-1/2} H R_0</span>
+<span class="sd">        = U \Sigma V^T`, :math:`(J J^T + I/\gamma)^{-1} = \gamma (I - U U^T) +</span>
+<span class="sd">        U \operatorname{diag}(1 / (\lambda_k + 1/\gamma)) U^T`, and :math:`b_k</span>
+<span class="sd">        = \sigma_k u_k^T \tilde{d}`; the two sums over :math:`k` combine into</span>
+<span class="sd">        one with no division by :math:`\lambda_k`.</span>
+<span class="sd">        """</span>
+        <span class="k">return</span> <span class="n">gammas</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_innovation_norm</span> <span class="o">-</span> <span class="n">gammas</span> <span class="o">*</span> <span class="p">(</span><span class="n">weights</span> <span class="o">@</span> <span class="bp">self</span><span class="o">.</span><span class="n">innovation</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+
+    <span class="nd">@cached_property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_innovation_norm</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">""":math:`q = d^T S_z^{-1} d`, one solve with the mismatch, kept (each new set of observations has its own)."""</span>
+        <span class="n">d</span> <span class="o">=</span> <span class="n">_innovation</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">problem</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">d</span> <span class="o">@</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">problem</span><span class="o">.</span><span class="n">obs_cov</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">d</span><span class="p">)))</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_carry</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">D</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""Return :math:`G^T H^T S_z^{-1} D`, the innovations carried as :math:`b` is (``_carried``)."""</span>
+        <span class="n">problem</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">problem</span>
+        <span class="n">Y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">problem</span><span class="o">.</span><span class="n">obs_cov</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">D</span><span class="p">))</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">G</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">problem</span><span class="o">.</span><span class="n">_operator</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">_transpose</span><span class="p">()</span> <span class="o">@</span> <span class="n">Y</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_factor_times</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">V</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""Return :math:`G V`."""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">G</span> <span class="o">@</span> <span class="n">V</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_cov_times</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">V</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">"""Return :math:`\hat{S} V = G (w / \gamma \circ (G^T V))`: ``O(n^2 k)``."""</span>

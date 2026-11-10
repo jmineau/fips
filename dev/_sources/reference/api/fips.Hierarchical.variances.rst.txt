@@ -1,0 +1,6 @@
+fips.Hierarchical.variances
+===========================
+
+.. currentmodule:: fips
+
+.. autoproperty:: Hierarchical.variances

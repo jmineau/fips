@@ -1,0 +1,906 @@
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>The uncertainty of the settings &#8212; fips 0.2.0b3.dev20+gfcd9c64d2 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../_static/plot_directive.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx_autodoc_typehints.css?v=057ac668" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=4b8357b6" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="../_static/scripts/fontawesome.js?digest=18bd87630a240e9c25be"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
+
+    <script src="../_static/documentation_options.js?v=04e3a186"></script>
+    <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=f281be69"></script>
+    <script>window.MathJax = {"options": {"processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'user_guide/hierarchical';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.23.0';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://jmineau.github.io/fips/switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'dev';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner =
+            true;
+        </script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Bounds on the state" href="bounds.html" />
+    <link rel="prev" title="Fitting the covariance settings" href="settings.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="color-scheme" content="light dark"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.2" />
+  
+    
+    <script src="../_static/searchtools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <script src="../searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button type="button" class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class=" navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev20+gfcd9c64d2 documentation - Home"/>
+    <img src="../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev20+gfcd9c64d2 documentation - Home"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class=" navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../getting_started/index.html">
+    Getting Started
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../reference/index.html">
+    API Reference
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+      
+        <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/jmineau/fips" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button type="button" class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../getting_started/index.html">
+    Getting Started
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../reference/index.html">
+    API Reference
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-3"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-3"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-3"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-3">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+        
+          <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/jmineau/fips" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item pst-sidebar-collapse"><button type="button" id="pst-collapse-sidebar-button" aria-expanded="true" aria-controls="pst-primary-sidebar">
+  <svg class="pst-icon" role="img" aria-hidden="true" focusable="false" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+    <path fill="currentColor" d="M3 15.5C2.36232 15.5 1.74874 15.2564 1.28478 14.8189C0.820828 14.3815 0.541576 13.7832 0.504167 13.1467L0.5 13L0.5 3C0.499965 2.36232 0.743605 1.74874 1.18107 1.28478C1.61854 0.820828 2.21676 0.541576 2.85333 0.504167L3 0.5L13 0.5C13.6377 0.499965 14.2513 0.743605 14.7152 1.18107C15.1792 1.61854 15.4584 2.21676 15.4958 2.85333L15.5 3L15.5 13C15.5 13.6377 15.2564 14.2513 14.8189 14.7152C14.3815 15.1792 13.7832 15.4584 13.1467 15.4958L13 15.5L3 15.5ZM3 13.8333L10.5 13.8333L10.5 2.16667L3 2.16667C2.79589 2.16669 2.59889 2.24163 2.44636 2.37726C2.29383 2.5129 2.19638 2.69979 2.1725 2.9025L2.16667 3L2.16667 13C2.16669 13.2041 2.24163 13.4011 2.37726 13.5536C2.5129 13.7062 2.69979 13.8036 2.9025 13.8275L3 13.8333ZM6.65583 10.325L6.5775 10.2558L4.91083 8.58917C4.76735 8.44567 4.68116 8.25476 4.66843 8.05223C4.65569 7.84971 4.71729 7.6495 4.84167 7.48917L4.91083 7.41083L6.5775 5.74417C6.72747 5.59471 6.9287 5.50794 7.14032 5.50148C7.35194 5.49502 7.55809 5.56935 7.7169 5.70937C7.8757 5.8494 7.97525 6.04463 7.99533 6.25539C8.01541 6.46616 7.95451 6.67667 7.825 6.84417L7.75583 6.9225L6.67917 8L7.75583 9.0775C7.89931 9.22099 7.98551 9.41191 7.99824 9.61443C8.01097 9.81695 7.94938 10.0172 7.825 10.1775L7.75583 10.2558C7.61234 10.3993 7.42142 10.4855 7.2189 10.4982C7.01638 10.511 6.81617 10.4494 6.65583 10.325Z"/>
+  </svg>
+  <span class="pst-collapse-sidebar-label">Collapse Sidebar</span>
+  <span class="pst-expand-sidebar-label">Expand Sidebar</span>
+</button></div>
+        <div class="sidebar-primary-item">
+
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="synthetic.html">Synthetic experiments</a></li>
+<li class="toctree-l1"><a class="reference internal" href="settings.html">Fitting the covariance settings</a></li>
+<li class="toctree-l1 current active"><a aria-current="page" class="current reference internal" href="#">The uncertainty of the settings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="bounds.html">Bounds on the state</a></li>
+<li class="toctree-l1"><a class="reference internal" href="nonlinear.html">A nonlinear forward model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="positive.html">Fluxes that stay positive</a></li>
+<li class="toctree-l1"><a class="reference internal" href="comparison.html">Choosing a method</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="examples/index.html">Examples</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="examples/gravity_2d.html">Gravity: density below the surface</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples/flux_regional.html">A regional flux inversion</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples/synthetic_truth.html">Does the inversion recover a known flux?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples/data_worth.html">Which observations constrain a regional total?</a></li>
+</ul>
+</details></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="index.html" class="nav-link">User Guide</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">The uncertainty of the settings</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="the-uncertainty-of-the-settings">
+<span id="hierarchical"></span><h1>The uncertainty of the settings<a class="headerlink" href="#the-uncertainty-of-the-settings" title="Link to this heading">#</a></h1>
+<p><a class="reference internal" href="settings.html"><span class="doc">Fitting the covariance settings</span></a> fits the covariance settings and solves at the fit, which
+treats them as known. The rule: <strong>give each setting a prior, and</strong>
+<a class="reference internal" href="../reference/api/fips.hierarchical.html#fips.hierarchical" title="fips.hierarchical"><code class="xref py py-func docutils literal notranslate"><span class="pre">fips.hierarchical()</span></code></a> <strong>draws the settings from their posterior and the
+state at each of those draws, so intervals read from its draws hold the
+uncertainty of the settings.</strong> The answer is not one Gaussian posterior but a
+mixture of them, one for each draw of the settings, held by a
+<a class="reference internal" href="../reference/api/fips.Hierarchical.html#fips.Hierarchical" title="fips.Hierarchical"><code class="xref py py-class docutils literal notranslate"><span class="pre">Hierarchical</span></code></a>.</p>
+<nav class="contents local" id="on-this-page">
+<p class="topic-title">On this page</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#the-settings-posterior" id="id1">The settings’ posterior</a></p></li>
+<li><p><a class="reference internal" href="#a-world-at-known-settings" id="id2">A world at known settings</a></p></li>
+<li><p><a class="reference internal" href="#totals-with-and-without-the-settings-uncertainty" id="id3">Totals with and without the settings’ uncertainty</a></p></li>
+<li><p><a class="reference internal" href="#few-observations-and-the-fast-path" id="id4">Few observations, and the fast path</a></p></li>
+<li><p><a class="reference internal" href="#what-it-costs-and-what-it-does-not-do" id="id5">What it costs, and what it does not do</a></p></li>
+</ul>
+</nav>
+<section id="the-settings-posterior">
+<h2><a class="toc-backref" href="#id1" role="doc-backlink">The settings’ posterior</a><a class="headerlink" href="#the-settings-posterior" title="Link to this heading">#</a></h2>
+<p>With a prior <span class="math notranslate nohighlight">\(p(s)\)</span> on the settings, their posterior is the prior times
+the evidence of the problem built at them (<a class="reference internal" href="../reference/api/fips.Posterior.log_evidence.html#fips.Posterior.log_evidence" title="fips.Posterior.log_evidence"><code class="xref py py-attr docutils literal notranslate"><span class="pre">log_evidence</span></code></a>,
+exact for a linear problem):</p>
+<div class="math notranslate nohighlight">
+\[p(s \mid z) \propto p(s) \, p(z \mid s).\]</div>
+<p>The posterior of the state is the posterior at each setting, averaged over
+the settings’ posterior,</p>
+<div class="math notranslate nohighlight">
+\[p(x \mid z) = \int p(x \mid s, z) \, p(s \mid z) \, ds,\]</div>
+<p>so a draw of the settings from <span class="math notranslate nohighlight">\(p(s \mid z)\)</span>, then of the state from
+<span class="math notranslate nohighlight">\(p(x \mid s, z)\)</span> (exactly, <a class="reference internal" href="../reference/api/fips.Posterior.sample.html#fips.Posterior.sample" title="fips.Posterior.sample"><code class="xref py py-meth docutils literal notranslate"><span class="pre">sample()</span></code></a>), is a draw
+of <span class="math notranslate nohighlight">\(p(x \mid z)\)</span>. Its variance is</p>
+<div class="math notranslate nohighlight">
+\[\operatorname{var}(x \mid z) = E\big[\hat{S}(s)\big] + \operatorname{var}\big[\hat{x}(s)\big],\]</div>
+<p>over the settings’ posterior: the average of each setting’s posterior
+variance, and the spread of the estimates between settings. A solve at fitted
+settings gives the first term at one setting and leaves out the second.</p>
+<p><a class="reference internal" href="../reference/api/fips.hierarchical.html#fips.hierarchical" title="fips.hierarchical"><code class="xref py py-func docutils literal notranslate"><span class="pre">fips.hierarchical()</span></code></a> draws the settings by a random-walk Metropolis, in
+the log of each positive setting. It starts at the settings’ posterior mode,
+proposes steps from Laplace’s approximation there (the inverse of a numerical
+Hessian of the log posterior), and during the burn-in scales the steps until
+about 0.3 of them are accepted. Each step solves one problem; at each kept
+step it draws the state once, at that step’s settings.</p>
+</section>
+<section id="a-world-at-known-settings">
+<h2><a class="toc-backref" href="#id2" role="doc-backlink">A world at known settings</a><a class="headerlink" href="#a-world-at-known-settings" title="Link to this heading">#</a></h2>
+<p>The world of <a class="reference internal" href="settings.html"><span class="doc">Fitting the covariance settings</span></a>: a hundred and fifty cells along a line, 1 km
+apart, two hundred observations of one to four neighboring cells, and a truth
+drawn at a prior std of 1, a correlation length of 5 km and a mismatch std of
+0.5:</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [1]: </span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+<span class="gp">In [2]: </span><span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+
+<span class="gp">In [3]: </span><span class="kn">from</span><span class="w"> </span><span class="nn">scipy.special</span><span class="w"> </span><span class="kn">import</span> <span class="n">ndtri</span>
+
+<span class="gp">In [4]: </span><span class="kn">import</span><span class="w"> </span><span class="nn">fips</span>
+
+<span class="gp">In [5]: </span><span class="n">rng</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+<span class="gp">In [6]: </span><span class="n">n_cells</span><span class="p">,</span> <span class="n">n_obs</span> <span class="o">=</span> <span class="mi">150</span><span class="p">,</span> <span class="mi">200</span>
+
+<span class="gp">In [7]: </span><span class="n">cells</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Space</span><span class="p">({</span><span class="s2">"flux"</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Index</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">n_cells</span><span class="p">)</span> <span class="o">+</span> <span class="mf">0.5</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">"x"</span><span class="p">)})</span>  <span class="c1"># km</span>
+
+<span class="gp">In [8]: </span><span class="n">observed</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Space</span><span class="p">({</span><span class="s2">"ch4"</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">RangeIndex</span><span class="p">(</span><span class="n">n_obs</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">"obs_id"</span><span class="p">)})</span>
+</pre></div>
+</div>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [9]: </span><span class="n">footprint</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">n_obs</span><span class="p">,</span> <span class="n">n_cells</span><span class="p">))</span>
+
+<span class="gp">In [10]: </span><span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">start</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">rng</span><span class="o">.</span><span class="n">integers</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">n_cells</span> <span class="o">-</span> <span class="mi">4</span><span class="p">,</span> <span class="n">n_obs</span><span class="p">)):</span>
+<span class="gp">   ....: </span>    <span class="n">footprint</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">start</span> <span class="p">:</span> <span class="n">start</span> <span class="o">+</span> <span class="n">rng</span><span class="o">.</span><span class="n">integers</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">5</span><span class="p">)]</span> <span class="o">=</span> <span class="n">rng</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">1.5</span><span class="p">)</span>
+<span class="gp">   ....: </span>
+
+<span class="gp">In [11]: </span><span class="n">H</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Operator</span><span class="p">(</span><span class="n">footprint</span><span class="p">,</span> <span class="n">observed</span><span class="p">,</span> <span class="n">cells</span><span class="p">)</span>
+
+<span class="gp">In [12]: </span><span class="n">prior</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Vector</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="n">n_cells</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">),</span> <span class="n">cells</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">"prior"</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The function from the settings to the problem takes them as a dict, by name:</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [13]: </span><span class="k">def</span><span class="w"> </span><span class="nf">build</span><span class="p">(</span><span class="n">settings</span><span class="p">,</span> <span class="n">obs</span><span class="p">,</span> <span class="n">H</span><span class="o">=</span><span class="n">H</span><span class="p">):</span>
+<span class="gp">   ....: </span><span class="w">    </span><span class="sd">"""The problem at the settings: the prior std, the correlation length (km), the mismatch std."""</span>
+<span class="gp">   ....: </span>    <span class="k">return</span> <span class="n">fips</span><span class="o">.</span><span class="n">Problem</span><span class="p">(</span>
+<span class="gp">   ....: </span>        <span class="n">prior</span><span class="o">=</span><span class="n">prior</span><span class="p">,</span>
+<span class="gp">   ....: </span>        <span class="n">prior_cov</span><span class="o">=</span><span class="n">fips</span><span class="o">.</span><span class="n">Exponential</span><span class="p">(</span><span class="s2">"x"</span><span class="p">,</span> <span class="n">settings</span><span class="p">[</span><span class="s2">"length"</span><span class="p">])</span><span class="o">.</span><span class="n">with_std</span><span class="p">(</span><span class="n">settings</span><span class="p">[</span><span class="s2">"std"</span><span class="p">]),</span>
+<span class="gp">   ....: </span>        <span class="n">obs</span><span class="o">=</span><span class="n">obs</span><span class="p">,</span>
+<span class="gp">   ....: </span>        <span class="n">obs_cov</span><span class="o">=</span><span class="n">fips</span><span class="o">.</span><span class="n">Independent</span><span class="p">()</span><span class="o">.</span><span class="n">with_std</span><span class="p">(</span><span class="n">settings</span><span class="p">[</span><span class="s2">"noise"</span><span class="p">]),</span>
+<span class="gp">   ....: </span>        <span class="n">forward</span><span class="o">=</span><span class="n">H</span><span class="p">,</span>
+<span class="gp">   ....: </span>    <span class="p">)</span>
+<span class="gp">   ....: </span>
+
+<span class="gp">In [14]: </span><span class="n">true</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">({</span><span class="s2">"std"</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">,</span> <span class="s2">"length"</span><span class="p">:</span> <span class="mf">5.0</span><span class="p">,</span> <span class="s2">"noise"</span><span class="p">:</span> <span class="mf">0.5</span><span class="p">})</span>
+
+<span class="gp">In [15]: </span><span class="n">world</span> <span class="o">=</span> <span class="n">build</span><span class="p">(</span><span class="n">true</span><span class="p">,</span> <span class="n">fips</span><span class="o">.</span><span class="n">Vector</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n_obs</span><span class="p">),</span> <span class="n">observed</span><span class="p">))</span>
+
+<span class="gp">In [16]: </span><span class="n">truth</span><span class="p">,</span> <span class="n">obs</span> <span class="o">=</span> <span class="n">world</span><span class="o">.</span><span class="n">simulate</span><span class="p">(</span><span class="n">rng</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Each setting gets a prior that knows it to a factor of <span class="math notranslate nohighlight">\(e\)</span> (a
+<a class="reference internal" href="../reference/api/fips.LogNormal.html#fips.LogNormal" title="fips.LogNormal"><code class="xref py py-class docutils literal notranslate"><span class="pre">LogNormal</span></code></a> with a standard deviation of 1 in the log), about a
+guess that is off by a factor of two in the two standard deviations and 2.5 in
+the length. <a class="reference internal" href="../reference/api/fips.HalfNormal.html#fips.HalfNormal" title="fips.HalfNormal"><code class="xref py py-class docutils literal notranslate"><span class="pre">HalfNormal</span></code></a> and <a class="reference internal" href="../reference/api/fips.Uniform.html#fips.Uniform" title="fips.Uniform"><code class="xref py py-class docutils literal notranslate"><span class="pre">Uniform</span></code></a> are the other
+two priors fips has.</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [17]: </span><span class="n">priors</span> <span class="o">=</span> <span class="p">{</span>
+<span class="gp">   ....: </span>    <span class="s2">"std"</span><span class="p">:</span> <span class="n">fips</span><span class="o">.</span><span class="n">LogNormal</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mf">0.5</span><span class="p">),</span> <span class="mf">1.0</span><span class="p">),</span>
+<span class="gp">   ....: </span>    <span class="s2">"length"</span><span class="p">:</span> <span class="n">fips</span><span class="o">.</span><span class="n">LogNormal</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mf">2.0</span><span class="p">),</span> <span class="mf">1.0</span><span class="p">),</span>
+<span class="gp">   ....: </span>    <span class="s2">"noise"</span><span class="p">:</span> <span class="n">fips</span><span class="o">.</span><span class="n">LogNormal</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mf">1.0</span><span class="p">),</span> <span class="mf">1.0</span><span class="p">),</span>
+<span class="gp">   ....: </span><span class="p">}</span>
+<span class="gp">   ....: </span>
+
+<span class="gp">In [18]: </span><span class="n">result</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">hierarchical</span><span class="p">(</span><span class="k">lambda</span> <span class="n">s</span><span class="p">:</span> <span class="n">build</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">obs</span><span class="p">),</span> <span class="n">priors</span><span class="p">,</span> <span class="n">draws</span><span class="o">=</span><span class="mi">2000</span><span class="p">,</span> <span class="n">burn_in</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+<span class="gp">In [19]: </span><span class="n">table</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">quantile</span><span class="p">([</span><span class="mf">0.025</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.975</span><span class="p">])</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">set_axis</span><span class="p">([</span><span class="s2">"2.5%"</span><span class="p">,</span> <span class="s2">"median"</span><span class="p">,</span> <span class="s2">"97.5%"</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+<span class="gp">In [20]: </span><span class="n">table</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="s2">"true"</span><span class="p">,</span> <span class="n">true</span><span class="p">)</span>
+
+<span class="gp">In [21]: </span><span class="n">table</span><span class="o">.</span><span class="n">assign</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="n">result</span><span class="o">.</span><span class="n">mode</span><span class="p">)</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="gh">Out[21]: </span>
+<span class="go">         true   2.5%  median  97.5%   mode</span>
+<span class="go">setting                                   </span>
+<span class="go">std       1.0  0.789   0.983  1.275  0.965</span>
+<span class="go">length    5.0  1.761   2.811  5.818  2.751</span>
+<span class="go">noise     0.5  0.419   0.483  0.561  0.477</span>
+</pre></div>
+</div>
+<p>The two standard deviations are known to about 25% and 15% (their 95%
+intervals), each holding the truth. The length is known to a factor of three:
+from 1.8 to 5.8 km, about its median of 2.8 km, the fit <a class="reference internal" href="settings.html"><span class="doc">Fitting the covariance settings</span></a> found.
+<a class="reference internal" href="../reference/api/fips.Hierarchical.mode.html#fips.Hierarchical.mode" title="fips.Hierarchical.mode"><code class="xref py py-attr docutils literal notranslate"><span class="pre">mode</span></code></a> is the settings’ posterior mode, where the
+chain started, close to that fit. The chain’s diagnostics are its acceptance
+and the effective sample size of each setting, about as many independent
+draws as the 2000 correlated ones are worth:</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [22]: </span><span class="nb">round</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">acceptance</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="n">result</span><span class="o">.</span><span class="n">ess</span><span class="o">.</span><span class="n">round</span><span class="p">()</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span>
+<span class="gh">Out[22]: </span><span class="go">(0.26, {'std': 111.0, 'length': 122.0, 'noise': 199.0})</span>
+</pre></div>
+</div>
+<p>A standard error of a setting’s mean is its standard deviation over the root
+of its effective sample size: here about a tenth of its spread. Ask for more
+draws to make it smaller.</p>
+</section>
+<section id="totals-with-and-without-the-settings-uncertainty">
+<h2><a class="toc-backref" href="#id3" role="doc-backlink">Totals with and without the settings’ uncertainty</a><a class="headerlink" href="#totals-with-and-without-the-settings-uncertainty" title="Link to this heading">#</a></h2>
+<p>The flux of three regions of 50 km each:
+<a class="reference internal" href="../reference/api/fips.Hierarchical.uncertainty.html#fips.Hierarchical.uncertainty" title="fips.Hierarchical.uncertainty"><code class="xref py py-meth docutils literal notranslate"><span class="pre">uncertainty()</span></code></a> reads each total’s mean, standard
+deviation and interval from the draws (here 90%), and
+<a class="reference internal" href="../reference/api/fips.Hierarchical.at.html#fips.Hierarchical.at" title="fips.Hierarchical.at"><code class="xref py py-meth docutils literal notranslate"><span class="pre">at()</span></code></a> gives the ordinary posterior at one setting, the
+mode, whose interval leaves the settings’ uncertainty out:</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [23]: </span><span class="n">x</span> <span class="o">=</span> <span class="n">cells</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="s2">"flux"</span><span class="p">)</span>
+
+<span class="gp">In [24]: </span><span class="n">regions</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">select</span><span class="p">([</span><span class="n">x</span> <span class="o">&lt;</span> <span class="mi">50</span><span class="p">,</span> <span class="n">x</span> <span class="o">&lt;</span> <span class="mi">100</span><span class="p">],</span> <span class="p">[</span><span class="s2">"west"</span><span class="p">,</span> <span class="s2">"middle"</span><span class="p">],</span> <span class="s2">"east"</span><span class="p">),</span> <span class="n">index</span><span class="o">=</span><span class="n">x</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">"region"</span><span class="p">)</span>
+
+<span class="gp">In [25]: </span><span class="n">W</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">aggregate</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">cells</span><span class="p">,</span> <span class="n">by</span><span class="o">=</span><span class="n">regions</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [26]: </span><span class="k">def</span><span class="w"> </span><span class="nf">intervals</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">truth</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="mf">0.9</span><span class="p">):</span>
+<span class="gp">   ....: </span><span class="w">    </span><span class="sd">"""Each region's truth, and its interval with the settings' uncertainty and at their mode."""</span>
+<span class="gp">   ....: </span>    <span class="n">mixed</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">uncertainty</span><span class="p">(</span><span class="n">W</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="n">level</span><span class="p">)</span>
+<span class="gp">   ....: </span>    <span class="n">at_mode</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">at</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">mode</span><span class="p">)</span>
+<span class="gp">   ....: </span>    <span class="n">estimate</span> <span class="o">=</span> <span class="p">(</span><span class="n">W</span> <span class="o">@</span> <span class="n">at_mode</span><span class="o">.</span><span class="n">estimate</span><span class="p">)</span><span class="o">.</span><span class="n">values</span>
+<span class="gp">   ....: </span>    <span class="n">std</span> <span class="o">=</span> <span class="n">at_mode</span><span class="o">.</span><span class="n">uncertainty</span><span class="p">(</span><span class="n">W</span><span class="p">)[</span><span class="s2">"posterior_std"</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
+<span class="gp">   ....: </span>    <span class="n">half</span> <span class="o">=</span> <span class="n">ndtri</span><span class="p">(</span><span class="mf">0.5</span> <span class="o">+</span> <span class="n">level</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="n">std</span>
+<span class="gp">   ....: </span>    <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
+<span class="gp">   ....: </span>        <span class="p">{</span>
+<span class="gp">   ....: </span>            <span class="s2">"truth"</span><span class="p">:</span> <span class="p">(</span><span class="n">W</span> <span class="o">@</span> <span class="n">truth</span><span class="p">)</span><span class="o">.</span><span class="n">values</span><span class="p">,</span>
+<span class="gp">   ....: </span>            <span class="s2">"std"</span><span class="p">:</span> <span class="n">mixed</span><span class="p">[</span><span class="s2">"posterior_std"</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">,</span>
+<span class="gp">   ....: </span>            <span class="s2">"lower"</span><span class="p">:</span> <span class="n">mixed</span><span class="p">[</span><span class="s2">"lower"</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">,</span>
+<span class="gp">   ....: </span>            <span class="s2">"upper"</span><span class="p">:</span> <span class="n">mixed</span><span class="p">[</span><span class="s2">"upper"</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">,</span>
+<span class="gp">   ....: </span>            <span class="s2">"std_at_mode"</span><span class="p">:</span> <span class="n">std</span><span class="p">,</span>
+<span class="gp">   ....: </span>            <span class="s2">"lower_at_mode"</span><span class="p">:</span> <span class="n">estimate</span> <span class="o">-</span> <span class="n">half</span><span class="p">,</span>
+<span class="gp">   ....: </span>            <span class="s2">"upper_at_mode"</span><span class="p">:</span> <span class="n">estimate</span> <span class="o">+</span> <span class="n">half</span><span class="p">,</span>
+<span class="gp">   ....: </span>        <span class="p">},</span>
+<span class="gp">   ....: </span>        <span class="n">index</span><span class="o">=</span><span class="n">W</span><span class="o">.</span><span class="n">rows</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">get_level_values</span><span class="p">(</span><span class="s2">"region"</span><span class="p">),</span>
+<span class="gp">   ....: </span>    <span class="p">)</span>
+<span class="gp">   ....: </span>
+
+<span class="gp">In [27]: </span><span class="n">intervals</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">truth</span><span class="p">)</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="gh">Out[27]: </span>
+<span class="go">         truth   std   lower   upper  std_at_mode  lower_at_mode  upper_at_mode</span>
+<span class="go">region                                                                         </span>
+<span class="go">east    109.10  1.98  106.68  113.30         1.95         106.80         113.20</span>
+<span class="go">middle  101.74  1.97   98.07  104.42         1.95          98.15         104.55</span>
+<span class="go">west    112.52  1.57  110.62  115.69         1.58         110.66         115.87</span>
+</pre></div>
+</div>
+<p>The two agree to about 2%: two hundred observations pin these totals, and the
+length, the setting known least, moves how a total splits between its cells
+more than the total itself (the prior std of each region’s total is 15.7; the
+posterior’s is under 2).</p>
+</section>
+<section id="few-observations-and-the-fast-path">
+<h2><a class="toc-backref" href="#id4" role="doc-backlink">Few observations, and the fast path</a><a class="headerlink" href="#few-observations-and-the-fast-path" title="Link to this heading">#</a></h2>
+<p>The settings’ uncertainty matters when few observations decide them. Fifteen
+observations, all in the western two regions:</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [28]: </span><span class="n">few</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Space</span><span class="p">({</span><span class="s2">"ch4"</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">RangeIndex</span><span class="p">(</span><span class="mi">15</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">"obs_id"</span><span class="p">)})</span>
+
+<span class="gp">In [29]: </span><span class="n">sparse</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">15</span><span class="p">,</span> <span class="n">n_cells</span><span class="p">))</span>
+
+<span class="gp">In [30]: </span><span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">start</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">rng</span><span class="o">.</span><span class="n">integers</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">96</span><span class="p">,</span> <span class="mi">15</span><span class="p">)):</span>
+<span class="gp">   ....: </span>    <span class="n">sparse</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">start</span> <span class="p">:</span> <span class="n">start</span> <span class="o">+</span> <span class="n">rng</span><span class="o">.</span><span class="n">integers</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">5</span><span class="p">)]</span> <span class="o">=</span> <span class="n">rng</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">1.5</span><span class="p">)</span>
+<span class="gp">   ....: </span>
+
+<span class="gp">In [31]: </span><span class="n">H_few</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">Operator</span><span class="p">(</span><span class="n">sparse</span><span class="p">,</span> <span class="n">few</span><span class="p">,</span> <span class="n">cells</span><span class="p">)</span>
+
+<span class="gp">In [32]: </span><span class="n">few_world</span> <span class="o">=</span> <span class="n">build</span><span class="p">(</span><span class="n">true</span><span class="p">,</span> <span class="n">fips</span><span class="o">.</span><span class="n">Vector</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">15</span><span class="p">),</span> <span class="n">few</span><span class="p">),</span> <span class="n">H</span><span class="o">=</span><span class="n">H_few</span><span class="p">)</span>
+
+<span class="gp">In [33]: </span><span class="n">truth_few</span><span class="p">,</span> <span class="n">obs_few</span> <span class="o">=</span> <span class="n">few_world</span><span class="o">.</span><span class="n">simulate</span><span class="p">(</span><span class="n">rng</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Here the length is held at its true 5 km and the two standard deviations are
+the settings. When the only settings are a factor on the prior std and one on
+the mismatch’s, pass the problem at factors of 1 instead of a function, and
+name them <code class="docutils literal notranslate"><span class="pre">&quot;prior_scale&quot;</span></code> and <code class="docutils literal notranslate"><span class="pre">&quot;obs_scale&quot;</span></code> (or <code class="docutils literal notranslate"><span class="pre">&quot;gamma&quot;</span></code>): one
+eigendecomposition then gives the evidence at every step without a solve, and
+the state’s draws at every kept step in one product. This run of 2500 steps
+takes about a tenth of a second, where the function would take a solve each:</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [34]: </span><span class="n">unit</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"std"</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">,</span> <span class="s2">"length"</span><span class="p">:</span> <span class="mf">5.0</span><span class="p">,</span> <span class="s2">"noise"</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">}</span>
+
+<span class="gp">In [35]: </span><span class="n">scales</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"prior_scale"</span><span class="p">:</span> <span class="n">fips</span><span class="o">.</span><span class="n">LogNormal</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mf">0.5</span><span class="p">),</span> <span class="mf">1.0</span><span class="p">),</span> <span class="s2">"obs_scale"</span><span class="p">:</span> <span class="n">fips</span><span class="o">.</span><span class="n">LogNormal</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)}</span>
+
+<span class="gp">In [36]: </span><span class="n">fast</span> <span class="o">=</span> <span class="n">fips</span><span class="o">.</span><span class="n">hierarchical</span><span class="p">(</span><span class="n">build</span><span class="p">(</span><span class="n">unit</span><span class="p">,</span> <span class="n">obs_few</span><span class="p">,</span> <span class="n">H</span><span class="o">=</span><span class="n">H_few</span><span class="p">),</span> <span class="n">scales</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+<span class="gp">In [37]: </span><span class="n">fast</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">quantile</span><span class="p">([</span><span class="mf">0.025</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.975</span><span class="p">])</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="gh">Out[37]: </span>
+<span class="go">setting  prior_scale  obs_scale</span>
+<span class="go">0.025          0.556      0.239</span>
+<span class="go">0.500          0.897      0.563</span>
+<span class="go">0.975          1.575      1.468</span>
+
+<span class="gp">In [38]: </span><span class="n">intervals</span><span class="p">(</span><span class="n">fast</span><span class="p">,</span> <span class="n">truth_few</span><span class="p">)</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="gh">Out[38]: </span>
+<span class="go">         truth    std  lower   upper  std_at_mode  lower_at_mode  upper_at_mode</span>
+<span class="go">region                                                                         </span>
+<span class="go">east     81.72  20.48  68.73  135.50        19.68          69.35         134.08</span>
+<span class="go">middle  108.50  10.85  97.83  132.99        10.36          98.15         132.23</span>
+<span class="go">west     74.70  13.27  63.47  106.72        12.16          63.54         103.54</span>
+</pre></div>
+</div>
+<p>Each standard deviation is now known to a factor of three to six, and the
+totals’ standard deviations with their uncertainty are 4% to 9% larger. Whether that is enough
+is a question of coverage: over worlds, how often each interval holds the
+true total. First in worlds at the true settings, then in worlds whose
+settings are drawn from their priors, 200 of each:</p>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [39]: </span><span class="k">def</span><span class="w"> </span><span class="nf">coverage</span><span class="p">(</span><span class="n">make_world</span><span class="p">,</span> <span class="n">trials</span><span class="o">=</span><span class="mi">200</span><span class="p">):</span>
+<span class="gp">   ....: </span><span class="w">    </span><span class="sd">"""The fraction of worlds whose 90% interval holds each region's true total."""</span>
+<span class="gp">   ....: </span>    <span class="n">rows</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="gp">   ....: </span>    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">trials</span><span class="p">):</span>
+<span class="gp">   ....: </span>        <span class="n">truth_k</span><span class="p">,</span> <span class="n">obs_k</span> <span class="o">=</span> <span class="n">make_world</span><span class="p">()</span>
+<span class="gp">   ....: </span>        <span class="n">table</span> <span class="o">=</span> <span class="n">intervals</span><span class="p">(</span><span class="n">fips</span><span class="o">.</span><span class="n">hierarchical</span><span class="p">(</span><span class="n">build</span><span class="p">(</span><span class="n">unit</span><span class="p">,</span> <span class="n">obs_k</span><span class="p">,</span> <span class="n">H</span><span class="o">=</span><span class="n">H_few</span><span class="p">),</span> <span class="n">scales</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="n">k</span><span class="p">),</span> <span class="n">truth_k</span><span class="p">)</span>
+<span class="gp">   ....: </span>        <span class="n">rows</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span>
+<span class="gp">   ....: </span>            <span class="s2">"with"</span><span class="p">:</span> <span class="n">table</span><span class="p">[</span><span class="s2">"lower"</span><span class="p">]</span><span class="o">.</span><span class="n">le</span><span class="p">(</span><span class="n">table</span><span class="p">[</span><span class="s2">"truth"</span><span class="p">])</span> <span class="o">&amp;</span> <span class="n">table</span><span class="p">[</span><span class="s2">"truth"</span><span class="p">]</span><span class="o">.</span><span class="n">le</span><span class="p">(</span><span class="n">table</span><span class="p">[</span><span class="s2">"upper"</span><span class="p">]),</span>
+<span class="gp">   ....: </span>            <span class="s2">"without"</span><span class="p">:</span> <span class="n">table</span><span class="p">[</span><span class="s2">"lower_at_mode"</span><span class="p">]</span><span class="o">.</span><span class="n">le</span><span class="p">(</span><span class="n">table</span><span class="p">[</span><span class="s2">"truth"</span><span class="p">])</span> <span class="o">&amp;</span> <span class="n">table</span><span class="p">[</span><span class="s2">"truth"</span><span class="p">]</span><span class="o">.</span><span class="n">le</span><span class="p">(</span><span class="n">table</span><span class="p">[</span><span class="s2">"upper_at_mode"</span><span class="p">]),</span>
+<span class="gp">   ....: </span>        <span class="p">}))</span>
+<span class="gp">   ....: </span>    <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="n">rows</span><span class="p">)</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="s2">"region"</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+<span class="gp">   ....: </span>
+</pre></div>
+</div>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [40]: </span><span class="n">coverage</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="n">few_world</span><span class="o">.</span><span class="n">simulate</span><span class="p">(</span><span class="n">rng</span><span class="p">))</span>
+<span class="gh">Out[40]: </span>
+<span class="go">         with  without</span>
+<span class="go">region                </span>
+<span class="go">east    0.845    0.825</span>
+<span class="go">middle  0.860    0.835</span>
+<span class="go">west    0.885    0.845</span>
+</pre></div>
+</div>
+<div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [41]: </span><span class="k">def</span><span class="w"> </span><span class="nf">from_priors</span><span class="p">():</span>
+<span class="gp">   ....: </span><span class="w">    </span><span class="sd">"""A world whose two standard deviations are drawn from their priors."""</span>
+<span class="gp">   ....: </span>    <span class="n">std</span><span class="p">,</span> <span class="n">noise</span> <span class="o">=</span> <span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">scales</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">rng</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"prior_scale"</span><span class="p">,</span> <span class="s2">"obs_scale"</span><span class="p">))</span>
+<span class="gp">   ....: </span>    <span class="n">world_k</span> <span class="o">=</span> <span class="n">build</span><span class="p">({</span><span class="s2">"std"</span><span class="p">:</span> <span class="n">std</span><span class="p">,</span> <span class="s2">"length"</span><span class="p">:</span> <span class="mf">5.0</span><span class="p">,</span> <span class="s2">"noise"</span><span class="p">:</span> <span class="n">noise</span><span class="p">},</span> <span class="n">fips</span><span class="o">.</span><span class="n">Vector</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">15</span><span class="p">),</span> <span class="n">few</span><span class="p">),</span> <span class="n">H</span><span class="o">=</span><span class="n">H_few</span><span class="p">)</span>
+<span class="gp">   ....: </span>    <span class="k">return</span> <span class="n">world_k</span><span class="o">.</span><span class="n">simulate</span><span class="p">(</span><span class="n">rng</span><span class="p">)</span>
+<span class="gp">   ....: </span>
+
+<span class="gp">In [42]: </span><span class="n">coverage</span><span class="p">(</span><span class="n">from_priors</span><span class="p">)</span>
+<span class="gh">Out[42]: </span>
+<span class="go">         with  without</span>
+<span class="go">region                </span>
+<span class="go">east    0.935    0.885</span>
+<span class="go">middle  0.895    0.875</span>
+<span class="go">west    0.890    0.850</span>
+</pre></div>
+</div>
+<p>With 200 worlds a coverage is known to about 0.02. In the worlds drawn from
+the priors, the intervals with the settings’ uncertainty cover at their level,
+89% to 93.5%, as a posterior must on average over its own prior; those at the
+mode cover 85% to 89%. At the true settings both cover less, 84.5% to 88.5%
+with the uncertainty and 82.5% to 84.5% without: there the priors pull each
+standard deviation towards their median, the prior std’s (0.5) below the
+truth and the mismatch std’s (1) above it, and fifteen observations do not
+undo all of the pull. With the prior std’s prior median at the truth instead,
+the same worlds cover 87% to 91.5% with the uncertainty (a run not on this
+page). A prior on the settings is a claim like any other, and the intervals
+are only as good as it.</p>
+</section>
+<section id="what-it-costs-and-what-it-does-not-do">
+<h2><a class="toc-backref" href="#id5" role="doc-backlink">What it costs, and what it does not do</a><a class="headerlink" href="#what-it-costs-and-what-it-does-not-do" title="Link to this heading">#</a></h2>
+<p>A step of the general path is a solve of the problem the function builds
+(here 4 ms for 150 cells and 200 observations, so the 2500 steps above took
+about 12 s), and the search for the mode and its Hessian about sixty more. A step of the
+fast path is <span class="math notranslate nohighlight">\(O(m)\)</span> (or <span class="math notranslate nohighlight">\(O(n)\)</span>, whichever is smaller) after one
+eigendecomposition, whatever the size of the problem. The draws of the state
+are kept, a <code class="docutils literal notranslate"><span class="pre">state</span> <span class="pre">x</span> <span class="pre">draws</span></code> array: 2000 draws of 30,000 cells are 480 MB.
+The settings’ estimates have Monte Carlo errors that
+<a class="reference internal" href="../reference/api/fips.Hierarchical.ess.html#fips.Hierarchical.ess" title="fips.Hierarchical.ess"><code class="xref py py-attr docutils literal notranslate"><span class="pre">ess</span></code></a> measures; four hundred effective draws give a
+setting’s mean to a twentieth of its spread.</p>
+<p>The posterior of the state is a mixture, so what is defined for one Gaussian
+(the gain, DOFS, the chi-squared tests, the evidence) is read from the
+posterior at one setting, <code class="docutils literal notranslate"><span class="pre">result.at(settings)</span></code>. The method is the analytic
+one: a function that returns a <code class="docutils literal notranslate"><span class="pre">&quot;bounded&quot;</span></code> or <code class="docutils literal notranslate"><span class="pre">&quot;gauss_newton&quot;</span></code> posterior
+is refused, since neither gives the exact evidence and exact draws each step
+needs.</p>
+<section id="references">
+<h3>References<a class="headerlink" href="#references" title="Link to this heading">#</a></h3>
+<p>Gelman, A., Roberts, G. O., and Gilks, W. R. (1996). Efficient Metropolis
+jumping rules. <em>Bayesian Statistics 5</em>, 599-607.</p>
+<p>Geyer, C. J. (1992). Practical Markov chain Monte Carlo. <em>Statistical
+Science</em>, 7(4), 473-483.</p>
+</section>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="settings.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Fitting the covariance settings</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="bounds.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Bounds on the state</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-settings-posterior">The settings’ posterior</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#a-world-at-known-settings">A world at known settings</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#totals-with-and-without-the-settings-uncertainty">Totals with and without the settings’ uncertainty</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#few-observations-and-the-fast-path">Few observations, and the fast path</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#what-it-costs-and-what-it-does-not-do">What it costs, and what it does not do</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#references">References</a></li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+
+  <div class="tocsection sourcelink">
+    <a href="../_sources/user_guide/hierarchical.rst.txt">
+      <i class="fa-solid fa-file-lines"></i> Show Source
+    </a>
+  </div>
+</div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be"></script>
+<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2025-2026, James Mineau.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.2.0.
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.23.0.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

@@ -1,0 +1,6 @@
+fips.Hierarchical.estimate
+==========================
+
+.. currentmodule:: fips
+
+.. autoproperty:: Hierarchical.estimate

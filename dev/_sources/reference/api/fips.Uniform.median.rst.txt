@@ -1,0 +1,6 @@
+fips.Uniform.median
+===================
+
+.. currentmodule:: fips
+
+.. autoproperty:: Uniform.median
