@@ -660,10 +660,10 @@ def _factor(problem: Problem, options: EnsembleOptions) -> Ensemble:
     if options.localization is None:
         # The thin SVD of L^{-1} B: M = U S^2 U^T, P_xy L^{-T} U = A V S
         U, s, Vt = svd(B_white, full_matrices=False)
-        Q = np.asarray(U)
-        eigenvalues = np.asarray(s) ** 2
-        F = A @ (np.asarray(Vt).T * s)
-        E = s[:, None] * np.asarray(Vt)
+        Q, s, Vt = np.asarray(U), np.asarray(s, dtype=float), np.asarray(Vt)
+        eigenvalues = s**2
+        F = A @ (Vt.T * s)
+        E = s[:, None] * Vt
     else:
         rho_xy, rho_yy = _weights(problem, options)
         P_yy = _whiten(root, rho_yy * (B @ B.T))  # L^{-1} P_yy
