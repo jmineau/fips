@@ -1,0 +1,6 @@
+fips.SoftplusForward.H
+======================
+
+.. currentmodule:: fips
+
+.. autoproperty:: SoftplusForward.H

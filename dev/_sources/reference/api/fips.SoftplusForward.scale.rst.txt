@@ -1,0 +1,6 @@
+fips.SoftplusForward.scale
+==========================
+
+.. currentmodule:: fips
+
+.. autoproperty:: SoftplusForward.scale

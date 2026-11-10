@@ -1,0 +1,6 @@
+fips.SoftplusForward.\_\_call\_\_
+=================================
+
+.. currentmodule:: fips
+
+.. automethod:: SoftplusForward.__call__

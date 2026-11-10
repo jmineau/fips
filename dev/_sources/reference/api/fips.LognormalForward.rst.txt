@@ -1,0 +1,42 @@
+﻿fips.LognormalForward
+=====================
+
+.. currentmodule:: fips
+
+.. autoclass:: LognormalForward
+   :no-members:
+   :show-inheritance:
+
+
+
+
+.. rubric:: Attributes
+
+.. autosummary::
+   :toctree:
+
+   ~LognormalForward.block
+   ~LognormalForward.H
+   ~LognormalForward.reference
+
+
+
+.. rubric:: Methods
+
+.. autosummary::
+   :toctree:
+
+   ~LognormalForward.__call__
+   ~LognormalForward.jacobian
+   ~LognormalForward.prior_for
+   ~LognormalForward.transform
+
+
+
+
+.. rubric:: Inherited
+
+
+From :class:`~.ForwardModel`: :py:obj:`~.ForwardModel.cols`, :py:obj:`~.ForwardModel.rows`
+
+

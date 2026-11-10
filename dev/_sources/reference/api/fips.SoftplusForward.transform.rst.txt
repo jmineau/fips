@@ -1,0 +1,6 @@
+fips.SoftplusForward.transform
+==============================
+
+.. currentmodule:: fips
+
+.. automethod:: SoftplusForward.transform

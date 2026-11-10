@@ -1,0 +1,6 @@
+fips.SoftplusForward.jacobian
+=============================
+
+.. currentmodule:: fips
+
+.. automethod:: SoftplusForward.jacobian

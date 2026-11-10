@@ -1,0 +1,1531 @@
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>fips.transforms &#8212; fips 0.2.0b3.dev15+gca734b8e2 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../_static/plot_directive.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx_autodoc_typehints.css?v=057ac668" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../_static/custom.css?v=4b8357b6" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="../../_static/scripts/fontawesome.js?digest=18bd87630a240e9c25be"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
+
+    <script src="../../_static/documentation_options.js?v=9ef15731"></script>
+    <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/fips/transforms';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.23.0';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://jmineau.github.io/fips/switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'dev';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner =
+            true;
+        </script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="color-scheme" content="light dark"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.2" />
+  
+    
+    <script src="../../_static/searchtools.js"></script>
+    <script src="../../_static/language_data.js"></script>
+    <script src="../../searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button type="button" class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class=" navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev15+gca734b8e2 documentation - Home"/>
+    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev15+gca734b8e2 documentation - Home"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class=" navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../getting_started/index.html">
+    Getting Started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../user_guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../reference/index.html">
+    API Reference
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+      
+        <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/jmineau/fips" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar hide-on-wide">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../getting_started/index.html">
+    Getting Started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../user_guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../reference/index.html">
+    API Reference
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-3"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-3"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-3"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-3">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+        
+          <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/jmineau/fips" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../index.html" class="nav-link">Module code</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">fips.transforms</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for fips.transforms</h1><div class="highlight"><pre>
+<span></span><span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">Forward models that keep one block of the state positive: lognormal and softplus.</span>
+
+<span class="sd">A flux that cannot be negative is solved as a hidden variable :math:`u` that</span>
+<span class="sd">can be anything, and a transform :math:`T` that makes it positive:</span>
+<span class="sd">the observations are :math:`z = H\, [T(u); \text{the other blocks}] + c + e`,</span>
+<span class="sd">where :math:`H` is the forward operator on the whole state. The other blocks</span>
+<span class="sd">(a bias, a background) pass through as they are. The state, its prior and its</span>
+<span class="sd">covariance are in :math:`u`'s units, written by the user;</span>
+<span class="sd">:meth:`LognormalForward.prior_for` and :meth:`SoftplusForward.prior_for`</span>
+<span class="sd">give the prior on :math:`u` whose flux has a mean and a standard deviation</span>
+<span class="sd">asked for. ``fips.solve(problem, "gauss_newton")`` finds the mode of</span>
+<span class="sd">:math:`u`; :meth:`~LognormalForward.transform` maps it, or draws of the</span>
+<span class="sd">posterior (:meth:`Posterior.sample &lt;fips.Posterior.sample&gt;`), to the flux.</span>
+
+<span class="sd">- :class:`LognormalForward`: :math:`T(u) = r\, e^{u}`, a scale factor of a</span>
+<span class="sd">  reference :math:`r` (an inventory): the uncertainty is a factor.</span>
+<span class="sd">- :class:`SoftplusForward`: :math:`T(u) = s \log(1 + e^{u/s})`: the flux</span>
+<span class="sd">  itself where it is large (:math:`T(u) \approx u` for :math:`u \gg s`),</span>
+<span class="sd">  bending to stay above zero within about :math:`s` of it.</span>
+<span class="sd">"""</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">math</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numbers</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">abstractmethod</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">overload</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">numpy.polynomial.legendre</span><span class="w"> </span><span class="kn">import</span> <span class="n">leggauss</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">scipy.special</span><span class="w"> </span><span class="kn">import</span> <span class="n">expit</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">fips.forward</span><span class="w"> </span><span class="kn">import</span> <span class="n">ForwardModel</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fips.linalg</span><span class="w"> </span><span class="kn">import</span> <span class="n">DiagonalOperator</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fips.operator</span><span class="w"> </span><span class="kn">import</span> <span class="n">Operator</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fips.space</span><span class="w"> </span><span class="kn">import</span> <span class="n">Space</span><span class="p">,</span> <span class="n">_listed</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fips.vector</span><span class="w"> </span><span class="kn">import</span> <span class="n">Vector</span>
+
+<span class="n">_NEAR</span> <span class="o">=</span> <span class="n">leggauss</span><span class="p">(</span><span class="mi">64</span><span class="p">)</span>
+<span class="sd">"""Gauss-Legendre nodes and weights on [-1, 1] for the panel next to the bend, in the logarithm of the distance to it."""</span>
+
+<span class="n">_FAR</span> <span class="o">=</span> <span class="n">leggauss</span><span class="p">(</span><span class="mi">128</span><span class="p">)</span>
+<span class="sd">"""Gauss-Legendre nodes and weights on [-1, 1] for the rest of each side."""</span>
+
+<span class="n">_SPAN</span> <span class="o">=</span> <span class="mf">12.0</span>
+<span class="sd">"""The standard normal is integrated over [-_SPAN, _SPAN] (its mass outside is 4e-33)."""</span>
+
+<span class="n">_NEAREST</span> <span class="o">=</span> <span class="mf">1e-14</span>
+<span class="sd">"""The near panel starts this fraction of its width from the bend (what it leaves out is below roundoff)."""</span>
+
+<span class="n">_CHUNK</span> <span class="o">=</span> <span class="mi">2048</span>
+<span class="sd">"""The cells whose softplus moments are computed at once (each holds 384 nodes)."""</span>
+
+<span class="n">_MATCHED</span> <span class="o">=</span> <span class="mf">1e-12</span>
+<span class="sd">"""The relative error of the mean and the standard deviation at which the softplus prior stops."""</span>
+
+<span class="n">_ACCEPTED</span> <span class="o">=</span> <span class="mf">1e-9</span>
+<span class="sd">"""The relative error above which the softplus prior raises instead."""</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_on_block</span><span class="p">(</span>
+    <span class="n">value</span><span class="p">:</span> <span class="s2">"Vector | pd.Series | float"</span><span class="p">,</span> <span class="n">labels</span><span class="p">:</span> <span class="n">Space</span><span class="p">,</span> <span class="n">what</span><span class="p">:</span> <span class="nb">str</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Return `value` on the block `labels` (a space of one block), in its order: a number for every label, a Series by its labels, a Vector by its space.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    TypeError</span>
+<span class="sd">        If `value` is an array or anything else without labels.</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        If its labels are not exactly the block's, or a value is not finite.</span>
+<span class="sd">    """</span>
+    <span class="p">(</span><span class="n">block</span><span class="p">,)</span> <span class="o">=</span> <span class="n">labels</span><span class="o">.</span><span class="n">names</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">):</span>
+        <span class="k">if</span> <span class="s2">"block"</span> <span class="ow">in</span> <span class="n">value</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">names</span><span class="p">:</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="n">Vector</span><span class="o">.</span><span class="n">from_series</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="n">Vector</span><span class="o">.</span><span class="n">from_series</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">block</span><span class="o">=</span><span class="n">block</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">Vector</span><span class="p">):</span>
+        <span class="n">values</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">values</span>
+        <span class="k">if</span> <span class="n">value</span><span class="o">.</span><span class="n">space</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">labels</span><span class="p">:</span>
+            <span class="n">values</span> <span class="o">=</span> <span class="n">values</span><span class="p">[</span>
+                <span class="n">labels</span><span class="o">.</span><span class="n">_align</span><span class="p">(</span><span class="n">value</span><span class="o">.</span><span class="n">space</span><span class="p">,</span> <span class="n">what</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">what</span><span class="si">}</span><span class="s2"> and block </span><span class="si">{</span><span class="n">block</span><span class="si">!r}</span><span class="s2">"</span><span class="p">)</span>
+            <span class="p">]</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">numbers</span><span class="o">.</span><span class="n">Real</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">bool</span><span class="p">):</span>
+        <span class="n">values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">labels</span><span class="p">),</span> <span class="nb">float</span><span class="p">(</span><span class="n">value</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">what</span><span class="si">}</span><span class="s2"> is a number, a Series on the labels of block </span><span class="si">{</span><span class="n">block</span><span class="si">!r}</span><span class="s2"> or a "</span>
+            <span class="sa">f</span><span class="s2">"Vector on that block, not </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">value</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">: an array has no "</span>
+            <span class="s2">"labels to say which value is whose."</span>
+        <span class="p">)</span>
+    <span class="n">bad</span> <span class="o">=</span> <span class="o">~</span><span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">values</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">bad</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">what</span><span class="si">}</span><span class="s2"> is not finite at </span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="n">bad</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span><span class="si">}</span><span class="s2"> labels: "</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">_listed</span><span class="p">(</span><span class="n">labels</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="n">bad</span><span class="p">])</span><span class="si">}</span><span class="s2">."</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="n">values</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_negative</span><span class="p">(</span><span class="n">values</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">labels</span><span class="p">:</span> <span class="n">Space</span><span class="p">,</span> <span class="n">what</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Raise if a value is negative, naming its labels."""</span>
+    <span class="n">bad</span> <span class="o">=</span> <span class="n">values</span> <span class="o">&lt;</span> <span class="mi">0</span>
+    <span class="k">if</span> <span class="n">bad</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">what</span><span class="si">}</span><span class="s2"> is negative at </span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="n">bad</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span><span class="si">}</span><span class="s2"> labels: "</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">_listed</span><span class="p">(</span><span class="n">labels</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="n">bad</span><span class="p">])</span><span class="si">}</span><span class="s2">."</span>
+        <span class="p">)</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">_Transformed</span><span class="p">(</span><span class="n">ForwardModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">    The machinery of a model :math:`F(x) = H\, [T(u); \text{the other blocks}]`, with :math:`T` element-wise on one block.</span>
+
+<span class="sd">    A subclass gives :meth:`_values` (:math:`T` on the block's values) and</span>
+<span class="sd">    :meth:`_slopes` (:math:`T'`), and its public methods.</span>
+<span class="sd">    """</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">H</span><span class="p">:</span> <span class="n">Operator</span><span class="p">,</span> <span class="n">block</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">H</span><span class="p">,</span> <span class="n">Operator</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"H is the forward operator on the whole state, an Operator, got "</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">H</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">."</span>
+            <span class="p">)</span>
+        <span class="n">cols</span> <span class="o">=</span> <span class="n">H</span><span class="o">.</span><span class="n">cols</span>
+        <span class="k">if</span> <span class="n">block</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">cols</span><span class="o">.</span><span class="n">names</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">"The state has the blocks </span><span class="si">{</span><span class="n">_listed</span><span class="p">(</span><span class="n">cols</span><span class="o">.</span><span class="n">names</span><span class="p">)</span><span class="si">}</span><span class="s2">: name the one "</span>
+                    <span class="s2">"the transform is on with block=."</span>
+                <span class="p">)</span>
+            <span class="n">block</span> <span class="o">=</span> <span class="n">cols</span><span class="o">.</span><span class="n">names</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">block</span> <span class="o">=</span> <span class="n">cols</span><span class="o">.</span><span class="n">names</span><span class="p">[</span><span class="n">cols</span><span class="o">.</span><span class="n">_position</span><span class="p">(</span><span class="n">block</span><span class="p">)]</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">H</span><span class="o">.</span><span class="n">rows</span><span class="p">,</span> <span class="n">cols</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_H</span> <span class="o">=</span> <span class="n">H</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_block</span> <span class="o">=</span> <span class="n">block</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_slice</span> <span class="o">=</span> <span class="n">cols</span><span class="o">.</span><span class="n">slice</span><span class="p">(</span><span class="n">block</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_labels</span> <span class="o">=</span> <span class="n">Space</span><span class="p">({</span><span class="n">block</span><span class="p">:</span> <span class="n">cols</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">block</span><span class="p">)})</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">H</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Operator</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""The forward operator on the whole state, the transformed block and the others."""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_H</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">block</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""The name of the block the transform is on."""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_block</span>
+
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_values</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">u</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return the transform of the block's values `u` (one row per label, in the order of the block)."""</span>
+
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_slopes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">u</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return the derivative of the transform at the block's values `u`."""</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_on_cols</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">Vector</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return the values of the state `x` in the order of the model's columns."""</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">Vector</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"x must be a Vector, got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">."</span><span class="p">)</span>
+        <span class="n">cols</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cols</span>
+        <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">space</span> <span class="ow">is</span> <span class="n">cols</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">x</span><span class="o">.</span><span class="n">values</span>
+        <span class="k">return</span> <span class="n">x</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="n">cols</span><span class="o">.</span><span class="n">_align</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">space</span><span class="p">,</span> <span class="s2">"x"</span><span class="p">,</span> <span class="s2">"x and the model's columns"</span><span class="p">)]</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_finite</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">u</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">transformed</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Return `transformed`, the transform (or its slope) of the block's values `u`, if it is finite.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            If it is not finite (it overflows) at some label, naming them.</span>
+<span class="sd">        """</span>
+        <span class="n">bad</span> <span class="o">=</span> <span class="o">~</span><span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">transformed</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">bad</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+            <span class="c1"># the labels' positions (of a state, or of any of its draws)</span>
+            <span class="n">rows</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">flatnonzero</span><span class="p">(</span><span class="n">bad</span> <span class="k">if</span> <span class="n">bad</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">1</span> <span class="k">else</span> <span class="n">bad</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"The transform of block </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_block</span><span class="si">!r}</span><span class="s2"> overflows at "</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">rows</span><span class="p">)</span><span class="si">}</span><span class="s2"> labels, where u is up to "</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">u</span><span class="p">[</span><span class="n">bad</span><span class="p">]))</span><span class="si">:</span><span class="s2">.4g</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">_listed</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_labels</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="n">rows</span><span class="p">])</span><span class="si">}</span><span class="s2">. "</span>
+                <span class="s2">"A state this large is far outside any prior on u; check the "</span>
+                <span class="s2">"prior's units."</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="n">transformed</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_mapped</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">values</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Return the state `values` (in the columns' order; one column per draw if 2D) with the block transformed.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            If the transform overflows at some label.</span>
+<span class="sd">        """</span>
+        <span class="n">mapped</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+        <span class="n">u</span> <span class="o">=</span> <span class="n">mapped</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_slice</span><span class="p">]</span>
+        <span class="n">mapped</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_slice</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_finite</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_values</span><span class="p">(</span><span class="n">u</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">mapped</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">Vector</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Vector</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return :math:`F(x)`."""</span>
+        <span class="n">values</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mapped</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_on_cols</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">Vector</span><span class="o">.</span><span class="n">_adopt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_H</span><span class="o">.</span><span class="n">data</span> <span class="o">@</span> <span class="n">values</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">rows</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_jacobian</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">Vector</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Operator</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return :math:`H` times the diagonal of the slopes (1 off the block), in the form of :math:`H`."""</span>
+        <span class="n">values</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_on_cols</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">u</span> <span class="o">=</span> <span class="n">values</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_slice</span><span class="p">]</span>
+        <span class="n">slopes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">values</span><span class="p">))</span>
+        <span class="n">slopes</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_slice</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_finite</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_slopes</span><span class="p">(</span><span class="n">u</span><span class="p">))</span>
+        <span class="n">form</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_H</span><span class="o">.</span><span class="n">data</span> <span class="o">@</span> <span class="n">DiagonalOperator</span><span class="o">.</span><span class="n">_adopt</span><span class="p">(</span><span class="n">slopes</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">Operator</span><span class="p">(</span><span class="n">form</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">rows</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">cols</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_H</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="s2">"Vector | pd.DataFrame"</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"Vector | pd.DataFrame"</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return `x` (a state, or draws of it, one column each) with the block transformed, on its own labels."""</span>
+        <span class="n">cols</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cols</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">Vector</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">space</span> <span class="ow">is</span> <span class="n">cols</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">Vector</span><span class="o">.</span><span class="n">_adopt</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_mapped</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">values</span><span class="p">),</span> <span class="n">cols</span><span class="p">,</span> <span class="n">x</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+            <span class="c1"># cols[i] is x.space[positions[i]]</span>
+            <span class="n">positions</span> <span class="o">=</span> <span class="n">cols</span><span class="o">.</span><span class="n">_align</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">space</span><span class="p">,</span> <span class="s2">"x"</span><span class="p">,</span> <span class="s2">"x and the model's columns"</span><span class="p">)</span>
+            <span class="n">mapped</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+            <span class="n">mapped</span><span class="p">[</span><span class="n">positions</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mapped</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="n">positions</span><span class="p">])</span>
+            <span class="k">return</span> <span class="n">Vector</span><span class="o">.</span><span class="n">_adopt</span><span class="p">(</span><span class="n">mapped</span><span class="p">,</span> <span class="n">x</span><span class="o">.</span><span class="n">space</span><span class="p">,</span> <span class="n">x</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">):</span>
+            <span class="c1"># the rows in the order of their space (each block's together),</span>
+            <span class="c1"># then in the order of the model's columns</span>
+            <span class="n">space</span><span class="p">,</span> <span class="n">order</span> <span class="o">=</span> <span class="n">Space</span><span class="o">.</span><span class="n">_regroup</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+            <span class="n">positions</span> <span class="o">=</span> <span class="n">order</span><span class="p">[</span>
+                <span class="n">cols</span><span class="o">.</span><span class="n">_align</span><span class="p">(</span>
+                    <span class="n">space</span><span class="p">,</span> <span class="s2">"the draws' rows"</span><span class="p">,</span> <span class="s2">"The draws' rows and the model's columns"</span>
+                <span class="p">)</span>
+            <span class="p">]</span>
+            <span class="n">mapped</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+            <span class="n">mapped</span><span class="p">[</span><span class="n">positions</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mapped</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)[</span><span class="n">positions</span><span class="p">])</span>
+            <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">mapped</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+            <span class="s2">"x is a Vector (a state, such as post.estimate) or a DataFrame of "</span>
+            <span class="sa">f</span><span class="s2">"draws with the state's labels as rows (post.sample), not "</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">."</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return the class, the block and the two spaces."""</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">(block: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_block</span><span class="si">!r}</span><span class="s2">, rows: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">rows</span><span class="si">!r}</span><span class="s2">, "</span>
+            <span class="sa">f</span><span class="s2">"cols: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">cols</span><span class="si">!r}</span><span class="s2">)"</span>
+        <span class="p">)</span>
+
+
+<div class="viewcode-block" id="LognormalForward">
+<a class="viewcode-back" href="../../reference/api/fips.LognormalForward.html#fips.LognormalForward">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">LognormalForward</span><span class="p">(</span><span class="n">_Transformed</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">    A forward model whose state on one block is the logarithm of a scale factor of a reference: the flux :math:`r\, e^{u}`.</span>
+
+<span class="sd">    The observations are :math:`F(x) = H\, [r \circ e^{u}; \text{the other</span>
+<span class="sd">    blocks}]`: :math:`H` is the forward operator on the whole state, the</span>
+<span class="sd">    state on `block` is :math:`u`, the log of the factor that scales the</span>
+<span class="sd">    reference :math:`r` (an inventory), and every other block (a bias)</span>
+<span class="sd">    passes through as it is. The Jacobian is :math:`H` with each column of</span>
+<span class="sd">    the block scaled by its flux, :math:`H \operatorname{diag}(r \circ</span>
+<span class="sd">    e^{u}, 1)`, in the form of :math:`H` (sparse stays sparse).</span>
+
+<span class="sd">    The prior and its covariance on the block are in log units: a standard</span>
+<span class="sd">    deviation of 0.5 is a factor of :math:`e^{0.5} = 1.65` either way. A cell</span>
+<span class="sd">    whose reference is zero has a zero flux whatever :math:`u` is, and its</span>
+<span class="sd">    column of the Jacobian is zero: no observation moves it, so a source</span>
+<span class="sd">    the reference has not got cannot appear (:class:`SoftplusForward` or the</span>
+<span class="sd">    ``"bounded"`` method can). :meth:`prior_for` gives the prior on</span>
+<span class="sd">    :math:`u` whose flux has a mean and a standard deviation;</span>
+<span class="sd">    :meth:`transform` maps the estimate, or draws of the posterior, to the</span>
+<span class="sd">    flux.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    H : Operator</span>
+<span class="sd">        The forward operator: its rows the observations' labels, its columns</span>
+<span class="sd">        the whole state's (the block and any other).</span>
+<span class="sd">    reference : Vector, Series or float</span>
+<span class="sd">        The reference flux :math:`r` of each cell of the block, not negative:</span>
+<span class="sd">        a Vector on the block (``inventory["flux"]``), a Series on its labels</span>
+<span class="sd">        (without a ``block`` level), or one number for every cell.</span>
+<span class="sd">    block : str, optional</span>
+<span class="sd">        The block of the state that is :math:`u`. By default the state's one</span>
+<span class="sd">        block.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    TypeError</span>
+<span class="sd">        If `H` is not an Operator, or `reference` is an array (it has no</span>
+<span class="sd">        labels).</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        If the state has several blocks and `block` is not given, `reference`</span>
+<span class="sd">        does not have exactly the block's labels, or a reference is negative</span>
+<span class="sd">        or not finite.</span>
+<span class="sd">    KeyError</span>
+<span class="sd">        If `block` is not a block of the state.</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    SoftplusForward : A flux that is additive away from zero.</span>
+<span class="sd">    fips.ForwardModel : A forward model written by hand.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    The mode :math:`\hat{u}` is the mean and the median of the Gaussian at</span>
+<span class="sd">    the mode, so :math:`r\, e^{\hat{u}}` is the median of each cell's flux</span>
+<span class="sd">    under it, below its mean :math:`r\, e^{\hat{u} + \sigma^2/2}` (with</span>
+<span class="sd">    :math:`\sigma^2` the variance at the mode). A sum of lognormals has no</span>
+<span class="sd">    closed form: draws of the total are ``model.transform(post.sample(n))``</span>
+<span class="sd">    summed by draw. Where the data constrain sums of cells whose prior is</span>
+<span class="sd">    wide, the Gaussian at the mode lies along the tangent of the curved set</span>
+<span class="sd">    of states they allow, and the draws' totals run high: the sum of the flux</span>
+<span class="sd">    at the mode is the better total (the user guide's "Fluxes that stay</span>
+<span class="sd">    positive" measures both).</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; import numpy as np</span>
+<span class="sd">    &gt;&gt;&gt; import pandas as pd</span>
+<span class="sd">    &gt;&gt;&gt; import fips</span>
+<span class="sd">    &gt;&gt;&gt; state = fips.Space({"flux": pd.Index(["a", "b"], name="cell")})</span>
+<span class="sd">    &gt;&gt;&gt; observed = fips.Space({"ch4": pd.RangeIndex(3, name="obs_id")})</span>
+<span class="sd">    &gt;&gt;&gt; H = fips.Operator(</span>
+<span class="sd">    ...     np.array([[1.0, 0.0], [0.0, 1.0], [1.0, 1.0]]), observed, state</span>
+<span class="sd">    ... )</span>
+<span class="sd">    &gt;&gt;&gt; inventory = pd.Series([2.0, 0.0], index=state.select("flux"))</span>
+<span class="sd">    &gt;&gt;&gt; model = fips.LognormalForward(H, inventory, block="flux")</span>
+<span class="sd">    &gt;&gt;&gt; u = fips.Vector([np.log(1.5), 3.0], state)</span>
+<span class="sd">    &gt;&gt;&gt; model(u).values  # cell b has no reference, so no flux</span>
+<span class="sd">    array([3., 0., 3.])</span>
+<span class="sd">    &gt;&gt;&gt; model.transform(u).values</span>
+<span class="sd">    array([3., 0.])</span>
+<span class="sd">    &gt;&gt;&gt; fips.taylortest(model, u)</span>
+<span class="sd">    True</span>
+<span class="sd">    """</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">H</span><span class="p">:</span> <span class="n">Operator</span><span class="p">,</span>
+        <span class="n">reference</span><span class="p">:</span> <span class="s2">"Vector | pd.Series | float"</span><span class="p">,</span>
+        <span class="n">block</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">H</span><span class="p">,</span> <span class="n">block</span><span class="p">)</span>
+        <span class="n">values</span> <span class="o">=</span> <span class="n">_on_block</span><span class="p">(</span><span class="n">reference</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_labels</span><span class="p">,</span> <span class="s2">"reference"</span><span class="p">)</span>
+        <span class="n">_negative</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_labels</span><span class="p">,</span> <span class="s2">"reference"</span><span class="p">)</span>
+        <span class="n">values</span><span class="o">.</span><span class="n">flags</span><span class="o">.</span><span class="n">writeable</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_reference</span> <span class="o">=</span> <span class="n">values</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">reference</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Vector</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""The reference flux :math:`r` of each cell of the block, on the block's labels."""</span>
+        <span class="k">return</span> <span class="n">Vector</span><span class="o">.</span><span class="n">_adopt</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_reference</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_labels</span><span class="p">,</span> <span class="s2">"reference"</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_values</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">u</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return :math:`r e^u`, zero where the reference is zero (whatever `u`)."""</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_reference</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">*</span><span class="p">([</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">ndim</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)))</span>
+        <span class="k">with</span> <span class="n">np</span><span class="o">.</span><span class="n">errstate</span><span class="p">(</span><span class="n">over</span><span class="o">=</span><span class="s2">"ignore"</span><span class="p">,</span> <span class="n">invalid</span><span class="o">=</span><span class="s2">"ignore"</span><span class="p">):</span>
+            <span class="n">flux</span> <span class="o">=</span> <span class="n">r</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">u</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">r</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span> <span class="n">flux</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_slopes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">u</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return the derivative of :math:`r e^u`, which is itself."""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_values</span><span class="p">(</span><span class="n">u</span><span class="p">)</span>
+
+<div class="viewcode-block" id="LognormalForward.__call__">
+<a class="viewcode-back" href="../../reference/api/fips.LognormalForward.__call__.html#fips.LognormalForward.__call__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">Vector</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Vector</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">        Return the observations of the state `x`, without the offset: :math:`H\, [r \circ e^{u}; \text{the other blocks}]`.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        x : Vector</span>
+<span class="sd">            A state on the model's columns (in any order).</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Vector</span>
+<span class="sd">            :math:`F(x)`, on :attr:`rows`.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            If `x` does not have the model's columns' labels, or the flux</span>
+<span class="sd">            overflows (:math:`u` above about 700).</span>
+<span class="sd">        """</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_forward</span><span class="p">(</span><span class="n">x</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="LognormalForward.jacobian">
+<a class="viewcode-back" href="../../reference/api/fips.LognormalForward.jacobian.html#fips.LognormalForward.jacobian">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">jacobian</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">Vector</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Operator</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">        Return the Jacobian at `x`: :math:`H \operatorname{diag}(r \circ e^{u}, 1)`.</span>
+
+<span class="sd">        Each column of the block is scaled by its flux; the columns of the</span>
+<span class="sd">        other blocks are those of :math:`H`. The form is that of :math:`H`.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        x : Vector</span>
+<span class="sd">            A state on the model's columns (in any order).</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Operator</span>
+<span class="sd">            :math:`J(x)`, on :attr:`rows` and :attr:`cols`.</span>
+<span class="sd">        """</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jacobian</span><span class="p">(</span><span class="n">x</span><span class="p">)</span></div>
+
+
+    <span class="nd">@overload</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">Vector</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Vector</span><span class="p">:</span>  <span class="c1"># noqa: D418</span>
+<span class="w">        </span><span class="sd">"""Of a state: a Vector on its labels."""</span>
+
+    <span class="nd">@overload</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>  <span class="c1"># noqa: D418</span>
+<span class="w">        </span><span class="sd">"""Of draws: a DataFrame on their labels."""</span>
+
+<div class="viewcode-block" id="LognormalForward.transform">
+<a class="viewcode-back" href="../../reference/api/fips.LognormalForward.transform.html#fips.LognormalForward.transform">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="s2">"Vector | pd.DataFrame"</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"Vector | pd.DataFrame"</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">        Return the state with the block as the flux, :math:`r\, e^{u}`: of a state, or of each draw.</span>
+
+<span class="sd">        The other blocks are as they are. For the estimate, the flux at the</span>
+<span class="sd">        mode, the median of each cell's flux under the Gaussian at the mode</span>
+<span class="sd">        (not its mean). For draws of the posterior (:meth:`Posterior.sample</span>
+<span class="sd">        &lt;fips.Posterior.sample&gt;`, one column each), draws of the flux: the</span>
+<span class="sd">        total of each column is a draw of the total (see the class's Notes</span>
+<span class="sd">        for when they run high). Aggregating ``u`` first</span>
+<span class="sd">        (``post.sample(n, W=W)``) and transforming that is not a total of</span>
+<span class="sd">        the flux.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        x : Vector or DataFrame</span>
+<span class="sd">            A state on the model's columns (in any order), or draws with the</span>
+<span class="sd">            state's labels as rows (the index of :attr:`Posterior.estimate</span>
+<span class="sd">            &lt;fips.Posterior.estimate&gt;`) and one column per draw.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Vector or DataFrame</span>
+<span class="sd">            The same labels (and columns) as `x`, the block transformed.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        TypeError</span>
+<span class="sd">            If `x` is neither a Vector nor a DataFrame.</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            If its labels are not the model's columns', or the flux</span>
+<span class="sd">            overflows.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; import numpy as np</span>
+<span class="sd">        &gt;&gt;&gt; import pandas as pd</span>
+<span class="sd">        &gt;&gt;&gt; import fips</span>
+<span class="sd">        &gt;&gt;&gt; state = fips.Space({"flux": pd.Index(["a", "b"], name="cell")})</span>
+<span class="sd">        &gt;&gt;&gt; H = fips.Operator(</span>
+<span class="sd">        ...     np.ones((1, 2)), fips.Space({"ch4": pd.RangeIndex(1, name="i")}), state</span>
+<span class="sd">        ... )</span>
+<span class="sd">        &gt;&gt;&gt; model = fips.LognormalForward(H, 2.0)</span>
+<span class="sd">        &gt;&gt;&gt; draws = pd.DataFrame(</span>
+<span class="sd">        ...     [[0.0, np.log(2.0)], [np.log(0.5), 0.0]], index=state.index</span>
+<span class="sd">        ... )</span>
+<span class="sd">        &gt;&gt;&gt; model.transform(draws).sum().tolist()  # the total of each draw</span>
+<span class="sd">        [3.0, 6.0]</span>
+<span class="sd">        """</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_transform</span><span class="p">(</span><span class="n">x</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="LognormalForward.prior_for">
+<a class="viewcode-back" href="../../reference/api/fips.LognormalForward.prior_for.html#fips.LognormalForward.prior_for">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">prior_for</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">mean</span><span class="p">:</span> <span class="s2">"Vector | pd.Series | float"</span><span class="p">,</span> <span class="n">std</span><span class="p">:</span> <span class="s2">"Vector | pd.Series | float"</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Vector</span><span class="p">,</span> <span class="n">Vector</span><span class="p">]:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">        Return the prior on :math:`u` (its mean and standard deviation, each cell's) whose flux :math:`r\, e^{u}` has the mean and the standard deviation asked for.</span>
+
+<span class="sd">        The flux is lognormal, with :math:`u \sim N(\mu, \sigma^2)`:</span>
+<span class="sd">        :math:`\sigma^2 = \log(1 + s^2 / m^2)` and :math:`\mu = \log(m / r) -</span>
+<span class="sd">        \sigma^2 / 2`, so that its mean is :math:`m` and its standard</span>
+<span class="sd">        deviation :math:`s` exactly. With the reference as the mean (an</span>
+<span class="sd">        inventory), :math:`\mu = -\sigma^2 / 2`: the prior median of the flux,</span>
+<span class="sd">        :math:`r\, e^{\mu}`, is below the inventory, and its mean is the</span>
+<span class="sd">        inventory. A prior of :math:`\mu = 0` instead makes the inventory the</span>
+<span class="sd">        median, and the prior's total :math:`e^{\sigma^2/2}` times the</span>
+<span class="sd">        inventory's (1.65 times for :math:`\sigma = 1`).</span>
+
+<span class="sd">        The correlations are those of :math:`u`, not of the flux: build the</span>
+<span class="sd">        covariance with them (``Exponential(...).with_std(sigma)``). Two cells</span>
+<span class="sd">        whose :math:`u` correlate by :math:`\rho` have fluxes that correlate</span>
+<span class="sd">        by :math:`(e^{\rho \sigma_i \sigma_j} - 1) / \sqrt{(e^{\sigma_i^2} -</span>
+<span class="sd">        1)(e^{\sigma_j^2} - 1)}`, less than :math:`\rho` (0.38 for</span>
+<span class="sd">        :math:`\rho = 0.5` and :math:`\sigma = 1`).</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        mean : Vector, Series or float</span>
+<span class="sd">            The prior mean :math:`m` of each cell's flux, on the block's labels</span>
+<span class="sd">            (or one number). Positive where the reference is; zero where it</span>
+<span class="sd">            is zero.</span>
+<span class="sd">        std : Vector, Series or float</span>
+<span class="sd">            The prior standard deviation :math:`s` of each cell's flux, not</span>
+<span class="sd">            negative; zero where the reference is zero.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        mean, std : Vector</span>
+<span class="sd">            :math:`\mu` and :math:`\sigma`, on the block's labels. A cell whose</span>
+<span class="sd">            reference is zero gets 0 and 0: its flux is zero whatever its</span>
+<span class="sd">            :math:`u`, and any prior there gives the other cells the same</span>
+<span class="sd">            posterior.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        TypeError</span>
+<span class="sd">            If `mean` or `std` is an array.</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            If their labels are not the block's, a value is negative or not</span>
+<span class="sd">            finite, a mean is zero where the reference is not, or a mean or a</span>
+<span class="sd">            standard deviation is not zero where the reference is.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        A flux of mean 2 and standard deviation 1 in each cell, the reference</span>
+<span class="sd">        its mean:</span>
+
+<span class="sd">        &gt;&gt;&gt; import numpy as np</span>
+<span class="sd">        &gt;&gt;&gt; import pandas as pd</span>
+<span class="sd">        &gt;&gt;&gt; import fips</span>
+<span class="sd">        &gt;&gt;&gt; state = fips.Space({"flux": pd.Index(["a", "b"], name="cell")})</span>
+<span class="sd">        &gt;&gt;&gt; H = fips.Operator(</span>
+<span class="sd">        ...     np.ones((1, 2)), fips.Space({"ch4": pd.RangeIndex(1, name="i")}), state</span>
+<span class="sd">        ... )</span>
+<span class="sd">        &gt;&gt;&gt; model = fips.LognormalForward(H, 2.0)</span>
+<span class="sd">        &gt;&gt;&gt; mu, sigma = model.prior_for(mean=2.0, std=1.0)</span>
+<span class="sd">        &gt;&gt;&gt; sigma.values.round(4)  # sqrt(log(1.25))</span>
+<span class="sd">        array([0.4724, 0.4724])</span>
+<span class="sd">        &gt;&gt;&gt; mu.values.round(4)  # -sigma^2 / 2</span>
+<span class="sd">        array([-0.1116, -0.1116])</span>
+<span class="sd">        """</span>
+        <span class="n">labels</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_labels</span>
+        <span class="n">m</span> <span class="o">=</span> <span class="n">_on_block</span><span class="p">(</span><span class="n">mean</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="s2">"mean"</span><span class="p">)</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="n">_on_block</span><span class="p">(</span><span class="n">std</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="s2">"std"</span><span class="p">)</span>
+        <span class="n">_negative</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="s2">"mean"</span><span class="p">)</span>
+        <span class="n">_negative</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="s2">"std"</span><span class="p">)</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_reference</span>
+        <span class="n">zero</span> <span class="o">=</span> <span class="n">r</span> <span class="o">==</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">values</span><span class="p">,</span> <span class="n">what</span> <span class="ow">in</span> <span class="p">((</span><span class="n">m</span><span class="p">,</span> <span class="s2">"mean"</span><span class="p">),</span> <span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="s2">"std"</span><span class="p">)):</span>
+            <span class="n">bad</span> <span class="o">=</span> <span class="n">zero</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">values</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">bad</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">"The </span><span class="si">{</span><span class="n">what</span><span class="si">}</span><span class="s2"> is not zero at </span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="n">bad</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span><span class="si">}</span><span class="s2"> labels where the "</span>
+                    <span class="s2">"reference is, whose flux is zero whatever u is: "</span>
+                    <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">_listed</span><span class="p">(</span><span class="n">labels</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="n">bad</span><span class="p">])</span><span class="si">}</span><span class="s2">. A source the reference has "</span>
+                    <span class="s2">"not got needs a reference there, or SoftplusForward."</span>
+                <span class="p">)</span>
+        <span class="n">bad</span> <span class="o">=</span> <span class="o">~</span><span class="n">zero</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">m</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">bad</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"The mean is zero at </span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="n">bad</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span><span class="si">}</span><span class="s2"> labels whose reference is "</span>
+                <span class="sa">f</span><span class="s2">"not, and a lognormal flux is never zero: "</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">_listed</span><span class="p">(</span><span class="n">labels</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="n">bad</span><span class="p">])</span><span class="si">}</span><span class="s2">."</span>
+            <span class="p">)</span>
+        <span class="n">safe</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">zero</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="n">m</span><span class="p">)</span>
+        <span class="n">variance</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">zero</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">log1p</span><span class="p">((</span><span class="n">s</span> <span class="o">/</span> <span class="n">safe</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">))</span>
+        <span class="n">mu</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">zero</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">safe</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">zero</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="n">r</span><span class="p">))</span> <span class="o">-</span> <span class="n">variance</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="n">Vector</span><span class="o">.</span><span class="n">_adopt</span><span class="p">(</span><span class="n">mu</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="s2">"prior"</span><span class="p">),</span>
+            <span class="n">Vector</span><span class="o">.</span><span class="n">_adopt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">variance</span><span class="p">),</span> <span class="n">labels</span><span class="p">,</span> <span class="s2">"prior_std"</span><span class="p">),</span>
+        <span class="p">)</span></div>
+</div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_softplus_rule</span><span class="p">(</span><span class="n">a</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">b</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">    Return nodes :math:`\xi` and weights (one row per cell) for :math:`E[f(a + b \xi)]`, :math:`\xi \sim N(0, 1)`, for a function that bends at :math:`a + b \xi = 0`.</span>
+
+<span class="sd">    Each side of the bend, :math:`\xi_0 = -a/b`, is one panel of</span>
+<span class="sd">    Gauss-Legendre nodes in the logarithm of the distance to it, up to 1 (the</span>
+<span class="sd">    bend's width, :math:`1/b`, can be far smaller), and one in the distance</span>
+<span class="sd">    beyond, both within :math:`[-12, 12]`; the weights carry the normal</span>
+<span class="sd">    density. Accurate to about 1e-14 for a smooth function on each side</span>
+<span class="sd">    (the tests hold it to SciPy's adaptive ``quad``).</span>
+<span class="sd">    """</span>
+    <span class="n">xi_0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="o">-</span><span class="n">a</span> <span class="o">/</span> <span class="n">b</span><span class="p">,</span> <span class="o">-</span><span class="n">_SPAN</span><span class="p">,</span> <span class="n">_SPAN</span><span class="p">)[:,</span> <span class="kc">None</span><span class="p">]</span>
+    <span class="n">nodes</span><span class="p">,</span> <span class="n">weights</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">side</span> <span class="ow">in</span> <span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.0</span><span class="p">):</span>
+        <span class="n">width</span> <span class="o">=</span> <span class="p">(</span><span class="n">_SPAN</span> <span class="o">-</span> <span class="n">side</span> <span class="o">*</span> <span class="n">xi_0</span><span class="p">)</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span>  <span class="c1"># each side's length, at least 0</span>
+        <span class="n">empty</span> <span class="o">=</span> <span class="n">width</span> <span class="o">&lt;=</span> <span class="mi">0</span>
+        <span class="n">width</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">empty</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="n">width</span><span class="p">)</span>
+        <span class="n">near</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">minimum</span><span class="p">(</span><span class="n">width</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)[:,</span> <span class="kc">None</span><span class="p">]</span>
+        <span class="c1"># the near panel: log s from log(near * _NEAREST) to log(near)</span>
+        <span class="n">x</span><span class="p">,</span> <span class="n">w</span> <span class="o">=</span> <span class="n">_NEAR</span>
+        <span class="n">low</span><span class="p">,</span> <span class="n">high</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">near</span> <span class="o">*</span> <span class="n">_NEAREST</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">near</span><span class="p">)</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">((</span><span class="n">high</span> <span class="o">+</span> <span class="n">low</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="n">high</span> <span class="o">-</span> <span class="n">low</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">x</span><span class="p">)</span>
+        <span class="n">nodes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">xi_0</span> <span class="o">+</span> <span class="n">side</span> <span class="o">*</span> <span class="n">s</span><span class="p">)</span>
+        <span class="n">weights</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">high</span> <span class="o">-</span> <span class="n">low</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">w</span> <span class="o">*</span> <span class="n">s</span><span class="p">)</span>
+        <span class="c1"># the far panel: s from near to the side's length</span>
+        <span class="n">x</span><span class="p">,</span> <span class="n">w</span> <span class="o">=</span> <span class="n">_FAR</span>
+        <span class="n">far</span> <span class="o">=</span> <span class="n">width</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">]</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="p">(</span><span class="n">far</span> <span class="o">+</span> <span class="n">near</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="n">far</span> <span class="o">-</span> <span class="n">near</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">x</span>
+        <span class="n">nodes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">xi_0</span> <span class="o">+</span> <span class="n">side</span> <span class="o">*</span> <span class="n">s</span><span class="p">)</span>
+        <span class="n">weights</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">far</span> <span class="o">-</span> <span class="n">near</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">w</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">ones_like</span><span class="p">(</span><span class="n">s</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="p">(</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+            <span class="n">weights</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">empty</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">],</span> <span class="mf">0.0</span><span class="p">,</span> <span class="n">weights</span><span class="p">[</span><span class="n">k</span><span class="p">])</span>
+    <span class="n">xi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">nodes</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">weight</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">weights</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="p">(</span><span class="n">xi</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span> <span class="o">/</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">math</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">xi</span><span class="p">,</span> <span class="n">weight</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_softplus_moments</span><span class="p">(</span>
+    <span class="n">a</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">b</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">    Return the mean and standard deviation of :math:`\log(1 + e^t)`, :math:`t \sim N(a, b^2)`, and their derivatives by :math:`a` and :math:`b` (``k x 2 x 2``).</span>
+
+<span class="sd">    The deviations are taken from :math:`f(a)` as :math:`f(t) - f(a) =</span>
+<span class="sd">    \log(1 + \sigma(a)(e^{t - a} - 1))` (with :math:`\sigma` the logistic</span>
+<span class="sd">    function), so a standard deviation far below the mean loses no digits.</span>
+<span class="sd">    The cells are taken ``_CHUNK`` at a time.</span>
+<span class="sd">    """</span>
+    <span class="n">parts</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">_softplus_chunk</span><span class="p">(</span><span class="n">a</span><span class="p">[</span><span class="n">k</span> <span class="p">:</span> <span class="n">k</span> <span class="o">+</span> <span class="n">_CHUNK</span><span class="p">],</span> <span class="n">b</span><span class="p">[</span><span class="n">k</span> <span class="p">:</span> <span class="n">k</span> <span class="o">+</span> <span class="n">_CHUNK</span><span class="p">])</span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">a</span><span class="p">),</span> <span class="n">_CHUNK</span><span class="p">)</span>
+    <span class="p">]</span> <span class="ow">or</span> <span class="p">[</span><span class="n">_softplus_chunk</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)]</span>
+    <span class="n">mean</span><span class="p">,</span> <span class="n">std</span><span class="p">,</span> <span class="n">jac</span> <span class="o">=</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">parts</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">mean</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">std</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">jac</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_softplus_chunk</span><span class="p">(</span>
+    <span class="n">a</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">b</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Return :func:`_softplus_moments` of a few cells."""</span>
+    <span class="n">xi</span><span class="p">,</span> <span class="n">w</span> <span class="o">=</span> <span class="n">_softplus_rule</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
+    <span class="n">step</span> <span class="o">=</span> <span class="n">b</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="n">xi</span>
+    <span class="n">t</span> <span class="o">=</span> <span class="n">a</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">+</span> <span class="n">step</span>
+    <span class="c1"># f(t) - f(a) = log(1 + expit(a) (e^step - 1)): exact for a small step, and</span>
+    <span class="c1"># wherever expit(a) &lt;= 1/2; else step + g(t) - g(a), g(x) = log(1 + e^-x)</span>
+    <span class="n">near</span> <span class="o">=</span> <span class="p">(</span><span class="n">step</span> <span class="o">&lt;=</span> <span class="mf">700.0</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">((</span><span class="n">a</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="mf">0.0</span><span class="p">)</span> <span class="o">|</span> <span class="p">(</span><span class="n">step</span> <span class="o">&gt;=</span> <span class="o">-</span><span class="mf">1.0</span><span class="p">))</span>
+    <span class="k">with</span> <span class="n">np</span><span class="o">.</span><span class="n">errstate</span><span class="p">(</span><span class="n">over</span><span class="o">=</span><span class="s2">"ignore"</span><span class="p">,</span> <span class="n">divide</span><span class="o">=</span><span class="s2">"ignore"</span><span class="p">,</span> <span class="n">invalid</span><span class="o">=</span><span class="s2">"ignore"</span><span class="p">):</span>
+        <span class="n">d</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log1p</span><span class="p">(</span><span class="n">expit</span><span class="p">(</span><span class="n">a</span><span class="p">)[:,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">expm1</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">minimum</span><span class="p">(</span><span class="n">step</span><span class="p">,</span> <span class="mf">700.0</span><span class="p">)))</span>
+    <span class="n">d</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span>
+        <span class="n">near</span><span class="p">,</span>
+        <span class="n">d</span><span class="p">,</span>
+        <span class="n">step</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">logaddexp</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="o">-</span><span class="n">t</span><span class="p">)</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">logaddexp</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="o">-</span><span class="n">a</span><span class="p">)[:,</span> <span class="kc">None</span><span class="p">],</span>
+    <span class="p">)</span>
+    <span class="n">shift</span> <span class="o">=</span> <span class="p">(</span><span class="n">d</span> <span class="o">*</span> <span class="n">w</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">mean</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">logaddexp</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">a</span><span class="p">)</span> <span class="o">+</span> <span class="n">shift</span>
+    <span class="n">dev</span> <span class="o">=</span> <span class="n">d</span> <span class="o">-</span> <span class="n">shift</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">]</span>
+    <span class="n">std</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">((</span><span class="n">dev</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="n">w</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>
+    <span class="n">g</span> <span class="o">=</span> <span class="n">expit</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+    <span class="n">jac</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">a</span><span class="p">),</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
+    <span class="n">jac</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">g</span> <span class="o">*</span> <span class="n">w</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">jac</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">g</span> <span class="o">*</span> <span class="n">xi</span> <span class="o">*</span> <span class="n">w</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">safe</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">std</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span> <span class="n">std</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span>
+    <span class="n">jac</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">dev</span> <span class="o">*</span> <span class="n">g</span> <span class="o">*</span> <span class="n">w</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="n">safe</span>
+    <span class="n">jac</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">dev</span> <span class="o">*</span> <span class="n">g</span> <span class="o">*</span> <span class="n">xi</span> <span class="o">*</span> <span class="n">w</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="n">safe</span>
+    <span class="k">return</span> <span class="n">mean</span><span class="p">,</span> <span class="n">std</span><span class="p">,</span> <span class="n">jac</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_softplus_match</span><span class="p">(</span><span class="n">m</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">s</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">    Return :math:`a, b` with :math:`\log(1 + e^t)`, :math:`t \sim N(a, b^2)`, of mean `m` and standard deviation `s` (both positive).</span>
+
+<span class="sd">    Newton's method on the logarithms of the two moments, in :math:`\alpha =</span>
+<span class="sd">    a/b` and :math:`\beta = \log b` (where the flux is far above the bend,</span>
+<span class="sd">    each moment is :math:`b` times a function of :math:`\alpha`, so the</span>
+<span class="sd">    equations are nearly linear), from the better of the lognormal answer</span>
+<span class="sd">    (right for :math:`m \ll 1`) and the additive one (:math:`a = m, b = s`,</span>
+<span class="sd">    right for :math:`m \gg 1`). Each cell's step is halved until its error</span>
+<span class="sd">    falls.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    RuntimeError</span>
+<span class="sd">        If some cell does not reach a relative error of ``_ACCEPTED``.</span>
+<span class="sd">    """</span>
+    <span class="n">log_m</span><span class="p">,</span> <span class="n">log_s</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">m</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">errors</span><span class="p">(</span>
+        <span class="n">alpha</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">beta</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">k</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""Return the errors of the log moments of the cells `k`, and their derivatives by alpha and beta."""</span>
+        <span class="n">b</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">beta</span><span class="p">)</span>
+        <span class="n">a</span> <span class="o">=</span> <span class="n">alpha</span> <span class="o">*</span> <span class="n">b</span>
+        <span class="n">mean</span><span class="p">,</span> <span class="n">std</span><span class="p">,</span> <span class="n">J</span> <span class="o">=</span> <span class="n">_softplus_moments</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
+        <span class="k">with</span> <span class="n">np</span><span class="o">.</span><span class="n">errstate</span><span class="p">(</span><span class="n">divide</span><span class="o">=</span><span class="s2">"ignore"</span><span class="p">,</span> <span class="n">invalid</span><span class="o">=</span><span class="s2">"ignore"</span><span class="p">):</span>
+            <span class="n">r</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">mean</span><span class="p">)</span> <span class="o">-</span> <span class="n">log_m</span><span class="p">[</span><span class="n">k</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">std</span><span class="p">)</span> <span class="o">-</span> <span class="n">log_s</span><span class="p">[</span><span class="n">k</span><span class="p">]],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+            <span class="c1"># d/dalpha = b d/da; d/dbeta = a d/da + b d/db; divided by the moment</span>
+            <span class="n">dr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span>
+                <span class="p">[</span>
+                    <span class="n">J</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">b</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">],</span>
+                    <span class="n">J</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">a</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">+</span> <span class="n">J</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">b</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">],</span>
+                <span class="p">],</span>
+                <span class="n">axis</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">dr</span> <span class="o">=</span> <span class="n">dr</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="n">mean</span><span class="p">,</span> <span class="n">std</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)[:,</span> <span class="p">:,</span> <span class="kc">None</span><span class="p">]</span>
+        <span class="n">r</span><span class="p">[</span><span class="o">~</span><span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">r</span><span class="p">)]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span>
+        <span class="k">return</span> <span class="n">r</span><span class="p">,</span> <span class="n">dr</span>
+
+    <span class="n">every</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">m</span><span class="p">))</span>
+    <span class="n">variance</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log1p</span><span class="p">((</span><span class="n">s</span> <span class="o">/</span> <span class="n">m</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="n">lognormal</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">m</span><span class="p">)</span> <span class="o">-</span> <span class="n">variance</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">variance</span><span class="p">),</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">variance</span><span class="p">)</span>
+    <span class="n">additive</span> <span class="o">=</span> <span class="n">m</span> <span class="o">/</span> <span class="n">s</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+    <span class="n">r_log</span><span class="p">,</span> <span class="n">dr_log</span> <span class="o">=</span> <span class="n">errors</span><span class="p">(</span><span class="o">*</span><span class="n">lognormal</span><span class="p">,</span> <span class="n">every</span><span class="p">)</span>
+    <span class="n">r_add</span><span class="p">,</span> <span class="n">dr_add</span> <span class="o">=</span> <span class="n">errors</span><span class="p">(</span><span class="o">*</span><span class="n">additive</span><span class="p">,</span> <span class="n">every</span><span class="p">)</span>
+    <span class="n">use</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">r_add</span><span class="p">)</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">r_log</span><span class="p">)</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">alpha</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">use</span><span class="p">,</span> <span class="n">additive</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">lognormal</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">beta</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">use</span><span class="p">,</span> <span class="n">additive</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">lognormal</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+    <span class="n">r</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">use</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">],</span> <span class="n">r_add</span><span class="p">,</span> <span class="n">r_log</span><span class="p">)</span>
+    <span class="n">dr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">use</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">],</span> <span class="n">dr_add</span><span class="p">,</span> <span class="n">dr_log</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">100</span><span class="p">):</span>
+        <span class="n">size</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">r</span><span class="p">)</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">pending</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">flatnonzero</span><span class="p">(</span><span class="n">size</span> <span class="o">&gt;</span> <span class="n">_MATCHED</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">len</span><span class="p">(</span><span class="n">pending</span><span class="p">):</span>
+            <span class="k">break</span>
+        <span class="k">with</span> <span class="n">np</span><span class="o">.</span><span class="n">errstate</span><span class="p">(</span><span class="n">invalid</span><span class="o">=</span><span class="s2">"ignore"</span><span class="p">):</span>
+            <span class="n">step</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">dr</span><span class="p">[</span><span class="n">pending</span><span class="p">],</span> <span class="o">-</span><span class="n">r</span><span class="p">[</span><span class="n">pending</span><span class="p">][:,</span> <span class="p">:,</span> <span class="kc">None</span><span class="p">])[:,</span> <span class="p">:,</span> <span class="mi">0</span><span class="p">]</span>
+        <span class="n">step</span><span class="p">[</span><span class="o">~</span><span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">step</span><span class="p">)]</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="n">fraction</span><span class="p">,</span> <span class="n">moved</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">pending</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">40</span><span class="p">):</span>  <span class="c1"># halve each cell's step until its error falls</span>
+            <span class="n">left</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">flatnonzero</span><span class="p">(</span><span class="o">~</span><span class="n">moved</span><span class="p">)</span>
+            <span class="n">k</span> <span class="o">=</span> <span class="n">pending</span><span class="p">[</span><span class="n">left</span><span class="p">]</span>
+            <span class="n">new_alpha</span> <span class="o">=</span> <span class="n">alpha</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">+</span> <span class="n">fraction</span> <span class="o">*</span> <span class="n">step</span><span class="p">[</span><span class="n">left</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+            <span class="n">new_beta</span> <span class="o">=</span> <span class="n">beta</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">+</span> <span class="n">fraction</span> <span class="o">*</span> <span class="n">step</span><span class="p">[</span><span class="n">left</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>
+            <span class="n">new_r</span><span class="p">,</span> <span class="n">new_dr</span> <span class="o">=</span> <span class="n">errors</span><span class="p">(</span><span class="n">new_alpha</span><span class="p">,</span> <span class="n">new_beta</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span>
+            <span class="n">better</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">new_r</span><span class="p">)</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">size</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+            <span class="n">alpha</span><span class="p">[</span><span class="n">k</span><span class="p">[</span><span class="n">better</span><span class="p">]],</span> <span class="n">beta</span><span class="p">[</span><span class="n">k</span><span class="p">[</span><span class="n">better</span><span class="p">]]</span> <span class="o">=</span> <span class="n">new_alpha</span><span class="p">[</span><span class="n">better</span><span class="p">],</span> <span class="n">new_beta</span><span class="p">[</span><span class="n">better</span><span class="p">]</span>
+            <span class="n">r</span><span class="p">[</span><span class="n">k</span><span class="p">[</span><span class="n">better</span><span class="p">]],</span> <span class="n">dr</span><span class="p">[</span><span class="n">k</span><span class="p">[</span><span class="n">better</span><span class="p">]]</span> <span class="o">=</span> <span class="n">new_r</span><span class="p">[</span><span class="n">better</span><span class="p">],</span> <span class="n">new_dr</span><span class="p">[</span><span class="n">better</span><span class="p">]</span>
+            <span class="n">moved</span><span class="p">[</span><span class="n">left</span><span class="p">[</span><span class="n">better</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="k">if</span> <span class="n">moved</span><span class="o">.</span><span class="n">all</span><span class="p">():</span>
+                <span class="k">break</span>
+            <span class="n">fraction</span> <span class="o">/=</span> <span class="mi">2</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">moved</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>  <span class="c1"># at roundoff</span>
+            <span class="k">break</span>
+    <span class="n">worst</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">r</span><span class="p">)</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">failed</span> <span class="o">=</span> <span class="o">~</span><span class="p">(</span><span class="n">worst</span> <span class="o">&lt;=</span> <span class="n">_ACCEPTED</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">failed</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"The softplus prior did not match the mean and standard deviation in "</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="n">failed</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span><span class="si">}</span><span class="s2"> cells (relative error up to </span><span class="si">{</span><span class="n">worst</span><span class="o">.</span><span class="n">max</span><span class="p">()</span><span class="si">:</span><span class="s2">.2g</span><span class="si">}</span><span class="s2">), "</span>
+            <span class="sa">f</span><span class="s2">"such as a mean of </span><span class="si">{</span><span class="n">m</span><span class="p">[</span><span class="n">failed</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="si">:</span><span class="s2">.4g</span><span class="si">}</span><span class="s2"> and a standard deviation of "</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">s</span><span class="p">[</span><span class="n">failed</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="si">:</span><span class="s2">.4g</span><span class="si">}</span><span class="s2"> times the scale."</span>
+        <span class="p">)</span>
+    <span class="n">b</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">beta</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">alpha</span> <span class="o">*</span> <span class="n">b</span><span class="p">,</span> <span class="n">b</span>
+
+
+<div class="viewcode-block" id="SoftplusForward">
+<a class="viewcode-back" href="../../reference/api/fips.SoftplusForward.html#fips.SoftplusForward">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">SoftplusForward</span><span class="p">(</span><span class="n">_Transformed</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">    A forward model whose state on one block is a flux that bends to stay above zero: :math:`s \log(1 + e^{u/s})`.</span>
+
+<span class="sd">    The observations are :math:`F(x) = H\, [s \log(1 + e^{u/s}); \text{the</span>
+<span class="sd">    other blocks}]`: :math:`H` is the forward operator on the whole state,</span>
+<span class="sd">    the state on `block` is :math:`u`, in the flux's units, and every other</span>
+<span class="sd">    block passes through as it is. Where :math:`u` is several `scale` above</span>
+<span class="sd">    zero the flux is :math:`u` (the problem is the linear one); where it is</span>
+<span class="sd">    several below, the flux is :math:`s\, e^{u/s}`, near zero and positive.</span>
+<span class="sd">    The Jacobian is :math:`H \operatorname{diag}(\operatorname{expit}(u/s),</span>
+<span class="sd">    1)`, the logistic function on the block, in the form of :math:`H`. Both</span>
+<span class="sd">    are computed without overflow for any :math:`u` (``np.logaddexp`` and</span>
+<span class="sd">    ``scipy.special.expit``).</span>
+
+<span class="sd">    `scale` is in the flux's units and says where the bend is: the transform</span>
+<span class="sd">    is not the same in other units (:math:`\log(1 + e^u)` bends within 1 of</span>
+<span class="sd">    zero, whatever 1 is). A scale near the prior's standard deviation of</span>
+<span class="sd">    the flux in the cells near zero bends where the prior says the flux</span>
+<span class="sd">    could be zero. :meth:`prior_for` gives the prior on :math:`u` whose flux</span>
+<span class="sd">    has a mean and a standard deviation; :meth:`transform` maps the</span>
+<span class="sd">    estimate, or draws of the posterior, to the flux.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    H : Operator</span>
+<span class="sd">        The forward operator: its rows the observations' labels, its columns</span>
+<span class="sd">        the whole state's (the block and any other).</span>
+<span class="sd">    block : str, optional</span>
+<span class="sd">        The block of the state that is :math:`u`. By default the state's one</span>
+<span class="sd">        block.</span>
+<span class="sd">    scale : float, default 1.0</span>
+<span class="sd">        The scale :math:`s` of the bend, in the flux's units, positive.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    TypeError</span>
+<span class="sd">        If `H` is not an Operator.</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        If the state has several blocks and `block` is not given, or `scale`</span>
+<span class="sd">        is not a positive, finite number.</span>
+<span class="sd">    KeyError</span>
+<span class="sd">        If `block` is not a block of the state.</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    LognormalForward : A flux whose uncertainty is a factor of a reference.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    The transform is monotone, so the mode :math:`\hat{u}` (the median of</span>
+<span class="sd">    the Gaussian at the mode) maps to the median of each cell's flux under</span>
+<span class="sd">    it, :meth:`transform` of the estimate. Draws of a total are</span>
+<span class="sd">    ``model.transform(post.sample(n))`` summed by draw; near the bend they run</span>
+<span class="sd">    high, as :class:`LognormalForward`'s do (see its Notes).</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; import numpy as np</span>
+<span class="sd">    &gt;&gt;&gt; import pandas as pd</span>
+<span class="sd">    &gt;&gt;&gt; import fips</span>
+<span class="sd">    &gt;&gt;&gt; state = fips.Space({"flux": pd.Index(["a", "b", "c"], name="cell")})</span>
+<span class="sd">    &gt;&gt;&gt; observed = fips.Space({"ch4": pd.RangeIndex(1, name="obs_id")})</span>
+<span class="sd">    &gt;&gt;&gt; H = fips.Operator(np.ones((1, 3)), observed, state)</span>
+<span class="sd">    &gt;&gt;&gt; model = fips.SoftplusForward(H, scale=0.1)</span>
+<span class="sd">    &gt;&gt;&gt; u = fips.Vector([5.0, 0.0, -1.0], state)</span>
+<span class="sd">    &gt;&gt;&gt; model.transform(u).values.round(5)  # u far above the scale is the flux</span>
+<span class="sd">    array([5.     , 0.06931, 0.     ])</span>
+<span class="sd">    &gt;&gt;&gt; fips.taylortest(model, u)</span>
+<span class="sd">    True</span>
+<span class="sd">    """</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">H</span><span class="p">:</span> <span class="n">Operator</span><span class="p">,</span> <span class="n">block</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">scale</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">H</span><span class="p">,</span> <span class="n">block</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">scale</span><span class="p">)</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">TypeError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"scale must be a number, got </span><span class="si">{</span><span class="n">scale</span><span class="si">!r}</span><span class="s2">."</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="kc">None</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="ow">and</span> <span class="n">value</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"scale must be positive and finite, got </span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s2">."</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_scale</span> <span class="o">=</span> <span class="n">value</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">scale</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""The scale of the bend, in the flux's units: the flux is ``scale * log(1 + exp(u / scale))``."""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scale</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_values</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">u</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""Return :math:`s \log(1 + e^{u/s})`."""</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scale</span>
+        <span class="k">return</span> <span class="n">s</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">logaddexp</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">u</span> <span class="o">/</span> <span class="n">s</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_slopes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">u</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return the logistic function of :math:`u/s`."""</span>
+        <span class="k">return</span> <span class="n">expit</span><span class="p">(</span><span class="n">u</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scale</span><span class="p">)</span>
+
+<div class="viewcode-block" id="SoftplusForward.__call__">
+<a class="viewcode-back" href="../../reference/api/fips.SoftplusForward.__call__.html#fips.SoftplusForward.__call__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">Vector</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Vector</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">        Return the observations of the state `x`, without the offset: :math:`H\, [s \log(1 + e^{u/s}); \text{the other blocks}]`.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        x : Vector</span>
+<span class="sd">            A state on the model's columns (in any order).</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Vector</span>
+<span class="sd">            :math:`F(x)`, on :attr:`rows`.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            If `x` does not have the model's columns' labels.</span>
+<span class="sd">        """</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_forward</span><span class="p">(</span><span class="n">x</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="SoftplusForward.jacobian">
+<a class="viewcode-back" href="../../reference/api/fips.SoftplusForward.jacobian.html#fips.SoftplusForward.jacobian">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">jacobian</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">Vector</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Operator</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">        Return the Jacobian at `x`: :math:`H \operatorname{diag}(\operatorname{expit}(u/s), 1)`.</span>
+
+<span class="sd">        Each column of the block is scaled by the slope of the transform,</span>
+<span class="sd">        between 0 (far below zero) and 1 (far above); the columns of the other</span>
+<span class="sd">        blocks are those of :math:`H`. The form is that of :math:`H`.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        x : Vector</span>
+<span class="sd">            A state on the model's columns (in any order).</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Operator</span>
+<span class="sd">            :math:`J(x)`, on :attr:`rows` and :attr:`cols`.</span>
+<span class="sd">        """</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_jacobian</span><span class="p">(</span><span class="n">x</span><span class="p">)</span></div>
+
+
+    <span class="nd">@overload</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">Vector</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Vector</span><span class="p">:</span>  <span class="c1"># noqa: D418</span>
+<span class="w">        </span><span class="sd">"""Of a state: a Vector on its labels."""</span>
+
+    <span class="nd">@overload</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>  <span class="c1"># noqa: D418</span>
+<span class="w">        </span><span class="sd">"""Of draws: a DataFrame on their labels."""</span>
+
+<div class="viewcode-block" id="SoftplusForward.transform">
+<a class="viewcode-back" href="../../reference/api/fips.SoftplusForward.transform.html#fips.SoftplusForward.transform">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="s2">"Vector | pd.DataFrame"</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"Vector | pd.DataFrame"</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">        Return the state with the block as the flux, :math:`s \log(1 + e^{u/s})`: of a state, or of each draw.</span>
+
+<span class="sd">        The other blocks are as they are. For the estimate, the flux at the</span>
+<span class="sd">        mode, the median of each cell's flux under the Gaussian at the mode.</span>
+<span class="sd">        For draws of the posterior (:meth:`Posterior.sample</span>
+<span class="sd">        &lt;fips.Posterior.sample&gt;`, one column each), draws of the flux: the</span>
+<span class="sd">        total of each column is a draw of the total (see the class's Notes</span>
+<span class="sd">        for when they run high).</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        x : Vector or DataFrame</span>
+<span class="sd">            A state on the model's columns (in any order), or draws with the</span>
+<span class="sd">            state's labels as rows and one column per draw.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Vector or DataFrame</span>
+<span class="sd">            The same labels (and columns) as `x`, the block transformed.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        TypeError</span>
+<span class="sd">            If `x` is neither a Vector nor a DataFrame.</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            If its labels are not the model's columns'.</span>
+<span class="sd">        """</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_transform</span><span class="p">(</span><span class="n">x</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="SoftplusForward.prior_for">
+<a class="viewcode-back" href="../../reference/api/fips.SoftplusForward.prior_for.html#fips.SoftplusForward.prior_for">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">prior_for</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">mean</span><span class="p">:</span> <span class="s2">"Vector | pd.Series | float"</span><span class="p">,</span> <span class="n">std</span><span class="p">:</span> <span class="s2">"Vector | pd.Series | float"</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Vector</span><span class="p">,</span> <span class="n">Vector</span><span class="p">]:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">        Return the prior on :math:`u` (its mean and standard deviation, each cell's) whose flux :math:`s \log(1 + e^{u/s})` has the mean and the standard deviation asked for.</span>
+
+<span class="sd">        There is no closed form: for :math:`u \sim N(\mu, \sigma^2)` the mean</span>
+<span class="sd">        and the standard deviation of the flux are integrals, computed by</span>
+<span class="sd">        quadrature (to about 1e-13), and :math:`\mu, \sigma` are found by</span>
+<span class="sd">        Newton's method until both match to 1e-12, relative. Far above the</span>
+<span class="sd">        scale (:math:`m \gg s`) the answer is :math:`\mu = m`, :math:`\sigma</span>
+<span class="sd">        = s` (the flux is :math:`u`); far below, the lognormal's. A cell with</span>
+<span class="sd">        no spread asked (a standard deviation of zero) gets :math:`\sigma =</span>
+<span class="sd">        0` and the :math:`\mu` whose flux is the mean.</span>
+
+<span class="sd">        The correlations are those of :math:`u`: where the flux is far above</span>
+<span class="sd">        the scale they are the flux's too; near zero the flux's are weaker.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        mean : Vector, Series or float</span>
+<span class="sd">            The prior mean of each cell's flux, positive (the flux is never</span>
+<span class="sd">            zero), on the block's labels or one number.</span>
+<span class="sd">        std : Vector, Series or float</span>
+<span class="sd">            The prior standard deviation of each cell's flux, not negative.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        mean, std : Vector</span>
+<span class="sd">            :math:`\mu` and :math:`\sigma`, in the flux's units, on the block's</span>
+<span class="sd">            labels.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        TypeError</span>
+<span class="sd">            If `mean` or `std` is an array.</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            If their labels are not the block's, a mean is not positive, or a</span>
+<span class="sd">            standard deviation is negative or not finite.</span>
+<span class="sd">        RuntimeError</span>
+<span class="sd">            If Newton's method does not match some cell (it has not failed in</span>
+<span class="sd">            the tests, over means from 1e-6 to 1e6 scales and standard</span>
+<span class="sd">            deviations from 1e-6 to 1e3 times the mean).</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        A flux of mean 1 and standard deviation 1, with the bend at 1: the</span>
+<span class="sd">        prior on :math:`u` is centered below the mean, and wider:</span>
+
+<span class="sd">        &gt;&gt;&gt; import numpy as np</span>
+<span class="sd">        &gt;&gt;&gt; import pandas as pd</span>
+<span class="sd">        &gt;&gt;&gt; import fips</span>
+<span class="sd">        &gt;&gt;&gt; state = fips.Space({"flux": pd.Index(["a"], name="cell")})</span>
+<span class="sd">        &gt;&gt;&gt; H = fips.Operator(</span>
+<span class="sd">        ...     np.ones((1, 1)), fips.Space({"ch4": pd.RangeIndex(1, name="i")}), state</span>
+<span class="sd">        ... )</span>
+<span class="sd">        &gt;&gt;&gt; mu, sigma = fips.SoftplusForward(H).prior_for(mean=1.0, std=1.0)</span>
+<span class="sd">        &gt;&gt;&gt; mu.values.round(3), sigma.values.round(3)</span>
+<span class="sd">        (array([-0.059]), array([1.872]))</span>
+<span class="sd">        """</span>
+        <span class="n">labels</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_labels</span>
+        <span class="n">m</span> <span class="o">=</span> <span class="n">_on_block</span><span class="p">(</span><span class="n">mean</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="s2">"mean"</span><span class="p">)</span>
+        <span class="n">s_flux</span> <span class="o">=</span> <span class="n">_on_block</span><span class="p">(</span><span class="n">std</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="s2">"std"</span><span class="p">)</span>
+        <span class="n">_negative</span><span class="p">(</span><span class="n">s_flux</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="s2">"std"</span><span class="p">)</span>
+        <span class="n">bad</span> <span class="o">=</span> <span class="n">m</span> <span class="o">&lt;=</span> <span class="mi">0</span>
+        <span class="k">if</span> <span class="n">bad</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"The mean is not positive at </span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="n">bad</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span><span class="si">}</span><span class="s2"> labels, and a "</span>
+                <span class="sa">f</span><span class="s2">"softplus flux is always above zero: </span><span class="si">{</span><span class="n">_listed</span><span class="p">(</span><span class="n">labels</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="n">bad</span><span class="p">])</span><span class="si">}</span><span class="s2">."</span>
+            <span class="p">)</span>
+        <span class="n">scale</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scale</span>
+        <span class="n">m</span><span class="p">,</span> <span class="n">s_flux</span> <span class="o">=</span> <span class="n">m</span> <span class="o">/</span> <span class="n">scale</span><span class="p">,</span> <span class="n">s_flux</span> <span class="o">/</span> <span class="n">scale</span>  <span class="c1"># in units of the scale</span>
+        <span class="n">mu</span><span class="p">,</span> <span class="n">sigma</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">m</span><span class="p">)),</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">m</span><span class="p">))</span>
+        <span class="n">fixed</span> <span class="o">=</span> <span class="n">s_flux</span> <span class="o">==</span> <span class="mi">0</span>
+        <span class="c1"># no spread: the u whose flux is the mean, log(e^m - 1)</span>
+        <span class="n">mu</span><span class="p">[</span><span class="n">fixed</span><span class="p">]</span> <span class="o">=</span> <span class="n">m</span><span class="p">[</span><span class="n">fixed</span><span class="p">]</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">expm1</span><span class="p">(</span><span class="o">-</span><span class="n">m</span><span class="p">[</span><span class="n">fixed</span><span class="p">]))</span>
+        <span class="k">if</span> <span class="p">(</span><span class="o">~</span><span class="n">fixed</span><span class="p">)</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+            <span class="n">mu</span><span class="p">[</span><span class="o">~</span><span class="n">fixed</span><span class="p">],</span> <span class="n">sigma</span><span class="p">[</span><span class="o">~</span><span class="n">fixed</span><span class="p">]</span> <span class="o">=</span> <span class="n">_softplus_match</span><span class="p">(</span><span class="n">m</span><span class="p">[</span><span class="o">~</span><span class="n">fixed</span><span class="p">],</span> <span class="n">s_flux</span><span class="p">[</span><span class="o">~</span><span class="n">fixed</span><span class="p">])</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="n">Vector</span><span class="o">.</span><span class="n">_adopt</span><span class="p">(</span><span class="n">mu</span> <span class="o">*</span> <span class="n">scale</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="s2">"prior"</span><span class="p">),</span>
+            <span class="n">Vector</span><span class="o">.</span><span class="n">_adopt</span><span class="p">(</span><span class="n">sigma</span> <span class="o">*</span> <span class="n">scale</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="s2">"prior_std"</span><span class="p">),</span>
+        <span class="p">)</span></div>
+</div>
+
+</pre></div>
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be"></script>
+<script defer src="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2025-2026, James Mineau.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.2.0.
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.23.0.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

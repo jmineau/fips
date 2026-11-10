@@ -1,0 +1,42 @@
+﻿fips.SoftplusForward
+====================
+
+.. currentmodule:: fips
+
+.. autoclass:: SoftplusForward
+   :no-members:
+   :show-inheritance:
+
+
+
+
+.. rubric:: Attributes
+
+.. autosummary::
+   :toctree:
+
+   ~SoftplusForward.block
+   ~SoftplusForward.H
+   ~SoftplusForward.scale
+
+
+
+.. rubric:: Methods
+
+.. autosummary::
+   :toctree:
+
+   ~SoftplusForward.__call__
+   ~SoftplusForward.jacobian
+   ~SoftplusForward.prior_for
+   ~SoftplusForward.transform
+
+
+
+
+.. rubric:: Inherited
+
+
+From :class:`~.ForwardModel`: :py:obj:`~.ForwardModel.cols`, :py:obj:`~.ForwardModel.rows`
+
+

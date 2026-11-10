@@ -1,0 +1,6 @@
+fips.SoftplusForward.block
+==========================
+
+.. currentmodule:: fips
+
+.. autoproperty:: SoftplusForward.block

@@ -6,7 +6,8 @@ them, and says what each is for before how to call it. :doc:`/getting_started/fi
 solves one problem from start to finish; :doc:`/getting_started/terminology` defines the words;
 :doc:`synthetic` tests an inversion on data whose answer is known; :doc:`bounds`
 holds the state to bounds (a flux that cannot be negative); :doc:`nonlinear`
-solves a problem whose forward is a model that is not linear.
+solves a problem whose forward is a model that is not linear; :doc:`positive`
+keeps a flux positive by solving for its logarithm or its softplus.
 
 .. contents:: On this page
    :local:
@@ -700,4 +701,5 @@ when it is read.
    synthetic
    bounds
    nonlinear
+   positive
    examples/index

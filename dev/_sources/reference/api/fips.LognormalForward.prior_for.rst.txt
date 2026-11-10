@@ -1,0 +1,6 @@
+fips.LognormalForward.prior\_for
+================================
+
+.. currentmodule:: fips
+
+.. automethod:: LognormalForward.prior_for
