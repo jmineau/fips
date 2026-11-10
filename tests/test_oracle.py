@@ -56,7 +56,7 @@ METHODS = [name for name in available_methods() if _METHODS[name].exact]
 
 
 def solve_held(problem: Problem, method: str, **options) -> Posterior:
-    """Solve as the oracle holds `method`: with the options it is registered as exact under (``"variational"``'s tight ``tol``), then `options`."""
+    """Solve as the oracle holds `method`: with the options it is registered as exact under (``"variational"``'s tight ``cg_tol``), then `options`."""
     return solve(problem, method, **{**_METHODS[method].oracle, **options})
 
 

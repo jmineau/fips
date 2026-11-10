@@ -1176,7 +1176,8 @@ class Posterior:
         rng : int, numpy.random.Generator or None, default None
             A seed, or the generator to draw from, as :meth:`trials` takes it
             (used as given, so one generator passed to every call gives
-            independent draws; None draws from fresh entropy). The prior's
+            independent draws; None draws from fresh entropy). A solve has a
+            ``seed``, a draw takes an ``rng``. The prior's
             standard normals are drawn first, as a ``columns x n`` array, then
             the model-data mismatch's, so a seed gives the same draws for the
             same problem and gamma (to roundoff, whichever form the method factored in).

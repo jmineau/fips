@@ -1067,12 +1067,12 @@ def _shown(values: list[float]) -> str:
 
 
 def _unconverged(
-    steps: int, whole: list[float], taken: list[float], limit: float, what: str = "tol"
+    steps: int, whole: list[float], taken: list[float], limit: float
 ) -> str:
     """Return the message of iterations that did not stop: the d2 the rule compared (each whole step's, before its line search), and the d2 of the steps as taken."""
     return (
         f"Gauss-Newton did not converge in {steps} steps: the last whole step's d2 "
-        f"is {whole[-1]:.3g}, above {what} * n = {limit:.3g} (the rule compares each "
+        f"is {whole[-1]:.3g}, above tol * n = {limit:.3g} (the rule compares each "
         f"step's d2 before it is shortened: {_shown(whole)}; as taken: "
         f"{_shown(taken)}). If they are still falling, raise max_iterations. A "
         "whole step that does not shrink while the steps taken do (each shortened "

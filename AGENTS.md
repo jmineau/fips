@@ -178,7 +178,9 @@ with a `gamma` field, values checked in `__post_init__`), its solution (answers
 `estimate_is_linear`, `evidence_is_laplace` (`no_evidence`, why not), and `innovation_precision` with `self_sensitivity` (for
 `Posterior.data_worth`) only if it can; a member it lacks raises `fips.UnavailableError`), and a function `(problem, options) -> Posterior`. Add a line to
 `_METHODS` in `methods/__init__.py`; its docstring says how a lognormal or an
-ensemble method fits. **A method's default options on a linear, unbounded
+ensemble method fits. **A solve has a `seed` (an int, in its options), a draw takes an
+`rng`** (`int | Generator | None`, through `np.random.default_rng`): `sample`, `simulate`,
+`ensemble`, `trials`, `taylortest`, `dottest`. **A method's default options on a linear, unbounded
 problem give the analytic posterior** (`"bounded"` with no finite bound and
 `"gauss_newton"` with an operator return the analytic solution itself):
 `tests/test_oracle.py` runs every registered method, with its defaults, against the closed-form posterior and the

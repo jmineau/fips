@@ -883,7 +883,9 @@ def test_a_wrong_jacobian_that_stalls_reports_the_d2_the_rule_compared():
     assert float(taken[-1]) < 1e-12 * whole  # the shortened steps, at roundoff
     assert "does not shrink while the steps taken do" in message
     assert "taylortest" in message
-    with pytest.raises(RuntimeError, match=r"last whole step's d2 is .* outer_tol"):
+    with pytest.raises(
+        RuntimeError, match=r"last whole step's d2 is .* above tol \* n"
+    ):
         fips.solve(wrong, "variational", max_iterations=30)
 
 
