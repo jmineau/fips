@@ -3,16 +3,19 @@
 Choosing a method
 =================
 
-fips solves a flux inversion whose flux cannot be negative in four ways: the
-analytic posterior, ``"bounded"`` with ``lower=0``, and ``"gauss_newton"``
-with a :class:`~fips.LognormalForward` or a :class:`~fips.SoftplusForward`.
-This page runs the four on one problem shaped like a Salt Lake Valley methane
-inversion, with one prior written four ways, and scores each on many sets of
-synthetic data (:doc:`synthetic`). What the numbers say, in short:
+fips solves a problem whose state cannot be negative (a flux, a
+concentration, a rate) in four ways: the analytic posterior, which ignores
+the bound, ``"bounded"`` with ``lower=0``, and ``"gauss_newton"`` with a
+:class:`~fips.LognormalForward` or a :class:`~fips.SoftplusForward`. This page
+runs the four on one example, a problem shaped like a Salt Lake Valley methane
+inversion (the flux of each cell of a grid, with an inventory as its prior,
+seen from a few sites), with one prior written four ways, and scores each on
+many sets of synthetic data (:doc:`synthetic`). What the example's numbers
+say, in short:
 
-- **for a basin total, the analytic posterior is good enough**: its total and
-  its interval held in every world tried here, at a hundredth of the others'
-  cost or less;
+- **for a total of the whole state (here, a basin's), the analytic posterior
+  is good enough**: its total and its interval held in every world tried
+  here, at a hundredth of the others' cost or less;
 - **for a map, the lognormal model is best**, and its intervals are right
   when the flux is a factor of the inventory, correlated as its prior says;
 - **bounds change the prior**: a Gaussian truncated at zero has a higher mean
