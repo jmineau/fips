@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>fips.methods.gauss_newton &#8212; fips 0.2.0b3.dev16+g8790e27f7 documentation</title>
+    <title>fips.methods.gauss_newton &#8212; fips 0.2.0b3.dev17+gae1465c08 documentation</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../../_static/documentation_options.js?v=86168d94"></script>
+    <script src="../../../_static/documentation_options.js?v=c3529834"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -132,8 +132,8 @@
       
     
     
-    <img src="../../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev16+g8790e27f7 documentation - Home"/>
-    <img src="../../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev16+g8790e27f7 documentation - Home"/>
+    <img src="../../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev17+gae1465c08 documentation - Home"/>
+    <img src="../../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev17+gae1465c08 documentation - Home"/>
   
   
 </a></div>
@@ -456,11 +456,29 @@
 
 <span class="sd">A step that overshoots, so that the cost at its estimate is higher than at</span>
 <span class="sd">the last one, is halved until it is not (a line search on the cost; the</span>
-<span class="sd">direction is still Gauss-Newton's, so the mode is the same), and only a whole</span>
-<span class="sd">step below the rule stops the iterations. The rule measures the step, not the</span>
-<span class="sd">distance to the mode: when the steps fall by a constant factor near 1 (a model</span>
-<span class="sd">that bends much over the posterior's spread), the solve logs a warning that</span>
-<span class="sd">the estimate may be further from the mode (``_warn_if_slow``).</span>
+<span class="sd">mode is the same), and only a whole step below the rule stops the</span>
+<span class="sd">iterations. The rule measures the step, not the distance to the mode: when</span>
+<span class="sd">the steps fall by a constant factor near 1 (a model that bends much over the</span>
+<span class="sd">posterior's spread), the solve logs a warning that the estimate may be</span>
+<span class="sd">further from the mode (``_warn_if_slow``).</span>
+
+<span class="sd">For a transform (:class:`~fips.LognormalForward`,</span>
+<span class="sd">:class:`~fips.SoftplusForward`), whose second derivatives are diagonal, the</span>
+<span class="sd">cost's whole Hessian is :math:`\hat{S}_i^{-1} - D_i`, with :math:`D_i =</span>
+<span class="sd">\gamma \operatorname{diag}(T''(u) \circ H^T S_z^{-1} r)` on the block</span>
+<span class="sd">(``ForwardModel._curvature``), and each iteration also takes Newton's step,</span>
+<span class="sd">solved by conjugate gradients preconditioned by :math:`\hat{S}_i`</span>
+<span class="sd">(``_newton``): it goes to whichever of the two estimates has the lower cost</span>
+<span class="sd">(each halved as above), and Gauss-Newton's alone where the Newton matrix is</span>
+<span class="sd">not positive definite. The iterations stop when both steps are below the</span>
+<span class="sd">rule, with Gauss-Newton's, so the mode is the same and the Gaussian at the</span>
+<span class="sd">mode is still the analytic solution of the problem linearized at the last</span>
+<span class="sd">iterate. Newton converges quadratically where Gauss-Newton crawls: in the</span>
+<span class="sd">user guide's Salt Lake Valley-shaped world (400 cells, 120 observations, a</span>
+<span class="sd">log standard deviation of 1, 200 trials) the lognormal model took a median of</span>
+<span class="sd">7 steps and at most 14, against Gauss-Newton's 9 and 23; the softplus model 9</span>
+<span class="sd">and 14, against 18 and 153. A model fips did not write has no curvature, and</span>
+<span class="sd">its steps are Gauss-Newton's.</span>
 
 <span class="sd">:math:`\hat{S}_i^{-1}` is never formed. Every estimate is :math:`x_0 + S_0 y`</span>
 <span class="sd">with :math:`y = J_i^T u_i` (:math:`u_i` the analytic solve's :math:`(J_i S_0</span>
@@ -1217,6 +1235,172 @@
     <span class="p">)</span>
 
 
+<span class="n">_NEWTON_ITERATIONS</span> <span class="o">=</span> <span class="mi">50</span>
+<span class="sd">"""The most conjugate-gradient iterations a Newton step's solve takes; one that has not converged by then gives the Gauss-Newton step."""</span>
+
+<span class="n">_SOLVED</span> <span class="o">=</span> <span class="mf">1e-12</span>
+<span class="sa">r</span><span class="sd">"""The Newton step is solved when its residual, measured as a :math:`d^2`, is below this fraction of the Gauss-Newton step's :math:`d^2` (a relative error of :math:`10^{-6}`)."""</span>
+
+
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">_Taken</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""A step taken: the fraction of its length, the state it leads to (``x_0 + S_0 y``), the model there, and the cost's terms there (with the weighted residual :math:`S_z^{-1} r`)."""</span>
+
+    <span class="n">fraction</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">x</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
+    <span class="n">y</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
+    <span class="n">modeled</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
+    <span class="n">data</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">state</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">weighted</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">cost</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gamma</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return the cost, gamma times the data misfit plus the state misfit."""</span>
+        <span class="k">return</span> <span class="n">gamma</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">state</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_newton</span><span class="p">(</span>
+    <span class="n">analytic</span><span class="p">:</span> <span class="s2">"Whitened | Information"</span><span class="p">,</span>
+    <span class="n">curvature</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">gradient</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">step</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">    Return the Newton step :math:`\delta` and :math:`\sigma` with :math:`\delta = \hat{S} \sigma`, or None where the Newton matrix is not positive definite.</span>
+
+<span class="sd">    The Newton matrix is the Gauss-Newton one less the model's curvature,</span>
+<span class="sd">    :math:`A = \hat{S}^{-1} - D` (`curvature` is :math:`D`'s diagonal,</span>
+<span class="sd">    :math:`\gamma` included), and the step solves :math:`A \delta = b`, with</span>
+<span class="sd">    `gradient` :math:`b = -g` (minus half the cost's gradient) and `step`</span>
+<span class="sd">    :math:`\hat{S} b`, the Gauss-Newton step. It is solved by conjugate</span>
+<span class="sd">    gradients preconditioned by :math:`\hat{S}`, the analytic solve's own</span>
+<span class="sd">    covariance (``_cov_times``, one product an iteration; in exact arithmetic</span>
+<span class="sd">    at most one iteration more than the cells :math:`D` is not zero on, and a</span>
+<span class="sd">    few near the mode, where :math:`D` is small beside :math:`\hat{S}^{-1}`).</span>
+<span class="sd">    Each search direction :math:`p` is :math:`\hat{S} s` with :math:`s`</span>
+<span class="sd">    carried beside it, so :math:`A p = s - D p` needs no inverse of</span>
+<span class="sd">    :math:`\hat{S}` or :math:`S_0`, and :math:`\delta = \hat{S} \sigma` with</span>
+<span class="sd">    :math:`\sigma` the same sum of the :math:`s`. It stops when the residual</span>
+<span class="sd">    :math:`\rho` has :math:`\rho^T \hat{S} \rho` (the :math:`d^2` of the</span>
+<span class="sd">    correction still to make) below :data:`_SOLVED` times the Gauss-Newton</span>
+<span class="sd">    step's.</span>
+
+<span class="sd">    A direction along which :math:`p^T A p \le 0` proves :math:`A` is not</span>
+<span class="sd">    positive definite, the conjugate gradients' own test at no extra cost</span>
+<span class="sd">    (a Cholesky of :math:`A` would need it formed, ``n x n``, which the</span>
+<span class="sd">    whitened form never is): it returns None, and the step is Gauss-Newton's.</span>
+<span class="sd">    So does a solve that has not converged in :data:`_NEWTON_ITERATIONS`.</span>
+<span class="sd">    A step it returns is a descent direction of the cost (each :math:`p` it</span>
+<span class="sd">    took had positive curvature).</span>
+<span class="sd">    """</span>
+    <span class="n">delta</span><span class="p">,</span> <span class="n">sigma</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">step</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">step</span><span class="p">)</span>
+    <span class="n">rho</span><span class="p">,</span> <span class="n">zeta</span> <span class="o">=</span> <span class="n">gradient</span><span class="p">,</span> <span class="n">step</span>
+    <span class="n">p</span><span class="p">,</span> <span class="n">s</span> <span class="o">=</span> <span class="n">zeta</span><span class="p">,</span> <span class="n">rho</span>
+    <span class="n">rz</span> <span class="o">=</span> <span class="n">rz_0</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">rho</span> <span class="o">@</span> <span class="n">zeta</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">_NEWTON_ITERATIONS</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="n">Dp</span> <span class="o">=</span> <span class="n">curvature</span> <span class="o">*</span> <span class="n">p</span>
+        <span class="n">metric</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">p</span> <span class="o">@</span> <span class="n">s</span><span class="p">)</span>  <span class="c1"># p^T S_hat^-1 p</span>
+        <span class="n">bend</span> <span class="o">=</span> <span class="n">metric</span> <span class="o">-</span> <span class="nb">float</span><span class="p">(</span><span class="n">p</span> <span class="o">@</span> <span class="n">Dp</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">bend</span> <span class="o">&gt;</span> <span class="mf">0.0</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+                <span class="s2">"The Newton matrix is not positive definite along a direction "</span>
+                <span class="s2">"(its curvature </span><span class="si">%.3g</span><span class="s2"> against Gauss-Newton's </span><span class="si">%.3g</span><span class="s2">): a Gauss-Newton step."</span><span class="p">,</span>
+                <span class="n">bend</span><span class="p">,</span>
+                <span class="n">metric</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="n">alpha</span> <span class="o">=</span> <span class="n">rz</span> <span class="o">/</span> <span class="n">bend</span>
+        <span class="n">delta</span> <span class="o">=</span> <span class="n">delta</span> <span class="o">+</span> <span class="n">alpha</span> <span class="o">*</span> <span class="n">p</span>
+        <span class="n">sigma</span> <span class="o">=</span> <span class="n">sigma</span> <span class="o">+</span> <span class="n">alpha</span> <span class="o">*</span> <span class="n">s</span>
+        <span class="n">rho</span> <span class="o">=</span> <span class="n">rho</span> <span class="o">-</span> <span class="n">alpha</span> <span class="o">*</span> <span class="p">(</span><span class="n">s</span> <span class="o">-</span> <span class="n">Dp</span><span class="p">)</span>
+        <span class="n">zeta</span> <span class="o">=</span> <span class="n">analytic</span><span class="o">.</span><span class="n">_cov_times</span><span class="p">(</span><span class="n">rho</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">])[:,</span> <span class="mi">0</span><span class="p">]</span>
+        <span class="n">rz_new</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">rho</span> <span class="o">@</span> <span class="n">zeta</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">rz_new</span> <span class="o">&lt;=</span> <span class="n">_SOLVED</span> <span class="o">*</span> <span class="n">rz_0</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">"The Newton step solved in </span><span class="si">%d</span><span class="s2"> iterations."</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">delta</span><span class="p">,</span> <span class="n">sigma</span>
+        <span class="n">p</span> <span class="o">=</span> <span class="n">zeta</span> <span class="o">+</span> <span class="p">(</span><span class="n">rz_new</span> <span class="o">/</span> <span class="n">rz</span><span class="p">)</span> <span class="o">*</span> <span class="n">p</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="n">rho</span> <span class="o">+</span> <span class="p">(</span><span class="n">rz_new</span> <span class="o">/</span> <span class="n">rz</span><span class="p">)</span> <span class="o">*</span> <span class="n">s</span>
+        <span class="n">rz</span> <span class="o">=</span> <span class="n">rz_new</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+        <span class="s2">"The Newton step's solve did not converge in </span><span class="si">%d</span><span class="s2"> iterations: a Gauss-Newton step."</span><span class="p">,</span>
+        <span class="n">_NEWTON_ITERATIONS</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="kc">None</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_newton_step</span><span class="p">(</span>
+    <span class="n">problem</span><span class="p">:</span> <span class="n">Problem</span><span class="p">,</span>
+    <span class="n">analytic</span><span class="p">:</span> <span class="s2">"Whitened | Information"</span><span class="p">,</span>
+    <span class="n">here</span><span class="p">:</span> <span class="n">_Taken</span><span class="p">,</span>
+    <span class="n">step</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">gamma</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">solve_S_z</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">    Return Newton's step from `here`, with its :math:`\Delta y` and :math:`d^2`, or None for a model with no curvature or where the Newton matrix is not positive definite (``_newton``).</span>
+
+<span class="sd">    `step` is the Gauss-Newton step, :math:`\hat{S} b` with :math:`b = \gamma</span>
+<span class="sd">    J^T S_z^{-1} r - y` (minus half the cost's gradient; :math:`y` stands for</span>
+<span class="sd">    :math:`S_0^{-1} (x - x_0)`). With :math:`\delta = \hat{S} \sigma`,</span>
+<span class="sd">    :math:`\Delta y = \sigma - \gamma J^T S_z^{-1} J \delta`, since</span>
+<span class="sd">    :math:`S_0 (\sigma - \gamma J^T S_z^{-1} J \hat{S} \sigma) = \hat{S}</span>
+<span class="sd">    \sigma` (from :math:`\hat{S}^{-1} = S_0^{-1} + \gamma J^T S_z^{-1} J`;</span>
+<span class="sd">    it holds for a singular :math:`S_0` too), so the next state is still</span>
+<span class="sd">    :math:`x_0 + S_0 y`.</span>
+<span class="sd">    """</span>
+    <span class="n">curvature</span> <span class="o">=</span> <span class="n">problem</span><span class="o">.</span><span class="n">_curvature</span><span class="p">(</span><span class="n">here</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">here</span><span class="o">.</span><span class="n">weighted</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">curvature</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="n">J</span> <span class="o">=</span> <span class="n">analytic</span><span class="o">.</span><span class="n">problem</span><span class="o">.</span><span class="n">_operator</span><span class="o">.</span><span class="n">data</span>
+    <span class="n">J_T</span> <span class="o">=</span> <span class="n">J</span><span class="o">.</span><span class="n">_transpose</span><span class="p">()</span>
+    <span class="n">gradient</span> <span class="o">=</span> <span class="n">gamma</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">J_T</span> <span class="o">@</span> <span class="n">here</span><span class="o">.</span><span class="n">weighted</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span> <span class="o">-</span> <span class="n">here</span><span class="o">.</span><span class="n">y</span>
+    <span class="n">solved</span> <span class="o">=</span> <span class="n">_newton</span><span class="p">(</span><span class="n">analytic</span><span class="p">,</span> <span class="n">gamma</span> <span class="o">*</span> <span class="n">curvature</span><span class="p">,</span> <span class="n">gradient</span><span class="p">,</span> <span class="n">step</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">solved</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="n">delta</span><span class="p">,</span> <span class="n">sigma</span> <span class="o">=</span> <span class="n">solved</span>
+    <span class="n">J_delta</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">J</span> <span class="o">@</span> <span class="n">delta</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+    <span class="n">dy</span> <span class="o">=</span> <span class="n">sigma</span> <span class="o">-</span> <span class="n">gamma</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">J_T</span> <span class="o">@</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">solve_S_z</span><span class="p">(</span><span class="n">J_delta</span><span class="p">)),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">(</span>
+        <span class="n">delta</span><span class="p">,</span>
+        <span class="n">dy</span><span class="p">,</span>
+        <span class="n">_d2</span><span class="p">(</span><span class="n">dy</span><span class="p">,</span> <span class="n">J_delta</span><span class="p">,</span> <span class="n">analytic</span><span class="o">.</span><span class="n">problem</span><span class="o">.</span><span class="n">prior_cov</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">solve_S_z</span><span class="p">,</span> <span class="n">gamma</span><span class="p">),</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_along</span><span class="p">(</span>
+    <span class="n">problem</span><span class="p">:</span> <span class="n">Problem</span><span class="p">,</span>
+    <span class="n">cost</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">],</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]],</span>
+    <span class="n">x</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">y</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">step</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">dy</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">limit</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="n">gamma</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">_Taken</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="ne">Exception</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Return the step from `x` taken as far along as the cost does not rise above `limit` (any length if `limit` is infinite), halved until it does not, or None if it rises however short; with the model's last failure.</span>
+
+<span class="sd">    A step too far can overflow the model (inf, or the NaN of 0 * inf, which a</span>
+<span class="sd">    Vector refuses): it is taken shorter.</span>
+<span class="sd">    """</span>
+    <span class="n">fraction</span><span class="p">,</span> <span class="n">failure</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span> <span class="kc">None</span>
+    <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">_HALVINGS</span><span class="p">):</span>
+        <span class="n">x_new</span><span class="p">,</span> <span class="n">y_new</span> <span class="o">=</span> <span class="n">x</span> <span class="o">+</span> <span class="n">fraction</span> <span class="o">*</span> <span class="n">step</span><span class="p">,</span> <span class="n">y</span> <span class="o">+</span> <span class="n">fraction</span> <span class="o">*</span> <span class="n">dy</span>
+        <span class="k">with</span> <span class="n">np</span><span class="o">.</span><span class="n">errstate</span><span class="p">(</span><span class="n">over</span><span class="o">=</span><span class="s2">"ignore"</span><span class="p">,</span> <span class="n">invalid</span><span class="o">=</span><span class="s2">"ignore"</span><span class="p">):</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">modeled</span> <span class="o">=</span> <span class="n">problem</span><span class="o">.</span><span class="n">_apply</span><span class="p">(</span><span class="n">x_new</span><span class="p">)</span>
+            <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">FloatingPointError</span><span class="p">,</span> <span class="ne">OverflowError</span><span class="p">)</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
+                <span class="n">failure</span><span class="p">,</span> <span class="n">modeled</span> <span class="o">=</span> <span class="n">error</span><span class="p">,</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">modeled</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">modeled</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">():</span>
+            <span class="n">data</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="n">weighted</span> <span class="o">=</span> <span class="n">cost</span><span class="p">(</span><span class="n">modeled</span><span class="p">,</span> <span class="n">y_new</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">gamma</span> <span class="o">*</span> <span class="n">data</span> <span class="o">+</span> <span class="n">state</span> <span class="o">&lt;=</span> <span class="n">limit</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">_Taken</span><span class="p">(</span>
+                    <span class="n">fraction</span><span class="p">,</span> <span class="n">x_new</span><span class="p">,</span> <span class="n">y_new</span><span class="p">,</span> <span class="n">modeled</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="n">weighted</span>
+                <span class="p">),</span> <span class="kc">None</span>
+        <span class="n">fraction</span> <span class="o">/=</span> <span class="mi">2</span>
+    <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="n">failure</span>
+
+
 <span class="k">def</span><span class="w"> </span><span class="nf">_iterate</span><span class="p">(</span>
     <span class="n">problem</span><span class="p">:</span> <span class="n">Problem</span><span class="p">,</span> <span class="n">options</span><span class="p">:</span> <span class="n">GaussNewtonOptions</span><span class="p">,</span> <span class="n">start</span><span class="p">:</span> <span class="n">GaussNewton</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">GaussNewton</span><span class="p">:</span>
@@ -1224,9 +1408,14 @@
 <span class="sd">    Return the Gauss-Newton solution of `problem`, from the prior or from the last linearization of `start` (a solution of the same problem with other observations).</span>
 
 <span class="sd">    Each step goes to the analytic estimate of the problem linearized at the</span>
-<span class="sd">    last estimate. A step whose cost is higher than the last estimate's (the</span>
-<span class="sd">    linearization overshot) is halved until it is not; only a whole step</span>
-<span class="sd">    small enough stops the iterations, so a halved step never does.</span>
+<span class="sd">    last estimate; for a model with a curvature (a transform), to Newton's</span>
+<span class="sd">    estimate instead (``_newton_step``) where its matrix is positive</span>
+<span class="sd">    definite and its cost is the lower. A step whose cost is higher than the</span>
+<span class="sd">    last estimate's (it overshot) is halved until it is not. Only a whole</span>
+<span class="sd">    Gauss-Newton step small enough stops the iterations (so a halved step,</span>
+<span class="sd">    or a Newton one, never does), and with a curvature only when Newton's</span>
+<span class="sd">    step is small enough too: where the Newton matrix is nearly singular,</span>
+<span class="sd">    the Gauss-Newton step is much shorter than the distance to the mode.</span>
 
 <span class="sd">    Raises</span>
 <span class="sd">    ------</span>
@@ -1242,10 +1431,11 @@
     <span class="n">c</span> <span class="o">=</span> <span class="n">problem</span><span class="o">.</span><span class="n">_offset_values</span><span class="p">()</span>
     <span class="n">limit</span> <span class="o">=</span> <span class="n">options</span><span class="o">.</span><span class="n">tol</span> <span class="o">*</span> <span class="n">n</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">cost</span><span class="p">(</span><span class="n">modeled</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">"""Return the data and the state misfits of the state ``x_0 + S_0 y`` that models `modeled`."""</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">cost</span><span class="p">(</span><span class="n">modeled</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""Return the data and the state misfits of the state ``x_0 + S_0 y`` that models `modeled`, and the weighted residual ``S_z^-1 r``."""</span>
         <span class="n">r</span> <span class="o">=</span> <span class="n">z</span> <span class="o">-</span> <span class="n">modeled</span> <span class="o">-</span> <span class="n">c</span>
-        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">r</span> <span class="o">@</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">solve_S_z</span><span class="p">(</span><span class="n">r</span><span class="p">))),</span> <span class="nb">float</span><span class="p">(</span><span class="n">y</span> <span class="o">@</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">S_0</span> <span class="o">@</span> <span class="n">y</span><span class="p">))</span>
+        <span class="n">weighted</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">solve_S_z</span><span class="p">(</span><span class="n">r</span><span class="p">))</span>
+        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">r</span> <span class="o">@</span> <span class="n">weighted</span><span class="p">),</span> <span class="nb">float</span><span class="p">(</span><span class="n">y</span> <span class="o">@</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">S_0</span> <span class="o">@</span> <span class="n">y</span><span class="p">)),</span> <span class="n">weighted</span>
 
     <span class="n">analytic</span><span class="p">:</span> <span class="n">Whitened</span> <span class="o">|</span> <span class="n">Information</span> <span class="o">|</span> <span class="kc">None</span>
     <span class="k">if</span> <span class="n">start</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -1256,55 +1446,64 @@
         <span class="n">linear</span> <span class="o">=</span> <span class="n">_with_obs</span><span class="p">(</span><span class="n">start</span><span class="o">.</span><span class="n">analytic</span><span class="o">.</span><span class="n">problem</span><span class="p">,</span> <span class="n">problem</span><span class="o">.</span><span class="n">obs</span><span class="p">)</span>
         <span class="n">analytic</span> <span class="o">=</span> <span class="n">start</span><span class="o">.</span><span class="n">analytic</span><span class="o">.</span><span class="n">with_data</span><span class="p">(</span><span class="n">linear</span><span class="p">)</span>
     <span class="n">modeled</span> <span class="o">=</span> <span class="n">problem</span><span class="o">.</span><span class="n">_apply</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
-    <span class="n">data</span><span class="p">,</span> <span class="n">state</span> <span class="o">=</span> <span class="n">cost</span><span class="p">(</span><span class="n">modeled</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
-    <span class="n">current</span> <span class="o">=</span> <span class="n">gamma</span> <span class="o">*</span> <span class="n">data</span> <span class="o">+</span> <span class="n">state</span>
+    <span class="n">data</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="n">weighted</span> <span class="o">=</span> <span class="n">cost</span><span class="p">(</span><span class="n">modeled</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+    <span class="n">here</span> <span class="o">=</span> <span class="n">_Taken</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">modeled</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="n">weighted</span><span class="p">)</span>
+    <span class="n">current</span> <span class="o">=</span> <span class="n">here</span><span class="o">.</span><span class="n">cost</span><span class="p">(</span><span class="n">gamma</span><span class="p">)</span>
 
     <span class="n">d2s</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="n">costs</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">newton_steps</span> <span class="o">=</span> <span class="mi">0</span>
     <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">options</span><span class="o">.</span><span class="n">max_iterations</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">analytic</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">analytic</span> <span class="o">=</span> <span class="n">_factor</span><span class="p">(</span><span class="n">problem</span><span class="o">.</span><span class="n">_linearized</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">modeled</span><span class="p">),</span> <span class="n">gamma</span><span class="p">)</span>
+            <span class="n">analytic</span> <span class="o">=</span> <span class="n">_factor</span><span class="p">(</span><span class="n">problem</span><span class="o">.</span><span class="n">_linearized</span><span class="p">(</span><span class="n">here</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">here</span><span class="o">.</span><span class="n">modeled</span><span class="p">),</span> <span class="n">gamma</span><span class="p">)</span>
         <span class="n">J</span> <span class="o">=</span> <span class="n">analytic</span><span class="o">.</span><span class="n">problem</span><span class="o">.</span><span class="n">_operator</span><span class="o">.</span><span class="n">data</span>
         <span class="n">x_full</span> <span class="o">=</span> <span class="n">analytic</span><span class="o">.</span><span class="n">estimate</span><span class="p">()</span>
         <span class="n">y_full</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">J</span><span class="o">.</span><span class="n">_transpose</span><span class="p">()</span> <span class="o">@</span> <span class="n">analytic</span><span class="o">.</span><span class="n">_innovation_precision_times</span><span class="p">())</span>
-        <span class="n">step</span><span class="p">,</span> <span class="n">dy</span> <span class="o">=</span> <span class="n">x_full</span> <span class="o">-</span> <span class="n">x</span><span class="p">,</span> <span class="n">y_full</span> <span class="o">-</span> <span class="n">y</span>
+        <span class="n">step</span><span class="p">,</span> <span class="n">dy</span> <span class="o">=</span> <span class="n">x_full</span> <span class="o">-</span> <span class="n">here</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">y_full</span> <span class="o">-</span> <span class="n">here</span><span class="o">.</span><span class="n">y</span>
         <span class="n">d2</span> <span class="o">=</span> <span class="n">_d2</span><span class="p">(</span><span class="n">dy</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">J</span> <span class="o">@</span> <span class="n">step</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">),</span> <span class="n">S_0</span><span class="p">,</span> <span class="n">solve_S_z</span><span class="p">,</span> <span class="n">gamma</span><span class="p">)</span>
-        <span class="n">converged</span> <span class="o">=</span> <span class="n">d2</span> <span class="o">&lt;</span> <span class="n">limit</span>
-        <span class="n">fraction</span><span class="p">,</span> <span class="n">failure</span><span class="p">,</span> <span class="n">modeled_new</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">modeled</span>
-        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">_HALVINGS</span><span class="p">):</span>
-            <span class="n">x_new</span><span class="p">,</span> <span class="n">y_new</span> <span class="o">=</span> <span class="n">x</span> <span class="o">+</span> <span class="n">fraction</span> <span class="o">*</span> <span class="n">step</span><span class="p">,</span> <span class="n">y</span> <span class="o">+</span> <span class="n">fraction</span> <span class="o">*</span> <span class="n">dy</span>
-            <span class="c1"># a step too far can overflow the model (inf, or the NaN of 0 * inf,</span>
-            <span class="c1"># which a Vector refuses): it is taken shorter</span>
-            <span class="k">with</span> <span class="n">np</span><span class="o">.</span><span class="n">errstate</span><span class="p">(</span><span class="n">over</span><span class="o">=</span><span class="s2">"ignore"</span><span class="p">,</span> <span class="n">invalid</span><span class="o">=</span><span class="s2">"ignore"</span><span class="p">):</span>
-                <span class="k">try</span><span class="p">:</span>
-                    <span class="n">modeled_new</span> <span class="o">=</span> <span class="n">problem</span><span class="o">.</span><span class="n">_apply</span><span class="p">(</span><span class="n">x_new</span><span class="p">)</span>
-                <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">FloatingPointError</span><span class="p">,</span> <span class="ne">OverflowError</span><span class="p">)</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
-                    <span class="n">failure</span><span class="p">,</span> <span class="n">finite</span> <span class="o">=</span> <span class="n">error</span><span class="p">,</span> <span class="kc">False</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="n">finite</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">modeled_new</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">())</span>
-                    <span class="k">if</span> <span class="n">finite</span><span class="p">:</span>
-                        <span class="n">data</span><span class="p">,</span> <span class="n">state</span> <span class="o">=</span> <span class="n">cost</span><span class="p">(</span><span class="n">modeled_new</span><span class="p">,</span> <span class="n">y_new</span><span class="p">)</span>
-            <span class="n">trial</span> <span class="o">=</span> <span class="n">gamma</span> <span class="o">*</span> <span class="n">data</span> <span class="o">+</span> <span class="n">state</span> <span class="k">if</span> <span class="n">finite</span> <span class="k">else</span> <span class="n">math</span><span class="o">.</span><span class="n">inf</span>
-            <span class="k">if</span> <span class="n">finite</span> <span class="ow">and</span> <span class="p">(</span><span class="n">converged</span> <span class="ow">or</span> <span class="n">trial</span> <span class="o">&lt;=</span> <span class="n">current</span> <span class="o">+</span> <span class="n">_RISE</span> <span class="o">*</span> <span class="nb">abs</span><span class="p">(</span><span class="n">current</span><span class="p">)):</span>
-                <span class="k">break</span>
-            <span class="n">fraction</span> <span class="o">/=</span> <span class="mi">2</span>
-        <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># None for a model without a curvature: Gauss-Newton's step alone</span>
+        <span class="n">newton_step</span> <span class="o">=</span> <span class="n">_newton_step</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="n">analytic</span><span class="p">,</span> <span class="n">here</span><span class="p">,</span> <span class="n">step</span><span class="p">,</span> <span class="n">gamma</span><span class="p">,</span> <span class="n">solve_S_z</span><span class="p">)</span>
+        <span class="n">converged</span> <span class="o">=</span> <span class="n">d2</span> <span class="o">&lt;</span> <span class="n">limit</span> <span class="ow">and</span> <span class="p">(</span><span class="n">newton_step</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">newton_step</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">limit</span><span class="p">)</span>
+        <span class="n">rise</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">inf</span> <span class="k">if</span> <span class="n">converged</span> <span class="k">else</span> <span class="n">current</span> <span class="o">+</span> <span class="n">_RISE</span> <span class="o">*</span> <span class="nb">abs</span><span class="p">(</span><span class="n">current</span><span class="p">)</span>
+        <span class="c1"># Newton's step first, so that it is kept on a tie</span>
+        <span class="n">candidates</span> <span class="o">=</span> <span class="p">[(</span><span class="n">step</span><span class="p">,</span> <span class="n">dy</span><span class="p">,</span> <span class="n">d2</span><span class="p">,</span> <span class="kc">False</span><span class="p">)]</span>
+        <span class="k">if</span> <span class="n">newton_step</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">converged</span><span class="p">:</span>
+            <span class="n">candidates</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="p">(</span><span class="o">*</span><span class="n">newton_step</span><span class="p">,</span> <span class="kc">True</span><span class="p">))</span>
+        <span class="n">taken</span><span class="p">,</span> <span class="n">failure</span><span class="p">,</span> <span class="n">newton</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">False</span>
+        <span class="k">for</span> <span class="n">step_i</span><span class="p">,</span> <span class="n">dy_i</span><span class="p">,</span> <span class="n">d2_i</span><span class="p">,</span> <span class="n">newton_i</span> <span class="ow">in</span> <span class="n">candidates</span><span class="p">:</span>
+            <span class="n">along</span><span class="p">,</span> <span class="n">failure</span> <span class="o">=</span> <span class="n">_along</span><span class="p">(</span>
+                <span class="n">problem</span><span class="p">,</span> <span class="n">cost</span><span class="p">,</span> <span class="n">here</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">here</span><span class="o">.</span><span class="n">y</span><span class="p">,</span> <span class="n">step_i</span><span class="p">,</span> <span class="n">dy_i</span><span class="p">,</span> <span class="n">rise</span><span class="p">,</span> <span class="n">gamma</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="n">along</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+                    <span class="s2">"The cost rises along </span><span class="si">%s</span><span class="s2"> step </span><span class="si">%d</span><span class="s2"> however short."</span><span class="p">,</span>
+                    <span class="s2">"Newton's"</span> <span class="k">if</span> <span class="n">newton_i</span> <span class="k">else</span> <span class="s2">"Gauss-Newton's"</span><span class="p">,</span>
+                    <span class="n">i</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="k">elif</span> <span class="n">taken</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">along</span><span class="o">.</span><span class="n">cost</span><span class="p">(</span><span class="n">gamma</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">taken</span><span class="o">.</span><span class="n">cost</span><span class="p">(</span><span class="n">gamma</span><span class="p">):</span>
+                <span class="n">taken</span><span class="p">,</span> <span class="n">d2</span><span class="p">,</span> <span class="n">newton</span> <span class="o">=</span> <span class="n">along</span><span class="p">,</span> <span class="n">d2_i</span><span class="p">,</span> <span class="n">newton_i</span>
+        <span class="k">if</span> <span class="n">taken</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
                 <span class="sa">f</span><span class="s2">"The cost rises along Gauss-Newton's step </span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2"> however short the "</span>
                 <span class="s2">"step: the Jacobian is not the derivative of the model at the last "</span>
                 <span class="s2">"estimate (check it with fips.taylortest(problem.forward, x)), or "</span>
                 <span class="s2">"the model does not give finite observations near it."</span>
             <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">failure</span>
-        <span class="k">if</span> <span class="n">fraction</span> <span class="o">&lt;</span> <span class="mf">1.0</span><span class="p">:</span>
+        <span class="n">kind</span> <span class="o">=</span> <span class="s2">"Newton"</span> <span class="k">if</span> <span class="n">newton</span> <span class="k">else</span> <span class="s2">"Gauss-Newton"</span>
+        <span class="n">newton_steps</span> <span class="o">+=</span> <span class="n">newton</span>
+        <span class="k">if</span> <span class="n">taken</span><span class="o">.</span><span class="n">fraction</span> <span class="o">&lt;</span> <span class="mf">1.0</span><span class="p">:</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
-                <span class="s2">"Gauss-Newton step </span><span class="si">%d</span><span class="s2"> overshot: taken at </span><span class="si">%g</span><span class="s2"> of its length."</span><span class="p">,</span>
+                <span class="s2">"</span><span class="si">%s</span><span class="s2"> step </span><span class="si">%d</span><span class="s2"> overshot: taken at </span><span class="si">%g</span><span class="s2"> of its length."</span><span class="p">,</span>
+                <span class="n">kind</span><span class="p">,</span>
                 <span class="n">i</span><span class="p">,</span>
-                <span class="n">fraction</span><span class="p">,</span>
+                <span class="n">taken</span><span class="o">.</span><span class="n">fraction</span><span class="p">,</span>
             <span class="p">)</span>
-        <span class="n">d2s</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">d2</span> <span class="o">*</span> <span class="n">fraction</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+        <span class="n">trial</span> <span class="o">=</span> <span class="n">taken</span><span class="o">.</span><span class="n">cost</span><span class="p">(</span><span class="n">gamma</span><span class="p">)</span>
+        <span class="n">d2s</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">d2</span> <span class="o">*</span> <span class="n">taken</span><span class="o">.</span><span class="n">fraction</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
         <span class="n">costs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">trial</span><span class="p">)</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
-            <span class="s2">"Gauss-Newton step </span><span class="si">%d</span><span class="s2">: d2 = </span><span class="si">%.3g</span><span class="s2"> (it stops below </span><span class="si">%.3g</span><span class="s2">), cost </span><span class="si">%.6g</span><span class="s2">."</span><span class="p">,</span>
+            <span class="s2">"</span><span class="si">%s</span><span class="s2"> step </span><span class="si">%d</span><span class="s2">: d2 = </span><span class="si">%.3g</span><span class="s2"> (it stops below </span><span class="si">%.3g</span><span class="s2">), cost </span><span class="si">%.6g</span><span class="s2">."</span><span class="p">,</span>
+            <span class="n">kind</span><span class="p">,</span>
             <span class="n">i</span><span class="p">,</span>
             <span class="n">d2s</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span>
             <span class="n">limit</span><span class="p">,</span>
@@ -1312,9 +1511,10 @@
         <span class="p">)</span>
         <span class="k">if</span> <span class="n">converged</span><span class="p">:</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
-                <span class="s2">"Gauss-Newton converged in </span><span class="si">%d</span><span class="s2"> steps: the last step's d2 is </span><span class="si">%.3g</span><span class="s2">, "</span>
+                <span class="s2">"Gauss-Newton converged in </span><span class="si">%d</span><span class="s2"> steps</span><span class="si">%s</span><span class="s2">: the last step's d2 is </span><span class="si">%.3g</span><span class="s2">, "</span>
                 <span class="s2">"below tol * n = </span><span class="si">%.3g</span><span class="s2">."</span><span class="p">,</span>
                 <span class="n">i</span><span class="p">,</span>
+                <span class="sa">f</span><span class="s2">" (</span><span class="si">{</span><span class="n">newton_steps</span><span class="si">}</span><span class="s2"> of them Newton's)"</span> <span class="k">if</span> <span class="n">newton_steps</span> <span class="k">else</span> <span class="s2">""</span><span class="p">,</span>
                 <span class="n">d2</span><span class="p">,</span>
                 <span class="n">limit</span><span class="p">,</span>
             <span class="p">)</span>
@@ -1322,17 +1522,17 @@
             <span class="k">return</span> <span class="n">GaussNewton</span><span class="p">(</span>
                 <span class="n">problem</span><span class="o">=</span><span class="n">problem</span><span class="p">,</span>
                 <span class="n">analytic</span><span class="o">=</span><span class="n">analytic</span><span class="p">,</span>
-                <span class="n">mode</span><span class="o">=</span><span class="n">_read_only</span><span class="p">(</span><span class="n">x_new</span><span class="p">),</span>
-                <span class="n">mode_y</span><span class="o">=</span><span class="n">_read_only</span><span class="p">(</span><span class="n">y_new</span><span class="p">),</span>
-                <span class="n">point</span><span class="o">=</span><span class="n">_read_only</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">x</span><span class="p">)),</span>
-                <span class="n">point_y</span><span class="o">=</span><span class="n">_read_only</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">y</span><span class="p">)),</span>
+                <span class="n">mode</span><span class="o">=</span><span class="n">_read_only</span><span class="p">(</span><span class="n">taken</span><span class="o">.</span><span class="n">x</span><span class="p">),</span>
+                <span class="n">mode_y</span><span class="o">=</span><span class="n">_read_only</span><span class="p">(</span><span class="n">taken</span><span class="o">.</span><span class="n">y</span><span class="p">),</span>
+                <span class="n">point</span><span class="o">=</span><span class="n">_read_only</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">here</span><span class="o">.</span><span class="n">x</span><span class="p">)),</span>
+                <span class="n">point_y</span><span class="o">=</span><span class="n">_read_only</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">here</span><span class="o">.</span><span class="n">y</span><span class="p">)),</span>
                 <span class="n">d2</span><span class="o">=</span><span class="n">_read_only</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">d2s</span><span class="p">)),</span>
                 <span class="n">cost</span><span class="o">=</span><span class="n">_read_only</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">costs</span><span class="p">)),</span>
-                <span class="n">data_misfit</span><span class="o">=</span><span class="n">data</span><span class="p">,</span>
-                <span class="n">state_misfit</span><span class="o">=</span><span class="n">state</span><span class="p">,</span>
+                <span class="n">data_misfit</span><span class="o">=</span><span class="n">taken</span><span class="o">.</span><span class="n">data</span><span class="p">,</span>
+                <span class="n">state_misfit</span><span class="o">=</span><span class="n">taken</span><span class="o">.</span><span class="n">state</span><span class="p">,</span>
                 <span class="n">options</span><span class="o">=</span><span class="n">options</span><span class="p">,</span>
             <span class="p">)</span>
-        <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">modeled</span><span class="p">,</span> <span class="n">current</span><span class="p">,</span> <span class="n">analytic</span> <span class="o">=</span> <span class="n">x_new</span><span class="p">,</span> <span class="n">y_new</span><span class="p">,</span> <span class="n">modeled_new</span><span class="p">,</span> <span class="n">trial</span><span class="p">,</span> <span class="kc">None</span>
+        <span class="n">here</span><span class="p">,</span> <span class="n">current</span><span class="p">,</span> <span class="n">analytic</span> <span class="o">=</span> <span class="n">taken</span><span class="p">,</span> <span class="n">trial</span><span class="p">,</span> <span class="kc">None</span>
     <span class="n">shown</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">d</span><span class="si">:</span><span class="s2">.3g</span><span class="si">}</span><span class="s2">"</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">d2s</span><span class="p">]</span>
     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">shown</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">8</span><span class="p">:</span>
         <span class="n">shown</span> <span class="o">=</span> <span class="p">[</span><span class="o">*</span><span class="n">shown</span><span class="p">[:</span><span class="mi">3</span><span class="p">],</span> <span class="s2">"..."</span><span class="p">,</span> <span class="o">*</span><span class="n">shown</span><span class="p">[</span><span class="o">-</span><span class="mi">4</span><span class="p">:]]</span>

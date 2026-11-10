@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>fips.problem &#8212; fips 0.2.0b3.dev16+g8790e27f7 documentation</title>
+    <title>fips.problem &#8212; fips 0.2.0b3.dev17+gae1465c08 documentation</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../_static/documentation_options.js?v=86168d94"></script>
+    <script src="../../_static/documentation_options.js?v=c3529834"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -132,8 +132,8 @@
       
     
     
-    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev16+g8790e27f7 documentation - Home"/>
-    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev16+g8790e27f7 documentation - Home"/>
+    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev17+gae1465c08 documentation - Home"/>
+    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev17+gae1465c08 documentation - Home"/>
   
   
 </a></div>
@@ -1284,13 +1284,33 @@
 <span class="sd">        """</span>
         <span class="n">model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_forward</span>
         <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">ForwardModel</span><span class="p">)</span>  <span class="c1"># called for a model only</span>
-        <span class="n">_</span><span class="p">,</span> <span class="n">rows</span><span class="p">,</span> <span class="n">to_state</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model_order</span>
-        <span class="k">if</span> <span class="n">rows</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">on_rows</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">v</span><span class="p">))</span>
-            <span class="n">on_rows</span><span class="p">[</span><span class="n">rows</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span>
-            <span class="n">v</span> <span class="o">=</span> <span class="n">on_rows</span>
-        <span class="n">gradient</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">_gradient</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_to_model</span><span class="p">(</span><span class="n">values</span><span class="p">),</span> <span class="n">v</span><span class="p">)</span>
+        <span class="n">gradient</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">_gradient</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_to_model</span><span class="p">(</span><span class="n">values</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">_to_model_rows</span><span class="p">(</span><span class="n">v</span><span class="p">))</span>
+        <span class="n">to_state</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model_order</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
         <span class="k">return</span> <span class="n">gradient</span> <span class="k">if</span> <span class="n">to_state</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">gradient</span><span class="p">[</span><span class="n">to_state</span><span class="p">]</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_curvature</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">values</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">v</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">        Return the diagonal of :math:`\sum_k v_k \nabla^2 F_k(x)` for the state values `x` (in the prior's order) and `v` on the observations, in the prior's order; None if the model has no diagonal one.</span>
+
+<span class="sd">        Through the model's ``_curvature`` (a transform's; None for any other</span>
+<span class="sd">        model, whose steps are then Gauss-Newton's).</span>
+<span class="sd">        """</span>
+        <span class="n">model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_forward</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">ForwardModel</span><span class="p">)</span>  <span class="c1"># called for a model only</span>
+        <span class="n">curvature</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">_curvature</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_to_model</span><span class="p">(</span><span class="n">values</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">_to_model_rows</span><span class="p">(</span><span class="n">v</span><span class="p">))</span>
+        <span class="n">to_state</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model_order</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">curvature</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">to_state</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">curvature</span>
+        <span class="k">return</span> <span class="n">curvature</span><span class="p">[</span><span class="n">to_state</span><span class="p">]</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_to_model_rows</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">v</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return `v`, on the observations, in the order of the forward model's rows."""</span>
+        <span class="n">rows</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model_order</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">rows</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">v</span>
+        <span class="n">on_rows</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">v</span><span class="p">))</span>
+        <span class="n">on_rows</span><span class="p">[</span><span class="n">rows</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span>
+        <span class="k">return</span> <span class="n">on_rows</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_jacobian</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">values</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">LinearOperator</span><span class="p">,</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">"""</span>
