@@ -517,14 +517,17 @@ def _wide_warnings(caplog) -> list[str]:
 
 @pytest.mark.parametrize("a", [0.5, 1.0])
 def test_a_wide_prior_warns_with_the_shift_of_the_cut_prior(caplog, a):
-    """A prior standard deviation over half the distance to a lower bound warns once, naming the block and how many of its elements are wide; the shift is the closed form ``phi(a) / Phi(a) / a`` of the distance (a prior total, for a bound of zero)."""
+    """A prior standard deviation over half the distance to a lower bound warns once, naming the block and how many of its elements are within two standard deviations of a bound; the shift is the closed form ``phi(a) / Phi(a) / a`` of the distance (a prior total, for a bound of zero)."""
     problem = _wide_problem(np.full(10, a), np.ones(10))
     with caplog.at_level("WARNING", logger="fips.methods.bounded"):
         fips.solve(problem, "bounded", lower=0.0, draws=20)
     (message,) = _wide_warnings(caplog)
     shift = 100 * norm.pdf(a) / norm.cdf(a) / a
-    assert "'flux' has 10 of 10 bounded elements wide" in message
-    assert f"shifted up by about {shift:.0f}%" in message
+    assert (
+        "'flux': 10 of 10 bounded elements are within two prior standard deviations of a bound"
+        in message
+    )
+    assert f"a total about {shift:.0f}% above the prior's" in message
     assert "each element taken alone" in message
     assert "The estimate (the mode) is not affected" in message
     assert "fips.solve(problem)" in message and "fips.LognormalForward" in message
@@ -550,7 +553,10 @@ def test_the_warning_counts_a_block_only_past_a_tenth_of_its_bounded_elements(ca
     with caplog.at_level("WARNING", logger="fips.methods.bounded"):
         fips.solve(_wide_problem(x_0, std), "bounded", lower=0.0, draws=20)
     (message,) = _wide_warnings(caplog)
-    assert "2 of 10 bounded elements wide" in message
+    assert (
+        "2 of 10 bounded elements are within two prior standard deviations of a bound"
+        in message
+    )
 
 
 def test_one_warning_names_each_wide_block_and_leaves_out_a_block_with_no_bound(
@@ -562,14 +568,14 @@ def test_one_warning_names_each_wide_block_and_leaves_out_a_block_with_no_bound(
     with caplog.at_level("WARNING", logger="fips.methods.bounded"):
         fips.solve(problem, "bounded", lower={"flux": 0.0, "other": 0.0}, draws=20)
     (message,) = _wide_warnings(caplog)
-    assert "'flux' has 6 of 6" in message and "'other' has 5 of 5" in message
+    assert "'flux': 6 of 6" in message and "'other': 5 of 5" in message
     assert "bias" not in message
     caplog.clear()
     narrow = _wide_problem(np.r_[np.full(6, 1.0), np.full(9, 5.0)], np.ones(15), sizes)
     with caplog.at_level("WARNING", logger="fips.methods.bounded"):
         fips.solve(narrow, "bounded", lower={"flux": 0.0, "bias": 0.0}, draws=20)
     (message,) = _wide_warnings(caplog)
-    assert "'flux' has 6 of 6" in message and "bias" not in message
+    assert "'flux': 6 of 6" in message and "bias" not in message
 
 
 def test_an_element_with_no_prior_spread_is_never_wide(caplog):
@@ -583,7 +589,10 @@ def test_an_element_with_no_prior_spread_is_never_wide(caplog):
     with caplog.at_level("WARNING", logger="fips.methods.bounded"):
         fips.solve(_wide_problem(x_0, std), "bounded", lower=0.0, draws=20)
     (message,) = _wide_warnings(caplog)
-    assert "5 of 10 bounded elements wide" in message
+    assert (
+        "5 of 10 bounded elements are within two prior standard deviations of a bound"
+        in message
+    )
 
 
 def test_an_upper_bound_mirrors_the_lower_one(caplog):
@@ -593,7 +602,7 @@ def test_an_upper_bound_mirrors_the_lower_one(caplog):
         problem = _wide_problem(np.full(10, -1.0), np.ones(10))
         fips.solve(problem, "bounded", upper=0.0, draws=20)
     (message,) = _wide_warnings(caplog)
-    assert f"shifted down by about {shift:.0f}%" in message
+    assert f"a total about {shift:.0f}% below the prior's" in message
 
 
 def test_two_bounds_count_an_element_once_and_use_the_two_sided_truncated_mean(caplog):
@@ -604,8 +613,11 @@ def test_two_bounds_count_an_element_once_and_use_the_two_sided_truncated_mean(c
         problem = _wide_problem(np.full(4, x_0), np.ones(4))
         fips.solve(problem, "bounded", lower=lower, upper=upper, draws=20)
     (message,) = _wide_warnings(caplog)
-    assert "'flux' has 4 of 4 bounded elements wide" in message
-    assert f"shifted up by about {100 * cut / x_0:.0f}%" in message
+    assert (
+        "'flux': 4 of 4 bounded elements are within two prior standard deviations of a bound"
+        in message
+    )
+    assert f"a total about {100 * cut / x_0:.0f}% above the prior's" in message
 
 
 def test_a_prior_mean_on_its_bound_reports_the_shift_in_the_state_units(caplog):
@@ -615,7 +627,9 @@ def test_a_prior_mean_on_its_bound_reports_the_shift_in_the_state_units(caplog):
         fips.solve(problem, "bounded", lower=0.0, draws=20)
     (message,) = _wide_warnings(caplog)
     total = 5 * 2.0 * norm.pdf(0.0) / norm.cdf(0.0)
-    assert f"shifted up by about {total:.3g} (in the state's units)" in message
+    assert (
+        f"a total about {total:.3g} above the prior's, in the state's units" in message
+    )
 
 
 def test_a_prior_mean_far_outside_its_bound_makes_no_numerical_warning(caplog):
@@ -625,8 +639,13 @@ def test_a_prior_mean_far_outside_its_bound_makes_no_numerical_warning(caplog):
     with caplog.at_level("WARNING", logger="fips.methods.bounded"):
         bounded._warn_if_wide(problem, lower, upper)  # a RuntimeWarning is an error
     (message,) = _wide_warnings(caplog)
-    assert "'flux' has 3 of 3 bounded elements wide" in message
-    assert "shifted up by about 100%" in message  # from -1000 to the bound at 0
+    assert (
+        "'flux': 3 of 3 bounded elements are within two prior standard deviations of a bound"
+        in message
+    )
+    assert (
+        "a total about 100% above the prior's" in message
+    )  # from -1000 to the bound at 0
 
 
 def test_the_twins_do_not_repeat_the_wide_prior_warning(caplog):

@@ -1178,31 +1178,24 @@ def _warn_if_wide(problem: Problem, lower: np.ndarray, upper: np.ndarray) -> Non
             continue
         total = float(shift[where].sum())
         away = float(np.abs(distance[where]).sum())
-        direction = "up" if total >= 0.0 else "down"
-        by = (
-            f"{100 * abs(total) / away:.0f}%"
-            if away > 0.0
-            else f"{abs(total):.3g} (in the state's units)"
-        )
+        side = "above" if total >= 0.0 else "below"
+        by = f"{100 * abs(total) / away:.0f}%" if away > 0.0 else f"{abs(total):.3g}"
+        units = "" if away > 0.0 else ", in the state's units"
+        # "two" is _WIDE
         reports.append(
-            f"{block!r} has {n_wide} of {n_bounded} bounded elements wide, "
-            f"its total shifted {direction} by about {by}"
+            f"{block!r}: {n_wide} of {n_bounded} bounded elements are within two "
+            "prior standard deviations of a bound, and the prior cut at the "
+            f"bounds has a total about {by} {side} the prior's{units} (each "
+            "element taken alone)"
         )
     if not reports:
         return
     logger.warning(
-        "The prior is wide against the bounds: %s. A wide element has a prior "
-        "standard deviation over half its distance to a bound; the shift is the "
-        "sum, over the block's bounded elements, of the mean of the prior cut at "
-        "the bounds less the prior mean (each element taken alone), as a "
-        "percentage of the block's distance from its bounds (of its prior total, "
-        "for a bound of zero). The draws are of the posterior cut at the bounds, "
-        "and a Gaussian cut at a lower bound has a higher mean than the Gaussian "
-        "(a lower one, cut at an upper bound). Where the data constrain "
-        "little, the mean, the intervals and any total read from the draws sit "
-        "there, away from the prior's. The estimate (the mode) is not affected. "
-        "For a total, read the analytic posterior (fips.solve(problem)) or use "
-        "fips.LognormalForward.",
+        "The prior is wide against the bounds: %s. The draws are of the "
+        "posterior cut at the bounds, so where the data constrain little, their "
+        "mean, intervals and totals sit that far from the prior's. The estimate "
+        "(the mode) is not affected; for a total, read the analytic posterior "
+        "(fips.solve(problem)) or use fips.LognormalForward.",
         "; ".join(reports),
     )
 
