@@ -37,6 +37,7 @@ import logging
 import math
 from collections.abc import Sequence
 from dataclasses import dataclass, field
+from functools import cached_property
 from typing import ClassVar, Self
 
 import numpy as np
@@ -290,6 +291,84 @@ class _Factors:
         ) / math.sqrt(self.gamma)
         innovations = np.asarray(problem._operator.data @ delta) + error  # m x N
         return self.estimate()[:, None] + delta - self._gain_times(innovations)
+
+    def _eigendecomposition(self) -> "Self":
+        """Return these factors read from the eigendecomposition, at this gamma (done and kept as :meth:`with_gamma` does)."""
+        return self if self.eigenvalues is not None else self.with_gamma(self.gamma)
+
+    def _evidence_terms(self, gammas: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+        r"""
+        Return the chi-squared and the information content at each of `gammas`, from the eigendecomposition.
+
+        Both are sums over the eigenvalues, :math:`O(k)` for each gamma, with
+        no product of the factors: the information content is
+        :math:`\tfrac{1}{2} \sum_k \ln(1 + \gamma \lambda_k)`, and the
+        chi-squared is each form's sum (:meth:`_chi2_at`). The scales-only
+        fast path of :func:`fips.hierarchical` reads the evidence at every
+        step of its chain from these.
+        """
+        factors = self._eigendecomposition()
+        eigenvalues = factors.eigenvalues
+        assert eigenvalues is not None  # _eigendecomposition gives them
+        gammas = np.asarray(gammas, dtype=float)
+        weights = gammas[:, None] / (gammas[:, None] * eigenvalues[None, :] + 1.0)
+        information = 0.5 * np.log1p(gammas[:, None] * eigenvalues[None, :]).sum(axis=1)
+        return factors._chi2_at(gammas, weights), information
+
+    def _chi2_at(self, gammas: np.ndarray, weights: np.ndarray) -> np.ndarray:
+        r"""Return the chi-squared at each of `gammas`, with `weights` their :math:`w_k` (``N x k``; each form defines it)."""
+        raise NotImplementedError
+
+    def _carry(self, D: np.ndarray) -> np.ndarray:
+        r"""Return a block of innovations `D` (``m x N``) in the form's basis, as :attr:`innovation` is the innovation's (each form defines it)."""
+        raise NotImplementedError
+
+    def _factor_times(self, V: np.ndarray) -> np.ndarray:
+        r"""Return the increment of the estimate for weighted components `V` (``k x N``): :math:`W^T V` or :math:`G V` (each form defines it)."""
+        raise NotImplementedError
+
+    def _draws_at(
+        self, gammas: np.ndarray, scales: np.ndarray, rng: np.random.Generator
+    ) -> np.ndarray:
+        r"""
+        Return one exact draw for each pair of `gammas` and `scales`, ``n x N``: a draw of the posterior with the prior std times the scale.
+
+        With the prior error covariance :math:`s^2 S_0` and the mismatch
+        :math:`c S_z`, the posterior's mean is this problem's at
+        :math:`\gamma = s^2 / c` and its covariance :math:`s^2` times this
+        problem's there. :meth:`sample` at :math:`(s, c)` is then
+        :math:`\hat{x}(\gamma) + s \big(\delta - K(\gamma) (H \delta + e)\big)`
+        with :math:`\delta \sim N(0, S_0)` and :math:`e \sim N(0, S_z /
+        \gamma)`. Each draw's normals are drawn from `rng` in turn, the prior's
+        then the mismatch's, as ``sample(1, rng)`` of each problem would draw
+        them, so a draw is that problem's own to roundoff. The gain is never
+        formed: one product with the factors for all the draws.
+        """
+        factors = self._eigendecomposition()
+        eigenvalues = factors.eigenvalues
+        assert eigenvalues is not None  # _eigendecomposition gives them
+        problem = factors.problem
+        prior_root = problem.prior_cov.data._root
+        obs_root = problem.obs_cov.data._root
+        gammas = np.asarray(gammas, dtype=float)
+        scales = np.asarray(scales, dtype=float)
+        N = len(gammas)
+        prior_normals = np.empty((prior_root.shape[1], N))
+        obs_normals = np.empty((obs_root.shape[1], N))
+        for j in range(N):
+            prior_normals[:, j] = rng.standard_normal(prior_root.shape[1])
+            obs_normals[:, j] = rng.standard_normal(obs_root.shape[1])
+        delta = np.asarray(prior_root @ prior_normals, dtype=float)
+        error = np.asarray(obs_root @ obs_normals, dtype=float) / np.sqrt(gammas)
+        innovations = np.asarray(problem._operator.data @ delta) + error  # m x N
+        weights = gammas[None, :] / (gammas[None, :] * eigenvalues[:, None] + 1.0)
+        carried = factors._carry(innovations)
+        components = factors.innovation[:, None] - scales[None, :] * carried
+        return (
+            problem.prior.values[:, None]
+            + scales[None, :] * delta
+            + factors._factor_times(weights * components)
+        )
 
     def misfits(self) -> tuple[float, float]:
         r"""
@@ -642,6 +721,18 @@ class Whitened(_Factors):
         r"""Return :math:`K D = W^T (w \circ (B D))`: ``with_data``'s product for a block of innovations."""
         return self.W.T @ (self.weights()[:, None] * (self.whitener @ D))
 
+    def _chi2_at(self, gammas: np.ndarray, weights: np.ndarray) -> np.ndarray:
+        r"""Return :math:`\sum_k w_k e_k^2` at each gamma (:meth:`chi2`), :math:`O(m)` each."""
+        return weights @ self.innovation**2
+
+    def _carry(self, D: np.ndarray) -> np.ndarray:
+        r"""Return :math:`B D`, the innovations whitened as :math:`e = B d` is."""
+        return self.whitener @ D
+
+    def _factor_times(self, V: np.ndarray) -> np.ndarray:
+        r"""Return :math:`W^T V`."""
+        return self.W.T @ V
+
     def _cov_times(self, V: np.ndarray) -> np.ndarray:
         r"""Return :math:`\hat{S} V = Q V - W^T (w \circ (W V))`: ``O(m n k)``, and a product of :math:`Q` in its own form."""
         prior = np.asarray(self.problem.prior_cov.data @ V, dtype=float)
@@ -955,6 +1046,34 @@ class Information(_Factors):
         Y = np.asarray(problem.obs_cov.data.solve(D))
         HtY = np.asarray(problem._operator.data._transpose() @ Y)
         return self.G @ (self.weights()[:, None] * (self.G.T @ HtY))
+
+    def _chi2_at(self, gammas: np.ndarray, weights: np.ndarray) -> np.ndarray:
+        r"""
+        Return the chi-squared at each gamma, :math:`\gamma q - \gamma \sum_k w_k b_k^2` with :math:`q = d^T S_z^{-1} d`: :math:`O(n)` each.
+
+        With :math:`\tilde{d} = S_z^{-1/2} d` and :math:`J = S_z^{-1/2} H R_0
+        = U \Sigma V^T`, :math:`(J J^T + I/\gamma)^{-1} = \gamma (I - U U^T) +
+        U \operatorname{diag}(1 / (\lambda_k + 1/\gamma)) U^T`, and :math:`b_k
+        = \sigma_k u_k^T \tilde{d}`; the two sums over :math:`k` combine into
+        one with no division by :math:`\lambda_k`.
+        """
+        return gammas * self._innovation_norm - gammas * (weights @ self.innovation**2)
+
+    @cached_property
+    def _innovation_norm(self) -> float:
+        r""":math:`q = d^T S_z^{-1} d`, one solve with the mismatch, kept (each new set of observations has its own)."""
+        d = _innovation(self.problem)
+        return float(d @ np.asarray(self.problem.obs_cov.data.solve(d)))
+
+    def _carry(self, D: np.ndarray) -> np.ndarray:
+        r"""Return :math:`G^T H^T S_z^{-1} D`, the innovations carried as :math:`b` is (``_carried``)."""
+        problem = self.problem
+        Y = np.asarray(problem.obs_cov.data.solve(D))
+        return self.G.T @ np.asarray(problem._operator.data._transpose() @ Y)
+
+    def _factor_times(self, V: np.ndarray) -> np.ndarray:
+        r"""Return :math:`G V`."""
+        return self.G @ V
 
     def _cov_times(self, V: np.ndarray) -> np.ndarray:
         r"""Return :math:`\hat{S} V = G (w / \gamma \circ (G^T V))`: ``O(n^2 k)``."""
