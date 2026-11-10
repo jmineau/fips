@@ -436,6 +436,29 @@ week to the next is not the root of the two weeks' variances summed:
    )
    post.uncertainty(change @ W).round(3)
 
+**Draws, for a question a covariance cannot answer.** ``post.cov(W)`` gives the
+spread of every linear combination, but not the chance that a total is above a
+value, or which week's total is the largest.
+:meth:`~fips.Posterior.sample` draws from the posterior (exactly, for the
+analytic method), one column per draw, labeled as the estimate is; with ``W`` it
+draws the totals. Take the function of each draw and read the answer off them.
+Here, how likely each week's total is to be below 1, and how often each week
+has the largest total:
+
+.. ipython:: python
+
+   draws = post.sample(4000, rng=0, W=W)
+   draws.shape
+   (draws < 1.0).mean(axis=1).round(2)
+   largest = draws.idxmax().map(lambda label: label[1])
+   largest.value_counts(normalize=True).sort_index().round(2)
+
+Each draw perturbs the prior and the observations by their errors and solves,
+which is the posterior's distribution exactly, and costs one product with each
+covariance's root and one with the factors for all the draws together: never an
+:math:`n \times n` matrix. The draws are a ``state x draws`` array, so for a
+large state ask for them in blocks.
+
 ``dropna=True`` on :func:`fips.aggregate.sum` and :func:`~fips.aggregate.mean`
 picks part of the state: labels a key cannot place are left out instead of
 raising (a Series that maps only a region's cells gives the region's total, an

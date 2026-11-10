@@ -1,0 +1,6 @@
+fips.Posterior.sample
+=====================
+
+.. currentmodule:: fips
+
+.. automethod:: Posterior.sample

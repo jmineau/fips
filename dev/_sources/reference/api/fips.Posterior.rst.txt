@@ -48,6 +48,7 @@
    ~Posterior.desroziers
    ~Posterior.leverage
    ~Posterior.recovery
+   ~Posterior.sample
    ~Posterior.summary
    ~Posterior.trials
    ~Posterior.uncertainty
