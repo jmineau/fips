@@ -174,8 +174,8 @@ class _BlockRoot(LinearOperator):
 
     A block's root may be rectangular (a Kronecker block on a subset of its
     grid has more columns than rows), so this is ``n x r`` and the draw of
-    block ``k`` uses the next ``r_k`` normals, in the blocks' order. It is
-    applied one way only: a draw needs ``R w``, never ``R^T``.
+    block ``k`` uses the next ``r_k`` normals, in the blocks' order. Its
+    transpose (``r x n``) is the roots' transposes, block by block.
     """
 
     def __init__(self, roots):
@@ -185,9 +185,14 @@ class _BlockRoot(LinearOperator):
 
     def _matmat(self, X):
         """Return ``R @ X``: each block's root times its rows of `X`."""
+        X = _as_array(X)
         return np.concatenate(
             [
                 _as_array(R.matmat(X[self._cols[k] : self._cols[k + 1]]))
                 for k, R in enumerate(self._roots)
             ]
         )
+
+    def _transpose(self):
+        """Return ``R^T``: the roots' transposes, block by block."""
+        return _BlockRoot([R._transpose() for R in self._roots])

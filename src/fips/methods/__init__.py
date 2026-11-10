@@ -11,7 +11,10 @@ mode, and draws of the Gaussian truncated to the bounds; and
 ``"gauss_newton"`` (:mod:`fips.methods.gauss_newton`), the mode of the
 posterior of a problem with a forward model, and draws of that posterior; and
 ``"ensemble"`` (:mod:`fips.methods.ensemble`), a square-root ensemble Kalman
-update of members drawn from the prior, for a model that can only be run.
+update of members drawn from the prior, for a model that can only be run;
+and ``"variational"`` (:mod:`fips.methods.variational`), the estimate by
+conjugate gradients and a low-rank posterior by Lanczos, from products
+alone, for a problem too large to factor.
 
 A method is a module here with three things, and a line in ``_METHODS``
 below:
@@ -28,7 +31,8 @@ below:
   posterior (``Posterior.sample``), ``at_bound()``, which says which state
   elements sit on a bound (``Posterior.at_bound``), ``iterations()`` and
   ``linearized()`` for an iterated method (``Posterior.iterations``, and the
-  linear problem its gain is of), ``estimate_is_mean = True`` when its
+  linear problem its gain is of), ``spectrum()`` for a low-rank posterior
+  (``Posterior.eigenvalues``), ``estimate_is_mean = True`` when its
   estimate is the posterior mean, and ``estimate_is_linear = True`` when its
   estimate is :math:`x_0 + K (z - H x_0 - c)` with the gain of ``gain()``
   (what ``Posterior.recovery`` needs), and ``evidence_is_laplace = True``
@@ -43,7 +47,10 @@ A method's default options on a linear problem with no bounds give the
 analytic posterior: ``tests/test_oracle.py`` runs every registered method,
 with its default options, against the closed form. A method registered with
 ``exact=False`` (the ensemble, which approaches it only as its members grow)
-is left out of the oracle and has its own convergence test.
+is left out of the oracle and has its own convergence test. One that is
+exact only to the tolerance of its iterative solves (the variational method)
+is registered with the options the oracle solves it with (``oracle``) and
+the tolerance the oracle holds it to (``oracle_rtol``).
 
 The :class:`~fips.Posterior` puts the labels on, keeps each output, and
 writes everything else (the averaging kernel, the innovation covariance,
@@ -66,19 +73,26 @@ linearization depends on gamma. The ensemble method's solution
 (``fips.methods.ensemble.Ensemble``) keeps the prior members, their modeled
 observations and the factors of the update, and answers from the updated
 members (``estimate_is_mean = True``); its ``with_gamma`` and ``with_data``
-reuse the modeled members. A method imports
+reuse the modeled members. The variational method's solution
+(``fips.methods.variational.Variational``) keeps the whitened estimate and
+the leading eigenpairs of the prior-preconditioned Hessian, and answers from
+the low-rank posterior they make (``estimate_is_mean`` for a linear
+problem); its ``with_gamma`` and ``with_data`` take one CG solve each, the
+eigenpairs kept, for a linear problem. A method imports
 :mod:`fips.posterior`; :mod:`fips.posterior` never imports a method.
 """
 
 import logging
-from collections.abc import Callable
-from dataclasses import dataclass, fields
+from collections.abc import Callable, Mapping
+from dataclasses import dataclass, field, fields
+from types import MappingProxyType
 from typing import Any
 
 from fips.methods.analytic import AnalyticOptions, _analytic
 from fips.methods.bounded import BoundedOptions, _bounded
 from fips.methods.ensemble import EnsembleOptions, _ensemble
 from fips.methods.gauss_newton import GaussNewtonOptions, _gauss_newton
+from fips.methods.variational import VariationalOptions, _variational
 from fips.posterior import Posterior
 from fips.problem import Problem
 
@@ -93,6 +107,10 @@ class _Method:
     solve: Callable[[Problem, Any], Posterior]
     exact: bool = True
     """False for a method whose posterior approaches the analytic one only as a number of members grows (``tests/test_oracle.py`` holds the others to it)."""
+    oracle: Mapping[str, Any] = field(default_factory=lambda: MappingProxyType({}))
+    """The options ``tests/test_oracle.py`` solves with, for a method exact only to the tolerance of its iterative solves (none for a direct one)."""
+    oracle_rtol: float = 1e-10
+    """The relative tolerance ``tests/test_oracle.py`` holds the method to."""
 
 
 _METHODS: dict[str, _Method] = {
@@ -100,6 +118,12 @@ _METHODS: dict[str, _Method] = {
     "bounded": _Method(BoundedOptions, _bounded),
     "gauss_newton": _Method(GaussNewtonOptions, _gauss_newton),
     "ensemble": _Method(EnsembleOptions, _ensemble, exact=False),
+    "variational": _Method(
+        VariationalOptions,
+        _variational,
+        oracle=MappingProxyType({"tol": 1e-13}),
+        oracle_rtol=1e-8,
+    ),
 }
 """The methods by name."""
 
@@ -132,7 +156,9 @@ def solve(problem: Problem, method: str = "analytic", **options: Any) -> Posteri
         with bounds on the state; ``"gauss_newton"`` the mode of the
         posterior of a problem with a forward model, and draws of it;
         ``"ensemble"`` the update of an ensemble of members, for a model that
-        can only be run.
+        can only be run; ``"variational"`` the estimate by conjugate gradients
+        and a low-rank posterior, from products alone, for a problem too
+        large to factor.
     **options
         The method's options, by name: for ``"analytic"``, ``gamma`` (see
         :class:`~fips.methods.analytic.AnalyticOptions`); for ``"bounded"``,
@@ -143,7 +169,10 @@ def solve(problem: Problem, method: str = "analytic", **options: Any) -> Posteri
         :class:`~fips.methods.gauss_newton.GaussNewtonOptions`); for
         ``"ensemble"``, ``gamma``, ``members``, ``predicted``,
         ``localization``, ``obs_localization`` and ``seed`` (see
-        :class:`~fips.methods.ensemble.EnsembleOptions`).
+        :class:`~fips.methods.ensemble.EnsembleOptions`); for
+        ``"variational"``, ``gamma``, ``rank``, ``tol``,
+        ``max_cg_iterations``, ``max_iterations`` and ``outer_tol`` (see
+        :class:`~fips.methods.variational.VariationalOptions`).
 
     Returns
     -------

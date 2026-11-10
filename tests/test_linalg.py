@@ -11,6 +11,7 @@ import pytest
 import scipy.sparse as sp
 from scipy.linalg import LinAlgError, block_diag
 from scipy.sparse.linalg import LinearOperator as SciPyLinearOperator
+from scipy.sparse.linalg import aslinearoperator
 
 import fips
 from fips import Covariance, Operator, Problem, Space, Vector
@@ -20,6 +21,7 @@ from fips.linalg import (
     DiagonalOperator,
     KroneckerOperator,
     LinearOperator,
+    MatrixFreeOperator,
     SparseOperator,
     as_linear_operator,
     dottest,
@@ -65,17 +67,20 @@ def make(form: str, A: np.ndarray) -> LinearOperator:
         return BlockDiagonalOperator(
             [DenseOperator(A[:k, :k]), DiagonalOperator(np.diag(A[k:, k:]))]
         )
+    if form == "matrix_free":
+        return MatrixFreeOperator(aslinearoperator(A))
     assert np.array_equal(A, np.diag(np.diag(A)))
     return DiagonalOperator(np.diag(A))
 
 
 FORMS = ["dense", "sparse", "diagonal"]
-ALL_FORMS = [*FORMS, "block"]
+ALL_FORMS = [*FORMS, "block", "matrix_free"]
 KIND = {
     "dense": DenseOperator,
     "sparse": SparseOperator,
     "diagonal": DiagonalOperator,
     "block": BlockDiagonalOperator,
+    "matrix_free": MatrixFreeOperator,
 }
 
 
@@ -980,6 +985,7 @@ def _every_form() -> dict[str, LinearOperator]:
             std=[1.0, 2.0, 0.5, 1.5],
             positions=[[0, 0, 1, 1], [0, 2, 1, 2]],
         ),
+        "matrix_free": MatrixFreeOperator(aslinearoperator(spd_dense(rng, 6))),
     }
 
 

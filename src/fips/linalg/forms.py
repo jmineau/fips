@@ -1,9 +1,9 @@
 """
-The base class of the forms, and the dense, sparse and diagonal forms.
+The base class of the forms, and the dense, sparse, diagonal and matrix-free forms.
 
 :class:`LinearOperator` is the base of every form. It is in one module with
-:class:`DenseOperator`, :class:`SparseOperator` and :class:`DiagonalOperator`
-because it builds them (a default method returns a dense form, a product of
+:class:`DenseOperator`, :class:`SparseOperator`, :class:`DiagonalOperator`
+and :class:`MatrixFreeOperator` because it builds them (a default method returns a dense form, a product of
 sparse matrices a sparse one) while each of them is a subclass of it. The forms
 made of other forms are in :mod:`fips.linalg.block` and
 :mod:`fips.linalg.kronecker`. What a form can do is in :mod:`fips.linalg`.
@@ -29,9 +29,9 @@ from scipy.sparse.linalg import splu
 logger = logging.getLogger(__name__)
 
 LinearOperatorLike: TypeAlias = (
-    "LinearOperator | sp.spmatrix | sp.sparray | npt.ArrayLike"
+    "LinearOperator | _SciPyLinearOperator | sp.spmatrix | sp.sparray | npt.ArrayLike"
 )
-"""What :func:`as_linear_operator` takes: a form, a SciPy sparse matrix or a 2D array."""
+"""What :func:`as_linear_operator` takes: a form, a SciPy linear operator, a SciPy sparse matrix or a 2D array."""
 
 _DENSE_FILL = 0.25
 """
@@ -1104,12 +1104,182 @@ class DiagonalOperator(LinearOperator):
         return DiagonalOperator._adopt(np.sqrt(self.values))
 
 
+class MatrixFreeOperator(LinearOperator):
+    r"""
+    A matrix known only by its products, :math:`A x` and :math:`A^T y`, never by its entries.
+
+    A Jacobian too large to hold, or one applied by running a model and its
+    adjoint, is given to fips as a SciPy linear operator,
+    ``scipy.sparse.linalg.LinearOperator(shape, matvec=..., rmatvec=...)``
+    (with ``matmat`` and ``rmatmat`` for a block of vectors, if it has
+    faster ones), which this form wraps; :func:`as_linear_operator` does so
+    for any SciPy linear operator that is not a fips form, so an
+    :class:`~fips.Operator` puts labels on one as on any other matrix.
+
+    What fips builds from it stays matrix-free: its transpose, a product or
+    a sum with any form, a scaling and a reordering of its rows and columns
+    (an :class:`~fips.Operator` given in another order than the problem's)
+    are applied term by term, one product of each part per vector. Its
+    entries are formed only where a method asks for them: :meth:`dense`,
+    :meth:`diagonal` and the solves take one product per column. The
+    ``"variational"`` method needs only products; ``fips.solve`` forms
+    :math:`H S_0` (``m x n``) from ``n`` of them.
+
+    Parameters
+    ----------
+    op : scipy.sparse.linalg.LinearOperator
+        The products. It is kept, not copied (a function cannot be): the
+        form gives what `op` gives, as float64. A pickle of the form holds
+        `op`, and needs its functions to be defined at the top level of a
+        module.
+
+    Raises
+    ------
+    TypeError
+        If `op` is not a SciPy linear operator, or is a fips form already.
+
+    See Also
+    --------
+    dottest : Check that ``rmatvec`` is the adjoint of ``matvec``.
+    fips.ForwardModel.jvp : The products of a forward model's Jacobian.
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> from scipy.sparse.linalg import LinearOperator as SciPyOperator
+    >>> from fips.linalg import MatrixFreeOperator, dottest
+    >>> def cumulate(x):
+    ...     return np.cumsum(x)
+    >>> def cumulate_back(y):
+    ...     return np.cumsum(y[::-1])[::-1]
+    >>> A = MatrixFreeOperator(
+    ...     SciPyOperator((3, 3), matvec=cumulate, rmatvec=cumulate_back)
+    ... )
+    >>> A @ np.array([1.0, 2.0, 3.0])
+    array([1., 3., 6.])
+    >>> dottest(A)
+    True
+    >>> type(2.0 * A.T).__name__  # still products
+    '_MatrixFreeScaled'
+    """
+
+    def __init__(self, op: _SciPyLinearOperator):
+        if not isinstance(op, _SciPyLinearOperator) or isinstance(op, LinearOperator):
+            raise TypeError(
+                "MatrixFreeOperator wraps a SciPy LinearOperator that is not a "
+                f"fips form, got {type(op).__name__}."
+            )
+        self._op = op
+        super().__init__(op.shape)
+
+    def _matmat(self, X):
+        """Return ``A @ X``, by the wrapped operator's products."""
+        return np.asarray(self._op.matmat(_as_array(X)), dtype=float)
+
+    def _transpose(self):
+        """Return the transpose, by the wrapped operator's ``rmatvec``."""
+        return MatrixFreeOperator(self._op.T)
+
+    def _elementwise(self, func):
+        """Return the form times a scalar, still matrix-free."""
+        return _MatrixFreeScaled(self, float(func(1.0)))
+
+    def _select(self, rows: np.ndarray, cols: np.ndarray) -> "LinearOperator":
+        """Return the rows and columns at `rows` and `cols` (``-1`` a row or column of zeros), still matrix-free."""
+        return _MatrixFreeSelected(self, rows, cols)
+
+
+class _MatrixFreeProduct(MatrixFreeOperator):
+    """``a @ b`` with one side matrix-free: ``b`` then ``a`` applied to each vector, never multiplied out."""
+
+    def __init__(self, a: LinearOperator, b: LinearOperator):
+        self._a, self._b = a, b
+        LinearOperator.__init__(self, (a.shape[0], b.shape[1]))
+
+    def _matmat(self, X):
+        """Return ``a @ (b @ X)``."""
+        return _as_array(self._a.matmat(_as_array(self._b.matmat(_as_array(X)))))
+
+    def _transpose(self):
+        """Return ``b^T a^T``."""
+        return _MatrixFreeProduct(self._b._transpose(), self._a._transpose())
+
+
+class _MatrixFreeSum(MatrixFreeOperator):
+    """``a + b`` with one side matrix-free, applied term by term."""
+
+    def __init__(self, a: LinearOperator, b: LinearOperator):
+        self._a, self._b = a, b
+        LinearOperator.__init__(self, a.shape)
+
+    def _matmat(self, X):
+        """Return ``a @ X + b @ X``."""
+        X = _as_array(X)
+        return _as_array(self._a.matmat(X)) + _as_array(self._b.matmat(X))
+
+    def _transpose(self):
+        """Return ``a^T + b^T``."""
+        return _MatrixFreeSum(self._a._transpose(), self._b._transpose())
+
+
+class _MatrixFreeScaled(MatrixFreeOperator):
+    """A matrix-free form times a scalar."""
+
+    def __init__(self, a: LinearOperator, scale: float):
+        self._a, self._scale = a, scale
+        LinearOperator.__init__(self, a.shape)
+
+    def _matmat(self, X):
+        """Return ``scale * (a @ X)``."""
+        return self._scale * _as_array(self._a.matmat(_as_array(X)))
+
+    def _transpose(self):
+        """Return ``scale * a^T``."""
+        return _MatrixFreeScaled(self._a._transpose(), self._scale)
+
+    def _elementwise(self, func):
+        """Return the form times another scalar, one scale."""
+        return _MatrixFreeScaled(self._a, float(func(self._scale)))
+
+
+class _MatrixFreeSelected(MatrixFreeOperator):
+    """
+    The entries of a matrix-free form at some rows and columns (integer positions, ``-1`` a row or column of zeros), by its products.
+
+    ``(S x)_i = (A u)_{rows_i}`` with ``u`` the vector `x` scattered to the
+    columns ``cols`` (added where a column repeats), so a product of the
+    selection is one product of the form.
+    """
+
+    def __init__(self, a: LinearOperator, rows: np.ndarray, cols: np.ndarray):
+        self._a = a
+        self._rows = _read_only(np.asarray(rows, dtype=np.intp))
+        self._cols = _read_only(np.asarray(cols, dtype=np.intp))
+        LinearOperator.__init__(self, (len(self._rows), len(self._cols)))
+
+    def _matmat(self, X):
+        """Return the selection times `X`, through one product of the form."""
+        X = _as_array(X)
+        kept = self._cols >= 0
+        U = np.zeros((self._a.shape[1], X.shape[1]))
+        np.add.at(U, self._cols[kept], X[kept])
+        Y = _as_array(self._a.matmat(U))[np.maximum(self._rows, 0)]
+        Y[self._rows < 0] = 0.0
+        return Y
+
+    def _transpose(self):
+        """Return the transpose: the transpose's entries at the columns and rows."""
+        return _MatrixFreeSelected(self._a._transpose(), self._cols, self._rows)
+
+
 def _product(a: LinearOperator, b: LinearOperator) -> LinearOperator:
     """Return ``a @ b`` in the cheapest form that is exact."""
     if a.shape[1] != b.shape[0]:
         raise ValueError(
             f"Cannot multiply operators of shapes {a.shape} and {b.shape}."
         )
+    if isinstance(a, MatrixFreeOperator) or isinstance(b, MatrixFreeOperator):
+        return _MatrixFreeProduct(a, b)
     if isinstance(a, DiagonalOperator) and isinstance(b, DiagonalOperator):
         return DiagonalOperator._adopt(a.values * b.values)
     if isinstance(a, SparseOperator) and isinstance(b, SparseOperator):
@@ -1140,6 +1310,8 @@ def _sum(a: LinearOperator, b: LinearOperator) -> LinearOperator:
     """Return ``a + b`` in the cheapest form that is exact."""
     if a.shape != b.shape:
         raise ValueError(f"Cannot add operators of shapes {a.shape} and {b.shape}.")
+    if isinstance(a, MatrixFreeOperator) or isinstance(b, MatrixFreeOperator):
+        return _MatrixFreeSum(a, b)
     if isinstance(a, DiagonalOperator) and isinstance(b, DiagonalOperator):
         return DiagonalOperator._adopt(a.values + b.values)
     a_csr, b_csr = a._csr(), b._csr()
@@ -1192,16 +1364,18 @@ def as_linear_operator(x: LinearOperatorLike) -> LinearOperator:
 
     Parameters
     ----------
-    x : LinearOperator, SciPy sparse matrix or 2D array-like
+    x : LinearOperator, SciPy linear operator, SciPy sparse matrix or 2D array-like
         What to wrap. A form comes back as it is; an array or a sparse matrix
-        is copied, and the form's copy is read-only.
+        is copied, and the form's copy is read-only; a SciPy linear operator
+        (a matrix known by its products) is kept.
 
     Returns
     -------
     LinearOperator
         A :class:`DiagonalOperator` for a square sparse matrix that stores
         entries on its diagonal only, a :class:`SparseOperator` for any other
-        sparse matrix, and a :class:`DenseOperator` for an array.
+        sparse matrix, a :class:`MatrixFreeOperator` for a SciPy linear
+        operator, and a :class:`DenseOperator` for an array.
 
     Raises
     ------
@@ -1221,6 +1395,8 @@ def as_linear_operator(x: LinearOperatorLike) -> LinearOperator:
     """
     if isinstance(x, LinearOperator):
         return x
+    if isinstance(x, _SciPyLinearOperator):
+        return MatrixFreeOperator(x)
     # isinstance, not issparse: the type checker narrows only this one
     if isinstance(x, (sp.spmatrix, sp.sparray)):
         diagonal = _diagonal_of(x)

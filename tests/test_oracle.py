@@ -9,7 +9,10 @@ closed-form Gaussian posterior, written below with ``numpy.linalg`` and
 nothing from fips. They are parametrized over the registered exact methods, so a
 method registered later is held to them too (one registered with
 ``exact=False``, whose posterior only approaches the closed form as its
-ensemble grows, has its own convergence test), and over the two forms the
+ensemble grows, has its own convergence test; one exact only to the
+tolerance of its iterative solves is solved with the options it is
+registered with, ``oracle``, and held at its ``oracle_rtol``:
+:func:`solve_held`), and over the two forms the
 analytic method factors in (the ``analytic_form`` fixture: whitened and
 information), whatever the size of the problem.
 
@@ -50,6 +53,17 @@ from fips.methods import _METHODS
 
 METHODS = [name for name in available_methods() if _METHODS[name].exact]
 """The exact methods; an approximate one (``"ensemble"``) is held to its own convergence test."""
+
+
+def solve_held(problem: Problem, method: str, **options) -> Posterior:
+    """Solve as the oracle holds `method`: with the options it is registered as exact under (``"variational"``'s tight ``tol``), then `options`."""
+    return solve(problem, method, **{**_METHODS[method].oracle, **options})
+
+
+def rtol_of(method: str) -> float:
+    """Return the relative tolerance the oracle holds `method` to: ``RTOL`` for a direct method, the CG tolerance's for ``"variational"``."""
+    return _METHODS[method].oracle_rtol
+
 
 RTOL = 1e-10
 """
@@ -159,15 +173,19 @@ def closed_form(z, x_0, H, S_0, S_z, c) -> ClosedForm:
     )
 
 
-def assert_close(actual, expected, scale: float, what: str) -> None:
-    """Compare at ``RTOL``, with an absolute floor of ``RTOL * scale``."""
+def assert_close(actual, expected, scale: float, what: str, rtol: float = RTOL) -> None:
+    """Compare at `rtol` (``RTOL`` unless a method is held to its own), with an absolute floor of ``rtol * scale``."""
     np.testing.assert_allclose(
         np.asarray(actual, dtype=float),
         np.asarray(expected, dtype=float),
-        rtol=RTOL,
-        atol=RTOL * scale,
+        rtol=rtol,
+        atol=rtol * scale,
         err_msg=what,
     )
+
+
+_assert_close = assert_close
+"""The module's comparison, for the functions that compare at a tolerance of their own."""
 
 
 # ---------------------------------------------------------------------------
@@ -294,9 +312,13 @@ def check_posterior(
     state_index: pd.Index,
     obs_index: pd.Index,
     what: str,
+    rtol: float = RTOL,
 ) -> None:
-    """Compare every output of a posterior with the closed form, by label."""
+    """Compare every output of a posterior with the closed form, by label, at `rtol`."""
     s, o, sc = state_index, obs_index, expected.scale
+
+    def assert_close(actual, expected, scale, what):
+        _assert_close(actual, expected, scale, what, rtol)
 
     def at(name):
         return f"{what}: {name}"
@@ -451,7 +473,7 @@ def test_chi2_tests_are_rodgers_four(method, gamma, n, m, rank):
         four = rodgers_four_tests(
             case.z, case.x_0, H, case.S_0, case.S_z / gamma, case.c
         )
-        table = solve(case.problem(), method, gamma=gamma).chi2_tests()
+        table = solve_held(case.problem(), method, gamma=gamma).chi2_tests()
         assert list(table.index) == list(rows)
         assert table.index.name == "test"
         assert list(table.columns) == ["chi2", "dof", "reduced_chi2", "p_value"]
@@ -461,7 +483,11 @@ def test_chi2_tests_are_rodgers_four(method, gamma, n, m, rank):
             what = f"seed {seed}, {row} = {name}"
             assert got["dof"] == dof, what
             np.testing.assert_allclose(
-                got["chi2"], statistic, rtol=1e-8, atol=1e-12, err_msg=what
+                got["chi2"],
+                statistic,
+                rtol=max(1e-8, rtol_of(method)),
+                atol=1e-12,
+                err_msg=what,
             )
             if dof == 0:
                 assert np.isnan(got["reduced_chi2"]) and np.isnan(got["p_value"])
@@ -507,11 +533,12 @@ def test_closed_form(method, n, m, sparse):
         )
         problem = case.problem(**case.sparse_inputs() if sparse else {})
         check_posterior(
-            solve(problem, method),
+            solve_held(problem, method),
             expected,
             case.state_index,
             case.obs_index,
             f"seed {seed}",
+            rtol=rtol_of(method),
         )
 
 
@@ -526,14 +553,24 @@ def test_gamma_scales_mismatch(method, gamma, n, m):
         expected = closed_form(
             case.z, case.x_0, case.H, case.S_0, case.S_z / gamma, case.c
         )
-        post = solve(case.problem(), method, gamma=gamma)
+        post = solve_held(case.problem(), method, gamma=gamma)
         check_posterior(
-            post, expected, case.state_index, case.obs_index, f"seed {seed}"
+            post,
+            expected,
+            case.state_index,
+            case.obs_index,
+            f"seed {seed}",
+            rtol=rtol_of(method),
         )
         # and from another gamma's factorization
-        post = solve(case.problem(), method, gamma=1.0).with_gamma(gamma)
+        post = solve_held(case.problem(), method, gamma=1.0).with_gamma(gamma)
         check_posterior(
-            post, expected, case.state_index, case.obs_index, f"seed {seed}, with_gamma"
+            post,
+            expected,
+            case.state_index,
+            case.obs_index,
+            f"seed {seed}, with_gamma",
+            rtol=rtol_of(method),
         )
 
 
@@ -602,9 +639,14 @@ def test_diagonal_given_as_variances(method, form):
         S_0, S_z = np.diag(v_0), np.diag(v_z)
         expected = closed_form(case.z, case.x_0, case.H, S_0, S_z, case.c)
         prior_cov, obs_cov = _diagonal_inputs(case, form, v_0, v_z)
-        post = solve(case.problem(prior_cov=prior_cov, obs_cov=obs_cov), method)
+        post = solve_held(case.problem(prior_cov=prior_cov, obs_cov=obs_cov), method)
         check_posterior(
-            post, expected, case.state_index, case.obs_index, f"seed {seed}"
+            post,
+            expected,
+            case.state_index,
+            case.obs_index,
+            f"seed {seed}",
+            rtol=rtol_of(method),
         )
 
 
@@ -637,9 +679,14 @@ def test_kronecker_prior_error(method, rows):
         )
         problem = case.problem(prior_cov=Covariance(op, case.state_space))
         assert isinstance(problem.prior_cov.data, KroneckerOperator)
-        post = solve(problem, method)
+        post = solve_held(problem, method)
         check_posterior(
-            post, expected, case.state_index, case.obs_index, f"seed {seed}"
+            post,
+            expected,
+            case.state_index,
+            case.obs_index,
+            f"seed {seed}",
+            rtol=rtol_of(method),
         )
 
 
@@ -653,9 +700,14 @@ def test_sparse_forward_operator(method):
         expected = closed_form(case.z, case.x_0, case.H, case.S_0, case.S_z, case.c)
         H = Operator(sp.csr_array(case.H), case.obs_space, case.state_space)
         assert isinstance(H.data, SparseOperator)
-        post = solve(case.problem(forward=H), method)
+        post = solve_held(case.problem(forward=H), method)
         check_posterior(
-            post, expected, case.state_index, case.obs_index, f"seed {seed}"
+            post,
+            expected,
+            case.state_index,
+            case.obs_index,
+            f"seed {seed}",
+            rtol=rtol_of(method),
         )
 
 
@@ -675,9 +727,14 @@ def test_block_diagonal_mismatch(method, n, m):
         form = BlockDiagonalOperator([dense, DiagonalOperator(variances)])
         problem = case.problem(obs_cov=Covariance(form, case.obs_space))
         assert isinstance(problem.obs_cov.data, BlockDiagonalOperator)
-        post = solve(problem, method)
+        post = solve_held(problem, method)
         check_posterior(
-            post, expected, case.state_index, case.obs_index, f"seed {seed}"
+            post,
+            expected,
+            case.state_index,
+            case.obs_index,
+            f"seed {seed}",
+            rtol=rtol_of(method),
         )
 
 
@@ -714,9 +771,14 @@ def test_jacobian_on_part_of_the_state_is_placed(method, given):
             {("conc", "flux"): block}, rows=case.obs_space, cols=case.state_space
         )
         assert isinstance(forward.data, SparseOperator) == (given != "dense frame")
-        post = solve(case.problem(forward=forward), method)
+        post = solve_held(case.problem(forward=forward), method)
         check_posterior(
-            post, expected, case.state_index, case.obs_index, f"seed {seed}"
+            post,
+            expected,
+            case.state_index,
+            case.obs_index,
+            f"seed {seed}",
+            rtol=rtol_of(method),
         )
         # and the placed operator's adjoint is its transpose
         form, adjoint = forward.data, forward.T.data
@@ -848,36 +910,56 @@ def test_multi_block(method, seed):
     """Block by block, read back by label, the posterior equals the closed form."""
     case = MultiBlockCase.random(seed)
     expected = closed_form(case.z, case.x_0, case.H, case.S_0, case.S_z, case.c)
-    post = solve(case.problem(), method)
+    post = solve_held(case.problem(), method)
     sc = expected.scale
     ss, os_ = case.state_slices, case.obs_slices
 
     for b, idx in case.state.items():
         what = f"seed {seed}: estimate[{b}]"
         got = _block_values(post.estimate, b, idx)
-        assert_close(got, expected.x_hat[ss[b]], sc["x_hat"], what)
+        assert_close(
+            got, expected.x_hat[ss[b]], sc["x_hat"], what, rtol=rtol_of(method)
+        )
         for b2, idx2 in case.state.items():
             what = f"seed {seed}: [{b}, {b2}]"
             got = _block_values(post.cov(), (b, b2), idx, idx2)
-            assert_close(got, expected.S_hat_cov[ss[b], ss[b2]], sc["S_hat"], what)
+            assert_close(
+                got,
+                expected.S_hat_cov[ss[b], ss[b2]],
+                sc["S_hat"],
+                what,
+                rtol=rtol_of(method),
+            )
             got = _block_values(post.averaging_kernel(), (b, b2), idx, idx2)
-            assert_close(got, expected.A[ss[b], ss[b2]], sc["A"], what)
+            assert_close(
+                got, expected.A[ss[b], ss[b2]], sc["A"], what, rtol=rtol_of(method)
+            )
         for o, oidx in case.obs.items():
             what = f"seed {seed}: kalman_gain[{b}, {o}]"
             got = _block_values(post.kalman_gain, (b, o), idx, oidx)
-            assert_close(got, expected.K[ss[b], os_[o]], sc["K"], what)
+            assert_close(
+                got, expected.K[ss[b], os_[o]], sc["K"], what, rtol=rtol_of(method)
+            )
 
     for o, oidx in case.obs.items():
         what = f"seed {seed}: modeled_obs[{o}]"
         got = _block_values(post.modeled_obs, o, oidx)
-        assert_close(got, expected.y_hat[os_[o]], sc["y"], what)
+        assert_close(got, expected.y_hat[os_[o]], sc["y"], what, rtol=rtol_of(method))
         for o2, oidx2 in case.obs.items():
             what = f"seed {seed}: innovation_cov[{o}, {o2}]"
             got = _block_values(post.innovation_cov, (o, o2), oidx, oidx2)
-            assert_close(got, expected.G[os_[o], os_[o2]], sc["G"], what)
+            assert_close(
+                got, expected.G[os_[o], os_[o2]], sc["G"], what, rtol=rtol_of(method)
+            )
 
-    assert_close(post.dofs, expected.DOFS, sc["DOFS"], "dofs")
-    assert_close(post.reduced_chi2, expected.reduced_chi2, sc["chi2"], "chi2")
+    assert_close(post.dofs, expected.DOFS, sc["DOFS"], "dofs", rtol=rtol_of(method))
+    assert_close(
+        post.reduced_chi2,
+        expected.reduced_chi2,
+        sc["chi2"],
+        "chi2",
+        rtol=rtol_of(method),
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -914,12 +996,12 @@ def _aligned(structure, index, columns=None) -> np.ndarray:
 def test_permutation(method, seed):
     """Each input in its own random order gives the same labeled posterior."""
     case = MultiBlockCase.random(seed)
-    ref = solve(case.problem(), method)
+    ref = solve_held(case.problem(), method)
     p = ref.problem
     rng = np.random.default_rng(1000 + seed)
 
     # The assembled inputs, with block levels, each shuffled on its own
-    shuffled = solve(
+    shuffled = solve_held(
         Problem(
             obs=Vector.from_series(_shuffled(p.obs.to_series(), rng)),
             prior=Vector.from_series(_shuffled(p.prior.to_series(), rng)),
@@ -949,6 +1031,7 @@ def test_permutation(method, seed):
             want.dense() if cols is not None else want.values,
             sc[key],
             f"seed {seed}: {name}",
+            rtol=rtol_of(method),
         )
     for diag in [
         "dofs",
@@ -961,7 +1044,7 @@ def test_permutation(method, seed):
     ]:
         got = getattr(shuffled, diag)
         want = getattr(ref, diag)
-        assert_close(got, want, abs(want), f"seed {seed}: {diag}")
+        assert_close(got, want, abs(want), f"seed {seed}: {diag}", rtol=rtol_of(method))
 
 
 # ---------------------------------------------------------------------------
@@ -1308,7 +1391,7 @@ def test_posterior_of_state_aggregates(method, average):
     averaged: ``W S_hat W^T`` and ``W A W^T (W W^T)^-1``.
     """
     case = Case.random(seed=11, n=7, m=10)
-    post = solve(case.problem(), method)
+    post = solve_held(case.problem(), method)
     cells = case.state_index.get_level_values("cell")
     regions = pd.Series(
         ["east", "west", "east", "north", "west", "east", "north"],
@@ -1334,6 +1417,7 @@ def test_posterior_of_state_aggregates(method, average):
         W_pos @ expected.S_hat_cov @ W_pos.T,
         sc["S_hat"] * 7,
         "W S_hat W^T",
+        rtol=rtol_of(method),
     )
     pinv = W_pos.T @ np.linalg.inv(W_pos @ W_pos.T)
     assert_close(
@@ -1341,6 +1425,7 @@ def test_posterior_of_state_aggregates(method, average):
         W_pos @ expected.A @ pinv,
         sc["A"] * 7,
         "W A W*",
+        rtol=rtol_of(method),
     )
 
 

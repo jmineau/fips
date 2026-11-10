@@ -597,21 +597,43 @@ class _KroneckerDraw(LinearOperator):
 
     It is ``n x N``, from the standard normals on the whole product grid to
     the operator's rows (:meth:`KroneckerOperator._make_root`), and is applied
-    through the Cholesky factors :math:`L_k`, one way only: a draw needs
-    :math:`R w`, never :math:`R^T`.
+    through the Cholesky factors :math:`L_k`. Its transpose,
+    :math:`(L_1^T \otimes \dots \otimes L_K^T) P^T D` (``N x n``), is the
+    whitening the ``"variational"`` method's products go through.
     """
 
-    def __init__(self, of: KroneckerOperator, roots: tuple[np.ndarray, ...]):
+    def __init__(
+        self,
+        of: KroneckerOperator,
+        roots: tuple[np.ndarray, ...],
+        transposed: bool = False,
+    ):
         self._of = of
         self._roots = tuple(_read_only(L) for L in roots)
-        super().__init__((of.shape[0], of._size))
+        self._transposed = transposed
+        shape = (of.shape[0], of._size)
+        super().__init__(shape[::-1] if transposed else shape)
 
     def _matmat(self, X):
-        """Return ``R @ X`` through the factors."""
+        """Return ``R @ X``, or ``R^T @ X`` for the transpose, through the factors."""
         of, s = self._of, self._of.std[:, None]
+        if not self._transposed:
 
-        def apply(Y):
-            """Return ``R Y`` for a block of columns."""
-            return s * of._gather(of._through(Y, self._roots))
+            def apply(Y):
+                """Return ``R Y`` for a block of columns."""
+                return s * of._gather(of._through(Y, self._roots))
 
-        return of._by_columns(X, apply)
+            return of._by_columns(X, apply)
+        roots = tuple(L.T for L in self._roots)
+        X = X.toarray() if sparse.issparse(X) else np.asarray(X, dtype=float)
+        out = np.empty((of._size, X.shape[1]))
+        step = max(1, _CHUNK // of._size)
+        for j in range(0, X.shape[1], step):
+            out[:, j : j + step] = of._through(
+                of._scatter(s * X[:, j : j + step]), roots
+            )
+        return out
+
+    def _transpose(self):
+        """Return the transpose, the same factors applied the other way."""
+        return _KroneckerDraw(self._of, self._roots, not self._transposed)

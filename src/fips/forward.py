@@ -5,12 +5,15 @@ A :class:`~fips.Problem` takes its forward map as an :class:`~fips.Operator`,
 the matrix :math:`H` of a linear map, or as a :class:`ForwardModel`, a class
 the caller writes with two methods: the model itself, :math:`F(x)`, and its
 Jacobian, :math:`J(x) = \partial F / \partial x` at a state, as an
-:class:`~fips.Operator`. The observations are then :math:`z = F(x) + c + e`.
+:class:`~fips.Operator` (or, for a model with an adjoint, its products
+:math:`J v` and :math:`J^T w`, :meth:`ForwardModel.jvp` and
+:meth:`ForwardModel.vjp`). The observations are then :math:`z = F(x) + c + e`.
 fips builds no Jacobian: it calls the caller's. :meth:`Problem.linearized
 <fips.Problem.linearized>` is the linear problem at a state, and
 ``fips.solve(problem, "gauss_newton")`` finds the mode of the posterior by
-solving it again at each estimate. :func:`taylortest` checks a model's
-Jacobian against the model.
+solving it again at each estimate (``"variational"`` does the same with
+products only). :func:`taylortest` checks a model's Jacobian against the
+model, and its transpose against the Jacobian.
 """
 
 import logging
@@ -18,6 +21,7 @@ from abc import ABC, abstractmethod
 
 import numpy as np
 
+from fips.linalg import LinearOperator, MatrixFreeOperator, dottest
 from fips.operator import Operator
 from fips.space import Space
 from fips.vector import Vector
@@ -41,6 +45,12 @@ class ForwardModel(ABC):
       :attr:`rows` as its rows and :attr:`cols` as its columns (in any
       order, and in any form: dense, sparse, the product of a matrix and a
       diagonal).
+
+    A model whose Jacobian is too large to hold, but which has a tangent
+    linear and an adjoint (a transport model run forward and backward),
+    writes :meth:`jvp` and :meth:`vjp` instead of ``jacobian``: its Jacobian
+    is then those products (a :class:`~fips.linalg.MatrixFreeOperator`), and
+    ``fips.solve(problem, "variational")`` solves with them alone.
 
     Call ``super().__init__(rows, cols)`` with the two spaces in the
     subclass's ``__init__``. fips calls both methods with a vector on
@@ -145,9 +155,11 @@ class ForwardModel(ABC):
         r"""
         Return the Jacobian of the model at `x`: :math:`J_{ij} = \partial F_i / \partial x_j`.
 
-        ``"gauss_newton"`` and :func:`taylortest` need it; the ensemble method
-        only runs the model, so a model solved with it need not write one.
-        This one raises.
+        ``"gauss_newton"``, ``"variational"`` and :func:`taylortest` need it;
+        the ensemble method only runs the model, so a model solved with it
+        need not write one. This one gives the products of :meth:`jvp` and
+        :meth:`vjp` at `x`, a :class:`~fips.linalg.MatrixFreeOperator`, when
+        the subclass writes both, and raises otherwise.
 
         Parameters
         ----------
@@ -163,20 +175,91 @@ class ForwardModel(ABC):
         Raises
         ------
         NotImplementedError
-            Unless the subclass writes it.
+            Unless the subclass writes it, or both :meth:`jvp` and :meth:`vjp`.
         """
+        cls = type(self)
+        if cls.jvp is not ForwardModel.jvp and cls.vjp is not ForwardModel.vjp:
+            values = _on(self.cols, x, "x", "the model's columns")
+            return Operator(_Linearization(self, values), self.rows, self.cols)
         raise NotImplementedError(
-            f"{type(self).__name__} has no jacobian: write one to solve with "
-            '"gauss_newton" or check it with taylortest, or solve with '
-            '"ensemble", which only runs the model.'
+            f"{cls.__name__} has no jacobian: write one (or both jvp and vjp, its "
+            'products) to solve with "gauss_newton" or "variational" or check it '
+            'with taylortest, or solve with "ensemble", which only runs the model.'
         )
+
+    def jvp(self, x: Vector, v: Vector) -> Vector:
+        r"""
+        Return the Jacobian at `x` times `v`, :math:`J(x)\, v`: a run of the tangent linear model.
+
+        Write it, with :meth:`vjp`, for a model whose Jacobian is known only
+        by its products. This one multiplies by :meth:`jacobian`.
+
+        Parameters
+        ----------
+        x : Vector
+            A state on :attr:`cols`, where the model is linearized.
+        v : Vector
+            A change of the state, on :attr:`cols`.
+
+        Returns
+        -------
+        Vector
+            :math:`J(x)\, v`, on :attr:`rows` (its labels in any order).
+
+        Raises
+        ------
+        NotImplementedError
+            If the subclass writes neither this nor :meth:`jacobian`.
+        """
+        if type(self).jacobian is ForwardModel.jacobian:
+            raise NotImplementedError(
+                f"{type(self).__name__} writes neither jacobian nor jvp."
+            )
+        J = _differentiated(self, _on(self.cols, x, "x", "the model's columns"))
+        values = _on(self.cols, v, "v", "the model's columns")
+        return Vector(np.asarray(J.data @ values, dtype=float), self.rows)
+
+    def vjp(self, x: Vector, w: Vector) -> Vector:
+        r"""
+        Return the transpose of the Jacobian at `x` times `w`, :math:`J(x)^T w`: a run of the adjoint model.
+
+        Write it, with :meth:`jvp`, for a model whose Jacobian is known only
+        by its products. This one multiplies by the transpose of
+        :meth:`jacobian` (or by a cheaper product the model has, as a
+        transform does).
+
+        Parameters
+        ----------
+        x : Vector
+            A state on :attr:`cols`, where the model is linearized.
+        w : Vector
+            Weights of the observations, on :attr:`rows`.
+
+        Returns
+        -------
+        Vector
+            :math:`J(x)^T w`, on :attr:`cols` (its labels in any order).
+
+        Raises
+        ------
+        NotImplementedError
+            If the subclass writes neither this nor :meth:`jacobian`.
+        """
+        if type(self).jacobian is ForwardModel.jacobian:
+            raise NotImplementedError(
+                f"{type(self).__name__} writes neither jacobian nor vjp."
+            )
+        values = _on(self.cols, x, "x", "the model's columns")
+        weights = _on(self.rows, w, "w", "the model's rows")
+        return Vector(self._gradient(values, weights), self.cols)
 
     def _gradient(self, x: np.ndarray, v: np.ndarray) -> np.ndarray:
         r"""
         Return :math:`J(x)^T v`, for the state values `x` in the order of :attr:`cols` and `v` in the order of :attr:`rows`, in the order of :attr:`cols`.
 
         A product with the transpose of the Jacobian, for a sampler's
-        gradient. This one forms the Jacobian; a model with a cheaper product
+        gradient. This one forms the Jacobian (the products of :meth:`vjp`,
+        for a model that writes them); a model with a cheaper product
         overrides it.
         """
         return np.asarray(_differentiated(self, x).data._transpose() @ v, dtype=float)
@@ -235,6 +318,64 @@ class _Aggregated(ForwardModel):
     def __repr__(self) -> str:
         """Return the model and the aggregation's rows."""
         return f"_Aggregated({self.model!r}, rows: {self._rows!r})"
+
+
+class _Linearization(MatrixFreeOperator):
+    r"""
+    The Jacobian of a model at a state as its products (:meth:`ForwardModel.jvp`, and :meth:`ForwardModel.vjp` for its transpose), on the model's rows and columns in their order.
+
+    A product with a block of vectors is one call of the model's product per
+    column. It pickles when the model does.
+    """
+
+    def __init__(
+        self, model: ForwardModel, values: np.ndarray, transposed: bool = False
+    ):
+        self._model = model
+        self._values = values
+        self._transposed = transposed
+        shape = (len(model.rows), len(model.cols))
+        LinearOperator.__init__(self, shape[::-1] if transposed else shape)
+
+    def _matmat(self, X):
+        """Return ``J @ X`` (``J^T @ X`` for the transpose), a column at a time."""
+        model = self._model
+        x = Vector(self._values, model.cols)
+        X = X.toarray() if hasattr(X, "toarray") else np.asarray(X, dtype=float)
+        out = np.empty((self.shape[0], X.shape[1]))
+        for j in range(X.shape[1]):
+            if self._transposed:
+                product = model.vjp(x, Vector(X[:, j], model.rows))
+                out[:, j] = _returned(model, product, model.cols, "vjp")
+            else:
+                product = model.jvp(x, Vector(X[:, j], model.cols))
+                out[:, j] = _returned(model, product, model.rows, "jvp")
+        return out
+
+    def _transpose(self):
+        """Return the transpose: the other product."""
+        return _Linearization(self._model, self._values, not self._transposed)
+
+
+def _on(space: Space, v: Vector, what: str, where: str) -> np.ndarray:
+    """Return the values of the Vector `v` in the order of `space`, which must have exactly its labels."""
+    if not isinstance(v, Vector):
+        raise TypeError(f"{what} must be a Vector, got {type(v).__name__}.")
+    if v.space is space:
+        return v.values
+    return v.values[
+        space._align(v.space, what, f"{what[:1].upper()}{what[1:]} and {where}")
+    ]
+
+
+def _returned(model: ForwardModel, v: Vector, space: Space, method: str) -> np.ndarray:
+    """Return what the model's `method` returned, a Vector on `space`, in the order of `space`."""
+    if not isinstance(v, Vector):
+        raise TypeError(
+            f"{type(model).__name__}.{method} must return a Vector, got "
+            f"{type(v).__name__}."
+        )
+    return _on(space, v, f"what {type(model).__name__}.{method} returns", "its labels")
 
 
 def _evaluated(model: ForwardModel, values: np.ndarray) -> np.ndarray:
@@ -297,12 +438,15 @@ _STEPS = 30
 _ORDER = 1.8
 """The order of the remainder :func:`taylortest` asks for at its smallest steps: 2 for a right Jacobian, 1 for a wrong one."""
 
+_ADJOINT = 1e-10
+r"""How far :math:`\langle J v, w \rangle` and :math:`\langle v, J^T w \rangle` may differ in :func:`taylortest`, relative to the size of their terms: roundoff of an exact discrete adjoint, far below a wrong one's."""
+
 
 def taylortest(
     model: ForwardModel, x: Vector, dx: Vector | None = None, seed: int | None = 0
 ) -> bool:
     r"""
-    Check that a model's Jacobian is the derivative of the model, by a Taylor test.
+    Check that a model's Jacobian is the derivative of the model, by a Taylor test, and that its transpose is its adjoint.
 
     For a step :math:`\epsilon` along a direction :math:`\delta x`, the
     remainder :math:`r(\epsilon) = \lVert F(x + \epsilon\, \delta x) - F(x) -
@@ -315,6 +459,15 @@ def taylortest(
     :math:`\lVert F \rVert`). A remainder at roundoff from the start (a model
     whose Jacobian is exact, such as a linear one) passes. The orders are
     logged at DEBUG.
+
+    The Jacobian is the one fips solves with: ``jacobian(x)``, or for a model
+    that writes only its products, :meth:`~ForwardModel.jvp` and
+    :meth:`~ForwardModel.vjp`. Its transpose must be its adjoint too:
+    :math:`\langle J v, w \rangle = \langle v, J^T w \rangle` for random
+    :math:`v` and :math:`w`, to within :math:`10^{-10}` of the size of the
+    terms (:func:`fips.linalg.dottest`), which an adjoint model with a term
+    missing or transposed wrong fails at order one. A failure of either
+    check is logged at INFO.
 
     Parameters
     ----------
@@ -333,7 +486,8 @@ def taylortest(
     Returns
     -------
     bool
-        True if the remainder falls as the square of the step.
+        True if the remainder falls as the square of the step and the
+        transpose is the adjoint.
 
     Raises
     ------
@@ -404,7 +558,15 @@ def taylortest(
     else:
         direction = on_cols(dx, "dx")
     F0 = _evaluated(model, point)
-    Jdx = np.asarray(_differentiated(model, point).data @ direction, dtype=float)
+    J = _differentiated(model, point).data
+    if not dottest(J, rtol=_ADJOINT, seed=seed):
+        logger.info(
+            "Taylor test: the transpose of %s's Jacobian is not its adjoint (vjp "
+            "is not the transpose of jvp).",
+            type(model).__name__,
+        )
+        return False
+    Jdx = np.asarray(J @ direction, dtype=float)
     eps = np.finfo(float).eps
     steps = 0.5 ** np.arange(1, _STEPS + 1)
     remainders, floors = [], []
@@ -418,6 +580,8 @@ def taylortest(
     if not len(pairs):
         exact = bool(np.all(r[np.isfinite(r)] <= floor[np.isfinite(r)]))
         logger.debug("Taylor test: the remainder is at roundoff (%s).", exact)
+        if not exact:
+            logger.info("Taylor test: the remainder is not at roundoff.")
         return exact
     orders = np.log2(r[pairs] / r[pairs + 1])
     logger.debug(
@@ -425,4 +589,11 @@ def taylortest(
         "largest step: %s.",
         np.array2string(orders, precision=2),
     )
-    return bool(np.all(orders[-3:] > _ORDER))
+    passed = bool(np.all(orders[-3:] > _ORDER))
+    if not passed:
+        logger.info(
+            "Taylor test: the remainder falls as the step to the power %s at the "
+            "smallest steps, not 2: the Jacobian is not the derivative of the model.",
+            np.array2string(orders[-3:], precision=2),
+        )
+    return passed
