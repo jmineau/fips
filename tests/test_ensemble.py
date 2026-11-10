@@ -460,8 +460,9 @@ def test_refused_features():
     post = fips.solve(build(15), "ensemble", members=10)
     with pytest.raises(TypeError, match="estimate_is_linear"):
         post.recovery()
-    with pytest.raises(TypeError):
+    with pytest.raises(fips.UnavailableError, match="sample covariance of its members"):
         _ = post.log_evidence
+    assert not hasattr(post, "log_evidence")
     model_post = fips.solve(build(15, forward=Cubic), "ensemble", members=10)
     with pytest.raises(TypeError, match="linear forward operator"):
         _ = model_post.dofs_per_element

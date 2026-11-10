@@ -36,10 +36,51 @@ from fips.covariance import Covariance, CovarianceModel
 from fips.linalg import LinearOperator
 from fips.linalg.forms import _adopt, _solve_psd
 from fips.operator import Operator
-from fips.problem import Problem, _covariance
+from fips.problem import Problem, _covariance, _vector
 from fips.vector import Vector
 
 logger = logging.getLogger(__name__)
+
+
+class UnavailableError(AttributeError, TypeError):
+    """
+    Raised when a posterior is asked for a member the method that solved it cannot give.
+
+    A :class:`Posterior` has every member for every method except those that
+    need more of the method than a :class:`Solution` gives (its docstring
+    lists them, and which method has which): :attr:`~Posterior.mean` of a
+    method whose estimate is a mode, :attr:`~Posterior.at_bound` of one with
+    no bounds, :attr:`~Posterior.log_evidence` of one whose posterior is not
+    the Gaussian at its estimate, and so on. It is an :class:`AttributeError`,
+    so ``hasattr(post, "at_bound")`` is False and generic code can ask a
+    posterior what it gives, and a :class:`TypeError`, as these refusals
+    were before it.
+
+    See Also
+    --------
+    Posterior : The members, and which method gives which.
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> import pandas as pd
+    >>> import fips
+    >>> state = fips.Space({"flux": pd.Index(["a", "b"], name="cell")})
+    >>> observed = fips.Space({"co2": pd.RangeIndex(1, name="obs_id")})
+    >>> problem = fips.Problem(
+    ...     prior=fips.Vector([0.5, 0.5], state),
+    ...     prior_cov=fips.Independent().with_std(0.5),
+    ...     obs=fips.Vector([-0.4], observed),
+    ...     obs_cov=fips.Independent().with_std(0.1),
+    ...     forward=fips.Operator(np.ones((1, 2)), observed, state),
+    ... )
+    >>> analytic = fips.solve(problem)
+    >>> bounded = fips.solve(problem, "bounded", lower=0.0)
+    >>> hasattr(analytic, "at_bound"), hasattr(bounded, "at_bound")
+    (False, True)
+    >>> hasattr(bounded, "mean")  # the bounded estimate is a mode
+    False
+    """
 
 
 class Solution(Protocol):
@@ -95,7 +136,8 @@ class Solution(Protocol):
     estimate, exactly or as Laplace's approximation, so that its
     :meth:`chi2` and :meth:`information` give the evidence, says so with
     ``evidence_is_laplace = True``; without it, a posterior has no
-    :attr:`~Posterior.log_evidence`.
+    :attr:`~Posterior.log_evidence`, and the solution's ``no_evidence``, a
+    sentence, if it has one, says why.
 
     A method whose posterior is not Gaussian in closed form answers each
     question as its docstring says. The bounded method's estimate is the mode;
@@ -418,9 +460,13 @@ class Posterior:
     :meth:`candidate_worth` (where the estimate is linear in the
     observations), :meth:`data_worth`, :meth:`sample` (where the method can
     draw from its posterior), :attr:`at_bound` (where it has bounds),
-    :attr:`iterations` (where it iterates) and :attr:`log_evidence` (where
-    the posterior is the Gaussian at the estimate). The analytic method has
-    all but :attr:`at_bound` and :attr:`iterations`. The ``"bounded"`` method
+    :attr:`iterations` (where it iterates), :attr:`eigenvalues` (where the
+    posterior is low-rank) and :attr:`log_evidence` (where the posterior is
+    the Gaussian at the estimate); asked for one, a posterior raises
+    :class:`~fips.UnavailableError` (for a property, ``hasattr`` is then
+    False). The analytic
+    method has all but :attr:`at_bound`, :attr:`iterations` and
+    :attr:`eigenvalues`. The ``"bounded"`` method
     (:class:`~fips.methods.bounded.BoundedOptions`) has :meth:`with_gamma`,
     :meth:`with_data`, :meth:`sample` and :attr:`at_bound`, and
     :attr:`log_evidence` only with no finite bound; its estimate is
@@ -441,7 +487,13 @@ class Posterior:
     members, at most as many as it has); its estimate, variances, gain and
     diagnostics are those of its members, which approach the analytic
     posterior as they grow, and what needs :math:`H` (the averaging kernel,
-    :attr:`dofs_per_element`) raises for a model.
+    :attr:`dofs_per_element`) raises for a model. The ``"variational"``
+    method (:class:`~fips.methods.variational.VariationalOptions`) has
+    :meth:`with_data`, :meth:`sample`, :attr:`iterations` and
+    :attr:`eigenvalues`, and for a linear problem :attr:`mean` and
+    :meth:`with_gamma`; :attr:`log_evidence` unless its ``rank`` left out
+    pairs that still hold information; its variances and gain are those of
+    its low-rank posterior.
 
     Parameters
     ----------
@@ -545,12 +597,12 @@ class Posterior:
 
         Raises
         ------
-        TypeError
+        UnavailableError
             If the solution does not have it: the method cannot give `feature`.
         """
         member = getattr(self._solution, name, None)
         if member is None:
-            raise TypeError(
+            raise UnavailableError(
                 f"The method that solved this problem cannot give {feature} "
                 f"({type(self._solution).__name__} has no {name}); solve the "
                 "problem again with fips.solve."
@@ -586,11 +638,12 @@ class Posterior:
 
         Raises
         ------
-        AttributeError
-            If the method's estimate is not the posterior mean.
+        UnavailableError
+            If the method's estimate is not the posterior mean (an
+            :class:`AttributeError`).
         """
         if not getattr(self._solution, "estimate_is_mean", False):
-            raise AttributeError(
+            raise UnavailableError(
                 "The method that solved this problem does not give the posterior "
                 "mean; its point estimate is `estimate`."
             )
@@ -604,9 +657,11 @@ class Posterior:
         The analytic method computes them from its factors in
         :math:`O(m n)`, without the :math:`n \times n` covariance. The
         ``"bounded"`` method gives the variances of its kept draws of the
-        truncated posterior (``draws`` of them: a Monte Carlo estimate, a
-        standard deviation good to about 2% at the default 2000), about
-        their mean, not about the mode; the ``"gauss_newton"`` method those
+        truncated posterior (``draws`` of them: a Monte Carlo estimate, at the
+        default 2000 a standard deviation good to about 1.5% away from the
+        bounds and to about 12% for an element whose analytic estimate is one
+        to four standard deviations outside its bound; the solve warns past
+        10%), about their mean, not about the mode; the ``"gauss_newton"`` method those
         of its kept draws of the posterior of its forward model, the same
         way; the ``"ensemble"`` method those of its updated members.
 
@@ -638,7 +693,7 @@ class Posterior:
 
         Raises
         ------
-        TypeError
+        UnavailableError
             If the method has no bounds (its solution has no ``at_bound``),
             as for the analytic method, and for ``"bounded"`` when no finite
             bound is given (its posterior is then the analytic one).
@@ -682,6 +737,16 @@ class Posterior:
         >>> post.at_bound.tolist()
         [True, True, False]
         """
+        missing = object()
+        given = [getattr(self._options, side, missing) for side in ("lower", "upper")]
+        takes_bounds = all(bound is not missing for bound in given)
+        if getattr(self._solution, "at_bound", None) is None and takes_bounds:
+            # a method that takes bounds, given none that is finite
+            raise UnavailableError(
+                f"No finite bound was given (lower={given[0]!r}, upper="
+                f"{given[1]!r}), so the posterior is the analytic one and no "
+                "element sits on a bound."
+            )
         at = self._optional("at_bound", "which state elements sit on a bound")
         return pd.Series(
             np.asarray(at(), dtype=bool),
@@ -717,7 +782,7 @@ class Posterior:
 
         Raises
         ------
-        TypeError
+        UnavailableError
             If the method does not iterate (its solution has no
             ``iterations``), as for the analytic method, and for
             ``"gauss_newton"`` on a problem whose forward is an operator (its
@@ -800,7 +865,7 @@ class Posterior:
 
         Raises
         ------
-        TypeError
+        UnavailableError
             If the method keeps no low-rank posterior (its solution has no
             ``spectrum``), as for the analytic method.
 
@@ -1077,9 +1142,11 @@ class Posterior:
         to the bounds, by exact Hamiltonian Monte Carlo (Pakman and Paninski,
         2014): each call runs a chain from the mode, leaves out its first
         ``burn_in`` draws, and returns the next `n`. Each draw starts from the
-        last, so the draws are correlated (in the tests, about one effective
-        draw per draw for most elements, one per four or five for an element
-        whose analytic estimate is far outside its bound). A call costs a
+        last, so the draws are correlated: about one effective draw per draw
+        for an element away from its bounds, and one per 13 to 17 for an
+        element whose analytic estimate is one to four standard deviations
+        outside its bound, whose draws pile against it (one far outside mixes
+        faster). A call costs a
         reflection off a bound, an ``O(n)`` step, for each bound a path
         reaches: about as many per draw as there are elements near a bound.
 
@@ -1131,8 +1198,9 @@ class Posterior:
         Raises
         ------
         TypeError
-            If `W` is not an Operator; or the method cannot draw from its
-            posterior (its solution has no ``sample``).
+            If `W` is not an Operator; or (an :class:`UnavailableError`) the
+            method cannot draw from its posterior (its solution has no
+            ``sample``).
         ValueError
             If `n` is not a positive integer (or, for the ensemble method, is
             above its number of members), or the columns of `W` do not have
@@ -1283,9 +1351,10 @@ class Posterior:
         Raises
         ------
         TypeError
-            If `W` is not an Operator, or the method cannot give the blocks of
-            :math:`P` and the self-sensitivity (its solution lacks
-            ``innovation_precision`` or ``self_sensitivity``).
+            If `W` is not an Operator, or (an :class:`UnavailableError`) the
+            method cannot give the blocks of :math:`P` and the
+            self-sensitivity (its solution lacks ``innovation_precision`` or
+            ``self_sensitivity``).
         ValueError
             If the columns of `W` do not have exactly the state's labels, or
             `by` puts no observation in a group.
@@ -1449,8 +1518,9 @@ class Posterior:
         ------
         TypeError
             If the method's estimate is not linear in the observations (its
-            solution does not set ``estimate_is_linear``), `forward` or `W`
-            is not an Operator, or `obs_cov` is not a covariance.
+            solution does not set ``estimate_is_linear``; an
+            :class:`UnavailableError`), `forward` or `W` is not an Operator,
+            or `obs_cov` is not a covariance.
         ValueError
             If the columns of `forward` or `W` do not have exactly the state's
             labels, `obs_cov` is not on the rows of `forward`, or `by` puts
@@ -1510,7 +1580,7 @@ class Posterior:
         1    B    a      3  0.375        0.447     0.354      0.209
         """
         if not getattr(self._solution, "estimate_is_linear", False):
-            raise TypeError(
+            raise UnavailableError(
                 "The method that solved this problem does not give an estimate "
                 f"linear in the observations ({type(self._solution).__name__} does "
                 "not set estimate_is_linear), so adding observations is not a "
@@ -2126,11 +2196,22 @@ class Posterior:
         ``"bounded"`` method gives it only with no finite bound, when its
         posterior is the analytic one.
 
+        For the ``"variational"`` method, it is the same formula with the
+        information content of its low-rank posterior: exact for a linear
+        problem at full rank. Below the problem's rank it leaves out
+        :math:`\tfrac{1}{2} \sum \ln(1 + \tilde\lambda_j)` of the pairs not
+        kept, so it is biased high, more for a larger prior; a maximum over
+        the settings would choose too large a prior. It is refused when the
+        last pair kept still has an eigenvalue above 1 (the solve warns of
+        it): raise ``rank`` until the last eigenvalues of :attr:`eigenvalues`
+        are well below 1.
+
         Raises
         ------
-        TypeError
+        UnavailableError
             If the method's posterior is not the Gaussian at its estimate (a
-            bounded posterior with a finite bound).
+            bounded posterior with a finite bound, an ensemble), or its rank
+            left out pairs that still hold information (``"variational"``).
         numpy.linalg.LinAlgError
             If :math:`S_z` is not positive-definite.
 
@@ -2184,17 +2265,12 @@ class Posterior:
         [-5.609, -4.624, -3.5]
         """
         if not getattr(self._solution, "evidence_is_laplace", False):
-            raise TypeError(
-                "The method that solved this problem gives no log evidence "
-                f"({type(self._solution).__name__}'s evidence_is_laplace is "
-                "false or unset): its posterior is not the Gaussian at its "
-                "estimate, so the chi-squared and the information content do not "
-                "give it. With bounds on the state, the exact evidence is the "
-                "Gaussian one times the probability of the bounds under the "
-                "posterior over their probability under the prior, both "
-                "orthant probabilities of a correlated Gaussian, which fips does "
-                "not compute. The evidence of the problem without bounds is "
-                "fips.solve(problem).log_evidence."
+            reason = getattr(self._solution, "no_evidence", None) or (
+                "its posterior is not the Gaussian at its estimate, so the "
+                "chi-squared and the information content do not give it."
+            )
+            raise UnavailableError(
+                f"The method that solved this problem gives no log evidence: {reason}"
             )
         m, gamma = len(self._problem.obs), self._gamma
         return -0.5 * float(
@@ -2525,9 +2601,10 @@ class Posterior:
 
         Raises
         ------
-        TypeError
+        UnavailableError
             If the method cannot change gamma without solving again (its
-            solution has no ``with_gamma``).
+            solution has no ``with_gamma``, or, for a method that solves a
+            forward model, its linearization depends on gamma).
 
         Examples
         --------
@@ -2588,10 +2665,12 @@ class Posterior:
         ValueError
             If `obs` does not have exactly the observations' labels.
         TypeError
-            If the method cannot take new observations without solving again
-            (its solution has no ``with_data``).
+            If `obs` is not a Vector; or (an :class:`UnavailableError`) the
+            method cannot take new observations without solving again (its
+            solution has no ``with_data``).
         """
         resolve = self._optional("with_data", "the posterior of other observations")
+        obs = _vector(obs, "obs")
         problem = self._problem
         space = problem.obs.space
         positions = space._align(
@@ -2756,8 +2835,9 @@ class Posterior:
         ------
         TypeError
             If the method's estimate is not linear in the observations (its
-            solution does not set ``estimate_is_linear``), or `world` is not
-            a Problem, or `truth` not a Vector.
+            solution does not set ``estimate_is_linear``; an
+            :class:`UnavailableError`), or `world` is not a Problem, or
+            `truth` not a Vector.
         ValueError
             If the world's observations or, without `W_world`, its state, the
             truth or the columns of `W` do not have exactly this posterior's
@@ -2824,7 +2904,7 @@ class Posterior:
         1      2   0.0  0.586          0.586      0.95
         """
         if not getattr(self._solution, "estimate_is_linear", False):
-            raise TypeError(
+            raise UnavailableError(
                 "The method that solved this problem does not give an estimate "
                 f"linear in the observations ({type(self._solution).__name__} does "
                 "not set estimate_is_linear), so its error has no closed form: "
@@ -3006,8 +3086,9 @@ class Posterior:
         ------
         TypeError
             If `world` is neither a Problem nor callable, or returns something
-            other than two Vectors; or the method cannot take new
-            observations (its solution has no ``with_data``).
+            other than two Vectors; or (an :class:`UnavailableError`) the
+            method cannot take new observations (its solution has no
+            ``with_data``).
         ValueError
             If `n` is not a positive integer; if the world's observations do
             not have exactly this posterior's labels, or its truth not the

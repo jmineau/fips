@@ -60,6 +60,7 @@ import fips
 from fips import Covariance, ForwardModel, Operator, Problem, Space, Vector
 from fips.linalg import DiagonalOperator, KroneckerOperator
 from fips.methods import gauss_newton
+from fips.methods._draws import _autocorrelation_times
 from fips.methods.analytic import Information, Whitened
 from fips.methods.gauss_newton import GaussNewton, GaussNewtonOptions
 from fips.problem import Problem as _Problem
@@ -285,8 +286,8 @@ class Arrays:
         return iterates, d2
 
 
-TIGHT = {"tol": 1e-22, "max_iterations": 100}
-"""Options with which the iterations go on to roundoff, for the comparisons with the dense references."""
+TIGHT = {"tol": 1e-20, "max_iterations": 100}
+"""Options with which the iterations go on close to roundoff, for the comparisons with the dense references (a tol of 1e-22 asked for steps at roundoff itself, which depend on the BLAS)."""
 
 SIZES = [(6, 15), (15, 6)]
 """Fewer, then more state elements than observations."""
@@ -674,6 +675,32 @@ def test_the_taylor_test_refuses_what_is_not_a_model():
         fips.taylortest(ExpModel(H), Vector(arrays.x_0, other))
 
 
+def test_the_taylor_test_refuses_a_step_that_tests_nothing():
+    """A ``dx`` of zeros, an infinite one, or one so small that the output does not move above roundoff, has a zero remainder at every step, which a Jacobian wrong by 2 passed: each is refused by name; the default ``dx`` fails it."""
+    arrays = Arrays.random(12, 6, 9)
+    state, obs = arrays.spaces()
+    H = Operator(arrays.H, obs, state)
+    x = Vector(arrays.x_0, state)
+    wrong = ExpModel(H, scale=2.0)
+    assert not fips.taylortest(wrong, x)
+    for values in (np.zeros(6), np.r_[np.inf, np.ones(5)]):  # a Vector refuses NaN
+        with pytest.raises(ValueError, match="dx must be finite and not zero"):
+            fips.taylortest(wrong, x, dx=Vector(values, state))
+    with pytest.raises(ValueError, match="barely changes along dx"):
+        fips.taylortest(wrong, x, dx=Vector(np.full(6, 1e-16), state))
+    # a little above roundoff at the largest step, the remainder is at roundoff
+    # whatever the Jacobian: the probe's case, a step of 1e-12 on its model
+    for scale in (1.0, 2.0):
+        with pytest.raises(ValueError, match="barely changes along dx"):
+            fips.taylortest(
+                ExpModel(H, scale=scale), x, dx=Vector(np.full(6, 1e-13), state)
+            )
+    # a direction the observations do not see: nothing to test either
+    blind = Operator(np.c_[arrays.H[:, :5], np.zeros(9)], obs, state)
+    with pytest.raises(ValueError, match="barely changes along dx"):
+        fips.taylortest(ExpModel(blind), x, dx=Vector(np.r_[np.zeros(5), 1.0], state))
+
+
 # ---------------------------------------------------------------------------
 # 5. Wrong variants of the method fail the tests above
 # ---------------------------------------------------------------------------
@@ -834,6 +861,32 @@ def test_a_solve_that_does_not_converge_raises():
         fips.solve(problem, "gauss_newton", max_iterations=2)
 
 
+def test_a_wrong_jacobian_that_stalls_reports_the_d2_the_rule_compared():
+    """A Jacobian twice too large: each whole step stays the same size while the steps taken shrink to roundoff (each shortened until the cost falls). The message reports the whole step's d2, which the rule compares, not the shortened one's, and points to the Jacobian."""
+    arrays = Arrays.random(12, 6, 9)
+    state, obs = arrays.spaces()
+    problem = arrays.problem()
+    wrong = Problem(
+        problem.prior,
+        problem.prior_cov,
+        problem.obs,
+        problem.obs_cov,
+        ExpModel(Operator(arrays.H, obs, state), scale=2.0),
+        offset=problem.offset,
+    )
+    with pytest.raises(RuntimeError) as raised:
+        fips.solve(wrong, "gauss_newton", max_iterations=30)
+    message = str(raised.value)
+    whole = float(message.split("last whole step's d2 is ")[1].split(",")[0])
+    assert whole > 6 * 1e-6  # above tol * n: it is what stopped the rule
+    taken = message.split("as taken: ")[1].split(")")[0].split(", ")
+    assert float(taken[-1]) < 1e-12 * whole  # the shortened steps, at roundoff
+    assert "does not shrink while the steps taken do" in message
+    assert "taylortest" in message
+    with pytest.raises(RuntimeError, match=r"last whole step's d2 is .* outer_tol"):
+        fips.solve(wrong, "variational", max_iterations=30)
+
+
 @pytest.mark.parametrize(
     "options, match",
     [
@@ -846,6 +899,7 @@ def test_a_solve_that_does_not_converge_raises():
         ({"gamma": -1.0}, "gamma"),
         ({"draws": 0}, "draws"),
         ({"draws": True}, "draws"),
+        ({"draws": 1}, "draws must be an integer of at least 2"),
         ({"burn_in": -1}, "burn_in"),
         ({"seed": 1.5}, "seed"),
     ],
@@ -1108,7 +1162,7 @@ def test_a_linear_model_draws_the_analytic_posterior(n, m):
     assert tuning.acceptance > 1 - 1e-9
     N = 4000
     draws = post.sample(N, rng=0).to_numpy()
-    assert gauss_newton._autocorrelation_times(draws).max() < 1.3
+    assert _autocorrelation_times(draws).max() < 1.3
     mean, S = ref.estimate.values, ref.cov().dense()
     variance = np.diag(S)
     assert_within(draws.mean(axis=1), np.sqrt(variance / N), mean)
@@ -1316,7 +1370,7 @@ def test_with_data_draws_the_posterior_of_the_new_data():
     fresh = fips.solve(other.problem(), "gauss_newton", draws=1000, burn_in=100)
     a, b = again._solution._kept(), fresh._solution._kept()
     # each chain's errors, with its own autocorrelation time
-    tau_a, tau_b = (gauss_newton._autocorrelation_times(d) for d in (a, b))
+    tau_a, tau_b = (_autocorrelation_times(d) for d in (a, b))
     se = np.sqrt((a.var(axis=1) * tau_a + b.var(axis=1) * tau_b) / 1000)
     assert np.all(np.abs(a.mean(axis=1) - b.mean(axis=1)) < 4.5 * se)
     se_log = np.sqrt(2 * (tau_a + tau_b) / 1000)

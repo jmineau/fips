@@ -103,6 +103,7 @@ from numpy.linalg import LinAlgError
 
 from fips.linalg import LinearOperator
 from fips.linalg.forms import _read_only
+from fips.methods._draws import _warn_if_imprecise
 from fips.methods.analytic import AnalyticOptions, Information, Whitened, _factor
 from fips.operator import Operator
 from fips.posterior import Posterior
@@ -159,8 +160,8 @@ class GaussNewtonOptions:
     ValueError
         If `gamma` is not a positive, finite number, `max_iterations` is not a
         positive integer, `tol` is not a positive, finite number, `draws` is
-        not a positive integer, or `burn_in` or `seed` is not a nonnegative
-        one.
+        not an integer of at least 2, or `burn_in` or `seed` is not a
+        nonnegative one.
     """
 
     gamma: float = 1.0
@@ -195,15 +196,20 @@ class GaussNewtonOptions:
         if not (math.isfinite(tol) and tol > 0):
             raise ValueError(f"tol must be positive and finite, got {tol}.")
         object.__setattr__(self, "tol", tol)
-        for name, least in (("draws", 1), ("burn_in", 0), ("seed", 0)):
+        for name, least in (("draws", 2), ("burn_in", 0), ("seed", 0)):
             value = getattr(self, name)
             if (
                 not isinstance(value, numbers.Integral)
                 or isinstance(value, bool)
                 or value < least
             ):
-                kind = "a positive" if least else "a nonnegative"
-                raise ValueError(f"{name} must be {kind} integer, got {value!r}.")
+                kind = {2: "an", 0: "a nonnegative"}[least]
+                at_least = (
+                    " of at least 2 (a variance needs two draws)" if least else ""
+                )
+                raise ValueError(
+                    f"{name} must be {kind} integer{at_least}, got {value!r}."
+                )
             object.__setattr__(self, name, int(value))
 
 
@@ -313,7 +319,7 @@ class GaussNewton:
             draws = self.options.draws
             kept = self.sample(draws, np.random.default_rng(self.options.seed))
             kept = self.__dict__["_draws"] = _read_only(kept)
-            _warn_if_imprecise(_autocorrelation_times(kept), draws)
+            _warn_if_imprecise(kept, logger, _SLOW_DRAWS)
         return kept
 
     def __getstate__(self) -> dict:
@@ -663,73 +669,12 @@ class _Sampler:
         return draws, here, accepted / N
 
 
-_IMPRECISE = 0.1
-"""The relative error of a standard deviation from the kept draws above which a solve warns."""
-
-_ROWS = 256
-"""The rows whose autocorrelation is computed at once."""
-
-
-def _autocorrelation_times(draws: np.ndarray) -> np.ndarray:
-    r"""
-    Return the integrated autocorrelation time :math:`\tau` of each row of `draws` (a chain, one column per draw), by Sokal's adaptive window.
-
-    :math:`\tau = 1 + 2 \sum_{k=1}^{w} \rho_k`, with :math:`\rho_k` the
-    autocorrelation at lag :math:`k` (by FFT) and the window :math:`w` the
-    first at least five times its :math:`\tau`. A chain has
-    :math:`N / \tau` effective draws. A row that never moves has
-    :math:`\tau = 1`. It reads one chain, so a chain that rarely visits a
-    tail gives too small a :math:`\tau`: a diagnostic, not a guarantee.
-    """
-    n, N = draws.shape
-    tau = np.ones(n)
-    if N < 3:
-        return tau
-    windows = np.arange(1, N)
-    for first in range(0, n, _ROWS):
-        rows = slice(first, min(n, first + _ROWS))
-        x = draws[rows] - draws[rows].mean(axis=1, keepdims=True)
-        f = np.fft.rfft(x, 2 * N, axis=1)
-        acf = np.fft.irfft(f * np.conj(f), 2 * N, axis=1)[:, :N]
-        variance = acf[:, 0]
-        moves = variance > 0
-        if not moves.any():
-            continue
-        taus = 1.0 + 2.0 * np.cumsum(acf[moves, 1:] / variance[moves, None], axis=1)
-        stop = windows[None, :] >= 5.0 * taus
-        window = np.where(stop.any(axis=1), stop.argmax(axis=1), N - 2)
-        block = tau[rows]
-        block[moves] = np.maximum(taus[np.arange(len(window)), window], 1.0)
-        tau[rows] = block
-    return tau
-
-
-def _warn_if_imprecise(tau: np.ndarray, draws: int) -> None:
-    r"""
-    Log a warning when the kept draws mix so slowly that a standard deviation from them is uncertain by more than :data:`_IMPRECISE`.
-
-    The relative error of a standard deviation from :math:`N` draws with
-    autocorrelation time :math:`\tau` is about :math:`\sqrt{\tau / (2 N)}`.
-    """
-    error = np.sqrt(tau / (2.0 * draws))
-    slow = error > _IMPRECISE
-    if not slow.any():
-        return
-    worst = int(np.argmax(tau))
-    logger.warning(
-        "The posterior's draws mix slowly: %d state elements have a standard "
-        "deviation from the %d kept draws uncertain by more than %d%%, the worst "
-        "(element %d) by about %d%% (%.0f draws for each independent one). The "
-        "posterior bends much over its spread, along a direction the Gaussian at "
-        "the mode does not follow; raise draws= for those elements' spread, or "
-        "read the totals the data constrain, which mix faster.",
-        int(slow.sum()),
-        draws,
-        round(100 * _IMPRECISE),
-        worst,
-        round(100 * float(error[worst])),
-        float(tau[worst]),
-    )
+_SLOW_DRAWS = (
+    "The posterior bends much over its spread, along a direction the Gaussian "
+    "at the mode does not follow; raise draws= for those elements' spread, or "
+    "read the totals the data constrain, which mix faster."
+)
+"""What the slow-mixing warning of the kept draws says of the cause and the remedy."""
 
 
 def _steps(step: float) -> int:
@@ -1026,6 +971,7 @@ def _iterate(
     current = here.cost(gamma)
 
     d2s: list[float] = []
+    whole: list[float] = []  # the d2 the stopping rule compares, of each whole step
     costs: list[float] = []
     newton_steps = 0
     for i in range(1, options.max_iterations + 1):
@@ -1039,6 +985,7 @@ def _iterate(
         # None for a model without a curvature: Gauss-Newton's step alone
         newton_step = _newton_step(problem, analytic, here, step, gamma, solve_S_z)
         converged = d2 < limit and (newton_step is None or newton_step[2] < limit)
+        whole.append(d2 if newton_step is None else max(d2, newton_step[2]))
         rise = math.inf if converged else current + _RISE * abs(current)
         # Newton's step first, so that it is kept on a tie
         candidates = [(step, dy, d2, False)]
@@ -1108,15 +1055,30 @@ def _iterate(
                 options=options,
             )
         here, current, analytic = taken, trial, None
-    shown = [f"{d:.3g}" for d in d2s]
+    raise RuntimeError(_unconverged(options.max_iterations, whole, d2s, limit))
+
+
+def _shown(values: list[float]) -> str:
+    """Return the values as text, the first three and the last four when there are more than eight."""
+    shown = [f"{d:.3g}" for d in values]
     if len(shown) > 8:
         shown = [*shown[:3], "...", *shown[-4:]]
-    raise RuntimeError(
-        f"Gauss-Newton did not converge in {options.max_iterations} steps: the last "
-        f"step's d2 is {d2s[-1]:.3g}, above tol * n = {limit:.3g} (the steps' d2: "
-        f"{', '.join(shown)}). If they are still falling, raise max_iterations; if not, check "
-        "the Jacobian with fips.taylortest(problem.forward, x), or the problem may "
-        "be too nonlinear for Gauss-Newton from the prior."
+    return ", ".join(shown)
+
+
+def _unconverged(
+    steps: int, whole: list[float], taken: list[float], limit: float, what: str = "tol"
+) -> str:
+    """Return the message of iterations that did not stop: the d2 the rule compared (each whole step's, before its line search), and the d2 of the steps as taken."""
+    return (
+        f"Gauss-Newton did not converge in {steps} steps: the last whole step's d2 "
+        f"is {whole[-1]:.3g}, above {what} * n = {limit:.3g} (the rule compares each "
+        f"step's d2 before it is shortened: {_shown(whole)}; as taken: "
+        f"{_shown(taken)}). If they are still falling, raise max_iterations. A "
+        "whole step that does not shrink while the steps taken do (each shortened "
+        "to keep the cost falling) points to the Jacobian: check it with "
+        "fips.taylortest(problem.forward, x). Or the problem may be too nonlinear "
+        "for Gauss-Newton from the prior."
     )
 
 

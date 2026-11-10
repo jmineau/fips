@@ -45,7 +45,7 @@ import math
 import numbers
 from collections.abc import Iterator, Mapping
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, ClassVar
 
 import numpy as np
 from numpy.linalg import LinAlgError
@@ -53,6 +53,7 @@ from scipy.linalg import cho_factor, cho_solve
 
 from fips.linalg import DenseOperator, LinearOperator
 from fips.linalg.forms import _read_only
+from fips.methods._draws import _warn_if_imprecise
 from fips.methods.analytic import AnalyticOptions, Information, Whitened, _factor
 from fips.operator import Operator
 from fips.posterior import Posterior
@@ -184,14 +185,22 @@ class BoundedOptions:
         (or ``inf`` for `upper`) where an element has none; a dict maps block
         names to a number or a Vector on that block's labels, and leaves the
         blocks it does not name unbounded (``lower={"flux": 0.0}`` keeps a
-        bias block free). None is no bound. With no finite bound, the
-        posterior is the analytic one.
+        bias block free). A finite number on a state of several blocks bounds
+        them all, and the solve logs a warning naming them. None is no bound.
+        With no finite bound, the posterior is the analytic one.
     draws : int, default 2000
         The number of draws of the truncated posterior kept for its variances
-        and the covariance of aggregates (Monte Carlo estimates: the relative
-        error of a standard deviation is about :math:`1 / \sqrt{2\,
-        \text{draws}}` for independent draws, 1.6% at 2000, and a little more
-        for these, which are correlated).
+        and the covariance of aggregates. They are Monte Carlo estimates from a
+        chain: each draw is exact, but starts from the last. At 2000, a
+        standard deviation is good to about 1.5% for an element away from its
+        bounds (:math:`1 / \sqrt{2\, \text{draws}}`, as for independent
+        draws), and to about 12% (root mean square over 24 solves; 25% at
+        worst) for an element whose analytic estimate is one to four standard
+        deviations outside its bound: its draws pile against the bound and mix
+        slowly (an autocorrelation time of 13 to 17 draws). One far outside
+        mixes faster. The error falls as :math:`1/\sqrt{\text{draws}}`; the
+        solve warns when a standard deviation is uncertain by more than 10%,
+        and says how many draws would do.
     burn_in : int, default 20
         The draws made and left out before those kept, from the mode. Each
         draw of the sampler travels a quarter period, after which a Gaussian
@@ -204,9 +213,9 @@ class BoundedOptions:
     ValueError
         If `gamma` is not a positive, finite number; a bound is NaN, or a
         bound no value can satisfy (``lower`` of ``inf``); both bounds are
-        numbers and `lower` is not below `upper`; or `draws` is not a positive
-        integer, `burn_in` not a nonnegative one, or `seed` not a nonnegative
-        integer. A bound's labels are checked against the state by
+        numbers and `lower` is not below `upper`; or `draws` is not an
+        integer of at least 2, `burn_in` not a nonnegative one, or `seed` not
+        a nonnegative integer. A bound's labels are checked against the state by
         :func:`fips.solve`.
     TypeError
         If a bound is not a number, a Vector, a dict or None, or a dict has a
@@ -237,15 +246,20 @@ class BoundedOptions:
             )
         object.__setattr__(self, "lower", lower)
         object.__setattr__(self, "upper", upper)
-        for name, least in (("draws", 1), ("burn_in", 0), ("seed", 0)):
+        for name, least in (("draws", 2), ("burn_in", 0), ("seed", 0)):
             value = getattr(self, name)
             if (
                 not isinstance(value, numbers.Integral)
                 or isinstance(value, bool)
                 or value < least
             ):
-                kind = "a positive" if least else "a nonnegative"
-                raise ValueError(f"{name} must be {kind} integer, got {value!r}.")
+                kind = {2: "an", 0: "a nonnegative"}[least]
+                at_least = (
+                    " of at least 2 (a variance needs two draws)" if least else ""
+                )
+                raise ValueError(
+                    f"{name} must be {kind} integer{at_least}, got {value!r}."
+                )
             object.__setattr__(self, name, int(value))
 
 
@@ -293,6 +307,14 @@ def _resolve(
         else:
             values[where] = value
     return values
+
+
+_SLOW_DRAWS = (
+    "The draws are exact but each starts from the last, and an element whose "
+    "analytic estimate is one to a few posterior standard deviations outside "
+    "its bound mixes slowest; raise draws= for those elements' spread."
+)
+"""What the slow-mixing warning of the kept draws says of the cause and the remedy."""
 
 
 class _Columns:
@@ -820,7 +842,7 @@ class Bounded:
         return sampler
 
     def _kept(self) -> np.ndarray:
-        """Return the kept draws (``n x draws``), drawn from the seed at the first call."""
+        """Return the kept draws (``n x draws``), drawn from the seed at the first call, with a warning if they mix too slowly for their variances."""
         kept = self.__dict__.get("_draws")
         if kept is None:
             logger.debug(
@@ -830,6 +852,7 @@ class Bounded:
             )
             kept = self.sample(self.draws, np.random.default_rng(self.seed))
             kept = self.__dict__["_draws"] = _read_only(kept)
+            _warn_if_imprecise(kept, logger, _SLOW_DRAWS)
         return kept
 
     def _conditioned(self) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
@@ -879,6 +902,15 @@ class Bounded:
         at a mode on the bound would not give it.
         """
         return not (np.isfinite(self.lower).any() or np.isfinite(self.upper).any())
+
+    no_evidence: ClassVar[str] = (
+        "with bounds on the state, the exact evidence is the Gaussian one "
+        "times the probability of the bounds under the posterior over their "
+        "probability under the prior, both orthant probabilities of a "
+        "correlated Gaussian, which fips does not compute. The evidence of the "
+        "problem without bounds is fips.solve(problem).log_evidence."
+    )
+    """Why a bounded posterior gives no log evidence."""
 
     def sample(self, N: int, rng: np.random.Generator) -> np.ndarray:
         """Return `N` new draws of the truncated posterior (``n x N``): a chain from the mode, its first ``burn_in`` left out."""
@@ -1059,6 +1091,26 @@ def _logdet(S: np.ndarray) -> float:
     return 2.0 * float(np.log(np.diagonal(factor)).sum())
 
 
+def _warn_if_every_block(options: BoundedOptions, state: Space) -> None:
+    """Log a warning when a finite bound given as a number bounds a state of several blocks: every block, a bias block too, which is rarely meant."""
+    if len(state.names) < 2:
+        return
+    for side in ("lower", "upper"):
+        bound = getattr(options, side)
+        if isinstance(bound, float) and math.isfinite(bound):
+            logger.warning(
+                "%s=%g bounds every block of the state: %s. A bias or an offset "
+                "block is usually free; to bound only some blocks, give a dict, "
+                "such as %s={%r: %g}.",
+                side,
+                bound,
+                _listed(state.names),
+                side,
+                state.names[0],
+                bound,
+            )
+
+
 def _bounded(problem: Problem, options: BoundedOptions) -> Posterior:
     """Factor the problem as the analytic method does, then hold the estimate to the bounds; with no finite bound, the analytic posterior."""
     if not isinstance(problem.forward, Operator):
@@ -1070,6 +1122,7 @@ def _bounded(problem: Problem, options: BoundedOptions) -> Posterior:
             "the bounds (the logarithm of a positive flux)."
         )
     state = problem.prior.space
+    _warn_if_every_block(options, state)
     lower = _resolve(options.lower, state, "lower")
     upper = _resolve(options.upper, state, "upper")
     crossed = ~(lower < upper)

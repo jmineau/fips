@@ -208,7 +208,12 @@ exact for a linear model, and it leaves out the skew of the posterior. Fit
 lognormal settings with it as above. ``"bounded"`` (:doc:`bounds`) raises: the
 evidence with bounds needs the probability of the bounds under the prior and
 under the posterior, which fips does not compute. Fit the settings of a
-bounded inversion on its analytic problem.
+bounded inversion on its analytic problem. ``"variational"``
+(:doc:`variational`) gives the evidence of its low-rank posterior, exact at
+full rank. Below it the evidence leaves out the information of the pairs not
+kept and is too high, the more so for a larger prior, so a maximum would pick
+too large a prior: it raises while the last pair kept still has an eigenvalue
+above 1, and is exact only when ``rank`` reaches the problem's.
 
 References
 ~~~~~~~~~~

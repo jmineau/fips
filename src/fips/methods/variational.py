@@ -70,7 +70,11 @@ a forward model (it is the mode), no ``estimate_is_linear`` (CG's estimate is
 linear in the data only to its tolerance, and the gain of ``k`` pairs is not
 its gain unless ``k`` is the rank), and ``evidence_is_laplace``: the log
 evidence from the cost at the estimate and the information content of the
-``k`` pairs (exact at full rank for a linear problem). For a linear problem
+``k`` pairs (exact at full rank for a linear problem), unless ``rank`` left
+out pairs that still hold information (the last kept has an eigenvalue above
+1): the pairs left out would add to the information content, so the evidence
+is biased high, and :attr:`Posterior.log_evidence <fips.Posterior.log_evidence>`
+refuses it. For a linear problem
 ``with_gamma`` and ``with_data`` cost one CG solve each: the eigenvectors do
 not depend on the data, and with gamma only the eigenvalues scale. With a
 forward model ``with_data`` solves again from the last linearization, and
@@ -99,7 +103,6 @@ import logging
 import math
 import numbers
 from dataclasses import dataclass
-from typing import ClassVar
 
 import numpy as np
 from scipy.linalg import eigh
@@ -108,8 +111,9 @@ from scipy.sparse.linalg import ArpackNoConvergence, eigsh
 from fips.linalg import LinearOperator
 from fips.linalg.forms import _read_only
 from fips.methods.analytic import AnalyticOptions
+from fips.methods.gauss_newton import _unconverged
 from fips.operator import Operator
-from fips.posterior import Posterior
+from fips.posterior import Posterior, UnavailableError
 from fips.problem import Problem
 
 logger = logging.getLogger(__name__)
@@ -140,7 +144,7 @@ class VariationalOptions:
         their right side, and Lanczos when each eigenvalue is good to ``tol``
         relative (``eigsh``'s ``tol``). The error of the estimate, measured in
         the posterior covariance, is at most ``tol`` times the length of the
-        right side.
+        right side. Below 1: the prior, where CG starts, is at 1.
     max_cg_iterations : int, default 1000
         The most conjugate-gradient iterations of one solve; a solve that has
         not reached ``tol`` by then raises.
@@ -157,8 +161,9 @@ class VariationalOptions:
     ------
     ValueError
         If `gamma` is not a positive, finite number, `rank`,
-        `max_cg_iterations` or `max_iterations` is not a positive integer, or
-        `tol` or `outer_tol` is not a positive, finite number.
+        `max_cg_iterations` or `max_iterations` is not a positive integer,
+        `tol` or `outer_tol` is not a positive, finite number, or `tol` is
+        not below 1.
     """
 
     gamma: float = 1.0
@@ -194,6 +199,12 @@ class VariationalOptions:
             if not (math.isfinite(number) and number > 0):
                 raise ValueError(f"{name} must be positive and finite, got {number}.")
             object.__setattr__(self, name, number)
+        if self.tol >= 1.0:
+            raise ValueError(
+                f"tol must be below 1, got {self.tol}: it is the residual of the "
+                "conjugate gradients relative to the right side, and the start, "
+                "the prior, has a relative residual of 1 (tol=1 returns the prior)."
+            )
 
 
 class _System:
@@ -364,8 +375,19 @@ _UNRESOLVED = 1.0
 r"""The eigenvalue :math:`\tilde\lambda` of the last pair kept above which a solve warns that ``rank`` was too small: that direction still holds more information from the data than from the prior."""
 
 
-def _report(eigenvalues: np.ndarray, most: int) -> None:
-    """Log the pairs kept and the DOFS the last tenth of them added, and warn when the last pair still holds much information and more pairs exist (`most` of them)."""
+def _unresolved(eigenvalues: np.ndarray, limited: bool) -> bool:
+    r"""
+    Return whether ``rank`` left out pairs that still hold information: the pairs were `limited` by ``rank`` (below ``min(m, r)``, the most the Hessian has), and the last kept has :math:`\tilde\lambda >` :data:`_UNRESOLVED`.
+
+    When every pair was computed (``rank`` at least ``min(m, r)``), those
+    dropped are at roundoff and the low-rank posterior is the exact one,
+    however few pairs are kept.
+    """
+    return limited and len(eigenvalues) > 0 and bool(eigenvalues[-1] > _UNRESOLVED)
+
+
+def _report(eigenvalues: np.ndarray, limited: bool) -> None:
+    """Log the pairs kept and the DOFS the last tenth of them added, and warn when ``rank`` left out pairs that still hold information (`limited`: ``rank`` was below the most pairs the Hessian has)."""
     k = len(eigenvalues)
     if not k:
         logger.info(
@@ -382,12 +404,13 @@ def _report(eigenvalues: np.ndarray, most: int) -> None:
         last,
         float(dofs[-last:].sum()),
     )
-    if k < most and eigenvalues[-1] > _UNRESOLVED:
+    if _unresolved(eigenvalues, limited):
         logger.warning(
             "The last of the %d pairs of the low-rank posterior still has an "
             "eigenvalue of %.3g (it adds %.2f to DOFS): the data inform more "
-            "directions than rank keeps, so the variances are too large and DOFS "
-            "too small. Raise rank (see post.eigenvalues).",
+            "directions than rank keeps, so the variances are too large, DOFS "
+            "too small and the log evidence biased high (it is refused). Raise "
+            "rank (see post.eigenvalues).",
             k,
             float(eigenvalues[-1]),
             float(dofs[-1]),
@@ -410,9 +433,6 @@ class Variational:
     made); nothing it holds or computes is ``n x n`` unless asked for
     (``cov()`` without an aggregation, ``gain()`` is ``n x m``).
     """
-
-    evidence_is_laplace: ClassVar[bool] = True
-    """Its log evidence is Laplace's: the cost at the estimate and the information content of the low-rank posterior (exact for a linear problem at full rank)."""
 
     problem: Problem
     """The problem solved."""
@@ -460,6 +480,37 @@ class Variational:
     def estimate_is_mean(self) -> bool:
         """True for a linear problem, whose posterior mean the estimate is (to the CG tolerance); False with a forward model (the mode)."""
         return isinstance(self.problem.forward, Operator)
+
+    def _unresolved(self) -> bool:
+        """Whether ``rank`` left out pairs that still hold information (``_unresolved``), at this solution's gamma."""
+        limited = self.options.rank < min(self.V.shape[0], len(self.linear.obs))
+        return _unresolved(self._tilde(), limited)
+
+    @property
+    def evidence_is_laplace(self) -> bool:
+        r"""
+        Whether the log evidence is Laplace's, the cost at the estimate and the information content of the low-rank posterior: unless ``rank`` left out pairs that still hold information.
+
+        The information content of ``k`` pairs leaves out :math:`\tfrac{1}{2}
+        \sum_{j > k} \ln(1 + \tilde\lambda_j)`, so below the problem's rank
+        the evidence is biased high by that much. When the last pair kept has
+        :math:`\tilde\lambda_k` above 1, the solve warns and the evidence is
+        refused. It is exact for a linear problem at full rank.
+        """
+        return not self._unresolved()
+
+    @property
+    def no_evidence(self) -> str:
+        """Why a solution whose rank left out informative pairs gives no log evidence."""
+        tilde = self._tilde()
+        return (
+            f"the low-rank posterior keeps {len(tilde)} pairs (rank="
+            f"{self.options.rank}), and the last still has an eigenvalue of "
+            f"{tilde[-1]:.3g}, above 1: the information content of the pairs "
+            "left out is missing, so the evidence at this rank is biased high, "
+            "by half the sum of log(1 + eigenvalue) over them. Raise rank until "
+            "the last pairs' eigenvalues are well below 1 (post.eigenvalues)."
+        )
 
     def _system(self) -> _System:
         """Return the products of :attr:`linear`, made once (not pickled)."""
@@ -601,12 +652,12 @@ class Variational:
 
         Raises
         ------
-        TypeError
+        UnavailableError
             With a forward model, whose linearization depends on gamma: solve
             again.
         """
         if not self.estimate_is_mean:
-            raise TypeError(
+            raise UnavailableError(
                 "The variational solution of a problem with a forward model has no "
                 "with_gamma: its linearization depends on gamma. Solve again with "
                 'fips.solve(problem, "variational", gamma=...).'
@@ -638,7 +689,7 @@ def _linear(
     d2 = state + gamma * system.weighted_norm(modeled)
     if keep is None:
         eigenvalues, V = _eigenpairs(system, options.rank, options.tol)
-        _report(gamma * eigenvalues, min(system.r, len(d)))
+        _report(gamma * eigenvalues, options.rank < min(system.r, len(d)))
         G = np.asarray(system.R @ V, dtype=float)
     else:
         eigenvalues, V, G = keep.eigenvalues, keep.V, keep.G
@@ -719,6 +770,7 @@ def _iterate(
         raise RuntimeError("The forward model cannot model the starting state.")
     current = gamma * here[0] + here[1]
     d2s: list[float] = []
+    whole: list[float] = []  # each whole step's d2, the one the stopping rule compares
     costs: list[float] = []
     cgs: list[int] = []
     for i in range(1, options.max_iterations + 1):
@@ -732,6 +784,7 @@ def _iterate(
             system.modeled(step[:, None])[:, 0]
         )
         converged = d2 < limit
+        whole.append(d2)
         fraction, taken = 1.0, None
         for _ in range(_HALVINGS):
             trial = cost(xi + fraction * step)
@@ -766,7 +819,7 @@ def _iterate(
             point_xi = xi
             xi = xi + fraction * step
             eigenvalues, V = _eigenpairs(system, options.rank, options.tol)
-            _report(gamma * eigenvalues, min(system.r, len(z)))
+            _report(gamma * eigenvalues, options.rank < min(system.r, len(z)))
             logger.info(
                 "Gauss-Newton converged in %d steps, %d CG iterations in all: the "
                 "last step's d2 is %.3g, below outer_tol * n = %.3g.",
@@ -796,9 +849,7 @@ def _iterate(
             return solution
         xi, here = xi + fraction * step, taken
     raise RuntimeError(
-        f"Gauss-Newton did not converge in {options.max_iterations} steps: the last "
-        f"step's d2 is {d2s[-1]:.3g}, above outer_tol * n = {limit:.3g}. Raise "
-        "max_iterations, or check the Jacobian with fips.taylortest(problem.forward, x)."
+        _unconverged(options.max_iterations, whole, d2s, limit, "outer_tol")
     )
 
 
