@@ -181,9 +181,11 @@ freedom and p-values are then approximate):
 
 :meth:`~fips.Posterior.with_gamma` and :meth:`~fips.Posterior.with_data` find
 the mode again on the kept factors, without solving again, and their draws are
-made when first needed. :meth:`~fips.Posterior.recovery` and the data worth
-refuse a bounded posterior, whose estimate is not linear in the data:
-:meth:`~fips.Posterior.trials` measures it instead (below).
+made when first needed. A bounded posterior is a sampled one: the members it
+cannot give (:meth:`~fips.Posterior.recovery` and the data worth among them,
+since its estimate is not linear in the data) are in :ref:`the table
+<posterior-members>`, and :meth:`~fips.Posterior.trials` measures what
+``recovery`` would (below).
 
 
 What it costs

@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>A nonlinear forward model &#8212; fips 0.2.0b3.dev24+gede7a6e40 documentation</title>
+    <title>A nonlinear forward model &#8212; fips 0.2.0b3.dev25+gb7302ec4c documentation</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../_static/documentation_options.js?v=42599d89"></script>
+    <script src="../_static/documentation_options.js?v=673372a1"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -137,8 +137,8 @@
       
     
     
-    <img src="../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev24+gede7a6e40 documentation - Home"/>
-    <img src="../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev24+gede7a6e40 documentation - Home"/>
+    <img src="../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev25+gb7302ec4c documentation - Home"/>
+    <img src="../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev25+gb7302ec4c documentation - Home"/>
   
   
 </a></div>
@@ -691,10 +691,11 @@ covariances, so its p-values are approximate. To compare, that Gaussian is
 <p><a class="reference internal" href="../reference/api/fips.Posterior.problem.html#fips.Posterior.problem" title="fips.Posterior.problem"><code class="xref py py-attr docutils literal notranslate"><span class="pre">problem</span></code></a> is the problem you solved, with the model.
 <a class="reference internal" href="../reference/api/fips.Posterior.with_data.html#fips.Posterior.with_data" title="fips.Posterior.with_data"><code class="xref py py-meth docutils literal notranslate"><span class="pre">with_data()</span></code></a> solves again, from the last linearization,
 and draws again, so <a class="reference internal" href="../reference/api/fips.Posterior.trials.html#fips.Posterior.trials" title="fips.Posterior.trials"><code class="xref py py-meth docutils literal notranslate"><span class="pre">trials()</span></code></a> works (running the sampler
-in each trial: <code class="docutils literal notranslate"><span class="pre">draws=</span></code> fewer makes it quicker); there is no
-<a class="reference internal" href="../reference/api/fips.Posterior.with_gamma.html#fips.Posterior.with_gamma" title="fips.Posterior.with_gamma"><code class="xref py py-meth docutils literal notranslate"><span class="pre">with_gamma()</span></code></a> (the linearization depends on gamma), and
-<a class="reference internal" href="../reference/api/fips.Posterior.recovery.html#fips.Posterior.recovery" title="fips.Posterior.recovery"><code class="xref py py-meth docutils literal notranslate"><span class="pre">recovery()</span></code></a>, whose exact answer needs an estimate linear
-in the data, points to <code class="docutils literal notranslate"><span class="pre">trials</span></code>.</p>
+in each trial: <code class="docutils literal notranslate"><span class="pre">draws=</span></code> fewer makes it quicker). This is a sampled
+posterior, and <a class="reference internal" href="../reference/posterior.html#posterior-members"><span class="std std-ref">the table</span></a> says what it cannot give:
+no <a class="reference internal" href="../reference/api/fips.Posterior.with_gamma.html#fips.Posterior.with_gamma" title="fips.Posterior.with_gamma"><code class="xref py py-meth docutils literal notranslate"><span class="pre">with_gamma()</span></code></a> (the linearization depends on gamma),
+and <a class="reference internal" href="../reference/api/fips.Posterior.recovery.html#fips.Posterior.recovery" title="fips.Posterior.recovery"><code class="xref py py-meth docutils literal notranslate"><span class="pre">recovery()</span></code></a>, whose exact answer needs an estimate
+linear in the data, points to <code class="docutils literal notranslate"><span class="pre">trials</span></code>.</p>
 <p>A statement about the flux, not the log scale factor, goes through the model’s
 transform: the flux at the mode is <span class="math notranslate nohighlight">\(r\, e^{\hat{x}}\)</span>, and the total from
 draws of the posterior:</p>
