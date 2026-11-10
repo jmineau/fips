@@ -1,0 +1,6 @@
+fips.methods.bounded.BoundedOptions.lower
+=========================================
+
+.. currentmodule:: fips.methods.bounded
+
+.. autoattribute:: BoundedOptions.lower

@@ -1,0 +1,27 @@
+﻿fips.methods.bounded.BoundedOptions
+===================================
+
+.. currentmodule:: fips.methods.bounded
+
+.. autoclass:: BoundedOptions
+   :no-members:
+
+
+
+
+.. rubric:: Attributes
+
+.. autosummary::
+   :toctree:
+
+   ~BoundedOptions.burn_in
+   ~BoundedOptions.draws
+   ~BoundedOptions.gamma
+   ~BoundedOptions.lower
+   ~BoundedOptions.seed
+   ~BoundedOptions.upper
+
+
+
+
+

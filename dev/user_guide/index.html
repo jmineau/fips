@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>User Guide &#8212; fips 0.2.0b3.dev12+ge775b9dac documentation</title>
+    <title>User Guide &#8212; fips 0.2.0b3.dev13+g2cc2af407 documentation</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../_static/documentation_options.js?v=21907c5f"></script>
+    <script src="../_static/documentation_options.js?v=c87b751f"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -137,8 +137,8 @@
       
     
     
-    <img src="../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev12+ge775b9dac documentation - Home"/>
-    <img src="../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev12+ge775b9dac documentation - Home"/>
+    <img src="../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev13+g2cc2af407 documentation - Home"/>
+    <img src="../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev13+g2cc2af407 documentation - Home"/>
   
   
 </a></div>
@@ -387,6 +387,7 @@
   <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
   <div class="bd-toc-item navbar-nav"><ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="synthetic.html">Synthetic experiments</a></li>
+<li class="toctree-l1"><a class="reference internal" href="bounds.html">Bounds on the state</a></li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="examples/index.html">Examples</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="examples/gravity_2d.html">Gravity: density below the surface</a></li>
 <li class="toctree-l2"><a class="reference internal" href="examples/flux_regional.html">A regional flux inversion</a></li>
@@ -456,7 +457,8 @@
 <p>This guide takes fips’s objects one at a time, in the order a problem uses
 them, and says what each is for before how to call it. <a class="reference internal" href="../getting_started/first_problem.html"><span class="doc">A First Problem</span></a>
 solves one problem from start to finish; <a class="reference internal" href="../getting_started/terminology.html"><span class="doc">Terminology</span></a> defines the words;
-<a class="reference internal" href="synthetic.html"><span class="doc">Synthetic experiments</span></a> tests an inversion on data whose answer is known.</p>
+<a class="reference internal" href="synthetic.html"><span class="doc">Synthetic experiments</span></a> tests an inversion on data whose answer is known; <a class="reference internal" href="bounds.html"><span class="doc">Bounds on the state</span></a>
+holds the state to bounds (a flux that cannot be negative).</p>
 <nav class="contents local" id="on-this-page">
 <p class="topic-title">On this page</p>
 <ul class="simple">
@@ -877,10 +879,10 @@ the estimate back on the whole state:</p>
 <h2><a class="toc-backref" href="#id5" role="doc-backlink">Solving and the posterior</a><a class="headerlink" href="#solving-and-the-posterior" title="Link to this heading">#</a></h2>
 <p><a class="reference internal" href="../reference/api/fips.solve.html#fips.solve" title="fips.solve"><code class="xref py py-func docutils literal notranslate"><span class="pre">fips.solve()</span></code></a> solves a problem with a method and returns a
 <a class="reference internal" href="../reference/api/fips.Posterior.html#fips.Posterior" title="fips.Posterior"><code class="xref py py-class docutils literal notranslate"><span class="pre">Posterior</span></code></a>, the answer. The method is <code class="docutils literal notranslate"><span class="pre">&quot;analytic&quot;</span></code> by default
-(the closed-form Gaussian posterior, the one method so far;
-<a class="reference internal" href="../reference/api/fips.available_methods.html#fips.available_methods" title="fips.available_methods"><code class="xref py py-func docutils literal notranslate"><span class="pre">fips.available_methods()</span></code></a> lists them), and its one option is the
-regularization factor <code class="docutils literal notranslate"><span class="pre">gamma</span></code>. An unknown method or option raises with the
-names it knows.</p>
+(the closed-form Gaussian posterior; <a class="reference internal" href="../reference/api/fips.available_methods.html#fips.available_methods" title="fips.available_methods"><code class="xref py py-func docutils literal notranslate"><span class="pre">fips.available_methods()</span></code></a> lists the
+methods), and its one option is the regularization factor <code class="docutils literal notranslate"><span class="pre">gamma</span></code>.
+<code class="docutils literal notranslate"><span class="pre">&quot;bounded&quot;</span></code> holds the state to bounds (<a class="reference internal" href="bounds.html"><span class="doc">Bounds on the state</span></a>). An unknown method or
+option raises with the names it knows.</p>
 <p>The analytic method factors the problem once, in one of two forms that give
 the same posterior. The whitened form works in the observations’ size: it
 whitens with the Cholesky factor of <span class="math notranslate nohighlight">\(S_z\)</span> (or the square root of its

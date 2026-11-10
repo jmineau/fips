@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>fips.posterior &#8212; fips 0.2.0b3.dev12+ge775b9dac documentation</title>
+    <title>fips.posterior &#8212; fips 0.2.0b3.dev13+g2cc2af407 documentation</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../_static/documentation_options.js?v=21907c5f"></script>
+    <script src="../../_static/documentation_options.js?v=c87b751f"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -132,8 +132,8 @@
       
     
     
-    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev12+ge775b9dac documentation - Home"/>
-    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev12+ge775b9dac documentation - Home"/>
+    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev13+g2cc2af407 documentation - Home"/>
+    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev13+g2cc2af407 documentation - Home"/>
   
   
 </a></div>
@@ -478,7 +478,7 @@
 <span class="sd">    observations (``problem.obs``). The posterior labels them, and computes</span>
 <span class="sd">    each one once.</span>
 
-<span class="sd">    Five members are optional, and a posterior whose solution lacks one says</span>
+<span class="sd">    Six members are optional, and a posterior whose solution lacks one says</span>
 <span class="sd">    so when it is asked for the feature:</span>
 
 <span class="sd">    - ``with_gamma(gamma) -&gt; Solution``: the solution at another</span>
@@ -494,6 +494,8 @@
 <span class="sd">    - ``sample(N, rng) -&gt; np.ndarray``: ``N`` draws from the posterior, one per</span>
 <span class="sd">      column (``n x N``), made with the :class:`numpy.random.Generator`</span>
 <span class="sd">      `rng` (:meth:`Posterior.sample`).</span>
+<span class="sd">    - ``at_bound() -&gt; np.ndarray``: which state elements sit on a bound at the</span>
+<span class="sd">      estimate, booleans (``n``; :attr:`Posterior.at_bound`).</span>
 
 <span class="sd">    And a solution whose :meth:`estimate` is the posterior mean says so with a</span>
 <span class="sd">    class attribute ``estimate_is_mean = True``; without it, a posterior has</span>
@@ -503,11 +505,15 @@
 <span class="sd">    ``estimate_is_linear = True``; without it, a posterior has no</span>
 <span class="sd">    :meth:`~Posterior.recovery`.</span>
 
-<span class="sd">    A method whose posterior is not Gaussian in closed form (a bounded or an</span>
-<span class="sd">    iterated one) answers these questions at its estimate: from the Gaussian</span>
-<span class="sd">    of the problem linearized there, with any cells on a bound held at it. Its</span>
-<span class="sd">    answers are then approximations, and :meth:`Posterior.trials` measures</span>
-<span class="sd">    how good they are.</span>
+<span class="sd">    A method whose posterior is not Gaussian in closed form answers each</span>
+<span class="sd">    question as its docstring says. The bounded method's estimate is the mode;</span>
+<span class="sd">    its variances and covariances are those of draws of its posterior (a</span>
+<span class="sd">    Gaussian truncated to the bounds); its gain, DOFS and information content</span>
+<span class="sd">    are those of the Gaussian at the mode, with the elements on a bound held</span>
+<span class="sd">    there; and its chi-squared terms are those of the mode. An iterated method</span>
+<span class="sd">    would answer from the Gaussian of the problem linearized at its estimate.</span>
+<span class="sd">    Such answers are estimates or approximations, and</span>
+<span class="sd">    :meth:`Posterior.trials` measures how good they are.</span>
 
 <span class="sd">    See Also</span>
 <span class="sd">    --------</span>
@@ -838,11 +844,18 @@
 <span class="sd">    (:attr:`innovation_cov`); what needs neither is on the</span>
 <span class="sd">    :class:`~fips.Problem` (:meth:`~fips.Problem.predict`).</span>
 
-<span class="sd">    Every member works for every method, except four that need more of the</span>
+<span class="sd">    Every member works for every method, except those that need more of the</span>
 <span class="sd">    method than a :class:`Solution` gives: :attr:`mean` (where the estimate is</span>
 <span class="sd">    the mean), :meth:`with_gamma` and :meth:`with_data` (where the method can</span>
-<span class="sd">    answer without solving again), and :meth:`recovery` (where the estimate is</span>
-<span class="sd">    linear in the observations). The analytic method has all four.</span>
+<span class="sd">    answer without solving again), :meth:`recovery` and</span>
+<span class="sd">    :meth:`candidate_worth` (where the estimate is linear in the</span>
+<span class="sd">    observations), :meth:`data_worth`, :meth:`sample` (where the method can</span>
+<span class="sd">    draw from its posterior) and :attr:`at_bound` (where it has bounds). The</span>
+<span class="sd">    analytic method has all but :attr:`at_bound`. The ``"bounded"`` method</span>
+<span class="sd">    (:class:`~fips.methods.bounded.BoundedOptions`) has :meth:`with_gamma`,</span>
+<span class="sd">    :meth:`with_data`, :meth:`sample` and :attr:`at_bound`; its estimate is</span>
+<span class="sd">    the mode of the posterior with bounds on the state, and its variances are</span>
+<span class="sd">    those of draws of that posterior.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -996,7 +1009,11 @@
 <span class="sd">        The posterior error variances, the diagonal of :math:`\hat{S}`.</span>
 
 <span class="sd">        The analytic method computes them from its factors in</span>
-<span class="sd">        :math:`O(m n)`, without the :math:`n \times n` covariance.</span>
+<span class="sd">        :math:`O(m n)`, without the :math:`n \times n` covariance. The</span>
+<span class="sd">        ``"bounded"`` method gives the variances of its kept draws of the</span>
+<span class="sd">        truncated posterior (``draws`` of them: a Monte Carlo estimate, a</span>
+<span class="sd">        standard deviation good to about 2% at the default 2000), about</span>
+<span class="sd">        their mean, not about the mode.</span>
 
 <span class="sd">        See Also</span>
 <span class="sd">        --------</span>
@@ -1004,6 +1021,81 @@
 <span class="sd">        """</span>
         <span class="n">values</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_solution</span><span class="o">.</span><span class="n">variances</span><span class="p">()</span>
         <span class="k">return</span> <span class="n">Vector</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_problem</span><span class="o">.</span><span class="n">prior</span><span class="o">.</span><span class="n">space</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">"variance"</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Posterior.at_bound">
+<a class="viewcode-back" href="../../reference/api/fips.Posterior.at_bound.html#fips.Posterior.at_bound">[docs]</a>
+    <span class="nd">@cached_property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">at_bound</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">        Which state elements sit on a bound at the estimate: True where one does.</span>
+
+<span class="sd">        A method with bounds on the state (``"bounded"``) moves an element that</span>
+<span class="sd">        the analytic estimate puts outside its bounds onto the bound, and may</span>
+<span class="sd">        hold others there that the move would push out. These are the elements</span>
+<span class="sd">        the bounds decide; the observations decide the others. Its estimate is</span>
+<span class="sd">        the mode, so an element on a bound still has posterior spread</span>
+<span class="sd">        (:attr:`variances`, from draws of the truncated posterior), on one side</span>
+<span class="sd">        of the bound.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        pandas.Series</span>
+<span class="sd">            Booleans on the state's labels, named ``at_bound``; its sum is the</span>
+<span class="sd">            number of elements on a bound.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        TypeError</span>
+<span class="sd">            If the method has no bounds (its solution has no ``at_bound``),</span>
+<span class="sd">            as for the analytic method, and for ``"bounded"`` when no finite</span>
+<span class="sd">            bound is given (its posterior is then the analytic one).</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        --------</span>
+<span class="sd">        estimate : The estimate, the mode for a bounded method.</span>
+<span class="sd">        fips.methods.bounded.BoundedOptions : The bounds.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        Three cells seen through two sums, :math:`a + b = -0.4` and :math:`b</span>
+<span class="sd">        + c = 1.2`. Without a bound, ``a`` goes below zero. Held at or above</span>
+<span class="sd">        zero, ``a`` goes to its bound and ``b``, which the first sum ties to</span>
+<span class="sd">        it, is held there too; ``c`` moves up by what the second sum says</span>
+<span class="sd">        ``b`` gave:</span>
+
+<span class="sd">        &gt;&gt;&gt; import numpy as np</span>
+<span class="sd">        &gt;&gt;&gt; import pandas as pd</span>
+<span class="sd">        &gt;&gt;&gt; import fips</span>
+<span class="sd">        &gt;&gt;&gt; cells = pd.Index(["a", "b", "c"], name="cell")</span>
+<span class="sd">        &gt;&gt;&gt; prior = fips.Vector.from_series(pd.Series(0.5, index=cells), block="flux")</span>
+<span class="sd">        &gt;&gt;&gt; obs = fips.Vector(</span>
+<span class="sd">        ...     np.array([-0.4, 1.2]),</span>
+<span class="sd">        ...     fips.Space({"co2": pd.Index(["o1", "o2"], name="obs_id")}),</span>
+<span class="sd">        ... )</span>
+<span class="sd">        &gt;&gt;&gt; problem = fips.Problem(</span>
+<span class="sd">        ...     prior=prior,</span>
+<span class="sd">        ...     prior_cov=fips.Independent().with_std(0.5),</span>
+<span class="sd">        ...     obs=obs,</span>
+<span class="sd">        ...     obs_cov=fips.Independent().with_std(0.1),</span>
+<span class="sd">        ...     forward=fips.Operator(</span>
+<span class="sd">        ...         np.array([[1.0, 1.0, 0.0], [0.0, 1.0, 1.0]]), obs.space, prior.space</span>
+<span class="sd">        ...     ),</span>
+<span class="sd">        ... )</span>
+<span class="sd">        &gt;&gt;&gt; fips.solve(problem).estimate.values.round(3)</span>
+<span class="sd">        array([-0.467,  0.105,  1.072])</span>
+<span class="sd">        &gt;&gt;&gt; post = fips.solve(problem, "bounded", lower=0.0)</span>
+<span class="sd">        &gt;&gt;&gt; post.estimate.values.round(3)</span>
+<span class="sd">        array([0.   , 0.   , 1.173])</span>
+<span class="sd">        &gt;&gt;&gt; post.at_bound.tolist()</span>
+<span class="sd">        [True, True, False]</span>
+<span class="sd">        """</span>
+        <span class="n">at</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_optional</span><span class="p">(</span><span class="s2">"at_bound"</span><span class="p">,</span> <span class="s2">"which state elements sit on a bound"</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">at</span><span class="p">(),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">),</span>
+            <span class="n">index</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_problem</span><span class="o">.</span><span class="n">prior</span><span class="o">.</span><span class="n">index</span><span class="p">,</span>
+            <span class="n">name</span><span class="o">=</span><span class="s2">"at_bound"</span><span class="p">,</span>
+        <span class="p">)</span></div>
 
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_aggregation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">W</span><span class="p">:</span> <span class="n">Operator</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LinearOperator</span><span class="p">:</span>
@@ -1058,7 +1150,9 @@
 <span class="sd">            Without `W`, :math:`\hat{S}`, dense, ``n x n`` (formed once, the</span>
 <span class="sd">            same object each time). With `W`, :math:`W \hat{S} W^T` on the</span>
 <span class="sd">            aggregation's rows, ``k x k``, computed without the ``n x n``</span>
-<span class="sd">            covariance.</span>
+<span class="sd">            covariance. For the ``"bounded"`` method, the covariance of its</span>
+<span class="sd">            kept draws of the truncated posterior (or of the draws</span>
+<span class="sd">            aggregated, :math:`W x`): a Monte Carlo estimate.</span>
 
 <span class="sd">        Raises</span>
 <span class="sd">        ------</span>
@@ -1264,6 +1358,16 @@
 <span class="sd">        held as a ``state x n`` array: for many draws of a large state, ask</span>
 <span class="sd">        for them in blocks (each call with its own generator, or the same one</span>
 <span class="sd">        passed along).</span>
+
+<span class="sd">        The ``"bounded"`` method draws its posterior, the Gaussian truncated</span>
+<span class="sd">        to the bounds, by exact Hamiltonian Monte Carlo (Pakman and Paninski,</span>
+<span class="sd">        2014): each call runs a chain from the mode, leaves out its first</span>
+<span class="sd">        ``burn_in`` draws, and returns the next `n`. Each draw starts from the</span>
+<span class="sd">        last, so the draws are correlated (in the tests, about one effective</span>
+<span class="sd">        draw per draw for most elements, one per four or five for an element</span>
+<span class="sd">        whose analytic estimate is far outside its bound). A call costs a</span>
+<span class="sd">        reflection off a bound, an ``O(n)`` step, for each bound a path</span>
+<span class="sd">        reaches: about as many per draw as there are elements near a bound.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -2902,7 +3006,7 @@
                 <span class="s2">"The method that solved this problem does not give an estimate "</span>
                 <span class="sa">f</span><span class="s2">"linear in the observations (</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_solution</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2"> does "</span>
                 <span class="s2">"not set estimate_is_linear), so its error has no closed form: "</span>
-                <span class="s2">"use Problem.simulate and with_data in a loop."</span>
+                <span class="s2">"measure it by sampling, with Posterior.trials."</span>
             <span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="mf">0.0</span> <span class="o">&lt;</span> <span class="n">level</span> <span class="o">&lt;</span> <span class="mf">1.0</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"level must be between 0 and 1, got </span><span class="si">{</span><span class="n">level</span><span class="si">}</span><span class="s2">."</span><span class="p">)</span>

@@ -1,0 +1,6 @@
+fips.methods.bounded.BoundedOptions.gamma
+=========================================
+
+.. currentmodule:: fips.methods.bounded
+
+.. autoattribute:: BoundedOptions.gamma

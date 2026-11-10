@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>fips.posterior.Solution &#8212; fips 0.2.0b3.dev12+ge775b9dac documentation</title>
+    <title>fips.posterior.Solution &#8212; fips 0.2.0b3.dev13+g2cc2af407 documentation</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../_static/documentation_options.js?v=21907c5f"></script>
+    <script src="../../_static/documentation_options.js?v=c87b751f"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -137,8 +137,8 @@
       
     
     
-    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev12+ge775b9dac documentation - Home"/>
-    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev12+ge775b9dac documentation - Home"/>
+    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev13+g2cc2af407 documentation - Home"/>
+    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev13+g2cc2af407 documentation - Home"/>
   
   
 </a></div>
@@ -605,7 +605,17 @@
 <li class="toctree-l3"><a class="reference internal" href="fips.methods.analytic.AnalyticOptions.gamma.html">fips.methods.analytic.AnalyticOptions.gamma</a></li>
 </ul>
 </details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="fips.methods.bounded.BoundedOptions.html">fips.methods.bounded.BoundedOptions</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="fips.methods.bounded.BoundedOptions.burn_in.html">fips.methods.bounded.BoundedOptions.burn_in</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fips.methods.bounded.BoundedOptions.draws.html">fips.methods.bounded.BoundedOptions.draws</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fips.methods.bounded.BoundedOptions.gamma.html">fips.methods.bounded.BoundedOptions.gamma</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fips.methods.bounded.BoundedOptions.lower.html">fips.methods.bounded.BoundedOptions.lower</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fips.methods.bounded.BoundedOptions.seed.html">fips.methods.bounded.BoundedOptions.seed</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fips.methods.bounded.BoundedOptions.upper.html">fips.methods.bounded.BoundedOptions.upper</a></li>
+</ul>
+</details></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="fips.Posterior.html">fips.Posterior</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="fips.Posterior.at_bound.html">fips.Posterior.at_bound</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.Posterior.chi2.html">fips.Posterior.chi2</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.Posterior.data_misfit.html">fips.Posterior.data_misfit</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.Posterior.dofs.html">fips.Posterior.dofs</a></li>
@@ -648,6 +658,7 @@
 <li class="toctree-l2"><a class="reference internal" href="fips.Posterior.cov.html">fips.Posterior.cov</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.Posterior.uncertainty.html">fips.Posterior.uncertainty</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.Posterior.sample.html">fips.Posterior.sample</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fips.Posterior.at_bound.html">fips.Posterior.at_bound</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.Posterior.modeled_obs.html">fips.Posterior.modeled_obs</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.Posterior.innovation_cov.html">fips.Posterior.innovation_cov</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.Posterior.desroziers.html">fips.Posterior.desroziers</a></li>
@@ -865,7 +876,7 @@ its system; a sampling method would keep its samples). Each answer is an unlabel
 problem’s spaces: <code class="docutils literal notranslate"><span class="pre">n</span></code> the state elements (<code class="docutils literal notranslate"><span class="pre">problem.prior</span></code>), <code class="docutils literal notranslate"><span class="pre">m</span></code> the
 observations (<code class="docutils literal notranslate"><span class="pre">problem.obs</span></code>). The posterior labels them, and computes
 each one once.</p>
-<p>Five members are optional, and a posterior whose solution lacks one says
+<p>Six members are optional, and a posterior whose solution lacks one says
 so when it is asked for the feature:</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">with_gamma(gamma)</span> <span class="pre">-&gt;</span> <span class="pre">Solution</span></code>: the solution at another
@@ -881,6 +892,8 @@ observation positions <span class="math notranslate nohighlight">\(g\)</span>, t
 <li><p><code class="docutils literal notranslate"><span class="pre">sample(N,</span> <span class="pre">rng)</span> <span class="pre">-&gt;</span> <span class="pre">np.ndarray</span></code>: <code class="docutils literal notranslate"><span class="pre">N</span></code> draws from the posterior, one per
 column (<code class="docutils literal notranslate"><span class="pre">n</span> <span class="pre">x</span> <span class="pre">N</span></code>), made with the <a class="reference external" href="https://numpy.org/doc/stable/reference/random/generator.html#numpy.random.Generator" title="(in NumPy v2.5)"><code class="xref py py-class docutils literal notranslate"><span class="pre">numpy.random.Generator</span></code></a>
 <cite>rng</cite> (<code class="xref py py-meth docutils literal notranslate"><span class="pre">Posterior.sample()</span></code>).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">at_bound()</span> <span class="pre">-&gt;</span> <span class="pre">np.ndarray</span></code>: which state elements sit on a bound at the
+estimate, booleans (<code class="docutils literal notranslate"><span class="pre">n</span></code>; <code class="xref py py-attr docutils literal notranslate"><span class="pre">Posterior.at_bound</span></code>).</p></li>
 </ul>
 <p>And a solution whose <a class="reference internal" href="fips.posterior.Solution.estimate.html#fips.posterior.Solution.estimate" title="fips.posterior.Solution.estimate"><code class="xref py py-meth docutils literal notranslate"><span class="pre">estimate()</span></code></a> is the posterior mean says so with a
 class attribute <code class="docutils literal notranslate"><span class="pre">estimate_is_mean</span> <span class="pre">=</span> <span class="pre">True</span></code>; without it, a posterior has
@@ -889,11 +902,15 @@ observations, <span class="math notranslate nohighlight">\(\hat{x} = x_0 + K (z 
 <span class="math notranslate nohighlight">\(K\)</span> of <a class="reference internal" href="fips.posterior.Solution.gain.html#fips.posterior.Solution.gain" title="fips.posterior.Solution.gain"><code class="xref py py-meth docutils literal notranslate"><span class="pre">gain()</span></code></a> whatever the values of <span class="math notranslate nohighlight">\(z\)</span>, says so with
 <code class="docutils literal notranslate"><span class="pre">estimate_is_linear</span> <span class="pre">=</span> <span class="pre">True</span></code>; without it, a posterior has no
 <code class="xref py py-meth docutils literal notranslate"><span class="pre">recovery()</span></code>.</p>
-<p>A method whose posterior is not Gaussian in closed form (a bounded or an
-iterated one) answers these questions at its estimate: from the Gaussian
-of the problem linearized there, with any cells on a bound held at it. Its
-answers are then approximations, and <code class="xref py py-meth docutils literal notranslate"><span class="pre">Posterior.trials()</span></code> measures
-how good they are.</p>
+<p>A method whose posterior is not Gaussian in closed form answers each
+question as its docstring says. The bounded method’s estimate is the mode;
+its variances and covariances are those of draws of its posterior (a
+Gaussian truncated to the bounds); its gain, DOFS and information content
+are those of the Gaussian at the mode, with the elements on a bound held
+there; and its chi-squared terms are those of the mode. An iterated method
+would answer from the Gaussian of the problem linearized at its estimate.
+Such answers are estimates or approximations, and
+<code class="xref py py-meth docutils literal notranslate"><span class="pre">Posterior.trials()</span></code> measures how good they are.</p>
 <div class="admonition seealso">
 <p class="admonition-title">See also</p>
 <dl class="simple">

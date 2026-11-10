@@ -1,0 +1,6 @@
+fips.methods.bounded.BoundedOptions.seed
+========================================
+
+.. currentmodule:: fips.methods.bounded
+
+.. autoattribute:: BoundedOptions.seed

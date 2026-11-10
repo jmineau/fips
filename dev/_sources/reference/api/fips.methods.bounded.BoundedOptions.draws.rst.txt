@@ -1,0 +1,6 @@
+fips.methods.bounded.BoundedOptions.draws
+=========================================
+
+.. currentmodule:: fips.methods.bounded
+
+.. autoattribute:: BoundedOptions.draws

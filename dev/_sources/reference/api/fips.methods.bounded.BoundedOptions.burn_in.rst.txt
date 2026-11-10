@@ -1,0 +1,6 @@
+fips.methods.bounded.BoundedOptions.burn\_in
+============================================
+
+.. currentmodule:: fips.methods.bounded
+
+.. autoattribute:: BoundedOptions.burn_in

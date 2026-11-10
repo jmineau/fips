@@ -1,0 +1,1573 @@
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>fips.methods.bounded &#8212; fips 0.2.0b3.dev13+g2cc2af407 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../_static/styles/theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
+<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/plot_directive.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sphinx_autodoc_typehints.css?v=057ac668" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/custom.css?v=4b8357b6" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="../../../_static/scripts/fontawesome.js?digest=18bd87630a240e9c25be"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
+<link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
+
+    <script src="../../../_static/documentation_options.js?v=c87b751f"></script>
+    <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../../_static/copybutton.js?v=f281be69"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/fips/methods/bounded';</script>
+    <script>
+        DOCUMENTATION_OPTIONS.theme_version = '0.23.0';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://jmineau.github.io/fips/switcher.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'dev';
+        DOCUMENTATION_OPTIONS.show_version_warning_banner =
+            true;
+        </script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="color-scheme" content="light dark"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.2" />
+  
+    
+    <script src="../../../_static/searchtools.js"></script>
+    <script src="../../../_static/language_data.js"></script>
+    <script src="../../../searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button type="button" class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class=" navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev13+g2cc2af407 documentation - Home"/>
+    <img src="../../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev13+g2cc2af407 documentation - Home"/>
+  
+  
+</a></div>
+    
+  </div>
+  
+  <div class=" navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../getting_started/index.html">
+    Getting Started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../user_guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../reference/index.html">
+    API Reference
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-2"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-2"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-2"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-2">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+      
+        <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/jmineau/fips" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar hide-on-wide">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../getting_started/index.html">
+    Getting Started
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../user_guide/index.html">
+    User Guide
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../../../reference/index.html">
+    API Reference
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+<div class="version-switcher__container dropdown pst-js-only">
+  <button id="pst-version-switcher-button-3"
+    type="button"
+    class="version-switcher__button btn btn-sm dropdown-toggle"
+    data-bs-toggle="dropdown"
+    aria-haspopup="listbox"
+    aria-controls="pst-version-switcher-list-3"
+    aria-label="Version switcher list"
+  >
+    Choose version  <!-- this text may get changed later by javascript -->
+    <span class="caret"></span>
+  </button>
+  <div id="pst-version-switcher-list-3"
+    class="version-switcher__menu dropdown-menu list-group-flush py-0"
+    role="listbox" aria-labelledby="pst-version-switcher-button-3">
+    <!-- dropdown will be populated by javascript on page load -->
+  </div>
+</div></div>
+        
+          <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/jmineau/fips" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-square-github fa-lg" aria-hidden="true"></i><span class="visually-hidden">GitHub</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../../index.html" class="nav-link">Module code</a></li>
+    
+    
+    <li class="breadcrumb-item"><a href="../methods.html" class="nav-link">fips.methods</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">fips.methods.bounded</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for fips.methods.bounded</h1><div class="highlight"><pre>
+<span></span><span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">The bounded method: the posterior with bounds on the state.</span>
+
+<span class="sd">The analytic posterior :math:`N(\hat{x}, \hat{S})` with the state held to a box,</span>
+<span class="sd">:math:`l \le x \le u` (a flux that cannot be negative, a fraction between 0 and</span>
+<span class="sd">1), is that Gaussian truncated to the box: the prior times the likelihood, with</span>
+<span class="sd">the prior set to zero outside the bounds. ``_bounded`` factors the problem as</span>
+<span class="sd">the analytic method does (``_factor``) and keeps two things from the factors:</span>
+
+<span class="sd">- **the mode**, the estimate (:meth:`Bounded.estimate`): the point of the box</span>
+<span class="sd">  where the analytic cost is least. The cost is quadratic, so that is the point</span>
+<span class="sd">  of the box nearest :math:`\hat{x}` in the metric of the posterior,</span>
+<span class="sd">  :math:`(x - \hat{x})^T \hat{S}^{-1} (x - \hat{x})`: the analytic estimate</span>
+<span class="sd">  moved onto the bounds along the posterior's correlations. An element that</span>
+<span class="sd">  was outside goes to its bound, and the others move by what the posterior</span>
+<span class="sd">  says they would if that element were known to be at its bound. It is found</span>
+<span class="sd">  by an active set (``_mode``) that needs :math:`\hat{S}` only at the columns</span>
+<span class="sd">  of the elements on a bound, from the factors (``_cov_times``);</span>
+<span class="sd">- **draws of the truncated posterior** (:meth:`Bounded.sample`), by exact</span>
+<span class="sd">  Hamiltonian Monte Carlo (Pakman and Paninski, 2014: ``_Sampler``), for its</span>
+<span class="sd">  uncertainty: the variances and the covariance of aggregates are those of the</span>
+<span class="sd">  draws.</span>
+
+<span class="sd">The gain, DOFS and the information content are those of the analytic posterior</span>
+<span class="sd">with the elements on a bound held there (the Gaussian at the mode); the</span>
+<span class="sd">chi-squared and the misfits are the analytic cost's terms at the mode. With no</span>
+<span class="sd">finite bound, the posterior is the analytic one, and ``_bounded`` returns the</span>
+<span class="sd">analytic solution itself.</span>
+
+<span class="sd">References</span>
+<span class="sd">----------</span>
+<span class="sd">Pakman, A., and Paninski, L. (2014). Exact Hamiltonian Monte Carlo for truncated</span>
+<span class="sd">multivariate Gaussians. *Journal of Computational and Graphical Statistics*,</span>
+<span class="sd">23(2), 518-542. https://doi.org/10.1080/10618600.2013.788448</span>
+
+<span class="sd">Nocedal, J., and Wright, S. J. (2006). *Numerical Optimization*, second</span>
+<span class="sd">edition, chapter 16. Springer.</span>
+
+<span class="sd">Lawson, C. L., and Hanson, R. J. (1974). *Solving Least Squares Problems*.</span>
+<span class="sd">Prentice-Hall.</span>
+<span class="sd">"""</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">math</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numbers</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Iterator</span><span class="p">,</span> <span class="n">Mapping</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">numpy.linalg</span><span class="w"> </span><span class="kn">import</span> <span class="n">LinAlgError</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">scipy.linalg</span><span class="w"> </span><span class="kn">import</span> <span class="n">cho_factor</span><span class="p">,</span> <span class="n">cho_solve</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">fips.linalg</span><span class="w"> </span><span class="kn">import</span> <span class="n">DenseOperator</span><span class="p">,</span> <span class="n">LinearOperator</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fips.linalg.forms</span><span class="w"> </span><span class="kn">import</span> <span class="n">_read_only</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fips.methods.analytic</span><span class="w"> </span><span class="kn">import</span> <span class="n">AnalyticOptions</span><span class="p">,</span> <span class="n">Information</span><span class="p">,</span> <span class="n">Whitened</span><span class="p">,</span> <span class="n">_factor</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fips.posterior</span><span class="w"> </span><span class="kn">import</span> <span class="n">Posterior</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fips.problem</span><span class="w"> </span><span class="kn">import</span> <span class="n">Problem</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fips.space</span><span class="w"> </span><span class="kn">import</span> <span class="n">Space</span><span class="p">,</span> <span class="n">_listed</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fips.vector</span><span class="w"> </span><span class="kn">import</span> <span class="n">Vector</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+<span class="n">_KKT_RTOL</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">finfo</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span><span class="o">.</span><span class="n">eps</span><span class="p">))</span>
+<span class="sd">"""How far from the optimality conditions the mode may be, relative to the scale of the state (1.5e-8)."""</span>
+
+<span class="n">_DECISION_RTOL</span> <span class="o">=</span> <span class="mf">1e-10</span>
+<span class="sd">"""How wrong the sign of a multiplier must be before the active set releases its element, relative to the scale of the state."""</span>
+
+<span class="n">_BLOCK</span> <span class="o">=</span> <span class="mi">512</span>
+<span class="sd">"""The number of velocities the sampler draws in one block."""</span>
+
+<span class="n">_COLUMNS</span> <span class="o">=</span> <span class="mi">64</span>
+<span class="sd">"""The number of neighboring columns of the posterior covariance computed in one product."""</span>
+
+<span class="n">_NEAR</span> <span class="o">=</span> <span class="mf">4.0</span>
+<span class="sd">"""The sampler fetches, before it starts, the columns of the elements whose analytic estimate is within this many posterior standard deviations inside a bound, or outside it."""</span>
+
+
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">_ByBlock</span><span class="p">(</span><span class="n">Mapping</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Bounds given by block, as the options keep them: a read-only mapping of each block's name to its bound.</span>
+
+<span class="sd">    A dict is not hashable, and the options are; this is, through its pairs</span>
+<span class="sd">    (a Vector hashes as itself).</span>
+<span class="sd">    """</span>
+
+    <span class="n">parts</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="s2">"float | Vector"</span><span class="p">],</span> <span class="o">...</span><span class="p">]</span>
+<span class="w">    </span><span class="sd">"""Each block's name and its bound, a number or a Vector on its labels."""</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">block</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"float | Vector"</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return the bound of `block`."""</span>
+        <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parts</span><span class="p">)[</span><span class="n">block</span><span class="p">]</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""Iterate over the block names."""</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">block</span> <span class="k">for</span> <span class="n">block</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">parts</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return the number of blocks."""</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parts</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return the bounds as the dict they were given as."""</span>
+        <span class="k">return</span> <span class="nb">repr</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parts</span><span class="p">))</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_checked_value</span><span class="p">(</span><span class="n">value</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">side</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">where</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"float | Vector"</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Return one bound, a number or a Vector, checked.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    TypeError</span>
+<span class="sd">        If it is neither.</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        If it is NaN, or a bound no value can satisfy (``+inf`` below,</span>
+<span class="sd">        ``-inf`` above).</span>
+<span class="sd">    """</span>
+    <span class="n">impossible</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">inf</span> <span class="k">if</span> <span class="n">side</span> <span class="o">==</span> <span class="s2">"lower"</span> <span class="k">else</span> <span class="o">-</span><span class="n">math</span><span class="o">.</span><span class="n">inf</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">Vector</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">value</span><span class="o">.</span><span class="n">values</span> <span class="o">==</span> <span class="n">impossible</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">side</span><span class="si">}{</span><span class="n">where</span><span class="si">}</span><span class="s2"> is </span><span class="si">{</span><span class="n">impossible</span><span class="si">}</span><span class="s2"> somewhere, a bound no value can "</span>
+                <span class="sa">f</span><span class="s2">"satisfy; </span><span class="si">{</span><span class="o">-</span><span class="n">impossible</span><span class="si">}</span><span class="s2"> means no bound."</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="n">value</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">numbers</span><span class="o">.</span><span class="n">Real</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">bool</span><span class="p">):</span>
+        <span class="n">number</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">math</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">number</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">side</span><span class="si">}{</span><span class="n">where</span><span class="si">}</span><span class="s2"> is NaN; give a number, or None for no bound."</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="n">number</span> <span class="o">==</span> <span class="n">impossible</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">side</span><span class="si">}{</span><span class="n">where</span><span class="si">}</span><span class="s2"> is </span><span class="si">{</span><span class="n">impossible</span><span class="si">}</span><span class="s2">, a bound no value can satisfy; "</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="o">-</span><span class="n">impossible</span><span class="si">}</span><span class="s2"> (or None) means no bound."</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="n">number</span>
+    <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+        <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">side</span><span class="si">}{</span><span class="n">where</span><span class="si">}</span><span class="s2"> is a number or a Vector, not </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">value</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2"> "</span>
+        <span class="s2">"(a Series becomes a Vector with Vector.from_series)."</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_checked_bound</span><span class="p">(</span><span class="n">bound</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">side</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"float | Vector | _ByBlock | None"</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Return a bound as the options keep it: None, a number, a Vector, or the bounds of each block.</span>
+
+<span class="sd">    A dict by block is kept as a ``_ByBlock`` (a dict is not hashable, and the</span>
+<span class="sd">    options are); copying the options checks it again.</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="n">bound</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">bound</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">):</span>
+        <span class="n">parts</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">block</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">bound</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">block</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">"The keys of </span><span class="si">{</span><span class="n">side</span><span class="si">}</span><span class="s2"> are block names, strings; got </span><span class="si">{</span><span class="n">block</span><span class="si">!r}</span><span class="s2">."</span>
+                <span class="p">)</span>
+            <span class="n">parts</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">block</span><span class="p">,</span> <span class="n">_checked_value</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">side</span><span class="p">,</span> <span class="sa">f</span><span class="s2">" of block </span><span class="si">{</span><span class="n">block</span><span class="si">!r}</span><span class="s2">"</span><span class="p">)))</span>
+        <span class="k">return</span> <span class="n">_ByBlock</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="n">parts</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">_checked_value</span><span class="p">(</span><span class="n">bound</span><span class="p">,</span> <span class="n">side</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="BoundedOptions">
+<a class="viewcode-back" href="../../../reference/api/fips.methods.bounded.BoundedOptions.html#fips.methods.bounded.BoundedOptions">[docs]</a>
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">BoundedOptions</span><span class="p">:</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">    The options of the ``"bounded"`` method.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    gamma : float, default 1.0</span>
+<span class="sd">        The regularization factor :math:`\gamma`, as for the analytic method</span>
+<span class="sd">        (:class:`~fips.methods.analytic.AnalyticOptions`): the model-data</span>
+<span class="sd">        mismatch is divided by it.</span>
+<span class="sd">    lower, upper : float, Vector, dict or None, default None</span>
+<span class="sd">        The bounds on the state: ``lower &lt;= x &lt;= upper``. A number bounds</span>
+<span class="sd">        every state element; a :class:`~fips.Vector` gives each element its</span>
+<span class="sd">        own bound, with exactly the state's labels (in any order), ``-inf``</span>
+<span class="sd">        (or ``inf`` for `upper`) where an element has none; a dict maps block</span>
+<span class="sd">        names to a number or a Vector on that block's labels, and leaves the</span>
+<span class="sd">        blocks it does not name unbounded (``lower={"flux": 0.0}`` keeps a</span>
+<span class="sd">        bias block free). None is no bound. With no finite bound, the</span>
+<span class="sd">        posterior is the analytic one.</span>
+<span class="sd">    draws : int, default 2000</span>
+<span class="sd">        The number of draws of the truncated posterior kept for its variances</span>
+<span class="sd">        and the covariance of aggregates (Monte Carlo estimates: the relative</span>
+<span class="sd">        error of a standard deviation is about :math:`1 / \sqrt{2\,</span>
+<span class="sd">        \text{draws}}` for independent draws, 1.6% at 2000, and a little more</span>
+<span class="sd">        for these, which are correlated).</span>
+<span class="sd">    burn_in : int, default 20</span>
+<span class="sd">        The draws made and left out before those kept, from the mode. Each</span>
+<span class="sd">        draw of the sampler travels a quarter period, after which a Gaussian</span>
+<span class="sd">        without bounds would be independent of its start, so few are needed.</span>
+<span class="sd">    seed : int, default 0</span>
+<span class="sd">        The seed of the kept draws, so that a solve is reproducible.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        If `gamma` is not a positive, finite number; a bound is NaN, or a</span>
+<span class="sd">        bound no value can satisfy (``lower`` of ``inf``); both bounds are</span>
+<span class="sd">        numbers and `lower` is not below `upper`; or `draws` is not a positive</span>
+<span class="sd">        integer, `burn_in` not a nonnegative one, or `seed` not a nonnegative</span>
+<span class="sd">        integer. A bound's labels are checked against the state by</span>
+<span class="sd">        :func:`fips.solve`.</span>
+<span class="sd">    TypeError</span>
+<span class="sd">        If a bound is not a number, a Vector, a dict or None, or a dict has a</span>
+<span class="sd">        key that is not a string.</span>
+<span class="sd">    """</span>
+
+    <span class="n">gamma</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span>
+<span class="w">    </span><span class="sd">"""The regularization factor: the model-data mismatch is divided by it."""</span>
+    <span class="n">lower</span><span class="p">:</span> <span class="s2">"float | Vector | Mapping[str, float | Vector] | None"</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="w">    </span><span class="sd">"""The lower bounds on the state, as given (a dict by block is kept as a mapping of its blocks)."""</span>
+    <span class="n">upper</span><span class="p">:</span> <span class="s2">"float | Vector | Mapping[str, float | Vector] | None"</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="w">    </span><span class="sd">"""The upper bounds on the state, as given (a dict by block is kept as a mapping of its blocks)."""</span>
+    <span class="n">draws</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2000</span>
+<span class="w">    </span><span class="sd">"""The number of draws of the truncated posterior kept for its variances and covariances."""</span>
+    <span class="n">burn_in</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">20</span>
+<span class="w">    </span><span class="sd">"""The draws left out before those kept."""</span>
+    <span class="n">seed</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="w">    </span><span class="sd">"""The seed of the kept draws."""</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">"gamma"</span><span class="p">,</span> <span class="n">AnalyticOptions</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">gamma</span><span class="p">)</span><span class="o">.</span><span class="n">gamma</span><span class="p">)</span>
+        <span class="n">lower</span> <span class="o">=</span> <span class="n">_checked_bound</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lower</span><span class="p">,</span> <span class="s2">"lower"</span><span class="p">)</span>
+        <span class="n">upper</span> <span class="o">=</span> <span class="n">_checked_bound</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">upper</span><span class="p">,</span> <span class="s2">"upper"</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">lower</span><span class="p">,</span> <span class="nb">float</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">upper</span><span class="p">,</span> <span class="nb">float</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">lower</span> <span class="o">&lt;</span> <span class="n">upper</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"lower (</span><span class="si">{</span><span class="n">lower</span><span class="si">}</span><span class="s2">) must be below upper (</span><span class="si">{</span><span class="n">upper</span><span class="si">}</span><span class="s2">): an element held "</span>
+                <span class="s2">"at one value is not bounded but known."</span>
+            <span class="p">)</span>
+        <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">"lower"</span><span class="p">,</span> <span class="n">lower</span><span class="p">)</span>
+        <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">"upper"</span><span class="p">,</span> <span class="n">upper</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">least</span> <span class="ow">in</span> <span class="p">((</span><span class="s2">"draws"</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="s2">"burn_in"</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="s2">"seed"</span><span class="p">,</span> <span class="mi">0</span><span class="p">)):</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+            <span class="k">if</span> <span class="p">(</span>
+                <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">numbers</span><span class="o">.</span><span class="n">Integral</span><span class="p">)</span>
+                <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">bool</span><span class="p">)</span>
+                <span class="ow">or</span> <span class="n">value</span> <span class="o">&lt;</span> <span class="n">least</span>
+            <span class="p">):</span>
+                <span class="n">kind</span> <span class="o">=</span> <span class="s2">"a positive"</span> <span class="k">if</span> <span class="n">least</span> <span class="k">else</span> <span class="s2">"a nonnegative"</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> must be </span><span class="si">{</span><span class="n">kind</span><span class="si">}</span><span class="s2"> integer, got </span><span class="si">{</span><span class="n">value</span><span class="si">!r}</span><span class="s2">."</span><span class="p">)</span>
+            <span class="nb">object</span><span class="o">.</span><span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">value</span><span class="p">))</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_resolve</span><span class="p">(</span>
+    <span class="n">bound</span><span class="p">:</span> <span class="s2">"float | Vector | Mapping[str, float | Vector] | None"</span><span class="p">,</span>
+    <span class="n">space</span><span class="p">:</span> <span class="n">Space</span><span class="p">,</span>
+    <span class="n">side</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Return the bound of each state element, in the order of `space`: ``-inf`` (lower) or ``inf`` (upper) where there is none.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        If a Vector does not have exactly the labels it bounds (the state's,</span>
+<span class="sd">        or its block's), or a dict names a block the state does not have.</span>
+<span class="sd">    """</span>
+    <span class="n">none</span> <span class="o">=</span> <span class="o">-</span><span class="n">math</span><span class="o">.</span><span class="n">inf</span> <span class="k">if</span> <span class="n">side</span> <span class="o">==</span> <span class="s2">"lower"</span> <span class="k">else</span> <span class="n">math</span><span class="o">.</span><span class="n">inf</span>
+    <span class="n">values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">space</span><span class="p">),</span> <span class="n">none</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">bound</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">values</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">bound</span><span class="p">,</span> <span class="nb">float</span><span class="p">):</span>
+        <span class="n">values</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">bound</span>
+        <span class="k">return</span> <span class="n">values</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">bound</span><span class="p">,</span> <span class="n">Vector</span><span class="p">):</span>
+        <span class="n">positions</span> <span class="o">=</span> <span class="n">space</span><span class="o">.</span><span class="n">_align</span><span class="p">(</span>
+            <span class="n">bound</span><span class="o">.</span><span class="n">space</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"the </span><span class="si">{</span><span class="n">side</span><span class="si">}</span><span class="s2"> bounds"</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"The </span><span class="si">{</span><span class="n">side</span><span class="si">}</span><span class="s2"> bounds and the state"</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">bound</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="n">positions</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">block</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">bound</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">block</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">space</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">side</span><span class="si">}</span><span class="s2"> names a block the state does not have, </span><span class="si">{</span><span class="n">block</span><span class="si">!r}</span><span class="s2">; the "</span>
+                <span class="sa">f</span><span class="s2">"state's blocks are </span><span class="si">{</span><span class="n">_listed</span><span class="p">(</span><span class="n">space</span><span class="o">.</span><span class="n">names</span><span class="p">)</span><span class="si">}</span><span class="s2">."</span>
+            <span class="p">)</span>
+        <span class="n">where</span> <span class="o">=</span> <span class="n">space</span><span class="o">.</span><span class="n">slice</span><span class="p">(</span><span class="n">block</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">Vector</span><span class="p">):</span>
+            <span class="n">own</span> <span class="o">=</span> <span class="n">Space</span><span class="p">({</span><span class="n">block</span><span class="p">:</span> <span class="n">space</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">block</span><span class="p">)})</span>
+            <span class="n">positions</span> <span class="o">=</span> <span class="n">own</span><span class="o">.</span><span class="n">_align</span><span class="p">(</span>
+                <span class="n">value</span><span class="o">.</span><span class="n">space</span><span class="p">,</span>
+                <span class="sa">f</span><span class="s2">"the </span><span class="si">{</span><span class="n">side</span><span class="si">}</span><span class="s2"> bounds of block </span><span class="si">{</span><span class="n">block</span><span class="si">!r}</span><span class="s2">"</span><span class="p">,</span>
+                <span class="sa">f</span><span class="s2">"The </span><span class="si">{</span><span class="n">side</span><span class="si">}</span><span class="s2"> bounds of block </span><span class="si">{</span><span class="n">block</span><span class="si">!r}</span><span class="s2"> and the block"</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">values</span><span class="p">[</span><span class="n">where</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="n">positions</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">values</span><span class="p">[</span><span class="n">where</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+    <span class="k">return</span> <span class="n">values</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">_Columns</span><span class="p">:</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">    Columns of the analytic posterior covariance :math:`\hat{S}`, computed from the factors in blocks and kept.</span>
+
+<span class="sd">    The active set and the sampler need :math:`\hat{S}` only at the columns of</span>
+<span class="sd">    the elements on (or near) a bound. They are computed as</span>
+<span class="sd">    ``analytic._cov_times`` of columns of the identity, in fixed blocks of</span>
+<span class="sd">    :data:`_COLUMNS` neighbors (``0:64``, ``64:128``, ...), whichever column of</span>
+<span class="sd">    a block is asked for first: a product's last bits depend on its shape, so</span>
+<span class="sd">    a column is the same whatever was fetched before it, and a chain of draws</span>
+<span class="sd">    is the same after a pickle. They are kept in one Fortran-ordered array, so</span>
+<span class="sd">    a column is a contiguous view. One cache serves every posterior of other</span>
+<span class="sd">    observations (``with_data``): :math:`\hat{S}` does not depend on their</span>
+<span class="sd">    values.</span>
+<span class="sd">    """</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">analytic</span><span class="p">:</span> <span class="s2">"Whitened | Information"</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_analytic</span> <span class="o">=</span> <span class="n">analytic</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">analytic</span><span class="o">.</span><span class="n">problem</span><span class="o">.</span><span class="n">prior</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_slot</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">intp</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_store</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">n</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">order</span><span class="o">=</span><span class="s2">"F"</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_count</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">fetch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">indices</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Compute the blocks of the columns `indices` not yet kept."""</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_slot</span><span class="p">)</span>
+        <span class="n">indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">indices</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">intp</span><span class="p">)</span>
+        <span class="n">blocks</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">indices</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_slot</span><span class="p">[</span><span class="n">indices</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">]</span> <span class="o">//</span> <span class="n">_COLUMNS</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">len</span><span class="p">(</span><span class="n">blocks</span><span class="p">):</span>
+            <span class="k">return</span>
+        <span class="n">need</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_count</span> <span class="o">+</span> <span class="n">_COLUMNS</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">blocks</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">need</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">_store</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
+            <span class="n">capacity</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="nb">max</span><span class="p">(</span><span class="n">need</span><span class="p">,</span> <span class="mi">2</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_store</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+            <span class="n">store</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">n</span><span class="p">,</span> <span class="n">capacity</span><span class="p">),</span> <span class="n">order</span><span class="o">=</span><span class="s2">"F"</span><span class="p">)</span>
+            <span class="n">store</span><span class="p">[:,</span> <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_count</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_store</span><span class="p">[:,</span> <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_count</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_store</span> <span class="o">=</span> <span class="n">store</span>
+        <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="n">blocks</span><span class="p">:</span>
+            <span class="n">columns</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">block</span> <span class="o">*</span> <span class="n">_COLUMNS</span><span class="p">,</span> <span class="nb">min</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="p">(</span><span class="n">block</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">_COLUMNS</span><span class="p">))</span>
+            <span class="n">E</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">n</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">columns</span><span class="p">)))</span>
+            <span class="n">E</span><span class="p">[</span><span class="n">columns</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">columns</span><span class="p">))]</span> <span class="o">=</span> <span class="mf">1.0</span>
+            <span class="n">slots</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_count</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_count</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">columns</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_store</span><span class="p">[:,</span> <span class="n">slots</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_analytic</span><span class="o">.</span><span class="n">_cov_times</span><span class="p">(</span><span class="n">E</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_slot</span><span class="p">[</span><span class="n">columns</span><span class="p">]</span> <span class="o">=</span> <span class="n">slots</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_count</span> <span class="o">+=</span> <span class="nb">len</span><span class="p">(</span><span class="n">columns</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">indices</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""Return :math:`\hat{S}` at the columns `indices` (``n x k``), fetching those not yet kept."""</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fetch</span><span class="p">(</span><span class="n">indices</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_store</span><span class="p">[:,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_slot</span><span class="p">[</span><span class="n">indices</span><span class="p">]]</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">column</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""Return column `i` of :math:`\hat{S}`, a view of the kept array."""</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_slot</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">fetch</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">i</span><span class="p">]))</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_store</span><span class="p">[:,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_slot</span><span class="p">[</span><span class="n">i</span><span class="p">]]</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_scale</span><span class="p">(</span>
+    <span class="n">x_hat</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">variances</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">lower</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">upper</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Return the scale of the state the mode's tolerances are relative to: its largest value, bound or posterior standard deviation."""</span>
+    <span class="n">bounds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">lower</span><span class="p">,</span> <span class="n">upper</span><span class="p">])</span>
+    <span class="n">finite</span> <span class="o">=</span> <span class="n">bounds</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">bounds</span><span class="p">)]</span>
+    <span class="k">return</span> <span class="nb">float</span><span class="p">(</span>
+        <span class="nb">max</span><span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">x_hat</span><span class="p">)</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">initial</span><span class="o">=</span><span class="mf">0.0</span><span class="p">),</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="n">variances</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">))</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">initial</span><span class="o">=</span><span class="mf">0.0</span><span class="p">),</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">finite</span><span class="p">)</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">initial</span><span class="o">=</span><span class="mf">0.0</span><span class="p">),</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">finfo</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span><span class="o">.</span><span class="n">tiny</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_mode</span><span class="p">(</span>
+    <span class="n">x_hat</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">lower</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">upper</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">columns</span><span class="p">:</span> <span class="n">_Columns</span><span class="p">,</span>
+    <span class="n">variances</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">scale</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">    Return the mode in the box, which side of its bound each element is held at (``1`` lower, ``-1`` upper, ``0`` free), and the multipliers.</span>
+
+<span class="sd">    The mode minimizes :math:`\tfrac{1}{2} (x - \hat{x})^T P (x - \hat{x})`,</span>
+<span class="sd">    :math:`P = \hat{S}^{-1}`, over :math:`l \le x \le u`, by the primal</span>
+<span class="sd">    active-set method for a convex quadratic program (Nocedal and Wright,</span>
+<span class="sd">    2006, algorithm 16.3), here with bounds only: the method of which Lawson</span>
+<span class="sd">    and Hanson's nonnegative least squares, and its bounded variant, are the</span>
+<span class="sd">    least-squares case, with the step back to the box at the first element</span>
+<span class="sd">    that would leave it. It keeps a feasible</span>
+<span class="sd">    point and a working set :math:`a` of elements held at a bound,</span>
+<span class="sd">    :math:`b_a`. Holding them there, the least cost is the analytic posterior</span>
+<span class="sd">    conditioned on :math:`x_a = b_a`,</span>
+
+<span class="sd">    .. math::</span>
+
+<span class="sd">        x(a) = \hat{x} + \hat{S}_{:a} \lambda_a, \qquad</span>
+<span class="sd">        \hat{S}_{aa} \lambda_a = b_a - \hat{x}_a,</span>
+
+<span class="sd">    whose gradient is :math:`P (x(a) - \hat{x}) = \lambda` (zero off</span>
+<span class="sd">    :math:`a`): :math:`\lambda_a` are the multipliers, positive at a lower</span>
+<span class="sd">    bound and negative at an upper one when :math:`a` is right. Each step</span>
+<span class="sd">    moves toward :math:`x(a)` and stops at the first free element that would</span>
+<span class="sd">    leave the box, which joins :math:`a`; at :math:`x(a)` itself, an element</span>
+<span class="sd">    whose multiplier has the wrong sign leaves :math:`a` (the most wrong</span>
+<span class="sd">    first, measured as :math:`\lambda_i \hat{S}_{ii}`, the distance it pulls</span>
+<span class="sd">    the element), and with none the point is the mode. It starts from</span>
+<span class="sd">    :math:`\hat{x}` put into the box, with the elements it put on a bound in</span>
+<span class="sd">    :math:`a`. Each step lowers the cost or changes :math:`a` at the same</span>
+<span class="sd">    cost, so it ends (a degenerate problem could cycle among sets of the</span>
+<span class="sd">    same cost: ``10 n + 100`` steps at most, then it raises); only</span>
+<span class="sd">    :math:`\hat{S}_{:a}` is used (``columns``). The solve then checks the</span>
+<span class="sd">    optimality conditions of what it returns (``_kkt``).</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    numpy.linalg.LinAlgError</span>
+<span class="sd">        If :math:`\hat{S}_{aa}` is not positive definite (an element on a</span>
+<span class="sd">        bound whose posterior variance is zero, or two whose errors the</span>
+<span class="sd">        posterior ties together), or the active set does not end.</span>
+<span class="sd">    """</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">x_hat</span><span class="p">)</span>
+    <span class="n">side</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int8</span><span class="p">)</span>
+    <span class="n">side</span><span class="p">[</span><span class="n">x_hat</span> <span class="o">&lt;</span> <span class="n">lower</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">side</span><span class="p">[</span><span class="n">x_hat</span> <span class="o">&gt;</span> <span class="n">upper</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">x_hat</span><span class="p">,</span> <span class="n">lower</span><span class="p">,</span> <span class="n">upper</span><span class="p">)</span>
+    <span class="n">multipliers</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+    <span class="n">tolerance</span> <span class="o">=</span> <span class="n">_DECISION_RTOL</span> <span class="o">*</span> <span class="n">scale</span>
+    <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">10</span> <span class="o">*</span> <span class="n">n</span> <span class="o">+</span> <span class="mi">100</span><span class="p">):</span>
+        <span class="n">active</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">flatnonzero</span><span class="p">(</span><span class="n">side</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">len</span><span class="p">(</span><span class="n">active</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">x_hat</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span> <span class="n">side</span><span class="p">,</span> <span class="n">multipliers</span>
+        <span class="n">bound</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">side</span><span class="p">[</span><span class="n">active</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span> <span class="n">lower</span><span class="p">[</span><span class="n">active</span><span class="p">],</span> <span class="n">upper</span><span class="p">[</span><span class="n">active</span><span class="p">])</span>
+        <span class="n">S_a</span> <span class="o">=</span> <span class="n">columns</span><span class="p">(</span><span class="n">active</span><span class="p">)</span>
+        <span class="n">lam</span> <span class="o">=</span> <span class="n">_conditioned_solve</span><span class="p">(</span><span class="n">S_a</span><span class="p">[</span><span class="n">active</span><span class="p">],</span> <span class="n">bound</span> <span class="o">-</span> <span class="n">x_hat</span><span class="p">[</span><span class="n">active</span><span class="p">])</span>
+        <span class="n">target</span> <span class="o">=</span> <span class="n">x_hat</span> <span class="o">+</span> <span class="n">S_a</span> <span class="o">@</span> <span class="n">lam</span>
+        <span class="n">target</span><span class="p">[</span><span class="n">active</span><span class="p">]</span> <span class="o">=</span> <span class="n">bound</span>
+        <span class="n">step</span> <span class="o">=</span> <span class="n">target</span> <span class="o">-</span> <span class="n">x</span>
+        <span class="n">free</span> <span class="o">=</span> <span class="n">side</span> <span class="o">==</span> <span class="mi">0</span>
+        <span class="n">down</span> <span class="o">=</span> <span class="n">free</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">step</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span> <span class="o">&amp;</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">lower</span><span class="p">)</span>
+        <span class="n">up</span> <span class="o">=</span> <span class="n">free</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">step</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span> <span class="o">&amp;</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">upper</span><span class="p">)</span>
+        <span class="n">alpha</span><span class="p">,</span> <span class="n">blocking</span><span class="p">,</span> <span class="n">held</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span>
+        <span class="k">if</span> <span class="n">down</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+            <span class="n">reach</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="n">down</span><span class="p">]</span> <span class="o">-</span> <span class="n">lower</span><span class="p">[</span><span class="n">down</span><span class="p">],</span> <span class="mf">0.0</span><span class="p">)</span> <span class="o">/</span> <span class="o">-</span><span class="n">step</span><span class="p">[</span><span class="n">down</span><span class="p">]</span>
+            <span class="n">k</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">argmin</span><span class="p">(</span><span class="n">reach</span><span class="p">))</span>
+            <span class="k">if</span> <span class="n">reach</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">alpha</span><span class="p">:</span>
+                <span class="n">alpha</span><span class="p">,</span> <span class="n">blocking</span><span class="p">,</span> <span class="n">held</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">reach</span><span class="p">[</span><span class="n">k</span><span class="p">]),</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">flatnonzero</span><span class="p">(</span><span class="n">down</span><span class="p">)[</span><span class="n">k</span><span class="p">]),</span> <span class="mi">1</span>
+        <span class="k">if</span> <span class="n">up</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+            <span class="n">reach</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="n">upper</span><span class="p">[</span><span class="n">up</span><span class="p">]</span> <span class="o">-</span> <span class="n">x</span><span class="p">[</span><span class="n">up</span><span class="p">],</span> <span class="mf">0.0</span><span class="p">)</span> <span class="o">/</span> <span class="n">step</span><span class="p">[</span><span class="n">up</span><span class="p">]</span>
+            <span class="n">k</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">argmin</span><span class="p">(</span><span class="n">reach</span><span class="p">))</span>
+            <span class="k">if</span> <span class="n">reach</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">alpha</span><span class="p">:</span>
+                <span class="n">alpha</span><span class="p">,</span> <span class="n">blocking</span><span class="p">,</span> <span class="n">held</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">reach</span><span class="p">[</span><span class="n">k</span><span class="p">]),</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">flatnonzero</span><span class="p">(</span><span class="n">up</span><span class="p">)[</span><span class="n">k</span><span class="p">]),</span> <span class="o">-</span><span class="mi">1</span>
+        <span class="k">if</span> <span class="n">blocking</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">x</span> <span class="o">+</span> <span class="n">alpha</span> <span class="o">*</span> <span class="n">step</span>
+            <span class="n">x</span><span class="p">[</span><span class="n">active</span><span class="p">]</span> <span class="o">=</span> <span class="n">bound</span>
+            <span class="n">x</span><span class="p">[</span><span class="n">blocking</span><span class="p">]</span> <span class="o">=</span> <span class="n">lower</span><span class="p">[</span><span class="n">blocking</span><span class="p">]</span> <span class="k">if</span> <span class="n">held</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="n">upper</span><span class="p">[</span><span class="n">blocking</span><span class="p">]</span>
+            <span class="n">side</span><span class="p">[</span><span class="n">blocking</span><span class="p">]</span> <span class="o">=</span> <span class="n">held</span>
+            <span class="k">continue</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">target</span>
+        <span class="n">pull</span> <span class="o">=</span> <span class="n">side</span><span class="p">[</span><span class="n">active</span><span class="p">]</span> <span class="o">*</span> <span class="n">lam</span> <span class="o">*</span> <span class="n">variances</span><span class="p">[</span><span class="n">active</span><span class="p">]</span>  <span class="c1"># below zero: the wrong sign</span>
+        <span class="n">worst</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">argmin</span><span class="p">(</span><span class="n">pull</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">pull</span><span class="p">[</span><span class="n">worst</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="o">-</span><span class="n">tolerance</span><span class="p">:</span>
+            <span class="n">multipliers</span><span class="p">[</span><span class="n">active</span><span class="p">]</span> <span class="o">=</span> <span class="n">lam</span>
+            <span class="k">return</span> <span class="n">x</span><span class="p">,</span> <span class="n">side</span><span class="p">,</span> <span class="n">multipliers</span>
+        <span class="n">side</span><span class="p">[</span><span class="n">active</span><span class="p">[</span><span class="n">worst</span><span class="p">]]</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">raise</span> <span class="n">LinAlgError</span><span class="p">(</span>
+        <span class="s2">"The bounded mode was not found: the active set did not end after "</span>
+        <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="mi">10</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">n</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">100</span><span class="si">}</span><span class="s2"> steps."</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_conditioned_solve</span><span class="p">(</span><span class="n">S_aa</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">rhs</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">    Return :math:`\hat{S}_{aa}^{-1}` times `rhs`, by Cholesky.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    numpy.linalg.LinAlgError</span>
+<span class="sd">        If :math:`\hat{S}_{aa}` is not positive definite.</span>
+<span class="sd">    """</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">factor</span> <span class="o">=</span> <span class="n">cho_factor</span><span class="p">(</span><span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">S_aa</span> <span class="o">+</span> <span class="n">S_aa</span><span class="o">.</span><span class="n">T</span><span class="p">),</span> <span class="n">lower</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">except</span> <span class="n">LinAlgError</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">LinAlgError</span><span class="p">(</span>
+            <span class="s2">"The posterior covariance of the elements on a bound is not positive "</span>
+            <span class="s2">"definite: an element whose posterior variance is zero, or elements "</span>
+            <span class="s2">"whose posterior errors are tied together, cannot be held at their "</span>
+            <span class="s2">"bounds. Check the bounds of the elements the observations or the "</span>
+            <span class="s2">"prior fix."</span>
+        <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">err</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">cho_solve</span><span class="p">(</span><span class="n">factor</span><span class="p">,</span> <span class="n">rhs</span><span class="p">))</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_kkt</span><span class="p">(</span>
+    <span class="n">x_hat</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">mode</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">side</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">multipliers</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">lower</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">upper</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+    <span class="n">columns</span><span class="p">:</span> <span class="n">_Columns</span><span class="p">,</span>
+    <span class="n">variances</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">    Return how far the mode is from each optimality condition, in the units of the state.</span>
+
+<span class="sd">    ``feasible``: how far an element is outside its bounds. ``stationary``:</span>
+<span class="sd">    :math:`|x - \hat{x} - \hat{S}_{:a} \lambda_a|`, which is zero when the</span>
+<span class="sd">    gradient :math:`P (x - \hat{x})` is :math:`\lambda`, zero at the free</span>
+<span class="sd">    elements; at the elements on a bound it is how far :math:`\hat{x}_a +</span>
+<span class="sd">    \hat{S}_{aa} \lambda_a` is from :math:`b_a`, the error of the solve that</span>
+<span class="sd">    made :math:`\lambda_a`. ``sign``: how far a multiplier is</span>
+<span class="sd">    of the wrong sign, as :math:`\lambda_i \hat{S}_{ii}`. ``complementary``:</span>
+<span class="sd">    :math:`|\lambda_i \hat{S}_{ii}|` times how far element :math:`i` is from</span>
+<span class="sd">    its bound.</span>
+<span class="sd">    """</span>
+    <span class="n">active</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">flatnonzero</span><span class="p">(</span><span class="n">side</span><span class="p">)</span>
+    <span class="n">implied</span> <span class="o">=</span> <span class="n">x_hat</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">active</span><span class="p">):</span>
+        <span class="n">implied</span> <span class="o">+=</span> <span class="n">columns</span><span class="p">(</span><span class="n">active</span><span class="p">)</span> <span class="o">@</span> <span class="n">multipliers</span><span class="p">[</span><span class="n">active</span><span class="p">]</span>
+    <span class="n">bound</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">side</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span> <span class="n">lower</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">side</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">,</span> <span class="n">upper</span><span class="p">,</span> <span class="n">mode</span><span class="p">))</span>
+    <span class="n">pull</span> <span class="o">=</span> <span class="n">side</span> <span class="o">*</span> <span class="n">multipliers</span> <span class="o">*</span> <span class="n">variances</span>
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">"feasible"</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="n">lower</span> <span class="o">-</span> <span class="n">mode</span><span class="p">,</span> <span class="n">mode</span> <span class="o">-</span> <span class="n">upper</span><span class="p">)</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">initial</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)),</span>
+        <span class="s2">"stationary"</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">implied</span> <span class="o">-</span> <span class="n">mode</span><span class="p">)</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">initial</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)),</span>
+        <span class="s2">"sign"</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="o">-</span><span class="n">pull</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">initial</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)),</span>
+        <span class="s2">"complementary"</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">multipliers</span> <span class="o">*</span> <span class="n">variances</span> <span class="o">*</span> <span class="p">(</span><span class="n">mode</span> <span class="o">-</span> <span class="n">bound</span><span class="p">))</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">initial</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)</span>
+        <span class="p">),</span>
+    <span class="p">}</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_first_hit</span><span class="p">(</span>
+    <span class="n">alpha</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">beta</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">gap</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">gap2</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">    Return when the first of the paths :math:`\alpha_k \cos t + \beta_k \sin t` falls below its `gap`, and which (``inf`` and ``-1`` for none).</span>
+
+<span class="sd">    With :math:`\alpha \cos t + \beta \sin t = r \cos(t - \phi)`, a path</span>
+<span class="sd">    reaches its gap only if :math:`r^2 &gt; \text{gap}^2` (`gap2`), and leaves</span>
+<span class="sd">    :math:`\{\ge \text{gap}\}` at :math:`t = \phi + \theta` (modulo</span>
+<span class="sd">    :math:`2\pi`), :math:`\theta = \arccos(\text{gap} / r)`, where it falls</span>
+<span class="sd">    (at :math:`\phi - \theta` it comes back). By the sum of the two angles,</span>
+<span class="sd">    :math:`t` is the angle of :math:`(\alpha\, \text{gap} - \beta q,\ \beta\,</span>
+<span class="sd">    \text{gap} + \alpha q)`, :math:`q = \sqrt{r^2 - \text{gap}^2}`: one</span>
+<span class="sd">    ``arctan2`` and one square root, for the paths that reach their gap</span>
+<span class="sd">    only. A path already below its gap and falling leaves now (:math:`t = 0`:</span>
+<span class="sd">    roundoff put it there); a root within roundoff of 0 is the one a path</span>
+<span class="sd">    has just come back through, and is skipped.</span>
+<span class="sd">    """</span>
+    <span class="n">reach</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">flatnonzero</span><span class="p">(</span><span class="n">alpha</span> <span class="o">*</span> <span class="n">alpha</span> <span class="o">+</span> <span class="n">beta</span> <span class="o">*</span> <span class="n">beta</span> <span class="o">&gt;</span> <span class="n">gap2</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">len</span><span class="p">(</span><span class="n">reach</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">math</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span>
+    <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">g</span> <span class="o">=</span> <span class="n">alpha</span><span class="p">[</span><span class="n">reach</span><span class="p">],</span> <span class="n">beta</span><span class="p">[</span><span class="n">reach</span><span class="p">],</span> <span class="n">gap</span><span class="p">[</span><span class="n">reach</span><span class="p">]</span>
+    <span class="n">leaving</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">flatnonzero</span><span class="p">((</span><span class="n">a</span> <span class="o">&lt;=</span> <span class="n">g</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">b</span> <span class="o">&lt;</span> <span class="mf">0.0</span><span class="p">))</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">leaving</span><span class="p">):</span>
+        <span class="k">return</span> <span class="mf">0.0</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">reach</span><span class="p">[</span><span class="n">leaving</span><span class="p">[</span><span class="mi">0</span><span class="p">]])</span>
+    <span class="n">q</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">a</span> <span class="o">*</span> <span class="n">a</span> <span class="o">+</span> <span class="n">b</span> <span class="o">*</span> <span class="n">b</span> <span class="o">-</span> <span class="n">g</span> <span class="o">*</span> <span class="n">g</span><span class="p">)</span>
+    <span class="n">t</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mod</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arctan2</span><span class="p">(</span><span class="n">b</span> <span class="o">*</span> <span class="n">g</span> <span class="o">+</span> <span class="n">a</span> <span class="o">*</span> <span class="n">q</span><span class="p">,</span> <span class="n">a</span> <span class="o">*</span> <span class="n">g</span> <span class="o">-</span> <span class="n">b</span> <span class="o">*</span> <span class="n">q</span><span class="p">),</span> <span class="mf">2.0</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span>
+    <span class="n">t</span><span class="p">[</span><span class="n">t</span> <span class="o">&lt;</span> <span class="mf">1e-12</span><span class="p">]</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">inf</span>
+    <span class="n">k</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">argmin</span><span class="p">(</span><span class="n">t</span><span class="p">))</span>
+    <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">t</span><span class="p">[</span><span class="n">k</span><span class="p">]),</span> <span class="nb">int</span><span class="p">(</span><span class="n">reach</span><span class="p">[</span><span class="n">k</span><span class="p">])</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_reflect</span><span class="p">(</span><span class="n">velocity</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">column</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">i</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">    Return the velocity reflected off the bound of element `i`, in the metric of :math:`\hat{S}`.</span>
+
+<span class="sd">    In the whitened state :math:`y` (:math:`x = \hat{x} + R y`, :math:`R R^T</span>
+<span class="sd">    = \hat{S}`), the bound of element :math:`i` is a plane with normal</span>
+<span class="sd">    :math:`f = R^T e_i`, and the velocity reflects off it:</span>
+<span class="sd">    :math:`\dot{y}' = \dot{y} - 2 (f^T \dot{y} / f^T f) f`. In the state's</span>
+<span class="sd">    own coordinates (:math:`\dot{x} = R \dot{y}`) that is</span>
+<span class="sd">    :math:`\dot{x}' = \dot{x} - 2 (\dot{x}_i / \hat{S}_{ii}) \hat{S}_{:i}`:</span>
+<span class="sd">    one column of :math:`\hat{S}` (`column`), and no root of it.</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="n">velocity</span> <span class="o">-</span> <span class="p">(</span><span class="mf">2.0</span> <span class="o">*</span> <span class="n">velocity</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">/</span> <span class="n">column</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="o">*</span> <span class="n">column</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">_Sampler</span><span class="p">:</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">    Exact Hamiltonian Monte Carlo for the Gaussian :math:`N(\hat{x}, \hat{S})` truncated to the box (Pakman and Paninski, 2014).</span>
+
+<span class="sd">    In the whitened state the Hamiltonian is :math:`\tfrac{1}{2} y^T y +</span>
+<span class="sd">    \tfrac{1}{2} s^T s`, and its paths are :math:`y(t) = y_0 \cos t + s \sin</span>
+<span class="sd">    t`: no step size, no rejection. In the state's own coordinates a path is</span>
+
+<span class="sd">    .. math::</span>
+
+<span class="sd">        x(t) = \hat{x} + (x_0 - \hat{x}) \cos t + v \sin t, \qquad v \sim N(0, \hat{S}),</span>
+
+<span class="sd">    so each element's time to reach its bound has a closed form</span>
+<span class="sd">    (:func:`_first_hit`), and at the first bound reached the velocity reflects</span>
+<span class="sd">    (:func:`_reflect`), keeping the energy. Each draw starts from the last</span>
+<span class="sd">    with a new velocity and travels :math:`\pi / 2` (Pakman and Paninski's</span>
+<span class="sd">    choice): without bounds :math:`x(\pi/2) = \hat{x} + v`, a draw independent</span>
+<span class="sd">    of the start. The velocities are the analytic method's exact draws less</span>
+<span class="sd">    :math:`\hat{x}` (``analytic.sample``), :data:`_BLOCK` at a time; only the</span>
+<span class="sd">    bounded elements are checked for a hit, and only the columns of the</span>
+<span class="sd">    elements that hit are used, from ``columns``.</span>
+<span class="sd">    """</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">analytic</span><span class="p">:</span> <span class="s2">"Whitened | Information"</span><span class="p">,</span>
+        <span class="n">lower</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+        <span class="n">upper</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+        <span class="n">columns</span><span class="p">:</span> <span class="n">_Columns</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">analytic</span> <span class="o">=</span> <span class="n">analytic</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mean</span> <span class="o">=</span> <span class="n">mean</span> <span class="o">=</span> <span class="n">analytic</span><span class="o">.</span><span class="n">estimate</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lower</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">upper</span> <span class="o">=</span> <span class="n">lower</span><span class="p">,</span> <span class="n">upper</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">columns</span> <span class="o">=</span> <span class="n">columns</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">std</span> <span class="o">=</span> <span class="n">std</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="n">analytic</span><span class="o">.</span><span class="n">variances</span><span class="p">(),</span> <span class="mf">0.0</span><span class="p">))</span>
+        <span class="c1"># Each finite bound is a wall: the element, +1 (lower) or -1 (upper), and</span>
+        <span class="c1"># the gap, so that sign * (x_i - mean_i) &gt;= gap inside. An element the</span>
+        <span class="c1"># posterior fixes (no variance) cannot move, and is left out.</span>
+        <span class="n">moves</span> <span class="o">=</span> <span class="n">std</span> <span class="o">&gt;</span> <span class="mi">0</span>
+        <span class="n">low</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">flatnonzero</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">lower</span><span class="p">)</span> <span class="o">&amp;</span> <span class="n">moves</span><span class="p">)</span>
+        <span class="n">high</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">flatnonzero</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">upper</span><span class="p">)</span> <span class="o">&amp;</span> <span class="n">moves</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cell</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">low</span><span class="p">,</span> <span class="n">high</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sign</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">low</span><span class="p">)),</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">high</span><span class="p">))])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bound</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">lower</span><span class="p">[</span><span class="n">low</span><span class="p">],</span> <span class="n">upper</span><span class="p">[</span><span class="n">high</span><span class="p">]])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">gap</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sign</span> <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bound</span> <span class="o">-</span> <span class="n">mean</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">gap2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">gap</span><span class="o">**</span><span class="mi">2</span>
+        <span class="c1"># The walls of one block's lower bounds, the usual case, are a slice</span>
+        <span class="n">cell</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cell</span>
+        <span class="n">contiguous</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">cell</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">array_equal</span><span class="p">(</span>
+            <span class="n">cell</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">cell</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">cell</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">cell</span><span class="p">))</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">walls</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="nb">slice</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">cell</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="nb">int</span><span class="p">(</span><span class="n">cell</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">cell</span><span class="p">))</span> <span class="k">if</span> <span class="n">contiguous</span> <span class="k">else</span> <span class="n">cell</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lower_only</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sign</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">))</span>
+        <span class="c1"># The columns of the elements that will hit, fetched in blocks first</span>
+        <span class="n">near</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sign</span> <span class="o">*</span> <span class="p">(</span><span class="n">mean</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">bound</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">_NEAR</span> <span class="o">*</span> <span class="n">std</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">]</span>
+        <span class="n">columns</span><span class="o">.</span><span class="n">fetch</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">[</span><span class="n">near</span><span class="p">])</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">start</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mode</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return the mode moved strictly inside the box, by a thousandth of a standard deviation (at most a quarter of the box)."""</span>
+        <span class="n">lower</span><span class="p">,</span> <span class="n">upper</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lower</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">upper</span>
+        <span class="n">inside</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">minimum</span><span class="p">(</span><span class="mf">1e-3</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">std</span><span class="p">,</span> <span class="mf">0.25</span> <span class="o">*</span> <span class="p">(</span><span class="n">upper</span> <span class="o">-</span> <span class="n">lower</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">mode</span><span class="p">,</span> <span class="n">lower</span> <span class="o">+</span> <span class="n">inside</span><span class="p">,</span> <span class="n">upper</span> <span class="o">-</span> <span class="n">inside</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">run</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">start</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">N</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">burn_in</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">rng</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">Generator</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return `N` draws (``n x N``) after `burn_in`, from `start`, with velocities drawn from `rng`."""</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mean</span><span class="p">)</span>
+        <span class="n">draws</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">n</span><span class="p">,</span> <span class="n">N</span><span class="p">))</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">start</span>
+        <span class="n">total</span> <span class="o">=</span> <span class="n">burn_in</span> <span class="o">+</span> <span class="n">N</span>
+        <span class="n">done</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">while</span> <span class="n">done</span> <span class="o">&lt;</span> <span class="n">total</span><span class="p">:</span>
+            <span class="n">V</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">analytic</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="n">_BLOCK</span><span class="p">,</span> <span class="n">total</span> <span class="o">-</span> <span class="n">done</span><span class="p">),</span> <span class="n">rng</span><span class="p">)</span>
+            <span class="n">V</span> <span class="o">-=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mean</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">V</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
+                <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_travel</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">V</span><span class="p">[:,</span> <span class="n">j</span><span class="p">])</span>
+                <span class="k">if</span> <span class="n">done</span> <span class="o">&gt;=</span> <span class="n">burn_in</span><span class="p">:</span>
+                    <span class="n">draws</span><span class="p">[:,</span> <span class="n">done</span> <span class="o">-</span> <span class="n">burn_in</span><span class="p">]</span> <span class="o">=</span> <span class="n">x</span>
+                <span class="n">done</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">return</span> <span class="n">draws</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_travel</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">velocity</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""Return where the path from `x` with `velocity` is after :math:`\pi / 2`, reflecting off each bound it reaches."""</span>
+        <span class="n">mean</span><span class="p">,</span> <span class="n">cell</span><span class="p">,</span> <span class="n">walls</span><span class="p">,</span> <span class="n">sign</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mean</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">cell</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">walls</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">sign</span>
+        <span class="n">gap</span><span class="p">,</span> <span class="n">gap2</span><span class="p">,</span> <span class="n">lower_only</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">gap</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gap2</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">lower_only</span>
+        <span class="n">a</span><span class="p">,</span> <span class="n">v</span> <span class="o">=</span> <span class="n">x</span> <span class="o">-</span> <span class="n">mean</span><span class="p">,</span> <span class="n">velocity</span>
+        <span class="n">left</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span>
+        <span class="n">most</span> <span class="o">=</span> <span class="mi">1000</span> <span class="o">+</span> <span class="mi">100</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">cell</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">most</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">lower_only</span><span class="p">:</span>
+                <span class="n">t</span><span class="p">,</span> <span class="n">k</span> <span class="o">=</span> <span class="n">_first_hit</span><span class="p">(</span><span class="n">a</span><span class="p">[</span><span class="n">walls</span><span class="p">],</span> <span class="n">v</span><span class="p">[</span><span class="n">walls</span><span class="p">],</span> <span class="n">gap</span><span class="p">,</span> <span class="n">gap2</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">t</span><span class="p">,</span> <span class="n">k</span> <span class="o">=</span> <span class="n">_first_hit</span><span class="p">(</span><span class="n">sign</span> <span class="o">*</span> <span class="n">a</span><span class="p">[</span><span class="n">walls</span><span class="p">],</span> <span class="n">sign</span> <span class="o">*</span> <span class="n">v</span><span class="p">[</span><span class="n">walls</span><span class="p">],</span> <span class="n">gap</span><span class="p">,</span> <span class="n">gap2</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">t</span> <span class="o">&lt;</span> <span class="n">left</span><span class="p">:</span>
+                <span class="n">position</span> <span class="o">=</span> <span class="n">mean</span> <span class="o">+</span> <span class="n">a</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">left</span><span class="p">)</span> <span class="o">+</span> <span class="n">v</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">left</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">position</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">lower</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">upper</span><span class="p">)</span>
+            <span class="n">i</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">cell</span><span class="p">[</span><span class="n">k</span><span class="p">])</span>
+            <span class="n">cos</span><span class="p">,</span> <span class="n">sin</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">t</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+            <span class="n">a</span><span class="p">,</span> <span class="n">v</span> <span class="o">=</span> <span class="n">a</span> <span class="o">*</span> <span class="n">cos</span> <span class="o">+</span> <span class="n">v</span> <span class="o">*</span> <span class="n">sin</span><span class="p">,</span> <span class="n">v</span> <span class="o">*</span> <span class="n">cos</span> <span class="o">-</span> <span class="n">a</span> <span class="o">*</span> <span class="n">sin</span>
+            <span class="n">a</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bound</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">-</span> <span class="n">mean</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="n">v</span> <span class="o">=</span> <span class="n">_reflect</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">columns</span><span class="o">.</span><span class="n">column</span><span class="p">(</span><span class="n">i</span><span class="p">),</span> <span class="n">i</span><span class="p">)</span>
+            <span class="n">left</span> <span class="o">-=</span> <span class="n">t</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+            <span class="s2">"A draw of the truncated posterior reflected off the bounds more than "</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">most</span><span class="si">}</span><span class="s2"> times."</span>
+        <span class="p">)</span>
+
+
+<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">eq</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Bounded</span><span class="p">:</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">    The bounded method's solution: the mode of the truncated posterior, and its draws.</span>
+
+<span class="sd">    It keeps the analytic factors (``analytic``), the bounds of each state</span>
+<span class="sd">    element, the mode, which bound each element is held at, and the</span>
+<span class="sd">    multipliers :math:`\lambda`, with :math:`x = \hat{x} + \hat{S}_{:a}</span>
+<span class="sd">    \lambda_a` (``_mode``). The :class:`~fips.Posterior` asks it for every</span>
+<span class="sd">    array it reports: it is the bounded method's</span>
+<span class="sd">    :class:`~fips.posterior.Solution`. The draws of the truncated posterior</span>
+<span class="sd">    are made at their first use and kept (not pickled: a posterior read back</span>
+<span class="sd">    draws them again, the same, from the seed).</span>
+
+<span class="sd">    Its answers, by what each needs:</span>
+
+<span class="sd">    - the estimate is the mode, not the mean, and is not linear in the</span>
+<span class="sd">      observations (no ``estimate_is_mean``, no ``estimate_is_linear``);</span>
+<span class="sd">    - the variances and the covariance of aggregates are those of the kept</span>
+<span class="sd">      draws (``draws`` of them, after ``burn_in``, from ``seed``), and</span>
+<span class="sd">      :meth:`sample` draws more;</span>
+<span class="sd">    - the gain, DOFS, DOFS per element and the information content are those</span>
+<span class="sd">      of the analytic posterior with the elements on a bound held there,</span>
+<span class="sd">      :math:`x_a = b_a` (the Gaussian at the mode), with :math:`C =</span>
+<span class="sd">      \hat{S}_{aa}`:</span>
+
+<span class="sd">      .. math::</span>
+
+<span class="sd">          K_a = K - \hat{S}_{:a} C^{-1} K_{a:}, \qquad</span>
+<span class="sd">          A_a = K_a H = A - \hat{S}_{:a} C^{-1} A_{a:};</span>
+
+<span class="sd">      an element on a bound has a row of zeros in both, and no DOFS;</span>
+<span class="sd">    - the chi-squared and the misfits are the cost's terms at the mode.</span>
+<span class="sd">    """</span>
+
+    <span class="n">analytic</span><span class="p">:</span> <span class="s2">"Whitened | Information"</span>
+<span class="w">    </span><span class="sd">"""The analytic factors of the problem, read at the solve's gamma."""</span>
+    <span class="n">lower</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
+<span class="w">    </span><span class="sd">"""The lower bound of each state element (``-inf`` for none)."""</span>
+    <span class="n">upper</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
+<span class="w">    </span><span class="sd">"""The upper bound of each state element (``inf`` for none)."""</span>
+    <span class="n">mode</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
+<span class="w">    </span><span class="sd">"""The mode in the box."""</span>
+    <span class="n">side</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
+<span class="w">    </span><span class="sd">"""``1`` where an element is held at its lower bound, ``-1`` at its upper bound, ``0`` where it is free."""</span>
+    <span class="n">multipliers</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">""":math:`\lambda`, zero at the free elements: :math:`x = \hat{x} + \hat{S} \lambda`."""</span>
+    <span class="n">draws</span><span class="p">:</span> <span class="nb">int</span>
+<span class="w">    </span><span class="sd">"""The number of draws kept."""</span>
+    <span class="n">burn_in</span><span class="p">:</span> <span class="nb">int</span>
+<span class="w">    </span><span class="sd">"""The draws left out before those kept."""</span>
+    <span class="n">seed</span><span class="p">:</span> <span class="nb">int</span>
+<span class="w">    </span><span class="sd">"""The seed of the kept draws."""</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">solve</span><span class="p">(</span>
+        <span class="bp">cls</span><span class="p">,</span>
+        <span class="n">analytic</span><span class="p">:</span> <span class="s2">"Whitened | Information"</span><span class="p">,</span>
+        <span class="n">lower</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+        <span class="n">upper</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+        <span class="n">draws</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">burn_in</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">seed</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">columns</span><span class="p">:</span> <span class="s2">"_Columns | None"</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"Bounded"</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Return the solution of the analytic factors held to the bounds: the mode, by the active set, checked.</span>
+
+<span class="sd">        `columns` is a cache of the posterior covariance's columns to share</span>
+<span class="sd">        (another solution of the same factors with other observations).</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        numpy.linalg.LinAlgError</span>
+<span class="sd">            If the active set fails (``_mode``), or the mode it ends at does not</span>
+<span class="sd">            meet the optimality conditions to ``sqrt(eps)`` of the scale of the</span>
+<span class="sd">            state (the largest of its values, bounds and posterior standard</span>
+<span class="sd">            deviations).</span>
+<span class="sd">        """</span>
+        <span class="k">if</span> <span class="n">columns</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">columns</span> <span class="o">=</span> <span class="n">_Columns</span><span class="p">(</span><span class="n">analytic</span><span class="p">)</span>
+        <span class="n">x_hat</span> <span class="o">=</span> <span class="n">analytic</span><span class="o">.</span><span class="n">estimate</span><span class="p">()</span>
+        <span class="n">variances</span> <span class="o">=</span> <span class="n">analytic</span><span class="o">.</span><span class="n">variances</span><span class="p">()</span>
+        <span class="n">scale</span> <span class="o">=</span> <span class="n">_scale</span><span class="p">(</span><span class="n">x_hat</span><span class="p">,</span> <span class="n">variances</span><span class="p">,</span> <span class="n">lower</span><span class="p">,</span> <span class="n">upper</span><span class="p">)</span>
+        <span class="n">mode</span><span class="p">,</span> <span class="n">side</span><span class="p">,</span> <span class="n">multipliers</span> <span class="o">=</span> <span class="n">_mode</span><span class="p">(</span><span class="n">x_hat</span><span class="p">,</span> <span class="n">lower</span><span class="p">,</span> <span class="n">upper</span><span class="p">,</span> <span class="n">columns</span><span class="p">,</span> <span class="n">variances</span><span class="p">,</span> <span class="n">scale</span><span class="p">)</span>
+        <span class="n">conditions</span> <span class="o">=</span> <span class="n">_kkt</span><span class="p">(</span>
+            <span class="n">x_hat</span><span class="p">,</span> <span class="n">mode</span><span class="p">,</span> <span class="n">side</span><span class="p">,</span> <span class="n">multipliers</span><span class="p">,</span> <span class="n">lower</span><span class="p">,</span> <span class="n">upper</span><span class="p">,</span> <span class="n">columns</span><span class="p">,</span> <span class="n">variances</span>
+        <span class="p">)</span>
+        <span class="n">worst</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">conditions</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">name</span><span class="p">:</span> <span class="n">conditions</span><span class="p">[</span><span class="n">name</span><span class="p">])</span>
+        <span class="k">if</span> <span class="n">conditions</span><span class="p">[</span><span class="n">worst</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">_KKT_RTOL</span> <span class="o">*</span> <span class="n">scale</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">LinAlgError</span><span class="p">(</span>
+                <span class="s2">"The bounded mode does not meet the optimality conditions: it is "</span>
+                <span class="sa">f</span><span class="s2">"off by </span><span class="si">{</span><span class="n">conditions</span><span class="p">[</span><span class="n">worst</span><span class="p">]</span><span class="si">:</span><span class="s2">.3g</span><span class="si">}</span><span class="s2"> in the '</span><span class="si">{</span><span class="n">worst</span><span class="si">}</span><span class="s2">' condition, where "</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">_KKT_RTOL</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">scale</span><span class="si">:</span><span class="s2">.3g</span><span class="si">}</span><span class="s2"> is allowed. The posterior covariance of "</span>
+                <span class="s2">"the elements on a bound is too ill-conditioned to hold them there."</span>
+            <span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+            <span class="s2">"Bounded mode: </span><span class="si">%d</span><span class="s2"> of </span><span class="si">%d</span><span class="s2"> elements on a bound; optimality conditions </span><span class="si">%s</span><span class="s2">."</span><span class="p">,</span>
+            <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">count_nonzero</span><span class="p">(</span><span class="n">side</span><span class="p">)),</span>
+            <span class="nb">len</span><span class="p">(</span><span class="n">side</span><span class="p">),</span>
+            <span class="n">conditions</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">solution</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">(</span>
+            <span class="n">analytic</span><span class="o">=</span><span class="n">analytic</span><span class="p">,</span>
+            <span class="n">lower</span><span class="o">=</span><span class="n">_read_only</span><span class="p">(</span><span class="n">lower</span><span class="p">),</span>
+            <span class="n">upper</span><span class="o">=</span><span class="n">_read_only</span><span class="p">(</span><span class="n">upper</span><span class="p">),</span>
+            <span class="n">mode</span><span class="o">=</span><span class="n">_read_only</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">mode</span><span class="p">,</span> <span class="n">lower</span><span class="p">,</span> <span class="n">upper</span><span class="p">)),</span>
+            <span class="n">side</span><span class="o">=</span><span class="n">_read_only</span><span class="p">(</span><span class="n">side</span><span class="p">),</span>
+            <span class="n">multipliers</span><span class="o">=</span><span class="n">_read_only</span><span class="p">(</span><span class="n">multipliers</span><span class="p">),</span>
+            <span class="n">draws</span><span class="o">=</span><span class="n">draws</span><span class="p">,</span>
+            <span class="n">burn_in</span><span class="o">=</span><span class="n">burn_in</span><span class="p">,</span>
+            <span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">solution</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">[</span><span class="s2">"_columns_"</span><span class="p">]</span> <span class="o">=</span> <span class="n">columns</span>
+        <span class="k">return</span> <span class="n">solution</span>
+
+    <span class="c1"># -- the caches, outside the frozen fields ----------------------------------</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_columns</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_Columns</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return the kept columns of the posterior covariance (a new cache after a pickle)."""</span>
+        <span class="n">columns</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"_columns_"</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">columns</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">columns</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">[</span><span class="s2">"_columns_"</span><span class="p">]</span> <span class="o">=</span> <span class="n">_Columns</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">analytic</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">columns</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_sampler</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_Sampler</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return the sampler of this solution's truncated posterior, made once."""</span>
+        <span class="n">sampler</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"_sampler_"</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">sampler</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">sampler</span> <span class="o">=</span> <span class="n">_Sampler</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">analytic</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">lower</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">upper</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_columns</span><span class="p">())</span>
+            <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">[</span><span class="s2">"_sampler_"</span><span class="p">]</span> <span class="o">=</span> <span class="n">sampler</span>
+        <span class="k">return</span> <span class="n">sampler</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_kept</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return the kept draws (``n x draws``), drawn from the seed at the first call."""</span>
+        <span class="n">kept</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"_draws"</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">kept</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+                <span class="s2">"Drawing </span><span class="si">%d</span><span class="s2"> draws of the truncated posterior (after </span><span class="si">%d</span><span class="s2"> left out)."</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">draws</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">burn_in</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">kept</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">draws</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">seed</span><span class="p">))</span>
+            <span class="n">kept</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">[</span><span class="s2">"_draws"</span><span class="p">]</span> <span class="o">=</span> <span class="n">_read_only</span><span class="p">(</span><span class="n">kept</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">kept</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_conditioned</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""Return the active elements :math:`a`, :math:`\hat{S}_{:a}` and :math:`\hat{S}_{:a} C^{-1}` (``n x |a|``), made once."""</span>
+        <span class="n">kept</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"_conditioned_"</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">kept</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">active</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">flatnonzero</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">side</span><span class="p">)</span>
+            <span class="n">S_a</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_columns</span><span class="p">()(</span><span class="n">active</span><span class="p">)</span>
+            <span class="c1"># S_:a C^-1, the transpose of C^-1 S_a:</span>
+            <span class="n">Y</span> <span class="o">=</span> <span class="n">_conditioned_solve</span><span class="p">(</span><span class="n">S_a</span><span class="p">[</span><span class="n">active</span><span class="p">],</span> <span class="n">S_a</span><span class="o">.</span><span class="n">T</span><span class="p">)</span><span class="o">.</span><span class="n">T</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">active</span><span class="p">)</span> <span class="k">else</span> <span class="n">S_a</span>
+            <span class="n">kept</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">[</span><span class="s2">"_conditioned_"</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">active</span><span class="p">,</span> <span class="n">S_a</span><span class="p">,</span> <span class="n">Y</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">kept</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">__getstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return the fields for a pickle or a copy, without the caches (the draws are made again, the same, from the seed)."""</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="n">name</span><span class="p">:</span> <span class="n">value</span>
+            <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"_columns_"</span><span class="p">,</span> <span class="s2">"_sampler_"</span><span class="p">,</span> <span class="s2">"_draws"</span><span class="p">,</span> <span class="s2">"_conditioned_"</span><span class="p">)</span>
+        <span class="p">}</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">__setstate__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Restore from a pickle or a copy, the arrays read-only again."""</span>
+        <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">state</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">state</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+                <span class="n">_read_only</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+
+    <span class="c1"># -- the Solution ------------------------------------------------------------</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">estimate</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return the mode."""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">mode</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">at_bound</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return which elements are held at a bound at the mode (boolean, ``n``)."""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">side</span> <span class="o">!=</span> <span class="mi">0</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">sample</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">N</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">rng</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">Generator</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return `N` new draws of the truncated posterior (``n x N``): a chain from the mode, its first ``burn_in`` left out."""</span>
+        <span class="n">sampler</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sampler</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">sampler</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">sampler</span><span class="o">.</span><span class="n">start</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mode</span><span class="p">),</span> <span class="n">N</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">burn_in</span><span class="p">,</span> <span class="n">rng</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">variances</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return the variances of the kept draws."""</span>
+        <span class="n">kept</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_kept</span><span class="p">()</span>
+        <span class="n">centered</span> <span class="o">=</span> <span class="n">kept</span> <span class="o">-</span> <span class="n">kept</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">keepdims</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s2">"ij,ij-&gt;i"</span><span class="p">,</span> <span class="n">centered</span><span class="p">,</span> <span class="n">centered</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">kept</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">cov</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">W</span><span class="p">:</span> <span class="n">LinearOperator</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return the covariance of the kept draws, ``n x n``, or of their aggregates ``W x``, ``k x k``."""</span>
+        <span class="n">kept</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_kept</span><span class="p">()</span>
+        <span class="n">Y</span> <span class="o">=</span> <span class="n">kept</span> <span class="k">if</span> <span class="n">W</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">W</span> <span class="o">@</span> <span class="n">kept</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+        <span class="n">centered</span> <span class="o">=</span> <span class="n">Y</span> <span class="o">-</span> <span class="n">Y</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">keepdims</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">S</span> <span class="o">=</span> <span class="n">centered</span> <span class="o">@</span> <span class="n">centered</span><span class="o">.</span><span class="n">T</span> <span class="o">/</span> <span class="p">(</span><span class="n">Y</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="k">return</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">S</span> <span class="o">+</span> <span class="n">S</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_gain_rows</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">active</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""Return the rows of the analytic gain at `active`, :math:`K_{a:}` (``|a| x m``)."""</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mode</span><span class="p">)</span>
+        <span class="n">E</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">active</span><span class="p">),</span> <span class="n">n</span><span class="p">))</span>
+        <span class="n">E</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">active</span><span class="p">)),</span> <span class="n">active</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.0</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">analytic</span><span class="o">.</span><span class="n">gain</span><span class="p">(</span><span class="n">DenseOperator</span><span class="o">.</span><span class="n">_adopt</span><span class="p">(</span><span class="n">E</span><span class="p">))</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">gain</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">W</span><span class="p">:</span> <span class="n">LinearOperator</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""Return the gain at the mode, :math:`K - \hat{S}_{:a} C^{-1} K_{a:}`, or :math:`W` times it."""</span>
+        <span class="n">active</span><span class="p">,</span> <span class="n">S_a</span><span class="p">,</span> <span class="n">Y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_conditioned</span><span class="p">()</span>
+        <span class="n">K</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">analytic</span><span class="o">.</span><span class="n">gain</span><span class="p">(</span><span class="n">W</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">len</span><span class="p">(</span><span class="n">active</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">K</span>
+        <span class="k">if</span> <span class="n">W</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">K</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">W</span> <span class="o">@</span> <span class="n">Y</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span> <span class="o">@</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gain_rows</span><span class="p">(</span><span class="n">active</span><span class="p">)</span>
+        <span class="n">K</span> <span class="o">=</span> <span class="n">K</span> <span class="o">-</span> <span class="n">Y</span> <span class="o">@</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gain_rows</span><span class="p">(</span><span class="n">active</span><span class="p">)</span>
+        <span class="n">K</span><span class="p">[</span><span class="n">active</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0</span>  <span class="c1"># exactly: the bounds, not the data, decide these elements</span>
+        <span class="k">return</span> <span class="n">K</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_kernel_rows</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">active</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""Return the rows of the analytic averaging kernel at `active`, :math:`A_{a:} = K_{a:} H` (``|a| x n``)."""</span>
+        <span class="n">H</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">analytic</span><span class="o">.</span><span class="n">problem</span><span class="o">.</span><span class="n">forward</span><span class="o">.</span><span class="n">data</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">H</span><span class="o">.</span><span class="n">_transpose</span><span class="p">()</span> <span class="o">@</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gain_rows</span><span class="p">(</span><span class="n">active</span><span class="p">)</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">dofs</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""Return :math:`\operatorname{tr}(A_a) = \operatorname{tr}(A) - \operatorname{tr}(C^{-1} A_{a:} \hat{S}_{:a})`."""</span>
+        <span class="n">active</span><span class="p">,</span> <span class="n">S_a</span><span class="p">,</span> <span class="n">Y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_conditioned</span><span class="p">()</span>
+        <span class="n">dofs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">analytic</span><span class="o">.</span><span class="n">dofs</span><span class="p">()</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">len</span><span class="p">(</span><span class="n">active</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">dofs</span>
+        <span class="k">return</span> <span class="n">dofs</span> <span class="o">-</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s2">"ik,ki-&gt;"</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_kernel_rows</span><span class="p">(</span><span class="n">active</span><span class="p">)))</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">dofs_per_element</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""Return :math:`\operatorname{diag}(A_a) = \operatorname{diag}(A) - \operatorname{diag}(\hat{S}_{:a} C^{-1} A_{a:})`: zero on a bound."""</span>
+        <span class="n">active</span><span class="p">,</span> <span class="n">S_a</span><span class="p">,</span> <span class="n">Y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_conditioned</span><span class="p">()</span>
+        <span class="n">diagonal</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">analytic</span><span class="o">.</span><span class="n">dofs_per_element</span><span class="p">()</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">len</span><span class="p">(</span><span class="n">active</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">diagonal</span>
+        <span class="n">diagonal</span> <span class="o">=</span> <span class="n">diagonal</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s2">"ik,ki-&gt;i"</span><span class="p">,</span> <span class="n">Y</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_kernel_rows</span><span class="p">(</span><span class="n">active</span><span class="p">))</span>
+        <span class="n">diagonal</span><span class="p">[</span><span class="n">active</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0</span>  <span class="c1"># exactly, as the gain's rows</span>
+        <span class="k">return</span> <span class="n">diagonal</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">information</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">        Return the information content at the mode, :math:`-\tfrac{1}{2} \ln \lvert I - A_a \rvert`.</span>
+
+<span class="sd">        By the matrix determinant lemma, with :math:`(I - A)^{-1} \hat{S} =</span>
+<span class="sd">        S_0`, :math:`\lvert I - A_a \rvert = \lvert I - A \rvert \,</span>
+<span class="sd">        \lvert S_{0,aa} \rvert / \lvert C \rvert`: the analytic information</span>
+<span class="sd">        less what the observations tell of the elements on a bound, which the</span>
+<span class="sd">        bounds fix. It is the information on the free elements given those.</span>
+<span class="sd">        """</span>
+        <span class="n">active</span><span class="p">,</span> <span class="n">S_a</span><span class="p">,</span> <span class="n">Y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_conditioned</span><span class="p">()</span>
+        <span class="n">information</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">analytic</span><span class="o">.</span><span class="n">information</span><span class="p">()</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">len</span><span class="p">(</span><span class="n">active</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">information</span>
+        <span class="n">prior</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">analytic</span><span class="o">.</span><span class="n">problem</span><span class="o">.</span><span class="n">prior_cov</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">_select</span><span class="p">(</span><span class="n">active</span><span class="p">,</span> <span class="n">active</span><span class="p">)</span><span class="o">.</span><span class="n">dense</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">information</span> <span class="o">-</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">_logdet</span><span class="p">(</span><span class="n">prior</span><span class="p">)</span> <span class="o">-</span> <span class="n">_logdet</span><span class="p">(</span><span class="n">S_a</span><span class="p">[</span><span class="n">active</span><span class="p">]))</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_residual_weights</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">        Return :math:`u_a = u - (H S_0 H^T + S_z/\gamma)^{-1} H S_0 \lambda`, with :math:`u` the analytic method's.</span>
+
+<span class="sd">        The residual at the mode is :math:`(S_z / \gamma) u_a` and its</span>
+<span class="sd">        increment :math:`x - x_0 = S_0 (H^T u_a + \lambda)`: since :math:`x -</span>
+<span class="sd">        \hat{x} = \hat{S} \lambda = S_0 (\lambda - H^T P H S_0 \lambda)`, with</span>
+<span class="sd">        :math:`P` the inverse.</span>
+<span class="sd">        """</span>
+        <span class="n">u</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">analytic</span><span class="o">.</span><span class="n">_innovation_precision_times</span><span class="p">()</span>
+        <span class="n">problem</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">analytic</span><span class="o">.</span><span class="n">problem</span>
+        <span class="n">HS_0l</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span>
+            <span class="n">problem</span><span class="o">.</span><span class="n">forward</span><span class="o">.</span><span class="n">data</span> <span class="o">@</span> <span class="p">(</span><span class="n">problem</span><span class="o">.</span><span class="n">prior_cov</span><span class="o">.</span><span class="n">data</span> <span class="o">@</span> <span class="bp">self</span><span class="o">.</span><span class="n">multipliers</span><span class="p">),</span>
+            <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">u</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">analytic</span><span class="o">.</span><span class="n">_precision_times</span><span class="p">(</span><span class="n">HS_0l</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">])[:,</span> <span class="mi">0</span><span class="p">]</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">misfits</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">        Return the data misfit :math:`r^T S_z^{-1} r` and the state misfit :math:`(x - x_0)^T S_0^{-1} (x - x_0)` at the mode.</span>
+
+<span class="sd">        With :math:`u_a` (``_residual_weights``), :math:`r = (S_z/\gamma) u_a`</span>
+<span class="sd">        and :math:`x - x_0 = S_0 y`, :math:`y = H^T u_a + \lambda`: the data</span>
+<span class="sd">        misfit is :math:`u_a^T S_z u_a / \gamma^2` and the state misfit</span>
+<span class="sd">        :math:`y^T S_0 y`, with no inverse of either covariance.</span>
+<span class="sd">        """</span>
+        <span class="n">problem</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">analytic</span><span class="o">.</span><span class="n">problem</span>
+        <span class="n">u</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_residual_weights</span><span class="p">()</span>
+        <span class="n">gamma</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">analytic</span><span class="o">.</span><span class="n">gamma</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">u</span> <span class="o">@</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">problem</span><span class="o">.</span><span class="n">obs_cov</span><span class="o">.</span><span class="n">data</span> <span class="o">@</span> <span class="n">u</span><span class="p">))</span> <span class="o">/</span> <span class="n">gamma</span><span class="o">**</span><span class="mi">2</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">problem</span><span class="o">.</span><span class="n">forward</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">_transpose</span><span class="p">()</span> <span class="o">@</span> <span class="n">u</span><span class="p">)</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">multipliers</span>
+        <span class="n">state</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">y</span> <span class="o">@</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">problem</span><span class="o">.</span><span class="n">prior_cov</span><span class="o">.</span><span class="n">data</span> <span class="o">@</span> <span class="n">y</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">data</span><span class="p">,</span> <span class="n">state</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">chi2</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""Return the cost at the mode, :math:`\gamma` times the data misfit plus the state misfit."""</span>
+        <span class="n">data</span><span class="p">,</span> <span class="n">state</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">misfits</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">analytic</span><span class="o">.</span><span class="n">gamma</span> <span class="o">*</span> <span class="n">data</span> <span class="o">+</span> <span class="n">state</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">chi2_tests</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">        Return Rodgers' four chi-squared tests at the mode.</span>
+
+<span class="sd">        The innovation does not depend on the estimate: its test is the</span>
+<span class="sd">        analytic one. The residual at the mode, :math:`(S_z/\gamma) u_a`,</span>
+<span class="sd">        against :math:`C = (S_z/\gamma) G^{-1} (S_z/\gamma)` gives</span>
+<span class="sd">        :math:`u_a^T G u_a`. The increment, :math:`S_0 y`, and the modeled</span>
+<span class="sd">        increment are measured in the directions the observations constrain</span>
+<span class="sd">        (``analytic._increment_chi2_at``), where both give the same number;</span>
+<span class="sd">        the part of the increment the bounds alone move is left out. The</span>
+<span class="sd">        chi-squared values are those of the mode; their degrees of freedom are</span>
+<span class="sd">        the analytic ones, and the p-values from them are approximate, since</span>
+<span class="sd">        the mode is not a linear function of Gaussian data.</span>
+<span class="sd">        """</span>
+        <span class="n">problem</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">analytic</span><span class="o">.</span><span class="n">problem</span>
+        <span class="n">gamma</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">analytic</span><span class="o">.</span><span class="n">gamma</span>
+        <span class="n">m</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">problem</span><span class="o">.</span><span class="n">obs</span><span class="p">)</span>
+        <span class="n">u</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_residual_weights</span><span class="p">()</span>
+        <span class="n">Htu</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">problem</span><span class="o">.</span><span class="n">forward</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">_transpose</span><span class="p">()</span> <span class="o">@</span> <span class="n">u</span><span class="p">)</span>
+        <span class="n">residual</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="nb">float</span><span class="p">(</span><span class="n">Htu</span> <span class="o">@</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">problem</span><span class="o">.</span><span class="n">prior_cov</span><span class="o">.</span><span class="n">data</span> <span class="o">@</span> <span class="n">Htu</span><span class="p">))</span>
+            <span class="o">+</span> <span class="nb">float</span><span class="p">(</span><span class="n">u</span> <span class="o">@</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">problem</span><span class="o">.</span><span class="n">obs_cov</span><span class="o">.</span><span class="n">data</span> <span class="o">@</span> <span class="n">u</span><span class="p">))</span> <span class="o">/</span> <span class="n">gamma</span>
+        <span class="p">)</span>
+        <span class="n">increment</span><span class="p">,</span> <span class="n">rank</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">analytic</span><span class="o">.</span><span class="n">_increment_chi2_at</span><span class="p">(</span><span class="n">Htu</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">multipliers</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">"innovation"</span><span class="p">:</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">analytic</span><span class="o">.</span><span class="n">chi2</span><span class="p">(),</span> <span class="n">m</span><span class="p">),</span>
+            <span class="s2">"residual"</span><span class="p">:</span> <span class="p">(</span><span class="n">residual</span><span class="p">,</span> <span class="n">m</span><span class="p">),</span>
+            <span class="s2">"modeled_increment"</span><span class="p">:</span> <span class="p">(</span><span class="n">increment</span><span class="p">,</span> <span class="n">rank</span><span class="p">),</span>
+            <span class="s2">"increment"</span><span class="p">:</span> <span class="p">(</span><span class="n">increment</span><span class="p">,</span> <span class="n">rank</span><span class="p">),</span>
+        <span class="p">}</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">with_gamma</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gamma</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"Bounded"</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return the solution at `gamma`: the active set again, on the analytic factors read at `gamma`."""</span>
+        <span class="k">return</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">analytic</span><span class="o">.</span><span class="n">with_gamma</span><span class="p">(</span><span class="n">gamma</span><span class="p">),</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">lower</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">upper</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">draws</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">burn_in</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">seed</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">with_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">problem</span><span class="p">:</span> <span class="n">Problem</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"Bounded"</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return the solution of `problem`, this one's with other observation values: the active set again, sharing the kept columns."""</span>
+        <span class="k">return</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">analytic</span><span class="o">.</span><span class="n">with_data</span><span class="p">(</span><span class="n">problem</span><span class="p">),</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">lower</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">upper</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">draws</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">burn_in</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">seed</span><span class="p">,</span>
+            <span class="n">columns</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_columns</span><span class="p">(),</span>
+        <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_logdet</span><span class="p">(</span><span class="n">S</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Return the log-determinant of a positive-definite matrix, by Cholesky."""</span>
+    <span class="n">factor</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">cho_factor</span><span class="p">(</span><span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">S</span> <span class="o">+</span> <span class="n">S</span><span class="o">.</span><span class="n">T</span><span class="p">),</span> <span class="n">lower</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">return</span> <span class="mf">2.0</span> <span class="o">*</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diagonal</span><span class="p">(</span><span class="n">factor</span><span class="p">))</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_bounded</span><span class="p">(</span><span class="n">problem</span><span class="p">:</span> <span class="n">Problem</span><span class="p">,</span> <span class="n">options</span><span class="p">:</span> <span class="n">BoundedOptions</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Posterior</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Factor the problem as the analytic method does, then hold the estimate to the bounds; with no finite bound, the analytic posterior."""</span>
+    <span class="n">state</span> <span class="o">=</span> <span class="n">problem</span><span class="o">.</span><span class="n">prior</span><span class="o">.</span><span class="n">space</span>
+    <span class="n">lower</span> <span class="o">=</span> <span class="n">_resolve</span><span class="p">(</span><span class="n">options</span><span class="o">.</span><span class="n">lower</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="s2">"lower"</span><span class="p">)</span>
+    <span class="n">upper</span> <span class="o">=</span> <span class="n">_resolve</span><span class="p">(</span><span class="n">options</span><span class="o">.</span><span class="n">upper</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="s2">"upper"</span><span class="p">)</span>
+    <span class="n">crossed</span> <span class="o">=</span> <span class="o">~</span><span class="p">(</span><span class="n">lower</span> <span class="o">&lt;</span> <span class="n">upper</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">crossed</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+        <span class="n">where</span> <span class="o">=</span> <span class="s2">"; "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">block</span><span class="si">!r}</span><span class="s2">: </span><span class="si">{</span><span class="n">_listed</span><span class="p">(</span><span class="n">state</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">block</span><span class="p">)[</span><span class="n">crossed</span><span class="p">[</span><span class="n">state</span><span class="o">.</span><span class="n">slice</span><span class="p">(</span><span class="n">block</span><span class="p">)]])</span><span class="si">}</span><span class="s2">"</span>
+            <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="n">state</span><span class="o">.</span><span class="n">names</span>
+            <span class="k">if</span> <span class="n">crossed</span><span class="p">[</span><span class="n">state</span><span class="o">.</span><span class="n">slice</span><span class="p">(</span><span class="n">block</span><span class="p">)]</span><span class="o">.</span><span class="n">any</span><span class="p">()</span>
+        <span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">"lower must be below upper at every state element, and is not in "</span>
+            <span class="sa">f</span><span class="s2">"block </span><span class="si">{</span><span class="n">where</span><span class="si">}</span><span class="s2">: an element held at one value is not bounded but known."</span>
+        <span class="p">)</span>
+    <span class="n">analytic</span> <span class="o">=</span> <span class="n">_factor</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="n">options</span><span class="o">.</span><span class="n">gamma</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">lower</span><span class="p">)</span><span class="o">.</span><span class="n">any</span><span class="p">()</span> <span class="ow">or</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">upper</span><span class="p">)</span><span class="o">.</span><span class="n">any</span><span class="p">()):</span>
+        <span class="k">return</span> <span class="n">Posterior</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="n">analytic</span><span class="p">,</span> <span class="n">options</span><span class="p">)</span>
+    <span class="n">solution</span> <span class="o">=</span> <span class="n">Bounded</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span>
+        <span class="n">analytic</span><span class="p">,</span> <span class="n">lower</span><span class="p">,</span> <span class="n">upper</span><span class="p">,</span> <span class="n">options</span><span class="o">.</span><span class="n">draws</span><span class="p">,</span> <span class="n">options</span><span class="o">.</span><span class="n">burn_in</span><span class="p">,</span> <span class="n">options</span><span class="o">.</span><span class="n">seed</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">Posterior</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="n">solution</span><span class="p">,</span> <span class="n">options</span><span class="p">)</span>
+</pre></div>
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be"></script>
+<script defer src="../../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2025-2026, James Mineau.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.2.0.
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.23.0.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>
