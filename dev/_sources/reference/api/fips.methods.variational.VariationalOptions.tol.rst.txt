@@ -1,0 +1,6 @@
+fips.methods.variational.VariationalOptions.tol
+===============================================
+
+.. currentmodule:: fips.methods.variational
+
+.. autoattribute:: VariationalOptions.tol

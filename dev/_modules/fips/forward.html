@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>fips.forward &#8212; fips 0.2.0b3.dev21+g2729ef234 documentation</title>
+    <title>fips.forward &#8212; fips 0.2.0b3.dev22+g0086be242 documentation</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../_static/documentation_options.js?v=70a3b4e6"></script>
+    <script src="../../_static/documentation_options.js?v=0de11b26"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -132,8 +132,8 @@
       
     
     
-    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev21+g2729ef234 documentation - Home"/>
-    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev21+g2729ef234 documentation - Home"/>
+    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev22+g0086be242 documentation - Home"/>
+    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev22+g0086be242 documentation - Home"/>
   
   
 </a></div>
@@ -428,12 +428,15 @@
 <span class="sd">the matrix :math:`H` of a linear map, or as a :class:`ForwardModel`, a class</span>
 <span class="sd">the caller writes with two methods: the model itself, :math:`F(x)`, and its</span>
 <span class="sd">Jacobian, :math:`J(x) = \partial F / \partial x` at a state, as an</span>
-<span class="sd">:class:`~fips.Operator`. The observations are then :math:`z = F(x) + c + e`.</span>
+<span class="sd">:class:`~fips.Operator` (or, for a model with an adjoint, its products</span>
+<span class="sd">:math:`J v` and :math:`J^T w`, :meth:`ForwardModel.jvp` and</span>
+<span class="sd">:meth:`ForwardModel.vjp`). The observations are then :math:`z = F(x) + c + e`.</span>
 <span class="sd">fips builds no Jacobian: it calls the caller's. :meth:`Problem.linearized</span>
 <span class="sd">&lt;fips.Problem.linearized&gt;` is the linear problem at a state, and</span>
 <span class="sd">``fips.solve(problem, "gauss_newton")`` finds the mode of the posterior by</span>
-<span class="sd">solving it again at each estimate. :func:`taylortest` checks a model's</span>
-<span class="sd">Jacobian against the model.</span>
+<span class="sd">solving it again at each estimate (``"variational"`` does the same with</span>
+<span class="sd">products only). :func:`taylortest` checks a model's Jacobian against the</span>
+<span class="sd">model, and its transpose against the Jacobian.</span>
 <span class="sd">"""</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
@@ -441,6 +444,7 @@
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 
+<span class="kn">from</span><span class="w"> </span><span class="nn">fips.linalg</span><span class="w"> </span><span class="kn">import</span> <span class="n">LinearOperator</span><span class="p">,</span> <span class="n">MatrixFreeOperator</span><span class="p">,</span> <span class="n">dottest</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">fips.operator</span><span class="w"> </span><span class="kn">import</span> <span class="n">Operator</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">fips.space</span><span class="w"> </span><span class="kn">import</span> <span class="n">Space</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">fips.vector</span><span class="w"> </span><span class="kn">import</span> <span class="n">Vector</span>
@@ -466,6 +470,12 @@
 <span class="sd">      :attr:`rows` as its rows and :attr:`cols` as its columns (in any</span>
 <span class="sd">      order, and in any form: dense, sparse, the product of a matrix and a</span>
 <span class="sd">      diagonal).</span>
+
+<span class="sd">    A model whose Jacobian is too large to hold, but which has a tangent</span>
+<span class="sd">    linear and an adjoint (a transport model run forward and backward),</span>
+<span class="sd">    writes :meth:`jvp` and :meth:`vjp` instead of ``jacobian``: its Jacobian</span>
+<span class="sd">    is then those products (a :class:`~fips.linalg.MatrixFreeOperator`), and</span>
+<span class="sd">    ``fips.solve(problem, "variational")`` solves with them alone.</span>
 
 <span class="sd">    Call ``super().__init__(rows, cols)`` with the two spaces in the</span>
 <span class="sd">    subclass's ``__init__``. fips calls both methods with a vector on</span>
@@ -575,9 +585,11 @@
 <span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Return the Jacobian of the model at `x`: :math:`J_{ij} = \partial F_i / \partial x_j`.</span>
 
-<span class="sd">        ``"gauss_newton"`` and :func:`taylortest` need it; the ensemble method</span>
-<span class="sd">        only runs the model, so a model solved with it need not write one.</span>
-<span class="sd">        This one raises.</span>
+<span class="sd">        ``"gauss_newton"``, ``"variational"`` and :func:`taylortest` need it;</span>
+<span class="sd">        the ensemble method only runs the model, so a model solved with it</span>
+<span class="sd">        need not write one. This one gives the products of :meth:`jvp` and</span>
+<span class="sd">        :meth:`vjp` at `x`, a :class:`~fips.linalg.MatrixFreeOperator`, when</span>
+<span class="sd">        the subclass writes both, and raises otherwise.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -593,13 +605,89 @@
 <span class="sd">        Raises</span>
 <span class="sd">        ------</span>
 <span class="sd">        NotImplementedError</span>
-<span class="sd">            Unless the subclass writes it.</span>
+<span class="sd">            Unless the subclass writes it, or both :meth:`jvp` and :meth:`vjp`.</span>
 <span class="sd">        """</span>
+        <span class="bp">cls</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">cls</span><span class="o">.</span><span class="n">jvp</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">ForwardModel</span><span class="o">.</span><span class="n">jvp</span> <span class="ow">and</span> <span class="bp">cls</span><span class="o">.</span><span class="n">vjp</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">ForwardModel</span><span class="o">.</span><span class="n">vjp</span><span class="p">:</span>
+            <span class="n">values</span> <span class="o">=</span> <span class="n">_on</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cols</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="s2">"x"</span><span class="p">,</span> <span class="s2">"the model's columns"</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">Operator</span><span class="p">(</span><span class="n">_Linearization</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">values</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">rows</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">cols</span><span class="p">)</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2"> has no jacobian: write one to solve with "</span>
-            <span class="s1">'"gauss_newton" or check it with taylortest, or solve with '</span>
-            <span class="s1">'"ensemble", which only runs the model.'</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="bp">cls</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2"> has no jacobian: write one (or both jvp and vjp, its "</span>
+            <span class="s1">'products) to solve with "gauss_newton" or "variational" or check it '</span>
+            <span class="s1">'with taylortest, or solve with "ensemble", which only runs the model.'</span>
         <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ForwardModel.jvp">
+<a class="viewcode-back" href="../../reference/api/fips.ForwardModel.jvp.html#fips.ForwardModel.jvp">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">jvp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">Vector</span><span class="p">,</span> <span class="n">v</span><span class="p">:</span> <span class="n">Vector</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Vector</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">        Return the Jacobian at `x` times `v`, :math:`J(x)\, v`: a run of the tangent linear model.</span>
+
+<span class="sd">        Write it, with :meth:`vjp`, for a model whose Jacobian is known only</span>
+<span class="sd">        by its products. This one multiplies by :meth:`jacobian`.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        x : Vector</span>
+<span class="sd">            A state on :attr:`cols`, where the model is linearized.</span>
+<span class="sd">        v : Vector</span>
+<span class="sd">            A change of the state, on :attr:`cols`.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Vector</span>
+<span class="sd">            :math:`J(x)\, v`, on :attr:`rows` (its labels in any order).</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        NotImplementedError</span>
+<span class="sd">            If the subclass writes neither this nor :meth:`jacobian`.</span>
+<span class="sd">        """</span>
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">jacobian</span> <span class="ow">is</span> <span class="n">ForwardModel</span><span class="o">.</span><span class="n">jacobian</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2"> writes neither jacobian nor jvp."</span>
+            <span class="p">)</span>
+        <span class="n">J</span> <span class="o">=</span> <span class="n">_differentiated</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">_on</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cols</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="s2">"x"</span><span class="p">,</span> <span class="s2">"the model's columns"</span><span class="p">))</span>
+        <span class="n">values</span> <span class="o">=</span> <span class="n">_on</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cols</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="s2">"v"</span><span class="p">,</span> <span class="s2">"the model's columns"</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">Vector</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">J</span><span class="o">.</span><span class="n">data</span> <span class="o">@</span> <span class="n">values</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">rows</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ForwardModel.vjp">
+<a class="viewcode-back" href="../../reference/api/fips.ForwardModel.vjp.html#fips.ForwardModel.vjp">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">vjp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">Vector</span><span class="p">,</span> <span class="n">w</span><span class="p">:</span> <span class="n">Vector</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Vector</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">        Return the transpose of the Jacobian at `x` times `w`, :math:`J(x)^T w`: a run of the adjoint model.</span>
+
+<span class="sd">        Write it, with :meth:`jvp`, for a model whose Jacobian is known only</span>
+<span class="sd">        by its products. This one multiplies by the transpose of</span>
+<span class="sd">        :meth:`jacobian` (or by a cheaper product the model has, as a</span>
+<span class="sd">        transform does).</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        x : Vector</span>
+<span class="sd">            A state on :attr:`cols`, where the model is linearized.</span>
+<span class="sd">        w : Vector</span>
+<span class="sd">            Weights of the observations, on :attr:`rows`.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Vector</span>
+<span class="sd">            :math:`J(x)^T w`, on :attr:`cols` (its labels in any order).</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        NotImplementedError</span>
+<span class="sd">            If the subclass writes neither this nor :meth:`jacobian`.</span>
+<span class="sd">        """</span>
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">jacobian</span> <span class="ow">is</span> <span class="n">ForwardModel</span><span class="o">.</span><span class="n">jacobian</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2"> writes neither jacobian nor vjp."</span>
+            <span class="p">)</span>
+        <span class="n">values</span> <span class="o">=</span> <span class="n">_on</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cols</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="s2">"x"</span><span class="p">,</span> <span class="s2">"the model's columns"</span><span class="p">)</span>
+        <span class="n">weights</span> <span class="o">=</span> <span class="n">_on</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rows</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="s2">"w"</span><span class="p">,</span> <span class="s2">"the model's rows"</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">Vector</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_gradient</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">weights</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">cols</span><span class="p">)</span></div>
 
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_gradient</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">v</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
@@ -607,7 +695,8 @@
 <span class="sd">        Return :math:`J(x)^T v`, for the state values `x` in the order of :attr:`cols` and `v` in the order of :attr:`rows`, in the order of :attr:`cols`.</span>
 
 <span class="sd">        A product with the transpose of the Jacobian, for a sampler's</span>
-<span class="sd">        gradient. This one forms the Jacobian; a model with a cheaper product</span>
+<span class="sd">        gradient. This one forms the Jacobian (the products of :meth:`vjp`,</span>
+<span class="sd">        for a model that writes them); a model with a cheaper product</span>
 <span class="sd">        overrides it.</span>
 <span class="sd">        """</span>
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">_differentiated</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">_transpose</span><span class="p">()</span> <span class="o">@</span> <span class="n">v</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
@@ -667,6 +756,64 @@
     <span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">"""Return the model and the aggregation's rows."""</span>
         <span class="k">return</span> <span class="sa">f</span><span class="s2">"_Aggregated(</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="si">!r}</span><span class="s2">, rows: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_rows</span><span class="si">!r}</span><span class="s2">)"</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">_Linearization</span><span class="p">(</span><span class="n">MatrixFreeOperator</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">    The Jacobian of a model at a state as its products (:meth:`ForwardModel.jvp`, and :meth:`ForwardModel.vjp` for its transpose), on the model's rows and columns in their order.</span>
+
+<span class="sd">    A product with a block of vectors is one call of the model's product per</span>
+<span class="sd">    column. It pickles when the model does.</span>
+<span class="sd">    """</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">:</span> <span class="n">ForwardModel</span><span class="p">,</span> <span class="n">values</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">transposed</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_model</span> <span class="o">=</span> <span class="n">model</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_values</span> <span class="o">=</span> <span class="n">values</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_transposed</span> <span class="o">=</span> <span class="n">transposed</span>
+        <span class="n">shape</span> <span class="o">=</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">rows</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">cols</span><span class="p">))</span>
+        <span class="n">LinearOperator</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">shape</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="k">if</span> <span class="n">transposed</span> <span class="k">else</span> <span class="n">shape</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_matmat</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Return ``J @ X`` (``J^T @ X`` for the transpose), a column at a time."""</span>
+        <span class="n">model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">Vector</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_values</span><span class="p">,</span> <span class="n">model</span><span class="o">.</span><span class="n">cols</span><span class="p">)</span>
+        <span class="n">X</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">toarray</span><span class="p">()</span> <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="s2">"toarray"</span><span class="p">)</span> <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_transposed</span><span class="p">:</span>
+                <span class="n">product</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">vjp</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">Vector</span><span class="p">(</span><span class="n">X</span><span class="p">[:,</span> <span class="n">j</span><span class="p">],</span> <span class="n">model</span><span class="o">.</span><span class="n">rows</span><span class="p">))</span>
+                <span class="n">out</span><span class="p">[:,</span> <span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">_returned</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">product</span><span class="p">,</span> <span class="n">model</span><span class="o">.</span><span class="n">cols</span><span class="p">,</span> <span class="s2">"vjp"</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">product</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">jvp</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">Vector</span><span class="p">(</span><span class="n">X</span><span class="p">[:,</span> <span class="n">j</span><span class="p">],</span> <span class="n">model</span><span class="o">.</span><span class="n">cols</span><span class="p">))</span>
+                <span class="n">out</span><span class="p">[:,</span> <span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">_returned</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">product</span><span class="p">,</span> <span class="n">model</span><span class="o">.</span><span class="n">rows</span><span class="p">,</span> <span class="s2">"jvp"</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">out</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_transpose</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Return the transpose: the other product."""</span>
+        <span class="k">return</span> <span class="n">_Linearization</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_model</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_values</span><span class="p">,</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_transposed</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_on</span><span class="p">(</span><span class="n">space</span><span class="p">:</span> <span class="n">Space</span><span class="p">,</span> <span class="n">v</span><span class="p">:</span> <span class="n">Vector</span><span class="p">,</span> <span class="n">what</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">where</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Return the values of the Vector `v` in the order of `space`, which must have exactly its labels."""</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">Vector</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">what</span><span class="si">}</span><span class="s2"> must be a Vector, got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">v</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">."</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">v</span><span class="o">.</span><span class="n">space</span> <span class="ow">is</span> <span class="n">space</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">v</span><span class="o">.</span><span class="n">values</span>
+    <span class="k">return</span> <span class="n">v</span><span class="o">.</span><span class="n">values</span><span class="p">[</span>
+        <span class="n">space</span><span class="o">.</span><span class="n">_align</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">space</span><span class="p">,</span> <span class="n">what</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">what</span><span class="p">[:</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span><span class="si">}{</span><span class="n">what</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span><span class="si">}</span><span class="s2"> and </span><span class="si">{</span><span class="n">where</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+    <span class="p">]</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_returned</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">ForwardModel</span><span class="p">,</span> <span class="n">v</span><span class="p">:</span> <span class="n">Vector</span><span class="p">,</span> <span class="n">space</span><span class="p">:</span> <span class="n">Space</span><span class="p">,</span> <span class="n">method</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Return what the model's `method` returned, a Vector on `space`, in the order of `space`."""</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">Vector</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">model</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">method</span><span class="si">}</span><span class="s2"> must return a Vector, got "</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">v</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">."</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="n">_on</span><span class="p">(</span><span class="n">space</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"what </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">model</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">method</span><span class="si">}</span><span class="s2"> returns"</span><span class="p">,</span> <span class="s2">"its labels"</span><span class="p">)</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_evaluated</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">ForwardModel</span><span class="p">,</span> <span class="n">values</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
@@ -729,6 +876,9 @@
 <span class="n">_ORDER</span> <span class="o">=</span> <span class="mf">1.8</span>
 <span class="sd">"""The order of the remainder :func:`taylortest` asks for at its smallest steps: 2 for a right Jacobian, 1 for a wrong one."""</span>
 
+<span class="n">_ADJOINT</span> <span class="o">=</span> <span class="mf">1e-10</span>
+<span class="sa">r</span><span class="sd">"""How far :math:`\langle J v, w \rangle` and :math:`\langle v, J^T w \rangle` may differ in :func:`taylortest`, relative to the size of their terms: roundoff of an exact discrete adjoint, far below a wrong one's."""</span>
+
 
 <div class="viewcode-block" id="taylortest">
 <a class="viewcode-back" href="../../reference/api/fips.taylortest.html#fips.taylortest">[docs]</a>
@@ -736,7 +886,7 @@
     <span class="n">model</span><span class="p">:</span> <span class="n">ForwardModel</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">Vector</span><span class="p">,</span> <span class="n">dx</span><span class="p">:</span> <span class="n">Vector</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">seed</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="mi">0</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">"""</span>
-<span class="sd">    Check that a model's Jacobian is the derivative of the model, by a Taylor test.</span>
+<span class="sd">    Check that a model's Jacobian is the derivative of the model, by a Taylor test, and that its transpose is its adjoint.</span>
 
 <span class="sd">    For a step :math:`\epsilon` along a direction :math:`\delta x`, the</span>
 <span class="sd">    remainder :math:`r(\epsilon) = \lVert F(x + \epsilon\, \delta x) - F(x) -</span>
@@ -749,6 +899,15 @@
 <span class="sd">    :math:`\lVert F \rVert`). A remainder at roundoff from the start (a model</span>
 <span class="sd">    whose Jacobian is exact, such as a linear one) passes. The orders are</span>
 <span class="sd">    logged at DEBUG.</span>
+
+<span class="sd">    The Jacobian is the one fips solves with: ``jacobian(x)``, or for a model</span>
+<span class="sd">    that writes only its products, :meth:`~ForwardModel.jvp` and</span>
+<span class="sd">    :meth:`~ForwardModel.vjp`. Its transpose must be its adjoint too:</span>
+<span class="sd">    :math:`\langle J v, w \rangle = \langle v, J^T w \rangle` for random</span>
+<span class="sd">    :math:`v` and :math:`w`, to within :math:`10^{-10}` of the size of the</span>
+<span class="sd">    terms (:func:`fips.linalg.dottest`), which an adjoint model with a term</span>
+<span class="sd">    missing or transposed wrong fails at order one. A failure of either</span>
+<span class="sd">    check is logged at INFO.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -767,7 +926,8 @@
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
 <span class="sd">    bool</span>
-<span class="sd">        True if the remainder falls as the square of the step.</span>
+<span class="sd">        True if the remainder falls as the square of the step and the</span>
+<span class="sd">        transpose is the adjoint.</span>
 
 <span class="sd">    Raises</span>
 <span class="sd">    ------</span>
@@ -838,7 +998,15 @@
     <span class="k">else</span><span class="p">:</span>
         <span class="n">direction</span> <span class="o">=</span> <span class="n">on_cols</span><span class="p">(</span><span class="n">dx</span><span class="p">,</span> <span class="s2">"dx"</span><span class="p">)</span>
     <span class="n">F0</span> <span class="o">=</span> <span class="n">_evaluated</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">point</span><span class="p">)</span>
-    <span class="n">Jdx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">_differentiated</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">point</span><span class="p">)</span><span class="o">.</span><span class="n">data</span> <span class="o">@</span> <span class="n">direction</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+    <span class="n">J</span> <span class="o">=</span> <span class="n">_differentiated</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">point</span><span class="p">)</span><span class="o">.</span><span class="n">data</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">dottest</span><span class="p">(</span><span class="n">J</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="n">_ADJOINT</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">):</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+            <span class="s2">"Taylor test: the transpose of </span><span class="si">%s</span><span class="s2">'s Jacobian is not its adjoint (vjp "</span>
+            <span class="s2">"is not the transpose of jvp)."</span><span class="p">,</span>
+            <span class="nb">type</span><span class="p">(</span><span class="n">model</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="kc">False</span>
+    <span class="n">Jdx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">J</span> <span class="o">@</span> <span class="n">direction</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
     <span class="n">eps</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">finfo</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span><span class="o">.</span><span class="n">eps</span>
     <span class="n">steps</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">**</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">_STEPS</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
     <span class="n">remainders</span><span class="p">,</span> <span class="n">floors</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[]</span>
@@ -852,6 +1020,8 @@
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">len</span><span class="p">(</span><span class="n">pairs</span><span class="p">):</span>
         <span class="n">exact</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">r</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">r</span><span class="p">)]</span> <span class="o">&lt;=</span> <span class="n">floor</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">r</span><span class="p">)]))</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">"Taylor test: the remainder is at roundoff (</span><span class="si">%s</span><span class="s2">)."</span><span class="p">,</span> <span class="n">exact</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">exact</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">"Taylor test: the remainder is not at roundoff."</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">exact</span>
     <span class="n">orders</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log2</span><span class="p">(</span><span class="n">r</span><span class="p">[</span><span class="n">pairs</span><span class="p">]</span> <span class="o">/</span> <span class="n">r</span><span class="p">[</span><span class="n">pairs</span> <span class="o">+</span> <span class="mi">1</span><span class="p">])</span>
     <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
@@ -859,7 +1029,14 @@
         <span class="s2">"largest step: </span><span class="si">%s</span><span class="s2">."</span><span class="p">,</span>
         <span class="n">np</span><span class="o">.</span><span class="n">array2string</span><span class="p">(</span><span class="n">orders</span><span class="p">,</span> <span class="n">precision</span><span class="o">=</span><span class="mi">2</span><span class="p">),</span>
     <span class="p">)</span>
-    <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">orders</span><span class="p">[</span><span class="o">-</span><span class="mi">3</span><span class="p">:]</span> <span class="o">&gt;</span> <span class="n">_ORDER</span><span class="p">))</span></div>
+    <span class="n">passed</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">orders</span><span class="p">[</span><span class="o">-</span><span class="mi">3</span><span class="p">:]</span> <span class="o">&gt;</span> <span class="n">_ORDER</span><span class="p">))</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">passed</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+            <span class="s2">"Taylor test: the remainder falls as the step to the power </span><span class="si">%s</span><span class="s2"> at the "</span>
+            <span class="s2">"smallest steps, not 2: the Jacobian is not the derivative of the model."</span><span class="p">,</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">array2string</span><span class="p">(</span><span class="n">orders</span><span class="p">[</span><span class="o">-</span><span class="mi">3</span><span class="p">:],</span> <span class="n">precision</span><span class="o">=</span><span class="mi">2</span><span class="p">),</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="n">passed</span></div>
 
 </pre></div>
 

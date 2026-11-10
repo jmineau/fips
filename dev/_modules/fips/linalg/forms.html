@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>fips.linalg.forms &#8212; fips 0.2.0b3.dev21+g2729ef234 documentation</title>
+    <title>fips.linalg.forms &#8212; fips 0.2.0b3.dev22+g0086be242 documentation</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../../_static/documentation_options.js?v=70a3b4e6"></script>
+    <script src="../../../_static/documentation_options.js?v=0de11b26"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -132,8 +132,8 @@
       
     
     
-    <img src="../../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev21+g2729ef234 documentation - Home"/>
-    <img src="../../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev21+g2729ef234 documentation - Home"/>
+    <img src="../../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev22+g0086be242 documentation - Home"/>
+    <img src="../../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev22+g0086be242 documentation - Home"/>
   
   
 </a></div>
@@ -422,11 +422,11 @@
                   
   <h1>Source code for fips.linalg.forms</h1><div class="highlight"><pre>
 <span></span><span class="sd">"""</span>
-<span class="sd">The base class of the forms, and the dense, sparse and diagonal forms.</span>
+<span class="sd">The base class of the forms, and the dense, sparse, diagonal and matrix-free forms.</span>
 
 <span class="sd">:class:`LinearOperator` is the base of every form. It is in one module with</span>
-<span class="sd">:class:`DenseOperator`, :class:`SparseOperator` and :class:`DiagonalOperator`</span>
-<span class="sd">because it builds them (a default method returns a dense form, a product of</span>
+<span class="sd">:class:`DenseOperator`, :class:`SparseOperator`, :class:`DiagonalOperator`</span>
+<span class="sd">and :class:`MatrixFreeOperator` because it builds them (a default method returns a dense form, a product of</span>
 <span class="sd">sparse matrices a sparse one) while each of them is a subclass of it. The forms</span>
 <span class="sd">made of other forms are in :mod:`fips.linalg.block` and</span>
 <span class="sd">:mod:`fips.linalg.kronecker`. What a form can do is in :mod:`fips.linalg`.</span>
@@ -452,9 +452,9 @@
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
 <span class="n">LinearOperatorLike</span><span class="p">:</span> <span class="n">TypeAlias</span> <span class="o">=</span> <span class="p">(</span>
-    <span class="s2">"LinearOperator | sp.spmatrix | sp.sparray | npt.ArrayLike"</span>
+    <span class="s2">"LinearOperator | _SciPyLinearOperator | sp.spmatrix | sp.sparray | npt.ArrayLike"</span>
 <span class="p">)</span>
-<span class="sd">"""What :func:`as_linear_operator` takes: a form, a SciPy sparse matrix or a 2D array."""</span>
+<span class="sd">"""What :func:`as_linear_operator` takes: a form, a SciPy linear operator, a SciPy sparse matrix or a 2D array."""</span>
 
 <span class="n">_DENSE_FILL</span> <span class="o">=</span> <span class="mf">0.25</span>
 <span class="sd">"""</span>
@@ -1596,12 +1596,185 @@
 
 
 
+<div class="viewcode-block" id="MatrixFreeOperator">
+<a class="viewcode-back" href="../../../reference/api/fips.linalg.MatrixFreeOperator.html#fips.linalg.MatrixFreeOperator">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">MatrixFreeOperator</span><span class="p">(</span><span class="n">LinearOperator</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">    A matrix known only by its products, :math:`A x` and :math:`A^T y`, never by its entries.</span>
+
+<span class="sd">    A Jacobian too large to hold, or one applied by running a model and its</span>
+<span class="sd">    adjoint, is given to fips as a SciPy linear operator,</span>
+<span class="sd">    ``scipy.sparse.linalg.LinearOperator(shape, matvec=..., rmatvec=...)``</span>
+<span class="sd">    (with ``matmat`` and ``rmatmat`` for a block of vectors, if it has</span>
+<span class="sd">    faster ones), which this form wraps; :func:`as_linear_operator` does so</span>
+<span class="sd">    for any SciPy linear operator that is not a fips form, so an</span>
+<span class="sd">    :class:`~fips.Operator` puts labels on one as on any other matrix.</span>
+
+<span class="sd">    What fips builds from it stays matrix-free: its transpose, a product or</span>
+<span class="sd">    a sum with any form, a scaling and a reordering of its rows and columns</span>
+<span class="sd">    (an :class:`~fips.Operator` given in another order than the problem's)</span>
+<span class="sd">    are applied term by term, one product of each part per vector. Its</span>
+<span class="sd">    entries are formed only where a method asks for them: :meth:`dense`,</span>
+<span class="sd">    :meth:`diagonal` and the solves take one product per column. The</span>
+<span class="sd">    ``"variational"`` method needs only products; ``fips.solve`` forms</span>
+<span class="sd">    :math:`H S_0` (``m x n``) from ``n`` of them.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    op : scipy.sparse.linalg.LinearOperator</span>
+<span class="sd">        The products. It is kept, not copied (a function cannot be): the</span>
+<span class="sd">        form gives what `op` gives, as float64. A pickle of the form holds</span>
+<span class="sd">        `op`, and needs its functions to be defined at the top level of a</span>
+<span class="sd">        module.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    TypeError</span>
+<span class="sd">        If `op` is not a SciPy linear operator, or is a fips form already.</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    dottest : Check that ``rmatvec`` is the adjoint of ``matvec``.</span>
+<span class="sd">    fips.ForwardModel.jvp : The products of a forward model's Jacobian.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; import numpy as np</span>
+<span class="sd">    &gt;&gt;&gt; from scipy.sparse.linalg import LinearOperator as SciPyOperator</span>
+<span class="sd">    &gt;&gt;&gt; from fips.linalg import MatrixFreeOperator, dottest</span>
+<span class="sd">    &gt;&gt;&gt; def cumulate(x):</span>
+<span class="sd">    ...     return np.cumsum(x)</span>
+<span class="sd">    &gt;&gt;&gt; def cumulate_back(y):</span>
+<span class="sd">    ...     return np.cumsum(y[::-1])[::-1]</span>
+<span class="sd">    &gt;&gt;&gt; A = MatrixFreeOperator(</span>
+<span class="sd">    ...     SciPyOperator((3, 3), matvec=cumulate, rmatvec=cumulate_back)</span>
+<span class="sd">    ... )</span>
+<span class="sd">    &gt;&gt;&gt; A @ np.array([1.0, 2.0, 3.0])</span>
+<span class="sd">    array([1., 3., 6.])</span>
+<span class="sd">    &gt;&gt;&gt; dottest(A)</span>
+<span class="sd">    True</span>
+<span class="sd">    &gt;&gt;&gt; type(2.0 * A.T).__name__  # still products</span>
+<span class="sd">    '_MatrixFreeScaled'</span>
+<span class="sd">    """</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">op</span><span class="p">:</span> <span class="n">_SciPyLinearOperator</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">op</span><span class="p">,</span> <span class="n">_SciPyLinearOperator</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">op</span><span class="p">,</span> <span class="n">LinearOperator</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                <span class="s2">"MatrixFreeOperator wraps a SciPy LinearOperator that is not a "</span>
+                <span class="sa">f</span><span class="s2">"fips form, got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">op</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">."</span>
+            <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_op</span> <span class="o">=</span> <span class="n">op</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">op</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_matmat</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Return ``A @ X``, by the wrapped operator's products."""</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_op</span><span class="o">.</span><span class="n">matmat</span><span class="p">(</span><span class="n">_as_array</span><span class="p">(</span><span class="n">X</span><span class="p">)),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_transpose</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Return the transpose, by the wrapped operator's ``rmatvec``."""</span>
+        <span class="k">return</span> <span class="n">MatrixFreeOperator</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_op</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_elementwise</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">func</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Return the form times a scalar, still matrix-free."""</span>
+        <span class="k">return</span> <span class="n">_MatrixFreeScaled</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">float</span><span class="p">(</span><span class="n">func</span><span class="p">(</span><span class="mf">1.0</span><span class="p">)))</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_select</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rows</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">cols</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"LinearOperator"</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return the rows and columns at `rows` and `cols` (``-1`` a row or column of zeros), still matrix-free."""</span>
+        <span class="k">return</span> <span class="n">_MatrixFreeSelected</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rows</span><span class="p">,</span> <span class="n">cols</span><span class="p">)</span></div>
+
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">_MatrixFreeProduct</span><span class="p">(</span><span class="n">MatrixFreeOperator</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""``a @ b`` with one side matrix-free: ``b`` then ``a`` applied to each vector, never multiplied out."""</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="p">:</span> <span class="n">LinearOperator</span><span class="p">,</span> <span class="n">b</span><span class="p">:</span> <span class="n">LinearOperator</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_a</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_b</span> <span class="o">=</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span>
+        <span class="n">LinearOperator</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">b</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_matmat</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Return ``a @ (b @ X)``."""</span>
+        <span class="k">return</span> <span class="n">_as_array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_a</span><span class="o">.</span><span class="n">matmat</span><span class="p">(</span><span class="n">_as_array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_b</span><span class="o">.</span><span class="n">matmat</span><span class="p">(</span><span class="n">_as_array</span><span class="p">(</span><span class="n">X</span><span class="p">)))))</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_transpose</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Return ``b^T a^T``."""</span>
+        <span class="k">return</span> <span class="n">_MatrixFreeProduct</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_b</span><span class="o">.</span><span class="n">_transpose</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">_a</span><span class="o">.</span><span class="n">_transpose</span><span class="p">())</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">_MatrixFreeSum</span><span class="p">(</span><span class="n">MatrixFreeOperator</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""``a + b`` with one side matrix-free, applied term by term."""</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="p">:</span> <span class="n">LinearOperator</span><span class="p">,</span> <span class="n">b</span><span class="p">:</span> <span class="n">LinearOperator</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_a</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_b</span> <span class="o">=</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span>
+        <span class="n">LinearOperator</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_matmat</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Return ``a @ X + b @ X``."""</span>
+        <span class="n">X</span> <span class="o">=</span> <span class="n">_as_array</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">_as_array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_a</span><span class="o">.</span><span class="n">matmat</span><span class="p">(</span><span class="n">X</span><span class="p">))</span> <span class="o">+</span> <span class="n">_as_array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_b</span><span class="o">.</span><span class="n">matmat</span><span class="p">(</span><span class="n">X</span><span class="p">))</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_transpose</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Return ``a^T + b^T``."""</span>
+        <span class="k">return</span> <span class="n">_MatrixFreeSum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_a</span><span class="o">.</span><span class="n">_transpose</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">_b</span><span class="o">.</span><span class="n">_transpose</span><span class="p">())</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">_MatrixFreeScaled</span><span class="p">(</span><span class="n">MatrixFreeOperator</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""A matrix-free form times a scalar."""</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="p">:</span> <span class="n">LinearOperator</span><span class="p">,</span> <span class="n">scale</span><span class="p">:</span> <span class="nb">float</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_a</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scale</span> <span class="o">=</span> <span class="n">a</span><span class="p">,</span> <span class="n">scale</span>
+        <span class="n">LinearOperator</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_matmat</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Return ``scale * (a @ X)``."""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scale</span> <span class="o">*</span> <span class="n">_as_array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_a</span><span class="o">.</span><span class="n">matmat</span><span class="p">(</span><span class="n">_as_array</span><span class="p">(</span><span class="n">X</span><span class="p">)))</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_transpose</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Return ``scale * a^T``."""</span>
+        <span class="k">return</span> <span class="n">_MatrixFreeScaled</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_a</span><span class="o">.</span><span class="n">_transpose</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scale</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_elementwise</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">func</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Return the form times another scalar, one scale."""</span>
+        <span class="k">return</span> <span class="n">_MatrixFreeScaled</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_a</span><span class="p">,</span> <span class="nb">float</span><span class="p">(</span><span class="n">func</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_scale</span><span class="p">)))</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">_MatrixFreeSelected</span><span class="p">(</span><span class="n">MatrixFreeOperator</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    The entries of a matrix-free form at some rows and columns (integer positions, ``-1`` a row or column of zeros), by its products.</span>
+
+<span class="sd">    ``(S x)_i = (A u)_{rows_i}`` with ``u`` the vector `x` scattered to the</span>
+<span class="sd">    columns ``cols`` (added where a column repeats), so a product of the</span>
+<span class="sd">    selection is one product of the form.</span>
+<span class="sd">    """</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="p">:</span> <span class="n">LinearOperator</span><span class="p">,</span> <span class="n">rows</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">cols</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_a</span> <span class="o">=</span> <span class="n">a</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_rows</span> <span class="o">=</span> <span class="n">_read_only</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">rows</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">intp</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_cols</span> <span class="o">=</span> <span class="n">_read_only</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">cols</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">intp</span><span class="p">))</span>
+        <span class="n">LinearOperator</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_rows</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_cols</span><span class="p">)))</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_matmat</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Return the selection times `X`, through one product of the form."""</span>
+        <span class="n">X</span> <span class="o">=</span> <span class="n">_as_array</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+        <span class="n">kept</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cols</span> <span class="o">&gt;=</span> <span class="mi">0</span>
+        <span class="n">U</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">_a</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">add</span><span class="o">.</span><span class="n">at</span><span class="p">(</span><span class="n">U</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cols</span><span class="p">[</span><span class="n">kept</span><span class="p">],</span> <span class="n">X</span><span class="p">[</span><span class="n">kept</span><span class="p">])</span>
+        <span class="n">Y</span> <span class="o">=</span> <span class="n">_as_array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_a</span><span class="o">.</span><span class="n">matmat</span><span class="p">(</span><span class="n">U</span><span class="p">))[</span><span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_rows</span><span class="p">,</span> <span class="mi">0</span><span class="p">)]</span>
+        <span class="n">Y</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_rows</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="k">return</span> <span class="n">Y</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_transpose</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Return the transpose: the transpose's entries at the columns and rows."""</span>
+        <span class="k">return</span> <span class="n">_MatrixFreeSelected</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_a</span><span class="o">.</span><span class="n">_transpose</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cols</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rows</span><span class="p">)</span>
+
+
 <span class="k">def</span><span class="w"> </span><span class="nf">_product</span><span class="p">(</span><span class="n">a</span><span class="p">:</span> <span class="n">LinearOperator</span><span class="p">,</span> <span class="n">b</span><span class="p">:</span> <span class="n">LinearOperator</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LinearOperator</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""Return ``a @ b`` in the cheapest form that is exact."""</span>
     <span class="k">if</span> <span class="n">a</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="n">b</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
             <span class="sa">f</span><span class="s2">"Cannot multiply operators of shapes </span><span class="si">{</span><span class="n">a</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2"> and </span><span class="si">{</span><span class="n">b</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">."</span>
         <span class="p">)</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">MatrixFreeOperator</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">MatrixFreeOperator</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">_MatrixFreeProduct</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">DiagonalOperator</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">DiagonalOperator</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">DiagonalOperator</span><span class="o">.</span><span class="n">_adopt</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">values</span> <span class="o">*</span> <span class="n">b</span><span class="o">.</span><span class="n">values</span><span class="p">)</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">SparseOperator</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">SparseOperator</span><span class="p">):</span>
@@ -1632,6 +1805,8 @@
 <span class="w">    </span><span class="sd">"""Return ``a + b`` in the cheapest form that is exact."""</span>
     <span class="k">if</span> <span class="n">a</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="n">b</span><span class="o">.</span><span class="n">shape</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Cannot add operators of shapes </span><span class="si">{</span><span class="n">a</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2"> and </span><span class="si">{</span><span class="n">b</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">."</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">MatrixFreeOperator</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">MatrixFreeOperator</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">_MatrixFreeSum</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">DiagonalOperator</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">DiagonalOperator</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">DiagonalOperator</span><span class="o">.</span><span class="n">_adopt</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">values</span> <span class="o">+</span> <span class="n">b</span><span class="o">.</span><span class="n">values</span><span class="p">)</span>
     <span class="n">a_csr</span><span class="p">,</span> <span class="n">b_csr</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">_csr</span><span class="p">(),</span> <span class="n">b</span><span class="o">.</span><span class="n">_csr</span><span class="p">()</span>
@@ -1686,16 +1861,18 @@
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    x : LinearOperator, SciPy sparse matrix or 2D array-like</span>
+<span class="sd">    x : LinearOperator, SciPy linear operator, SciPy sparse matrix or 2D array-like</span>
 <span class="sd">        What to wrap. A form comes back as it is; an array or a sparse matrix</span>
-<span class="sd">        is copied, and the form's copy is read-only.</span>
+<span class="sd">        is copied, and the form's copy is read-only; a SciPy linear operator</span>
+<span class="sd">        (a matrix known by its products) is kept.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
 <span class="sd">    LinearOperator</span>
 <span class="sd">        A :class:`DiagonalOperator` for a square sparse matrix that stores</span>
 <span class="sd">        entries on its diagonal only, a :class:`SparseOperator` for any other</span>
-<span class="sd">        sparse matrix, and a :class:`DenseOperator` for an array.</span>
+<span class="sd">        sparse matrix, a :class:`MatrixFreeOperator` for a SciPy linear</span>
+<span class="sd">        operator, and a :class:`DenseOperator` for an array.</span>
 
 <span class="sd">    Raises</span>
 <span class="sd">    ------</span>
@@ -1715,6 +1892,8 @@
 <span class="sd">    """</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">LinearOperator</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">x</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">_SciPyLinearOperator</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">MatrixFreeOperator</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
     <span class="c1"># isinstance, not issparse: the type checker narrows only this one</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="p">(</span><span class="n">sp</span><span class="o">.</span><span class="n">spmatrix</span><span class="p">,</span> <span class="n">sp</span><span class="o">.</span><span class="n">sparray</span><span class="p">)):</span>
         <span class="n">diagonal</span> <span class="o">=</span> <span class="n">_diagonal_of</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>

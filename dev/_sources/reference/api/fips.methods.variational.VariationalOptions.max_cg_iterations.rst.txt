@@ -1,0 +1,6 @@
+fips.methods.variational.VariationalOptions.max\_cg\_iterations
+===============================================================
+
+.. currentmodule:: fips.methods.variational
+
+.. autoattribute:: VariationalOptions.max_cg_iterations

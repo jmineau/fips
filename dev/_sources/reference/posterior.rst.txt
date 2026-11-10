@@ -14,7 +14,9 @@ posterior with bounds on the state, :class:`~fips.methods.bounded.BoundedOptions
 for ``"gauss_newton"``, the mode of a problem with a forward model,
 :class:`~fips.methods.gauss_newton.GaussNewtonOptions`; for ``"ensemble"``, the
 update of members drawn from the prior, for a model that can only be run,
-:class:`~fips.methods.ensemble.EnsembleOptions`), and an unknown method or option raises
+:class:`~fips.methods.ensemble.EnsembleOptions`; for ``"variational"``, conjugate
+gradients and a low-rank posterior from products alone, for a problem too large to
+factor, :class:`~fips.methods.variational.VariationalOptions`), and an unknown method or option raises
 with the names it knows. The posterior labels the answer and the method keeps
 its own machinery: the posterior asks what the method kept from the solve (a
 :class:`~fips.posterior.Solution`) for unlabeled arrays and labels them with
@@ -70,6 +72,13 @@ Solving
    :toctree: api/
 
    EnsembleOptions
+
+.. currentmodule:: fips.methods.variational
+
+.. autosummary::
+   :toctree: api/
+
+   VariationalOptions
 
 .. currentmodule:: fips
 
@@ -138,6 +147,7 @@ Diagnostics
    Posterior.uncertainty_reduction
    Posterior.summary
    Posterior.iterations
+   Posterior.eigenvalues
 
 Reusing the factorization
 ~~~~~~~~~~~~~~~~~~~~~~~~~

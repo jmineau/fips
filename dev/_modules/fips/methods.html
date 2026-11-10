@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>fips.methods &#8212; fips 0.2.0b3.dev21+g2729ef234 documentation</title>
+    <title>fips.methods &#8212; fips 0.2.0b3.dev22+g0086be242 documentation</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../_static/documentation_options.js?v=70a3b4e6"></script>
+    <script src="../../_static/documentation_options.js?v=0de11b26"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -132,8 +132,8 @@
       
     
     
-    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev21+g2729ef234 documentation - Home"/>
-    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev21+g2729ef234 documentation - Home"/>
+    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev22+g0086be242 documentation - Home"/>
+    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev22+g0086be242 documentation - Home"/>
   
   
 </a></div>
@@ -434,7 +434,10 @@
 <span class="sd">``"gauss_newton"`` (:mod:`fips.methods.gauss_newton`), the mode of the</span>
 <span class="sd">posterior of a problem with a forward model, and draws of that posterior; and</span>
 <span class="sd">``"ensemble"`` (:mod:`fips.methods.ensemble`), a square-root ensemble Kalman</span>
-<span class="sd">update of members drawn from the prior, for a model that can only be run.</span>
+<span class="sd">update of members drawn from the prior, for a model that can only be run;</span>
+<span class="sd">and ``"variational"`` (:mod:`fips.methods.variational`), the estimate by</span>
+<span class="sd">conjugate gradients and a low-rank posterior by Lanczos, from products</span>
+<span class="sd">alone, for a problem too large to factor.</span>
 
 <span class="sd">A method is a module here with three things, and a line in ``_METHODS``</span>
 <span class="sd">below:</span>
@@ -451,7 +454,8 @@
 <span class="sd">  posterior (``Posterior.sample``), ``at_bound()``, which says which state</span>
 <span class="sd">  elements sit on a bound (``Posterior.at_bound``), ``iterations()`` and</span>
 <span class="sd">  ``linearized()`` for an iterated method (``Posterior.iterations``, and the</span>
-<span class="sd">  linear problem its gain is of), ``estimate_is_mean = True`` when its</span>
+<span class="sd">  linear problem its gain is of), ``spectrum()`` for a low-rank posterior</span>
+<span class="sd">  (``Posterior.eigenvalues``), ``estimate_is_mean = True`` when its</span>
 <span class="sd">  estimate is the posterior mean, and ``estimate_is_linear = True`` when its</span>
 <span class="sd">  estimate is :math:`x_0 + K (z - H x_0 - c)` with the gain of ``gain()``</span>
 <span class="sd">  (what ``Posterior.recovery`` needs), and ``evidence_is_laplace = True``</span>
@@ -466,7 +470,10 @@
 <span class="sd">analytic posterior: ``tests/test_oracle.py`` runs every registered method,</span>
 <span class="sd">with its default options, against the closed form. A method registered with</span>
 <span class="sd">``exact=False`` (the ensemble, which approaches it only as its members grow)</span>
-<span class="sd">is left out of the oracle and has its own convergence test.</span>
+<span class="sd">is left out of the oracle and has its own convergence test. One that is</span>
+<span class="sd">exact only to the tolerance of its iterative solves (the variational method)</span>
+<span class="sd">is registered with the options the oracle solves it with (``oracle``) and</span>
+<span class="sd">the tolerance the oracle holds it to (``oracle_rtol``).</span>
 
 <span class="sd">The :class:`~fips.Posterior` puts the labels on, keeps each output, and</span>
 <span class="sd">writes everything else (the averaging kernel, the innovation covariance,</span>
@@ -489,19 +496,26 @@
 <span class="sd">(``fips.methods.ensemble.Ensemble``) keeps the prior members, their modeled</span>
 <span class="sd">observations and the factors of the update, and answers from the updated</span>
 <span class="sd">members (``estimate_is_mean = True``); its ``with_gamma`` and ``with_data``</span>
-<span class="sd">reuse the modeled members. A method imports</span>
+<span class="sd">reuse the modeled members. The variational method's solution</span>
+<span class="sd">(``fips.methods.variational.Variational``) keeps the whitened estimate and</span>
+<span class="sd">the leading eigenpairs of the prior-preconditioned Hessian, and answers from</span>
+<span class="sd">the low-rank posterior they make (``estimate_is_mean`` for a linear</span>
+<span class="sd">problem); its ``with_gamma`` and ``with_data`` take one CG solve each, the</span>
+<span class="sd">eigenpairs kept, for a linear problem. A method imports</span>
 <span class="sd">:mod:`fips.posterior`; :mod:`fips.posterior` never imports a method.</span>
 <span class="sd">"""</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span><span class="p">,</span> <span class="n">fields</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Mapping</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span><span class="p">,</span> <span class="n">field</span><span class="p">,</span> <span class="n">fields</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">types</span><span class="w"> </span><span class="kn">import</span> <span class="n">MappingProxyType</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">fips.methods.analytic</span><span class="w"> </span><span class="kn">import</span> <span class="n">AnalyticOptions</span><span class="p">,</span> <span class="n">_analytic</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">fips.methods.bounded</span><span class="w"> </span><span class="kn">import</span> <span class="n">BoundedOptions</span><span class="p">,</span> <span class="n">_bounded</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">fips.methods.ensemble</span><span class="w"> </span><span class="kn">import</span> <span class="n">EnsembleOptions</span><span class="p">,</span> <span class="n">_ensemble</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">fips.methods.gauss_newton</span><span class="w"> </span><span class="kn">import</span> <span class="n">GaussNewtonOptions</span><span class="p">,</span> <span class="n">_gauss_newton</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">fips.methods.variational</span><span class="w"> </span><span class="kn">import</span> <span class="n">VariationalOptions</span><span class="p">,</span> <span class="n">_variational</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">fips.posterior</span><span class="w"> </span><span class="kn">import</span> <span class="n">Posterior</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">fips.problem</span><span class="w"> </span><span class="kn">import</span> <span class="n">Problem</span>
 
@@ -516,6 +530,10 @@
     <span class="n">solve</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">Problem</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">Posterior</span><span class="p">]</span>
     <span class="n">exact</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
 <span class="w">    </span><span class="sd">"""False for a method whose posterior approaches the analytic one only as a number of members grows (``tests/test_oracle.py`` holds the others to it)."""</span>
+    <span class="n">oracle</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="n">MappingProxyType</span><span class="p">({}))</span>
+<span class="w">    </span><span class="sd">"""The options ``tests/test_oracle.py`` solves with, for a method exact only to the tolerance of its iterative solves (none for a direct one)."""</span>
+    <span class="n">oracle_rtol</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-10</span>
+<span class="w">    </span><span class="sd">"""The relative tolerance ``tests/test_oracle.py`` holds the method to."""</span>
 
 
 <span class="n">_METHODS</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">_Method</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
@@ -523,6 +541,12 @@
     <span class="s2">"bounded"</span><span class="p">:</span> <span class="n">_Method</span><span class="p">(</span><span class="n">BoundedOptions</span><span class="p">,</span> <span class="n">_bounded</span><span class="p">),</span>
     <span class="s2">"gauss_newton"</span><span class="p">:</span> <span class="n">_Method</span><span class="p">(</span><span class="n">GaussNewtonOptions</span><span class="p">,</span> <span class="n">_gauss_newton</span><span class="p">),</span>
     <span class="s2">"ensemble"</span><span class="p">:</span> <span class="n">_Method</span><span class="p">(</span><span class="n">EnsembleOptions</span><span class="p">,</span> <span class="n">_ensemble</span><span class="p">,</span> <span class="n">exact</span><span class="o">=</span><span class="kc">False</span><span class="p">),</span>
+    <span class="s2">"variational"</span><span class="p">:</span> <span class="n">_Method</span><span class="p">(</span>
+        <span class="n">VariationalOptions</span><span class="p">,</span>
+        <span class="n">_variational</span><span class="p">,</span>
+        <span class="n">oracle</span><span class="o">=</span><span class="n">MappingProxyType</span><span class="p">({</span><span class="s2">"tol"</span><span class="p">:</span> <span class="mf">1e-13</span><span class="p">}),</span>
+        <span class="n">oracle_rtol</span><span class="o">=</span><span class="mf">1e-8</span><span class="p">,</span>
+    <span class="p">),</span>
 <span class="p">}</span>
 <span class="sd">"""The methods by name."""</span>
 
@@ -560,7 +584,9 @@
 <span class="sd">        with bounds on the state; ``"gauss_newton"`` the mode of the</span>
 <span class="sd">        posterior of a problem with a forward model, and draws of it;</span>
 <span class="sd">        ``"ensemble"`` the update of an ensemble of members, for a model that</span>
-<span class="sd">        can only be run.</span>
+<span class="sd">        can only be run; ``"variational"`` the estimate by conjugate gradients</span>
+<span class="sd">        and a low-rank posterior, from products alone, for a problem too</span>
+<span class="sd">        large to factor.</span>
 <span class="sd">    **options</span>
 <span class="sd">        The method's options, by name: for ``"analytic"``, ``gamma`` (see</span>
 <span class="sd">        :class:`~fips.methods.analytic.AnalyticOptions`); for ``"bounded"``,</span>
@@ -571,7 +597,10 @@
 <span class="sd">        :class:`~fips.methods.gauss_newton.GaussNewtonOptions`); for</span>
 <span class="sd">        ``"ensemble"``, ``gamma``, ``members``, ``predicted``,</span>
 <span class="sd">        ``localization``, ``obs_localization`` and ``seed`` (see</span>
-<span class="sd">        :class:`~fips.methods.ensemble.EnsembleOptions`).</span>
+<span class="sd">        :class:`~fips.methods.ensemble.EnsembleOptions`); for</span>
+<span class="sd">        ``"variational"``, ``gamma``, ``rank``, ``tol``,</span>
+<span class="sd">        ``max_cg_iterations``, ``max_iterations`` and ``outer_tol`` (see</span>
+<span class="sd">        :class:`~fips.methods.variational.VariationalOptions`).</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>

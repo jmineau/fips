@@ -19,6 +19,7 @@
    ~Posterior.data_misfit
    ~Posterior.dofs
    ~Posterior.dofs_per_element
+   ~Posterior.eigenvalues
    ~Posterior.estimate
    ~Posterior.information_content
    ~Posterior.innovation_cov

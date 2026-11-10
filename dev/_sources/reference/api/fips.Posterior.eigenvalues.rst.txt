@@ -1,0 +1,6 @@
+fips.Posterior.eigenvalues
+==========================
+
+.. currentmodule:: fips
+
+.. autoproperty:: Posterior.eigenvalues

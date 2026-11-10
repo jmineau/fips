@@ -27,6 +27,8 @@
 
    ~ForwardModel.__call__
    ~ForwardModel.jacobian
+   ~ForwardModel.jvp
+   ~ForwardModel.vjp
 
 
 

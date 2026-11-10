@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>fips.posterior &#8212; fips 0.2.0b3.dev21+g2729ef234 documentation</title>
+    <title>fips.posterior &#8212; fips 0.2.0b3.dev22+g0086be242 documentation</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../_static/documentation_options.js?v=70a3b4e6"></script>
+    <script src="../../_static/documentation_options.js?v=0de11b26"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -132,8 +132,8 @@
       
     
     
-    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev21+g2729ef234 documentation - Home"/>
-    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev21+g2729ef234 documentation - Home"/>
+    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev22+g0086be242 documentation - Home"/>
+    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev22+g0086be242 documentation - Home"/>
   
   
 </a></div>
@@ -478,7 +478,7 @@
 <span class="sd">    observations (``problem.obs``). The posterior labels them, and computes</span>
 <span class="sd">    each one once.</span>
 
-<span class="sd">    Eight members are optional, and a posterior whose solution lacks one says</span>
+<span class="sd">    Nine members are optional, and a posterior whose solution lacks one says</span>
 <span class="sd">    so when it is asked for the feature (or, for ``linearized``, uses its own</span>
 <span class="sd">    problem):</span>
 
@@ -497,9 +497,13 @@
 <span class="sd">      `rng` (:meth:`Posterior.sample`).</span>
 <span class="sd">    - ``at_bound() -&gt; np.ndarray``: which state elements sit on a bound at the</span>
 <span class="sd">      estimate, booleans (``n``; :attr:`Posterior.at_bound`).</span>
-<span class="sd">    - ``iterations() -&gt; tuple[np.ndarray, np.ndarray]``: for each iteration of</span>
-<span class="sd">      an iterated method, the size of its step and the cost after it</span>
+<span class="sd">    - ``iterations() -&gt; tuple[np.ndarray, ...]``: for each iteration of</span>
+<span class="sd">      an iterated method, the size of its step and the cost after it, and</span>
+<span class="sd">      for a method that solves by conjugate gradients their iterations</span>
 <span class="sd">      (:attr:`Posterior.iterations`).</span>
+<span class="sd">    - ``spectrum() -&gt; np.ndarray``: for a low-rank posterior, the eigenvalues</span>
+<span class="sd">      of the prior-preconditioned Hessian it keeps, from the largest</span>
+<span class="sd">      (:attr:`Posterior.eigenvalues`).</span>
 <span class="sd">    - ``linearized() -&gt; Problem``: for a method that solves a problem with a</span>
 <span class="sd">      forward model, the linear problem its gain is of (the problem</span>
 <span class="sd">      linearized where its last solve was made). The averaging kernel and</span>
@@ -531,7 +535,11 @@
 <span class="sd">    its estimate. The ``"ensemble"`` method's estimate is the mean of its</span>
 <span class="sd">    updated members; its variances, covariances and gain are those of the</span>
 <span class="sd">    members, and its DOFS, information content and chi-squared the analytic</span>
-<span class="sd">    formulas with the members' covariance of the modeled observations.</span>
+<span class="sd">    formulas with the members' covariance of the modeled observations. The</span>
+<span class="sd">    ``"variational"`` method's estimate is the solution of conjugate</span>
+<span class="sd">    gradients (the mode, with a forward model); its variances, covariances,</span>
+<span class="sd">    gain, DOFS and information content are those of its low-rank posterior,</span>
+<span class="sd">    exact when its rank reaches the problem's.</span>
 <span class="sd">    Such answers are estimates or approximations, and</span>
 <span class="sd">    :meth:`Posterior.trials` measures how good they are.</span>
 
@@ -1166,13 +1174,18 @@
 <span class="sd">        number of state elements. ``cost`` is the cost at the step's estimate,</span>
 <span class="sd">        :math:`\gamma` times the data misfit plus the state misfit; the last is</span>
 <span class="sd">        :attr:`chi2`. Near the mode, Gauss-Newton's ``d2`` falls by orders of</span>
-<span class="sd">        magnitude a step, and the cost settles.</span>
+<span class="sd">        magnitude a step, and the cost settles. ``"variational"`` takes the</span>
+<span class="sd">        same steps for a forward model (one for a linear problem), each solved</span>
+<span class="sd">        by conjugate gradients, and adds their number, ``cg_iterations`` (each</span>
+<span class="sd">        a product with :math:`H` and one with :math:`H^T`).</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        pandas.DataFrame</span>
 <span class="sd">            One row per step, indexed by ``iteration`` (from 1), with the</span>
-<span class="sd">            columns ``d2`` and ``cost``; its length is the number of steps.</span>
+<span class="sd">            columns ``d2`` and ``cost`` (and ``cg_iterations`` for a method</span>
+<span class="sd">            that solves by conjugate gradients); its length is the number of</span>
+<span class="sd">            steps.</span>
 
 <span class="sd">        Raises</span>
 <span class="sd">        ------</span>
@@ -1223,10 +1236,63 @@
 <span class="sd">        array([1.496, 3.003])</span>
 <span class="sd">        """</span>
         <span class="n">history</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_optional</span><span class="p">(</span><span class="s2">"iterations"</span><span class="p">,</span> <span class="s2">"the steps of an iterated solve"</span><span class="p">)</span>
-        <span class="n">d2</span><span class="p">,</span> <span class="n">cost</span> <span class="o">=</span> <span class="n">history</span><span class="p">()</span>
+        <span class="n">d2</span><span class="p">,</span> <span class="n">cost</span><span class="p">,</span> <span class="o">*</span><span class="n">cg</span> <span class="o">=</span> <span class="n">history</span><span class="p">()</span>
+        <span class="n">columns</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">"d2"</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">d2</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">),</span>
+            <span class="s2">"cost"</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">cost</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">),</span>
+        <span class="p">}</span>
+        <span class="k">if</span> <span class="n">cg</span><span class="p">:</span>
+            <span class="n">columns</span><span class="p">[</span><span class="s2">"cg_iterations"</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">cg</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
-            <span class="p">{</span><span class="s2">"d2"</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">d2</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">),</span> <span class="s2">"cost"</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">cost</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)},</span>
-            <span class="n">index</span><span class="o">=</span><span class="n">pd</span><span class="o">.</span><span class="n">RangeIndex</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">d2</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">"iteration"</span><span class="p">),</span>
+            <span class="n">columns</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">pd</span><span class="o">.</span><span class="n">RangeIndex</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">d2</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">"iteration"</span><span class="p">)</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Posterior.eigenvalues">
+<a class="viewcode-back" href="../../reference/api/fips.Posterior.eigenvalues.html#fips.Posterior.eigenvalues">[docs]</a>
+    <span class="nd">@cached_property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">eigenvalues</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
+<span class="sd">        The eigenvalues a low-rank posterior keeps, and the DOFS each adds: whether its rank was enough.</span>
+
+<span class="sd">        ``"variational"`` keeps the ``rank`` leading eigenpairs of the</span>
+<span class="sd">        prior-preconditioned Hessian, :math:`\tilde{H} = \gamma R^T H^T</span>
+<span class="sd">        S_z^{-1} H R` (:math:`S_0 = R R^T`). Along the eigenvector of</span>
+<span class="sd">        :math:`\tilde\lambda_j` the data remove the share</span>
+<span class="sd">        :math:`\tilde\lambda_j / (1 + \tilde\lambda_j)` of the prior's</span>
+<span class="sd">        variance, which is that pair's DOFS; the directions left out keep</span>
+<span class="sd">        the prior's variance. When the last pairs add little to DOFS (their</span>
+<span class="sd">        eigenvalues well below 1), ``rank`` held what the data inform; when</span>
+<span class="sd">        they add much, a larger ``rank`` lowers the variances further.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        pandas.DataFrame</span>
+<span class="sd">            One row per pair, indexed by ``pair`` (from 1, the largest</span>
+<span class="sd">            eigenvalue first), with the columns ``eigenvalue``</span>
+<span class="sd">            (:math:`\tilde\lambda_j`), ``dofs`` (its share) and</span>
+<span class="sd">            ``cumulative_dofs``, whose last value is :attr:`dofs`.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        TypeError</span>
+<span class="sd">            If the method keeps no low-rank posterior (its solution has no</span>
+<span class="sd">            ``spectrum``), as for the analytic method.</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        --------</span>
+<span class="sd">        fips.methods.variational.VariationalOptions : ``rank``.</span>
+<span class="sd">        """</span>
+        <span class="n">spectrum</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_optional</span><span class="p">(</span><span class="s2">"spectrum"</span><span class="p">,</span> <span class="s2">"the eigenvalues of a low-rank posterior"</span><span class="p">)</span>
+        <span class="n">eigenvalues</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">spectrum</span><span class="p">(),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+        <span class="n">dofs</span> <span class="o">=</span> <span class="n">eigenvalues</span> <span class="o">/</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">+</span> <span class="n">eigenvalues</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
+            <span class="p">{</span>
+                <span class="s2">"eigenvalue"</span><span class="p">:</span> <span class="n">eigenvalues</span><span class="p">,</span>
+                <span class="s2">"dofs"</span><span class="p">:</span> <span class="n">dofs</span><span class="p">,</span>
+                <span class="s2">"cumulative_dofs"</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span><span class="n">dofs</span><span class="p">),</span>
+            <span class="p">},</span>
+            <span class="n">index</span><span class="o">=</span><span class="n">pd</span><span class="o">.</span><span class="n">RangeIndex</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">eigenvalues</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">"pair"</span><span class="p">),</span>
         <span class="p">)</span></div>
 
 

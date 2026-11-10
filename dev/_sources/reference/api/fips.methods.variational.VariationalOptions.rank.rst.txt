@@ -1,0 +1,6 @@
+fips.methods.variational.VariationalOptions.rank
+================================================
+
+.. currentmodule:: fips.methods.variational
+
+.. autoattribute:: VariationalOptions.rank

@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Linear Algebra &#8212; fips 0.2.0b3.dev21+g2729ef234 documentation</title>
+    <title>Linear Algebra &#8212; fips 0.2.0b3.dev22+g0086be242 documentation</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../_static/documentation_options.js?v=70a3b4e6"></script>
+    <script src="../_static/documentation_options.js?v=0de11b26"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -137,8 +137,8 @@
       
     
     
-    <img src="../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev21+g2729ef234 documentation - Home"/>
-    <img src="../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev21+g2729ef234 documentation - Home"/>
+    <img src="../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev22+g0086be242 documentation - Home"/>
+    <img src="../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev22+g0086be242 documentation - Home"/>
   
   
 </a></div>
@@ -481,12 +481,16 @@
 <li class="toctree-l3"><a class="reference internal" href="api/fips.ForwardModel.rows.html">fips.ForwardModel.rows</a></li>
 <li class="toctree-l3"><a class="reference internal" href="api/fips.ForwardModel.__call__.html">fips.ForwardModel.__call__</a></li>
 <li class="toctree-l3"><a class="reference internal" href="api/fips.ForwardModel.jacobian.html">fips.ForwardModel.jacobian</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/fips.ForwardModel.jvp.html">fips.ForwardModel.jvp</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/fips.ForwardModel.vjp.html">fips.ForwardModel.vjp</a></li>
 </ul>
 </details></li>
 <li class="toctree-l2"><a class="reference internal" href="api/fips.ForwardModel.rows.html">fips.ForwardModel.rows</a></li>
 <li class="toctree-l2"><a class="reference internal" href="api/fips.ForwardModel.cols.html">fips.ForwardModel.cols</a></li>
 <li class="toctree-l2"><a class="reference internal" href="api/fips.ForwardModel.__call__.html">fips.ForwardModel.__call__</a></li>
 <li class="toctree-l2"><a class="reference internal" href="api/fips.ForwardModel.jacobian.html">fips.ForwardModel.jacobian</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/fips.ForwardModel.jvp.html">fips.ForwardModel.jvp</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/fips.ForwardModel.vjp.html">fips.ForwardModel.vjp</a></li>
 <li class="toctree-l2"><a class="reference internal" href="api/fips.taylortest.html">fips.taylortest</a></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="api/fips.LognormalForward.html">fips.LognormalForward</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l3"><a class="reference internal" href="api/fips.LognormalForward.block.html">fips.LognormalForward.block</a></li>
@@ -685,12 +689,22 @@
 <li class="toctree-l3"><a class="reference internal" href="api/fips.methods.ensemble.EnsembleOptions.seed.html">fips.methods.ensemble.EnsembleOptions.seed</a></li>
 </ul>
 </details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="api/fips.methods.variational.VariationalOptions.html">fips.methods.variational.VariationalOptions</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="api/fips.methods.variational.VariationalOptions.gamma.html">fips.methods.variational.VariationalOptions.gamma</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/fips.methods.variational.VariationalOptions.max_cg_iterations.html">fips.methods.variational.VariationalOptions.max_cg_iterations</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/fips.methods.variational.VariationalOptions.max_iterations.html">fips.methods.variational.VariationalOptions.max_iterations</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/fips.methods.variational.VariationalOptions.outer_tol.html">fips.methods.variational.VariationalOptions.outer_tol</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/fips.methods.variational.VariationalOptions.rank.html">fips.methods.variational.VariationalOptions.rank</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/fips.methods.variational.VariationalOptions.tol.html">fips.methods.variational.VariationalOptions.tol</a></li>
+</ul>
+</details></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="api/fips.Posterior.html">fips.Posterior</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l3"><a class="reference internal" href="api/fips.Posterior.at_bound.html">fips.Posterior.at_bound</a></li>
 <li class="toctree-l3"><a class="reference internal" href="api/fips.Posterior.chi2.html">fips.Posterior.chi2</a></li>
 <li class="toctree-l3"><a class="reference internal" href="api/fips.Posterior.data_misfit.html">fips.Posterior.data_misfit</a></li>
 <li class="toctree-l3"><a class="reference internal" href="api/fips.Posterior.dofs.html">fips.Posterior.dofs</a></li>
 <li class="toctree-l3"><a class="reference internal" href="api/fips.Posterior.dofs_per_element.html">fips.Posterior.dofs_per_element</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/fips.Posterior.eigenvalues.html">fips.Posterior.eigenvalues</a></li>
 <li class="toctree-l3"><a class="reference internal" href="api/fips.Posterior.estimate.html">fips.Posterior.estimate</a></li>
 <li class="toctree-l3"><a class="reference internal" href="api/fips.Posterior.information_content.html">fips.Posterior.information_content</a></li>
 <li class="toctree-l3"><a class="reference internal" href="api/fips.Posterior.innovation_cov.html">fips.Posterior.innovation_cov</a></li>
@@ -752,6 +766,7 @@
 <li class="toctree-l2"><a class="reference internal" href="api/fips.Posterior.uncertainty_reduction.html">fips.Posterior.uncertainty_reduction</a></li>
 <li class="toctree-l2"><a class="reference internal" href="api/fips.Posterior.summary.html">fips.Posterior.summary</a></li>
 <li class="toctree-l2"><a class="reference internal" href="api/fips.Posterior.iterations.html">fips.Posterior.iterations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/fips.Posterior.eigenvalues.html">fips.Posterior.eigenvalues</a></li>
 <li class="toctree-l2"><a class="reference internal" href="api/fips.Posterior.with_gamma.html">fips.Posterior.with_gamma</a></li>
 <li class="toctree-l2"><a class="reference internal" href="api/fips.Posterior.with_data.html">fips.Posterior.with_data</a></li>
 <li class="toctree-l2"><a class="reference internal" href="api/fips.Posterior.recovery.html">fips.Posterior.recovery</a></li>
@@ -898,6 +913,7 @@
 <li class="toctree-l3"><a class="reference internal" href="api/fips.linalg.BlockDiagonalOperator.sqrt.html">fips.linalg.BlockDiagonalOperator.sqrt</a></li>
 </ul>
 </details></li>
+<li class="toctree-l2"><a class="reference internal" href="api/fips.linalg.MatrixFreeOperator.html">fips.linalg.MatrixFreeOperator</a></li>
 <li class="toctree-l2"><a class="reference internal" href="api/fips.linalg.as_linear_operator.html">fips.linalg.as_linear_operator</a></li>
 <li class="toctree-l2"><a class="reference internal" href="api/fips.linalg.LinearOperator.dot.html">fips.linalg.LinearOperator.dot</a></li>
 <li class="toctree-l2"><a class="reference internal" href="api/fips.linalg.LinearOperator.solve.html">fips.linalg.LinearOperator.solve</a></li>
@@ -998,7 +1014,8 @@
 solvers compute with them: a <a class="reference internal" href="api/fips.linalg.DenseOperator.html#fips.linalg.DenseOperator" title="fips.linalg.DenseOperator"><code class="xref py py-class docutils literal notranslate"><span class="pre">DenseOperator</span></code></a> (a NumPy array), a
 <a class="reference internal" href="api/fips.linalg.SparseOperator.html#fips.linalg.SparseOperator" title="fips.linalg.SparseOperator"><code class="xref py py-class docutils literal notranslate"><span class="pre">SparseOperator</span></code></a> (a SciPy sparse matrix), a <a class="reference internal" href="api/fips.linalg.DiagonalOperator.html#fips.linalg.DiagonalOperator" title="fips.linalg.DiagonalOperator"><code class="xref py py-class docutils literal notranslate"><span class="pre">DiagonalOperator</span></code></a>
 (the diagonal only), a <a class="reference internal" href="api/fips.linalg.BlockDiagonalOperator.html#fips.linalg.BlockDiagonalOperator" title="fips.linalg.BlockDiagonalOperator"><code class="xref py py-class docutils literal notranslate"><span class="pre">BlockDiagonalOperator</span></code></a> (a form on each diagonal
-block, zeros between them) or a <a class="reference internal" href="api/fips.linalg.KroneckerOperator.html#fips.linalg.KroneckerOperator" title="fips.linalg.KroneckerOperator"><code class="xref py py-class docutils literal notranslate"><span class="pre">KroneckerOperator</span></code></a> (Kronecker factors).
+block, zeros between them), a <a class="reference internal" href="api/fips.linalg.KroneckerOperator.html#fips.linalg.KroneckerOperator" title="fips.linalg.KroneckerOperator"><code class="xref py py-class docutils literal notranslate"><span class="pre">KroneckerOperator</span></code></a> (Kronecker factors)
+or a <a class="reference internal" href="api/fips.linalg.MatrixFreeOperator.html#fips.linalg.MatrixFreeOperator" title="fips.linalg.MatrixFreeOperator"><code class="xref py py-class docutils literal notranslate"><span class="pre">MatrixFreeOperator</span></code></a> (a SciPy linear operator: products only).
 None of them has labels: the labels are the
 <a class="reference internal" href="api/fips.Space.html#fips.Space" title="fips.Space"><code class="xref py py-class docutils literal notranslate"><span class="pre">Space</span></code></a> on each axis of an <a class="reference internal" href="api/fips.Operator.html#fips.Operator" title="fips.Operator"><code class="xref py py-class docutils literal notranslate"><span class="pre">Operator</span></code></a>.</p>
 <p>Each is a <a class="reference external" href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.sparse.linalg.LinearOperator.html#scipy.sparse.linalg.LinearOperator" title="(in SciPy v1.18.0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">scipy.sparse.linalg.LinearOperator</span></code></a>, so <code class="docutils literal notranslate"><span class="pre">matvec</span></code>,
@@ -1007,7 +1024,8 @@ None of them has labels: the labels are the
 <li><p><code class="docutils literal notranslate"><span class="pre">A</span> <span class="pre">&#64;</span> <span class="pre">B</span></code> of two forms keeps the cheapest form that is exact: diagonal
 times diagonal is diagonal; sparse or diagonal times sparse is sparse; a
 product with a dense side is dense; a Kronecker form times a sparse one
-(<code class="docutils literal notranslate"><span class="pre">H</span> <span class="pre">&#64;</span> <span class="pre">S_0</span></code>) is computed through the factors and is dense. <code class="docutils literal notranslate"><span class="pre">A</span> <span class="pre">&#64;</span> <span class="pre">x</span></code> with an
+(<code class="docutils literal notranslate"><span class="pre">H</span> <span class="pre">&#64;</span> <span class="pre">S_0</span></code>) is computed through the factors and is dense; a product with a
+matrix-free side is matrix-free, applied term by term. <code class="docutils literal notranslate"><span class="pre">A</span> <span class="pre">&#64;</span> <span class="pre">x</span></code> with an
 array is an array, as in SciPy.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">A</span> <span class="pre">+</span> <span class="pre">B</span></code> and <code class="docutils literal notranslate"><span class="pre">A</span> <span class="pre">-</span> <span class="pre">B</span></code> follow the same rule (an array counts as dense), and
 a scalar <code class="docutils literal notranslate"><span class="pre">*</span></code> or <code class="docutils literal notranslate"><span class="pre">/</span></code> keeps the form.</p></li>
@@ -1049,6 +1067,9 @@ of their parents, never a second copy.</p>
 <tr class="row-odd"><td><p><a class="reference internal" href="api/fips.linalg.BlockDiagonalOperator.html#fips.linalg.BlockDiagonalOperator" title="fips.linalg.BlockDiagonalOperator"><code class="xref py py-obj docutils literal notranslate"><span class="pre">BlockDiagonalOperator</span></code></a>(*args, **kwargs)</p></td>
 <td><p>A square matrix made of forms on its diagonal blocks, zero between them.</p></td>
 </tr>
+<tr class="row-even"><td><p><a class="reference internal" href="api/fips.linalg.MatrixFreeOperator.html#fips.linalg.MatrixFreeOperator" title="fips.linalg.MatrixFreeOperator"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MatrixFreeOperator</span></code></a>(op)</p></td>
+<td><p>A matrix known only by its products, <span class="math notranslate nohighlight">\(A x\)</span> and <span class="math notranslate nohighlight">\(A^T y\)</span>, never by its entries.</p></td>
+</tr>
 </tbody>
 </table>
 </div>
@@ -1066,8 +1087,8 @@ of their parents, never a second copy.</p>
 <dl class="py data">
 <dt class="sig sig-object py" id="fips.linalg.LinearOperatorLike">
 <span class="sig-prename descclassname"><span class="pre">fips.linalg.</span></span><span class="sig-name descname"><span class="pre">LinearOperatorLike</span></span><a class="headerlink" href="#fips.linalg.LinearOperatorLike" title="Link to this definition">#</a></dt>
-<dd><p>The type of what <a class="reference internal" href="api/fips.linalg.as_linear_operator.html#fips.linalg.as_linear_operator" title="fips.linalg.as_linear_operator"><code class="xref py py-func docutils literal notranslate"><span class="pre">as_linear_operator()</span></code></a> takes: a form, a SciPy sparse
-matrix or array, or a 2D array-like.</p>
+<dd><p>The type of what <a class="reference internal" href="api/fips.linalg.as_linear_operator.html#fips.linalg.as_linear_operator" title="fips.linalg.as_linear_operator"><code class="xref py py-func docutils literal notranslate"><span class="pre">as_linear_operator()</span></code></a> takes: a form, a SciPy linear
+operator, a SciPy sparse matrix or array, or a 2D array-like.</p>
 </dd></dl>
 
 </section>

@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>A model with no Jacobian: the ensemble method &#8212; fips 0.2.0b3.dev21+g2729ef234 documentation</title>
+    <title>A model with no Jacobian: the ensemble method &#8212; fips 0.2.0b3.dev22+g0086be242 documentation</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../_static/documentation_options.js?v=70a3b4e6"></script>
+    <script src="../_static/documentation_options.js?v=0de11b26"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -60,7 +60,7 @@
     <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Examples" href="examples/index.html" />
+    <link rel="next" title="A problem too large to factor: the variational method" href="variational.html" />
     <link rel="prev" title="Choosing a method" href="comparison.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
@@ -137,8 +137,8 @@
       
     
     
-    <img src="../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev21+g2729ef234 documentation - Home"/>
-    <img src="../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev21+g2729ef234 documentation - Home"/>
+    <img src="../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev22+g0086be242 documentation - Home"/>
+    <img src="../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev22+g0086be242 documentation - Home"/>
   
   
 </a></div>
@@ -394,6 +394,7 @@
 <li class="toctree-l1"><a class="reference internal" href="positive.html">Fluxes that stay positive</a></li>
 <li class="toctree-l1"><a class="reference internal" href="comparison.html">Choosing a method</a></li>
 <li class="toctree-l1 current active"><a aria-current="page" class="current reference internal" href="#">A model with no Jacobian: the ensemble method</a></li>
+<li class="toctree-l1"><a class="reference internal" href="variational.html">A problem too large to factor: the variational method</a></li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="examples/index.html">Examples</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="examples/gravity_2d.html">Gravity: density below the surface</a></li>
 <li class="toctree-l2"><a class="reference internal" href="examples/flux_regional.html">A regional flux inversion</a></li>
@@ -690,13 +691,13 @@ exact one:</p>
 <span class="gp">In [34]: </span><span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mf">3.5</span><span class="p">))</span>
 
 <span class="gp">In [35]: </span><span class="n">ax</span><span class="o">.</span><span class="n">loglog</span><span class="p">(</span><span class="n">curve</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">curve</span><span class="p">[</span><span class="s2">"mean"</span><span class="p">],</span> <span class="s2">"o-"</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">"mean (posterior sd)"</span><span class="p">)</span>
-<span class="gh">Out[35]: </span><span class="go">[&lt;matplotlib.lines.Line2D at 0x7c9934e84ec0&gt;]</span>
+<span class="gh">Out[35]: </span><span class="go">[&lt;matplotlib.lines.Line2D at 0x72d6ceb64980&gt;]</span>
 
 <span class="gp">In [36]: </span><span class="n">ax</span><span class="o">.</span><span class="n">loglog</span><span class="p">(</span><span class="n">curve</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">curve</span><span class="p">[</span><span class="s2">"std"</span><span class="p">],</span> <span class="s2">"s-"</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">"std (relative)"</span><span class="p">)</span>
-<span class="gh">Out[36]: </span><span class="go">[&lt;matplotlib.lines.Line2D at 0x7c9934ce5940&gt;]</span>
+<span class="gh">Out[36]: </span><span class="go">[&lt;matplotlib.lines.Line2D at 0x72d6ceb67770&gt;]</span>
 
 <span class="gp">In [37]: </span><span class="n">ax</span><span class="o">.</span><span class="n">loglog</span><span class="p">(</span><span class="n">sizes</span><span class="p">,</span> <span class="n">curve</span><span class="p">[</span><span class="s2">"mean"</span><span class="p">]</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">sizes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">sizes</span><span class="p">)),</span> <span class="s2">"k:"</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="sa">r</span><span class="s2">"$1/\sqrt</span><span class="si">{N}</span><span class="s2">$"</span><span class="p">)</span>
-<span class="gh">Out[37]: </span><span class="go">[&lt;matplotlib.lines.Line2D at 0x7c9934ce5be0&gt;]</span>
+<span class="gh">Out[37]: </span><span class="go">[&lt;matplotlib.lines.Line2D at 0x72d6ceb67a10&gt;]</span>
 
 <span class="gp">In [38]: </span><span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">"members"</span><span class="p">)</span>
 <span class="gh">Out[38]: </span><span class="go">Text(0.5, 0, 'members')</span>
@@ -705,7 +706,7 @@ exact one:</p>
 <span class="gh">Out[39]: </span><span class="go">Text(0, 0.5, 'error of the region totals')</span>
 
 <span class="gp">In [40]: </span><span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
-<span class="gh">Out[40]: </span><span class="go">&lt;matplotlib.legend.Legend at 0x7c9934ce5a90&gt;</span>
+<span class="gh">Out[40]: </span><span class="go">&lt;matplotlib.legend.Legend at 0x72d6ceb678c0&gt;</span>
 </pre></div>
 </div>
 <a class="reference internal image-reference" href="../_images/ensemble_convergence.png"><img alt="../_images/ensemble_convergence.png" src="../_images/ensemble_convergence.png" style="width: 5in;" />
@@ -844,11 +845,11 @@ prior added); no outlier rejection is made.</p>
       </div>
     </a>
     <a class="right-next"
-       href="examples/index.html"
+       href="variational.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Examples</p>
+        <p class="prev-next-title">A problem too large to factor: the variational method</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>

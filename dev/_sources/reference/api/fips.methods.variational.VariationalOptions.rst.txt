@@ -1,0 +1,27 @@
+﻿fips.methods.variational.VariationalOptions
+===========================================
+
+.. currentmodule:: fips.methods.variational
+
+.. autoclass:: VariationalOptions
+   :no-members:
+
+
+
+
+.. rubric:: Attributes
+
+.. autosummary::
+   :toctree:
+
+   ~VariationalOptions.gamma
+   ~VariationalOptions.max_cg_iterations
+   ~VariationalOptions.max_iterations
+   ~VariationalOptions.outer_tol
+   ~VariationalOptions.rank
+   ~VariationalOptions.tol
+
+
+
+
+

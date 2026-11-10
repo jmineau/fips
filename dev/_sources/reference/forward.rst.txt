@@ -11,10 +11,13 @@ it as ``forward=``; :meth:`Problem.linearized` is the linear problem at a
 state, and ``fips.solve(problem, "gauss_newton")`` finds the mode of the
 posterior (:class:`~fips.methods.gauss_newton.GaussNewtonOptions`). A
 model solved with ``"ensemble"`` needs only ``__call__``
-(:doc:`/user_guide/ensemble`).
-:func:`taylortest` checks the Jacobian against the model, as
-:func:`fips.linalg.dottest` checks an operator's transpose. The guide is
-:doc:`/user_guide/nonlinear`.
+(:doc:`/user_guide/ensemble`). A model with a tangent linear and an adjoint
+writes :meth:`ForwardModel.jvp` and :meth:`ForwardModel.vjp` in place of the
+Jacobian, and ``"variational"`` solves with those products alone
+(:doc:`/user_guide/variational`).
+:func:`taylortest` checks the Jacobian against the model, and its transpose
+against it, as :func:`fips.linalg.dottest` checks an operator's transpose. The
+guide is :doc:`/user_guide/nonlinear`.
 
 .. ipython:: python
 
@@ -47,6 +50,8 @@ The model
    ForwardModel.cols
    ForwardModel.__call__
    ForwardModel.jacobian
+   ForwardModel.jvp
+   ForwardModel.vjp
 
 Checking the Jacobian
 ~~~~~~~~~~~~~~~~~~~~~

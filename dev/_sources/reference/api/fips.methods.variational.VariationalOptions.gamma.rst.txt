@@ -1,0 +1,6 @@
+fips.methods.variational.VariationalOptions.gamma
+=================================================
+
+.. currentmodule:: fips.methods.variational
+
+.. autoattribute:: VariationalOptions.gamma

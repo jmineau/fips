@@ -1,0 +1,23 @@
+﻿fips.linalg.MatrixFreeOperator
+==============================
+
+.. currentmodule:: fips.linalg
+
+.. autoclass:: MatrixFreeOperator
+   :no-members:
+   :show-inheritance:
+
+
+
+
+
+
+
+
+
+.. rubric:: Inherited
+
+
+From :class:`~.LinearOperator`: :py:obj:`~.LinearOperator.dense`, :py:obj:`~.LinearOperator.diagonal`, :py:obj:`~.LinearOperator.dot`, :py:obj:`~.LinearOperator.logdet`, :py:obj:`~.LinearOperator.solve`, :py:obj:`~.LinearOperator.sqrt`, :py:obj:`~.LinearOperator.trace`
+
+

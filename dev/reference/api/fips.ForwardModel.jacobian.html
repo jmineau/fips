@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>fips.ForwardModel.jacobian &#8212; fips 0.2.0b3.dev21+g2729ef234 documentation</title>
+    <title>fips.ForwardModel.jacobian &#8212; fips 0.2.0b3.dev22+g0086be242 documentation</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../_static/documentation_options.js?v=70a3b4e6"></script>
+    <script src="../../_static/documentation_options.js?v=0de11b26"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -60,7 +60,7 @@
     <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="fips.taylortest" href="fips.taylortest.html" />
+    <link rel="next" title="fips.ForwardModel.jvp" href="fips.ForwardModel.jvp.html" />
     <link rel="prev" title="fips.ForwardModel.__call__" href="fips.ForwardModel.__call__.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
@@ -137,8 +137,8 @@
       
     
     
-    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev21+g2729ef234 documentation - Home"/>
-    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev21+g2729ef234 documentation - Home"/>
+    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev22+g0086be242 documentation - Home"/>
+    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev22+g0086be242 documentation - Home"/>
   
   
 </a></div>
@@ -481,12 +481,16 @@
 <li class="toctree-l3"><a class="reference internal" href="fips.ForwardModel.rows.html">fips.ForwardModel.rows</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.ForwardModel.__call__.html">fips.ForwardModel.__call__</a></li>
 <li class="toctree-l3 current active"><a aria-current="page" class="current reference internal" href="#">fips.ForwardModel.jacobian</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fips.ForwardModel.jvp.html">fips.ForwardModel.jvp</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fips.ForwardModel.vjp.html">fips.ForwardModel.vjp</a></li>
 </ul>
 </details></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.ForwardModel.rows.html">fips.ForwardModel.rows</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.ForwardModel.cols.html">fips.ForwardModel.cols</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.ForwardModel.__call__.html">fips.ForwardModel.__call__</a></li>
 <li class="toctree-l2 current active"><a aria-current="page" class="current reference internal" href="#">fips.ForwardModel.jacobian</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fips.ForwardModel.jvp.html">fips.ForwardModel.jvp</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fips.ForwardModel.vjp.html">fips.ForwardModel.vjp</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.taylortest.html">fips.taylortest</a></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="fips.LognormalForward.html">fips.LognormalForward</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l3"><a class="reference internal" href="fips.LognormalForward.block.html">fips.LognormalForward.block</a></li>
@@ -685,12 +689,22 @@
 <li class="toctree-l3"><a class="reference internal" href="fips.methods.ensemble.EnsembleOptions.seed.html">fips.methods.ensemble.EnsembleOptions.seed</a></li>
 </ul>
 </details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="fips.methods.variational.VariationalOptions.html">fips.methods.variational.VariationalOptions</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="fips.methods.variational.VariationalOptions.gamma.html">fips.methods.variational.VariationalOptions.gamma</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fips.methods.variational.VariationalOptions.max_cg_iterations.html">fips.methods.variational.VariationalOptions.max_cg_iterations</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fips.methods.variational.VariationalOptions.max_iterations.html">fips.methods.variational.VariationalOptions.max_iterations</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fips.methods.variational.VariationalOptions.outer_tol.html">fips.methods.variational.VariationalOptions.outer_tol</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fips.methods.variational.VariationalOptions.rank.html">fips.methods.variational.VariationalOptions.rank</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fips.methods.variational.VariationalOptions.tol.html">fips.methods.variational.VariationalOptions.tol</a></li>
+</ul>
+</details></li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="fips.Posterior.html">fips.Posterior</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l3"><a class="reference internal" href="fips.Posterior.at_bound.html">fips.Posterior.at_bound</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.Posterior.chi2.html">fips.Posterior.chi2</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.Posterior.data_misfit.html">fips.Posterior.data_misfit</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.Posterior.dofs.html">fips.Posterior.dofs</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.Posterior.dofs_per_element.html">fips.Posterior.dofs_per_element</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fips.Posterior.eigenvalues.html">fips.Posterior.eigenvalues</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.Posterior.estimate.html">fips.Posterior.estimate</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.Posterior.information_content.html">fips.Posterior.information_content</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fips.Posterior.innovation_cov.html">fips.Posterior.innovation_cov</a></li>
@@ -752,6 +766,7 @@
 <li class="toctree-l2"><a class="reference internal" href="fips.Posterior.uncertainty_reduction.html">fips.Posterior.uncertainty_reduction</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.Posterior.summary.html">fips.Posterior.summary</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.Posterior.iterations.html">fips.Posterior.iterations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fips.Posterior.eigenvalues.html">fips.Posterior.eigenvalues</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.Posterior.with_gamma.html">fips.Posterior.with_gamma</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.Posterior.with_data.html">fips.Posterior.with_data</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.Posterior.recovery.html">fips.Posterior.recovery</a></li>
@@ -898,6 +913,7 @@
 <li class="toctree-l3"><a class="reference internal" href="fips.linalg.BlockDiagonalOperator.sqrt.html">fips.linalg.BlockDiagonalOperator.sqrt</a></li>
 </ul>
 </details></li>
+<li class="toctree-l2"><a class="reference internal" href="fips.linalg.MatrixFreeOperator.html">fips.linalg.MatrixFreeOperator</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.linalg.as_linear_operator.html">fips.linalg.as_linear_operator</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.linalg.LinearOperator.dot.html">fips.linalg.LinearOperator.dot</a></li>
 <li class="toctree-l2"><a class="reference internal" href="fips.linalg.LinearOperator.solve.html">fips.linalg.LinearOperator.solve</a></li>
@@ -1003,9 +1019,11 @@
 <dt class="sig sig-object py" id="fips.ForwardModel.jacobian">
 <span class="sig-prename descclassname"><span class="pre">ForwardModel.</span></span><span class="sig-name descname"><span class="pre">jacobian</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/fips/forward.html#ForwardModel.jacobian"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fips.ForwardModel.jacobian" title="Link to this definition">#</a></dt>
 <dd><p>Return the Jacobian of the model at <cite>x</cite>: <span class="math notranslate nohighlight">\(J_{ij} = \partial F_i / \partial x_j\)</span>.</p>
-<p><code class="docutils literal notranslate"><span class="pre">&quot;gauss_newton&quot;</span></code> and <a class="reference internal" href="fips.taylortest.html#fips.taylortest" title="fips.taylortest"><code class="xref py py-func docutils literal notranslate"><span class="pre">taylortest()</span></code></a> need it; the ensemble method
-only runs the model, so a model solved with it need not write one.
-This one raises.</p>
+<p><code class="docutils literal notranslate"><span class="pre">&quot;gauss_newton&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;variational&quot;</span></code> and <a class="reference internal" href="fips.taylortest.html#fips.taylortest" title="fips.taylortest"><code class="xref py py-func docutils literal notranslate"><span class="pre">taylortest()</span></code></a> need it;
+the ensemble method only runs the model, so a model solved with it
+need not write one. This one gives the products of <a class="reference internal" href="fips.ForwardModel.jvp.html#fips.ForwardModel.jvp" title="fips.ForwardModel.jvp"><code class="xref py py-meth docutils literal notranslate"><span class="pre">jvp()</span></code></a> and
+<a class="reference internal" href="fips.ForwardModel.vjp.html#fips.ForwardModel.vjp" title="fips.ForwardModel.vjp"><code class="xref py py-meth docutils literal notranslate"><span class="pre">vjp()</span></code></a> at <cite>x</cite>, a <a class="reference internal" href="fips.linalg.MatrixFreeOperator.html#fips.linalg.MatrixFreeOperator" title="fips.linalg.MatrixFreeOperator"><code class="xref py py-class docutils literal notranslate"><span class="pre">MatrixFreeOperator</span></code></a>, when
+the subclass writes both, and raises otherwise.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>x</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="fips.Vector.html#fips.Vector" title="fips.vector.Vector"><code class="xref py py-class docutils literal notranslate"><span class="pre">Vector</span></code></a></span>) – A state on <a class="reference internal" href="fips.ForwardModel.cols.html#fips.ForwardModel.cols" title="fips.ForwardModel.cols"><code class="xref py py-attr docutils literal notranslate"><span class="pre">cols</span></code></a>.</p>
@@ -1018,7 +1036,7 @@ those of <a class="reference internal" href="fips.ForwardModel.cols.html#fips.Fo
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="fips.Operator.html#fips.Operator" title="fips.operator.Operator"><code class="xref py py-class docutils literal notranslate"><span class="pre">Operator</span></code></a></span></p>
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/builtins/exceptions.html#NotImplementedError" title="(in Python v3.15)"><strong>NotImplementedError</strong></a> – Unless the subclass writes it.</p>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/builtins/exceptions.html#NotImplementedError" title="(in Python v3.15)"><strong>NotImplementedError</strong></a> – Unless the subclass writes it, or both <a class="reference internal" href="fips.ForwardModel.jvp.html#fips.ForwardModel.jvp" title="fips.ForwardModel.jvp"><code class="xref py py-meth docutils literal notranslate"><span class="pre">jvp()</span></code></a> and <a class="reference internal" href="fips.ForwardModel.vjp.html#fips.ForwardModel.vjp" title="fips.ForwardModel.vjp"><code class="xref py py-meth docutils literal notranslate"><span class="pre">vjp()</span></code></a>.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1045,11 +1063,11 @@ those of <a class="reference internal" href="fips.ForwardModel.cols.html#fips.Fo
       </div>
     </a>
     <a class="right-next"
-       href="fips.taylortest.html"
+       href="fips.ForwardModel.jvp.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">fips.taylortest</p>
+        <p class="prev-next-title">fips.ForwardModel.jvp</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>

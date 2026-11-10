@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>fips.linalg.kronecker &#8212; fips 0.2.0b3.dev21+g2729ef234 documentation</title>
+    <title>fips.linalg.kronecker &#8212; fips 0.2.0b3.dev22+g0086be242 documentation</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../../_static/documentation_options.js?v=70a3b4e6"></script>
+    <script src="../../../_static/documentation_options.js?v=0de11b26"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -132,8 +132,8 @@
       
     
     
-    <img src="../../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev21+g2729ef234 documentation - Home"/>
-    <img src="../../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev21+g2729ef234 documentation - Home"/>
+    <img src="../../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev22+g0086be242 documentation - Home"/>
+    <img src="../../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev22+g0086be242 documentation - Home"/>
   
   
 </a></div>
@@ -1038,24 +1038,46 @@
 
 <span class="sd">    It is ``n x N``, from the standard normals on the whole product grid to</span>
 <span class="sd">    the operator's rows (:meth:`KroneckerOperator._make_root`), and is applied</span>
-<span class="sd">    through the Cholesky factors :math:`L_k`, one way only: a draw needs</span>
-<span class="sd">    :math:`R w`, never :math:`R^T`.</span>
+<span class="sd">    through the Cholesky factors :math:`L_k`. Its transpose,</span>
+<span class="sd">    :math:`(L_1^T \otimes \dots \otimes L_K^T) P^T D` (``N x n``), is the</span>
+<span class="sd">    whitening the ``"variational"`` method's products go through.</span>
 <span class="sd">    """</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">of</span><span class="p">:</span> <span class="n">KroneckerOperator</span><span class="p">,</span> <span class="n">roots</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="o">...</span><span class="p">]):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">of</span><span class="p">:</span> <span class="n">KroneckerOperator</span><span class="p">,</span>
+        <span class="n">roots</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span>
+        <span class="n">transposed</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_of</span> <span class="o">=</span> <span class="n">of</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_roots</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">_read_only</span><span class="p">(</span><span class="n">L</span><span class="p">)</span> <span class="k">for</span> <span class="n">L</span> <span class="ow">in</span> <span class="n">roots</span><span class="p">)</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">((</span><span class="n">of</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">of</span><span class="o">.</span><span class="n">_size</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_transposed</span> <span class="o">=</span> <span class="n">transposed</span>
+        <span class="n">shape</span> <span class="o">=</span> <span class="p">(</span><span class="n">of</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">of</span><span class="o">.</span><span class="n">_size</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">shape</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="k">if</span> <span class="n">transposed</span> <span class="k">else</span> <span class="n">shape</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_matmat</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">"""Return ``R @ X`` through the factors."""</span>
+<span class="w">        </span><span class="sd">"""Return ``R @ X``, or ``R^T @ X`` for the transpose, through the factors."""</span>
         <span class="n">of</span><span class="p">,</span> <span class="n">s</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_of</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_of</span><span class="o">.</span><span class="n">std</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_transposed</span><span class="p">:</span>
 
-        <span class="k">def</span><span class="w"> </span><span class="nf">apply</span><span class="p">(</span><span class="n">Y</span><span class="p">):</span>
-<span class="w">            </span><span class="sd">"""Return ``R Y`` for a block of columns."""</span>
-            <span class="k">return</span> <span class="n">s</span> <span class="o">*</span> <span class="n">of</span><span class="o">.</span><span class="n">_gather</span><span class="p">(</span><span class="n">of</span><span class="o">.</span><span class="n">_through</span><span class="p">(</span><span class="n">Y</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_roots</span><span class="p">))</span>
+            <span class="k">def</span><span class="w"> </span><span class="nf">apply</span><span class="p">(</span><span class="n">Y</span><span class="p">):</span>
+<span class="w">                </span><span class="sd">"""Return ``R Y`` for a block of columns."""</span>
+                <span class="k">return</span> <span class="n">s</span> <span class="o">*</span> <span class="n">of</span><span class="o">.</span><span class="n">_gather</span><span class="p">(</span><span class="n">of</span><span class="o">.</span><span class="n">_through</span><span class="p">(</span><span class="n">Y</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_roots</span><span class="p">))</span>
 
-        <span class="k">return</span> <span class="n">of</span><span class="o">.</span><span class="n">_by_columns</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">apply</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">of</span><span class="o">.</span><span class="n">_by_columns</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">apply</span><span class="p">)</span>
+        <span class="n">roots</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">L</span><span class="o">.</span><span class="n">T</span> <span class="k">for</span> <span class="n">L</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_roots</span><span class="p">)</span>
+        <span class="n">X</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">toarray</span><span class="p">()</span> <span class="k">if</span> <span class="n">sparse</span><span class="o">.</span><span class="n">issparse</span><span class="p">(</span><span class="n">X</span><span class="p">)</span> <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">of</span><span class="o">.</span><span class="n">_size</span><span class="p">,</span> <span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+        <span class="n">step</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">_CHUNK</span> <span class="o">//</span> <span class="n">of</span><span class="o">.</span><span class="n">_size</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">step</span><span class="p">):</span>
+            <span class="n">out</span><span class="p">[:,</span> <span class="n">j</span> <span class="p">:</span> <span class="n">j</span> <span class="o">+</span> <span class="n">step</span><span class="p">]</span> <span class="o">=</span> <span class="n">of</span><span class="o">.</span><span class="n">_through</span><span class="p">(</span>
+                <span class="n">of</span><span class="o">.</span><span class="n">_scatter</span><span class="p">(</span><span class="n">s</span> <span class="o">*</span> <span class="n">X</span><span class="p">[:,</span> <span class="n">j</span> <span class="p">:</span> <span class="n">j</span> <span class="o">+</span> <span class="n">step</span><span class="p">]),</span> <span class="n">roots</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="n">out</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_transpose</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Return the transpose, the same factors applied the other way."""</span>
+        <span class="k">return</span> <span class="n">_KroneckerDraw</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_of</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_roots</span><span class="p">,</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_transposed</span><span class="p">)</span>
 </pre></div>
 
                 </article>

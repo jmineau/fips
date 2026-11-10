@@ -1,0 +1,6 @@
+fips.ForwardModel.vjp
+=====================
+
+.. currentmodule:: fips
+
+.. automethod:: ForwardModel.vjp

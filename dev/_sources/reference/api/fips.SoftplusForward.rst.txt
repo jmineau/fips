@@ -37,6 +37,6 @@
 .. rubric:: Inherited
 
 
-From :class:`~.ForwardModel`: :py:obj:`~.ForwardModel.cols`, :py:obj:`~.ForwardModel.rows`
+From :class:`~.ForwardModel`: :py:obj:`~.ForwardModel.cols`, :py:obj:`~.ForwardModel.jvp`, :py:obj:`~.ForwardModel.rows`, :py:obj:`~.ForwardModel.vjp`
 
 
