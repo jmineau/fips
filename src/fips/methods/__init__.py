@@ -7,7 +7,9 @@ before anything is computed, and an unknown method or option raises with the
 names it knows. The methods are ``"analytic"`` (:mod:`fips.methods.analytic`),
 the closed-form Gaussian posterior; ``"bounded"``
 (:mod:`fips.methods.bounded`), that posterior with bounds on the state: its
-mode, and draws of the Gaussian truncated to the bounds; and
+mode, and draws of the Gaussian truncated to the bounds (or rectified
+draws, the bounded problem solved again for draws of the prior and the
+data); and
 ``"gauss_newton"`` (:mod:`fips.methods.gauss_newton`), the mode of the
 posterior of a problem with a forward model, and draws of that posterior; and
 ``"ensemble"`` (:mod:`fips.methods.ensemble`), a square-root ensemble Kalman
@@ -59,8 +61,8 @@ problem, so a new method gets them all. The analytic method's solution is
 ``Whitened`` or ``Information``, the factorization of its whitened
 (``m x m``) or information (``n x n``) system, whichever its size calls for.
 The bounded method's solution (``fips.methods.bounded.Bounded``) holds the
-analytic one and the mode, and answers the variances from draws of its
-truncated posterior and the gain from the Gaussian at the mode; it has no
+analytic one and the mode, and answers the variances from its draws (of its
+truncated posterior, or rectified) and the gain from the Gaussian at the mode; it has no
 ``estimate_is_mean`` and no ``estimate_is_linear`` (the mode is not linear in
 the data), and its ``kept`` draws give the posterior's mean and intervals, ``evidence_is_laplace`` only with no finite bound, and its ``with_gamma`` and ``with_data`` find the mode again on the
 analytic factors. The Gauss-Newton method's solution
@@ -163,8 +165,8 @@ def solve(problem: Problem, method: str = "analytic", **options: Any) -> Posteri
     **options
         The method's options, by name: for ``"analytic"``, ``gamma`` (see
         :class:`~fips.methods.analytic.AnalyticOptions`); for ``"bounded"``,
-        ``gamma``, ``lower``, ``upper``, ``draws``, ``burn_in`` and ``seed``
-        (see :class:`~fips.methods.bounded.BoundedOptions`); for
+        ``gamma``, ``lower``, ``upper``, ``draws``, ``burn_in``, ``seed`` and
+        ``distribution`` (see :class:`~fips.methods.bounded.BoundedOptions`); for
         ``"gauss_newton"``, ``gamma``, ``max_iterations``, ``tol``, ``draws``,
         ``burn_in`` and ``seed`` (see
         :class:`~fips.methods.gauss_newton.GaussNewtonOptions`); for

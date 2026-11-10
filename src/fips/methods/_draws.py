@@ -56,7 +56,9 @@ def _autocorrelation_times(draws: np.ndarray) -> np.ndarray:
     return tau
 
 
-def _std_errors(draws: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+def _std_errors(
+    draws: np.ndarray, independent: bool = False
+) -> tuple[np.ndarray, np.ndarray]:
     r"""
     Return the relative error of the standard deviation of each row of the chain `draws`, and the autocorrelation time it counts.
 
@@ -75,11 +77,12 @@ def _std_errors(draws: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
     element piled against its bound (a Gaussian truncated one to a few of its
     standard deviations inside the box) has a larger :math:`\operatorname{var}(y)
     / \bar{y}^2` than a Gaussian and mixes slower, and both raise :math:`e`.
-    A row that never moves has an error of 0.
+    A row that never moves has an error of 0. Draws `independent` by
+    construction (not a chain) have :math:`\tau_y = 1`, not an estimate of it.
     """
     N = draws.shape[1]
     y = (draws - draws.mean(axis=1, keepdims=True)) ** 2
-    tau = _autocorrelation_times(y)
+    tau = np.ones(len(y)) if independent else _autocorrelation_times(y)
     mean = y.mean(axis=1)
     moves = mean > 0
     error = np.zeros(len(mean))
@@ -87,30 +90,41 @@ def _std_errors(draws: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
     return error, tau
 
 
-def _warn_if_imprecise(draws: np.ndarray, logger: logging.Logger, why: str) -> None:
+def _warn_if_imprecise(
+    draws: np.ndarray, logger: logging.Logger, why: str, independent: bool = False
+) -> None:
     """
     Log a warning to `logger` when a standard deviation from the kept `draws` is uncertain by more than :data:`_IMPRECISE` (:func:`_std_errors`), saying how many draws would do; `why` is the method's sentence on the cause and the remedy.
 
+    Draws `independent` by construction are not a chain: their error is
+    counted with no autocorrelation, and the warning says they are too few
+    rather than that they mix slowly.
+
     The draws needed scale as the square of the error: ``N (e / 0.1)^2``.
     """
-    error, tau = _std_errors(draws)
+    error, tau = _std_errors(draws, independent)
     slow = error > _IMPRECISE
     if not slow.any():
         return
     N = draws.shape[1]
     worst = int(np.argmax(error))
     needed = math.ceil(N * (float(error[worst]) / _IMPRECISE) ** 2)
+    if independent:
+        what, chain = "are too few", ""
+    else:
+        what = "mix slowly"
+        chain = f" (its variance has {float(tau[worst]):.0f} draws for each independent one)"
     logger.warning(
-        "The posterior's draws mix slowly: %d state elements have a standard "
-        "deviation from the %d kept draws uncertain by more than %d%%, the worst "
-        "(element %d) by about %d%% (its variance has %.0f draws for each "
-        "independent one); about %d draws would bring it to %d%%. %s",
+        "The posterior's draws %s: %d state elements have a standard deviation "
+        "from the %d kept draws uncertain by more than %d%%, the worst (element "
+        "%d) by about %d%%%s; about %d draws would bring it to %d%%. %s",
+        what,
         int(slow.sum()),
         N,
         round(100 * _IMPRECISE),
         worst,
         round(100 * float(error[worst])),
-        float(tau[worst]),
+        chain,
         needed,
         round(100 * _IMPRECISE),
         why,

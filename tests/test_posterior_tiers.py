@@ -32,6 +32,7 @@ EXPECTED = {
     "bounded, no finite bound": ANALYTIC,
     "gauss_newton, an operator": ANALYTIC,
     "bounded": dict(zip(MEMBERS, "YYNNNNYNN", strict=True)),
+    "bounded, rectified": dict(zip(MEMBERS, "YYNNNNYNN", strict=True)),
     "gauss_newton, a model": dict(zip(MEMBERS, "YNYNNNNYN", strict=True)),
     "ensemble": dict(zip(MEMBERS, "YYNNNNNNN", strict=True)),
     "variational, linear, full rank": dict(zip(MEMBERS, "YYYNNNNYY", strict=True)),
@@ -67,6 +68,9 @@ def posts() -> dict[str, fips.Posterior]:
         "bounded, no finite bound": fips.solve(linear, "bounded", draws=50),
         "gauss_newton, an operator": fips.solve(linear, "gauss_newton", draws=50),
         "bounded": fips.solve(linear, "bounded", lower=1.0, draws=50),
+        "bounded, rectified": fips.solve(
+            linear, "bounded", lower=1.0, draws=50, distribution="rectified"
+        ),
         "gauss_newton, a model": fips.solve(model, "gauss_newton", draws=50),
         "ensemble": fips.solve(linear, "ensemble", members=50),
         "variational, linear, full rank": fips.solve(linear, "variational", rank=4),
@@ -166,7 +170,9 @@ def test_an_interval_that_is_not_sampled_is_the_estimate_plus_or_minus_z_sd(
         )
 
 
-@pytest.mark.parametrize("case", ["bounded", "gauss_newton, a model"])
+@pytest.mark.parametrize(
+    "case", ["bounded", "bounded, rectified", "gauss_newton, a model"]
+)
 def test_a_sampled_answer_reads_its_mean_and_interval_from_its_draws(case, posts):
     """A sampled posterior's mean is the kept draws' mean (not the mode), and its interval their quantiles, of the state or of a total."""
     post = posts[case]
