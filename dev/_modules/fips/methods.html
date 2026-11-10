@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>fips.methods &#8212; fips 0.2.0b3.dev18+gcd15cccf9 documentation</title>
+    <title>fips.methods &#8212; fips 0.2.0b3.dev19+ga4bfb9bc6 documentation</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../_static/documentation_options.js?v=fbf69674"></script>
+    <script src="../../_static/documentation_options.js?v=bf0428a7"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -132,8 +132,8 @@
       
     
     
-    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev18+gcd15cccf9 documentation - Home"/>
-    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev18+gcd15cccf9 documentation - Home"/>
+    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev19+ga4bfb9bc6 documentation - Home"/>
+    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev19+ga4bfb9bc6 documentation - Home"/>
   
   
 </a></div>
@@ -452,7 +452,10 @@
 <span class="sd">  linear problem its gain is of), ``estimate_is_mean = True`` when its</span>
 <span class="sd">  estimate is the posterior mean, and ``estimate_is_linear = True`` when its</span>
 <span class="sd">  estimate is :math:`x_0 + K (z - H x_0 - c)` with the gain of ``gain()``</span>
-<span class="sd">  (what ``Posterior.recovery`` needs); a posterior whose solution lacks one</span>
+<span class="sd">  (what ``Posterior.recovery`` needs), and ``evidence_is_laplace = True``</span>
+<span class="sd">  when its posterior is the Gaussian at its estimate, exactly or</span>
+<span class="sd">  approximately, so that ``chi2()`` and ``information()`` give the evidence</span>
+<span class="sd">  (``Posterior.log_evidence``); a posterior whose solution lacks one</span>
 <span class="sd">  of them raises when that feature is asked for;</span>
 <span class="sd">- a function from a :class:`~fips.Problem` and the options to</span>
 <span class="sd">  ``Posterior(problem, solution, options)``.</span>
@@ -471,12 +474,13 @@
 <span class="sd">analytic one and the mode, and answers the variances from draws of its</span>
 <span class="sd">truncated posterior and the gain from the Gaussian at the mode; it has no</span>
 <span class="sd">``estimate_is_mean`` and no ``estimate_is_linear`` (the mode is not linear in</span>
-<span class="sd">the data), and its ``with_gamma`` and ``with_data`` find the mode again on the</span>
+<span class="sd">the data), ``evidence_is_laplace`` only with no finite bound, and its ``with_gamma`` and ``with_data`` find the mode again on the</span>
 <span class="sd">analytic factors. The Gauss-Newton method's solution</span>
 <span class="sd">(``fips.methods.gauss_newton.GaussNewton``) keeps its mode and the analytic</span>
 <span class="sd">solution of the problem linearized at its last iterate (a lognormal flux is</span>
 <span class="sd">such a forward model), answers the gain from it and the variances from draws</span>
-<span class="sd">of the posterior, which it preconditions; it has no ``with_gamma``, since its</span>
+<span class="sd">of the posterior, which it preconditions, and its evidence is Laplace's from</span>
+<span class="sd">the Gaussian at the mode; it has no ``with_gamma``, since its</span>
 <span class="sd">linearization depends on gamma. An ensemble method would keep its posterior ensemble and</span>
 <span class="sd">answer from the sample mean and covariance (``estimate_is_mean = True``), and</span>
 <span class="sd">could not change gamma without solving again either. A method imports</span>

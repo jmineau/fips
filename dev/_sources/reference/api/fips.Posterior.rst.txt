@@ -24,6 +24,7 @@
    ~Posterior.innovation_cov
    ~Posterior.iterations
    ~Posterior.kalman_gain
+   ~Posterior.log_evidence
    ~Posterior.mean
    ~Posterior.modeled_obs
    ~Posterior.options

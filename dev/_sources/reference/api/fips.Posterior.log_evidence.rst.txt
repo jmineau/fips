@@ -1,0 +1,6 @@
+fips.Posterior.log\_evidence
+============================
+
+.. currentmodule:: fips
+
+.. autoproperty:: Posterior.log_evidence
