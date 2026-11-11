@@ -1,0 +1,6 @@
+fips.methods.variational.VariationalOptions.seed
+================================================
+
+.. currentmodule:: fips.methods.variational
+
+.. autoattribute:: VariationalOptions.seed

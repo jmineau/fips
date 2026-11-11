@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>fips 0.2.0b3.dev43+gd59a2333c &#8212; fips 0.2.0b3.dev43+gd59a2333c documentation</title>
+    <title>fips 0.2.0b3.dev44+gb6d9ac8cf &#8212; fips 0.2.0b3.dev44+gb6d9ac8cf documentation</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="_static/documentation_options.js?v=bc76ec41"></script>
+    <script src="_static/documentation_options.js?v=f47929e5"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
@@ -134,8 +134,8 @@
       
     
     
-    <img src="_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev43+gd59a2333c documentation - Home"/>
-    <img src="_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev43+gd59a2333c documentation - Home"/>
+    <img src="_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev44+gb6d9ac8cf documentation - Home"/>
+    <img src="_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev44+gb6d9ac8cf documentation - Home"/>
   
   
 </a></div>
@@ -400,7 +400,7 @@
                 <article class="bd-article">
                   
   <section class="hidden-title" id="fips-release">
-<h1>fips 0.2.0b3.dev43+gd59a2333c<a class="headerlink" href="#fips-release" title="Link to this heading">#</a></h1>
+<h1>fips 0.2.0b3.dev44+gb6d9ac8cf<a class="headerlink" href="#fips-release" title="Link to this heading">#</a></h1>
 <a class="only-light reference internal image-reference" href="_images/logo.png"><img alt="fips logo" class="align-center only-light" src="_images/logo.png" style="width: 600px;" />
 </a>
 <a class="only-dark reference internal image-reference" href="_images/logo_dark.png"><img alt="fips logo" class="align-center only-dark" src="_images/logo_dark.png" style="width: 600px;" />
@@ -419,7 +419,7 @@
 <li><p><strong>Built from named blocks</strong>: a state of fluxes and offsets, observations from towers and satellites. Each block keeps its own labels, and a matrix is built block by block.</p></li>
 <li><p><strong>The standard linear model</strong>: observations are the forward operator times the state, plus an offset, plus an error. Plug in your forward operator (a Jacobian you computed), the prior and its covariance, and the observation covariance. Covariances are written as correlation models (exponential, Gaussian, Matérn, Kronecker products) with standard deviations.</p></li>
 <li><p><strong>Fast and exact</strong>: each matrix is kept in its cheapest form (dense, sparse, diagonal, or Kronecker factors), and fips computes the exact Gaussian posterior with direct linear algebra, for large state spaces in seconds.</p></li>
-<li><p><strong>Past the linear Gaussian problem</strong>: bounds on the state, forward models that are not linear (with ready-made ones that keep a quantity positive), models that can only be run, and problems too large to factor, each a method of the same <code class="docutils literal notranslate"><span class="pre">fips.solve</span></code> on the same <code class="docutils literal notranslate"><span class="pre">Problem</span></code>; and covariance settings fitted from the data, with their uncertainty carried into the answer.</p></li>
+<li><p><strong>Past the linear Gaussian problem</strong>: bounds on the state, forward models that are not linear (with ready-made ones that keep a quantity positive), models that can only be run, and problems too large to factor, each a method of the same <code class="docutils literal notranslate"><span class="pre">fips.solve</span></code> on the same <code class="docutils literal notranslate"><span class="pre">Problem</span></code>; and covariance hyperparameters fitted from the data, with their uncertainty carried into the answer.</p></li>
 </ul>
 </section>
 <section id="installation">

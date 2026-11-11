@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Bounds on the state &#8212; fips 0.2.0b3.dev43+gd59a2333c documentation</title>
+    <title>Bounds on the state &#8212; fips 0.2.0b3.dev44+gb6d9ac8cf documentation</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../_static/documentation_options.js?v=bc76ec41"></script>
+    <script src="../_static/documentation_options.js?v=f47929e5"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -137,8 +137,8 @@
       
     
     
-    <img src="../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev43+gd59a2333c documentation - Home"/>
-    <img src="../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev43+gd59a2333c documentation - Home"/>
+    <img src="../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev44+gb6d9ac8cf documentation - Home"/>
+    <img src="../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev44+gb6d9ac8cf documentation - Home"/>
   
   
 </a></div>
@@ -401,8 +401,8 @@
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Checking and tuning an inversion</span></p>
 <ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="settings.html">Fitting the covariance settings</a></li>
-<li class="toctree-l1"><a class="reference internal" href="hierarchical.html">The uncertainty of the settings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hyperparameters.html">Fitting the covariance hyperparameters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hierarchical.html">The uncertainty of the hyperparameters</a></li>
 <li class="toctree-l1"><a class="reference internal" href="synthetic.html">Synthetic experiments</a></li>
 </ul>
 <ul class="nav bd-sidenav">
@@ -642,10 +642,10 @@ mean. Here it misses the true total, which the analytic interval holds.</p>
 
 <span class="gp">In [29]: </span><span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">({</span><span class="s2">"analytic"</span><span class="p">:</span> <span class="n">analytic</span><span class="o">.</span><span class="n">uncertainty</span><span class="p">(</span><span class="n">W</span><span class="p">),</span> <span class="s2">"bounded"</span><span class="p">:</span> <span class="n">post</span><span class="o">.</span><span class="n">uncertainty</span><span class="p">(</span><span class="n">W</span><span class="p">)})</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
 <span class="gh">Out[29]: </span>
-<span class="go">                     prior_std  posterior_std  reduction  lower  upper</span>
-<span class="go">         block what                                                   </span>
-<span class="go">analytic total flux      4.065          0.952      0.766  1.838  5.568</span>
-<span class="go">bounded  total flux      2.469          0.679      0.725  3.894  6.569</span>
+<span class="go">                     estimate  prior_std  posterior_std  reduction  lower  upper</span>
+<span class="go">         block what                                                             </span>
+<span class="go">analytic total flux     3.703      4.065          0.952      0.766  1.838  5.568</span>
+<span class="go">bounded  total flux     3.863      2.469          0.679      0.725  3.894  6.569</span>
 </pre></div>
 </div>
 <p>The two <code class="docutils literal notranslate"><span class="pre">prior_std</span></code> differ too: each method’s is the prior it used. The
@@ -803,10 +803,10 @@ the prior mean at a lower bound, and the rectified draws’ less far above:</p>
 
 <span class="gp">In [37]: </span><span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">({</span><span class="s2">"truncated"</span><span class="p">:</span> <span class="n">post</span><span class="o">.</span><span class="n">uncertainty</span><span class="p">(</span><span class="n">W</span><span class="p">),</span> <span class="s2">"rectified"</span><span class="p">:</span> <span class="n">rectified</span><span class="o">.</span><span class="n">uncertainty</span><span class="p">(</span><span class="n">W</span><span class="p">)})</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
 <span class="gh">Out[37]: </span>
-<span class="go">                      prior_std  posterior_std  reduction  lower  upper</span>
-<span class="go">          block what                                                   </span>
-<span class="go">truncated total flux      2.469          0.679      0.725  3.894  6.569</span>
-<span class="go">rectified total flux      2.387          0.660      0.724  3.140  5.737</span>
+<span class="go">                      estimate  prior_std  posterior_std  reduction  lower  upper</span>
+<span class="go">          block what                                                             </span>
+<span class="go">truncated total flux     3.863      2.469          0.679      0.725  3.894  6.569</span>
+<span class="go">rectified total flux     3.863      2.387          0.660      0.724  3.140  5.737</span>
 </pre></div>
 </div>
 <p>About half the rectified draws hold that cell at exactly zero, and none of

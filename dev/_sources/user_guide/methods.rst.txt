@@ -83,9 +83,9 @@ Ask in this order:
 5. **Is the problem too large to factor**, or is the model given by a tangent
    linear and an adjoint? Use ``"variational"``.
 
-Two questions apply to every method: whether the covariance settings (the
+Two questions apply to every method: whether the covariance hyperparameters (the
 prior's standard deviation and correlation length, the observation error)
-are right, which :doc:`settings` answers from the data, and whether their
+are right, which :doc:`hyperparameters` answers from the data, and whether their
 uncertainty matters to the answer, which :doc:`hierarchical` carries into it.
 
 

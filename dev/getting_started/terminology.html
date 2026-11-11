@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Terminology &#8212; fips 0.2.0b3.dev43+gd59a2333c documentation</title>
+    <title>Terminology &#8212; fips 0.2.0b3.dev44+gb6d9ac8cf documentation</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../_static/documentation_options.js?v=bc76ec41"></script>
+    <script src="../_static/documentation_options.js?v=f47929e5"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -137,8 +137,8 @@
       
     
     
-    <img src="../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev43+gd59a2333c documentation - Home"/>
-    <img src="../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev43+gd59a2333c documentation - Home"/>
+    <img src="../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev44+gb6d9ac8cf documentation - Home"/>
+    <img src="../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev44+gb6d9ac8cf documentation - Home"/>
   
   
 </a></div>
@@ -631,20 +631,20 @@ uncertainty, <span class="math notranslate nohighlight">\(\tfrac{1}{2} \ln (\lve
 gamma above 1 trusts the observations more and below 1 the prior
 more. 1 by default.</p></td>
 </tr>
-<tr class="row-even"><td><p><strong>settings</strong></p></td>
+<tr class="row-even"><td><p><strong>hyperparameters</strong></p></td>
 <td><p><span class="math notranslate nohighlight">\(s\)</span></p></td>
 <td><p>your own function’s arguments</p></td>
 <td><p>The numbers the covariances are built from: the prior’s standard
 deviation and correlation length, the observation error’s standard
-deviation. Also called hyperparameters. <a class="reference internal" href="../user_guide/settings.html"><span class="doc">Fitting the covariance settings</span></a>
-fits them; <a class="reference internal" href="../user_guide/hierarchical.html"><span class="doc">The uncertainty of the settings</span></a> carries their uncertainty.</p></td>
+deviation. <a class="reference internal" href="../user_guide/hyperparameters.html"><span class="doc">Fitting the covariance hyperparameters</span></a> fits them;
+<a class="reference internal" href="../user_guide/hierarchical.html"><span class="doc">The uncertainty of the hyperparameters</span></a> carries their uncertainty.</p></td>
 </tr>
 <tr class="row-odd"><td><p><strong>evidence</strong></p></td>
 <td><p><span class="math notranslate nohighlight">\(p(z)\)</span></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">post.log_evidence</span></code></p></td>
 <td><p>The probability of the observations given the covariances, with the
 state integrated out. Also called the marginal likelihood. The
-settings that maximize it are the maximum-likelihood settings.</p></td>
+hyperparameters that maximize it are the maximum-likelihood hyperparameters.</p></td>
 </tr>
 </tbody>
 </table>

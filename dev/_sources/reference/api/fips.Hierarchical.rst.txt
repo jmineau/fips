@@ -17,8 +17,8 @@
    ~Hierarchical.acceptance
    ~Hierarchical.ess
    ~Hierarchical.estimate
+   ~Hierarchical.hyperparameters
    ~Hierarchical.mode
-   ~Hierarchical.settings
    ~Hierarchical.variances
 
 

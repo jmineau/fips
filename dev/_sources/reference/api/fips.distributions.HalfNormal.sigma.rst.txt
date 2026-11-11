@@ -1,6 +1,6 @@
-fips.distributions.HalfNormal.scale
+fips.distributions.HalfNormal.sigma
 ===================================
 
 .. currentmodule:: fips.distributions
 
-.. autoattribute:: HalfNormal.scale
+.. autoattribute:: HalfNormal.sigma

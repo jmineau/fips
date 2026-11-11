@@ -19,6 +19,7 @@
    ~VariationalOptions.max_cg_iterations
    ~VariationalOptions.max_iterations
    ~VariationalOptions.rank
+   ~VariationalOptions.seed
    ~VariationalOptions.tol
 
 

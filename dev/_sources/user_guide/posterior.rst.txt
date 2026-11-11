@@ -214,8 +214,8 @@ departure from the prior:
        columns=["gamma", "data_misfit", "state_misfit"],
    ).round(3)
 
-To choose gamma, or any other covariance setting, from the data instead, see
-:doc:`settings`.
+To choose gamma, or any other covariance hyperparameter, from the data instead, see
+:doc:`hyperparameters`.
 
 
 Checking the covariances
@@ -253,7 +253,7 @@ four rows are the same:
 
 :attr:`~fips.Posterior.log_evidence`, the log probability of the observations
 given the covariances, is the measure to maximize when fitting them:
-:doc:`settings`.
+:doc:`hyperparameters`.
 
 
 What each group of observations adds
@@ -344,9 +344,9 @@ with pandas, xarray or matplotlib:
 Repeated inversions, logging and saving
 ---------------------------------------
 
-**An inversion run many times** (one a month, a sweep over settings) is a
+**An inversion run many times** (one a month, a sweep over hyperparameters) is a
 function in your own code that builds the :class:`~fips.Problem` from your
-settings, then :func:`fips.solve`:
+hyperparameters, then :func:`fips.solve`:
 
 .. code-block:: python
 
@@ -366,7 +366,7 @@ until you configure logging.** Several methods warn about things that change
 how far the answer can be trusted (a covariance close to singular, a prior
 wide against its bounds, draws that mix slowly, iterations that converge
 slowly). Each is a :class:`~fips.FipsWarning`, which Python prints once for
-each line of your code that leads to it, so you see it without setting
+each line of your code that leads to it, so you see it without hyperparameter
 anything up. :func:`warnings.filterwarnings` chooses what happens to them;
 in a loop of inversions, for example, make them errors so that no answer
 that drew one goes into the table unnoticed:

@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>A model without a Jacobian: the ensemble method &#8212; fips 0.2.0b3.dev43+gd59a2333c documentation</title>
+    <title>A model without a Jacobian: the ensemble method &#8212; fips 0.2.0b3.dev44+gb6d9ac8cf documentation</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../_static/documentation_options.js?v=bc76ec41"></script>
+    <script src="../_static/documentation_options.js?v=f47929e5"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -137,8 +137,8 @@
       
     
     
-    <img src="../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev43+gd59a2333c documentation - Home"/>
-    <img src="../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev43+gd59a2333c documentation - Home"/>
+    <img src="../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev44+gb6d9ac8cf documentation - Home"/>
+    <img src="../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev44+gb6d9ac8cf documentation - Home"/>
   
   
 </a></div>
@@ -401,8 +401,8 @@
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Checking and tuning an inversion</span></p>
 <ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="settings.html">Fitting the covariance settings</a></li>
-<li class="toctree-l1"><a class="reference internal" href="hierarchical.html">The uncertainty of the settings</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hyperparameters.html">Fitting the covariance hyperparameters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="hierarchical.html">The uncertainty of the hyperparameters</a></li>
 <li class="toctree-l1"><a class="reference internal" href="synthetic.html">Synthetic experiments</a></li>
 </ul>
 <ul class="nav bd-sidenav">
@@ -602,12 +602,12 @@ each quarter of the line:</p>
 
 <span class="gp">In [22]: </span><span class="n">post</span><span class="o">.</span><span class="n">uncertainty</span><span class="p">(</span><span class="n">W</span><span class="p">)</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
 <span class="gh">Out[22]: </span>
-<span class="go">               prior_std  posterior_std  reduction  lower  upper</span>
-<span class="go">block quarter                                                   </span>
-<span class="go">flux  0             4.98           0.80       0.84  26.23  29.37</span>
-<span class="go">      1             5.37           0.70       0.87  27.17  29.92</span>
-<span class="go">      2             5.25           0.84       0.84  24.63  27.93</span>
-<span class="go">      3             5.41           0.97       0.82  28.11  31.92</span>
+<span class="go">               estimate  prior_std  posterior_std  reduction  lower  upper</span>
+<span class="go">block quarter                                                             </span>
+<span class="go">flux  0           27.80       4.98           0.80       0.84  26.23  29.37</span>
+<span class="go">      1           28.55       5.37           0.70       0.87  27.17  29.92</span>
+<span class="go">      2           26.28       5.25           0.84       0.84  24.63  27.93</span>
+<span class="go">      3           30.02       5.41           0.97       0.82  28.11  31.92</span>
 </pre></div>
 </div>
 <p>When the forward runs in Python (an <a class="reference internal" href="../reference/api/fips.Operator.html#fips.Operator" title="fips.Operator"><code class="xref py py-class docutils literal notranslate"><span class="pre">Operator</span></code></a>, or a

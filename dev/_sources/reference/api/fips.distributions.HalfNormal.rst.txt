@@ -16,7 +16,7 @@
    :toctree:
 
    ~HalfNormal.median
-   ~HalfNormal.scale
+   ~HalfNormal.sigma
 
 
 
