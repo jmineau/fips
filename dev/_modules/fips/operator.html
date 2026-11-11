@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>fips.operator &#8212; fips 0.2.0b3.dev35+gd1a34da7b documentation</title>
+    <title>fips.operator &#8212; fips 0.2.0b3.dev36+g72e79b0cb documentation</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../_static/documentation_options.js?v=bd5d55db"></script>
+    <script src="../../_static/documentation_options.js?v=9265c06b"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -132,8 +132,8 @@
       
     
     
-    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev35+gd1a34da7b documentation - Home"/>
-    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev35+gd1a34da7b documentation - Home"/>
+    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev36+g72e79b0cb documentation - Home"/>
+    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev36+g72e79b0cb documentation - Home"/>
   
   
 </a></div>
@@ -1324,10 +1324,12 @@
             <span class="p">)</span>
         <span class="n">theirs</span> <span class="o">=</span> <span class="n">other</span><span class="o">.</span><span class="n">_on</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_rows</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cols</span><span class="p">)</span>
         <span class="n">total</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span> <span class="o">+</span> <span class="n">theirs</span> <span class="k">if</span> <span class="n">sign</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data</span> <span class="o">-</span> <span class="n">theirs</span>
-        <span class="c1"># two covariances sum to a covariance; a covariance and any other operator, to an operator</span>
+        <span class="c1"># two covariances sum to a covariance; a difference, or a covariance and</span>
+        <span class="c1"># any other operator, is an operator (a difference need not be positive</span>
+        <span class="c1"># semidefinite)</span>
         <span class="n">summed</span> <span class="o">=</span> <span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_like</span><span class="p">(</span><span class="n">total</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rows</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cols</span><span class="p">)</span>
-            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span>
+            <span class="k">if</span> <span class="n">sign</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span>
             <span class="k">else</span> <span class="n">Operator</span><span class="p">(</span><span class="n">total</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rows</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cols</span><span class="p">)</span>
         <span class="p">)</span>
         <span class="n">summed</span><span class="o">.</span><span class="n">_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_name</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_name</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">name</span> <span class="k">else</span> <span class="kc">None</span>
@@ -1336,7 +1338,11 @@
 <div class="viewcode-block" id="Operator.__add__">
 <a class="viewcode-back" href="../../reference/api/fips.Operator.__add__.html#fips.Operator.__add__">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="fm">__add__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s2">"Operator"</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"Operator"</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">"""Return the sum with an operator on the same labels (in any order)."""</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Return the sum with an operator on the same labels (in any order).</span>
+
+<span class="sd">        The sum of two covariances is a covariance.</span>
+<span class="sd">        """</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">Operator</span><span class="p">):</span>
             <span class="c1"># a covariance model adds itself (CovarianceModel.__radd__); for</span>
             <span class="c1"># anything else Python raises a TypeError</span>
@@ -1347,17 +1353,27 @@
 <div class="viewcode-block" id="Operator.__sub__">
 <a class="viewcode-back" href="../../reference/api/fips.Operator.__sub__.html#fips.Operator.__sub__">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="fm">__sub__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s2">"Operator"</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"Operator"</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">"""Return the difference with an operator on the same labels (in any order)."""</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Return the difference with an operator on the same labels (in any order).</span>
+
+<span class="sd">        The difference of two covariances is a plain operator, since it need</span>
+<span class="sd">        not be positive semidefinite.</span>
+<span class="sd">        """</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_combine</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.0</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="Operator.__mul__">
 <a class="viewcode-back" href="../../reference/api/fips.Operator.__mul__.html#fips.Operator.__mul__">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="fm">__mul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scalar</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"Operator"</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">"""Return the operator times a scalar, in the same form."""</span>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Return the operator times a scalar, in the same form.</span>
+
+<span class="sd">        A covariance times a negative scalar is a plain operator, since it need</span>
+<span class="sd">        not be positive semidefinite.</span>
+<span class="sd">        """</span>
         <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">ndim</span><span class="p">(</span><span class="n">scalar</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">"An Operator is multiplied by a scalar with '*'; use '@'."</span><span class="p">)</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_like</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_data</span> <span class="o">*</span> <span class="nb">float</span><span class="p">(</span><span class="n">scalar</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rows</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cols</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scaled</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_data</span> <span class="o">*</span> <span class="nb">float</span><span class="p">(</span><span class="n">scalar</span><span class="p">),</span> <span class="nb">float</span><span class="p">(</span><span class="n">scalar</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">)</span></div>
 
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__rmul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scalar</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"Operator"</span><span class="p">:</span>
@@ -1370,15 +1386,26 @@
 <span class="w">        </span><span class="sd">"""Return the operator divided by a scalar."""</span>
         <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">ndim</span><span class="p">(</span><span class="n">scalar</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">"An Operator can only be divided by a scalar."</span><span class="p">)</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_like</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_data</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="n">scalar</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rows</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cols</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scaled</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_data</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="n">scalar</span><span class="p">),</span> <span class="nb">float</span><span class="p">(</span><span class="n">scalar</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="Operator.__neg__">
 <a class="viewcode-back" href="../../reference/api/fips.Operator.__neg__.html#fips.Operator.__neg__">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="fm">__neg__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"Operator"</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">"""Return ``-self``."""</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_like</span><span class="p">(</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rows</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cols</span><span class="p">)</span></div>
+<span class="w">        </span><span class="sd">"""</span>
+<span class="sd">        Return ``-self``.</span>
 
+<span class="sd">        The negation of a covariance is a plain operator, since it is not</span>
+<span class="sd">        positive semidefinite.</span>
+<span class="sd">        """</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scaled</span><span class="p">(</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_scaled</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">LinearOperatorLike</span><span class="p">,</span> <span class="n">keeps_class</span><span class="p">:</span> <span class="nb">bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"Operator"</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return `data` on this operator's labels: `_like` when scaling keeps the class, else a plain operator."""</span>
+        <span class="k">if</span> <span class="n">keeps_class</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_like</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rows</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cols</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">Operator</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rows</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cols</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_name</span><span class="p">)</span>
 
 <div class="viewcode-block" id="Operator.dense">
 <a class="viewcode-back" href="../../reference/api/fips.Operator.dense.html#fips.Operator.dense">[docs]</a>
