@@ -27,6 +27,10 @@ in layers that each catch what the one before misses:
    covariance of aggregates against the same draws aggregated; the Gaussian
    at the mode (gain, DOFS, the information content) and the chi-squared
    terms against dense formulas; a pickle round trip; the options' checks.
+6. **Rectified draws.** Each against SciPy's bounded least squares of its
+   perturbed problem; one element against the Gaussian clipped to its
+   bounds; paired with the analytic draws, and equal to them where no bound
+   binds.
 """
 
 import dataclasses
@@ -1343,3 +1347,304 @@ def test_bounds_are_checked_against_the_state():
     infinite = Vector(np.r_[np.zeros(8), -np.inf, np.inf], state)
     with pytest.raises(ValueError, match="lower is inf somewhere"):
         fips.solve(problem, "bounded", lower=infinite)
+
+
+# ---------------------------------------------------------------------------
+# 6. Rectified draws: the bounded problem solved again for each draw
+# ---------------------------------------------------------------------------
+
+
+def _perturbed(arrays: Arrays, problem: Problem, N: int, seed: int, gamma: float = 1.0):
+    """The prior means and observations of the `N` perturbed problems the analytic draws from `seed` solve: the prior's normals first, then the mismatch's, as ``analytic.sample`` draws them."""
+    rng = np.random.default_rng(seed)
+    prior_root = problem.prior_cov.data._root
+    obs_root = problem.obs_cov.data._root
+    delta = np.asarray(prior_root @ rng.standard_normal((prior_root.shape[1], N)))
+    error = np.asarray(obs_root @ rng.standard_normal((obs_root.shape[1], N)))
+    return arrays.x_0[:, None] + delta, arrays.z[:, None] - error / math.sqrt(gamma)
+
+
+@pytest.mark.usefixtures("analytic_form")
+@pytest.mark.parametrize(
+    "n, m, lower, upper",
+    [(10, 14, 0.0, None), (14, 8, 0.0, 1.5), (9, 12, None, 0.4)],
+    ids=["lower, n < m", "both, n > m", "upper"],
+)
+def test_each_rectified_draw_is_the_bounded_solve_of_its_perturbed_problem(
+    n, m, lower, upper
+):
+    """Draw ``k`` is SciPy's bounded least squares (BVLS) of the problem with the prior mean and the observations of the analytic method's draw ``k``, to 1e-9 of the scale of the state; most draws hold some elements exactly on a bound."""
+    arrays = Arrays.random(11, n, m)
+    problem = arrays.problem()
+    gamma = 0.7
+    post = fips.solve(
+        problem,
+        "bounded",
+        lower=lower,
+        upper=upper,
+        gamma=gamma,
+        distribution="rectified",
+    )
+    N = 40
+    draws = post._solution.sample(N, np.random.default_rng(3))
+    priors, observations = _perturbed(arrays, problem, N, 3, gamma)
+    low = -np.inf if lower is None else lower
+    high = np.inf if upper is None else upper
+    on_bound = 0
+    for k in range(N):
+        perturbed = dataclasses.replace(arrays, x_0=priors[:, k], z=observations[:, k])
+        reference = perturbed.bvls(low, high, gamma)
+        scale = max(np.abs(reference).max(), 1.0)
+        np.testing.assert_allclose(draws[:, k], reference, rtol=0, atol=1e-9 * scale)
+        on_bound += int(np.any((draws[:, k] == low) | (draws[:, k] == high)))
+    assert on_bound > N // 2
+
+
+def test_the_mode_and_the_gaussian_at_it_do_not_depend_on_the_draws():
+    """``distribution`` changes the draws only: the mode, the active set, the gain, DOFS and the chi-squared are the same arrays."""
+    problem = Arrays.random(2, 10, 12).problem()
+    truncated = fips.solve(problem, "bounded", lower=0.0, draws=20)
+    rectified = fips.solve(
+        problem, "bounded", lower=0.0, draws=20, distribution="rectified"
+    )
+    np.testing.assert_array_equal(truncated.estimate.values, rectified.estimate.values)
+    pd.testing.assert_series_equal(truncated.at_bound, rectified.at_bound)
+    np.testing.assert_array_equal(
+        truncated.kalman_gain.dense(), rectified.kalman_gain.dense()
+    )
+    assert truncated.dofs == rectified.dofs and truncated.chi2 == rectified.chi2
+    assert truncated.options.distribution == "truncated"  # the default
+    assert rectified._solution.distribution == "rectified"
+
+
+@pytest.mark.parametrize(
+    "x_hat, lower, upper",
+    [(0.5, 0.0, None), (1.0, 0.0, None), (-1.0, None, 0.0), (0.3, 0.0, 1.0)],
+    ids=["a = 0.5", "a = 1", "upper, a = 1", "both"],
+)
+def test_one_element_rectified_is_the_gaussian_set_to_its_bounds(x_hat, lower, upper):
+    """
+    For one element with posterior ``N(x_hat, 1)``, a rectified draw is the analytic draw clipped to the bounds.
+
+    Its mean is ``E[clip(x, l, u)]`` (for one lower bound and ``a = x_hat - l``,
+    ``x_hat + phi(a) - a Phi(-a)``: 1.083 at ``a = 1``, against 1.288 for the
+    truncated Gaussian), and a draw is exactly on a bound with probability
+    ``Phi(-a)``; both within 4.5 Monte Carlo standard errors of 20,000
+    independent draws.
+    """
+    post = fips.solve(
+        gaussian_problem(np.array([x_hat]), np.eye(1)),
+        "bounded",
+        lower=lower,
+        upper=upper,
+        distribution="rectified",
+    )
+    draws = post.sample(20_000, rng=4).to_numpy()[0]
+    low = -np.inf if lower is None else lower
+    high = np.inf if upper is None else upper
+    shift = bounded._rectified_shift(
+        np.array([x_hat]), np.ones(1), np.array([low]), np.array([high])
+    )[0]
+    assert abs(draws.mean() - (x_hat + shift)) < 4.5 * draws.std() / math.sqrt(20_000)
+    share = norm.cdf(low - x_hat) + norm.sf(high - x_hat)
+    at_bound = float(np.mean((draws == low) | (draws == high)))
+    assert abs(at_bound - share) < 4.5 * math.sqrt(share * (1 - share) / 20_000)
+    if (lower, upper) == (0.0, None) and x_hat == 1.0:
+        assert x_hat + shift == pytest.approx(1.0833, abs=1e-4)
+    # the kept draws give the posterior's mean, against its mode on no bound
+    np.testing.assert_array_equal(post.mean.values, post._solution.kept().mean(axis=1))
+    assert post.estimate.values[0] == pytest.approx(
+        np.clip(x_hat, low, high), abs=1e-12
+    )
+
+
+def test_rectified_draws_are_paired_with_the_analytic_ones():
+    """Draw ``k`` of ``sample(N, rng)`` is the analytic posterior's draw ``k`` from the same ``rng``, exactly where no bound binds in it, and moved onto the bound where one does."""
+    problem = Arrays.random(4, 8, 12).problem()
+    analytic = fips.solve(problem).sample(200, rng=5).to_numpy()
+    post = fips.solve(problem, "bounded", lower=-0.6, distribution="rectified")
+    rectified = post.sample(200, rng=5).to_numpy()
+    inside = np.all(analytic >= -0.6, axis=0)
+    assert 10 < inside.sum() < 190
+    np.testing.assert_array_equal(rectified[:, inside], analytic[:, inside])
+    assert np.all(rectified[:, ~inside].min(axis=0) == -0.6)
+    assert np.all(rectified >= -0.6)
+
+
+def test_with_bounds_far_from_the_posterior_rectified_draws_are_the_analytic_draws():
+    """Bounds no draw reaches leave every draw as the analytic method's, bit for bit."""
+    problem = Arrays.random(5, 6, 9).problem()
+    post = fips.solve(problem, "bounded", lower=-100.0, distribution="rectified")
+    assert not post.at_bound.any()
+    np.testing.assert_array_equal(
+        post.sample(300, rng=8).to_numpy(),
+        fips.solve(problem).sample(300, rng=8).to_numpy(),
+    )
+
+
+def test_rectified_draws_are_reproducible_from_the_seed_and_ignore_burn_in():
+    """The kept draws are the same for the same seed (``burn_in`` changes nothing: there is no chain) and differ for another."""
+    problem = Arrays.random(6, 7, 9).problem()
+
+    def kept(**options):
+        post = fips.solve(
+            problem,
+            "bounded",
+            lower=0.0,
+            draws=100,
+            distribution="rectified",
+            **options,
+        )
+        return post._solution.kept()
+
+    first = kept(seed=3)
+    np.testing.assert_array_equal(first, kept(seed=3, burn_in=500))
+    assert not np.allclose(first, kept(seed=4))
+
+
+def test_rectified_twins_and_pickle_keep_the_choice_and_redraw_the_same():
+    """``with_gamma`` and ``with_data`` keep ``"rectified"`` and draw as a fresh solve does (independent draws from factors equal to roundoff); a pickle round trip redraws the same kept draws from the seed."""
+    arrays = Arrays.random(7, 10, 14)
+    problem = arrays.problem()
+    options = {"lower": 0.0, "upper": 1.5, "draws": 200, "distribution": "rectified"}
+    post = fips.solve(problem, "bounded", **options)
+    other = Vector(arrays.z + 0.3, problem.obs.space)
+    pairs = [
+        (post.with_gamma(3.0), fips.solve(problem, "bounded", gamma=3.0, **options)),
+        (
+            post.with_data(other),
+            fips.solve(post.with_data(other).problem, "bounded", **options),
+        ),
+    ]
+    for reused, fresh in pairs:
+        assert reused._solution.distribution == "rectified"
+        assert reused.options == fresh.options
+        np.testing.assert_allclose(
+            reused._solution.kept(), fresh._solution.kept(), rtol=0, atol=1e-9
+        )
+    variances = post.variances.values
+    back = pickle.loads(pickle.dumps(post))
+    assert back.options.distribution == "rectified"
+    np.testing.assert_array_equal(back._solution.kept(), post._solution.kept())
+    np.testing.assert_array_equal(back.variances.values, variances)
+
+
+@pytest.mark.parametrize("distribution", ["Rectified", "clipped", None, 1])
+def test_an_unknown_distribution_is_refused(distribution):
+    """``distribution`` is ``"truncated"`` or ``"rectified"``; anything else raises, naming the two."""
+    with pytest.raises(
+        ValueError, match='distribution must be "truncated" .* or "rectified"'
+    ):
+        BoundedOptions(lower=0.0, distribution=distribution)
+
+
+def test_an_element_the_posterior_fixes_stays_put_in_rectified_draws():
+    """An element with no prior spread on its bound has no posterior variance: every rectified draw keeps it at the analytic estimate's value, with no failed active set."""
+    std = np.r_[np.zeros(3), np.ones(5)]
+    problem = _wide_problem(np.r_[np.zeros(3), np.full(5, 0.5)], std)
+    post = fips.solve(problem, "bounded", lower=0.0, distribution="rectified")
+    kept = post._solution.kept()
+    np.testing.assert_array_equal(kept[:3], 0.0)
+    assert np.mean(kept[3:] == 0.0) > 0.1
+
+
+def test_a_draw_that_cannot_be_moved_onto_the_bounds_raises_naming_it(monkeypatch):
+    """A draw whose active set fails raises the active set's error when the draws are made, naming the draw: a draw is never dropped, which would bias the rest."""
+    problem = Arrays.random(0, 8, 10).problem()
+    post = fips.solve(problem, "bounded", lower=0.0, draws=20, distribution="rectified")
+    real = bounded._mode
+    calls = []
+
+    def failing(*args):
+        calls.append(None)
+        if len(calls) == 4:
+            raise LinAlgError("The posterior covariance of the elements on a bound")
+        return real(*args)
+
+    monkeypatch.setattr(bounded, "_mode", failing)
+    with pytest.raises(LinAlgError, match="Rectified draw 3 of 20 could not be moved"):
+        _ = post.variances
+
+
+def test_rectified_draws_too_few_for_a_spread_warn_without_calling_them_a_chain(caplog):
+    """
+    Cells 2.7 standard deviations below their bound are on it in all but about 0.3% of rectified draws, so their spread from 300 draws rests on one or two: the solve warns that the draws are too few, with no word of mixing; cells away from a bound do not warn.
+
+    The draws are independent, so their error is counted with no
+    autocorrelation (``independent=True``): for independent Gaussian draws
+    it is ``1/sqrt(2N)``, as for a chain with no correlation.
+    """
+    x_hat = np.array([3.0, -2.7, -2.7, -2.7, -2.7, 4.0])
+    with caplog.at_level("WARNING", logger="fips.methods.bounded"):
+        post = fips.solve(
+            gaussian_problem(x_hat, np.eye(6)),
+            "bounded",
+            lower=0.0,
+            draws=300,
+            distribution="rectified",
+        )
+        _ = post.variances
+    assert "The posterior's draws are too few" in caplog.text
+    assert (
+        "mix slowly" not in caplog.text
+        and "for each independent one" not in caplog.text
+    )
+    assert "The rectified draws are independent" in caplog.text
+    error, tau = _draws._std_errors(np.asarray(post._solution.kept()), independent=True)
+    assert np.all(tau == 1.0) and error[[0, 5]].max() < 0.07
+    caplog.clear()
+    with caplog.at_level("WARNING", logger="fips.methods.bounded"):
+        far = fips.solve(
+            gaussian_problem(-x_hat, np.eye(6)),
+            "bounded",
+            lower=-10.0,
+            draws=300,
+            distribution="rectified",
+        )
+        _ = far.variances
+    assert "too few" not in caplog.text
+    rng = np.random.default_rng(0)
+    error, _ = _draws._std_errors(rng.standard_normal((400, 2000)), independent=True)
+    assert np.median(error) == pytest.approx(1 / np.sqrt(2 * 2000), rel=0.05)
+
+
+@pytest.mark.parametrize("a", [0.5, 1.0])
+def test_a_wide_prior_warns_with_the_shift_of_the_prior_set_to_its_bound(caplog, a):
+    """For rectified draws the warning's shift is the closed form ``(phi(a) - a Phi(-a)) / a`` of the distance (40% at ``a = 0.5``, 8% at ``a = 1``, against 102% and 29% cut), with the same trigger and words that fit."""
+    problem = _wide_problem(np.full(10, a), np.ones(10))
+    with caplog.at_level("WARNING", logger="fips.methods.bounded"):
+        fips.solve(problem, "bounded", lower=0.0, draws=20, distribution="rectified")
+    (message,) = _wide_warnings(caplog)
+    shift = 100 * (norm.pdf(a) - a * norm.sf(a)) / a
+    assert round(shift) == {0.5: 40, 1.0: 8}[a]
+    assert (
+        "'flux': 10 of 10 bounded elements are within two prior standard deviations of a bound"
+        in message
+    )
+    assert (
+        "the prior set to its bounds where it falls outside them has a total about "
+        f"{shift:.0f}% above the prior's" in message
+    )
+    assert "The draws are the bounded problem solved again" in message
+    assert "cut" not in message
+
+
+def test_the_rectified_shift_mirrors_and_takes_two_bounds(caplog):
+    """The shift of an upper bound is the lower one's mirrored; with two bounds it is the mean of the Gaussian clipped at both, against Monte Carlo; at the bound itself, ``s phi(0)``, in the state's units."""
+    x_0, s = np.array([1.0, -1.0, 0.3, 0.0]), np.array([1.0, 1.0, 1.0, 2.0])
+    lower = np.array([0.0, -np.inf, 0.0, 0.0])
+    upper = np.array([np.inf, 0.0, 1.0, np.inf])
+    shift = bounded._rectified_shift(x_0, s, lower, upper)
+    assert shift[1] == pytest.approx(-shift[0], rel=1e-14)
+    clipped = np.clip(np.random.default_rng(0).normal(0.3, 1.0, 1_000_000), 0.0, 1.0)
+    se = clipped.std() / 1000
+    assert abs(shift[2] - (clipped.mean() - 0.3)) < 4.5 * se
+    assert shift[3] == pytest.approx(2.0 * norm.pdf(0.0), rel=1e-14)
+    problem = _wide_problem(np.zeros(5), np.full(5, 2.0))
+    with caplog.at_level("WARNING", logger="fips.methods.bounded"):
+        fips.solve(problem, "bounded", lower=0.0, draws=20, distribution="rectified")
+    (message,) = _wide_warnings(caplog)
+    total = 5 * 2.0 * norm.pdf(0.0)
+    assert (
+        f"a total about {total:.3g} above the prior's, in the state's units" in message
+    )

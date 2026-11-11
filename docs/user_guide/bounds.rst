@@ -48,7 +48,8 @@ and by how much the cut prior's total sits above the prior's (below it, at an
 upper bound), each element taken alone, as a percentage of the total's
 distance from the bounds: of the prior's total, for a bound of zero. That is
 how far the draws' totals sit from the prior's where the data constrain little;
-the estimate is not affected.
+the estimate is not affected. With rectified draws (below) it gives the
+smaller shift of the prior set to its bounds.
 
 The bounds are ``lower`` and ``upper``: a number for every element, a
 :class:`~fips.Vector` with an element's own bound (``-inf`` or ``inf`` for
@@ -200,6 +201,137 @@ since its estimate is not linear in the data) are in :ref:`the table
 ``recovery`` would (below).
 
 
+.. _bounds-rectified:
+
+Rectified draws
+---------------
+
+**Rectified draws are the bounded estimate itself, with the prior mean and the
+data redrawn** (``distribution="rectified"``). Each draw is the bounded problem solved
+again for one draw of the prior mean from :math:`N(x_0, S_0)` and of the
+observations from :math:`N(z, S_z)`, so an element that draw puts outside its
+bounds is exactly on its bound, as at the mode. The default draws, of the
+truncated posterior, are never exactly on a bound. The estimate, the active
+set, the gain and DOFS are the same either way; only the draws differ, and
+with them the variances, ``post.mean``, the intervals and totals.
+
+A cell on its bound at the mode, in the small problem above:
+
+.. ipython:: python
+
+   rectified = fips.solve(problem, "bounded", lower={"flux": 0.0}, distribution="rectified")
+   cell = post.at_bound[post.at_bound].index[0]  # the first cell on its bound
+   cell_draws = {"truncated": post.sample(2000, rng=1), "rectified": rectified.sample(2000, rng=1)}
+
+.. ipython:: python
+
+   pd.DataFrame(
+       {
+           name: {
+               "exactly 0": float((d.loc[cell] == 0).mean()),
+               "mean": float(d.loc[cell].mean()),
+               "95th percentile": float(d.loc[cell].quantile(0.95)),
+           }
+           for name, d in cell_draws.items()
+       }
+   ).T.round(3)
+
+About half the rectified draws hold this cell at zero, and none of the
+truncated ones does: a truncated draw sits above the bound, by little or by
+much, so its mean is higher. The total moves the same way. Here the analytic
+total's interval and the rectified one hold the truth (3.45) and the truncated
+one, centered higher, does not; one set of data proves nothing, and the trials
+below measure it:
+
+.. ipython:: python
+
+   pd.concat(
+       {
+           "analytic": analytic.uncertainty(W),
+           "truncated": post.uncertainty(W),
+           "rectified": rectified.uncertainty(W),
+       }
+   ).round(3)
+
+**What the rectified draws are, and are not.** They are the distribution of
+the bounded estimate when the prior mean and the data are redrawn from their
+Gaussians: what the inversion would give for other inputs as likely as these.
+They are not, in general, the Bayesian posterior of any prior fips writes
+down, and they are not the truncated posterior. For one element whose prior
+mean is one standard deviation above a bound of zero, with no data, the
+rectified mean is 1.083 times the prior mean (the truncated one is 1.288
+times), and 16% of the draws are exactly zero. The construction is old:
+Miller, Michalak and Levi (2014, section 3.3.1) propose realizations this way
+(perturbed inputs, then the bounded solve) and then accept or reject each by a
+Metropolis-Hastings test, which fips does not; Bardsley and Fox (2012) solve a
+nonnegativity-constrained quadratic problem for each sample; Everink, Dong and
+Andersen (2023) call the resulting distribution a regularized Gaussian.
+
+**How often their intervals hold the truth**, against the analytic posterior
+and the truncated draws: 50 cells on a line whose prior standard deviation
+equals its mean (correlated over 5 cells), 40 observations, 300 trials of data
+from the problem's own error (a coverage near 0.9 is known to about 0.02),
+1000 draws a trial. The truth is a draw of the Gaussian prior, the same with
+its negative cells set to zero, or a draw of the prior truncated at zero. With
+weak data (the analytic total's standard deviation a third of the prior's),
+the share of 95% intervals that held the truth:
+
+.. list-table::
+   :header-rows: 1
+   :stub-columns: 1
+
+   * - The truth
+     - Total, analytic
+     - Total, truncated
+     - Total, rectified
+     - Cells, truncated
+     - Cells, rectified
+   * - Gaussian prior draw
+     - 0.98
+     - 0.54
+     - 0.77
+     - 0.76
+     - 0.79
+   * - Negatives set to zero
+     - 0.99
+     - 0.63
+     - 0.88
+     - 0.77
+     - 0.96
+   * - Truncated prior draw
+     - 0.94
+     - 0.95
+     - 0.94
+     - 0.95
+     - 0.97
+
+With stronger data (a standard deviation a tenth of the prior's) the totals
+were 0.97, 0.70, 0.84; 0.98, 0.81, 0.94; and 0.96, 0.95, 0.96. **The
+rectified intervals hold the truth more often than the truncated ones wherever
+the truth is not a draw of the truncated prior, and as often where it is; the
+analytic total held it in every world, while the rectified total fell short of
+95% where the truth could be negative (0.77 and 0.84) and, with weak data,
+where it had exact zeros (0.88).** For a total, read the analytic posterior. The rectified draws suit
+the cells of a map near zero: where the truth has exact zeros, 96% of their
+cells' intervals held it, against 77% for the truncated draws, which never
+reach zero.
+
+How they are made: the analytic estimate of the perturbed problem is an exact
+draw of the analytic posterior :math:`N(\hat{x}, \hat{S})` (what
+:meth:`~fips.Posterior.sample` of ``fips.solve(problem)`` returns), and its
+bounded estimate is that draw moved onto the bounds along the posterior's
+correlations, by the same active set as the mode. So draw ``k`` of
+``rectified.sample(n, rng=5)`` is draw ``k`` of
+``fips.solve(problem).sample(n, rng=5)``, unchanged where no bound binds in
+it. The draws are independent, not a chain: ``burn_in`` does nothing, and the
+solve warns when a standard deviation from them is uncertain by more than 10%,
+which happens for an element on its bound in nearly every draw, whose spread
+comes from the few that are not. With rectified draws, the wide-prior warning
+gives the shift of the prior set to its bounds, not cut at them (8% of the
+distance to a bound of zero, against 29%, for a standard deviation equal to
+that distance).
+
+
 What it costs
 -------------
 
@@ -215,6 +347,15 @@ far from its bounds bounces little and costs little. The draws are made only
 when a spread is asked for, and a smaller ``draws`` (``fips.solve(problem,
 "bounded", lower={"flux": 0.0}, draws=500)``) costs proportionally less, with a
 larger Monte Carlo error.
+
+A rectified draw costs an active set, as the mode does: a step for each
+element it holds or releases on the way, each a solve with :math:`\hat{S}` at
+the elements on a bound. With a correlated prior whose standard deviation
+equals its mean and weak data, a draw of 400 elements (70 of them on a bound
+in a typical draw) took 28 ms against 4 ms for a truncated one, and a draw of
+2000 elements (120 on a bound) 0.28 s against 15 ms: 9 minutes for the
+default 2000 draws, on one machine. Both keep the same columns of
+:math:`\hat{S}`, up to all of them (``n x n``).
 
 :meth:`~fips.Posterior.trials` asks each trial's posterior for its spread, so
 a bounded posterior draws in every trial: keep ``draws`` small there.
@@ -300,3 +441,9 @@ Miller, S. M., Michalak, A. M., and Levi, P. J. (2014). Atmospheric inverse
 modeling with known physical bounds: an example from trace gas emissions.
 *Geoscientific Model Development*, 7, 303-315.
 https://doi.org/10.5194/gmd-7-303-2014
+
+Bardsley and Fox (2012). *Inverse Problems in Science and Engineering*,
+20(4), 477-498.
+
+Everink, Dong and Andersen (2023). *Inverse Problems*.
+https://doi.org/10.1088/1361-6420/acf9c5

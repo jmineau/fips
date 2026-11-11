@@ -149,7 +149,9 @@ class Solution(Protocol):
     A method whose posterior is not Gaussian in closed form answers each
     question as its docstring says. The bounded method's estimate is the mode;
     its mean, variances, covariances and intervals are those of the draws it
-    keeps of its posterior (a Gaussian truncated to the bounds); its gain,
+    keeps (of its posterior, a Gaussian truncated to the bounds, or, with
+    ``distribution="rectified"``, of the bounded estimate with the prior mean
+    and the data redrawn); its gain,
     DOFS and information content are those of the Gaussian at the mode, with
     the elements on a bound held there; and its chi-squared terms are those
     of the mode. The ``"gauss_newton"`` method's estimate is the mode; its
@@ -764,7 +766,7 @@ class Posterior:
         The analytic method computes them from its factors in
         :math:`O(m n)`, without the :math:`n \times n` covariance. The
         ``"bounded"`` method gives the variances of its kept draws of the
-        truncated posterior (``draws`` of them: a Monte Carlo estimate, at the
+        truncated posterior, or its rectified draws (``draws`` of them: a Monte Carlo estimate, at the
         default 2000 a standard deviation good to about 1.5% away from the
         bounds and to about 12% for an element whose analytic estimate is one
         to four standard deviations outside its bound; the solve warns past
@@ -821,8 +823,7 @@ class Posterior:
         hold others there that the move would push out. These are the elements
         the bounds decide; the observations decide the others. Its estimate is
         the mode, so an element on a bound still has posterior spread
-        (:attr:`variances`, from draws of the truncated posterior), on one side
-        of the bound.
+        (:attr:`variances`, from its draws), on one side of the bound.
 
         Returns
         -------
@@ -1317,6 +1318,13 @@ class Posterior:
         faster). A call costs a
         reflection off a bound, an ``O(n)`` step, for each bound a path
         reaches: about as many per draw as there are elements near a bound.
+        With ``distribution="rectified"`` each call instead takes the
+        analytic method's `n` draws from `rng` and moves each onto the bounds
+        as the mode is (the bounded problem solved again for that draw of the
+        prior and the data): independent draws, draw ``k`` paired with the
+        analytic posterior's draw ``k`` for the same `rng` and equal to it
+        where no bound binds, often exactly on a bound. A call costs an
+        active set per draw.
 
         The ``"gauss_newton"`` method draws the posterior of its forward
         model, :math:`p(x \mid z) \propto e^{-\chi^2(x)/2}`, by Hamiltonian

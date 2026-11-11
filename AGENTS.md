@@ -67,8 +67,8 @@ src/fips/
   methods/          solve, the method table (_METHODS), one module per method
     analytic.py     AnalyticOptions; its two Solutions, Whitened (m x m) and
                     Information (n x n); `_choose` picks the form by size
-    bounded.py      BoundedOptions; Bounded: the mode by an active set on the
-                    analytic posterior, draws by exact HMC (_Sampler)
+    bounded.py      BoundedOptions; Bounded: the mode by an active set on the analytic
+                    posterior, draws by exact HMC (_Sampler) or rectified (`_mode` at analytic draws)
     gauss_newton.py GaussNewtonOptions; GaussNewton: the mode by linearizations (Newton for a transform), draws by HMC
     ensemble.py     EnsembleOptions; Ensemble: batch EnSRF of the members and their runs (no Jacobian)
     variational.py  VariationalOptions; Variational: CG on the whitened system, Lanczos pairs (rank)
@@ -305,7 +305,7 @@ dependency needs a reason, proposed first.
 - Check an optional pandas index with `is None`: its truth value raises.
 - **The bounded method needs `S_hat` only at some columns** (`_Columns`, from
   `analytic._cov_times`, kept; one cache for every `with_data`): the active set's
-  and those the sampler's paths reach. They are computed in fixed blocks of 64
+  and those the sampler's paths (or the rectified draws' active sets) reach. They are computed in fixed blocks of 64
   neighbors, since a product's last bits depend on its shape: a chain is then
   the same after a pickle. The draws are made at the first `variances`/`cov`
   and kept outside the frozen fields (not pickled). A draw costs one `O(n)`

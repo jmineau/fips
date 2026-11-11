@@ -449,7 +449,8 @@ inventory's total, and an interval of the mode's total plus or minus 1.96
 standard deviations held the truth in 2.5% of the trials. So use
 ``"bounded"`` for a map that must not go below zero, and do not read a total,
 or a cell's interval, from its draws unless the truncated prior is the prior
-you mean.
+you mean. These tables are of the truncated draws; the rectified draws
+(:ref:`bounds-rectified`) shift a total less, and were not run here.
 
 **The softplus model** is a Gaussian prior where the flux is large and bends
 near zero. Its own world is right; in the lognormal truth its total is 4.6%

@@ -16,10 +16,18 @@ the analytic method does (``_factor``) and keeps two things from the factors:
   says they would if that element were known to be at its bound. It is found
   by an active set (``_mode``) that needs :math:`\hat{S}` only at the columns
   of the elements on a bound, from the factors (``_cov_times``);
-- **draws of the truncated posterior** (:meth:`Bounded.sample`), by exact
-  Hamiltonian Monte Carlo (Pakman and Paninski, 2014: ``_Sampler``), for its
-  uncertainty: the variances and the covariance of aggregates are those of the
-  draws, and so are the posterior mean and the intervals (their quantiles).
+- **draws** (:meth:`Bounded.sample`), for its uncertainty: the variances and
+  the covariance of aggregates are those of the draws, and so are the
+  posterior mean and the intervals (their quantiles). By default they are
+  draws of the truncated posterior, by exact Hamiltonian Monte Carlo (Pakman
+  and Paninski, 2014: ``_Sampler``); with ``distribution="rectified"`` each is
+  the bounded problem solved again for a draw of the prior mean and the
+  observations: an exact draw of the analytic posterior moved onto the
+  bounds by ``_mode``, as the analytic estimate is. A rectified draw is often
+  exactly on a bound; a truncated one never is. Bardsley and Fox (2012)
+  solve such a nonnegativity-constrained problem for each sample, and Miller,
+  Michalak and Levi (2014, section 3.3.1) propose realizations this way, then
+  test each by Metropolis-Hastings, which fips does not.
 
 The gain, DOFS and the information content are those of the analytic posterior
 with the elements on a bound held there (the Gaussian at the mode); the
@@ -29,6 +37,15 @@ analytic solution itself.
 
 References
 ----------
+Bardsley and Fox (2012). *Inverse Problems in Science and Engineering*,
+20(4), 477-498; from its abstract: "for each sample a large-scale
+nonnegativity constrained quadratic minimization problem must be solved".
+
+Miller, S. M., Michalak, A. M., and Levi, P. J. (2014). Atmospheric inverse
+modeling with known physical bounds: an example from trace gas emissions.
+*Geoscientific Model Development*, 7, 303-315.
+https://doi.org/10.5194/gmd-7-303-2014
+
 Pakman, A., and Paninski, L. (2014). Exact Hamiltonian Monte Carlo for truncated
 multivariate Gaussians. *Journal of Computational and Graphical Statistics*,
 23(2), 518-542. https://doi.org/10.1080/10618600.2013.788448
@@ -50,7 +67,7 @@ from typing import Any, ClassVar
 import numpy as np
 from numpy.linalg import LinAlgError
 from scipy.linalg import cho_factor, cho_solve
-from scipy.stats import truncnorm
+from scipy.stats import norm, truncnorm
 
 from fips.linalg import DenseOperator, LinearOperator
 from fips.linalg.forms import _read_only
@@ -78,6 +95,9 @@ _COLUMNS = 64
 
 _NEAR = 4.0
 """The sampler fetches, before it starts, the columns of the elements whose analytic estimate is within this many posterior standard deviations inside a bound, or outside it."""
+
+_DISTRIBUTIONS = ("truncated", "rectified")
+"""What the draws can be draws of: the posterior truncated to the bounds, or the bounded problem solved again for draws of the prior and the data."""
 
 
 @dataclass(frozen=True)
@@ -195,35 +215,68 @@ class BoundedOptions:
         cut at the bounds, whose mean is higher than the Gaussian's at a lower
         bound (lower, at an upper one), so a total read from them sits above
         (or below) the prior's; the warning says by how much, for each such
-        block.
+        block (for rectified draws, the smaller shift of the prior set to its
+        bounds).
     draws : int, default 2000
-        The number of draws of the truncated posterior kept for its variances
-        and the covariance of aggregates. They are Monte Carlo estimates from a
-        chain: each draw is exact, but starts from the last. At 2000, a
+        The number of draws kept for the variances, the covariance of
+        aggregates, the mean and the intervals. Truncated draws are Monte
+        Carlo estimates from a chain: each draw is exact, but starts from the
+        last. At 2000, a
         standard deviation is good to about 1.5% for an element away from its
         bounds (:math:`1 / \sqrt{2\, \text{draws}}`, as for independent
         draws), and to about 12% (root mean square over 24 solves; 25% at
         worst) for an element whose analytic estimate is one to four standard
         deviations outside its bound: its draws pile against the bound and mix
         slowly (an autocorrelation time of 13 to 17 draws). One far outside
-        mixes faster. The error falls as :math:`1/\sqrt{\text{draws}}`; the
+        mixes faster. Rectified draws are independent; an element on its
+        bound in nearly every one has its spread from the few that are not.
+        The error falls as :math:`1/\sqrt{\text{draws}}`; the
         solve warns when a standard deviation is uncertain by more than 10%,
         and says how many draws would do.
     burn_in : int, default 20
         The draws made and left out before those kept, from the mode. Each
         draw of the sampler travels a quarter period, after which a Gaussian
         without bounds would be independent of its start, so few are needed.
+        Rectified draws are not a chain, and leave none out: it does nothing
+        for them.
     seed : int, default 0
         The seed of the kept draws, so that a solve is reproducible.
+    distribution : {"truncated", "rectified"}, default "truncated"
+        What the draws are draws of. ``"truncated"``: the analytic posterior
+        truncated to the box, by the chain above; a draw is never exactly on
+        a bound. ``"rectified"``: the bounded problem solved again for each
+        draw of the prior mean and the observations from their Gaussians.
+        Each draw is an exact draw of the analytic posterior moved onto the
+        bounds as the mode is (the analytic estimate's place taken by the
+        draw), so an element outside its bounds in that draw is exactly on
+        one, and its neighbors move along the posterior's correlations. The
+        draws are independent (no chain: `burn_in` does nothing), and draw
+        ``k`` of :meth:`~fips.Posterior.sample` is the analytic posterior's
+        draw ``k`` from the same generator, moved onto the bounds. It is the
+        distribution of the bounded estimate when the prior mean and the data
+        are redrawn, not the Bayesian posterior of a prior fips writes down
+        and not the truncated posterior; where the data constrain little its
+        mean sits less far above the prior's than the truncated one (for one
+        element whose prior standard deviation equals its distance from a
+        lower bound, 8% of that distance against 29%). Each draw costs an
+        active set, as the mode does, a step for each element it holds or
+        releases on the way. With a correlated prior whose standard
+        deviation equals its mean and weak data, a draw took 28 ms for 400
+        elements (70 on a bound in a typical draw) and 0.28 s for 2000 (120
+        on a bound: 9 minutes for 2000 draws), against 4 and 15 ms for a
+        truncated draw. Both keep the columns of the posterior covariance
+        at every element a draw reaches a bound at, up to all of them
+        (``n x n``: 30 MiB for 2000 elements).
 
     Raises
     ------
     ValueError
         If `gamma` is not a positive, finite number; a bound is NaN, or a
         bound no value can satisfy (``lower`` of ``inf``); both bounds are
-        numbers and `lower` is not below `upper`; or `draws` is not an
+        numbers and `lower` is not below `upper`; `draws` is not an
         integer of at least 2, `burn_in` not a nonnegative one, or `seed` not
-        a nonnegative integer. A bound's labels are checked against the state by
+        a nonnegative integer; or `distribution` is neither ``"truncated"``
+        nor ``"rectified"``. A bound's labels are checked against the state by
         :func:`fips.solve`.
     TypeError
         If a bound is not a number, a Vector, a dict or None, or a dict has a
@@ -237,11 +290,13 @@ class BoundedOptions:
     upper: "float | Vector | Mapping[str, float | Vector] | None" = None
     """The upper bounds on the state, as given (a dict by block is kept as a mapping of its blocks)."""
     draws: int = 2000
-    """The number of draws of the truncated posterior kept for its variances and covariances."""
+    """The number of draws kept for the variances, covariances, mean and intervals."""
     burn_in: int = 20
-    """The draws left out before those kept."""
+    """The draws of the truncated chain left out before those kept (none for rectified draws)."""
     seed: int = 0
     """The seed of the kept draws."""
+    distribution: str = "truncated"
+    """What the draws are draws of: ``"truncated"`` (the posterior truncated to the bounds) or ``"rectified"`` (the bounded problem solved again for draws of the prior and the data)."""
 
     def __post_init__(self):
         object.__setattr__(self, "gamma", AnalyticOptions(self.gamma).gamma)
@@ -269,6 +324,12 @@ class BoundedOptions:
                     f"{name} must be {kind} integer{at_least}, got {value!r}."
                 )
             object.__setattr__(self, name, int(value))
+        if self.distribution not in _DISTRIBUTIONS:
+            raise ValueError(
+                'distribution must be "truncated" (the posterior truncated to '
+                'the bounds) or "rectified" (the bounded problem solved again for '
+                f"draws of the prior and the data), got {self.distribution!r}."
+            )
 
 
 def _resolve(
@@ -323,6 +384,13 @@ _SLOW_DRAWS = (
     "its bound mixes slowest; raise draws= for those elements' spread."
 )
 """What the slow-mixing warning of the kept draws says of the cause and the remedy."""
+
+_RARE_DRAWS = (
+    "The rectified draws are independent, and an element on its bound in most "
+    "of them has its spread from the few that are not; raise draws= for those "
+    "elements' spread."
+)
+"""What the too-few-draws warning of the kept rectified draws says of the cause and the remedy."""
 
 
 class _Columns:
@@ -558,6 +626,38 @@ def _kkt(
     }
 
 
+def _checked_mode(
+    x_hat: np.ndarray,
+    lower: np.ndarray,
+    upper: np.ndarray,
+    columns: _Columns,
+    variances: np.ndarray,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, dict[str, float]]:
+    """
+    Return the mode of the box nearest `x_hat` in the posterior's metric (``_mode``), which side each element is held at, the multipliers and how far it is from each optimality condition (``_kkt``), checked.
+
+    Raises
+    ------
+    numpy.linalg.LinAlgError
+        If the active set fails (``_mode``), or the mode it ends at does not
+        meet the optimality conditions to ``sqrt(eps)`` of the scale of the
+        state (the largest of its values, bounds and posterior standard
+        deviations).
+    """
+    scale = _scale(x_hat, variances, lower, upper)
+    mode, side, multipliers = _mode(x_hat, lower, upper, columns, variances, scale)
+    conditions = _kkt(x_hat, mode, side, multipliers, lower, upper, columns, variances)
+    worst = max(conditions, key=lambda name: conditions[name])
+    if conditions[worst] > _KKT_RTOL * scale:
+        raise LinAlgError(
+            "The bounded mode does not meet the optimality conditions: it is "
+            f"off by {conditions[worst]:.3g} in the '{worst}' condition, where "
+            f"{_KKT_RTOL * scale:.3g} is allowed. The posterior covariance of "
+            "the elements on a bound is too ill-conditioned to hold them there."
+        )
+    return np.clip(mode, lower, upper), side, multipliers, conditions
+
+
 def _first_hit(
     alpha: np.ndarray, beta: np.ndarray, gap: np.ndarray, gap2: np.ndarray
 ) -> tuple[float, int]:
@@ -719,25 +819,26 @@ class _Sampler:
 @dataclass(frozen=True, eq=False)
 class Bounded:
     r"""
-    The bounded method's solution: the mode of the truncated posterior, and its draws.
+    The bounded method's solution: the mode of the posterior in the box, and its draws.
 
     It keeps the analytic factors (``analytic``), the bounds of each state
     element, the mode, which bound each element is held at, and the
     multipliers :math:`\lambda`, with :math:`x = \hat{x} + \hat{S}_{:a}
     \lambda_a` (``_mode``). The :class:`~fips.Posterior` asks it for every
     array it reports: it is the bounded method's
-    :class:`~fips.posterior.Solution`. The draws of the truncated posterior
-    are made at their first use and kept (not pickled: a posterior read back
-    draws them again, the same, from the seed).
+    :class:`~fips.posterior.Solution`. The draws (of the truncated
+    posterior, or rectified: ``distribution``) are made at their first use
+    and kept (not pickled: a posterior read back draws them again, the same,
+    from the seed).
 
     Its answers, by what each needs:
 
     - the estimate is the mode, not the mean, and is not linear in the
       observations (no ``estimate_is_mean``, no ``estimate_is_linear``);
     - the variances and the covariance of aggregates are those of the kept
-      draws (:meth:`kept`: ``draws`` of them, after ``burn_in``, from
-      ``seed``), and so are the posterior's mean and intervals (the draws'
-      quantiles); :meth:`sample` draws more;
+      draws (:meth:`kept`: ``draws`` of them from ``seed``, after ``burn_in``
+      for the truncated chain), and so are the posterior's mean and
+      intervals (the draws' quantiles); :meth:`sample` draws more;
     - the gain, DOFS, DOFS per element and the information content are those
       of the analytic posterior with the elements on a bound held there,
       :math:`x_a = b_a` (the Gaussian at the mode), with :math:`C =
@@ -770,6 +871,8 @@ class Bounded:
     """The draws left out before those kept."""
     seed: int
     """The seed of the kept draws."""
+    distribution: str = "truncated"
+    """What the draws are draws of: ``"truncated"`` (the chain of the truncated posterior) or ``"rectified"`` (the analytic draws moved onto the bounds)."""
 
     @classmethod
     def solve(
@@ -780,11 +883,13 @@ class Bounded:
         draws: int,
         burn_in: int,
         seed: int,
+        distribution: str = "truncated",
         columns: "_Columns | None" = None,
     ) -> "Bounded":
         """
         Return the solution of the analytic factors held to the bounds: the mode, by the active set, checked.
 
+        `distribution` is what its draws are draws of (``BoundedOptions``).
         `columns` is a cache of the posterior covariance's columns to share
         (another solution of the same factors with other observations).
 
@@ -798,21 +903,9 @@ class Bounded:
         """
         if columns is None:
             columns = _Columns(analytic)
-        x_hat = analytic.estimate()
-        variances = analytic.variances()
-        scale = _scale(x_hat, variances, lower, upper)
-        mode, side, multipliers = _mode(x_hat, lower, upper, columns, variances, scale)
-        conditions = _kkt(
-            x_hat, mode, side, multipliers, lower, upper, columns, variances
+        mode, side, multipliers, conditions = _checked_mode(
+            analytic.estimate(), lower, upper, columns, analytic.variances()
         )
-        worst = max(conditions, key=lambda name: conditions[name])
-        if conditions[worst] > _KKT_RTOL * scale:
-            raise LinAlgError(
-                "The bounded mode does not meet the optimality conditions: it is "
-                f"off by {conditions[worst]:.3g} in the '{worst}' condition, where "
-                f"{_KKT_RTOL * scale:.3g} is allowed. The posterior covariance of "
-                "the elements on a bound is too ill-conditioned to hold them there."
-            )
         logger.debug(
             "Bounded mode: %d of %d elements on a bound; optimality conditions %s.",
             int(np.count_nonzero(side)),
@@ -823,12 +916,13 @@ class Bounded:
             analytic=analytic,
             lower=_read_only(lower),
             upper=_read_only(upper),
-            mode=_read_only(np.clip(mode, lower, upper)),
+            mode=_read_only(mode),
             side=_read_only(side),
             multipliers=_read_only(multipliers),
             draws=draws,
             burn_in=burn_in,
             seed=seed,
+            distribution=distribution,
         )
         solution.__dict__["_columns_"] = columns
         return solution
@@ -851,17 +945,21 @@ class Bounded:
         return sampler
 
     def kept(self) -> np.ndarray:
-        """Return the kept draws (``n x draws``), which the variances, the covariances, the mean and the intervals are read from: drawn from the seed at the first call, with a warning if they mix too slowly for their variances."""
+        """Return the kept draws (``n x draws``), which the variances, the covariances, the mean and the intervals are read from: drawn from the seed at the first call, with a warning if they are too few for their variances."""
         kept = self.__dict__.get("_draws")
         if kept is None:
             logger.debug(
-                "Drawing %d draws of the truncated posterior (after %d left out).",
+                "Drawing %d %s draws (after %d left out).",
                 self.draws,
-                self.burn_in,
+                self.distribution,
+                self.burn_in if self.distribution == "truncated" else 0,
             )
             kept = self.sample(self.draws, np.random.default_rng(self.seed))
             kept = self.__dict__["_draws"] = _read_only(kept)
-            _warn_if_imprecise(kept, logger, _SLOW_DRAWS)
+            if self.distribution == "truncated":
+                _warn_if_imprecise(kept, logger, _SLOW_DRAWS)
+            else:
+                _warn_if_imprecise(kept, logger, _RARE_DRAWS, independent=True)
         return kept
 
     def _conditioned(self) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
@@ -922,9 +1020,56 @@ class Bounded:
     """Why a bounded posterior gives no log evidence."""
 
     def sample(self, N: int, rng: np.random.Generator) -> np.ndarray:
-        """Return `N` new draws of the truncated posterior (``n x N``): a chain from the mode, its first ``burn_in`` left out."""
+        """
+        Return `N` new draws (``n x N``).
+
+        Truncated: a chain of the truncated posterior from the mode, its first
+        ``burn_in`` left out. Rectified: the analytic posterior's `N` draws
+        from `rng` (``analytic.sample``), each moved onto the bounds
+        (:meth:`_rectify`).
+        """
+        if self.distribution == "rectified":
+            return self._rectify(self.analytic.sample(N, rng))
         sampler = self._sampler()
         return sampler.run(sampler.start(self.mode), N, self.burn_in, rng)
+
+    def _rectify(self, draws: np.ndarray) -> np.ndarray:
+        r"""
+        Return the analytic posterior's draws `draws` (``n x N``, overwritten) each moved onto the bounds as the mode is: the bounded problem solved again for a draw of the prior and the data.
+
+        The analytic estimate of the problem with the prior mean drawn from
+        :math:`N(x_0, S_0)` and the observations from :math:`N(z, S_z /
+        \gamma)` is an exact draw :math:`x_s` of :math:`N(\hat{x}, \hat{S})`
+        (``analytic.sample``), and the perturbed problem has the same
+        :math:`\hat{S}`, so its bounded estimate is the point of the box
+        nearest :math:`x_s` in the metric of :math:`\hat{S}`: ``_mode`` at
+        :math:`x_s` in place of :math:`\hat{x}`, checked by its optimality
+        conditions. An element the posterior fixes (no variance) keeps the
+        analytic estimate's value, as the mode does: the draw's roundoff
+        there could put it a hair outside a bound it sits on.
+
+        Raises
+        ------
+        numpy.linalg.LinAlgError
+            If a draw's active set fails or ends off the optimality
+            conditions (``_checked_mode``), naming the draw.
+        """
+        columns = self._columns()
+        variances = self.analytic.variances()
+        fixed = ~(variances > 0)
+        x_hat = self.analytic.estimate()
+        lower, upper = self.lower, self.upper
+        for j in range(draws.shape[1]):
+            x = draws[:, j]
+            x[fixed] = x_hat[fixed]
+            try:
+                draws[:, j] = _checked_mode(x, lower, upper, columns, variances)[0]
+            except LinAlgError as err:
+                raise LinAlgError(
+                    f"Rectified draw {j} of {draws.shape[1]} could not be moved "
+                    f"onto the bounds: {err}"
+                ) from err
+        return draws
 
     def variances(self) -> np.ndarray:
         """Return the variances of the kept draws."""
@@ -1079,6 +1224,7 @@ class Bounded:
             self.draws,
             self.burn_in,
             self.seed,
+            self.distribution,
         )
 
     def with_data(self, problem: Problem) -> "Bounded":
@@ -1090,6 +1236,7 @@ class Bounded:
             self.draws,
             self.burn_in,
             self.seed,
+            self.distribution,
             columns=self._columns(),
         )
 
@@ -1127,24 +1274,59 @@ _WIDE_SHARE = 0.10
 """The share of a block's bounded elements that must be wide for the solve to warn of the block."""
 
 
-def _warn_if_wide(problem: Problem, lower: np.ndarray, upper: np.ndarray) -> None:
+def _rectified_shift(
+    x_0: np.ndarray, std: np.ndarray, lower: np.ndarray, upper: np.ndarray
+) -> np.ndarray:
+    r"""
+    Return the mean of the prior set to its bounds where it falls outside, less the prior mean, each element alone: :math:`E[\operatorname{clip}(x, l, u)] - x_0` for :math:`x \sim N(x_0, s^2)`, :math:`s > 0`.
+
+    With :math:`\alpha = (l - x_0) / s` and :math:`\beta = (u - x_0) / s`,
+
+    .. math::
+
+        E[\operatorname{clip}(x, l, u)] - x_0 = (l - x_0)\, \Phi(\alpha)
+        + (u - x_0) (1 - \Phi(\beta)) + s\, (\phi(\alpha) - \phi(\beta)),
+
+    a term left out where its bound is infinite. For one lower bound, with
+    :math:`d = x_0 - l` and :math:`a = d / s`, it is :math:`s\, \phi(a) - d\,
+    \Phi(-a)`.
+    """
+    alpha = (lower - x_0) / std
+    beta = (upper - x_0) / std
+    shift = std * (norm.pdf(alpha) - norm.pdf(beta))
+    low, high = np.isfinite(lower), np.isfinite(upper)
+    shift[low] += (lower[low] - x_0[low]) * norm.cdf(alpha[low])
+    shift[high] += (upper[high] - x_0[high]) * norm.sf(beta[high])
+    return shift
+
+
+def _warn_if_wide(
+    problem: Problem,
+    lower: np.ndarray,
+    upper: np.ndarray,
+    distribution: str = "truncated",
+) -> None:
     r"""
     Log one warning when a block's prior is wide against its bounds, so that a total read from the draws sits above (or below) the prior's.
 
-    The draws are of the posterior cut at the bounds, and a Gaussian cut at a
-    lower bound has a higher mean than the Gaussian (a lower one, at an upper
-    bound): where the data constrain little, the draws' mean, intervals and
-    totals are those of the cut prior. An element
+    Where the data constrain little, the draws' mean, intervals and totals
+    are those of the prior as the draws treat it: for ``"truncated"`` draws,
+    the prior cut at the bounds, whose mean is higher than the Gaussian's at
+    a lower bound (lower, at an upper one); for ``"rectified"`` ones, the
+    prior set to its bound where it falls outside, whose mean moves the same
+    way, less far. An element
     is wide on a side when that side's bound is finite, its prior standard
     deviation :math:`s` is positive and the bound is less than two standard
     deviations from the prior mean :math:`x_0` (:math:`a = (x_0 - l) / s < 2`
     for a lower bound :math:`l`; an upper bound is the mirror image). A block
     is reported when more than 10% of its bounded elements (those with a
     finite bound) are wide. Its shift is the sum, over its bounded elements,
-    of the mean of the prior cut at the bounds less the prior mean (each
-    element alone: :math:`s\, \phi(a) / \Phi(a)` for one bound), as a share
-    of the sum of the elements' distances from the prior mean to the nearer
-    bound: the share of the prior's total, for a bound of zero.
+    of the mean of that prior less the prior mean (each element alone:
+    :math:`s\, \phi(a) / \Phi(a)` cut, :math:`s\, \phi(a) - (x_0 - l)\,
+    \Phi(-a)` set to the bound, :func:`_rectified_shift`, for one lower
+    bound), as a share of the sum of the elements' distances from the prior
+    mean to the nearer bound: the share of the prior's total, for a bound of
+    zero.
     """
     state = problem.prior.space
     x_0 = problem.prior.values
@@ -1156,18 +1338,25 @@ def _warn_if_wide(problem: Problem, lower: np.ndarray, upper: np.ndarray) -> Non
     wide = bounded & positive & (a < _WIDE)
     shift = np.zeros(len(state))
     cut = bounded & positive
-    with np.errstate(
-        invalid="ignore"
-    ):  # SciPy's skewness, unused, at a bound 1000 sd away
-        shift[cut] = (
-            truncnorm.mean(
-                (lower[cut] - x_0[cut]) / scale[cut],
-                (upper[cut] - x_0[cut]) / scale[cut],
-                loc=x_0[cut],
-                scale=scale[cut],
+    if distribution == "rectified":
+        shift[cut] = _rectified_shift(x_0[cut], scale[cut], lower[cut], upper[cut])
+        prior = "the prior set to its bounds where it falls outside them"
+        draws = "the bounded problem solved again for draws of the prior and the data"
+    else:
+        with np.errstate(
+            invalid="ignore"
+        ):  # SciPy's skewness, unused, at a bound 1000 sd away
+            shift[cut] = (
+                truncnorm.mean(
+                    (lower[cut] - x_0[cut]) / scale[cut],
+                    (upper[cut] - x_0[cut]) / scale[cut],
+                    loc=x_0[cut],
+                    scale=scale[cut],
+                )
+                - x_0[cut]
             )
-            - x_0[cut]
-        )
+        prior = "the prior cut at the bounds"
+        draws = "of the posterior cut at the bounds"
     distance = np.where(bounded, np.minimum(x_0 - lower, upper - x_0), 0.0)
     reports = []
     for block in state.names:
@@ -1184,19 +1373,19 @@ def _warn_if_wide(problem: Problem, lower: np.ndarray, upper: np.ndarray) -> Non
         # "two" is _WIDE
         reports.append(
             f"{block!r}: {n_wide} of {n_bounded} bounded elements are within two "
-            "prior standard deviations of a bound, and the prior cut at the "
-            f"bounds has a total about {by} {side} the prior's{units} (each "
-            "element taken alone)"
+            f"prior standard deviations of a bound, and {prior} has a total "
+            f"about {by} {side} the prior's{units} (each element taken alone)"
         )
     if not reports:
         return
     logger.warning(
-        "The prior is wide against the bounds: %s. The draws are of the "
-        "posterior cut at the bounds, so where the data constrain little, their "
-        "mean, intervals and totals sit that far from the prior's. The estimate "
-        "(the mode) is not affected; for a total, read the analytic posterior "
-        "(fips.solve(problem)) or use fips.LognormalForward.",
+        "The prior is wide against the bounds: %s. The draws are %s, so where "
+        "the data constrain little, their mean, intervals and totals sit that "
+        "far from the prior's. The estimate (the mode) is not affected; for a "
+        "total, read the analytic posterior (fips.solve(problem)) or use "
+        "fips.LognormalForward.",
         "; ".join(reports),
+        draws,
     )
 
 
@@ -1228,8 +1417,14 @@ def _bounded(problem: Problem, options: BoundedOptions) -> Posterior:
     analytic = _factor(problem, options.gamma)
     if not (np.isfinite(lower).any() or np.isfinite(upper).any()):
         return Posterior(problem, analytic, options)
-    _warn_if_wide(problem, lower, upper)
+    _warn_if_wide(problem, lower, upper, options.distribution)
     solution = Bounded.solve(
-        analytic, lower, upper, options.draws, options.burn_in, options.seed
+        analytic,
+        lower,
+        upper,
+        options.draws,
+        options.burn_in,
+        options.seed,
+        options.distribution,
     )
     return Posterior(problem, solution, options)
