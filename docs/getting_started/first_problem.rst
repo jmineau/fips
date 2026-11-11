@@ -135,16 +135,17 @@ the estimate, on the prior's labels, and its uncertainty:
 
    post = fips.solve(problem)
    post.estimate.to_series().round(3)
-   post.variances.to_series().pow(0.5).round(4)
+   np.sqrt(post.variances.to_series()).rename("std").round(4)
    post.cov().to_frame().round(6)
 
-Nothing larger than the observations is formed until you ask for it: the
-estimate and the variances come from a factorization of an :math:`m \times m`
-matrix (an :math:`n \times n` one here, with fewer state elements than
-observations, a diagonal observation covariance and a prior error covariance
-that has a square root), and ``post.cov()`` forms the full
-:math:`n \times n` covariance only when it is read. The diagnostics of the solve are attributes, and
-:meth:`~fips.Posterior.summary` gives them as one row:
+``post.estimate`` is the posterior mean, ``post.variances`` the diagonal of
+the posterior covariance (their square roots, above, are the standard
+deviations), and ``post.cov()`` the whole covariance. The posterior also says
+how much the observations told: ``post.dofs`` (degrees of freedom for signal)
+is about how many independent numbers they pinned down, at most one per state
+element, and ``post.reduced_chi2`` is near 1 when the covariances fit the
+data. :meth:`~fips.Posterior.summary` gives these and the other diagnostics as
+one row; :doc:`terminology` defines each.
 
 .. ipython:: python
 
@@ -153,7 +154,8 @@ that has a square root), and ``post.cov()`` forms the full
    post.summary()
 
 The method is ``"analytic"`` by default, and its one option is the
-regularization factor ``gamma`` (the solve uses :math:`S_z / \gamma`).
+regularization factor ``gamma``: the solve divides the observation covariance
+by gamma, so a gamma above 1 trusts the observations more.
 :meth:`~fips.Posterior.with_gamma` gives another gamma's posterior from the same
 factorization, without solving again:
 
@@ -219,12 +221,14 @@ Often the question is about an aggregate of the state: the mean slowness of
 each half of the line, a regional total, a monthly mean. An aggregation
 :math:`W` (:mod:`fips.aggregate`) groups the labels of a space;
 ``post.cov(W)`` is the posterior covariance of the aggregates, computed without
-the full covariance:
+the full covariance. ``blocks="slowness"`` aggregates that block, and
+``dropna=True`` leaves out the labels the grouping does not place (here, the
+delays):
 
 .. ipython:: python
 
    halves = pd.Series(["near", "near", "far", "far"], index=cells, name="half")
-   W = fips.aggregate.mean(prior2.space, by=halves, blocks="slowness")
+   W = fips.aggregate.mean(prior2.space, by=halves, blocks="slowness", dropna=True)
    (W @ post2.estimate).to_series().round(3)
    post2.cov(W)["slowness", "slowness"].to_frame().round(6)
 
@@ -251,9 +255,10 @@ xarray.
 What's next
 -----------
 
-- :doc:`/user_guide/index`, the User Guide: each object in more depth, covariance models,
-  sparse matrices, offsets, aggregated observations, part of the state held at
-  its prior, and repeated inversions.
-- :doc:`/user_guide/examples/index`: two worked problems, gravity and a regional flux
-  inversion.
+- :doc:`/user_guide/index`: the user guide. :doc:`/user_guide/problem` and
+  :doc:`/user_guide/posterior` go further into building a problem and reading
+  its answer; :doc:`/user_guide/methods` covers problems with bounds, forward
+  models that are not linear, and problems too large to factor.
+- :doc:`/user_guide/examples/index`: whole problems worked from start to
+  finish.
 - :doc:`/reference/index`: every class, function and attribute.

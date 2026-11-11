@@ -3,40 +3,63 @@
 A nonlinear forward model
 =========================
 
-When the observations are not a linear function of the state (fluxes solved
-as scale factors of an inventory, :math:`x \mapsto r\, e^{x}`; a sensor that
-saturates), the forward map is a model :math:`F` and the observations are
-:math:`z = F(x) + c + e`. The rule: **write the model and its Jacobian as a**
-:class:`~fips.ForwardModel`, **and** ``fips.solve(problem, "gauss_newton")``
-**solves the problem linearized at its last estimate, again and again, until the
-estimate stops moving.** It ends at the mode of the posterior, and draws the
-posterior itself for its uncertainty, by Hamiltonian Monte Carlo started at the
-mode and steered by the Gaussian of the problem linearized there. That
-Gaussian is the posterior when the model is close to linear over the
-posterior's spread; when the model bends a lot it is not, and the draws still
-are.
+When the observations are not a linear function of the state, the forward map
+is a model :math:`F`, and the observations are :math:`z = F(x) + c + e`.
+Write the model and its Jacobian as a :class:`~fips.ForwardModel`, and
+``fips.solve(problem, "gauss_newton")`` solves the problem linearized at its
+last estimate, again and again, until the estimate stops moving. **The
+estimate is the mode** of the posterior. **The spread comes from draws** of
+the posterior itself, which the solve keeps: Hamiltonian Monte Carlo, started
+at the mode and steered by the Gaussian at the mode (the analytic posterior of
+the problem linearized there).
 
 .. contents:: On this page
    :local:
    :depth: 1
 
 
-A model
--------
+When to use it
+--------------
 
-A :class:`~fips.ForwardModel` is a class with two methods: ``__call__(x)``,
-the observations a state models without the offset, :math:`F(x)`, a
-:class:`~fips.Vector` on the observations' labels; and ``jacobian(x)``, the
-derivatives :math:`J_{ij} = \partial F_i / \partial x_j` at :math:`x`, an
-:class:`~fips.Operator`. Its ``__init__`` passes the two spaces to
+Use ``"gauss_newton"`` when the forward map is a model whose Jacobian you can
+write (or compute), and the problem fits in memory as the analytic one does.
+
+Another method is better when:
+
+- **the forward map is linear**: write it as an :class:`~fips.Operator` and use
+  ``"analytic"`` (:doc:`posterior`). ``"gauss_newton"`` with an operator
+  returns the analytic posterior itself;
+- **the model makes a quantity positive** (a factor of a reference, or a value
+  that bends away from zero): :class:`~fips.LogNormalForward` and
+  :class:`~fips.SoftplusForward` are ready-made models solved this way
+  (:doc:`positive`);
+- **the model can only be run**, with no Jacobian: ``"ensemble"``
+  (:doc:`ensemble`);
+- **the problem is too large to factor**, or the Jacobian is known only by
+  its products (a tangent linear and an adjoint model): ``"variational"``
+  (:doc:`variational`).
+
+
+An example
+----------
+
+As an example, a flux inversion solved for scale factors: the state
+:math:`x` is the logarithm of a factor that scales each cell's reference flux
+:math:`r` (an inventory), so the flux :math:`r\, e^{x}` cannot be negative.
+The model is :math:`F(x) = H\, (r\, e^{x})` and its Jacobian is :math:`H
+\operatorname{diag}(r\, e^{x})`. (fips has this model ready-made, with the
+prior that goes with it: :class:`~fips.LogNormalForward`. Here it is
+written by hand, to show how.)
+
+Writing the model
+~~~~~~~~~~~~~~~~~
+
+A :class:`~fips.ForwardModel` is a class with two methods: ``__call__(x)``
+returns :math:`F(x)` without the offset, a :class:`~fips.Vector` on the
+observations' labels, and ``jacobian(x)`` returns :math:`J_{ij} = \partial
+F_i / \partial x_j` at :math:`x`, an :class:`~fips.Operator` in any form.
+Its ``__init__`` passes the observations' and the state's spaces to
 ``super().__init__(rows, cols)``. fips builds no Jacobian: it calls yours.
-
-Here the state is the logarithm of a scale factor of each cell's inventory
-:math:`r`, so the flux :math:`r\, e^{x}` cannot be negative and the prior is a
-factor of the inventory, not a flux. The model is :math:`F(x) = H (r\, e^{x})`
-and its Jacobian :math:`H \operatorname{diag}(r\, e^{x})` (fips has it ready
-made, with the prior that goes with it, as :class:`~fips.LogNormalForward`:
-:doc:`positive`):
 
 .. ipython:: python
 
@@ -45,8 +68,8 @@ made, with the prior that goes with it, as :class:`~fips.LogNormalForward`:
    import fips
    from fips.linalg import DiagonalOperator
 
-   class ScaledInventory(fips.ForwardModel):
-       """The observations of an inventory scaled by exp(x): F(x) = H (r * exp(x))."""
+   class ScaledReference(fips.ForwardModel):
+       """The observations of a reference scaled by exp(x): F(x) = H (r * exp(x))."""
        def __init__(self, H, reference):
            super().__init__(H.rows, H.cols)
            self.H = H
@@ -54,104 +77,92 @@ made, with the prior that goes with it, as :class:`~fips.LogNormalForward`:
        def __call__(self, x):
            return self.H @ (self.reference * np.exp(x))
        def jacobian(self, x):
-           flux = (self.reference * np.exp(x)).values
-           return self.H @ fips.Operator(DiagonalOperator(flux), x.space, x.space)
+           value = (self.reference * np.exp(x)).values
+           return self.H @ fips.Operator(DiagonalOperator(value), x.space, x.space)
 
-Ten cells, 25 observations of them over a background of 1900 ppb, a prior of
-no change (:math:`x_0 = 0`) with a standard deviation of 0.5 (a factor of
-about 1.6) correlated over two cells, and data made from a truth drawn from
-that prior:
+Ten cells and 25 observations. The prior is no change (:math:`x_0 = 0`), with
+a standard deviation of 0.5 (a factor of about 1.6 either way) correlated
+over two cells; the data come from a truth drawn from that prior:
 
 .. ipython:: python
 
    rng = np.random.default_rng(0)
    cells = fips.Space({"flux": pd.RangeIndex(10, name="cell")})
-   observed = fips.Space({"ch4": pd.RangeIndex(25, name="obs_id")})
+   observed = fips.Space({"conc": pd.RangeIndex(25, name="obs_id")})
    footprint = rng.uniform(0.0, 1.0, (25, 10)) * (rng.uniform(size=(25, 10)) < 0.4)
    H = fips.Operator(footprint, observed, cells)
-   inventory = fips.Vector(rng.uniform(0.5, 2.0, 10), cells)
-   model = ScaledInventory(H, inventory)
+   reference = fips.Vector(rng.uniform(0.5, 2.0, 10), cells)
+   model = ScaledReference(H, reference)
 
 .. ipython:: python
 
-   def build(obs, std=0.5, noise=0.2):
-       """The problem of the observations `obs`, with a prior std of `std` in log units."""
+   def build(obs):
+       """The problem of the observations `obs`."""
        return fips.Problem(
            prior=fips.Vector(np.zeros(10), cells),
-           prior_cov=fips.Exponential("cell", 2.0).with_std(std),
+           prior_cov=fips.Exponential("cell", 2.0).with_std(0.5),
            obs=obs,
-           obs_cov=fips.Independent().with_std(noise),
+           obs_cov=fips.Independent().with_std(0.2),
            forward=model,
-           offset=1900.0,
+           offset=10.0,
        )
 
    truth, obs = build(fips.Vector(np.zeros(25), observed)).simulate(rng=1)
    problem = build(obs)
-   problem.predict(problem.prior).values[:4].round(3)  # F(x_0) + c
 
-:meth:`~fips.Problem.predict` and :meth:`~fips.Problem.simulate` run the model,
-and :meth:`~fips.Problem.aggregate` follows it with the aggregation (the model
-of the aggregated problem is :math:`W F(x)`). :meth:`~fips.Problem.restrict`
-refuses a model: holding elements at their prior puts what they add to the
-observations into the offset, which is a constant only for a linear forward.
-
+:meth:`~fips.Problem.predict` and :meth:`~fips.Problem.simulate` run the
+model; :meth:`~fips.Problem.aggregate` follows it with the aggregation.
+:meth:`~fips.Problem.restrict` refuses a model: holding elements at their
+prior puts what they add to the observations into the offset, which is a
+constant only for a linear forward map.
 
 Checking the Jacobian
----------------------
+~~~~~~~~~~~~~~~~~~~~~
 
-A wrong Jacobian still gives an answer, so check it first.
-:func:`fips.taylortest` steps away from a state along a direction and
-compares the model with its tangent: the remainder :math:`\lVert F(x +
-\epsilon\, \delta x) - F(x) - \epsilon J \delta x \rVert` falls as
-:math:`\epsilon^2` when :math:`J` is the derivative, and only as
-:math:`\epsilon` when it is not. A Jacobian that forgot the inventory fails:
+**A wrong Jacobian still gives an answer, so check it first.**
+:func:`fips.taylortest` steps away from a state and compares the model with
+its tangent: the remainder falls as the square of the step when the Jacobian
+is the derivative, and only as the step when it is not. It also checks that
+the Jacobian's transpose is its adjoint. A Jacobian that forgot the reference
+fails:
 
 .. ipython:: python
 
    fips.taylortest(model, problem.prior)
 
-   class Forgot(ScaledInventory):
+   class Forgot(ScaledReference):
        def jacobian(self, x):
            scale = fips.Operator(DiagonalOperator(np.exp(x.values)), x.space, x.space)
            return self.H @ scale
 
-   fips.taylortest(Forgot(H, inventory), problem.prior)
+   fips.taylortest(Forgot(H, reference), problem.prior)
 
-Its debug log has the order of the remainder at each step; a right Jacobian
-gives 2. It checks one direction, a random one by default (``dx=`` sets it),
-and the state you give: check at the prior and at the estimate.
-
+It checks one direction (a random one by default; ``dx=`` sets it) at the
+state you give: check at the prior and again at the estimate.
 
 One linearization
------------------
+~~~~~~~~~~~~~~~~~
 
-:meth:`Problem.linearized(x) <fips.Problem.linearized>` is the linear problem
+:meth:`problem.linearized(x) <fips.Problem.linearized>` is the linear problem
 at a state :math:`x`: the forward operator :math:`J(x)` and the offset
-:math:`c + F(x) - J(x)\, x`, so it predicts what the model does at :math:`x`
-and near it to first order. Its analytic solve is one Gauss-Newton step from
+:math:`c + F(x) - J(x)\, x`. Its analytic solve is one Gauss-Newton step from
 :math:`x`. ``fips.solve(problem)`` refuses a model rather than linearize it
-silently at the prior, since one linearization is not the mode when the data
-move the state far:
+at the prior without saying so:
 
 .. ipython:: python
 
    linear = problem.linearized(problem.prior)
-   linear.forward
    one_step = fips.solve(linear)
    one_step.estimate.values.round(2)
 
-
 Solving
--------
+~~~~~~~
 
-``"gauss_newton"`` starts from the prior and takes that step from each new
-estimate. It stops by Rodgers' (2000) rule: when the step :math:`\delta`,
-measured in the posterior covariance of the solve that made it, :math:`d^2 =
-\delta^T \hat{S}^{-1} \delta`, is below ``tol`` (default :math:`10^{-6}`) times
-the number of state elements. A step that would raise the cost is halved until
-it does not; a solve that has not stopped after ``max_iterations`` (50) raises,
-naming the steps' :math:`d^2`. :attr:`~fips.Posterior.iterations` keeps each
-step's :math:`d^2` and the cost after it:
+``"gauss_newton"`` starts at the prior and takes that step from each new
+estimate. :attr:`~fips.Posterior.iterations` has each step's size
+:math:`d^2` (the step measured in the posterior covariance) and the cost
+after it; the solve stops when :math:`d^2` is below ``tol`` times the number
+of state elements:
 
 .. ipython:: python
 
@@ -159,138 +170,266 @@ step's :math:`d^2` and the cost after it:
    post.iterations
    post.estimate.values.round(2)
 
-The first step went most of the way; the next ones moved the estimate by up to
-a few posterior standard deviations, which one linearization would have missed:
+The first step went most of the way. The next ones still moved some cells
+by more than two posterior standard deviations, which one linearization
+would have missed:
 
 .. ipython:: python
 
    moved = (post.estimate.values - one_step.estimate.values) / np.sqrt(post.variances.values)
    np.abs(moved).max().round(2)
 
-Near the mode, :math:`d^2` falls by orders of magnitude a step. When it falls
-only by a constant factor, the model bends much over the posterior's spread,
-the estimate may be further from the mode than the last step, and the solve
-logs a warning saying so. A model written by hand gives only its Jacobian, so
-its steps are Gauss-Newton's; for :class:`~fips.LogNormalForward` and
-:class:`~fips.SoftplusForward`, whose second derivatives fips knows, the steps
-are Newton's where those are better, and the solve takes about half as many
-where Gauss-Newton's crawl (:doc:`positive`).
+**A statement about the value, not the state, comes from the draws.** The
+flux at the mode is :math:`r\, e^{\hat{x}}`; the total flux and its spread
+come from mapping each draw of the posterior to the flux, then summing:
+
+.. ipython:: python
+
+   draws = post.sample(4000, rng=2)
+   totals = (reference.values[:, None] * np.exp(draws.values)).sum(axis=0)
+   pd.Series(
+       {
+           "truth": (reference * np.exp(truth)).values.sum(),
+           "at the mode": (reference * np.exp(post.estimate)).values.sum(),
+           "mean of draws": totals.mean(),
+           "std of draws": totals.std(),
+       }
+   ).round(2)
 
 
 What the posterior reports
 --------------------------
 
-The **estimate** is the mode: the state where the cost :math:`(x - x_0)^T
-S_0^{-1} (x - x_0) + \gamma (z - F(x) - c)^T S_z^{-1} (z - F(x) - c)` is least.
-``post.mean`` is the mean of the draws (below). The rest comes from three places:
+A ``"gauss_newton"`` posterior is a *sampled* one: the
+:ref:`members table <posterior-members>` lists what it gives. Its members
+come from three places:
 
-- **the model at the mode**: :attr:`~fips.Posterior.modeled_obs` is
-  :math:`F(\hat{x}) + c`, and the residuals, :attr:`~fips.Posterior.rmse`,
-  :attr:`~fips.Posterior.r2`, :attr:`~fips.Posterior.chi2` (the cost at the
-  mode) and its two misfits are the model's;
-- **draws of the posterior**, :math:`p(x \mid z) \propto e^{-\chi^2(x)/2}`:
-  :attr:`~fips.Posterior.mean`, :attr:`~fips.Posterior.variances`,
-  :meth:`~fips.Posterior.cov` (of the state, or of aggregates :math:`W x`),
-  :meth:`~fips.Posterior.uncertainty` (whose interval is the draws'
-  quantiles) and :meth:`~fips.Posterior.sample`. They are read from ``draws``
-  (2000) kept draws, made at their first use from ``seed``, after a
-  ``burn_in`` (200) that tunes the sampler;
+- **the model at the mode.** :attr:`~fips.Posterior.estimate` is the mode.
+  :attr:`~fips.Posterior.modeled_obs` is :math:`F(\hat{x}) + c`; the
+  residuals, :attr:`~fips.Posterior.rmse`, :attr:`~fips.Posterior.r2`,
+  :attr:`~fips.Posterior.chi2` (the cost at the mode) and the misfits are
+  the model's.
+- **the kept draws of the posterior.** :attr:`~fips.Posterior.mean`,
+  :attr:`~fips.Posterior.variances`, :meth:`~fips.Posterior.cov` (of the
+  state, or of aggregates :math:`W x`) and the ``lower`` and ``upper`` of
+  :meth:`~fips.Posterior.uncertainty` and :meth:`~fips.Posterior.trials`
+  (the draws' quantiles) are read from ``draws`` kept draws, made from
+  ``seed`` the first time one is needed. :meth:`~fips.Posterior.sample`
+  makes new ones.
 - **the Gaussian at the mode**, the analytic posterior of the problem
-  linearized at the last step, one step of :math:`d^2 < \mathrm{tol} \cdot n`
-  from the mode: the gain, the averaging kernel, DOFS, the information
-  content and the innovation covariance. :meth:`~fips.Posterior.chi2_tests`
-  tests the model's innovation and residual against that Gaussian's
-  covariances, so its p-values are approximate. To compare, that Gaussian is
-  ``fips.solve(problem.linearized(post.estimate))``.
+  linearized at the last step: the gain, the averaging kernel, DOFS, the
+  information content and the innovation covariance.
+  :meth:`~fips.Posterior.chi2_tests` tests the model's innovation and
+  residuals against that Gaussian's covariances, so its p-values are
+  approximate. To read it
+  whole, solve it: ``fips.solve(problem.linearized(post.estimate))``.
 
-:attr:`~fips.Posterior.problem` is the problem you solved, with the model.
-:meth:`~fips.Posterior.with_data` solves again, from the last linearization,
-and draws again, so :meth:`~fips.Posterior.trials` works (running the sampler
-in each trial: ``draws=`` fewer makes it quicker). This is a sampled
-posterior, and :ref:`the table <posterior-members>` says what it cannot give:
-no :meth:`~fips.Posterior.with_gamma` (the linearization depends on gamma),
-and :meth:`~fips.Posterior.recovery`, whose exact answer needs an estimate
-linear in the data, points to ``trials``.
+:attr:`~fips.Posterior.iterations` has the steps.
+:meth:`~fips.Posterior.with_data` solves again from the last linearization
+and draws again, so :meth:`~fips.Posterior.trials` works; it runs the sampler
+in each trial. ``log_evidence`` is Laplace's, from the Gaussian at the mode.
+:meth:`~fips.Posterior.with_gamma` raises (the linearization depends on
+gamma), and so does :meth:`~fips.Posterior.recovery`, which needs an
+estimate linear in the data: :meth:`~fips.Posterior.trials` measures what it
+would (:doc:`synthetic`).
 
-A statement about the flux, not the log scale factor, goes through the model's
-transform: the flux at the mode is :math:`r\, e^{\hat{x}}`, and the total from
-draws of the posterior:
-
-.. ipython:: python
-
-   draws = post.sample(4000, rng=2)
-   totals = (inventory.values[:, None] * np.exp(draws.values)).sum(axis=0)
-   flux_at_mode = (inventory * np.exp(post.estimate)).values.sum()
-   pd.Series({"truth": (inventory * np.exp(truth)).values.sum(), "at the mode": flux_at_mode, "mean of draws": totals.mean(), "std of draws": totals.std()}).round(2)
+**Read an interval as the draws' quantiles.** In the problem's own world
+(truths drawn from the prior, data made through the model), those intervals
+hold the truth about as often as they claim, for any model. Read as the mode
+plus or minus a multiple of the standard deviation, an interval is not the
+posterior's where the posterior is skewed.
 
 
-How the posterior is drawn
---------------------------
+Options
+-------
 
-The sampler is Hamiltonian Monte Carlo: each draw starts from the last with a
-random velocity and follows a path on which the cost is a potential energy,
-and a Metropolis test accepts the path's end or keeps the start, which makes
-the chain's draws those of the posterior exactly, whatever the paths are. The
-paths are steered by the Gaussian at the mode, in two ways (Shahbaba et al.,
-2014, split HMC): the velocities are its draws less its mean, and the part of
-the cost that Gaussian accounts for is followed exactly, as a rotation about
-the mode (a quarter turn makes a draw of that Gaussian independent of its
-start); only the rest, the cost less the Gaussian's, is followed in steps,
-whose length the ``burn_in`` tunes to accept 90% of the paths. A model that is
-linear has no rest: every path is a quarter turn of one step and is accepted,
-and the draws are exact and independent. The more the model bends over the
-posterior's spread, the more steps a path takes (a median of 16 over 200 data
-sets of :doc:`comparison`'s 400-cell flux problem with a log standard
-deviation of 1, at most 38). No inverse of
-the prior covariance is formed, so a prior with zero spread somewhere (an
-element with no reference) works.
+Each is a keyword of ``fips.solve(problem, "gauss_newton", ...)``
+(:class:`~fips.methods.gauss_newton.GaussNewtonOptions`).
 
-Each step evaluates the model and the product of its Jacobian's transpose with
-a vector (``fips.LogNormalForward`` and ``fips.SoftplusForward`` form no
-Jacobian for it; a model of your own forms one with ``jacobian``), and one
-product with the covariance of the Gaussian at the mode. The draws are
-correlated, a few draws apart for most elements; a solve logs a warning when
-some element's draws mix so slowly that its standard deviation is uncertain by
-more than 10%, and ``draws=`` asks for more. The tuned step and the burn-in's
-acceptance rate are logged at the INFO level. A wrong Jacobian does not make
-the draws wrong (the Metropolis test corrects the paths), but the step falls
-until a draw takes hundreds of steps, and the solve warns: check the Jacobian
-with :func:`fips.taylortest`.
+.. list-table::
+   :header-rows: 1
+   :widths: 20 12 68
 
-How well the draws cover
-------------------------
+   * - Option
+     - Default
+     - What it does
+   * - ``tol``
+     - ``1e-6``
+     - The iterations stop when a step's :math:`d^2` is below ``tol`` times
+       the number of state elements. At the default the last step is about a
+       thousandth of a posterior standard deviation.
+   * - ``max_iterations``
+     - 50
+     - The most steps to take; a solve that has not stopped by then raises.
+   * - ``draws``
+     - 2000
+     - The number of draws of the posterior kept for the variances, the
+       covariances, the mean and the intervals. Fewer make each trial of
+       :meth:`~fips.Posterior.trials` quicker.
+   * - ``burn_in``
+     - 200
+     - The draws made from the mode and left out before those kept, while the
+       sampler tunes its step.
+   * - ``seed``
+     - 0
+     - The seed of the tuning and of the kept draws.
+   * - ``gamma``
+     - 1.0
+     - The regularization factor: the observation covariance is divided by
+       it, as for the analytic method.
 
-In the problem's own world the draws' intervals should hold the truth as often
-as they claim, for any model: each trial draws a truth from the prior, makes
-its data through the model, and solves them. Here with a prior standard
-deviation of 0.3 (a factor of 1.35 either way) and of 1.5 (a factor of 4.5),
-noisier data, and fewer draws and trials than a study would use, to keep the
-page quick; each cell's interval is the quantiles of its draws:
+There is no option to skip the draws. The Gaussian at the mode, which is not
+the posterior where the model bends, is
+``fips.solve(problem.linearized(post.estimate))``.
 
-.. ipython:: python
 
-   def own_world(std, trials=40):
-       """How often each cell's 68% and 95% intervals from the draws hold the truth, in the problem's own world."""
-       _, obs = build(fips.Vector(np.zeros(25), observed), std, 0.5).simulate(rng=3)
-       post = fips.solve(build(obs, std, 0.5), "gauss_newton", max_iterations=200, burn_in=50)
-       g = np.random.default_rng(4)
-       inside = {0.68: [], 0.95: []}
-       for _ in range(trials):
-           truth, data = post.problem.simulate(rng=g)
-           draws = post.with_data(data).sample(150, rng=g)
-           for level in inside:
-               low, high = draws.quantile(0.5 - level / 2, axis=1), draws.quantile(0.5 + level / 2, axis=1)
-               inside[level].append(((low.values <= truth.values) & (truth.values <= high.values)).mean())
-       return {f"coverage_{round(100 * level)}": np.mean(v) for level, v in inside.items()}
+Warnings and checks
+-------------------
 
-   pd.DataFrame({std: own_world(std) for std in (0.3, 1.5)}).T.round(3)
+fips logs its warnings through Python's :mod:`logging`, which is silent
+until you configure it (:ref:`repeated-inversions`). The solve logs a
+warning when:
 
-Both cover about as they claim (40 trials of 10 cells know a coverage to
-about 0.02). :meth:`~fips.Posterior.trials` runs the same loop, and its
-``lower`` and ``upper`` are each trial's draws' quantiles, as here. Read
-instead as the mode plus or minus a multiple of the draws' standard
-deviation, the interval is not the posterior's where it is skewed: at 1.5 it
-held the truth 93% of the time at 95% (the Gaussian at the mode, read the
-same way, 92%). A total of a transform's flux is not a total of the state, so
-read it from the draws (:doc:`positive`); :doc:`comparison` reads every
-method that way.
+- **it converged slowly**: each step was a large fraction of the last, so the
+  estimate may be further from the mode than ``tol`` meant. Lower ``tol``.
+  The model bends much over the posterior's spread, which is also where the
+  Gaussian at the mode is least right.
+- **the sampler takes 200 or more steps a draw**: the posterior bends very
+  much over its spread, or the Jacobian is not the derivative of the model.
+  A wrong Jacobian leaves the draws exact (the sampler's acceptance test
+  corrects for it) but makes each draw cost hundreds of steps. Check it with
+  ``fips.taylortest(problem.forward, post.estimate)``.
+- **the kept draws mix slowly**: a standard deviation from them is uncertain
+  by more than 10%. It says how many draws would do; raise ``draws``, or read
+  the aggregates the data constrain, which mix faster.
+
+**The slow-mixing warning reads one chain, so it cannot see what that chain
+missed.** On a posterior that bends along a curve (an observation of a sum of
+elements, each with a wide prior), the chain can stay out of a tail for
+hundreds of draws: an element's standard deviation from the default 2000
+draws can then be off by a third or more, with a warning that understates it
+or no warning at all, while the aggregates the observations constrain stay
+right. When an element's spread matters, solve again with two or three other
+``seed`` values and compare, and raise ``draws`` until they agree. Calls to
+:meth:`~fips.Posterior.sample` each start a new chain from the same point, so
+draws from several calls are not a check either.
+
+At the INFO level it logs the number of steps it took, and the sampler's
+tuned step and acceptance rate.
+
+It raises:
+
+- :class:`RuntimeError` if it has not stopped after ``max_iterations``,
+  naming each step's :math:`d^2`. If they are still falling, raise
+  ``max_iterations``; if the whole steps do not shrink while the steps taken
+  do, check the Jacobian; a very wide prior can also be too nonlinear to
+  solve from the prior;
+- :class:`RuntimeError` if the cost rises along a step however short: the
+  Jacobian is not the derivative of the model, or the model does not give
+  finite observations near the estimate;
+- :class:`NotImplementedError` if the model has no ``jacobian``.
+
+``fips.solve(problem)`` (the analytic method) and ``"bounded"`` raise
+:class:`TypeError` for a problem with a model. A member a sampled posterior
+cannot give raises :class:`~fips.UnavailableError`.
+
+
+Cost
+----
+
+**Each step costs an analytic solve** of the problem linearized at the last
+estimate, plus a few runs of the model. A mildly nonlinear problem stops in a
+few steps; a strongly nonlinear one (a wide prior on a model that bends) can
+take tens.
+
+**The draws cost more**, and are made only when a spread is first asked for:
+``burn_in`` plus ``draws`` of them. Each draw follows a path of steps (one for
+a linear model, more the more it bends), and each step runs the model, a
+product with its Jacobian's transpose and one with the covariance of the
+Gaussian at the mode: thousands to tens of thousands of model runs in all.
+:meth:`~fips.Posterior.trials` draws in every trial: keep ``draws`` small
+there.
+
+
+How it works
+------------
+
+**The mode.** The estimate is the state where the cost
+
+.. math::
+
+    \chi^2(x) = (x - x_0)^T S_0^{-1} (x - x_0)
+        + \gamma\, (z - F(x) - c)^T S_z^{-1} (z - F(x) - c)
+
+is least. Gauss-Newton finds it as Rodgers (2000, chapter 5) does: from the
+prior, each step solves the problem linearized at the last estimate
+:math:`x_i`, with the Jacobian :math:`J_i = J(x_i)` and the gain
+:math:`K_i` of that linear problem,
+
+.. math::
+
+    x_{i+1} = x_0 + K_i \big(z - F(x_i) - c + J_i (x_i - x_0)\big).
+
+**The stopping rule** is Rodgers': the step, measured in the posterior
+covariance of the solve that made it, is small against the number of state
+elements :math:`n`:
+
+.. math::
+
+    d_i^2 = (x_{i+1} - x_i)^T \hat{S}_i^{-1} (x_{i+1} - x_i)
+        < \mathrm{tol} \cdot n, \qquad
+    \hat{S}_i^{-1} = S_0^{-1} + \gamma J_i^T S_z^{-1} J_i.
+
+Neither :math:`\hat{S}_i^{-1}` nor :math:`S_0^{-1}` is formed: every estimate
+is :math:`x_0 + S_0 y`, so the prior term of :math:`d^2` is :math:`\Delta y^T
+S_0 \Delta y`, and a prior covariance that is singular works. A step that
+would raise the cost is halved until it does not; only a whole step below the
+rule stops the iterations. The rule measures the step, not the distance to
+the mode: near the mode, :math:`d^2` falls by orders of magnitude a step,
+and when it falls only by a constant factor the solve warns.
+
+**Newton's steps, for a transform.** For :class:`~fips.LogNormalForward` and
+:class:`~fips.SoftplusForward` fips knows the second derivatives, and each
+iteration also takes Newton's step, with the cost's whole Hessian. It goes to
+whichever of the two estimates has the lower cost. Where Gauss-Newton's steps
+crawl, Newton's converge much faster near the mode. The mode is the same, and
+the Gaussian at the mode is still that of the problem linearized there. A
+model you write gives only its Jacobian, so its steps are Gauss-Newton's.
+
+**The draws** are Hamiltonian Monte Carlo, split at the Gaussian at the mode
+(Shahbaba et al., 2014). Each draw starts from the last with a random
+velocity and follows a path on which half the cost is a potential energy; a
+Metropolis test accepts the path's end or keeps the start, which makes the
+posterior, :math:`p(x \mid z) \propto e^{-\chi^2(x)/2}`, the chain's
+distribution exactly, whatever the paths are. Each draw is then exact; how
+well a finite chain covers the posterior depends on how well it mixes
+(`Warnings and checks`_). The Gaussian at the mode
+steers the paths in two ways. The velocities are its draws less its mean. The
+part of the cost that it accounts for is followed exactly, as a rotation
+about the mode,
+
+.. math::
+
+    x(t) = \hat{x} + (x - \hat{x}) \cos t + v \sin t,
+
+for a quarter period (after which a draw of that Gaussian is independent of
+its start), and only the rest of the cost is followed in steps. The burn-in
+tunes the step's length to accept 90% of the paths (Hoffman and Gelman,
+2014). A linear model has no rest: each path is a quarter turn of one step,
+always accepted, and the draws are exact and independent. A path the model
+cannot follow (it overflows) is rejected.
+
+
+References
+----------
+
+Hoffman, M. D., and Gelman, A. (2014). The No-U-Turn sampler: adaptively
+setting path lengths in Hamiltonian Monte Carlo. *Journal of Machine Learning
+Research*, 15, 1593-1623.
+
+Rodgers, C. D. (2000). *Inverse Methods for Atmospheric Sounding: Theory and
+Practice*, chapter 5. World Scientific. https://doi.org/10.1142/3171
+
+Shahbaba, B., Lan, S., Johnson, W. O., and Neal, R. M. (2014). Split
+Hamiltonian Monte Carlo. *Statistics and Computing*, 24(3), 339-349.
+https://doi.org/10.1007/s11222-012-9373-1

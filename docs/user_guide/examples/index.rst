@@ -2,9 +2,9 @@
 Examples
 ========
 
-Worked examples of the inverse problems fips solves, as Jupyter notebooks. They
-run when the documentation is built, so the output you see is what the current
-code produces.
+Worked examples of the inverse problems fips solves, as Jupyter notebooks and
+pages. They run when the documentation is built, so the output you see is what
+the current code produces.
 
 .. toctree::
    :maxdepth: 1
@@ -13,6 +13,7 @@ code produces.
    flux_regional
    synthetic_truth
    data_worth
+   comparison
 
 :doc:`gravity_2d`
    The density of buried prisms from the gravity measured above them: a small,
@@ -27,7 +28,7 @@ code produces.
 :doc:`synthetic_truth`
    Does the inversion recover a known flux? A world makes the data and the
    inversion solves them, exactly with ``recovery`` and sampled with ``trials``:
-   coverage of the monthly totals, a mismatch assumed too small or too large, a
+   coverage of the monthly totals, an observation error assumed too small or too large, a
    bias on one site, a truth of 1.5 times the prior, a seasonal truth aliased by
    an annual inversion, and a lognormal world with a transport error the
    inversion cannot see.
@@ -37,3 +38,10 @@ code produces.
    uncertainty of a region's annual total and of a seasonal difference, what
    each site and each month of observations contributes, and which candidate
    site would help most.
+
+:doc:`comparison`
+   Four ways to keep a quantity positive, compared: the analytic posterior,
+   ``"bounded"`` with ``lower=0``, and ``"gauss_newton"`` with
+   ``LogNormalForward`` and ``SoftplusForward``, scored on one synthetic
+   problem in each method's own world and in a lognormal one, with the tables
+   of a 400-element run.

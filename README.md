@@ -28,9 +28,9 @@ Inverse problems in geophysics and atmospheric science often involve large state
 
 - **The standard linear model**: observations are the forward operator times the state, plus an offset, plus an error. Plug in your forward operator (a Jacobian you computed), the prior and its covariance, and the observation covariance. Covariances are written as correlation models (exponential, Gaussian, Matérn, Kronecker products) with standard deviations.
 
-- **And past it**: bounds on the state (`"bounded"`, its mode and draws of the truncated posterior), and a forward model that is not linear, written with its Jacobian (`fips.ForwardModel`), whose posterior mode `"gauss_newton"` finds.
+- **Fast and exact**: each matrix is kept in its cheapest form (dense, sparse, diagonal, or Kronecker factors), and fips computes the exact Gaussian posterior with direct linear algebra, for large state spaces in seconds.
 
-- **Fast and exact**: each matrix is kept in its cheapest form (dense, sparse, diagonal, or Kronecker factors), and fips computes the exact Gaussian posterior with direct linear algebra, not sampling, for large state spaces in seconds.
+- **Past the linear Gaussian problem**: bounds on the state, forward models that are not linear (with ready-made ones that keep a quantity positive), models that can only be run, and problems too large to factor, each a method of the same `fips.solve` on the same `Problem`; and covariance settings fitted from the data, with their uncertainty carried into the answer.
 
 ## Installation
 
@@ -57,7 +57,7 @@ import pandas as pd
 
 import fips
 
-rng = np.random.default_rng(0)
+rng = np.random.default_rng(0)  # made-up data, to show the calls
 
 # The state: monthly fluxes on a 3 x 3 grid, labeled by (time, lat, lon)
 cells = pd.MultiIndex.from_product(
@@ -95,6 +95,16 @@ post = fips.solve(problem)
 
 print(post.estimate.to_series("flux"))  # posterior fluxes, labeled by (time, lat, lon)
 print(post.summary())  # DOFS, chi-squared, R², RMSE, ... in one row
+
+# The monthly mean flux, prior and posterior, with one standard deviation (needs fips[viz])
+from fips.visualization import plot_comparison
+
+monthly = fips.aggregate.mean(prior.space, by="time")
+fig, ax = plot_comparison(
+    (monthly @ prior).to_series().droplevel("block").rename("prior"),
+    (monthly @ post.estimate).to_series().droplevel("block").rename("posterior"),
+    errors=[problem.prior_cov.aggregate(monthly), post.cov(monthly)],
+)
 ```
 
 The prior and the observations are `Vector`s, the forward operator is an `Operator`, the covariances are put on the labels by the `Problem`, and `fips.solve` returns the `Posterior`. Everything is matched by label: the Jacobian's rows and columns could come in any order.
@@ -102,7 +112,7 @@ The prior and the observations are `Vector`s, the forward operator is an `Operat
 More in the [documentation](https://jmineau.github.io/fips/stable/):
 
 - [A first problem](https://jmineau.github.io/fips/stable/getting_started/first_problem.html), step by step, with a state of two blocks.
-- [The user guide](https://jmineau.github.io/fips/stable/user_guide/index.html): correlated covariances (exponential, Matérn, Kronecker products), sparse Jacobians, offsets solved for with the state, aggregated observations, and repeated inversions.
+- [The user guide](https://jmineau.github.io/fips/stable/user_guide/index.html): building a problem (correlated covariances, sparse Jacobians, offsets, aggregated observations), reading the posterior, and choosing a method for bounds, nonlinear models and large problems.
 - [A regional flux inversion](https://jmineau.github.io/fips/stable/user_guide/examples/flux_regional.html), worked from start to finish.
 
 ## Documentation

@@ -3,69 +3,49 @@
 Bounds on the state
 ===================
 
-Some quantities cannot be negative (a flux, a concentration, a rate), yet the
-Gaussian posterior of a problem that estimates them often is negative where
-the prior is small and the observations see little.
-``fips.solve(problem, "bounded", lower={"flux": 0.0})`` holds the state to
-bounds (here, a block named ``flux`` at or above zero). The rule: **the bounded estimate is the analytic one moved
-onto the bounds along the posterior's correlations.** An element the analytic
-estimate puts below its bound goes to the bound, and its neighbors move by what
-the posterior says they would if that element were known to be at its bound.
-A neighbor the move would push out is held at its bound too. Clipping (setting
-the negative elements to zero and nothing else) is not this: it always raises the
-total, while moving along the correlations can lower it as well.
+Some quantities cannot leave a range: a rate cannot be negative, a fraction
+stays between 0 and 1. The Gaussian posterior of a linear problem does not
+know this, and where the prior is near a bound and the observations see
+little, its estimate crosses it. ``fips.solve(problem, "bounded",
+lower={"flux": 0.0})`` solves the same problem with the state held to its
+bounds (here, a block named ``flux`` at or above zero). **The estimate is the
+mode**: the analytic estimate moved onto the bounds along the posterior's
+correlations. **The spread comes from draws** of the analytic posterior
+truncated to the bounds, which the solve keeps.
 
 .. contents:: On this page
    :local:
    :depth: 1
 
 
-What the bounded posterior is
------------------------------
+When to use it
+--------------
 
-The prior with the bounds is the Gaussian prior set to zero outside them
-(whose mean is above the Gaussian's: :doc:`comparison` shows how far), so
-the posterior with the bounds is the analytic posterior :math:`N(\hat{x},
-\hat{S})` truncated to the box :math:`l \le x \le u`. It is not Gaussian, and
-its mean is not its mode:
+Use ``"bounded"`` when each element's estimate must respect its bounds (a map
+with no negative values) and the Gaussian prior cut at the bounds is the
+prior you mean. The problem is the linear one: a forward operator, a
+Gaussian prior and Gaussian observation errors.
 
-- the **estimate** is the **mode**, the point of the box where the analytic
-  cost is least, which is the point of the box nearest :math:`\hat{x}` in the
-  metric of :math:`\hat{S}`. fips finds it with an active set that needs only
-  the columns of :math:`\hat{S}` at the elements on a bound, from the analytic
-  factors, and checks the optimality conditions of the answer before it
-  returns it. The mode is not the mean: ``post.mean`` is the mean of the draws;
-- the **uncertainty** comes from **draws** of the truncated posterior, by exact
-  Hamiltonian Monte Carlo (Pakman and Paninski, 2014). An element on its bound
-  still has spread, on one side of the bound. The intervals of
-  :meth:`~fips.Posterior.uncertainty` and :meth:`~fips.Posterior.trials`
-  (``lower`` and ``upper``) are the draws' quantiles, not the mode plus or
-  minus a multiple of the standard deviation.
+Another method is better when:
 
-Where the prior is wide against its bounds (a standard deviation over half the
-distance to a bound, for more than a tenth of a block's bounded elements) the
-solve logs one warning naming the block, how many of its elements are wide,
-and by how much the cut prior's total sits above the prior's (below it, at an
-upper bound), each element taken alone, as a percentage of the total's
-distance from the bounds: of the prior's total, for a bound of zero. That is
-how far the draws' totals sit from the prior's where the data constrain little;
-the estimate is not affected. With rectified draws (below) it gives the
-smaller shift of the prior set to its bounds.
-
-The bounds are ``lower`` and ``upper``: a number for every element, a
-:class:`~fips.Vector` with an element's own bound (``-inf`` or ``inf`` for
-none), or a dict by block. ``{"flux": 0.0}`` bounds the ``flux`` block and leaves the
-other blocks free, as a bias block must be. Bounds go to the solve, not to the
-:class:`~fips.Problem`: the problem is the Gaussian question, and the bounds
-are how the method answers it.
+- **you want an aggregate** (a sum or a mean over many elements): the analytic
+  posterior's aggregate is often close to Gaussian, its estimate is unbiased,
+  and it costs least (``fips.solve(problem)``; :ref:`methods-positive`);
+- **the uncertainty is a factor of a reference, or additive away from zero**:
+  solve for a transform of the state that is always positive
+  (:class:`~fips.LogNormalForward`, :class:`~fips.SoftplusForward`;
+  :doc:`positive`);
+- **the forward map is a model, not a matrix**: ``"bounded"`` refuses it.
+  Write the model on a state that cannot leave the bounds (the logarithm of a
+  positive value) and solve with ``"gauss_newton"`` (:doc:`nonlinear`).
 
 
-A small problem
----------------
+An example
+----------
 
-Twenty cells along a line, with a prior of 0.2 and correlated errors, seen
-from two sites, each with a bias of its own; the data come from a truth drawn
-lognormal, most of it near zero:
+As an example, a flux inversion: twenty cells along a line, a prior flux of
+0.2 in each with correlated errors, and two sites that see the cells, each
+with a bias of its own. The bias block must stay free.
 
 .. ipython:: python
 
@@ -74,8 +54,8 @@ lognormal, most of it near zero:
    import fips
 
    rng = np.random.default_rng(0)
-   n_cells, n_obs = 20, 24
-   cells = pd.Index(np.arange(n_cells) + 0.5, name="x")  # km along a line
+   n, m = 20, 24
+   cells = pd.Index(np.arange(n) + 0.5, name="x")  # km along a line
    sites = pd.Index(["north", "south"], name="site")
    prior = fips.Vector.from_blocks(
        {"flux": pd.Series(0.2, index=cells), "bias": pd.Series(0.0, index=sites)},
@@ -85,42 +65,35 @@ lognormal, most of it near zero:
 .. ipython:: python
 
    obs_labels = pd.MultiIndex.from_arrays(
-       [np.repeat(sites, n_obs // 2), np.tile(np.arange(n_obs // 2), 2)],
-       names=["site", "hour"],
+       [np.repeat(sites, m // 2), np.tile(np.arange(m // 2), 2)], names=["site", "hour"]
    )
-   obs_space = fips.Space({"ch4": obs_labels})
-   footprint = rng.uniform(0.0, 1.0, (n_obs, n_cells))
-   footprint *= rng.uniform(0.0, 1.0, (n_obs, n_cells)) < 0.3
+   obs_space = fips.Space({"conc": obs_labels})
+   footprint = rng.uniform(0.0, 1.0, (m, n))
+   footprint *= rng.uniform(0.0, 1.0, (m, n)) < 0.3
    south = (obs_labels.get_level_values("site") == "south").astype(int)
    H = np.hstack([footprint, np.eye(2)[south]])  # each site sees its own bias
    forward = fips.Operator(H, obs_space, prior.space)
 
-.. ipython:: python
-
-   def build(obs):
-       """The problem of the observations `obs`."""
-       return fips.Problem(
-           prior=prior,
-           prior_cov=fips.Covariance.block_diag(
-               flux=fips.Exponential("x", 3.0).with_std(0.4),
-               bias=fips.Independent().with_std(0.5),
-           ),
-           obs=obs,
-           obs_cov=fips.Independent().with_std(0.2),
-           forward=forward,
-       )
+The data come from a truth that is mostly near zero:
 
 .. ipython:: python
 
-   flux = np.exp(rng.normal(np.log(0.15), 1.0, n_cells))
+   flux = np.exp(rng.normal(np.log(0.15), 1.0, n))
    truth = fips.Vector(np.r_[flux, -0.6, 0.4], prior.space)
-   obs = fips.Vector(H @ truth.values + rng.normal(0.0, 0.2, n_obs), obs_space)
-   problem = build(obs)
+   obs = fips.Vector(H @ truth.values + rng.normal(0.0, 0.2, m), obs_space)
+   problem = fips.Problem(
+       prior=prior,
+       prior_cov=fips.Covariance.block_diag(
+           flux=fips.Exponential("x", 3.0).with_std(0.4),
+           bias=fips.Independent().with_std(0.5),
+       ),
+       obs=obs,
+       obs_cov=fips.Independent().with_std(0.2),
+       forward=forward,
+   )
 
-The analytic posterior and the bounded one, side by side. Two cells go below
-zero in the analytic estimate; with the bounds they sit at zero, their
-neighbors move a little, and the bias block, unbounded, keeps its negative
-north bias:
+The analytic estimate and the bounded one, at the cells on a bound and their
+neighbors:
 
 .. ipython:: python
 
@@ -137,44 +110,37 @@ north bias:
    near = post.at_bound.to_numpy()
    near = near | np.roll(near, 1) | np.roll(near, -1)  # on a bound, or next to one
    side[near].round(3)
+
+The cells the analytic estimate puts below zero sit at zero, and their
+neighbors move by what the posterior's correlations say. Clipping (setting
+the negative values to zero and nothing else) would always raise the total;
+moving along the correlations can lower it too. The bias block has no bound
+and keeps its negative north bias:
+
+.. ipython:: python
+
    side.loc["bias"].round(3)
 
-:attr:`~fips.Posterior.at_bound` says which elements sit on a bound at the
-mode: the elements the bounds decide, where the observations decide the
-others.
-
-
-What the posterior says
------------------------
-
-**The spread comes from draws.** :attr:`~fips.Posterior.variances`,
-:meth:`~fips.Posterior.cov` (of the state or of totals) and
-:meth:`~fips.Posterior.uncertainty` are those of the draws the solve keeps:
-``draws=2000`` of them by default, made at the first need from ``seed=0``, so a
-solve is reproducible. They are Monte Carlo estimates from a chain, each draw
-exact but started from the last: from 2000 draws a standard deviation is good
-to about 1.5% for an element away from its bounds, and to about 12% for one
-whose analytic estimate is one to four standard deviations outside its bound,
-whose draws pile against it and mix slowly (more draws make it better as one
-over their square root; the solve warns when a standard deviation is
-uncertain by more than 10%, with the number of draws that would do). The
-total's uncertainty is smaller with
-the bounds: they rule out the negative totals the Gaussian allowed.
+The total of the flux, with its 95% interval. With the bounds, the interval
+is the quantiles of the draws. It is narrower, since the bounds rule out the
+negative totals the Gaussian allowed, and higher: where the data see little,
+the draws are those of the prior cut at zero, whose mean is above the prior
+mean. Here it misses the true total, which the analytic interval holds.
 
 .. ipython:: python
 
    W = fips.Operator(
-       np.r_[np.ones(n_cells), 0.0, 0.0][None, :],
+       np.r_[np.ones(n), 0.0, 0.0][None, :],
        fips.Space({"total": pd.Index(["flux"], name="what")}),
        prior.space,
    )
+   (W @ truth).values.round(3)
    pd.concat({"analytic": analytic.uncertainty(W), "bounded": post.uncertainty(W)}).round(3)
 
-**The mode is not the mean.** The estimate is the mode; the draws are spread
-on the side of the bound away from it, so their mean is above it for a lower
-bound. A question about the distribution (a total's mean, the chance it is
-below a value) is read off :meth:`~fips.Posterior.sample`, new draws of the
-truncated posterior:
+**The mode is not the mean.** The draws spread on the side of the bound away
+from the mode, so their mean is above it. A question about the distribution
+(the mean of a total, the chance it is below a value) is read off new draws,
+:meth:`~fips.Posterior.sample`:
 
 .. ipython:: python
 
@@ -182,269 +148,287 @@ truncated posterior:
    (W @ post.estimate).values.round(3), round(float(draws.iloc[0].mean()), 3)
    round(float((draws.iloc[0] < 3.0).mean()), 3)
 
-**The gain, DOFS and the averaging kernel are those at the mode**: the
-analytic posterior with the elements on a bound held there. An element on a
-bound has no DOFS, since the bound, not the data, decides it. The chi-squared
-and the misfits are those of the mode (the chi-squared tests' degrees of
-freedom and p-values are then approximate):
 
-.. ipython:: python
+What the posterior reports
+--------------------------
 
-   post.dofs_per_element.to_series()[post.at_bound].round(3)
-   round(analytic.dofs, 3), round(post.dofs, 3)
+A bounded posterior is a *sampled* one: the
+:ref:`members table <posterior-members>` lists what it gives.
 
-:meth:`~fips.Posterior.with_gamma` and :meth:`~fips.Posterior.with_data` find
-the mode again on the kept factors, without solving again, and their draws are
-made when first needed. A bounded posterior is a sampled one: the members it
-cannot give (:meth:`~fips.Posterior.recovery` and the data worth among them,
-since its estimate is not linear in the data) are in :ref:`the table
-<posterior-members>`, and :meth:`~fips.Posterior.trials` measures what
-``recovery`` would (below).
+- :attr:`~fips.Posterior.estimate` is the **mode**, and
+  :attr:`~fips.Posterior.at_bound` says which elements sit on a bound there:
+  the bounds decide those, and the observations the others.
+- :attr:`~fips.Posterior.variances`, :meth:`~fips.Posterior.cov` (of the
+  state or of aggregates), :attr:`~fips.Posterior.mean` and the ``lower`` and
+  ``upper`` of :meth:`~fips.Posterior.uncertainty` and
+  :meth:`~fips.Posterior.trials` are those of the **kept draws**: ``draws``
+  of them, made from ``seed`` the first time one is needed, so a solve is
+  reproducible. The interval is the draws' quantiles, not the mode plus or
+  minus a multiple of the standard deviation. An element on its bound still
+  has spread, on one side of the bound.
+- :meth:`~fips.Posterior.sample` makes new draws, for any function of the
+  state.
+- **The gain, the averaging kernel, DOFS and the information content are
+  those at the mode**: the analytic posterior with the elements on a bound
+  held there. An element on a bound has no DOFS: the bound decides it, not
+  the data.
+- :attr:`~fips.Posterior.chi2` and the misfits are those of the mode. The
+  degrees of freedom and p-values of :meth:`~fips.Posterior.chi2_tests` are
+  then approximate.
+- :meth:`~fips.Posterior.with_gamma` and :meth:`~fips.Posterior.with_data`
+  find the mode again on the kept factors, without factoring again; their
+  draws are made when first needed.
+- :meth:`~fips.Posterior.recovery` and the data worth raise: they need an
+  estimate linear in the data, and the mode is not.
+  :meth:`~fips.Posterior.trials` measures what ``recovery`` would
+  (:doc:`synthetic`). ``log_evidence`` raises too; the evidence of the
+  problem without bounds is ``fips.solve(problem).log_evidence``.
 
+With no finite bound, the solve returns the analytic posterior itself, a
+Gaussian one.
+
+
+Options
+-------
+
+Each is a keyword of ``fips.solve(problem, "bounded", ...)``
+(:class:`~fips.methods.bounded.BoundedOptions`).
+
+.. list-table::
+   :header-rows: 1
+   :widths: 18 16 66
+
+   * - Option
+     - Default
+     - What it does
+   * - ``lower``, ``upper``
+     - ``None``
+     - The bounds: ``lower <= x <= upper``. A number, a
+       :class:`~fips.Vector`, or a dict by block (below). ``None`` is no
+       bound.
+   * - ``distribution``
+     - ``"truncated"``
+     - What the draws are draws of: the posterior truncated to the bounds, or
+       ``"rectified"``, the bounded estimate with the prior mean and the data
+       drawn again (below).
+   * - ``draws``
+     - 2000
+     - The number of draws kept for the variances, the covariances, the mean
+       and the intervals. The Monte Carlo error of a standard deviation falls
+       as one over its square root.
+   * - ``burn_in``
+     - 20
+     - The draws of the truncated chain made and left out before those kept.
+       Rectified draws are not a chain, and leave none out.
+   * - ``seed``
+     - 0
+     - The seed of the kept draws.
+   * - ``gamma``
+     - 1.0
+     - The regularization factor: the observation covariance is divided by
+       it, as for the analytic method.
+
+Giving the bounds
+~~~~~~~~~~~~~~~~~
+
+The bounds go to the solve, not to the :class:`~fips.Problem`: the problem is
+the Gaussian question, and the bounds are how this method answers it. Each
+of ``lower`` and ``upper`` is one of:
+
+- **a number**, for every state element. On a state of several blocks that
+  bounds the bias block too, which is rarely meant, and the solve warns;
+- **a** :class:`~fips.Vector` with exactly the state's labels, one bound per
+  element, ``-inf`` (or ``inf`` for ``upper``) where an element has none;
+- **a dict by block**, such as ``{"flux": 0.0}``: each value a number or a
+  Vector on that block's labels. Blocks it does not name are free.
 
 .. _bounds-rectified:
 
-Rectified draws
----------------
+Truncated or rectified draws
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-**Rectified draws are the bounded estimate itself, with the prior mean and the
-data redrawn** (``distribution="rectified"``). Each draw is the bounded problem solved
-again for one draw of the prior mean from :math:`N(x_0, S_0)` and of the
-observations from :math:`N(z, S_z)`, so an element that draw puts outside its
-bounds is exactly on its bound, as at the mode. The default draws, of the
-truncated posterior, are never exactly on a bound. The estimate, the active
-set, the gain and DOFS are the same either way; only the draws differ, and
-with them the variances, ``post.mean``, the intervals and totals.
+**Truncated draws** (the default) are draws of the analytic posterior
+truncated to the bounds: the Bayesian posterior of the Gaussian prior cut at
+the bounds. A truncated draw is never exactly on a bound.
 
-A cell on its bound at the mode, in the small problem above:
+**Rectified draws** (``distribution="rectified"``) are the bounded estimate
+itself, with the inputs drawn again: each is the bounded problem solved for
+one draw of the prior mean from :math:`N(x_0, S_0)` and of the observations
+from :math:`N(z, S_z)`. An element that the draw puts outside its bounds is
+exactly on its bound, as at the mode. They are the distribution of the
+bounded estimate over inputs as likely as these. They are not the truncated
+posterior, and not the Bayesian posterior of any prior fips writes down.
+
+The estimate, ``at_bound``, the gain and DOFS are the same either way; the
+draws differ, and with them the variances, the mean, the intervals and the
+aggregates. Where the data see little, the truncated draws' mean sits above
+the prior mean at a lower bound, and the rectified draws' less far above:
 
 .. ipython:: python
 
    rectified = fips.solve(problem, "bounded", lower={"flux": 0.0}, distribution="rectified")
-   cell = post.at_bound[post.at_bound].index[0]  # the first cell on its bound
-   cell_draws = {"truncated": post.sample(2000, rng=1), "rectified": rectified.sample(2000, rng=1)}
+   first = post.at_bound[post.at_bound].index[0]  # the first cell on its bound
+   on_bound = {"truncated": post, "rectified": rectified}
+   {name: float((p.sample(2000, rng=1).loc[first] == 0).mean()) for name, p in on_bound.items()}
+   pd.concat({"truncated": post.uncertainty(W), "rectified": rectified.uncertainty(W)}).round(3)
 
-.. ipython:: python
+About half the rectified draws hold that cell at exactly zero, and none of
+the truncated ones do. The rectified total sits lower, and here its interval
+holds the true total. **For an aggregate, read the analytic posterior**;
+rectified draws suit the elements of a map near a bound, where the truth may
+be exactly on it. :doc:`examples/comparison` compares the methods on one
+problem.
 
-   pd.DataFrame(
-       {
-           name: {
-               "exactly 0": float((d.loc[cell] == 0).mean()),
-               "mean": float(d.loc[cell].mean()),
-               "95th percentile": float(d.loc[cell].quantile(0.95)),
-           }
-           for name, d in cell_draws.items()
-       }
-   ).T.round(3)
 
-About half the rectified draws hold this cell at zero, and none of the
-truncated ones does: a truncated draw sits above the bound, by little or by
-much, so its mean is higher. The total moves the same way. Here the analytic
-total's interval and the rectified one hold the truth (3.45) and the truncated
-one, centered higher, does not; one set of data proves nothing, and the trials
-below measure it:
+Warnings and checks
+-------------------
 
-.. ipython:: python
+fips logs its warnings through Python's :mod:`logging`, which is silent
+until you configure it (:ref:`repeated-inversions`). The solve logs a
+warning when:
 
-   pd.concat(
-       {
-           "analytic": analytic.uncertainty(W),
-           "truncated": post.uncertainty(W),
-           "rectified": rectified.uncertainty(W),
-       }
-   ).round(3)
+- **a number bounds a state of several blocks.** It bounds every block, a
+  bias block too. Give a dict to bound only some: ``lower={"flux": 0.0}``.
+- **the prior is wide against its bounds**: a prior standard deviation over
+  half the distance to a bound, for more than a tenth of a block's bounded
+  elements. Where the data see little, the draws' mean, intervals and
+  aggregates are those of the prior as the draws treat it, cut at the bounds
+  (or, for rectified draws, set to them), and so above the prior mean at a
+  lower bound. The warning names the block and says by how much its
+  aggregate sits above the prior's, as a share of its distance from the
+  bounds. The estimate is not affected. For an aggregate, read the analytic
+  posterior or use :class:`~fips.LogNormalForward`.
+- **the kept draws are too few**: a standard deviation from them is
+  uncertain by more than 10%. It says how many draws would do; raise
+  ``draws``. Truncated draws mix slowest at an element whose analytic
+  estimate is one to a few standard deviations outside its bound; rectified
+  draws are too few at an element on its bound in nearly every draw.
 
-**What the rectified draws are, and are not.** They are the distribution of
-the bounded estimate when the prior mean and the data are redrawn from their
-Gaussians: what the inversion would give for other inputs as likely as these.
-They are not, in general, the Bayesian posterior of any prior fips writes
-down, and they are not the truncated posterior. For one element whose prior
-mean is one standard deviation above a bound of zero, with no data, the
-rectified mean is 1.083 times the prior mean (the truncated one is 1.288
-times), and 16% of the draws are exactly zero. The construction is old:
-Miller, Michalak and Levi (2014, section 3.3.1) propose realizations this way
-(perturbed inputs, then the bounded solve) and then accept or reject each by a
-Metropolis-Hastings test, which fips does not; Bardsley and Fox (2012) solve a
-nonnegativity-constrained quadratic problem for each sample; Everink, Dong and
+It raises:
+
+- :class:`TypeError` if the problem's forward is a model, or a bound is not a
+  number, a Vector, a dict or ``None``;
+- :class:`ValueError` if ``lower`` is not below ``upper`` at some element
+  (an element held at one value is known, not bounded), a bound is NaN or
+  one no value can satisfy (a ``lower`` of ``inf``), a Vector's labels are
+  not the state's (or its block's), or a dict names a block the state does
+  not have;
+- :class:`numpy.linalg.LinAlgError` if elements on a bound cannot be held
+  there: an element whose posterior variance is zero, or elements whose
+  posterior errors are tied together. Check the bounds of the elements the
+  prior or the observations fix.
+
+A member a sampled posterior cannot give raises
+:class:`~fips.UnavailableError` (:ref:`the table <posterior-members>`).
+
+
+Cost
+----
+
+**The mode costs little more than the analytic solve**: the factors, plus a
+column of the posterior covariance :math:`\hat{S}` for each element that ends
+on a bound.
+
+**The draws cost more**, and are made only when a spread is first asked for.
+A truncated draw follows a path that bounces off each bound it meets, and
+each bounce costs a step of the size of the state, so the cost grows with the
+number of elements near a bound: for a thousand elements mostly near zero,
+the default 2000 draws take tens of seconds, and a state far from its bounds
+bounces little. A rectified draw costs an active set, as the mode does. Both
+keep the columns of :math:`\hat{S}` at every element a draw holds on a bound,
+up to all of them (:math:`n \times n`). The cost is proportional to
+``draws``; :meth:`~fips.Posterior.trials` draws in every trial, so keep
+``draws`` small there.
+
+
+How it works
+------------
+
+**The posterior.** The prior with the bounds is the Gaussian prior set to
+zero outside them. The likelihood is unchanged, so the posterior is the
+analytic posterior :math:`N(\hat{x}, \hat{S})` truncated to the box
+:math:`l \le x \le u`. It is not Gaussian, and its mean is not its mode.
+
+**The mode** is the point of the box where the analytic cost is least. The
+cost is quadratic, so that is the point of the box nearest :math:`\hat{x}` in
+the metric of the posterior:
+
+.. math::
+
+    x^\ast = \arg\min_{l \le x \le u} (x - \hat{x})^T \hat{S}^{-1} (x - \hat{x}).
+
+With :math:`a` the set of elements held on a bound :math:`b_a`, the answer is
+:math:`x^\ast = \hat{x} + \hat{S}_{:a} \lambda_a`, with :math:`\lambda_a =
+\hat{S}_{aa}^{-1} (b_a - \hat{x}_a)`: the held elements go to their bounds,
+and the others move by what the posterior says they would if those elements
+were known to be there. An active set finds :math:`a`, exchanging at each
+step every element to hold or release (Nocedal and Wright, 2006; Lawson and
+Hanson, 1974, for nonnegative least squares), and needs :math:`\hat{S}` only
+at the columns of :math:`a`, from the analytic factors. The solve checks the
+optimality conditions of the answer before it returns it.
+
+**The diagnostics at the mode** are those of the analytic posterior with the
+elements of :math:`a` held at their bounds. With :math:`C = \hat{S}_{aa}`,
+
+.. math::
+
+    K_a = K - \hat{S}_{:a} C^{-1} K_{a:}, \qquad
+    A_a = K_a H = A - \hat{S}_{:a} C^{-1} A_{a:},
+
+and an element on a bound has a row of zeros in both.
+
+**Truncated draws** are made by exact Hamiltonian Monte Carlo (Pakman and
+Paninski, 2014). Each draw starts from the last, :math:`x_0`, with a velocity
+:math:`v \sim N(0, \hat{S})`, and follows
+
+.. math::
+
+    x(t) = \hat{x} + (x_0 - \hat{x}) \cos t + v \sin t
+
+for a quarter period, :math:`t = \pi/2`. Each element's time to reach its
+bound has a closed form; at the first bound reached, the velocity reflects
+and the path goes on. With no bound in the way, :math:`x(\pi/2) = \hat{x} +
+v` is a draw independent of the start. There is no step size and no
+rejection. The draws are correlated only through the bounces: an element
+away from its bounds has about one independent draw per draw (a standard
+deviation from 2000 is good to about 1.5%), while one whose analytic
+estimate is one to four standard deviations outside its bound piles against
+it and mixes an order of magnitude slower.
+
+**Rectified draws** use one fact: the analytic estimate of the problem with a
+drawn prior mean and drawn observations is an exact draw :math:`x_s` of
+:math:`N(\hat{x}, \hat{S})`, and that problem has the same :math:`\hat{S}`.
+Its bounded estimate is therefore :math:`x_s` moved onto the bounds by the
+same active set as the mode, with :math:`x_s` in place of :math:`\hat{x}`.
+So draw ``k`` of ``rectified.sample(N, rng=5)`` is draw ``k`` of
+``fips.solve(problem).sample(N, rng=5)``, unchanged where no bound binds. The
+draws are independent. Miller, Michalak and Levi (2014, section 3.3.1)
+propose realizations this way and then accept or reject each by a
+Metropolis-Hastings test, which fips does not; Bardsley and Fox (2012) solve
+a nonnegativity-constrained problem for each sample; Everink, Dong and
 Andersen (2023) call the resulting distribution a regularized Gaussian.
 
-**How often their intervals hold the truth**, against the analytic posterior
-and the truncated draws: 50 cells on a line whose prior standard deviation
-equals its mean (correlated over 5 cells), 40 observations, 300 trials of data
-from the problem's own error (a coverage near 0.9 is known to about 0.02),
-1000 draws a trial. The truth is a draw of the Gaussian prior, the same with
-its negative cells set to zero, or a draw of the prior truncated at zero. With
-weak data (the analytic total's standard deviation a third of the prior's),
-the share of 95% intervals that held the truth:
-
-.. list-table::
-   :header-rows: 1
-   :stub-columns: 1
-
-   * - The truth
-     - Total, analytic
-     - Total, truncated
-     - Total, rectified
-     - Cells, truncated
-     - Cells, rectified
-   * - Gaussian prior draw
-     - 0.98
-     - 0.54
-     - 0.77
-     - 0.76
-     - 0.79
-   * - Negatives set to zero
-     - 0.99
-     - 0.63
-     - 0.88
-     - 0.77
-     - 0.96
-   * - Truncated prior draw
-     - 0.94
-     - 0.95
-     - 0.94
-     - 0.95
-     - 0.97
-
-With stronger data (a standard deviation a tenth of the prior's) the totals
-were 0.97, 0.70, 0.84; 0.98, 0.81, 0.94; and 0.96, 0.95, 0.96. **The
-rectified intervals hold the truth more often than the truncated ones wherever
-the truth is not a draw of the truncated prior, and as often where it is; the
-analytic total held it in every world, while the rectified total fell short of
-95% where the truth could be negative (0.77 and 0.84) and, with weak data,
-where it had exact zeros (0.88).** For a total, read the analytic posterior. The rectified draws suit
-the elements of a map near zero: where the truth has exact zeros, 96% of
-their intervals held it, against 77% for the truncated draws, which never
-reach zero.
-
-How they are made: the analytic estimate of the perturbed problem is an exact
-draw of the analytic posterior :math:`N(\hat{x}, \hat{S})` (what
-:meth:`~fips.Posterior.sample` of ``fips.solve(problem)`` returns), and its
-bounded estimate is that draw moved onto the bounds along the posterior's
-correlations, by the same active set as the mode. So draw ``k`` of
-``rectified.sample(n, rng=5)`` is draw ``k`` of
-``fips.solve(problem).sample(n, rng=5)``, unchanged where no bound binds in
-it. The draws are independent, not a chain: ``burn_in`` does nothing, and the
-solve warns when a standard deviation from them is uncertain by more than 10%,
-which happens for an element on its bound in nearly every draw, whose spread
-comes from the few that are not. With rectified draws, the wide-prior warning
-gives the shift of the prior set to its bounds, not cut at them (8% of the
-distance to a bound of zero, against 29%, for a standard deviation equal to
-that distance).
-
-
-What it costs
--------------
-
-The mode costs little more than the analytic solve: the active set needs the
-columns of :math:`\hat{S}` at the elements on a bound, a product with the
-factors for each, and a solve with :math:`\hat{S}` at those elements at each
-of its steps. The draws cost more. Each draw follows a path that bounces off
-every bound it reaches, each bounce a step of the size of the state, and a
-path reaches about as many bounds as there are elements near one. A state of a
-thousand elements, most of them near zero, took about 20 ms a draw (40 s for
-2000), and one of three thousand about 0.1 s a draw, on one machine; a state
-far from its bounds bounces little and costs little. The draws are made only
-when a spread is asked for, and a smaller ``draws`` (``fips.solve(problem,
-"bounded", lower={"flux": 0.0}, draws=500)``) costs proportionally less, with a
-larger Monte Carlo error.
-
-A rectified draw costs an active set, as the mode does: a few steps, each
-exchanging at once every element to hold or release, and each a solve with
-:math:`\hat{S}` at the elements on a bound. With a correlated prior whose
-standard deviation equals its mean and weak data, a draw of 400 elements (70
-of them on a bound in a typical draw) took 1.7 ms against 4 ms for a truncated
-one, and a draw of 2000 elements (120 on a bound) 7.6 ms against 14 ms: 15 s
-for the default 2000 draws, on one machine. Both keep the same columns of
-:math:`\hat{S}`, up to all of them (``n x n``).
-
-:meth:`~fips.Posterior.trials` asks each trial's posterior for its spread, so
-a bounded posterior draws in every trial: keep ``draws`` small there.
-
-
-In a world with a nonnegative truth
------------------------------------
-
-Does holding the state at or above zero give a better answer? It depends on
-what is asked, and :meth:`~fips.Posterior.trials` (see :doc:`synthetic`)
-measures it: the same data, trial for trial (the same seed), solved with and
-without the bounds, in a world whose truth is lognormal, most of it near zero,
-which neither posterior assumes. The rows of the aggregation are each cell and
-the total:
-
-.. ipython:: python
-
-   def world(rng):
-       """A lognormal flux, a Gaussian bias, and the observations they give."""
-       x = np.r_[np.exp(rng.normal(np.log(0.15), 1.0, n_cells)), rng.normal(0.0, 0.5, 2)]
-       return fips.Vector(x, prior.space), fips.Vector(
-           H @ x + rng.normal(0.0, 0.2, n_obs), obs_space
-       )
-
-.. ipython:: python
-
-   rows = fips.Space({"cell": cells, "total": pd.Index(["flux"], name="what")})
-   each_and_total = np.vstack([np.eye(n_cells, n_cells + 2), np.r_[np.ones(n_cells), 0.0, 0.0]])
-   W_rows = fips.Operator(each_and_total, rows, prior.space)
-   small = fips.solve(problem, "bounded", lower={"flux": 0.0}, draws=300)
-   tables = {
-       "analytic": analytic.trials(world, 100, rng=7, W=W_rows),
-       "bounded": small.trials(world, 100, rng=7, W=W_rows),
-   }
-
-.. ipython:: python
-
-   def scores(table):
-       """The cells' RMSE, and the total's bias, spread, claimed spread and 95% coverage."""
-       error = table["estimate"] - table["truth"]
-       cell = error.xs("cell", level="block")
-       total = table.xs("total", level="block")
-       total_error = total["estimate"] - total["truth"]
-       covered = (total["lower"] <= total["truth"]) & (total["truth"] <= total["upper"])
-       return pd.Series(
-           {
-               "cell RMSE": float(np.sqrt((cell**2).mean())),
-               "total bias": total_error.mean(),
-               "total spread": total_error.std(),
-               "claimed spread": total["posterior_std"].mean(),
-               "total coverage": covered.mean(),
-           }
-       )
-
-.. ipython:: python
-
-   pd.DataFrame({name: scores(table) for name, table in tables.items()}).round(3)
-
-With 100 trials the bias is known to about a tenth of the spread, and a
-coverage near 0.9 to about 0.03. In this world the bounds make the map better
-(a smaller cell RMSE) and move the total: up, by a few Monte Carlo standard
-errors of the bias, with a smaller spread and a smaller claimed spread. The
-bounded total's interval, the quantiles of its draws, holds the truth much
-less often than the analytic one: the draws are of the truncated posterior,
-whose total is above this world's wherever the data see little. That is the
-pattern to expect: **bounds mostly improve maps and can move totals**, and since the
-estimate is the mode of a skewed posterior, a total read from it is not the
-posterior's mean total (above, the draws'). Which matters depends on the
-question. For a total of the state, read the analytic posterior: the draws'
-total is that of the truncated prior wherever the data see little, above a
-prior that is the mean, and :doc:`comparison` measures it far above in its
-400-cell example. The world here is a toy: the trials of an inversion's
-own problem, at its own size, say what its bounds do.
 
 References
-~~~~~~~~~~
+----------
 
-Pakman, A., and Paninski, L. (2014). Exact Hamiltonian Monte Carlo for
-truncated multivariate Gaussians. *Journal of Computational and Graphical
-Statistics*, 23(2), 518-542. https://doi.org/10.1080/10618600.2013.788448
+Bardsley and Fox (2012). *Inverse Problems in Science and
+Engineering*, 20(4), 477-498.
+
+Everink, Dong and Andersen (2023). *Inverse Problems*.
+https://doi.org/10.1088/1361-6420/acf9c5
+
+Lawson, C. L., and Hanson, R. J. (1974). *Solving Least Squares Problems*.
+Prentice-Hall.
 
 Miller, S. M., Michalak, A. M., and Levi, P. J. (2014). Atmospheric inverse
 modeling with known physical bounds: an example from trace gas emissions.
 *Geoscientific Model Development*, 7, 303-315.
 https://doi.org/10.5194/gmd-7-303-2014
 
-Bardsley and Fox (2012). *Inverse Problems in Science and Engineering*,
-20(4), 477-498.
+Nocedal, J., and Wright, S. J. (2006). *Numerical Optimization*, second
+edition, chapter 16. Springer.
 
-Everink, Dong and Andersen (2023). *Inverse Problems*.
-https://doi.org/10.1088/1361-6420/acf9c5
+Pakman, A., and Paninski, L. (2014). Exact Hamiltonian Monte Carlo for
+truncated multivariate Gaussians. *Journal of Computational and Graphical
+Statistics*, 23(2), 518-542. https://doi.org/10.1080/10618600.2013.788448

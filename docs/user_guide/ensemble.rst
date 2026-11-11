@@ -1,38 +1,47 @@
 .. _ensemble:
 
-A model with no Jacobian: the ensemble method
-=============================================
+A model without a Jacobian: the ensemble method
+===============================================
 
-Some forward models can only be run: a TM5 or WRF configuration has no
-:math:`H` matrix and no Jacobian anyone can write by hand. The rule: **draw
-members from the prior with** :meth:`problem.ensemble <fips.Problem.ensemble>`,
-**run the model on each, and give the runs to** ``fips.solve(problem,
-"ensemble", members=members, predicted=modeled)``. It updates the members with
-the observations, as CarbonTracker does (a deterministic square-root ensemble
-Kalman filter, EnSRF, applied to all the observations at once), and reports
-the posterior of the updated members: their mean, their spread, their gain.
-Its answer approaches the analytic posterior as the members grow, with an
-error that falls as :math:`1/\sqrt{N}`.
-
-**When not to use it**: with an explicit :math:`H` (a STILT footprint is one),
-``fips.solve(problem)`` gives the posterior exactly, at the cost of one
-factorization; the ensemble only approximates it. With a model whose Jacobian
-you can write, ``"gauss_newton"`` finds the mode and draws the posterior exactly
-(:doc:`nonlinear`).
+Some forward models can only be run. A transport or weather model maps a
+state to the observations it makes, but it has no matrix :math:`H` and no
+Jacobian anyone can write. **Draw members from the prior with**
+:meth:`problem.ensemble(N) <fips.Problem.ensemble>`, **run the model on each,
+and give the runs to** ``fips.solve(problem, "ensemble", members=members,
+predicted=predicted)``. The solve updates the members with the observations.
+The estimate is the mean of the updated members, and the uncertainty is their
+spread. With a linear model the answer approaches the analytic posterior as
+the members grow, with an error that falls as :math:`1/\sqrt{N}`.
 
 .. contents:: On this page
    :local:
    :depth: 1
 
 
-A model that can only be run
-----------------------------
+When to use it
+--------------
 
-A line of 120 cells, one a kilometer, and 40 observations along it, each of
-which sees the cells upwind, the nearest most. ``transport`` stands in for the
-transport model: it takes the fluxes of one member and returns the
-observations they make. Here it is a line of numpy; in a real inversion it is
-a job on a cluster, and the members go to it as files.
+Use it when the forward model can only be run, and a run costs enough that
+you can afford tens or hundreds of them, not one per state element.
+
+- With a forward operator :math:`H` (a matrix), use ``"analytic"``
+  (:doc:`posterior`): it is exact, and the ensemble only approximates it.
+- With a forward model whose Jacobian you can write, use ``"gauss_newton"``
+  (:doc:`nonlinear`): it finds the mode and draws the posterior itself.
+- With a model that has a tangent linear and an adjoint, use
+  ``"variational"`` (:doc:`variational`).
+- With bounds on the state, use ``"bounded"`` (:doc:`bounds`): the ensemble
+  method takes none.
+
+
+An example
+----------
+
+Here the state is a flux along a line of 120 elements, one a kilometer, and
+40 sensors along the line each see the elements behind them, the nearest most.
+``run_model`` stands in for the model: it takes one member and returns the
+observations that member makes. Here it is a line of numpy; a real model is a
+job on a cluster, and the members go to it as files.
 
 .. ipython:: python
 
@@ -41,43 +50,35 @@ a job on a cluster, and the members go to it as files.
    import fips
 
    n, m = 120, 40
-   cell_x = np.arange(n, dtype=float)  # km
-   site_x = np.linspace(2.0, n - 3.0, m)
-   upwind = site_x[:, None] - cell_x[None, :]
-   footprint = np.where(upwind >= 0, np.exp(-upwind / 3.0), 0.0)
+   position = np.arange(n, dtype=float)  # km
+   site = np.linspace(2.0, n - 3.0, m)
+   behind = site[:, None] - position[None, :]
+   weights = np.where(behind >= 0, np.exp(-behind / 3.0), 0.0)
 
-   def transport(flux):
-       """Stand-in for a transport model run: the observations a member's fluxes make."""
-       return footprint @ flux.to_numpy()
+   def run_model(x):
+       """Stand-in for one run of the model: the observations a member makes."""
+       return weights @ np.asarray(x, dtype=float)
 
-The problem still needs its forward map's labels, so the model is a
-:class:`~fips.ForwardModel` with ``__call__`` alone: the ensemble method needs
-no Jacobian. When given the runs, the solve never calls it; what does
-(:meth:`~fips.Problem.simulate`, :attr:`~fips.Posterior.modeled_obs`) runs it
-once. A model that cannot run from Python at all can raise in ``__call__``:
-the two-stage solve still works.
+The problem still needs the labels of the state and of the observations, so
+the model is a :class:`~fips.ForwardModel` that writes ``__call__`` alone: the
+ensemble method needs no Jacobian. Given the runs, the solve never calls the
+model, so a model that cannot run from Python may raise in ``__call__``. The
+prior is 1 in every element with a standard deviation of 0.5, correlated over
+2 km; the observations are of a truth drawn from it.
 
 .. ipython:: python
 
-   cells = fips.Space({"flux": pd.RangeIndex(n, name="cell")})
-   observed = fips.Space({"ch4": pd.RangeIndex(m, name="obs_id")})
+   state = fips.Space({"flux": pd.RangeIndex(n, name="element")})
+   observed = fips.Space({"obs": pd.RangeIndex(m, name="obs_id")})
 
-   class Transport(fips.ForwardModel):
+   class Model(fips.ForwardModel):
        def __call__(self, x):
-           return fips.Vector(transport(x.to_series()), observed)
+           return fips.Vector(run_model(x.values), self.rows)
 
-   model = Transport(observed, cells)
-
-A prior of 1 in every cell with a standard deviation of 0.5, correlated over
-2 km (short: the footprints are longer), and observations of a truth drawn
-from it:
-
-.. ipython:: python
-
-   def build(obs, forward=model):
+   def build(obs, forward=Model(observed, state)):
        return fips.Problem(
-           prior=fips.Vector(np.ones(n), cells),
-           prior_cov=fips.Exponential("cell", 2.0).with_std(0.5),
+           prior=fips.Vector(np.ones(n), state),
+           prior_cov=fips.Exponential("element", 2.0).with_std(0.5),
            obs=obs,
            obs_cov=fips.Independent().with_std(0.2),
            forward=forward,
@@ -86,159 +87,84 @@ from it:
    truth, obs = build(fips.Vector(np.zeros(m), observed)).simulate(rng=1)
    problem = build(obs)
 
-
-The two stages
---------------
-
-Stage one, in fips: draw the members. Each is a column, labeled as the prior
-is; their mean is the prior exactly.
+**Stage one, in fips: draw the members.** Each member is a column, labeled as
+the prior is. Their mean is the prior exactly.
 
 .. ipython:: python
 
    members = problem.ensemble(100, rng=0)
    members.shape
 
-Stage two, outside fips: run the model on each member (``members[j]`` is one
-member's fluxes; write it out with ``to_csv`` or ``to_xarray``), and put the
-runs in a DataFrame, one row per observation, labeled as ``problem.obs.index``,
-one column per member, labeled as the members are (in any order). The runs are
+**Stage two, outside fips: run the model on each member.** ``members[j]`` is
+one member; write it out with ``to_csv`` or ``to_xarray``. Put the runs in a
+DataFrame with one row per observation, labeled as ``problem.obs.index``, and
+one column per member, labeled as the members are (in any order). A run is
 the model's output, :math:`F(x_j)`, without the problem's offset.
 
 .. ipython:: python
 
-   modeled = pd.DataFrame(
-       {j: transport(members[j]) for j in members.columns},
+   predicted = pd.DataFrame(
+       {j: run_model(members[j]) for j in members.columns},
        index=problem.obs.index,
    )
 
-Stage three, in fips: the update.
+**Stage three, in fips: update the members.** Here the posterior of the sum of
+each quarter of the line:
 
 .. ipython:: python
 
-   post = fips.solve(problem, "ensemble", members=members, predicted=modeled)
-   regions = fips.Operator(
-       np.kron(np.eye(4), np.ones((1, n // 4))),
-       fips.Space({"total": pd.Index(["W", "WC", "EC", "E"], name="region")}),
-       cells,
-   )
-   post.uncertainty(regions).round(2)
+   post = fips.solve(problem, "ensemble", members=members, predicted=predicted)
+   quarter = pd.Series(np.arange(n) // 30, index=pd.RangeIndex(n, name="element"), name="quarter")
+   W = fips.aggregate.sum(state, by=quarter)
+   post.uncertainty(W).round(2)
 
-A problem whose forward runs in Python can skip the middle:
-``fips.solve(problem, "ensemble", members=100, seed=0)`` draws the members
-with that seed and runs the forward (a :class:`~fips.ForwardModel`'s
-``__call__``, or an :class:`~fips.Operator`'s product) on each, and gives the
-same posterior.
-
-What the posterior is, for the ensemble:
-
-- :attr:`~fips.Posterior.estimate` (and :attr:`~fips.Posterior.mean`) is the
-  mean of the updated members; :attr:`~fips.Posterior.variances`,
-  :meth:`~fips.Posterior.cov` and :attr:`~fips.Posterior.kalman_gain` are
-  those of the members, and :meth:`~fips.Posterior.sample` returns the
-  updated members themselves (it raises past their number);
-- :attr:`~fips.Posterior.dofs`, :attr:`~fips.Posterior.information_content`,
-  :attr:`~fips.Posterior.chi2` and :meth:`~fips.Posterior.chi2_tests` are the
-  analytic method's formulas with the members' covariance of the modeled
-  observations in place of :math:`H S_0 H^T`;
-- :meth:`~fips.Posterior.with_data` and :meth:`~fips.Posterior.with_gamma`
-  reuse the runs, so :meth:`~fips.Posterior.trials` runs the model only to make
-  each trial's data;
-- what a Gaussian posterior gives and an ensemble's does not
-  (:meth:`~fips.Posterior.recovery`, :attr:`~fips.Posterior.log_evidence`: the
-  evidence of a sample covariance is not the evidence) is in :ref:`the table
-  <posterior-members>`, and what needs :math:`H`
-  (:meth:`~fips.Posterior.averaging_kernel`,
-  :attr:`~fips.Posterior.dofs_per_element`) raises for a model.
-
-
-How close it is
----------------
-
-This stand-in is cheap and linear, so its :math:`H` can be built from 120
-runs, one a cell, and the exact posterior compared with the ensemble's. A real
-transport model is not cheap, which is why it is run per member and not per
-cell.
+When the forward runs in Python (an :class:`~fips.Operator`, or a
+:class:`~fips.ForwardModel`'s ``__call__``), one call does all three stages:
+``members=100, seed=0`` draws the members with that seed and runs the forward
+on each. It gives the same posterior.
 
 .. ipython:: python
 
-   H = fips.Operator(
-       np.column_stack([transport(pd.Series(np.eye(n)[j])) for j in range(n)]),
-       observed,
-       cells,
-   )
-   exact = fips.solve(build(obs, forward=H))
-   exact.uncertainty(regions).round(2)
+   one_call = fips.solve(problem, "ensemble", members=100, seed=0)
+   np.allclose(one_call.estimate.values, post.estimate.values)
 
-The error of the regions' totals over 16 ensembles of each size, the mean's
-in posterior standard deviations and the standard deviation's relative to the
-exact one:
+This stand-in model is linear, so the exact posterior is at hand: its matrix
+is ``weights``. (A real model is run per member, not per element, because it
+cannot be run as often as there are elements.)
 
 .. ipython:: python
 
-   exact_totals = (regions @ exact.estimate).values
-   exact_std = np.sqrt(exact.cov(regions).variances.values)
+   exact = fips.solve(build(obs, forward=fips.Operator(weights, observed, state)))
+   pd.DataFrame({
+       "exact": exact.uncertainty(W)["posterior_std"],
+       "100 members": post.uncertainty(W)["posterior_std"],
+   }).round(2)
 
-   def error(N, seed):
-       e = fips.solve(problem, "ensemble", members=N, seed=seed)
-       mean = ((regions @ e.estimate).values - exact_totals) / exact_std
-       std = np.sqrt(e.cov(regions).variances.values) / exact_std - 1.0
-       return np.sqrt(np.mean(mean**2)), np.sqrt(np.mean(std**2))
-
-   sizes = [25, 50, 100, 200, 400, 800, 1600]
-   curve = pd.DataFrame(
-       [np.sqrt(np.mean([np.square(error(N, s)) for s in range(16)], axis=0)) for N in sizes],
-       index=pd.Index(sizes, name="members"),
-       columns=["mean", "std"],
-   )
-   curve.round(3)
-   np.polyfit(np.log(sizes), np.log(curve), 1)[0].round(2)  # the slopes
-
-.. ipython:: python
-
-   import matplotlib.pyplot as plt
-
-   fig, ax = plt.subplots(figsize=(5, 3.5))
-   ax.loglog(curve.index, curve["mean"], "o-", label="mean (posterior sd)")
-   ax.loglog(curve.index, curve["std"], "s-", label="std (relative)")
-   ax.loglog(sizes, curve["mean"].iloc[0] * np.sqrt(sizes[0] / np.array(sizes)), "k:", label=r"$1/\sqrt{N}$")
-   ax.set_xlabel("members")
-   ax.set_ylabel("error of the region totals")
-   @savefig ensemble_convergence.png width=5in
-   ax.legend()
-
-The mean's error falls as :math:`1/\sqrt{N}` (a slope of about -0.6 here,
-a little steeper at the smallest ensembles, where the gain's error has a part
-that falls as :math:`1/N`): four times the members for half the error. The
-standard deviation's falls faster over these sizes: at small ensembles it is
-mostly a bias, a spread too small by a part that falls as :math:`1/N` (the
-members' sampling noise fits the data and is taken for information), and the
-random part, which falls as :math:`1/\sqrt{N}`, takes over only at large
-ensembles. At 100 members the totals are within about four tenths of their
-posterior standard deviation of the exact ones, and their standard deviations
-about 10% small. (The tests hold the slopes of the mean and of the whole
-covariance to about -1/2 from 25 to 3200 members on an explicit-:math:`H`
-problem.)
+At 100 members the standard deviations of the sums are about a tenth too
+small. A small ensemble's spread is too small, not only noisy: the members'
+sampling noise fits the data and is taken for information. The error falls as
+:math:`1/\sqrt{N}`, so four times the members halve it.
 
 
 Localization
-------------
+~~~~~~~~~~~~
 
-An ensemble of :math:`N` members has :math:`N - 1` directions, far fewer than
-the cells, so its covariance between a cell and an observation far away is
-noise, not zero. The update follows that noise: it moves cells the observation
-cannot see, and shrinks their spread, so the posterior claims more certainty
-than it has. Localization multiplies the ensemble's covariances by weights that
-fall to zero with distance (Houtekamer and Mitchell, 2001). fips computes no
-distances: the weights are yours, an :class:`~fips.Operator` of the state by
-the observations (``localization=``), and one of the observations by
-themselves (``obs_localization=``). Here, Gaspari and Cohn's (1999)
-fifth-order function, which falls from 1 at no distance to 0 at twice its
-half-width:
+An ensemble of :math:`N` members spans :math:`N - 1` directions, far fewer
+than the state's elements. Its covariance between an element and an
+observation far away is noise, not zero, and the update follows that noise:
+it moves elements the observation cannot see and shrinks their spread, so the
+posterior claims more certainty than it has. **Localization multiplies the
+ensemble's covariances by weights that fall to zero with distance.** fips
+computes no distances: the weights are yours, an :class:`~fips.Operator` of
+the state by the observations (``localization=``) and one of the observations
+by themselves (``obs_localization=``). Give both or neither. Here the weights
+are Gaspari and Cohn's fifth-order function, which falls from 1 at no distance
+to 0 at twice its half-width:
 
 .. ipython:: python
 
    def gaspari_cohn(distance, half_width):
-       """Gaspari and Cohn's (1999) function of a distance, zero beyond twice the half-width."""
+       """Gaspari and Cohn's function of a distance, zero beyond twice the half-width."""
        r = np.abs(distance) / half_width
        w = np.zeros_like(r)
        a, b = r <= 1.0, (r > 1.0) & (r < 2.0)
@@ -249,71 +175,224 @@ half-width:
    def localized(N, half_width):
        return fips.solve(
            problem, "ensemble", members=N, seed=3,
-           localization=fips.Operator(gaspari_cohn(cell_x[:, None] - site_x[None, :], half_width), cells, observed),
-           obs_localization=fips.Operator(gaspari_cohn(site_x[:, None] - site_x[None, :], half_width), observed, observed),
+           localization=fips.Operator(gaspari_cohn(position[:, None] - site[None, :], half_width), state, observed),
+           obs_localization=fips.Operator(gaspari_cohn(site[:, None] - site[None, :], half_width), observed, observed),
        )
 
-The test is the one of :doc:`synthetic`: 200 sets of data from the problem's
-own world, each solved with the same members (``with_data``), and how often
-each region's 95% interval holds its true total. The analytic posterior's
-holds it 95% of the time; the ensemble's, with 40 members and no
-localization, much less, since it claims too small a spread:
+The check is the one of :doc:`synthetic`: 200 sets of data from the problem's
+own world, each solved with the same members (``trials`` reuses them), and how
+often each sum's 95% interval holds its true value. The analytic posterior's
+holds it about 95% of the time.
 
 .. ipython:: python
 
-   def score(post):
-       table = post.trials(n=200, rng=5, W=regions)
-       error = table["estimate"] - table["truth"]
-       return pd.Series({
-           "coverage": (error.abs() <= 1.96 * table["posterior_std"]).mean(),
-           "rmse": np.sqrt((error**2).mean()),
-           "claimed_std": table["posterior_std"].mean(),
-       })
+   def coverage(post):
+       """How often the 95% interval of each sum holds its true value, over 200 sets of data."""
+       table = post.trials(n=200, rng=5, W=W)
+       return table["truth"].between(table["lower"], table["upper"]).mean()
 
-   pd.DataFrame({
-       "analytic": score(exact),
-       "40 members": score(fips.solve(problem, "ensemble", members=40, seed=3)),
-       "40, localized 5 km": score(localized(40, 5.0)),
-       "40, localized 10 km": score(localized(40, 10.0)),
-       "40, localized 20 km": score(localized(40, 20.0)),
-   }).round(2)
+   pd.Series({
+       "analytic": coverage(exact),
+       "40 members": coverage(fips.solve(problem, "ensemble", members=40, seed=3)),
+       "40, localized 10 km": coverage(localized(40, 10.0)),
+       "40, localized 20 km": coverage(localized(40, 20.0)),
+   })
 
-Localized, the 40 members' intervals hold the truth about as often as they
-claim to, and their totals are closer to the truth. The half-width is a
-choice: too short cuts real correlations (the footprints here reach about
-10 km upwind, and the prior's correlation 2 km past that), so the update moves
-less than it should, and the error and the spread it claims are both larger (5
-km); longer comes closer to the analytic posterior (20 km, the best of the
-three here), until the noise is back (no localization at all is an infinite
-half-width). Choose it with ``trials``, as here, in a world shaped like
-yours. With localization the
-updated members' covariance is not the localized Kalman posterior (an ensemble
-of :math:`N` members cannot hold a covariance of more than :math:`N - 1`
-directions), and weights of one everywhere give the unlocalized update
-exactly.
+Without localization, 40 members claim too small a spread, and their intervals
+miss the truth far more often than they say. Localized, they hold it about as
+often as they claim. The half-width is a choice. Too short cuts real
+correlations (here an observation sees about 10 km behind it, and the prior's
+correlation reaches 2 km past that), so the update moves less than it should.
+Too long lets the noise back in (no localization is an infinite half-width).
+Choose it with ``trials``, as here, in a synthetic world shaped like yours.
 
 
-The update, and what it costs
------------------------------
+What the posterior reports
+--------------------------
 
-The prior members' deviations :math:`A` and their runs' :math:`B` (each
-divided by :math:`\sqrt{N - 1}`) give the ensemble's covariances
-:math:`P_{xy} = A B^T` and :math:`P_{yy} = B B^T`, each localized by its
-weights. The mean moves by the ensemble gain, :math:`K = P_{xy} (P_{yy} +
-S_z/\gamma)^{-1}`, and the deviations by the reduced gain of Whitaker and
-Hamill's (2002) batch square-root filter, computed with the observations
-whitened by :math:`S_z`: their covariance after the update is the Kalman
-posterior of the ensemble's own covariance, exactly. Without localization the
-same update is the ensemble transform of the ETKF, :math:`A^a = A (I + S^T
-S)^{-1/2}`, which fips computes from the thin SVD of the whitened runs
-(:math:`O(m N \min(m, N))`); with localization it eigendecomposes the
-:math:`m \times m` localized :math:`P_{yy}` and forms the :math:`n \times m`
-localized :math:`P_{xy}`. A non-diagonal :math:`S_z` is factored by Cholesky,
-dense. None of it depends on :math:`\gamma` or the observations' values, so
-:meth:`~fips.Posterior.with_gamma` and :meth:`~fips.Posterior.with_data` cost
-a product. The runs are the cost: :math:`N` of them, once.
+The ensemble's posterior is a Gaussian one, written from the updated members.
+The :ref:`members table <posterior-members>` lists every member for every kind
+of answer; for the ensemble:
 
-What stays outside: assimilating window after window (CarbonTracker's lag
-loop) is a loop of ``fips.solve(..., "ensemble")`` calls, each starting from
-the last one's updated members (``post.sample(N)``, with the next window's
-prior added); no outlier rejection is made.
+- :attr:`~fips.Posterior.estimate` (and :attr:`~fips.Posterior.mean`) is the
+  mean of the updated members. :attr:`~fips.Posterior.variances`,
+  :meth:`~fips.Posterior.cov` and :attr:`~fips.Posterior.kalman_gain` are
+  those of the updated members.
+- :meth:`~fips.Posterior.sample` returns the updated members themselves, so
+  it raises when asked for more than there are.
+- :attr:`~fips.Posterior.dofs`, :attr:`~fips.Posterior.information_content`,
+  :attr:`~fips.Posterior.chi2` and :meth:`~fips.Posterior.chi2_tests` are the
+  analytic method's formulas, with the members' covariance of the modeled
+  observations in place of :math:`H S_0 H^T`.
+- :meth:`~fips.Posterior.with_data` and :meth:`~fips.Posterior.with_gamma`
+  reuse the runs. :meth:`~fips.Posterior.trials` runs the model only to make
+  each trial's data, so it needs a model that runs in Python.
+- :attr:`~fips.Posterior.log_evidence` raises: the evidence of a sample
+  covariance is not the evidence. :meth:`~fips.Posterior.recovery` and the
+  data worth raise: the estimate is not claimed linear in the observations.
+- What needs :math:`H` (:meth:`~fips.Posterior.averaging_kernel`,
+  :attr:`~fips.Posterior.dofs_per_element`, the leverage, the innovation
+  covariance) works when the forward is an :class:`~fips.Operator`, and
+  raises :class:`TypeError` for a model.
+
+
+Options
+-------
+
+``fips.solve(problem, "ensemble", **options)`` takes
+(:class:`~fips.methods.ensemble.EnsembleOptions`):
+
+.. list-table::
+   :header-rows: 1
+   :widths: 20 14 66
+
+   * - Option
+     - Default
+     - What it does
+   * - ``members``
+     - required
+     - The prior members: the DataFrame :meth:`~fips.Problem.ensemble`
+       returns (one row per state element, one column per member, at least
+       two), or a number of members to draw. The update uses the members'
+       own mean and covariance as the prior, not ``problem.prior`` and
+       ``problem.prior_cov``: members from an earlier update carry it
+       forward.
+   * - ``predicted``
+     - None
+     - The model's output for each member, without the offset: one row per
+       observation, the members' columns. Given, fips runs no model; it needs
+       ``members`` as a DataFrame. None runs the problem's forward on each
+       member.
+   * - ``localization``
+     - None
+     - Weights on the ensemble's covariance of the state with the modeled
+       observations: an :class:`~fips.Operator`, state by observations.
+   * - ``obs_localization``
+     - None
+     - Weights on the ensemble's covariance of the modeled observations: an
+       :class:`~fips.Operator`, observations by observations, symmetric.
+   * - ``seed``
+     - 0
+     - The seed of the members drawn when ``members`` is a number.
+   * - ``gamma``
+     - 1.0
+     - The regularization factor: the observation covariance is divided by
+       it, as for every method (:doc:`posterior`).
+
+
+Warnings and checks
+-------------------
+
+The method warns about nothing. **A spread too small for the number of
+members comes with no message**: check it with
+:meth:`~fips.Posterior.trials` in a synthetic world, as above. When fips runs
+the forward itself, it logs one INFO line, naming the model and the number of
+members. fips logs through :mod:`logging`, silent until you configure it
+(:ref:`repeated-inversions`).
+
+It raises:
+
+- :class:`ValueError` when ``members`` is missing or holds fewer than two
+  members, when two members share a label, when ``predicted`` comes with a
+  number of members, or when only one of the two localizations is given;
+- :class:`ValueError` when the rows of ``members`` or ``predicted`` are not
+  the labels of the prior or of the observations (it names the labels on one
+  side only), when the columns of ``predicted`` are not the members' labels,
+  or when a value, given or run, is not finite;
+- :class:`ValueError` when ``obs_localization`` is not symmetric, or when its
+  weights make the localized covariance of the modeled observations clearly
+  negative (Gaspari and Cohn's function never does);
+- :class:`TypeError` when ``members`` is neither a number nor a DataFrame,
+  ``predicted`` is not a DataFrame, or a localization is not an
+  :class:`~fips.Operator`;
+- :class:`numpy.linalg.LinAlgError` when the observation covariance is not
+  positive definite: the update whitens the observations with its Cholesky
+  factor.
+
+
+Cost
+----
+
+**The cost is the runs**: :math:`N` runs of the model, made by you, once.
+Everything fips does is small beside them. Without localization, the update
+is a thin SVD of the whitened runs, :math:`O(m N \min(m, N))`, and products
+with the :math:`n \times N` members. With localization, it eigendecomposes an
+:math:`m \times m` matrix and holds an :math:`n \times m` dense one. A
+non-diagonal observation covariance is factored once, dense. Another
+:math:`\gamma` or other observation values cost a product, with no more runs.
+
+
+How it works
+------------
+
+The update is a deterministic square-root ensemble Kalman filter (EnSRF)
+applied to every observation at once, as CarbonTracker does. Write :math:`X`
+for the members (:math:`n \times N`) and :math:`Y` for their runs
+(:math:`m \times N`, :math:`Y_{\cdot j} = F(x_j)`). Their deviations from
+their means, scaled, are
+
+.. math::
+
+   A = (X - \bar{x}) / \sqrt{N - 1}, \qquad B = (Y - \bar{y}) / \sqrt{N - 1},
+
+and they give the ensemble's covariances :math:`P_{xy} = A B^T` and
+:math:`P_{yy} = B B^T`. With localization, each is multiplied element by
+element by its weights, :math:`\rho_{xy} \circ P_{xy}` and :math:`\rho_{yy}
+\circ P_{yy}`. With the innovation :math:`d = z - c - \bar{y}` and
+:math:`R = S_z / \gamma`, the mean moves by the ensemble's gain:
+
+.. math::
+
+   \bar{x}^a = \bar{x} + K d, \qquad K = P_{xy} (P_{yy} + R)^{-1}.
+
+The deviations move by the reduced gain of Whitaker and Hamill's batch
+square-root filter, :math:`A^a = A - \tilde{K} B`. With :math:`S_z = L L^T`
+and :math:`M = L^{-1} P_{yy} L^{-T}`,
+
+.. math::
+
+   \tilde{K} = P_{xy} L^{-T} \, G^{-1/2} (G^{1/2} + \gamma^{-1/2} I)^{-1},
+   \qquad G = M + I / \gamma,
+
+chosen so that the covariance of the updated deviations, :math:`A^a A^{aT}`,
+is the Kalman posterior of the ensemble's own covariance :math:`A A^T`,
+exactly. Without localization the same update is the ensemble transform of
+the ETKF, :math:`A^a = A (I + S^T S)^{-1/2}` with :math:`S = \sqrt{\gamma}
+L^{-1} B`, which fips computes from the thin SVD of :math:`L^{-1} B`. With
+localization it eigendecomposes the localized :math:`M`. The updated
+deviations' covariance is then not the localized Kalman posterior:
+:math:`N` members cannot hold a covariance of more than :math:`N - 1`
+directions; weights of one everywhere give the unlocalized update exactly.
+None of the factors depends on :math:`\gamma` or on the observations' values,
+which is why another :math:`\gamma` or other data cost a product.
+
+Assimilating window after window is a loop of ``fips.solve(...,
+"ensemble")`` calls, each starting from the members the last one updated
+(``post.sample(N)``), with the next window's prior added. The method rejects
+no outliers.
+
+
+References
+----------
+
+Gaspari, G., and Cohn, S. E. (1999). Construction of correlation functions in
+two and three dimensions. *Quarterly Journal of the Royal Meteorological
+Society*, 125(554), 723-757. https://doi.org/10.1002/qj.49712555417
+
+Houtekamer, P. L., and Mitchell, H. L. (2001). A sequential ensemble Kalman
+filter for atmospheric data assimilation. *Monthly Weather Review*, 129(1),
+123-137. https://doi.org/10.1175/1520-0493(2001)129<0123:ASEKFF>2.0.CO;2
+
+Peters, W., Miller, J. B., Whitaker, J., Denning, A. S., Hirsch, A., Krol,
+M. C., Zupanski, D., Bruhwiler, L., and Tans, P. P. (2005). An ensemble data
+assimilation system to estimate CO2 surface fluxes from atmospheric trace gas
+observations. *Journal of Geophysical Research*, 110, D24304.
+https://doi.org/10.1029/2005JD006157
+
+Tippett, M. K., Anderson, J. L., Bishop, C. H., Hamill, T. M., and Whitaker,
+J. S. (2003). Ensemble square root filters. *Monthly Weather Review*, 131(7),
+1485-1490. https://doi.org/10.1175/1520-0493(2003)131<1485:ESRF>2.0.CO;2
+
+Whitaker, J. S., and Hamill, T. M. (2002). Ensemble data assimilation without
+perturbed observations. *Monthly Weather Review*, 130(7), 1913-1924.
+https://doi.org/10.1175/1520-0493(2002)130<1913:EDAWPO>2.0.CO;2
