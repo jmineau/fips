@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>fips.methods.ensemble &#8212; fips 0.2.0b3.dev31+g6c1b40a3d documentation</title>
+    <title>fips.methods.ensemble &#8212; fips 0.2.0b3.dev32+gff32ffda2 documentation</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../../_static/documentation_options.js?v=84f0c1a0"></script>
+    <script src="../../../_static/documentation_options.js?v=bdbe5e4b"></script>
     <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -132,8 +132,8 @@
       
     
     
-    <img src="../../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev31+g6c1b40a3d documentation - Home"/>
-    <img src="../../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev31+g6c1b40a3d documentation - Home"/>
+    <img src="../../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev32+gff32ffda2 documentation - Home"/>
+    <img src="../../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev32+gff32ffda2 documentation - Home"/>
   
   
 </a></div>
@@ -427,8 +427,8 @@
 <span></span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">The ensemble method: a square-root ensemble Kalman update, for a forward model that can only be run.</span>
 
-<span class="sd">A transport model with no Jacobian (a TM5 or WRF configuration) cannot be</span>
-<span class="sd">linearized by hand, but it can be run. The ensemble method needs only its</span>
+<span class="sd">A model with no Jacobian (an atmospheric transport model, such as a TM5 or</span>
+<span class="sd">WRF configuration) cannot be linearized by hand, but it can be run. The ensemble method needs only its</span>
 <span class="sd">runs: :meth:`Problem.ensemble &lt;fips.Problem.ensemble&gt;` draws ``N`` members</span>
 <span class="sd">from the prior, the model is run on each (outside fips, or by fips when the</span>
 <span class="sd">problem's forward is an :class:`~fips.Operator` or a</span>
@@ -573,7 +573,7 @@
 <span class="sd">        with the modeled observations: rows the state's labels, columns the</span>
 <span class="sd">        observations' (any order, any form). fips computes no distances:</span>
 <span class="sd">        the weights are yours (Gaspari and Cohn's function of the distance</span>
-<span class="sd">        between each cell and each observation, say). Without it, no</span>
+<span class="sd">        between each state element and each observation, say). Without it, no</span>
 <span class="sd">        localization. It needs `obs_localization`.</span>
 <span class="sd">    obs_localization : Operator, optional</span>
 <span class="sd">        Weights :math:`\rho_{yy}` on the ensemble's covariance of the modeled</span>

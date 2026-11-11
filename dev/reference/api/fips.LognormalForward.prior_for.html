@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>fips.LognormalForward.prior_for &#8212; fips 0.2.0b3.dev31+g6c1b40a3d documentation</title>
+    <title>fips.LognormalForward.prior_for &#8212; fips 0.2.0b3.dev32+gff32ffda2 documentation</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../_static/documentation_options.js?v=84f0c1a0"></script>
+    <script src="../../_static/documentation_options.js?v=bdbe5e4b"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -137,8 +137,8 @@
       
     
     
-    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev31+g6c1b40a3d documentation - Home"/>
-    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev31+g6c1b40a3d documentation - Home"/>
+    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev32+gff32ffda2 documentation - Home"/>
+    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev32+gff32ffda2 documentation - Home"/>
   
   
 </a></div>
@@ -1035,37 +1035,37 @@
 <dl class="py method">
 <dt class="sig sig-object py" id="fips.LognormalForward.prior_for">
 <span class="sig-prename descclassname"><span class="pre">LognormalForward.</span></span><span class="sig-name descname"><span class="pre">prior_for</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mean</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">std</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/fips/transforms.html#LognormalForward.prior_for"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fips.LognormalForward.prior_for" title="Link to this definition">#</a></dt>
-<dd><p>Return the prior on <span class="math notranslate nohighlight">\(u\)</span> (its mean and standard deviation, each cell’s) whose flux <span class="math notranslate nohighlight">\(r\, e^{u}\)</span> has the mean and the standard deviation asked for.</p>
-<p>The flux is lognormal, with <span class="math notranslate nohighlight">\(u \sim N(\mu, \sigma^2)\)</span>:
+<dd><p>Return the prior on <span class="math notranslate nohighlight">\(u\)</span> (its mean and standard deviation, each element’s) whose value <span class="math notranslate nohighlight">\(r\, e^{u}\)</span> has the mean and the standard deviation asked for.</p>
+<p>The value is lognormal, with <span class="math notranslate nohighlight">\(u \sim N(\mu, \sigma^2)\)</span>:
 <span class="math notranslate nohighlight">\(\sigma^2 = \log(1 + s^2 / m^2)\)</span> and <span class="math notranslate nohighlight">\(\mu = \log(m / r) -
 \sigma^2 / 2\)</span>, so that its mean is <span class="math notranslate nohighlight">\(m\)</span> and its standard
-deviation <span class="math notranslate nohighlight">\(s\)</span> exactly. With the reference as the mean (an
-inventory), <span class="math notranslate nohighlight">\(\mu = -\sigma^2 / 2\)</span>: the prior median of the flux,
-<span class="math notranslate nohighlight">\(r\, e^{\mu}\)</span>, is below the inventory, and its mean is the
-inventory. A prior of <span class="math notranslate nohighlight">\(\mu = 0\)</span> instead makes the inventory the
+deviation <span class="math notranslate nohighlight">\(s\)</span> exactly. With the reference as the mean,
+<span class="math notranslate nohighlight">\(\mu = -\sigma^2 / 2\)</span>: the prior median of the value,
+<span class="math notranslate nohighlight">\(r\, e^{\mu}\)</span>, is below the reference, and its mean is the
+reference. A prior of <span class="math notranslate nohighlight">\(\mu = 0\)</span> instead makes the reference the
 median, and the prior’s total <span class="math notranslate nohighlight">\(e^{\sigma^2/2}\)</span> times the
-inventory’s (1.65 times for <span class="math notranslate nohighlight">\(\sigma = 1\)</span>).</p>
-<p>The correlations are those of <span class="math notranslate nohighlight">\(u\)</span>, not of the flux: build the
-covariance with them (<code class="docutils literal notranslate"><span class="pre">Exponential(...).with_std(sigma)</span></code>). Two cells
-whose <span class="math notranslate nohighlight">\(u\)</span> correlate by <span class="math notranslate nohighlight">\(\rho\)</span> have fluxes that correlate
+reference’s (1.65 times for <span class="math notranslate nohighlight">\(\sigma = 1\)</span>).</p>
+<p>The correlations are those of <span class="math notranslate nohighlight">\(u\)</span>, not of the value: build the
+covariance with them (<code class="docutils literal notranslate"><span class="pre">Exponential(...).with_std(sigma)</span></code>). Two
+elements whose <span class="math notranslate nohighlight">\(u\)</span> correlate by <span class="math notranslate nohighlight">\(\rho\)</span> have values that correlate
 by <span class="math notranslate nohighlight">\((e^{\rho \sigma_i \sigma_j} - 1) / \sqrt{(e^{\sigma_i^2} -
 1)(e^{\sigma_j^2} - 1)}\)</span>, less than <span class="math notranslate nohighlight">\(\rho\)</span> (0.38 for
 <span class="math notranslate nohighlight">\(\rho = 0.5\)</span> and <span class="math notranslate nohighlight">\(\sigma = 1\)</span>).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>mean</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="fips.Vector.html#fips.Vector" title="fips.vector.Vector"><code class="xref py py-class docutils literal notranslate"><span class="pre">Vector</span></code></a> | <a class="reference external" href="https://pandas.pydata.org/docs/reference/api/pandas.Series.html#pandas.Series" title="(in pandas v3.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Series</span></code></a> | <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a></span>) – The prior mean <span class="math notranslate nohighlight">\(m\)</span> of each cell’s flux, on the block’s labels
+<li><p><strong>mean</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="fips.Vector.html#fips.Vector" title="fips.vector.Vector"><code class="xref py py-class docutils literal notranslate"><span class="pre">Vector</span></code></a> | <a class="reference external" href="https://pandas.pydata.org/docs/reference/api/pandas.Series.html#pandas.Series" title="(in pandas v3.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Series</span></code></a> | <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a></span>) – The prior mean <span class="math notranslate nohighlight">\(m\)</span> of each element’s value, on the block’s labels
 (or one number). Positive where the reference is; zero where it
 is zero.</p></li>
-<li><p><strong>std</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="fips.Vector.html#fips.Vector" title="fips.vector.Vector"><code class="xref py py-class docutils literal notranslate"><span class="pre">Vector</span></code></a> | <a class="reference external" href="https://pandas.pydata.org/docs/reference/api/pandas.Series.html#pandas.Series" title="(in pandas v3.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Series</span></code></a> | <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a></span>) – The prior standard deviation <span class="math notranslate nohighlight">\(s\)</span> of each cell’s flux, not
-negative; zero where the reference is zero.</p></li>
+<li><p><strong>std</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="fips.Vector.html#fips.Vector" title="fips.vector.Vector"><code class="xref py py-class docutils literal notranslate"><span class="pre">Vector</span></code></a> | <a class="reference external" href="https://pandas.pydata.org/docs/reference/api/pandas.Series.html#pandas.Series" title="(in pandas v3.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Series</span></code></a> | <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a></span>) – The prior standard deviation <span class="math notranslate nohighlight">\(s\)</span> of each element’s value,
+not negative; zero where the reference is zero.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>mean, std</strong> – <span class="math notranslate nohighlight">\(\mu\)</span> and <span class="math notranslate nohighlight">\(\sigma\)</span>, on the block’s labels. A cell whose
-reference is zero gets 0 and 0: its flux is zero whatever its
-<span class="math notranslate nohighlight">\(u\)</span>, and any prior there gives the other cells the same
-posterior.</p>
+<dd class="field-even"><p><strong>mean, std</strong> – <span class="math notranslate nohighlight">\(\mu\)</span> and <span class="math notranslate nohighlight">\(\sigma\)</span>, on the block’s labels. An element
+whose reference is zero gets 0 and 0: its value is zero whatever
+its <span class="math notranslate nohighlight">\(u\)</span>, and any prior there gives the other elements the
+same posterior.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></a>[<a class="reference internal" href="fips.Vector.html#fips.Vector" title="fips.vector.Vector"><code class="xref py py-class docutils literal notranslate"><span class="pre">Vector</span></code></a>, <a class="reference internal" href="fips.Vector.html#fips.Vector" title="fips.vector.Vector"><code class="xref py py-class docutils literal notranslate"><span class="pre">Vector</span></code></a>]</span></p>
@@ -1080,8 +1080,8 @@ posterior.</p>
 </dd>
 </dl>
 <p class="rubric">Examples</p>
-<p>A flux of mean 2 and standard deviation 1 in each cell, the reference
-its mean:</p>
+<p>A mean of 2 and a standard deviation of 1 in each element, the
+reference its mean:</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">fips</span>

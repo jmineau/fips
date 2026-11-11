@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>A nonlinear forward model &#8212; fips 0.2.0b3.dev31+g6c1b40a3d documentation</title>
+    <title>A nonlinear forward model &#8212; fips 0.2.0b3.dev32+gff32ffda2 documentation</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../_static/documentation_options.js?v=84f0c1a0"></script>
+    <script src="../_static/documentation_options.js?v=bdbe5e4b"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -60,7 +60,7 @@
     <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Fluxes that stay positive" href="positive.html" />
+    <link rel="next" title="Values that stay positive" href="positive.html" />
     <link rel="prev" title="Bounds on the state" href="bounds.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
@@ -137,8 +137,8 @@
       
     
     
-    <img src="../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev31+g6c1b40a3d documentation - Home"/>
-    <img src="../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev31+g6c1b40a3d documentation - Home"/>
+    <img src="../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev32+gff32ffda2 documentation - Home"/>
+    <img src="../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev32+gff32ffda2 documentation - Home"/>
   
   
 </a></div>
@@ -391,7 +391,7 @@
 <li class="toctree-l1"><a class="reference internal" href="hierarchical.html">The uncertainty of the settings</a></li>
 <li class="toctree-l1"><a class="reference internal" href="bounds.html">Bounds on the state</a></li>
 <li class="toctree-l1 current active"><a aria-current="page" class="current reference internal" href="#">A nonlinear forward model</a></li>
-<li class="toctree-l1"><a class="reference internal" href="positive.html">Fluxes that stay positive</a></li>
+<li class="toctree-l1"><a class="reference internal" href="positive.html">Values that stay positive</a></li>
 <li class="toctree-l1"><a class="reference internal" href="comparison.html">Choosing a method</a></li>
 <li class="toctree-l1"><a class="reference internal" href="ensemble.html">A model with no Jacobian: the ensemble method</a></li>
 <li class="toctree-l1"><a class="reference internal" href="variational.html">A problem too large to factor: the variational method</a></li>
@@ -501,7 +501,7 @@ derivatives <span class="math notranslate nohighlight">\(J_{ij} = \partial F_i /
 factor of the inventory, not a flux. The model is <span class="math notranslate nohighlight">\(F(x) = H (r\, e^{x})\)</span>
 and its Jacobian <span class="math notranslate nohighlight">\(H \operatorname{diag}(r\, e^{x})\)</span> (fips has it ready
 made, with the prior that goes with it, as <a class="reference internal" href="../reference/api/fips.LognormalForward.html#fips.LognormalForward" title="fips.LognormalForward"><code class="xref py py-class docutils literal notranslate"><span class="pre">LognormalForward</span></code></a>:
-<a class="reference internal" href="positive.html"><span class="doc">Fluxes that stay positive</span></a>):</p>
+<a class="reference internal" href="positive.html"><span class="doc">Values that stay positive</span></a>):</p>
 <div class="highlight-ipython notranslate"><div class="highlight"><pre><span></span><span class="gp">In [1]: </span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 
 <span class="gp">In [2]: </span><span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
@@ -566,7 +566,7 @@ that prior:</p>
 <p><a class="reference internal" href="../reference/api/fips.Problem.predict.html#fips.Problem.predict" title="fips.Problem.predict"><code class="xref py py-meth docutils literal notranslate"><span class="pre">predict()</span></code></a> and <a class="reference internal" href="../reference/api/fips.Problem.simulate.html#fips.Problem.simulate" title="fips.Problem.simulate"><code class="xref py py-meth docutils literal notranslate"><span class="pre">simulate()</span></code></a> run the model,
 and <a class="reference internal" href="../reference/api/fips.Problem.aggregate.html#fips.Problem.aggregate" title="fips.Problem.aggregate"><code class="xref py py-meth docutils literal notranslate"><span class="pre">aggregate()</span></code></a> follows it with the aggregation (the model
 of the aggregated problem is <span class="math notranslate nohighlight">\(W F(x)\)</span>). <a class="reference internal" href="../reference/api/fips.Problem.restrict.html#fips.Problem.restrict" title="fips.Problem.restrict"><code class="xref py py-meth docutils literal notranslate"><span class="pre">restrict()</span></code></a>
-refuses a model: holding cells at their prior puts what they add to the
+refuses a model: holding elements at their prior puts what they add to the
 observations into the offset, which is a constant only for a linear forward.</p>
 </section>
 <section id="checking-the-jacobian">
@@ -662,7 +662,7 @@ logs a warning saying so. A model written by hand gives only its Jacobian, so
 its steps are Gauss-Newton’s; for <a class="reference internal" href="../reference/api/fips.LognormalForward.html#fips.LognormalForward" title="fips.LognormalForward"><code class="xref py py-class docutils literal notranslate"><span class="pre">LognormalForward</span></code></a> and
 <a class="reference internal" href="../reference/api/fips.SoftplusForward.html#fips.SoftplusForward" title="fips.SoftplusForward"><code class="xref py py-class docutils literal notranslate"><span class="pre">SoftplusForward</span></code></a>, whose second derivatives fips knows, the steps
 are Newton’s where those are better, and the solve takes about half as many
-where Gauss-Newton’s crawl (<a class="reference internal" href="positive.html"><span class="doc">Fluxes that stay positive</span></a>).</p>
+where Gauss-Newton’s crawl (<a class="reference internal" href="positive.html"><span class="doc">Values that stay positive</span></a>).</p>
 </section>
 <section id="what-the-posterior-reports">
 <h2><a class="toc-backref" href="#id5" role="doc-backlink">What the posterior reports</a><a class="headerlink" href="#what-the-posterior-reports" title="Link to this heading">#</a></h2>
@@ -731,10 +731,10 @@ whose length the <code class="docutils literal notranslate"><span class="pre">bu
 linear has no rest: every path is a quarter turn of one step and is accepted,
 and the draws are exact and independent. The more the model bends over the
 posterior’s spread, the more steps a path takes (a median of 16 over 200 data
-sets of a Salt Lake Valley-shaped flux problem with a log standard deviation
-of 1, at most 38). No inverse of
-the prior covariance is formed, so a prior with zero spread somewhere (a
-cell with no inventory) works.</p>
+sets of <a class="reference internal" href="comparison.html"><span class="doc">Choosing a method</span></a>’s 400-cell flux problem with a log standard
+deviation of 1, at most 38). No inverse of
+the prior covariance is formed, so a prior with zero spread somewhere (an
+element with no reference) works.</p>
 <p>Each step evaluates the model and the product of its Jacobian’s transpose with
 a vector (<code class="docutils literal notranslate"><span class="pre">fips.LognormalForward</span></code> and <code class="docutils literal notranslate"><span class="pre">fips.SoftplusForward</span></code> form no
 Jacobian for it; a model of your own forms one with <code class="docutils literal notranslate"><span class="pre">jacobian</span></code>), and one
@@ -784,7 +784,7 @@ instead as the mode plus or minus a multiple of the draws’ standard
 deviation, the interval is not the posterior’s where it is skewed: at 1.5 it
 held the truth 93% of the time at 95% (the Gaussian at the mode, read the
 same way, 92%). A total of a transform’s flux is not a total of the state, so
-read it from the draws (<a class="reference internal" href="positive.html"><span class="doc">Fluxes that stay positive</span></a>); <a class="reference internal" href="comparison.html"><span class="doc">Choosing a method</span></a> reads every
+read it from the draws (<a class="reference internal" href="positive.html"><span class="doc">Values that stay positive</span></a>); <a class="reference internal" href="comparison.html"><span class="doc">Choosing a method</span></a> reads every
 method that way.</p>
 </section>
 </section>
@@ -813,7 +813,7 @@ method that way.</p>
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Fluxes that stay positive</p>
+        <p class="prev-next-title">Values that stay positive</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>

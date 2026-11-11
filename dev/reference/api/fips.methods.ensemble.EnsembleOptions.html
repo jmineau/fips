@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>fips.methods.ensemble.EnsembleOptions &#8212; fips 0.2.0b3.dev31+g6c1b40a3d documentation</title>
+    <title>fips.methods.ensemble.EnsembleOptions &#8212; fips 0.2.0b3.dev32+gff32ffda2 documentation</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../_static/documentation_options.js?v=84f0c1a0"></script>
+    <script src="../../_static/documentation_options.js?v=bdbe5e4b"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -137,8 +137,8 @@
       
     
     
-    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev31+g6c1b40a3d documentation - Home"/>
-    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev31+g6c1b40a3d documentation - Home"/>
+    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev32+gff32ffda2 documentation - Home"/>
+    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev32+gff32ffda2 documentation - Home"/>
   
   
 </a></div>
@@ -1058,7 +1058,7 @@ is the second stage of a model that runs outside Python. It needs
 with the modeled observations: rows the state’s labels, columns the
 observations’ (any order, any form). fips computes no distances:
 the weights are yours (Gaspari and Cohn’s function of the distance
-between each cell and each observation, say). Without it, no
+between each state element and each observation, say). Without it, no
 localization. It needs <cite>obs_localization</cite>.</p></li>
 <li><p><strong>obs_localization</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="fips.Operator.html#fips.Operator" title="fips.operator.Operator"><code class="xref py py-class docutils literal notranslate"><span class="pre">Operator</span></code></a> | <span class="highlight sphinx_autodoc_typehints-value"><a class="reference external" href="https://docs.python.org/3/builtins/constants.html#None" title="(in Python v3.15)"><code class="xref py py-obj docutils literal notranslate"><span class="kc"><span class="pre">None</span></span></code></a></span></span>) – Weights <span class="math notranslate nohighlight">\(\rho_{yy}\)</span> on the ensemble’s covariance of the modeled
 observations with each other: rows and columns the observations’

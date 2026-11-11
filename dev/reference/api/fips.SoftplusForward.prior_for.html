@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>fips.SoftplusForward.prior_for &#8212; fips 0.2.0b3.dev31+g6c1b40a3d documentation</title>
+    <title>fips.SoftplusForward.prior_for &#8212; fips 0.2.0b3.dev32+gff32ffda2 documentation</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../_static/documentation_options.js?v=84f0c1a0"></script>
+    <script src="../../_static/documentation_options.js?v=bdbe5e4b"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -137,8 +137,8 @@
       
     
     
-    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev31+g6c1b40a3d documentation - Home"/>
-    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev31+g6c1b40a3d documentation - Home"/>
+    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev32+gff32ffda2 documentation - Home"/>
+    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev32+gff32ffda2 documentation - Home"/>
   
   
 </a></div>
@@ -1035,27 +1035,27 @@
 <dl class="py method">
 <dt class="sig sig-object py" id="fips.SoftplusForward.prior_for">
 <span class="sig-prename descclassname"><span class="pre">SoftplusForward.</span></span><span class="sig-name descname"><span class="pre">prior_for</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mean</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">std</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/fips/transforms.html#SoftplusForward.prior_for"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#fips.SoftplusForward.prior_for" title="Link to this definition">#</a></dt>
-<dd><p>Return the prior on <span class="math notranslate nohighlight">\(u\)</span> (its mean and standard deviation, each cell’s) whose flux <span class="math notranslate nohighlight">\(s \log(1 + e^{u/s})\)</span> has the mean and the standard deviation asked for.</p>
+<dd><p>Return the prior on <span class="math notranslate nohighlight">\(u\)</span> (its mean and standard deviation, each element’s) whose value <span class="math notranslate nohighlight">\(s \log(1 + e^{u/s})\)</span> has the mean and the standard deviation asked for.</p>
 <p>There is no closed form: for <span class="math notranslate nohighlight">\(u \sim N(\mu, \sigma^2)\)</span> the mean
-and the standard deviation of the flux are integrals, computed by
+and the standard deviation of the value are integrals, computed by
 quadrature (to about 1e-13), and <span class="math notranslate nohighlight">\(\mu, \sigma\)</span> are found by
 Newton’s method until both match to 1e-12, relative. Far above the
 scale (<span class="math notranslate nohighlight">\(m \gg s\)</span>) the answer is <span class="math notranslate nohighlight">\(\mu = m\)</span>, <span class="math notranslate nohighlight">\(\sigma
-= s\)</span> (the flux is <span class="math notranslate nohighlight">\(u\)</span>); far below, the lognormal’s. A cell with
-no spread asked (a standard deviation of zero) gets <span class="math notranslate nohighlight">\(\sigma =
-0\)</span> and the <span class="math notranslate nohighlight">\(\mu\)</span> whose flux is the mean.</p>
-<p>The correlations are those of <span class="math notranslate nohighlight">\(u\)</span>: where the flux is far above
-the scale they are the flux’s too; near zero the flux’s are weaker.</p>
+= s\)</span> (the value is <span class="math notranslate nohighlight">\(u\)</span>); far below, the lognormal’s. An element
+with no spread asked (a standard deviation of zero) gets <span class="math notranslate nohighlight">\(\sigma
+= 0\)</span> and the <span class="math notranslate nohighlight">\(\mu\)</span> whose value is the mean.</p>
+<p>The correlations are those of <span class="math notranslate nohighlight">\(u\)</span>: where the value is far above
+the scale they are the value’s too; near zero the value’s are weaker.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>mean</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="fips.Vector.html#fips.Vector" title="fips.vector.Vector"><code class="xref py py-class docutils literal notranslate"><span class="pre">Vector</span></code></a> | <a class="reference external" href="https://pandas.pydata.org/docs/reference/api/pandas.Series.html#pandas.Series" title="(in pandas v3.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Series</span></code></a> | <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a></span>) – The prior mean of each cell’s flux, positive (the flux is never
-zero), on the block’s labels or one number.</p></li>
-<li><p><strong>std</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="fips.Vector.html#fips.Vector" title="fips.vector.Vector"><code class="xref py py-class docutils literal notranslate"><span class="pre">Vector</span></code></a> | <a class="reference external" href="https://pandas.pydata.org/docs/reference/api/pandas.Series.html#pandas.Series" title="(in pandas v3.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Series</span></code></a> | <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a></span>) – The prior standard deviation of each cell’s flux, not negative.</p></li>
+<li><p><strong>mean</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="fips.Vector.html#fips.Vector" title="fips.vector.Vector"><code class="xref py py-class docutils literal notranslate"><span class="pre">Vector</span></code></a> | <a class="reference external" href="https://pandas.pydata.org/docs/reference/api/pandas.Series.html#pandas.Series" title="(in pandas v3.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Series</span></code></a> | <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a></span>) – The prior mean of each element’s value, positive (the value is
+never zero), on the block’s labels or one number.</p></li>
+<li><p><strong>std</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="fips.Vector.html#fips.Vector" title="fips.vector.Vector"><code class="xref py py-class docutils literal notranslate"><span class="pre">Vector</span></code></a> | <a class="reference external" href="https://pandas.pydata.org/docs/reference/api/pandas.Series.html#pandas.Series" title="(in pandas v3.1)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Series</span></code></a> | <a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a></span>) – The prior standard deviation of each element’s value, not negative.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>mean, std</strong> – <span class="math notranslate nohighlight">\(\mu\)</span> and <span class="math notranslate nohighlight">\(\sigma\)</span>, in the flux’s units, on the block’s
+<dd class="field-even"><p><strong>mean, std</strong> – <span class="math notranslate nohighlight">\(\mu\)</span> and <span class="math notranslate nohighlight">\(\sigma\)</span>, in the value’s units, on the block’s
 labels.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
@@ -1066,14 +1066,14 @@ labels.</p>
 <li><p><a class="reference external" href="https://docs.python.org/3/builtins/exceptions.html#TypeError" title="(in Python v3.15)"><strong>TypeError</strong></a> – If <cite>mean</cite> or <cite>std</cite> is an array.</p></li>
 <li><p><a class="reference external" href="https://docs.python.org/3/builtins/exceptions.html#ValueError" title="(in Python v3.15)"><strong>ValueError</strong></a> – If their labels are not the block’s, a mean is not positive, or a
     standard deviation is negative or not finite.</p></li>
-<li><p><a class="reference external" href="https://docs.python.org/3/builtins/exceptions.html#RuntimeError" title="(in Python v3.15)"><strong>RuntimeError</strong></a> – If Newton’s method does not match some cell (it has not failed in
+<li><p><a class="reference external" href="https://docs.python.org/3/builtins/exceptions.html#RuntimeError" title="(in Python v3.15)"><strong>RuntimeError</strong></a> – If Newton’s method does not match some element (it has not failed in
     the tests, over means from 1e-6 to 1e6 scales and standard
     deviations from 1e-6 to 1e3 times the mean).</p></li>
 </ul>
 </dd>
 </dl>
 <p class="rubric">Examples</p>
-<p>A flux of mean 1 and standard deviation 1, with the bend at 1: the
+<p>A mean of 1 and a standard deviation of 1, with the bend at 1: the
 prior on <span class="math notranslate nohighlight">\(u\)</span> is centered below the mean, and wider:</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>

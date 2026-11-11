@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>fips.Posterior.sample &#8212; fips 0.2.0b3.dev31+g6c1b40a3d documentation</title>
+    <title>fips.Posterior.sample &#8212; fips 0.2.0b3.dev32+gff32ffda2 documentation</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../_static/documentation_options.js?v=84f0c1a0"></script>
+    <script src="../../_static/documentation_options.js?v=bdbe5e4b"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -137,8 +137,8 @@
       
     
     
-    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev31+g6c1b40a3d documentation - Home"/>
-    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev31+g6c1b40a3d documentation - Home"/>
+    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev32+gff32ffda2 documentation - Home"/>
+    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev32+gff32ffda2 documentation - Home"/>
   
   
 </a></div>
@@ -1039,7 +1039,7 @@
 <p>The distribution of any function of the state, which <a class="reference internal" href="fips.Posterior.cov.html#fips.Posterior.cov" title="fips.Posterior.cov"><code class="xref py py-meth docutils literal notranslate"><span class="pre">cov()</span></code></a> and
 <a class="reference internal" href="fips.Posterior.uncertainty.html#fips.Posterior.uncertainty" title="fips.Posterior.uncertainty"><code class="xref py py-meth docutils literal notranslate"><span class="pre">uncertainty()</span></code></a> give only for a linear one and only as a spread:
 the probability that a total is above a value or below zero, a
-quantile of a ratio of two totals, the share of cells below zero. Take
+quantile of a ratio of two totals, the share of elements below zero. Take
 the function of each draw, and read the answer off the draws.</p>
 <p>The analytic method draws exactly, by perturbing the prior and the
 data and solving. With <span class="math notranslate nohighlight">\(x_p \sim N(x_0, S_0)\)</span> and <span class="math notranslate nohighlight">\(e \sim
@@ -1077,10 +1077,11 @@ Monte Carlo with the Gaussian at the mode as its mass and the exactly
 solved part of its paths, and a Metropolis test: each call continues
 the chain from where the solve’s burn-in ended, at its tuned step
 (<code class="docutils literal notranslate"><span class="pre">GaussNewtonOptions</span></code>), and returns the next <cite>n</cite> draws. A draw of
-the state (log scale factors), carried through the model or its
-transform, is a draw of the result: a total of fluxes, its interval.
-The draws are correlated (an autocorrelation time of 1 to 3 draws for
-most elements in a Salt Lake Valley-shaped test; hundreds along a
+the state (log scale factors, under a lognormal transform), carried
+through the model or its transform, is a draw of the result: a total
+of the transformed values, its interval. The draws are correlated (an
+autocorrelation time of 1 to 3 draws for most elements of the user
+guide’s 400-element comparison problem; hundreds along a
 curve the data pin, which the totals they constrain do not share). A
 draw costs a few evaluations of the model and of the product of its
 Jacobian’s transpose (one for a linear model), each with a product of

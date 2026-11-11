@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>fips.Posterior.log_evidence &#8212; fips 0.2.0b3.dev31+g6c1b40a3d documentation</title>
+    <title>fips.Posterior.log_evidence &#8212; fips 0.2.0b3.dev32+gff32ffda2 documentation</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../_static/documentation_options.js?v=84f0c1a0"></script>
+    <script src="../../_static/documentation_options.js?v=bdbe5e4b"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -137,8 +137,8 @@
       
     
     
-    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev31+g6c1b40a3d documentation - Home"/>
-    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev31+g6c1b40a3d documentation - Home"/>
+    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev32+gff32ffda2 documentation - Home"/>
+    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev32+gff32ffda2 documentation - Home"/>
   
   
 </a></div>
@@ -1077,10 +1077,10 @@ Gauss-Newton curvature of the cost, at the last linearization, one
 step from the mode). It is exact for a linear forward model; for a
 model that bends, it is the evidence of the Gaussian at the mode, and
 leaves out how the posterior departs from it (the skew its draws show,
-<a class="reference internal" href="fips.Posterior.sample.html#fips.Posterior.sample" title="fips.Posterior.sample"><code class="xref py py-meth docutils literal notranslate"><span class="pre">sample()</span></code></a>): for a lognormal flux in a few cells with a log-std of
-0.8, it was within about 0.1 of the evidence by importance sampling. The
-<code class="docutils literal notranslate"><span class="pre">&quot;bounded&quot;</span></code> method gives it only with no finite bound, when its
-posterior is the analytic one.</p>
+<a class="reference internal" href="fips.Posterior.sample.html#fips.Posterior.sample" title="fips.Posterior.sample"><code class="xref py py-meth docutils literal notranslate"><span class="pre">sample()</span></code></a>): for a lognormal block of a few elements with a
+log-std of 0.8, it was within about 0.1 of the evidence by importance
+sampling. The <code class="docutils literal notranslate"><span class="pre">&quot;bounded&quot;</span></code> method gives it only with no finite bound,
+when its posterior is the analytic one.</p>
 <p>For the <code class="docutils literal notranslate"><span class="pre">&quot;variational&quot;</span></code> method, it is the same formula with the
 information content of its low-rank posterior: exact for a linear
 problem at full rank. Below the problem’s rank it leaves out

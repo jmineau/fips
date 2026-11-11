@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Bounds on the state &#8212; fips 0.2.0b3.dev31+g6c1b40a3d documentation</title>
+    <title>Bounds on the state &#8212; fips 0.2.0b3.dev32+gff32ffda2 documentation</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../_static/documentation_options.js?v=84f0c1a0"></script>
+    <script src="../_static/documentation_options.js?v=bdbe5e4b"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -137,8 +137,8 @@
       
     
     
-    <img src="../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev31+g6c1b40a3d documentation - Home"/>
-    <img src="../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev31+g6c1b40a3d documentation - Home"/>
+    <img src="../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev32+gff32ffda2 documentation - Home"/>
+    <img src="../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev32+gff32ffda2 documentation - Home"/>
   
   
 </a></div>
@@ -391,7 +391,7 @@
 <li class="toctree-l1"><a class="reference internal" href="hierarchical.html">The uncertainty of the settings</a></li>
 <li class="toctree-l1 current active"><a aria-current="page" class="current reference internal" href="#">Bounds on the state</a></li>
 <li class="toctree-l1"><a class="reference internal" href="nonlinear.html">A nonlinear forward model</a></li>
-<li class="toctree-l1"><a class="reference internal" href="positive.html">Fluxes that stay positive</a></li>
+<li class="toctree-l1"><a class="reference internal" href="positive.html">Values that stay positive</a></li>
 <li class="toctree-l1"><a class="reference internal" href="comparison.html">Choosing a method</a></li>
 <li class="toctree-l1"><a class="reference internal" href="ensemble.html">A model with no Jacobian: the ensemble method</a></li>
 <li class="toctree-l1"><a class="reference internal" href="variational.html">A problem too large to factor: the variational method</a></li>
@@ -464,15 +464,16 @@
                   
   <section id="bounds-on-the-state">
 <span id="bounds"></span><h1>Bounds on the state<a class="headerlink" href="#bounds-on-the-state" title="Link to this heading">#</a></h1>
-<p>A flux of methane cannot be negative, yet the Gaussian posterior of a flux
-inversion often is in cells where the prior is small and the observations see
-little. <code class="docutils literal notranslate"><span class="pre">fips.solve(problem,</span> <span class="pre">&quot;bounded&quot;,</span> <span class="pre">lower={&quot;flux&quot;:</span> <span class="pre">0.0})</span></code> holds the
-state to bounds. The rule: <strong>the bounded estimate is the analytic one moved
+<p>Some quantities cannot be negative (a flux, a concentration, a rate), yet the
+Gaussian posterior of a problem that estimates them often is negative where
+the prior is small and the observations see little.
+<code class="docutils literal notranslate"><span class="pre">fips.solve(problem,</span> <span class="pre">&quot;bounded&quot;,</span> <span class="pre">lower={&quot;flux&quot;:</span> <span class="pre">0.0})</span></code> holds the state to
+bounds (here, a block named <code class="docutils literal notranslate"><span class="pre">flux</span></code> at or above zero). The rule: <strong>the bounded estimate is the analytic one moved
 onto the bounds along the posterior’s correlations.</strong> An element the analytic
 estimate puts below its bound goes to the bound, and its neighbors move by what
 the posterior says they would if that element were known to be at its bound.
 A neighbor the move would push out is held at its bound too. Clipping (setting
-the negative cells to zero and nothing else) is not this: it always raises the
+the negative elements to zero and nothing else) is not this: it always raises the
 total, while moving along the correlations can lower it as well.</p>
 <nav class="contents local" id="on-this-page">
 <p class="topic-title">On this page</p>
@@ -517,7 +518,7 @@ the estimate is not affected. With rectified draws (below) it gives the
 smaller shift of the prior set to its bounds.</p>
 <p>The bounds are <code class="docutils literal notranslate"><span class="pre">lower</span></code> and <code class="docutils literal notranslate"><span class="pre">upper</span></code>: a number for every element, a
 <a class="reference internal" href="../reference/api/fips.Vector.html#fips.Vector" title="fips.Vector"><code class="xref py py-class docutils literal notranslate"><span class="pre">Vector</span></code></a> with an element’s own bound (<code class="docutils literal notranslate"><span class="pre">-inf</span></code> or <code class="docutils literal notranslate"><span class="pre">inf</span></code> for
-none), or a dict by block. <code class="docutils literal notranslate"><span class="pre">{&quot;flux&quot;:</span> <span class="pre">0.0}</span></code> bounds the fluxes and leaves the
+none), or a dict by block. <code class="docutils literal notranslate"><span class="pre">{&quot;flux&quot;:</span> <span class="pre">0.0}</span></code> bounds the <code class="docutils literal notranslate"><span class="pre">flux</span></code> block and leaves the
 other blocks free, as a bias block must be. Bounds go to the solve, not to the
 <a class="reference internal" href="../reference/api/fips.Problem.html#fips.Problem" title="fips.Problem"><code class="xref py py-class docutils literal notranslate"><span class="pre">Problem</span></code></a>: the problem is the Gaussian question, and the bounds
 are how the method answers it.</p>
@@ -821,8 +822,8 @@ the truth is not a draw of the truncated prior, and as often where it is; the
 analytic total held it in every world, while the rectified total fell short of
 95% where the truth could be negative (0.77 and 0.84) and, with weak data,
 where it had exact zeros (0.88).</strong> For a total, read the analytic posterior. The rectified draws suit
-the cells of a map near zero: where the truth has exact zeros, 96% of their
-cells’ intervals held it, against 77% for the truncated draws, which never
+the elements of a map near zero: where the truth has exact zeros, 96% of
+their intervals held it, against 77% for the truncated draws, which never
 reach zero.</p>
 <p>How they are made: the analytic estimate of the perturbed problem is an exact
 draw of the analytic posterior <span class="math notranslate nohighlight">\(N(\hat{x}, \hat{S})\)</span> (what
@@ -866,7 +867,7 @@ a bounded posterior draws in every trial: keep <code class="docutils literal not
 </section>
 <section id="in-a-world-with-a-nonnegative-truth">
 <h2><a class="toc-backref" href="#id6" role="doc-backlink">In a world with a nonnegative truth</a><a class="headerlink" href="#in-a-world-with-a-nonnegative-truth" title="Link to this heading">#</a></h2>
-<p>Does holding the fluxes at or above zero give a better answer? It depends on
+<p>Does holding the state at or above zero give a better answer? It depends on
 what is asked, and <a class="reference internal" href="../reference/api/fips.Posterior.trials.html#fips.Posterior.trials" title="fips.Posterior.trials"><code class="xref py py-meth docutils literal notranslate"><span class="pre">trials()</span></code></a> (see <a class="reference internal" href="synthetic.html"><span class="doc">Synthetic experiments</span></a>)
 measures it: the same data, trial for trial (the same seed), solved with and
 without the bounds, in a world whose truth is lognormal, most of it near zero,
@@ -935,10 +936,10 @@ whose total is above this world’s wherever the data see little. That is the
 pattern to expect: <strong>bounds mostly improve maps and can move totals</strong>, and since the
 estimate is the mode of a skewed posterior, a total read from it is not the
 posterior’s mean total (above, the draws’). Which matters depends on the
-question. For a basin total, read the analytic posterior: the draws’ total is
-that of the truncated prior wherever the data see little, above an inventory
-that is the mean, and <a class="reference internal" href="comparison.html"><span class="doc">Choosing a method</span></a> measures it far above in a Salt Lake
-Valley-shaped problem. The world here is a toy: the trials of an inversion’s
+question. For a total of the state, read the analytic posterior: the draws’
+total is that of the truncated prior wherever the data see little, above a
+prior that is the mean, and <a class="reference internal" href="comparison.html"><span class="doc">Choosing a method</span></a> measures it far above in its
+400-cell example. The world here is a toy: the trials of an inversion’s
 own problem, at its own size, say what its bounds do.</p>
 <section id="references">
 <h3>References<a class="headerlink" href="#references" title="Link to this heading">#</a></h3>

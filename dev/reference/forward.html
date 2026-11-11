@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Forward models &#8212; fips 0.2.0b3.dev31+g6c1b40a3d documentation</title>
+    <title>Forward models &#8212; fips 0.2.0b3.dev32+gff32ffda2 documentation</title>
   
   
   
@@ -42,7 +42,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../_static/documentation_options.js?v=84f0c1a0"></script>
+    <script src="../_static/documentation_options.js?v=bdbe5e4b"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -137,8 +137,8 @@
       
     
     
-    <img src="../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev31+g6c1b40a3d documentation - Home"/>
-    <img src="../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev31+g6c1b40a3d documentation - Home"/>
+    <img src="../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev32+gff32ffda2 documentation - Home"/>
+    <img src="../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev32+gff32ffda2 documentation - Home"/>
   
   
 </a></div>
@@ -1137,15 +1137,15 @@ problem and for a model.</p>
 </table>
 </div>
 </section>
-<section id="fluxes-that-stay-positive">
-<h2>Fluxes that stay positive<a class="headerlink" href="#fluxes-that-stay-positive" title="Link to this heading">#</a></h2>
+<section id="values-that-stay-positive">
+<h2>Values that stay positive<a class="headerlink" href="#values-that-stay-positive" title="Link to this heading">#</a></h2>
 <p>Two models that solve for a variable <span class="math notranslate nohighlight">\(u\)</span> whose transform, on one block,
-is a positive flux; the other blocks pass through. The guide is
-<a class="reference internal" href="../user_guide/positive.html"><span class="doc">Fluxes that stay positive</span></a>.</p>
+is a positive value; the other blocks pass through. The guide is
+<a class="reference internal" href="../user_guide/positive.html"><span class="doc">Values that stay positive</span></a>.</p>
 <div class="pst-scrollable-table-container"><table class="autosummary longtable table">
 <tbody>
 <tr class="row-odd"><td><p><a class="reference internal" href="api/fips.LognormalForward.html#fips.LognormalForward" title="fips.LognormalForward"><code class="xref py py-obj docutils literal notranslate"><span class="pre">LognormalForward</span></code></a>(H, reference[, block])</p></td>
-<td><p>A forward model whose state on one block is the logarithm of a scale factor of a reference: the flux <span class="math notranslate nohighlight">\(r\, e^{u}\)</span>.</p></td>
+<td><p>A forward model whose state on one block is the logarithm of a scale factor of a reference: the value <span class="math notranslate nohighlight">\(r\, e^{u}\)</span>.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="api/fips.LognormalForward.H.html#fips.LognormalForward.H" title="fips.LognormalForward.H"><code class="xref py py-obj docutils literal notranslate"><span class="pre">LognormalForward.H</span></code></a></p></td>
 <td><p>The forward operator on the whole state, the transformed block and the others.</p></td>
@@ -1154,7 +1154,7 @@ is a positive flux; the other blocks pass through. The guide is
 <td><p>The name of the block the transform is on.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="api/fips.LognormalForward.reference.html#fips.LognormalForward.reference" title="fips.LognormalForward.reference"><code class="xref py py-obj docutils literal notranslate"><span class="pre">LognormalForward.reference</span></code></a></p></td>
-<td><p>The reference flux <span class="math notranslate nohighlight">\(r\)</span> of each cell of the block, on the block's labels.</p></td>
+<td><p>The reference <span class="math notranslate nohighlight">\(r\)</span> of each element of the block, on the block's labels.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="api/fips.LognormalForward.__call__.html#fips.LognormalForward.__call__" title="fips.LognormalForward.__call__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">LognormalForward.__call__</span></code></a>(x)</p></td>
 <td><p>Return the observations of the state <cite>x</cite>, without the offset: <span class="math notranslate nohighlight">\(H\, [r \circ e^{u}; \text{the other blocks}]\)</span>.</p></td>
@@ -1163,13 +1163,13 @@ is a positive flux; the other blocks pass through. The guide is
 <td><p>Return the Jacobian at <cite>x</cite>: <span class="math notranslate nohighlight">\(H \operatorname{diag}(r \circ e^{u}, 1)\)</span>.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="api/fips.LognormalForward.transform.html#fips.LognormalForward.transform" title="fips.LognormalForward.transform"><code class="xref py py-obj docutils literal notranslate"><span class="pre">LognormalForward.transform</span></code></a>(x)</p></td>
-<td><p>Return the state with the block as the flux, <span class="math notranslate nohighlight">\(r\, e^{u}\)</span>: of a state, or of each draw.</p></td>
+<td><p>Return the state with the block as the transformed value, <span class="math notranslate nohighlight">\(r\, e^{u}\)</span>: of a state, or of each draw.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="api/fips.LognormalForward.prior_for.html#fips.LognormalForward.prior_for" title="fips.LognormalForward.prior_for"><code class="xref py py-obj docutils literal notranslate"><span class="pre">LognormalForward.prior_for</span></code></a>(mean, std)</p></td>
-<td><p>Return the prior on <span class="math notranslate nohighlight">\(u\)</span> (its mean and standard deviation, each cell's) whose flux <span class="math notranslate nohighlight">\(r\, e^{u}\)</span> has the mean and the standard deviation asked for.</p></td>
+<td><p>Return the prior on <span class="math notranslate nohighlight">\(u\)</span> (its mean and standard deviation, each element's) whose value <span class="math notranslate nohighlight">\(r\, e^{u}\)</span> has the mean and the standard deviation asked for.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="api/fips.SoftplusForward.html#fips.SoftplusForward" title="fips.SoftplusForward"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SoftplusForward</span></code></a>(H, scale[, block])</p></td>
-<td><p>A forward model whose state on one block is a flux that bends to stay above zero: <span class="math notranslate nohighlight">\(s \log(1 + e^{u/s})\)</span>.</p></td>
+<td><p>A forward model whose state on one block bends to stay above zero: the value <span class="math notranslate nohighlight">\(s \log(1 + e^{u/s})\)</span>.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="api/fips.SoftplusForward.H.html#fips.SoftplusForward.H" title="fips.SoftplusForward.H"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SoftplusForward.H</span></code></a></p></td>
 <td><p>The forward operator on the whole state, the transformed block and the others.</p></td>
@@ -1178,7 +1178,7 @@ is a positive flux; the other blocks pass through. The guide is
 <td><p>The name of the block the transform is on.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="api/fips.SoftplusForward.scale.html#fips.SoftplusForward.scale" title="fips.SoftplusForward.scale"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SoftplusForward.scale</span></code></a></p></td>
-<td><p>the flux is <code class="docutils literal notranslate"><span class="pre">scale</span> <span class="pre">*</span> <span class="pre">log(1</span> <span class="pre">+</span> <span class="pre">exp(u</span> <span class="pre">/</span> <span class="pre">scale))</span></code>.</p></td>
+<td><p>the value is <code class="docutils literal notranslate"><span class="pre">scale</span> <span class="pre">*</span> <span class="pre">log(1</span> <span class="pre">+</span> <span class="pre">exp(u</span> <span class="pre">/</span> <span class="pre">scale))</span></code>.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="api/fips.SoftplusForward.__call__.html#fips.SoftplusForward.__call__" title="fips.SoftplusForward.__call__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SoftplusForward.__call__</span></code></a>(x)</p></td>
 <td><p>Return the observations of the state <cite>x</cite>, without the offset: <span class="math notranslate nohighlight">\(H\, [s \log(1 + e^{u/s}); \text{the other blocks}]\)</span>.</p></td>
@@ -1187,10 +1187,10 @@ is a positive flux; the other blocks pass through. The guide is
 <td><p>Return the Jacobian at <cite>x</cite>: <span class="math notranslate nohighlight">\(H \operatorname{diag}(\operatorname{expit}(u/s), 1)\)</span>.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="api/fips.SoftplusForward.transform.html#fips.SoftplusForward.transform" title="fips.SoftplusForward.transform"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SoftplusForward.transform</span></code></a>(x)</p></td>
-<td><p>Return the state with the block as the flux, <span class="math notranslate nohighlight">\(s \log(1 + e^{u/s})\)</span>: of a state, or of each draw.</p></td>
+<td><p>Return the state with the block as the transformed value, <span class="math notranslate nohighlight">\(s \log(1 + e^{u/s})\)</span>: of a state, or of each draw.</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="api/fips.SoftplusForward.prior_for.html#fips.SoftplusForward.prior_for" title="fips.SoftplusForward.prior_for"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SoftplusForward.prior_for</span></code></a>(mean, std)</p></td>
-<td><p>Return the prior on <span class="math notranslate nohighlight">\(u\)</span> (its mean and standard deviation, each cell's) whose flux <span class="math notranslate nohighlight">\(s \log(1 + e^{u/s})\)</span> has the mean and the standard deviation asked for.</p></td>
+<td><p>Return the prior on <span class="math notranslate nohighlight">\(u\)</span> (its mean and standard deviation, each element's) whose value <span class="math notranslate nohighlight">\(s \log(1 + e^{u/s})\)</span> has the mean and the standard deviation asked for.</p></td>
 </tr>
 </tbody>
 </table>
@@ -1253,7 +1253,7 @@ top level of a module, holding data that pickles.</p>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-model">The model</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#either-kind-of-forward">Either kind of forward</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#checking-the-jacobian">Checking the Jacobian</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#fluxes-that-stay-positive">Fluxes that stay positive</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#values-that-stay-positive">Values that stay positive</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#serialization">Serialization</a></li>
 </ul>
   </nav></div>

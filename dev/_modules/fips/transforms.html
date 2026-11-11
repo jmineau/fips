@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>fips.transforms &#8212; fips 0.2.0b3.dev31+g6c1b40a3d documentation</title>
+    <title>fips.transforms &#8212; fips 0.2.0b3.dev32+gff32ffda2 documentation</title>
   
   
   
@@ -41,7 +41,7 @@
   <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="../../_static/documentation_options.js?v=84f0c1a0"></script>
+    <script src="../../_static/documentation_options.js?v=bdbe5e4b"></script>
     <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -132,8 +132,8 @@
       
     
     
-    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev31+g6c1b40a3d documentation - Home"/>
-    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev31+g6c1b40a3d documentation - Home"/>
+    <img src="../../_static/logo.png" class="logo__image only-light" alt="fips 0.2.0b3.dev32+gff32ffda2 documentation - Home"/>
+    <img src="../../_static/logo_dark.png" class="logo__image only-dark pst-js-only" alt="fips 0.2.0b3.dev32+gff32ffda2 documentation - Home"/>
   
   
 </a></div>
@@ -424,21 +424,24 @@
 <span></span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">Forward models that keep one block of the state positive: lognormal and softplus.</span>
 
-<span class="sd">A flux that cannot be negative is solved as a hidden variable :math:`u` that</span>
-<span class="sd">can be anything, and a transform :math:`T` that makes it positive:</span>
+<span class="sd">A block of the state that cannot be negative (a flux, a concentration, a</span>
+<span class="sd">rate) is solved as a hidden variable :math:`u` that can be anything, and a</span>
+<span class="sd">transform :math:`T` that makes it positive:</span>
 <span class="sd">the observations are :math:`z = H\, [T(u); \text{the other blocks}] + c + e`,</span>
 <span class="sd">where :math:`H` is the forward operator on the whole state. The other blocks</span>
 <span class="sd">(a bias, a background) pass through as they are. The state, its prior and its</span>
 <span class="sd">covariance are in :math:`u`'s units, written by the user;</span>
 <span class="sd">:meth:`LognormalForward.prior_for` and :meth:`SoftplusForward.prior_for`</span>
-<span class="sd">give the prior on :math:`u` whose flux has a mean and a standard deviation</span>
-<span class="sd">asked for. ``fips.solve(problem, "gauss_newton")`` finds the mode of</span>
+<span class="sd">give the prior on :math:`u` whose transformed value has a mean and a</span>
+<span class="sd">standard deviation asked for. ``fips.solve(problem, "gauss_newton")`` finds the mode of</span>
 <span class="sd">:math:`u`; :meth:`~LognormalForward.transform` maps it, or draws of the</span>
-<span class="sd">posterior (:meth:`Posterior.sample &lt;fips.Posterior.sample&gt;`), to the flux.</span>
+<span class="sd">posterior (:meth:`Posterior.sample &lt;fips.Posterior.sample&gt;`), to the</span>
+<span class="sd">transformed value :math:`T(u)`.</span>
 
 <span class="sd">- :class:`LognormalForward`: :math:`T(u) = r\, e^{u}`, a scale factor of a</span>
-<span class="sd">  reference :math:`r` (an inventory): the uncertainty is a factor.</span>
-<span class="sd">- :class:`SoftplusForward`: :math:`T(u) = s \log(1 + e^{u/s})`: the flux</span>
+<span class="sd">  reference :math:`r` (a prior estimate, such as an emission inventory): the</span>
+<span class="sd">  uncertainty is a factor.</span>
+<span class="sd">- :class:`SoftplusForward`: :math:`T(u) = s \log(1 + e^{u/s})`: the value</span>
 <span class="sd">  itself where it is large (:math:`T(u) \approx u` for :math:`u \gg s`),</span>
 <span class="sd">  bending to stay above zero within about :math:`s` of it.</span>
 <span class="sd">"""</span>
@@ -475,7 +478,7 @@
 <span class="sd">"""The near panel starts this fraction of its width from the bend (what it leaves out is below roundoff)."""</span>
 
 <span class="n">_CHUNK</span> <span class="o">=</span> <span class="mi">2048</span>
-<span class="sd">"""The cells whose softplus moments are computed at once (each holds 384 nodes)."""</span>
+<span class="sd">"""The elements whose softplus moments are computed at once (each holds 384 nodes)."""</span>
 
 <span class="n">_MATCHED</span> <span class="o">=</span> <span class="mf">1e-12</span>
 <span class="sd">"""The relative error of the mean and the standard deviation at which the softplus prior stops."""</span>
@@ -714,25 +717,26 @@
 <a class="viewcode-back" href="../../reference/api/fips.LognormalForward.html#fips.LognormalForward">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">LognormalForward</span><span class="p">(</span><span class="n">_Transformed</span><span class="p">):</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">"""</span>
-<span class="sd">    A forward model whose state on one block is the logarithm of a scale factor of a reference: the flux :math:`r\, e^{u}`.</span>
+<span class="sd">    A forward model whose state on one block is the logarithm of a scale factor of a reference: the value :math:`r\, e^{u}`.</span>
 
 <span class="sd">    The observations are :math:`F(x) = H\, [r \circ e^{u}; \text{the other</span>
 <span class="sd">    blocks}]`: :math:`H` is the forward operator on the whole state, the</span>
 <span class="sd">    state on `block` is :math:`u`, the log of the factor that scales the</span>
-<span class="sd">    reference :math:`r` (an inventory), and every other block (a bias)</span>
-<span class="sd">    passes through as it is. The Jacobian is :math:`H` with each column of</span>
-<span class="sd">    the block scaled by its flux, :math:`H \operatorname{diag}(r \circ</span>
+<span class="sd">    reference :math:`r` (a prior estimate, such as an emission inventory),</span>
+<span class="sd">    and every other block (a bias) passes through as it is. The Jacobian is</span>
+<span class="sd">    :math:`H` with each column of the block scaled by its value,</span>
+<span class="sd">    :math:`H \operatorname{diag}(r \circ</span>
 <span class="sd">    e^{u}, 1)`, in the form of :math:`H` (sparse stays sparse).</span>
 
 <span class="sd">    The prior and its covariance on the block are in log units: a standard</span>
-<span class="sd">    deviation of 0.5 is a factor of :math:`e^{0.5} = 1.65` either way. A cell</span>
-<span class="sd">    whose reference is zero has a zero flux whatever :math:`u` is, and its</span>
-<span class="sd">    column of the Jacobian is zero: no observation moves it, so a source</span>
-<span class="sd">    the reference has not got cannot appear (:class:`SoftplusForward` or the</span>
+<span class="sd">    deviation of 0.5 is a factor of :math:`e^{0.5} = 1.65` either way. An</span>
+<span class="sd">    element whose reference is zero has a zero value whatever :math:`u` is,</span>
+<span class="sd">    and its column of the Jacobian is zero: no observation moves it, so the</span>
+<span class="sd">    data cannot make it positive (:class:`SoftplusForward` or the</span>
 <span class="sd">    ``"bounded"`` method can). :meth:`prior_for` gives the prior on</span>
-<span class="sd">    :math:`u` whose flux has a mean and a standard deviation;</span>
+<span class="sd">    :math:`u` whose value has a mean and a standard deviation;</span>
 <span class="sd">    :meth:`transform` maps the estimate, or draws of the posterior, to the</span>
-<span class="sd">    flux.</span>
+<span class="sd">    value.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -740,9 +744,10 @@
 <span class="sd">        The forward operator: its rows the observations' labels, its columns</span>
 <span class="sd">        the whole state's (the block and any other).</span>
 <span class="sd">    reference : Vector, Series or float</span>
-<span class="sd">        The reference flux :math:`r` of each cell of the block, not negative:</span>
-<span class="sd">        a Vector on the block (``inventory["flux"]``), a Series on its labels</span>
-<span class="sd">        (without a ``block`` level), or one number for every cell.</span>
+<span class="sd">        The reference :math:`r` of each element of the block, not negative: a</span>
+<span class="sd">        Vector on the block (``inventory["flux"]`` in a flux inversion), a</span>
+<span class="sd">        Series on its labels (without a ``block`` level), or one number for</span>
+<span class="sd">        every element.</span>
 <span class="sd">    block : str, optional</span>
 <span class="sd">        The block of the state that is :math:`u`. By default the state's one</span>
 <span class="sd">        block.</span>
@@ -761,21 +766,21 @@
 
 <span class="sd">    See Also</span>
 <span class="sd">    --------</span>
-<span class="sd">    SoftplusForward : A flux that is additive away from zero.</span>
+<span class="sd">    SoftplusForward : A positive value whose uncertainty is additive away from zero.</span>
 <span class="sd">    fips.ForwardModel : A forward model written by hand.</span>
 
 <span class="sd">    Notes</span>
 <span class="sd">    -----</span>
 <span class="sd">    The mode :math:`\hat{u}` is the mean and the median of the Gaussian at</span>
-<span class="sd">    the mode, so :math:`r\, e^{\hat{u}}` is the median of each cell's flux</span>
-<span class="sd">    under it, below its mean :math:`r\, e^{\hat{u} + \sigma^2/2}` (with</span>
+<span class="sd">    the mode, so :math:`r\, e^{\hat{u}}` is the median of each element's</span>
+<span class="sd">    value under it, below its mean :math:`r\, e^{\hat{u} + \sigma^2/2}` (with</span>
 <span class="sd">    :math:`\sigma^2` the variance at the mode). A sum of lognormals has no</span>
 <span class="sd">    closed form: draws of the total are ``model.transform(post.sample(n))``</span>
-<span class="sd">    summed by draw. Where the data constrain sums of cells whose prior is</span>
+<span class="sd">    summed by draw. Where the data constrain sums of elements whose prior is</span>
 <span class="sd">    wide, the Gaussian at the mode lies along the tangent of the curved set</span>
-<span class="sd">    of states they allow, and the draws' totals run high: the sum of the flux</span>
-<span class="sd">    at the mode is the better total (the user guide's "Fluxes that stay</span>
-<span class="sd">    positive" measures both).</span>
+<span class="sd">    of states they allow, and the draws' totals run high: the sum of the</span>
+<span class="sd">    values at the mode is the better total (the user guide's "Values that</span>
+<span class="sd">    stay positive" measures both).</span>
 
 <span class="sd">    Examples</span>
 <span class="sd">    --------</span>
@@ -812,15 +817,15 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">reference</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Vector</span><span class="p">:</span>
-<span class="w">        </span><span class="sa">r</span><span class="sd">"""The reference flux :math:`r` of each cell of the block, on the block's labels."""</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""The reference :math:`r` of each element of the block, on the block's labels."""</span>
         <span class="k">return</span> <span class="n">Vector</span><span class="o">.</span><span class="n">_adopt</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_reference</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_labels</span><span class="p">,</span> <span class="s2">"reference"</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_values</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">u</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">"""Return :math:`r e^u`, zero where the reference is zero (whatever `u`)."""</span>
         <span class="n">r</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_reference</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">*</span><span class="p">([</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="n">u</span><span class="o">.</span><span class="n">ndim</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)))</span>
         <span class="k">with</span> <span class="n">np</span><span class="o">.</span><span class="n">errstate</span><span class="p">(</span><span class="n">over</span><span class="o">=</span><span class="s2">"ignore"</span><span class="p">,</span> <span class="n">invalid</span><span class="o">=</span><span class="s2">"ignore"</span><span class="p">):</span>
-            <span class="n">flux</span> <span class="o">=</span> <span class="n">r</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">u</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">r</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span> <span class="n">flux</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="n">r</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">u</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">r</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_slopes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">u</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">"""Return the derivative of :math:`r e^u`, which is itself."""</span>
@@ -849,7 +854,7 @@
 <span class="sd">        Raises</span>
 <span class="sd">        ------</span>
 <span class="sd">        ValueError</span>
-<span class="sd">            If `x` does not have the model's columns' labels, or the flux</span>
+<span class="sd">            If `x` does not have the model's columns' labels, or the value</span>
 <span class="sd">            overflows (:math:`u` above about 700).</span>
 <span class="sd">        """</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_forward</span><span class="p">(</span><span class="n">x</span><span class="p">)</span></div>
@@ -861,7 +866,7 @@
 <span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">        Return the Jacobian at `x`: :math:`H \operatorname{diag}(r \circ e^{u}, 1)`.</span>
 
-<span class="sd">        Each column of the block is scaled by its flux; the columns of the</span>
+<span class="sd">        Each column of the block is scaled by its value; the columns of the</span>
 <span class="sd">        other blocks are those of :math:`H`. The form is that of :math:`H`.</span>
 
 <span class="sd">        Parameters</span>
@@ -889,16 +894,16 @@
 <a class="viewcode-back" href="../../reference/api/fips.LognormalForward.transform.html#fips.LognormalForward.transform">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="s2">"Vector | pd.DataFrame"</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"Vector | pd.DataFrame"</span><span class="p">:</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
-<span class="sd">        Return the state with the block as the flux, :math:`r\, e^{u}`: of a state, or of each draw.</span>
+<span class="sd">        Return the state with the block as the transformed value, :math:`r\, e^{u}`: of a state, or of each draw.</span>
 
-<span class="sd">        The other blocks are as they are. For the estimate, the flux at the</span>
-<span class="sd">        mode, the median of each cell's flux under the Gaussian at the mode</span>
-<span class="sd">        (not its mean). For draws of the posterior (:meth:`Posterior.sample</span>
-<span class="sd">        &lt;fips.Posterior.sample&gt;`, one column each), draws of the flux: the</span>
-<span class="sd">        total of each column is a draw of the total (see the class's Notes</span>
-<span class="sd">        for when they run high). Aggregating ``u`` first</span>
-<span class="sd">        (``post.sample(n, W=W)``) and transforming that is not a total of</span>
-<span class="sd">        the flux.</span>
+<span class="sd">        The other blocks are as they are. For the estimate, the value at the</span>
+<span class="sd">        mode, the median of each element's value under the Gaussian at the</span>
+<span class="sd">        mode (not its mean). For draws of the posterior</span>
+<span class="sd">        (:meth:`Posterior.sample &lt;fips.Posterior.sample&gt;`, one column each),</span>
+<span class="sd">        draws of the value: the total of each column is a draw of the total</span>
+<span class="sd">        (see the class's Notes for when they run high). Aggregating ``u``</span>
+<span class="sd">        first (``post.sample(n, W=W)``) and transforming that is not a total</span>
+<span class="sd">        of the values.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -917,7 +922,7 @@
 <span class="sd">        TypeError</span>
 <span class="sd">            If `x` is neither a Vector nor a DataFrame.</span>
 <span class="sd">        ValueError</span>
-<span class="sd">            If its labels are not the model's columns', or the flux</span>
+<span class="sd">            If its labels are not the model's columns', or the value</span>
 <span class="sd">            overflows.</span>
 
 <span class="sd">        Examples</span>
@@ -945,21 +950,21 @@
         <span class="bp">self</span><span class="p">,</span> <span class="n">mean</span><span class="p">:</span> <span class="s2">"Vector | pd.Series | float"</span><span class="p">,</span> <span class="n">std</span><span class="p">:</span> <span class="s2">"Vector | pd.Series | float"</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Vector</span><span class="p">,</span> <span class="n">Vector</span><span class="p">]:</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
-<span class="sd">        Return the prior on :math:`u` (its mean and standard deviation, each cell's) whose flux :math:`r\, e^{u}` has the mean and the standard deviation asked for.</span>
+<span class="sd">        Return the prior on :math:`u` (its mean and standard deviation, each element's) whose value :math:`r\, e^{u}` has the mean and the standard deviation asked for.</span>
 
-<span class="sd">        The flux is lognormal, with :math:`u \sim N(\mu, \sigma^2)`:</span>
+<span class="sd">        The value is lognormal, with :math:`u \sim N(\mu, \sigma^2)`:</span>
 <span class="sd">        :math:`\sigma^2 = \log(1 + s^2 / m^2)` and :math:`\mu = \log(m / r) -</span>
 <span class="sd">        \sigma^2 / 2`, so that its mean is :math:`m` and its standard</span>
-<span class="sd">        deviation :math:`s` exactly. With the reference as the mean (an</span>
-<span class="sd">        inventory), :math:`\mu = -\sigma^2 / 2`: the prior median of the flux,</span>
-<span class="sd">        :math:`r\, e^{\mu}`, is below the inventory, and its mean is the</span>
-<span class="sd">        inventory. A prior of :math:`\mu = 0` instead makes the inventory the</span>
+<span class="sd">        deviation :math:`s` exactly. With the reference as the mean,</span>
+<span class="sd">        :math:`\mu = -\sigma^2 / 2`: the prior median of the value,</span>
+<span class="sd">        :math:`r\, e^{\mu}`, is below the reference, and its mean is the</span>
+<span class="sd">        reference. A prior of :math:`\mu = 0` instead makes the reference the</span>
 <span class="sd">        median, and the prior's total :math:`e^{\sigma^2/2}` times the</span>
-<span class="sd">        inventory's (1.65 times for :math:`\sigma = 1`).</span>
+<span class="sd">        reference's (1.65 times for :math:`\sigma = 1`).</span>
 
-<span class="sd">        The correlations are those of :math:`u`, not of the flux: build the</span>
-<span class="sd">        covariance with them (``Exponential(...).with_std(sigma)``). Two cells</span>
-<span class="sd">        whose :math:`u` correlate by :math:`\rho` have fluxes that correlate</span>
+<span class="sd">        The correlations are those of :math:`u`, not of the value: build the</span>
+<span class="sd">        covariance with them (``Exponential(...).with_std(sigma)``). Two</span>
+<span class="sd">        elements whose :math:`u` correlate by :math:`\rho` have values that correlate</span>
 <span class="sd">        by :math:`(e^{\rho \sigma_i \sigma_j} - 1) / \sqrt{(e^{\sigma_i^2} -</span>
 <span class="sd">        1)(e^{\sigma_j^2} - 1)}`, less than :math:`\rho` (0.38 for</span>
 <span class="sd">        :math:`\rho = 0.5` and :math:`\sigma = 1`).</span>
@@ -967,20 +972,20 @@
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        mean : Vector, Series or float</span>
-<span class="sd">            The prior mean :math:`m` of each cell's flux, on the block's labels</span>
+<span class="sd">            The prior mean :math:`m` of each element's value, on the block's labels</span>
 <span class="sd">            (or one number). Positive where the reference is; zero where it</span>
 <span class="sd">            is zero.</span>
 <span class="sd">        std : Vector, Series or float</span>
-<span class="sd">            The prior standard deviation :math:`s` of each cell's flux, not</span>
-<span class="sd">            negative; zero where the reference is zero.</span>
+<span class="sd">            The prior standard deviation :math:`s` of each element's value,</span>
+<span class="sd">            not negative; zero where the reference is zero.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        mean, std : Vector</span>
-<span class="sd">            :math:`\mu` and :math:`\sigma`, on the block's labels. A cell whose</span>
-<span class="sd">            reference is zero gets 0 and 0: its flux is zero whatever its</span>
-<span class="sd">            :math:`u`, and any prior there gives the other cells the same</span>
-<span class="sd">            posterior.</span>
+<span class="sd">            :math:`\mu` and :math:`\sigma`, on the block's labels. An element</span>
+<span class="sd">            whose reference is zero gets 0 and 0: its value is zero whatever</span>
+<span class="sd">            its :math:`u`, and any prior there gives the other elements the</span>
+<span class="sd">            same posterior.</span>
 
 <span class="sd">        Raises</span>
 <span class="sd">        ------</span>
@@ -993,8 +998,8 @@
 
 <span class="sd">        Examples</span>
 <span class="sd">        --------</span>
-<span class="sd">        A flux of mean 2 and standard deviation 1 in each cell, the reference</span>
-<span class="sd">        its mean:</span>
+<span class="sd">        A mean of 2 and a standard deviation of 1 in each element, the</span>
+<span class="sd">        reference its mean:</span>
 
 <span class="sd">        &gt;&gt;&gt; import numpy as np</span>
 <span class="sd">        &gt;&gt;&gt; import pandas as pd</span>
@@ -1022,15 +1027,15 @@
             <span class="k">if</span> <span class="n">bad</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
                     <span class="sa">f</span><span class="s2">"The </span><span class="si">{</span><span class="n">what</span><span class="si">}</span><span class="s2"> is not zero at </span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="n">bad</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span><span class="si">}</span><span class="s2"> labels where the "</span>
-                    <span class="s2">"reference is zero, whose flux is zero whatever u is: "</span>
-                    <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">_listed</span><span class="p">(</span><span class="n">labels</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="n">bad</span><span class="p">])</span><span class="si">}</span><span class="s2">. A source the reference has "</span>
-                    <span class="s2">"not got needs a reference there, or SoftplusForward."</span>
+                    <span class="s2">"reference is zero, whose value is zero whatever u is: "</span>
+                    <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">_listed</span><span class="p">(</span><span class="n">labels</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="n">bad</span><span class="p">])</span><span class="si">}</span><span class="s2">. A positive value at those labels "</span>
+                    <span class="s2">"needs a reference, or SoftplusForward."</span>
                 <span class="p">)</span>
         <span class="n">bad</span> <span class="o">=</span> <span class="o">~</span><span class="n">zero</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">m</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">bad</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
                 <span class="sa">f</span><span class="s2">"The mean is zero at </span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="n">bad</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span><span class="si">}</span><span class="s2"> labels whose reference is "</span>
-                <span class="sa">f</span><span class="s2">"not, and a lognormal flux is never zero: "</span>
+                <span class="sa">f</span><span class="s2">"not, and a lognormal value is never zero: "</span>
                 <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">_listed</span><span class="p">(</span><span class="n">labels</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="n">bad</span><span class="p">])</span><span class="si">}</span><span class="s2">."</span>
             <span class="p">)</span>
         <span class="n">safe</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">zero</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="n">m</span><span class="p">)</span>
@@ -1046,7 +1051,7 @@
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_softplus_rule</span><span class="p">(</span><span class="n">a</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">b</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">"""</span>
-<span class="sd">    Return nodes :math:`\xi` and weights (one row per cell) for :math:`E[f(a + b \xi)]`, :math:`\xi \sim N(0, 1)`, for a function that bends at :math:`a + b \xi = 0`.</span>
+<span class="sd">    Return nodes :math:`\xi` and weights (one row per element) for :math:`E[f(a + b \xi)]`, :math:`\xi \sim N(0, 1)`, for a function that bends at :math:`a + b \xi = 0`.</span>
 
 <span class="sd">    Each side of the bend, :math:`\xi_0 = -a/b`, is one panel of</span>
 <span class="sd">    Gauss-Legendre nodes in the logarithm of the distance to it, up to 1 (the</span>
@@ -1092,7 +1097,7 @@
 <span class="sd">    The deviations are taken from :math:`f(a)` as :math:`f(t) - f(a) =</span>
 <span class="sd">    \log(1 + \sigma(a)(e^{t - a} - 1))` (with :math:`\sigma` the logistic</span>
 <span class="sd">    function), so a standard deviation far below the mean loses no digits.</span>
-<span class="sd">    The cells are taken ``_CHUNK`` at a time.</span>
+<span class="sd">    The elements are taken ``_CHUNK`` at a time.</span>
 <span class="sd">    """</span>
     <span class="n">parts</span> <span class="o">=</span> <span class="p">[</span>
         <span class="n">_softplus_chunk</span><span class="p">(</span><span class="n">a</span><span class="p">[</span><span class="n">k</span> <span class="p">:</span> <span class="n">k</span> <span class="o">+</span> <span class="n">_CHUNK</span><span class="p">],</span> <span class="n">b</span><span class="p">[</span><span class="n">k</span> <span class="p">:</span> <span class="n">k</span> <span class="o">+</span> <span class="n">_CHUNK</span><span class="p">])</span>
@@ -1105,7 +1110,7 @@
 <span class="k">def</span><span class="w"> </span><span class="nf">_softplus_chunk</span><span class="p">(</span>
     <span class="n">a</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">b</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">"""Return :func:`_softplus_moments` of a few cells."""</span>
+<span class="w">    </span><span class="sd">"""Return :func:`_softplus_moments` of a few elements."""</span>
     <span class="n">xi</span><span class="p">,</span> <span class="n">w</span> <span class="o">=</span> <span class="n">_softplus_rule</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
     <span class="n">step</span> <span class="o">=</span> <span class="n">b</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="n">xi</span>
     <span class="n">t</span> <span class="o">=</span> <span class="n">a</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">+</span> <span class="n">step</span>
@@ -1134,10 +1139,10 @@
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_steps</span><span class="p">(</span><span class="n">A</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">b</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">"""Return the solution of each cell's 2 x 2 system ``A x = b`` (``k x 2``), NaN for a cell whose matrix is singular."""</span>
+<span class="w">    </span><span class="sd">"""Return the solution of each element's 2 x 2 system ``A x = b`` (``k x 2``), NaN for an element whose matrix is singular."""</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">b</span><span class="p">[:,</span> <span class="p">:,</span> <span class="kc">None</span><span class="p">])[:,</span> <span class="p">:,</span> <span class="mi">0</span><span class="p">]</span>
-    <span class="k">except</span> <span class="n">LinAlgError</span><span class="p">:</span>  <span class="c1"># some cell is singular: the others one by one</span>
+    <span class="k">except</span> <span class="n">LinAlgError</span><span class="p">:</span>  <span class="c1"># some element is singular: the others one by one</span>
         <span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="n">b</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">b</span><span class="p">)):</span>
             <span class="k">with</span> <span class="n">contextlib</span><span class="o">.</span><span class="n">suppress</span><span class="p">(</span><span class="n">LinAlgError</span><span class="p">):</span>
@@ -1146,32 +1151,32 @@
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_softplus_match</span><span class="p">(</span>
-    <span class="n">m</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">s</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">cells</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Index</span>
+    <span class="n">m</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">s</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">labels</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Index</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">"""</span>
 <span class="sd">    Return :math:`a, b` with :math:`\log(1 + e^t)`, :math:`t \sim N(a, b^2)`, of mean `m` and standard deviation `s` (both positive).</span>
 
 <span class="sd">    Newton's method on the logarithms of the two moments, in :math:`\alpha =</span>
-<span class="sd">    a/b` and :math:`\beta = \log b` (where the flux is far above the bend,</span>
+<span class="sd">    a/b` and :math:`\beta = \log b` (where the value is far above the bend,</span>
 <span class="sd">    each moment is :math:`b` times a function of :math:`\alpha`, so the</span>
 <span class="sd">    equations are nearly linear), from the better of the lognormal answer</span>
 <span class="sd">    (right for :math:`m \ll 1`) and the additive one (:math:`a = m, b = s`,</span>
-<span class="sd">    right for :math:`m \gg 1`). Each cell's step is halved until its error</span>
+<span class="sd">    right for :math:`m \gg 1`). Each element's step is halved until its error</span>
 <span class="sd">    falls.</span>
 
 <span class="sd">    Raises</span>
 <span class="sd">    ------</span>
 <span class="sd">    RuntimeError</span>
-<span class="sd">        If some cell does not reach a relative error of ``_ACCEPTED`` (its</span>
-<span class="sd">        Newton matrix singular, or its steps stalled), naming `cells`, the</span>
-<span class="sd">        labels of the cells.</span>
+<span class="sd">        If some element does not reach a relative error of ``_ACCEPTED`` (its</span>
+<span class="sd">        Newton matrix singular, or its steps stalled), naming `labels`, the</span>
+<span class="sd">        labels of the elements.</span>
 <span class="sd">    """</span>
     <span class="n">log_m</span><span class="p">,</span> <span class="n">log_s</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">m</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">errors</span><span class="p">(</span>
         <span class="n">alpha</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">beta</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">k</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">"""Return the errors of the log moments of the cells `k`, and their derivatives by alpha and beta."""</span>
+<span class="w">        </span><span class="sd">"""Return the errors of the log moments of the elements `k`, and their derivatives by alpha and beta."""</span>
         <span class="n">b</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">beta</span><span class="p">)</span>
         <span class="n">a</span> <span class="o">=</span> <span class="n">alpha</span> <span class="o">*</span> <span class="n">b</span>
         <span class="n">mean</span><span class="p">,</span> <span class="n">std</span><span class="p">,</span> <span class="n">J</span> <span class="o">=</span> <span class="n">_softplus_moments</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
@@ -1209,7 +1214,7 @@
             <span class="n">step</span> <span class="o">=</span> <span class="n">_steps</span><span class="p">(</span><span class="n">dr</span><span class="p">[</span><span class="n">pending</span><span class="p">],</span> <span class="o">-</span><span class="n">r</span><span class="p">[</span><span class="n">pending</span><span class="p">])</span>
         <span class="n">step</span><span class="p">[</span><span class="o">~</span><span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">step</span><span class="p">)]</span> <span class="o">=</span> <span class="mf">0.0</span>
         <span class="n">fraction</span><span class="p">,</span> <span class="n">moved</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">pending</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">)</span>
-        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">40</span><span class="p">):</span>  <span class="c1"># halve each cell's step until its error falls</span>
+        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">40</span><span class="p">):</span>  <span class="c1"># halve each element's step until its error falls</span>
             <span class="n">left</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">flatnonzero</span><span class="p">(</span><span class="o">~</span><span class="n">moved</span><span class="p">)</span>
             <span class="n">k</span> <span class="o">=</span> <span class="n">pending</span><span class="p">[</span><span class="n">left</span><span class="p">]</span>
             <span class="n">new_alpha</span> <span class="o">=</span> <span class="n">alpha</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">+</span> <span class="n">fraction</span> <span class="o">*</span> <span class="n">step</span><span class="p">[</span><span class="n">left</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
@@ -1228,10 +1233,10 @@
     <span class="n">failed</span> <span class="o">=</span> <span class="o">~</span><span class="p">(</span><span class="n">worst</span> <span class="o">&lt;=</span> <span class="n">_ACCEPTED</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">failed</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
         <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">"The softplus prior did not match the mean and standard deviation in "</span>
-            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="n">failed</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span><span class="si">}</span><span class="s2"> cells (relative error up to </span><span class="si">{</span><span class="n">worst</span><span class="o">.</span><span class="n">max</span><span class="p">()</span><span class="si">:</span><span class="s2">.2g</span><span class="si">}</span><span class="s2">), "</span>
+            <span class="sa">f</span><span class="s2">"The softplus prior did not match the mean and standard deviation at "</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="n">failed</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span><span class="si">}</span><span class="s2"> labels (relative error up to </span><span class="si">{</span><span class="n">worst</span><span class="o">.</span><span class="n">max</span><span class="p">()</span><span class="si">:</span><span class="s2">.2g</span><span class="si">}</span><span class="s2">), "</span>
             <span class="sa">f</span><span class="s2">"such as a mean of </span><span class="si">{</span><span class="n">m</span><span class="p">[</span><span class="n">failed</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="si">:</span><span class="s2">.4g</span><span class="si">}</span><span class="s2"> and a standard deviation of "</span>
-            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">s</span><span class="p">[</span><span class="n">failed</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="si">:</span><span class="s2">.4g</span><span class="si">}</span><span class="s2"> times the scale: </span><span class="si">{</span><span class="n">_listed</span><span class="p">(</span><span class="n">cells</span><span class="p">[</span><span class="n">failed</span><span class="p">])</span><span class="si">}</span><span class="s2">."</span>
+            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">s</span><span class="p">[</span><span class="n">failed</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="si">:</span><span class="s2">.4g</span><span class="si">}</span><span class="s2"> times the scale: </span><span class="si">{</span><span class="n">_listed</span><span class="p">(</span><span class="n">labels</span><span class="p">[</span><span class="n">failed</span><span class="p">])</span><span class="si">}</span><span class="s2">."</span>
         <span class="p">)</span>
     <span class="n">b</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">beta</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">alpha</span> <span class="o">*</span> <span class="n">b</span><span class="p">,</span> <span class="n">b</span>
@@ -1241,26 +1246,28 @@
 <a class="viewcode-back" href="../../reference/api/fips.SoftplusForward.html#fips.SoftplusForward">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">SoftplusForward</span><span class="p">(</span><span class="n">_Transformed</span><span class="p">):</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">"""</span>
-<span class="sd">    A forward model whose state on one block is a flux that bends to stay above zero: :math:`s \log(1 + e^{u/s})`.</span>
+<span class="sd">    A forward model whose state on one block bends to stay above zero: the value :math:`s \log(1 + e^{u/s})`.</span>
 
 <span class="sd">    The observations are :math:`F(x) = H\, [s \log(1 + e^{u/s}); \text{the</span>
 <span class="sd">    other blocks}]`: :math:`H` is the forward operator on the whole state,</span>
-<span class="sd">    the state on `block` is :math:`u`, in the flux's units, and every other</span>
-<span class="sd">    block passes through as it is. Where :math:`u` is several `scale` above</span>
-<span class="sd">    zero the flux is :math:`u` (the problem is the linear one); where it is</span>
-<span class="sd">    several below, the flux is :math:`s\, e^{u/s}`, near zero and positive.</span>
+<span class="sd">    the state on `block` is :math:`u`, in the units of the value, and every</span>
+<span class="sd">    other block passes through as it is. Where :math:`u` is several `scale`</span>
+<span class="sd">    above zero the value is :math:`u` (the problem is the linear one); where</span>
+<span class="sd">    it is several below, the value is :math:`s\, e^{u/s}`, near zero and</span>
+<span class="sd">    positive.</span>
 <span class="sd">    The Jacobian is :math:`H \operatorname{diag}(\operatorname{expit}(u/s),</span>
 <span class="sd">    1)`, the logistic function on the block, in the form of :math:`H`. Both</span>
 <span class="sd">    are computed without overflow for any :math:`u` (``np.logaddexp`` and</span>
 <span class="sd">    ``scipy.special.expit``).</span>
 
-<span class="sd">    `scale` is in the flux's units and says where the bend is: the transform</span>
-<span class="sd">    is not the same in other units (:math:`\log(1 + e^u)` bends within 1 of</span>
-<span class="sd">    zero, whatever 1 is), so it has no default. A scale near the prior's standard deviation of</span>
-<span class="sd">    the flux in the cells near zero bends where the prior says the flux</span>
-<span class="sd">    could be zero. :meth:`prior_for` gives the prior on :math:`u` whose flux</span>
-<span class="sd">    has a mean and a standard deviation; :meth:`transform` maps the</span>
-<span class="sd">    estimate, or draws of the posterior, to the flux.</span>
+<span class="sd">    `scale` is in the value's units and says where the bend is: the</span>
+<span class="sd">    transform is not the same in other units (:math:`\log(1 + e^u)` bends</span>
+<span class="sd">    within 1 of zero, whatever 1 is), so it has no default. A scale near the</span>
+<span class="sd">    prior's standard deviation of the value in the elements near zero bends</span>
+<span class="sd">    where the prior says the value could be zero. :meth:`prior_for` gives the</span>
+<span class="sd">    prior on :math:`u` whose value has a mean and a standard deviation;</span>
+<span class="sd">    :meth:`transform` maps the estimate, or draws of the posterior, to the</span>
+<span class="sd">    value.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -1288,13 +1295,13 @@
 
 <span class="sd">    See Also</span>
 <span class="sd">    --------</span>
-<span class="sd">    LognormalForward : A flux whose uncertainty is a factor of a reference.</span>
+<span class="sd">    LognormalForward : A positive value whose uncertainty is a factor of a reference.</span>
 
 <span class="sd">    Notes</span>
 <span class="sd">    -----</span>
 <span class="sd">    The transform is monotone, so the mode :math:`\hat{u}` (the median of</span>
-<span class="sd">    the Gaussian at the mode) maps to the median of each cell's flux under</span>
-<span class="sd">    it, :meth:`transform` of the estimate. Draws of a total are</span>
+<span class="sd">    the Gaussian at the mode) maps to the median of each element's value</span>
+<span class="sd">    under it, :meth:`transform` of the estimate. Draws of a total are</span>
 <span class="sd">    ``model.transform(post.sample(n))`` summed by draw; near the bend they run</span>
 <span class="sd">    high, as :class:`LognormalForward`'s do (see its Notes).</span>
 
@@ -1308,7 +1315,7 @@
 <span class="sd">    &gt;&gt;&gt; H = fips.Operator(np.ones((1, 3)), observed, state)</span>
 <span class="sd">    &gt;&gt;&gt; model = fips.SoftplusForward(H, scale=0.1)</span>
 <span class="sd">    &gt;&gt;&gt; u = fips.Vector([5.0, 0.0, -1.0], state)</span>
-<span class="sd">    &gt;&gt;&gt; model.transform(u).values.round(5)  # u far above the scale is the flux</span>
+<span class="sd">    &gt;&gt;&gt; model.transform(u).values.round(5)  # u far above the scale is the value</span>
 <span class="sd">    array([5.     , 0.06931, 0.     ])</span>
 <span class="sd">    &gt;&gt;&gt; fips.taylortest(model, u)</span>
 <span class="sd">    True</span>
@@ -1326,7 +1333,7 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">scale</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">"""The scale of the bend, in the flux's units: the flux is ``scale * log(1 + exp(u / scale))``."""</span>
+<span class="w">        </span><span class="sd">"""The scale of the bend, in the value's units: the value is ``scale * log(1 + exp(u / scale))``."""</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scale</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_values</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">u</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
@@ -1402,12 +1409,12 @@
 <a class="viewcode-back" href="../../reference/api/fips.SoftplusForward.transform.html#fips.SoftplusForward.transform">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="s2">"Vector | pd.DataFrame"</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"Vector | pd.DataFrame"</span><span class="p">:</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
-<span class="sd">        Return the state with the block as the flux, :math:`s \log(1 + e^{u/s})`: of a state, or of each draw.</span>
+<span class="sd">        Return the state with the block as the transformed value, :math:`s \log(1 + e^{u/s})`: of a state, or of each draw.</span>
 
-<span class="sd">        The other blocks are as they are. For the estimate, the flux at the</span>
-<span class="sd">        mode, the median of each cell's flux under the Gaussian at the mode.</span>
-<span class="sd">        For draws of the posterior (:meth:`Posterior.sample</span>
-<span class="sd">        &lt;fips.Posterior.sample&gt;`, one column each), draws of the flux: the</span>
+<span class="sd">        The other blocks are as they are. For the estimate, the value at the</span>
+<span class="sd">        mode, the median of each element's value under the Gaussian at the</span>
+<span class="sd">        mode. For draws of the posterior (:meth:`Posterior.sample</span>
+<span class="sd">        &lt;fips.Posterior.sample&gt;`, one column each), draws of the value: the</span>
 <span class="sd">        total of each column is a draw of the total (see the class's Notes</span>
 <span class="sd">        for when they run high).</span>
 
@@ -1438,32 +1445,32 @@
         <span class="bp">self</span><span class="p">,</span> <span class="n">mean</span><span class="p">:</span> <span class="s2">"Vector | pd.Series | float"</span><span class="p">,</span> <span class="n">std</span><span class="p">:</span> <span class="s2">"Vector | pd.Series | float"</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Vector</span><span class="p">,</span> <span class="n">Vector</span><span class="p">]:</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">"""</span>
-<span class="sd">        Return the prior on :math:`u` (its mean and standard deviation, each cell's) whose flux :math:`s \log(1 + e^{u/s})` has the mean and the standard deviation asked for.</span>
+<span class="sd">        Return the prior on :math:`u` (its mean and standard deviation, each element's) whose value :math:`s \log(1 + e^{u/s})` has the mean and the standard deviation asked for.</span>
 
 <span class="sd">        There is no closed form: for :math:`u \sim N(\mu, \sigma^2)` the mean</span>
-<span class="sd">        and the standard deviation of the flux are integrals, computed by</span>
+<span class="sd">        and the standard deviation of the value are integrals, computed by</span>
 <span class="sd">        quadrature (to about 1e-13), and :math:`\mu, \sigma` are found by</span>
 <span class="sd">        Newton's method until both match to 1e-12, relative. Far above the</span>
 <span class="sd">        scale (:math:`m \gg s`) the answer is :math:`\mu = m`, :math:`\sigma</span>
-<span class="sd">        = s` (the flux is :math:`u`); far below, the lognormal's. A cell with</span>
-<span class="sd">        no spread asked (a standard deviation of zero) gets :math:`\sigma =</span>
-<span class="sd">        0` and the :math:`\mu` whose flux is the mean.</span>
+<span class="sd">        = s` (the value is :math:`u`); far below, the lognormal's. An element</span>
+<span class="sd">        with no spread asked (a standard deviation of zero) gets :math:`\sigma</span>
+<span class="sd">        = 0` and the :math:`\mu` whose value is the mean.</span>
 
-<span class="sd">        The correlations are those of :math:`u`: where the flux is far above</span>
-<span class="sd">        the scale they are the flux's too; near zero the flux's are weaker.</span>
+<span class="sd">        The correlations are those of :math:`u`: where the value is far above</span>
+<span class="sd">        the scale they are the value's too; near zero the value's are weaker.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        mean : Vector, Series or float</span>
-<span class="sd">            The prior mean of each cell's flux, positive (the flux is never</span>
-<span class="sd">            zero), on the block's labels or one number.</span>
+<span class="sd">            The prior mean of each element's value, positive (the value is</span>
+<span class="sd">            never zero), on the block's labels or one number.</span>
 <span class="sd">        std : Vector, Series or float</span>
-<span class="sd">            The prior standard deviation of each cell's flux, not negative.</span>
+<span class="sd">            The prior standard deviation of each element's value, not negative.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        mean, std : Vector</span>
-<span class="sd">            :math:`\mu` and :math:`\sigma`, in the flux's units, on the block's</span>
+<span class="sd">            :math:`\mu` and :math:`\sigma`, in the value's units, on the block's</span>
 <span class="sd">            labels.</span>
 
 <span class="sd">        Raises</span>
@@ -1474,13 +1481,13 @@
 <span class="sd">            If their labels are not the block's, a mean is not positive, or a</span>
 <span class="sd">            standard deviation is negative or not finite.</span>
 <span class="sd">        RuntimeError</span>
-<span class="sd">            If Newton's method does not match some cell (it has not failed in</span>
+<span class="sd">            If Newton's method does not match some element (it has not failed in</span>
 <span class="sd">            the tests, over means from 1e-6 to 1e6 scales and standard</span>
 <span class="sd">            deviations from 1e-6 to 1e3 times the mean).</span>
 
 <span class="sd">        Examples</span>
 <span class="sd">        --------</span>
-<span class="sd">        A flux of mean 1 and standard deviation 1, with the bend at 1: the</span>
+<span class="sd">        A mean of 1 and a standard deviation of 1, with the bend at 1: the</span>
 <span class="sd">        prior on :math:`u` is centered below the mean, and wider:</span>
 
 <span class="sd">        &gt;&gt;&gt; import numpy as np</span>
@@ -1496,23 +1503,23 @@
 <span class="sd">        """</span>
         <span class="n">labels</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_labels</span>
         <span class="n">m</span> <span class="o">=</span> <span class="n">_on_block</span><span class="p">(</span><span class="n">mean</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="s2">"mean"</span><span class="p">)</span>
-        <span class="n">s_flux</span> <span class="o">=</span> <span class="n">_on_block</span><span class="p">(</span><span class="n">std</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="s2">"std"</span><span class="p">)</span>
-        <span class="n">_negative</span><span class="p">(</span><span class="n">s_flux</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="s2">"std"</span><span class="p">)</span>
+        <span class="n">s_value</span> <span class="o">=</span> <span class="n">_on_block</span><span class="p">(</span><span class="n">std</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="s2">"std"</span><span class="p">)</span>
+        <span class="n">_negative</span><span class="p">(</span><span class="n">s_value</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="s2">"std"</span><span class="p">)</span>
         <span class="n">bad</span> <span class="o">=</span> <span class="n">m</span> <span class="o">&lt;=</span> <span class="mi">0</span>
         <span class="k">if</span> <span class="n">bad</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
                 <span class="sa">f</span><span class="s2">"The mean is not positive at </span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="n">bad</span><span class="o">.</span><span class="n">sum</span><span class="p">())</span><span class="si">}</span><span class="s2"> labels, and a "</span>
-                <span class="sa">f</span><span class="s2">"softplus flux is always above zero: </span><span class="si">{</span><span class="n">_listed</span><span class="p">(</span><span class="n">labels</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="n">bad</span><span class="p">])</span><span class="si">}</span><span class="s2">."</span>
+                <span class="sa">f</span><span class="s2">"softplus value is always above zero: </span><span class="si">{</span><span class="n">_listed</span><span class="p">(</span><span class="n">labels</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="n">bad</span><span class="p">])</span><span class="si">}</span><span class="s2">."</span>
             <span class="p">)</span>
         <span class="n">scale</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scale</span>
-        <span class="n">m</span><span class="p">,</span> <span class="n">s_flux</span> <span class="o">=</span> <span class="n">m</span> <span class="o">/</span> <span class="n">scale</span><span class="p">,</span> <span class="n">s_flux</span> <span class="o">/</span> <span class="n">scale</span>  <span class="c1"># in units of the scale</span>
+        <span class="n">m</span><span class="p">,</span> <span class="n">s_value</span> <span class="o">=</span> <span class="n">m</span> <span class="o">/</span> <span class="n">scale</span><span class="p">,</span> <span class="n">s_value</span> <span class="o">/</span> <span class="n">scale</span>  <span class="c1"># in units of the scale</span>
         <span class="n">mu</span><span class="p">,</span> <span class="n">sigma</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">m</span><span class="p">)),</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">m</span><span class="p">))</span>
-        <span class="n">fixed</span> <span class="o">=</span> <span class="n">s_flux</span> <span class="o">==</span> <span class="mi">0</span>
-        <span class="c1"># no spread: the u whose flux is the mean, log(e^m - 1)</span>
+        <span class="n">fixed</span> <span class="o">=</span> <span class="n">s_value</span> <span class="o">==</span> <span class="mi">0</span>
+        <span class="c1"># no spread: the u whose value is the mean, log(e^m - 1)</span>
         <span class="n">mu</span><span class="p">[</span><span class="n">fixed</span><span class="p">]</span> <span class="o">=</span> <span class="n">m</span><span class="p">[</span><span class="n">fixed</span><span class="p">]</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">expm1</span><span class="p">(</span><span class="o">-</span><span class="n">m</span><span class="p">[</span><span class="n">fixed</span><span class="p">]))</span>
         <span class="k">if</span> <span class="p">(</span><span class="o">~</span><span class="n">fixed</span><span class="p">)</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
             <span class="n">mu</span><span class="p">[</span><span class="o">~</span><span class="n">fixed</span><span class="p">],</span> <span class="n">sigma</span><span class="p">[</span><span class="o">~</span><span class="n">fixed</span><span class="p">]</span> <span class="o">=</span> <span class="n">_softplus_match</span><span class="p">(</span>
-                <span class="n">m</span><span class="p">[</span><span class="o">~</span><span class="n">fixed</span><span class="p">],</span> <span class="n">s_flux</span><span class="p">[</span><span class="o">~</span><span class="n">fixed</span><span class="p">],</span> <span class="n">labels</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="o">~</span><span class="n">fixed</span><span class="p">]</span>
+                <span class="n">m</span><span class="p">[</span><span class="o">~</span><span class="n">fixed</span><span class="p">],</span> <span class="n">s_value</span><span class="p">[</span><span class="o">~</span><span class="n">fixed</span><span class="p">],</span> <span class="n">labels</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="o">~</span><span class="n">fixed</span><span class="p">]</span>
             <span class="p">)</span>
         <span class="k">return</span> <span class="p">(</span>
             <span class="n">Vector</span><span class="o">.</span><span class="n">_adopt</span><span class="p">(</span><span class="n">mu</span> <span class="o">*</span> <span class="n">scale</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="s2">"prior"</span><span class="p">),</span>
